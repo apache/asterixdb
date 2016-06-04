@@ -49,12 +49,12 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -144,10 +144,12 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         List<Pair<LogicalVariable, ILogicalExpression>> listLeft = new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
         List<Pair<LogicalVariable, ILogicalExpression>> listRight = new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
 
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyLists)
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyLists) {
             listLeft.add(new Pair<LogicalVariable, ILogicalExpression>(pair.first, pair.second.getValue()));
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyListsArg)
+        }
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyListsArg) {
             listRight.add(new Pair<LogicalVariable, ILogicalExpression>(pair.first, pair.second.getValue()));
+        }
 
         boolean isomorphic = VariableUtilities.varListEqualUnordered(listLeft, listRight);
 
@@ -634,8 +636,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
 
         List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
         if (argOp.getInputs().size() > 0) {
-            for (int i = 0; i < argOp.getInputs().size(); i++)
+            for (int i = 0; i < argOp.getInputs().size(); i++) {
                 VariableUtilities.getLiveVariables(argOp.getInputs().get(i).getValue(), liveVars);
+            }
         }
         List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getProducedVariables(argOp, producedVars);
@@ -650,8 +653,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
                 VariableUtilities.substituteVariables(newOp, map.getKey(), map.getValue(), null);
             }
         }
-        for (int i = 0; i < producedVars.size(); i++)
+        for (int i = 0; i < producedVars.size(); i++) {
             VariableUtilities.substituteVariables(newOp, producedVars.get(i), producedVarsNew.get(i), null);
+        }
         return newOp;
     }
 
@@ -679,12 +683,13 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
     }
 
     @Override
-    public Boolean visitOuterUnnestOperator(OuterUnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
+    public Boolean visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
-        if (aop.getOperatorTag() != LogicalOperatorTag.OUTER_UNNEST) {
+        if (aop.getOperatorTag() != LogicalOperatorTag.LEFT_OUTER_UNNEST) {
             return Boolean.FALSE;
         }
-        OuterUnnestOperator unnestOpArg = (OuterUnnestOperator) copyAndSubstituteVar(op, arg);
+        LeftOuterUnnestOperator unnestOpArg = (LeftOuterUnnestOperator) copyAndSubstituteVar(op, arg);
         boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), unnestOpArg.getVariables())
                 && variableEqual(op.getPositionalVariable(), unnestOpArg.getPositionalVariable());
         if (!isomorphic) {

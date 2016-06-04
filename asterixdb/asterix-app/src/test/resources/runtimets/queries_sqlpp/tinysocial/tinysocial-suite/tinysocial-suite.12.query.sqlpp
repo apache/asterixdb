@@ -25,6 +25,6 @@ use TinySocial;
 
 select element fbu
 from  FacebookUsers as fbu
-where some e in fbu.employment satisfies TinySocial."is-null"(e."end-date")
+where some e in fbu.employment satisfies TinySocial."is-missing"(e."end-date")
 order by fbu.id
 ;

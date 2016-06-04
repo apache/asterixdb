@@ -36,6 +36,7 @@ import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -154,7 +155,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         Set<String> fieldNameSet = new HashSet<>();
         Deque<String> fieldPathStack = new ArrayDeque<>();
 
-        ARecordType inputRecordType = FieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
+        ARecordType inputRecordType = getRecordTypeFromType(type0, expression);
         if (inputRecordType == null) {
             return BuiltinType.ANY;
         }
@@ -317,6 +318,28 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         }
         return new ARecordType(srcRecType.getTypeName(), destFieldNames.toArray(new String[n]),
                 destFieldTypes.toArray(new IAType[n]), isOpen);
+    }
+
+    private static ARecordType getRecordTypeFromType(IAType type0, ILogicalExpression expression)
+            throws AlgebricksException {
+        switch (type0.getTypeTag()) {
+            case RECORD:
+                return (ARecordType) type0;
+            case ANY:
+                return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+            case UNION:
+                AUnionType u = (AUnionType) type0;
+                IAType t1 = u.getActualType();
+                if (t1.getTypeTag() == ATypeTag.RECORD) {
+                    return (ARecordType) t1;
+                } else if (t1.getTypeTag() == ATypeTag.ANY) {
+                    return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+                }
+                // Falls through for other cases.
+            default:
+                throw new AlgebricksException(
+                        "Unsupported type " + type0 + " for field access expression: " + expression);
+        }
     }
 
 }

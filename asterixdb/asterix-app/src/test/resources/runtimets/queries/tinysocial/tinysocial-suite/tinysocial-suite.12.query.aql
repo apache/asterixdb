@@ -23,6 +23,6 @@
 use dataverse TinySocial;
 
 for $fbu in dataset FacebookUsers
-where (some $e in $fbu.employment satisfies is-null($e.end-date)) 
+where (some $e in $fbu.employment satisfies is-missing($e.end-date))
 order by $fbu.id
 return $fbu;

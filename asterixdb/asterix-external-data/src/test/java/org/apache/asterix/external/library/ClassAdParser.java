@@ -352,10 +352,10 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         }
 
         if (recType != null) {
-            int nullableFieldId = checkNullConstraints(recType, nulls);
-            if (nullableFieldId != -1) {
+            int optionalFieldId = checkOptionalConstraints(recType, nulls);
+            if (optionalFieldId != -1) {
                 throw new HyracksDataException(
-                        "Field: " + recType.getFieldNames()[nullableFieldId] + " can not be null");
+                        "Field: " + recType.getFieldNames()[optionalFieldId] + " can not be optional");
             }
         }
         recBuilder.write(out, true);
@@ -621,7 +621,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
         return objectPool.bitSetPool.get();
     }
 
-    public static int checkNullConstraints(ARecordType recType, BitSet nulls) {
+    public static int checkOptionalConstraints(ARecordType recType, BitSet nulls) {
         for (int i = 0; i < recType.getFieldTypes().length; i++) {
             if (nulls.get(i) == false) {
                 IAType type = recType.getFieldTypes()[i];
@@ -631,7 +631,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
                 if (type.getTypeTag() == ATypeTag.UNION) { // union
                     AUnionType unionType = (AUnionType) type;
-                    if (!unionType.isNullableType()) {
+                    if (!unionType.isUnknownableType()) {
                         return i;
                     }
                 }

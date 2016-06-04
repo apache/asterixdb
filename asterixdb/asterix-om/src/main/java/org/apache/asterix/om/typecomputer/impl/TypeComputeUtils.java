@@ -46,7 +46,7 @@ public class TypeComputeUtils {
 
     @FunctionalInterface
     public static interface ResultTypeGenerator {
-        public IAType getResultType(IAType... knownInputTypes);
+        public IAType getResultType(ILogicalExpression expr, IAType... knownInputTypes) throws AlgebricksException;
     }
 
     private TypeComputeUtils() {
@@ -101,9 +101,9 @@ public class TypeComputeUtils {
             if (category == NULL) {
                 return BuiltinType.ANULL;
             }
-            return TypeComputeUtils.getResultType(resultTypeGenerator.getResultType(knownInputTypes), category);
+            return TypeComputeUtils.getResultType(resultTypeGenerator.getResultType(expr, knownInputTypes), category);
         } else {
-            return resultTypeGenerator.getResultType(knownInputTypes);
+            return resultTypeGenerator.getResultType(expr, knownInputTypes);
         }
     }
 
@@ -138,7 +138,7 @@ public class TypeComputeUtils {
         }
         IAType resultType = type;
         if ((category & NULLABLE) != 0 || (category & NULL) != 0) {
-            resultType = AUnionType.createNullableType(resultType);
+            resultType = AUnionType.createUnknownableType(resultType);
         }
         if ((category & MISSABLE) != 0 || (category & MISSING) != 0) {
             resultType = AUnionType.createMissableType(resultType);

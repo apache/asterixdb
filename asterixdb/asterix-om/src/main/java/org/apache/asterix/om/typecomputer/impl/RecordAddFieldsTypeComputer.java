@@ -75,7 +75,7 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
             return inputRecordType;
         }
 
-        boolean nullable = TypeHelper.canBeUnknown(type0) || TypeHelper.canBeUnknown(type1);
+        boolean unknownable = TypeHelper.canBeUnknown(type0) || TypeHelper.canBeUnknown(type1);
         Map<String, IAType> additionalFields = new HashMap<>();
         List<String> resultFieldNames = new ArrayList<>();
         List<IAType> resultFieldTypes = new ArrayList<>();
@@ -151,8 +151,8 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
         int n = resultFieldNames.size();
         IAType resultType = new ARecordType(resultTypeName, resultFieldNames.toArray(new String[n]),
                 resultFieldTypes.toArray(new IAType[n]), true);
-        if (nullable) {
-            resultType = AUnionType.createNullableType(resultType);
+        if (unknownable) {
+            resultType = AUnionType.createUnknownableType(resultType);
         }
         return resultType;
     }

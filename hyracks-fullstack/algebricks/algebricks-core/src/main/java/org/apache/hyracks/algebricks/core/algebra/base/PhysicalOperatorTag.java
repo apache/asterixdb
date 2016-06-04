@@ -71,6 +71,7 @@ public enum PhysicalOperatorTag {
     TOKENIZE,
     UNION_ALL,
     UNNEST,
+    LEFT_OUTER_UNNEST,
     UPDATE,
     WRITE_RESULT,
     INTERSECT,

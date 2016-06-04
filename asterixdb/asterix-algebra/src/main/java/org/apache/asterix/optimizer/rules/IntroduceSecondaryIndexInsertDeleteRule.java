@@ -594,18 +594,18 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // create the smallest record
                     enforcedType = new ARecordType(splits.get(splits.size() - 2),
                             new String[] { splits.get(splits.size() - 1) },
-                            new IAType[] { AUnionType.createNullableType(index.getKeyFieldTypes().get(i)) }, true);
+                            new IAType[] { AUnionType.createUnknownableType(index.getKeyFieldTypes().get(i)) }, true);
                     // create the open part of the nested field
                     for (int k = splits.size() - 3; k > (j - 2); k--) {
                         enforcedType = new ARecordType(splits.get(k), new String[] { splits.get(k + 1) },
-                                new IAType[] { AUnionType.createNullableType(enforcedType) }, true);
+                                new IAType[] { AUnionType.createUnknownableType(enforcedType) }, true);
                     }
                     // Bridge the gap
                     Pair<ARecordType, String> gapPair = nestedTypeStack.pop();
                     ARecordType parent = gapPair.first;
 
                     IAType[] parentFieldTypes = ArrayUtils.addAll(parent.getFieldTypes().clone(),
-                            new IAType[] { AUnionType.createNullableType(enforcedType) });
+                            new IAType[] { AUnionType.createUnknownableType(enforcedType) });
                     enforcedType = new ARecordType(bridgeName,
                             ArrayUtils.addAll(parent.getFieldNames(), enforcedType.getTypeName()), parentFieldTypes,
                             true);
@@ -630,7 +630,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     }
                     if (enforcedFieldType == null) {
                         recordNameTypesMap.put(splits.get(splits.size() - 1),
-                                AUnionType.createNullableType(index.getKeyFieldTypes().get(i)));
+                                AUnionType.createUnknownableType(index.getKeyFieldTypes().get(i)));
                     }
                     enforcedType = new ARecordType(nestedFieldType.getTypeName(),
                             recordNameTypesMap.keySet().toArray(new String[recordNameTypesMap.size()]),

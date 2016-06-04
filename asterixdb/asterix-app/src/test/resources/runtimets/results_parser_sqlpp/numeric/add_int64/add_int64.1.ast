@@ -1,0 +1,108 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    OperatorExpr [
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+      +
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [+1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    OperatorExpr [
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+      +
+      FunctionCall null.int16@1[
+        LiteralExpr [STRING] [2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    OperatorExpr [
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+      +
+      FunctionCall null.int32@1[
+        LiteralExpr [STRING] [+3]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    OperatorExpr [
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+      +
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    OperatorExpr [
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+      +
+      FunctionCall null.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result6]
+    :
+    OperatorExpr [
+      FunctionCall null.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+      +
+      FunctionCall null.double@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result7]
+    :
+    OperatorExpr [
+      FunctionCall null.double@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+      +
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result8]
+    :
+    OperatorExpr [
+      FunctionCall null.double@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+      +
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [DOUBLE] [1.0]
+        ]
+        Index:         LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+]

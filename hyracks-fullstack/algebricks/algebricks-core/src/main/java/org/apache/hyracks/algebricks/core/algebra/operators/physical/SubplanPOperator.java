@@ -59,7 +59,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPhysicalPropertiesVector childsProperties = op2.getPhysicalOperator().getDeliveredProperties();
-        List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         if (childsProperties.getLocalProperties() != null) {
             propsLocal.addAll(childsProperties.getLocalProperties());
         }
@@ -84,21 +84,21 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         SubplanOperator subplan = (SubplanOperator) op;
         if (subplan.getNestedPlans().size() != 1) {
             throw new NotImplementedException("Subplan currently works only for one nested plan with one root.");
         }
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], subplan, opSchema, context);
-        assert (subplans.length == 1);
+        assert subplans.length == 1;
         AlgebricksPipeline np = subplans[0];
         RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
-        IMissingWriterFactory[] nullWriterFactories = new IMissingWriterFactory[np.getOutputWidth()];
-        for (int i = 0; i < nullWriterFactories.length; i++) {
-            nullWriterFactories[i] = context.getNullWriterFactory();
+        IMissingWriterFactory[] missingWriterFactories = new IMissingWriterFactory[np.getOutputWidth()];
+        for (int i = 0; i < missingWriterFactories.length; i++) {
+            missingWriterFactories[i] = context.getMissingWriterFactory();
         }
-        SubplanRuntimeFactory runtime = new SubplanRuntimeFactory(np, nullWriterFactories, inputRecordDesc, null);
+        SubplanRuntimeFactory runtime = new SubplanRuntimeFactory(np, missingWriterFactories, inputRecordDesc, null);
 
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(subplan, runtime, recDesc);

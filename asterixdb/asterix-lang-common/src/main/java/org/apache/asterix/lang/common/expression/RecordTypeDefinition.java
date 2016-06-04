@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.expression;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
@@ -35,15 +36,15 @@ public class RecordTypeDefinition extends TypeExpression {
     private ArrayList<String> fieldNames;
     private ArrayList<TypeExpression> fieldTypes;
     private ArrayList<IRecordFieldDataGen> fieldDataGen;
-    private ArrayList<Boolean> nullableFields;
+    private ArrayList<Boolean> optionalFields;
     private RecordKind recordKind;
     private UndeclaredFieldsDataGen undeclaredFieldsDataGen;
 
     public RecordTypeDefinition() {
-        fieldNames = new ArrayList<String>();
-        fieldTypes = new ArrayList<TypeExpression>();
-        nullableFields = new ArrayList<Boolean>();
-        fieldDataGen = new ArrayList<IRecordFieldDataGen>();
+        fieldNames = new ArrayList<>();
+        fieldTypes = new ArrayList<>();
+        optionalFields = new ArrayList<>();
+        fieldDataGen = new ArrayList<>();
     }
 
     @Override
@@ -54,29 +55,29 @@ public class RecordTypeDefinition extends TypeExpression {
     public void addField(String name, TypeExpression type, Boolean nullable, IRecordFieldDataGen fldDataGen) {
         fieldNames.add(name);
         fieldTypes.add(type);
-        nullableFields.add(nullable);
+        optionalFields.add(nullable);
         fieldDataGen.add(fldDataGen);
     }
 
-    public void addField(String name, TypeExpression type, Boolean nullable) {
+    public void addField(String name, TypeExpression type, Boolean optional) {
         fieldNames.add(name);
         fieldTypes.add(type);
-        nullableFields.add(nullable);
+        optionalFields.add(optional);
     }
 
-    public ArrayList<String> getFieldNames() {
+    public List<String> getFieldNames() {
         return fieldNames;
     }
 
-    public ArrayList<TypeExpression> getFieldTypes() {
+    public List<TypeExpression> getFieldTypes() {
         return fieldTypes;
     }
 
-    public ArrayList<Boolean> getNullableFields() {
-        return nullableFields;
+    public List<Boolean> getOptionableFields() {
+        return optionalFields;
     }
 
-    public ArrayList<IRecordFieldDataGen> getFieldDataGen() {
+    public List<IRecordFieldDataGen> getFieldDataGen() {
         return fieldDataGen;
     }
 

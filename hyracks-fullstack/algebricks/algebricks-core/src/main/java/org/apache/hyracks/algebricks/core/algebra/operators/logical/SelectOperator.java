@@ -60,11 +60,11 @@ public class SelectOperator extends AbstractLogicalOperator {
         return condition;
     }
 
-    public boolean getRetainNull() {
+    public boolean getRetainMissing() {
         return retainNull;
     }
 
-    public LogicalVariable getNullPlaceholderVariable() throws AlgebricksException {
+    public LogicalVariable getMissingPlaceholderVariable() throws AlgebricksException {
         return nullPlaceholderVar;
     }
 

@@ -26,7 +26,6 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -97,19 +96,11 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                             recBuilder.init();
                             for (int i = 0; i < evalFields.length; i++) {
                                 evalFields[i].evaluate(tuple, fieldValuePointable);
-                                byte[] data = fieldValuePointable.getByteArray();
-                                int offset = fieldValuePointable.getStartOffset();
                                 boolean openField = openFields[i];
-                                if (openField && data[offset] != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-                                    // MISSING for an open field means the field does not exist.
+                                if (openField) {
                                     evalNames[i].evaluate(tuple, fieldNamePointable);
                                     recBuilder.addField(fieldNamePointable, fieldValuePointable);
-                                }
-                                if (!openField && data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-                                    // Turns MISSING into NULL for a closed field.
-                                    data[offset] = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
-                                }
-                                if (!openField) {
+                                } else {
                                     recBuilder.addField(closedFieldId, fieldValuePointable);
                                     closedFieldId++;
                                 }

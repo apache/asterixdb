@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.IAObject;
@@ -108,10 +109,10 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             IAObject[] closedFields = null;
             if (numberOfSchemaFields > 0) {
                 in.readInt(); // read number of closed fields.
-                boolean hasNullableFields = NonTaggedFormatUtil.hasNullableField(this.recordType);
+                boolean hasOptionalFields = NonTaggedFormatUtil.hasOptionalField(this.recordType);
                 byte[] nullBitMap = null;
-                if (hasNullableFields) {
-                    int nullBitMapSize = (int) (Math.ceil(numberOfSchemaFields / 8.0));
+                if (hasOptionalFields) {
+                    int nullBitMapSize = (int) (Math.ceil(numberOfSchemaFields / 4.0));
                     nullBitMap = new byte[nullBitMapSize];
                     in.readFully(nullBitMap);
                 }
@@ -120,8 +121,12 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     in.readInt();
                 }
                 for (int fieldId = 0; fieldId < numberOfSchemaFields; fieldId++) {
-                    if (hasNullableFields && ((nullBitMap[fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)) {
+                    if (hasOptionalFields && ((nullBitMap[fieldId / 4] & (1 << (7 - 2 * (fieldId % 4)))) == 0)) {
                         closedFields[fieldId] = ANull.NULL;
+                        continue;
+                    }
+                    if (hasOptionalFields && ((nullBitMap[fieldId / 4] & (1 << (7 - 2 * (fieldId % 4) - 1))) == 0)) {
+                        closedFields[fieldId] = AMissing.MISSING;
                         continue;
                     }
                     closedFields[fieldId] = (IAObject) deserializers[fieldId].deserialize(in);
@@ -219,6 +224,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
 
     public static final int getFieldOffsetById(byte[] serRecord, int offset, int fieldId, int nullBitmapSize,
             boolean isOpen) {
+        byte nullTestCode = (byte) (1 << (7 - 2 * (fieldId % 4)));
+        byte missingTestCode = (byte) (1 << (7 - 2 * (fieldId % 4) - 1));
         if (isOpen) {
             if (serRecord[0 + offset] == ATypeTag.RECORD.serialize()) {
                 // 5 is the index of the byte that determines whether the record
@@ -227,9 +234,14 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     if (nullBitmapSize > 0) {
                         // 14 = tag (1) + record Size (4) + isExpanded (1) +
                         // offset of openPart (4) + number of closed fields (4)
-                        if ((serRecord[14 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0) {
+                        int pos = 14 + offset + fieldId / 4;
+                        if ((serRecord[pos] & nullTestCode) == 0) {
                             // the field value is null
                             return 0;
+                        }
+                        if ((serRecord[pos] & missingTestCode) == 0) {
+                            // the field value is missing
+                            return -1;
                         }
                     }
                     return offset + AInt32SerializerDeserializer.getInt(serRecord,
@@ -238,9 +250,14 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     if (nullBitmapSize > 0) {
                         // 9 = tag (1) + record Size (4) + isExpanded (1) +
                         // number of closed fields (4)
-                        if ((serRecord[10 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0) {
+                        int pos = 10 + offset + fieldId / 4;
+                        if ((serRecord[pos] & nullTestCode) == 0) {
                             // the field value is null
                             return 0;
+                        }
+                        if ((serRecord[pos] & missingTestCode) == 0) {
+                            // the field value is missing
+                            return -1;
                         }
                     }
                     return offset + AInt32SerializerDeserializer.getInt(serRecord,
@@ -250,27 +267,34 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 return -1;
             }
         } else {
-            if (serRecord[offset] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                if (nullBitmapSize > 0) {
-                    // 9 = tag (1) + record Size (4) + number of closed fields
-                    // (4)
-                    if ((serRecord[9 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0) {
-                        // the field value is null
-                        return 0;
-                    }
-                }
-                return offset
-                        + AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
-            } else {
-                return -1;
+            if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                return Integer.MIN_VALUE;
             }
+            if (nullBitmapSize > 0) {
+                // 9 = tag (1) + record Size (4) + number of closed fields
+                // (4)
+                int pos = 9 + offset + fieldId / 4;
+                if ((serRecord[pos] & nullTestCode) == 0) {
+                    // the field value is null
+                    return 0;
+                }
+                if ((serRecord[pos] & missingTestCode) == 0) {
+                    // the field value is missing
+                    return -1;
+                }
+            }
+            return offset + AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
         }
     }
 
     public static final int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart)
             throws HyracksDataException {
-        int openPartOffset = 0;
+        int openPartOffset;
         if (serRecord[start] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+            if (len <= 5) {
+                // Empty record
+                return -1;
+            }
             // 5 is the index of the byte that determines whether the record is
             // expanded or not, i.e. it has an open part.
             if (serRecord[start + 5] == 1) { // true

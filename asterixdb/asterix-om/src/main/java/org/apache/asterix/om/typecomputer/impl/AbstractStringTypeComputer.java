@@ -22,6 +22,7 @@ import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 abstract public class AbstractStringTypeComputer extends AbstractResultTypeComputer {
 
@@ -34,5 +35,6 @@ abstract public class AbstractStringTypeComputer extends AbstractResultTypeCompu
     }
 
     @Override
-    protected abstract IAType getResultType(IAType... strippedInputTypes);
+    protected abstract IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes)
+            throws AlgebricksException;
 }

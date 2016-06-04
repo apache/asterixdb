@@ -74,12 +74,12 @@ public final class NonTaggedFormatUtil {
         }
     }
 
-    public static final boolean hasNullableField(ARecordType recType) {
+    public static final boolean hasOptionalField(ARecordType recType) {
         for (int i = 0; i < recType.getFieldTypes().length; i++) {
             IAType type = recType.getFieldTypes()[i];
             if (type != null) {
                 ATypeTag tag = type.getTypeTag();
-                if (tag == ATypeTag.NULL) {
+                if (tag == ATypeTag.NULL || tag == ATypeTag.MISSING) {
                     return true;
                 }
                 if (tag != ATypeTag.UNION) {

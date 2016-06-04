@@ -57,9 +57,9 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     };
 
     // access results: field names, field types, and field values
-    private final List<IVisitablePointable> fieldNames = new ArrayList<IVisitablePointable>();
-    private final List<IVisitablePointable> fieldTypeTags = new ArrayList<IVisitablePointable>();
-    private final List<IVisitablePointable> fieldValues = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> fieldNames = new ArrayList<>();
+    private final List<IVisitablePointable> fieldTypeTags = new ArrayList<>();
+    private final List<IVisitablePointable> fieldValues = new ArrayList<>();
 
     // pointable allocator
     private final PointableAllocator allocator = new PointableAllocator();
@@ -76,6 +76,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     private final int numberOfSchemaFields;
     private final int[] fieldOffsets;
     private final IVisitablePointable nullReference = AFlatValuePointable.FACTORY.create(null);
+    private final IVisitablePointable missingReference = AFlatValuePointable.FACTORY.create(null);
 
     private int closedPartTypeInfoSize = 0;
     private int offsetArrayOffset;
@@ -127,6 +128,12 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
             typeDos.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             int nullFieldEnd = typeBos.size();
             nullReference.set(typeBos.getByteArray(), nullFieldStart, nullFieldEnd - nullFieldStart);
+
+            // initialize a constant: missing value bytes reference
+            int missingFieldStart = typeBos.size();
+            typeDos.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+            int missingFieldEnd = typeBos.size();
+            missingReference.set(typeBos.getByteArray(), missingFieldStart, missingFieldEnd - missingFieldStart);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -181,11 +188,11 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
             if (numberOfSchemaFields > 0) {
                 s += 4;
                 int nullBitMapOffset = 0;
-                boolean hasNullableFields = NonTaggedFormatUtil.hasNullableField(inputRecType);
-                if (hasNullableFields) {
+                boolean hasOptionalFields = NonTaggedFormatUtil.hasOptionalField(inputRecType);
+                if (hasOptionalFields) {
                     nullBitMapOffset = s;
-                    offsetArrayOffset = s + (this.numberOfSchemaFields % 8 == 0 ? numberOfSchemaFields / 8
-                            : numberOfSchemaFields / 8 + 1);
+                    offsetArrayOffset = s + (this.numberOfSchemaFields % 4 == 0 ? numberOfSchemaFields / 4
+                            : numberOfSchemaFields / 4 + 1);
                 } else {
                     offsetArrayOffset = s;
                 }
@@ -194,12 +201,18 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     offsetArrayOffset += 4;
                 }
                 for (int fieldNumber = 0; fieldNumber < numberOfSchemaFields; fieldNumber++) {
-                    if (hasNullableFields) {
-                        byte b1 = b[nullBitMapOffset + fieldNumber / 8];
-                        int p = 1 << (7 - (fieldNumber % 8));
+                    if (hasOptionalFields) {
+                        byte b1 = b[nullBitMapOffset + fieldNumber / 4];
+                        int p = 1 << (7 - 2 * (fieldNumber % 4));
                         if ((b1 & p) == 0) {
                             // set null value (including type tag inside)
                             fieldValues.add(nullReference);
+                            continue;
+                        }
+                        p = 1 << (7 - 2 * (fieldNumber % 4) - 1);
+                        if ((b1 & p) == 0) {
+                            // set missing value (including type tag inside)
+                            fieldValues.add(missingReference);
                             continue;
                         }
                     }

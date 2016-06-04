@@ -69,7 +69,7 @@ public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
                 envPointers);
         List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars); // live variables from outer branch can be null together
-        env.getCorrelatedNullableVariableLists().add(liveVars);
+        env.getCorrelatedMissableVariableLists().add(liveVars);
         return env;
     }
 

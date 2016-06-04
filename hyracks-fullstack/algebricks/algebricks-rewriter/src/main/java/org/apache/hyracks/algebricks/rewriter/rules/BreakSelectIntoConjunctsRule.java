@@ -68,7 +68,7 @@ public class BreakSelectIntoConjunctsRule implements IAlgebraicRewriteRule {
                 firstExpr = e;
             } else {
                 SelectOperator newSelect = new SelectOperator(new MutableObject<ILogicalExpression>(e),
-                        select.getRetainNull(), select.getNullPlaceholderVariable());
+                        select.getRetainMissing(), select.getMissingPlaceholderVariable());
                 List<Mutable<ILogicalOperator>> botInpList = botOp.getInputs();
                 botInpList.clear();
                 botInpList.add(new MutableObject<ILogicalOperator>(newSelect));

@@ -24,14 +24,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -214,8 +214,8 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                         }
                     }
                 }
-                throw new AlgebricksException("Field access " + getFirstExpr(a2)
-                        + " does not correspond to any input of operator " + topOp);
+                throw new AlgebricksException(
+                        "Field access " + getFirstExpr(a2) + " does not correspond to any input of operator " + topOp);
             }
         }
     }
@@ -242,8 +242,6 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
      * into
      * assign $x := Expr
      * assign $y := record-constructor { "field": Expr, ... }
-     *
-     * @param toPush
      */
     private static boolean findAndEliminateRedundantFieldAccess(AssignOperator assign) throws AlgebricksException {
         ILogicalExpression expr = getFirstExpr(assign);
@@ -259,89 +257,110 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             return false;
         }
         ConstantExpression ce = (ConstantExpression) arg1;
+        ILogicalExpression fldExpr;
         if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
             String fldName = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
-            ILogicalExpression fldExpr = findFieldExpression(assign, recordVar, fldName);
-
-            if (fldExpr != null) {
-                // check the liveness of the new expression
-                List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();
-                fldExpr.getUsedVariables(usedVariables);
-                List<LogicalVariable> liveInputVars = new ArrayList<LogicalVariable>();
-                VariableUtilities.getLiveVariables(assign, liveInputVars);
-                usedVariables.removeAll(liveInputVars);
-                if (usedVariables.size() == 0) {
-                    assign.getExpressions().get(0).setValue(fldExpr);
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
+            fldExpr = findFieldExpression(assign, recordVar, fldName,
+                    LoadRecordFieldsRule::findFieldByNameFromRecordConstructor);
         } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
-            // int fldIdx = ((IntegerLiteral) ce.getValue()).getValue();
-            // TODO
-            return false;
+            Integer fldIdx = ((AInt32) ((AsterixConstantValue) ce.getValue()).getObject()).getIntegerValue();
+            fldExpr = findFieldExpression(assign, recordVar, fldIdx,
+                    LoadRecordFieldsRule::findFieldByIndexFromRecordConstructor);
         } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
             return false;
         } else {
             throw new IllegalStateException();
         }
+
+        if (fldExpr == null) {
+            return false;
+        }
+        // check the liveness of the new expression
+        List<LogicalVariable> usedVariables = new ArrayList<>();
+        fldExpr.getUsedVariables(usedVariables);
+        List<LogicalVariable> liveInputVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(assign, liveInputVars);
+        usedVariables.removeAll(liveInputVars);
+        if (usedVariables.isEmpty()) {
+            assign.getExpressions().get(0).setValue(fldExpr);
+            return true;
+        } else {
+            return false;
+        }
     }
 
+    @FunctionalInterface
+    private interface FieldResolver {
+        public ILogicalExpression resolve(Object accessKey, AbstractFunctionCallExpression funcExpr);
+    }
+
+    // Finds a field expression.
     private static ILogicalExpression findFieldExpression(AbstractLogicalOperator op, LogicalVariable recordVar,
-            String fldName) {
+            Object accessKey, FieldResolver resolver) {
         for (Mutable<ILogicalOperator> child : op.getInputs()) {
             AbstractLogicalOperator opChild = (AbstractLogicalOperator) child.getValue();
             if (opChild.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                 AssignOperator op2 = (AssignOperator) opChild;
-                int i = 0;
-                for (LogicalVariable var : op2.getVariables()) {
-                    if (var == recordVar) {
-                        AbstractLogicalExpression constr = (AbstractLogicalExpression) op2.getExpressions().get(i)
-                                .getValue();
-                        if (constr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                            return null;
-                        }
-                        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) constr;
-                        if (!fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
-                                && !fce.getFunctionIdentifier().equals(
-                                        AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
-                            return null;
-                        }
-                        Iterator<Mutable<ILogicalExpression>> fldIter = fce.getArguments().iterator();
-                        while (fldIter.hasNext()) {
-                            ILogicalExpression fldExpr = fldIter.next().getValue();
-                            if (fldExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                                ConstantExpression ce = (ConstantExpression) fldExpr;
-                                String f2 = ((AString) ((AsterixConstantValue) ce.getValue()).getObject())
-                                        .getStringValue();
-                                if (fldName.equals(f2)) {
-                                    return fldIter.next().getValue();
-                                }
-                            }
-                            fldIter.next();
-                        }
-                        return null;
-                    }
-                    i++;
+                int i = op2.getVariables().indexOf(recordVar);
+                if (i >= 0) {
+                    AbstractLogicalExpression constr = (AbstractLogicalExpression) op2.getExpressions().get(i)
+                            .getValue();
+                    return resolveFieldExpression(constr, accessKey, resolver);
                 }
             } else if (opChild.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
                 NestedTupleSourceOperator nts = (NestedTupleSourceOperator) opChild;
                 AbstractLogicalOperator opBelowNestedPlan = (AbstractLogicalOperator) nts.getDataSourceReference()
                         .getValue().getInputs().get(0).getValue();
-                ILogicalExpression expr1 = findFieldExpression(opBelowNestedPlan, recordVar, fldName);
+                ILogicalExpression expr1 = findFieldExpression(opBelowNestedPlan, recordVar, accessKey, resolver);
                 if (expr1 != null) {
                     return expr1;
                 }
             }
-            ILogicalExpression expr2 = findFieldExpression(opChild, recordVar, fldName);
+            ILogicalExpression expr2 = findFieldExpression(opChild, recordVar, accessKey, resolver);
             if (expr2 != null) {
                 return expr2;
             }
         }
         return null;
+    }
+
+    // Resolves field expression from an access key and a field resolver.
+    private static ILogicalExpression resolveFieldExpression(AbstractLogicalExpression constr, Object accessKey,
+            FieldResolver resolver) {
+        if (constr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return null;
+        }
+        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) constr;
+        if (!fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
+                && !fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
+            return null;
+        }
+        return resolver.resolve(accessKey, fce);
+    }
+
+    // Resolves field expression by name-based access.
+    private static ILogicalExpression findFieldByNameFromRecordConstructor(Object fldName,
+            AbstractFunctionCallExpression fce) {
+        Iterator<Mutable<ILogicalExpression>> fldIter = fce.getArguments().iterator();
+        while (fldIter.hasNext()) {
+            ILogicalExpression fldExpr = fldIter.next().getValue();
+            if (fldExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                ConstantExpression ce = (ConstantExpression) fldExpr;
+                String f2 = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
+                if (fldName.equals(f2)) {
+                    return fldIter.next().getValue();
+                }
+            }
+            fldIter.next();
+        }
+        return null;
+    }
+
+    // Resolves field expression by index-based access.
+    private static ILogicalExpression findFieldByIndexFromRecordConstructor(Object index,
+            AbstractFunctionCallExpression fce) {
+        Integer fieldIndex = (Integer) index;
+        return fce.getArguments().size() > fieldIndex ? fce.getArguments().get(2 * fieldIndex + 1).getValue() : null;
     }
 
     private final class ExtractFieldLoadExpressionVisitor implements ILogicalExpressionReferenceTransform {

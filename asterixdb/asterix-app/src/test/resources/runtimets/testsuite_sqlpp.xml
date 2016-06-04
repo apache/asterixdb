@@ -927,6 +927,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="double_missing">
+        <output-dir compare="Text">double_missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="double_null">
         <output-dir compare="Text">double_null</output-dir>
       </compilation-unit>
@@ -939,6 +944,11 @@
     <test-case FilePath="comparison">
       <compilation-unit name="float">
         <output-dir compare="Text">float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="float_missing">
+        <output-dir compare="Text">float_missing</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -962,6 +972,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="int16_missing">
+        <output-dir compare="Text">int16_missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="int16_null">
         <output-dir compare="Text">int16_null</output-dir>
       </compilation-unit>
@@ -969,6 +984,11 @@
     <test-case FilePath="comparison">
       <compilation-unit name="int32">
         <output-dir compare="Text">int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int32_missing">
+        <output-dir compare="Text">int32_missing</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -982,6 +1002,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="int64_missing">
+        <output-dir compare="Text">int64_missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="int64_null">
         <output-dir compare="Text">int64_null</output-dir>
       </compilation-unit>
@@ -989,6 +1014,11 @@
     <test-case FilePath="comparison">
       <compilation-unit name="int8">
         <output-dir compare="Text">int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int8_missing">
+        <output-dir compare="Text">int8_missing</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -1021,6 +1051,11 @@
     <test-case FilePath="comparison">
       <compilation-unit name="string">
         <output-dir compare="Text">string</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="string_missing">
+        <output-dir compare="Text">string_missing</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -2277,7 +2312,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unsupported type</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: The first argument should be a RECORD, but it is</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -3601,6 +3636,11 @@
     <test-case FilePath="null-missing">
       <compilation-unit name="ceil">
         <output-dir compare="Text">ceil</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="comparison">
+        <output-dir compare="Text">comparison</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">
@@ -6704,6 +6744,16 @@
   </test-group>
   <test-group name="leftouterjoin">
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="loj-01-core">
+        <output-dir compare="Text">loj-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="loj-01-sugar">
+        <output-dir compare="Text">loj-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue658">
         <output-dir compare="Text">query_issue658</output-dir>
       </compilation-unit>
@@ -7163,6 +7213,16 @@
     <test-case FilePath="temp-dataset">
       <compilation-unit name="insert-and-scan-dataset-with-index">
         <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="unnest">
+      <compilation-unit name="left-outer-unnest">
+        <output-dir compare="Text">left-outer-unnest</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="unnest">
+      <compilation-unit name="left-outer-unnest-with-pos">
+        <output-dir compare="Text">left-outer-unnest-with-pos</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -20,6 +20,8 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class StringStringTypeComputer extends AbstractStringTypeComputer {
     public static final StringStringTypeComputer INSTANCE = new StringStringTypeComputer();
@@ -28,7 +30,7 @@ public class StringStringTypeComputer extends AbstractStringTypeComputer {
     }
 
     @Override
-    public IAType getResultType(IAType... inputTypes) {
+    public IAType getResultType(ILogicalExpression expr, IAType... inputTypes) throws AlgebricksException {
         return BuiltinType.ASTRING;
     }
 

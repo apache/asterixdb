@@ -18,22 +18,23 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.std;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
-import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
@@ -43,23 +44,19 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
     private final int outCol;
     private final IUnnestingEvaluatorFactory unnestingFactory;
-    private int outColPos;
-    private final boolean outColIsProjected;
-
+    private final boolean unnestColIsProjected;
     private final IUnnestingPositionWriter positionWriter;
-    private IScalarEvaluatorFactory posOffsetEvalFactory;
+    private final boolean leftOuter;
+    private final IMissingWriterFactory missingWriterFactory;
+    private int outColPos;
 
-    // Each time step() is called on the aggregate, a new value is written in
-    // its output. One byte is written before that value and is neglected.
-    // By convention, if the aggregate function writes nothing, it means it
-    // produced the last value.
-
-    public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList) {
-        this(outCol, unnestingFactory, projectionList, null, null);
+    public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList,
+            boolean leftOuter, IMissingWriterFactory missingWriterFactory) {
+        this(outCol, unnestingFactory, projectionList, null, leftOuter, missingWriterFactory);
     }
 
     public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList,
-            IUnnestingPositionWriter positionWriter, IScalarEvaluatorFactory posOffsetEvalFactory) {
+            IUnnestingPositionWriter positionWriter, boolean leftOuter, IMissingWriterFactory missingWriterFactory) {
         super(projectionList);
         this.outCol = outCol;
         this.unnestingFactory = unnestingFactory;
@@ -69,12 +66,10 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 outColPos = f;
             }
         }
-        outColIsProjected = outColPos >= 0;
+        unnestColIsProjected = outColPos >= 0;
         this.positionWriter = positionWriter;
-        this.posOffsetEvalFactory = posOffsetEvalFactory;
-        if (this.posOffsetEvalFactory == null) {
-            this.posOffsetEvalFactory = new ConstantEvalFactory(new byte[5]);
-        }
+        this.leftOuter = leftOuter;
+        this.missingWriterFactory = missingWriterFactory;
     }
 
     @Override
@@ -85,23 +80,27 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
-
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutput output = new DataOutputStream(bos);
+        if (missingWriterFactory != null) {
+            IMissingWriter missingWriter = missingWriterFactory.createMissingWriter();
+            try {
+                missingWriter.writeMissing(output);
+            } catch (HyracksDataException e) {
+                throw new AlgebricksException(e);
+            }
+        }
+        byte[] missingBytes = bos.toByteArray();
+        int missingBytesLen = bos.size();
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
-            private IUnnestingEvaluator unnest;
             private ArrayTupleBuilder tupleBuilder;
-
-            private IScalarEvaluator offsetEval = posOffsetEvalFactory.createScalarEvaluator(ctx);
+            private IUnnestingEvaluator unnest = unnestingFactory.createUnnestingEvaluator(ctx);
 
             @Override
             public void open() throws HyracksDataException {
                 writer.open();
                 initAccessAppendRef(ctx);
-                try {
-                    unnest = unnestingFactory.createUnnestingEvaluator(ctx);
-                } catch (AlgebricksException ae) {
-                    throw new HyracksDataException(ae);
-                }
                 tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             }
 
@@ -112,52 +111,65 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
                     try {
-                        offsetEval.evaluate(tRef, p);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
-                    int offset = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
-                    try {
                         unnest.init(tRef);
-                        // assume that when unnesting the tuple, each step() call for each element
-                        // in the tuple will increase the positionIndex, and the positionIndex will
-                        // be reset when a new tuple is to be processed.
-                        int positionIndex = 1;
-                        boolean goon = true;
-                        do {
-                            tupleBuilder.reset();
-                            if (!unnest.step(p)) {
-                                goon = false;
-                            } else {
-
-                                if (!outColIsProjected && positionWriter == null) {
-                                    appendProjectionToFrame(t, projectionList);
-                                } else {
-                                    for (int f = 0; f < outColPos; f++) {
-                                        tupleBuilder.addField(tAccess, t, f);
-                                    }
-                                    if (outColIsProjected) {
-                                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
-                                    } else {
-                                        tupleBuilder.addField(tAccess, t, outColPos);
-                                    }
-                                    for (int f = outColPos + 1; f < (positionWriter != null ? projectionList.length - 1
-                                            : projectionList.length); f++) {
-                                        tupleBuilder.addField(tAccess, t, f);
-                                    }
-                                }
-                                if (positionWriter != null) {
-                                    // Write the positional variable
-                                    positionWriter.write(tupleBuilder.getDataOutput(), offset + positionIndex++);
-                                    tupleBuilder.addFieldEndOffset();
-                                }
-                                appendToFrameFromTupleBuilder(tupleBuilder);
-                            }
-                        } while (goon);
+                        unnesting(t);
                     } catch (AlgebricksException | IOException ae) {
                         throw new HyracksDataException(ae);
                     }
                 }
+            }
+
+            private void unnesting(int t) throws AlgebricksException, IOException {
+                // Assumes that when unnesting the tuple, each step() call for each element
+                // in the tuple will increase the positionIndex, and the positionIndex will
+                // be reset when a new tuple is to be processed.
+                int positionIndex = 1;
+                boolean emitted = false;
+                do {
+                    if (!unnest.step(p)) {
+                        break;
+                    }
+                    writeOutput(t, positionIndex++, false);
+                    emitted = true;
+                } while (true);
+                if (leftOuter && !emitted) {
+                    writeOutput(t, -1, true);
+                }
+            }
+
+            private void writeOutput(int t, int positionIndex, boolean missing)
+                    throws HyracksDataException, IOException {
+                if (!unnestColIsProjected && positionWriter == null) {
+                    appendProjectionToFrame(t, projectionList);
+                    appendToFrameFromTupleBuilder(tupleBuilder);
+                    return;
+                }
+
+                tupleBuilder.reset();
+                for (int f = 0; f < outColPos; f++) {
+                    tupleBuilder.addField(tAccess, t, f);
+                }
+                if (unnestColIsProjected) {
+                    if (missing) {
+                        tupleBuilder.addField(missingBytes, 0, missingBytesLen);
+                    } else {
+                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
+                    }
+                }
+                for (int f = unnestColIsProjected ? outColPos + 1 : outColPos; f < (positionWriter != null
+                        ? projectionList.length - 1 : projectionList.length); f++) {
+                    tupleBuilder.addField(tAccess, t, f);
+                }
+                if (positionWriter != null) {
+                    // Write the positional variable
+                    if (missing) {
+                        tupleBuilder.addField(missingBytes, 0, missingBytesLen);
+                    } else {
+                        positionWriter.write(tupleBuilder.getDataOutput(), positionIndex);
+                        tupleBuilder.addFieldEndOffset();
+                    }
+                }
+                appendToFrameFromTupleBuilder(tupleBuilder);
             }
 
             @Override
@@ -166,5 +178,4 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             }
         };
     }
-
 }

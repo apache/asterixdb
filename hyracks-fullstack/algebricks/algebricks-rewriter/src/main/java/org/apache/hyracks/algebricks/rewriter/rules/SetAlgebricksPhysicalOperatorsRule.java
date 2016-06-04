@@ -65,6 +65,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexBulklo
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexInsertDeleteUpsertPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InsertDeleteUpsertPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IntersectPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.LeftOuterUnnestPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
@@ -261,6 +262,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     op.setPhysicalOperator(new UnnestPOperator());
                     break;
                 }
+                case LEFT_OUTER_UNNEST:
+                    op.setPhysicalOperator(new LeftOuterUnnestPOperator());
+                    break;
                 case DATASOURCESCAN: {
                     DataSourceScanOperator scan = (DataSourceScanOperator) op;
                     IDataSource dataSource = scan.getDataSource();

@@ -184,30 +184,24 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
         private static boolean isClosed(IAType t) throws AlgebricksException {
             switch (t.getTypeTag()) {
                 case MISSING:
-                case ANY: {
+                case ANY:
                     return false;
-                }
-                case SHORTWITHOUTTYPEINFO: {
+                case SHORTWITHOUTTYPEINFO:
                     return true;
-                }
-                case RECORD: {
+                case RECORD:
                     return !((ARecordType) t).isOpen();
-                }
-                case UNION: {
+                case UNION:
                     AUnionType ut = (AUnionType) t;
                     if (!isClosed(ut.getActualType())) {
                         return false;
                     }
                     return true;
-                }
-                case ORDEREDLIST: {
+                case ORDEREDLIST:
                     AOrderedListType ol = (AOrderedListType) t;
                     return isClosed(ol.getItemType());
-                }
-                case UNORDEREDLIST: {
+                case UNORDEREDLIST:
                     AUnorderedListType ul = (AUnorderedListType) t;
                     return isClosed(ul.getItemType());
-                }
                 default:
                     return true;
             }

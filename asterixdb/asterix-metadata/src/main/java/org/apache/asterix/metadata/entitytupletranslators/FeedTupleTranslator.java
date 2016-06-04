@@ -39,6 +39,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
@@ -93,7 +94,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
         Object o = feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_FUNCTION_FIELD_INDEX);
         FunctionSignature signature = null;
-        if (!(o instanceof ANull)) {
+        if (!(o instanceof ANull) && !(o instanceof AMissing)) {
             String functionName = ((AString) o).getStringValue();
             signature = new FunctionSignature(dataverseName, functionName, 1);
         }

@@ -174,7 +174,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                     IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1]
                             .getSize()];
                     for (int j = 0; j < nonMatchWriterFactories.length; j++) {
-                        nonMatchWriterFactories[j] = context.getNullWriterFactory();
+                        nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                     }
                     opDesc = new HybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(), maxInputBuildSizeInFrames,
                             aveRecordsPerFrame, getFudgeFactor(), keysLeft, keysRight, hashFunFactories,
@@ -208,7 +208,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                     IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1]
                             .getSize()];
                     for (int j = 0; j < nonMatchWriterFactories.length; j++) {
-                        nonMatchWriterFactories[j] = context.getNullWriterFactory();
+                        nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                     }
                     opDesc = new OptimizedHybridHashJoinOperatorDescriptor(spec, getMemSizeInFrames(),
                             maxInputBuildSizeInFrames, getFudgeFactor(), keysLeft, keysRight, hashFunFamilies,

@@ -95,7 +95,6 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                  * pattern match: sink insert assign
                  * resulting plan: sink-insert-project-assign
                  */
-
                 AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
                 if (op2.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
                     InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op2;
@@ -113,7 +112,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
                     // Derive the Variable which we will potentially wrap with cast/null functions
                     ILogicalExpression expr = insertDeleteOperator.getPayloadExpression().getValue();
-                    List<LogicalVariable> payloadVars = new ArrayList<LogicalVariable>();
+                    List<LogicalVariable> payloadVars = new ArrayList<>();
                     expr.getUsedVariables(payloadVars);
                     recordVar = payloadVars.get(0);
                 } else {
@@ -140,14 +139,13 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                             "output-record-type defined for expression with multiple input operators");
                 }
                 AbstractLogicalOperator input = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-                List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+                List<LogicalVariable> liveVars = new ArrayList<>();
                 VariableUtilities.getLiveVariables(input, liveVars);
                 if (liveVars.size() > 1) {
                     throw new AlgebricksException(
                             "Expression with multiple fields cannot be cast to output-record-type!");
                 }
                 recordVar = liveVars.get(0);
-
                 break;
             }
             default: {

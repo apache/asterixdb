@@ -154,7 +154,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInvertedIndexRuntime(
             AqlMetadataProvider metadataProvider, JobGenContext context, JobSpecification jobSpec,
-            AbstractUnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainNull,
+            AbstractUnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainMissing,
             String datasetName, Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) throws AlgebricksException {
@@ -285,7 +285,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
                     appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                     invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
-                    searchModifierFactory, outputRecDesc, retainInput, retainNull, context.getNullWriterFactory(),
+                    searchModifierFactory, outputRecDesc, retainInput, retainMissing, context.getMissingWriterFactory(),
                     NoOpOperationCallbackFactory.INSTANCE, minFilterFieldIndexes, maxFilterFieldIndexes);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(invIndexSearchOp,

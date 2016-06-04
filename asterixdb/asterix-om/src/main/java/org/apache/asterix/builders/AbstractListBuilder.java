@@ -71,9 +71,6 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
         }
         headerSize = 2;
         metadataInfoSize = 8;
-        if (itemTypeTag == ATypeTag.MISSING) {
-            itemTypeTag = ATypeTag.NULL;
-        }
     }
 
     @Override
@@ -84,26 +81,30 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
             int len = item.getLength();
 
             byte serializedTypeTag = data[start];
-            if (serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-                // NULL in a list is MISSING.
-                serializedTypeTag = ATypeTag.SERIALIZED_NULL_TYPE_TAG;
-            }
-
-            if (!fixedSize && (serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG || itemTypeTag == ATypeTag.ANY)) {
+            if (!fixedSize && ((serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    && serializedTypeTag != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) || itemTypeTag == ATypeTag.ANY)) {
                 this.offsets.add(outputStorage.getLength());
             }
-            if (itemTypeTag == ATypeTag.ANY
-                    || (itemTypeTag == ATypeTag.NULL && serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+            if (toWriteTag(serializedTypeTag)) {
                 this.numberOfItems++;
                 this.outputStream.write(serializedTypeTag);
                 this.outputStream.write(data, start + 1, len - 1);
-            } else if (serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            } else if (serializedTypeTag != ATypeTag.SERIALIZED_NULL_TYPE_TAG
+                    && serializedTypeTag != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
                 this.numberOfItems++;
                 this.outputStream.write(data, start + 1, len - 1);
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    private boolean toWriteTag(byte serializedTypeTag) {
+        boolean toWriteTag = itemTypeTag == ATypeTag.ANY;
+        toWriteTag = toWriteTag
+                || (itemTypeTag == ATypeTag.NULL && serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+        return toWriteTag
+                || (itemTypeTag == ATypeTag.MISSING && serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
     }
 
     @Override

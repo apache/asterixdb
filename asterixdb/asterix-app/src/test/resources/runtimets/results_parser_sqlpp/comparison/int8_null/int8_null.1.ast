@@ -1,0 +1,69 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    OperatorExpr [
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [3]
+      ]
+      >
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      >=
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [3]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    OperatorExpr [
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [3]
+      ]
+      <
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      <=
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [3]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    OperatorExpr [
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [3]
+      ]
+      =
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result6]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      !=
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [3]
+      ]
+    ]
+  )
+]

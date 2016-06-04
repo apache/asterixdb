@@ -28,6 +28,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericRoundHalfToEven2TypeComputer extends AbstractResultTypeComputer {
 
@@ -68,7 +69,7 @@ public class NumericRoundHalfToEven2TypeComputer extends AbstractResultTypeCompu
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
         switch (tag) {
             case INT8:

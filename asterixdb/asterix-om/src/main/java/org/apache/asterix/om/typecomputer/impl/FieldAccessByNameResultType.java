@@ -19,24 +19,20 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class FieldAccessByNameResultType implements IResultTypeComputer {
+public class FieldAccessByNameResultType extends AbstractResultTypeComputer {
 
     public static final FieldAccessByNameResultType INSTANCE = new FieldAccessByNameResultType();
 
@@ -44,57 +40,31 @@ public class FieldAccessByNameResultType implements IResultTypeComputer {
     }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        Object obj = env.getType(f.getArguments().get(0).getValue());
-
-        if (obj == null) {
-            return null;
+    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+        if (argIndex == 0 && type.getTypeTag() != ATypeTag.RECORD) {
+            throw new AlgebricksException("The first argument should be a RECORD, but it is " + type + ".");
         }
-        IAType type0 = (IAType) obj;
-        ARecordType t0 = getRecordTypeFromType(type0, expression);
-        if (t0 == null) {
+        if (argIndex == 1 && type.getTypeTag() != ATypeTag.STRING) {
+            throw new AlgebricksException("The second argument should be an STRING, but it is found " + type + ".");
+        }
+    }
+
+    @Override
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        IAType firstArgType = strippedInputTypes[0];
+        if (firstArgType.getTypeTag() != ATypeTag.RECORD) {
             return BuiltinType.ANY;
         }
-
-        AbstractLogicalExpression arg1 = (AbstractLogicalExpression) f.getArguments().get(1).getValue();
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
+            return BuiltinType.ANY;
         }
-
         ConstantExpression ce = (ConstantExpression) arg1;
-        String typeName = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
-        for (int i = 0; i < t0.getFieldNames().length; i++) {
-            if (t0.getFieldNames()[i].equals(typeName)) {
-                return t0.getFieldTypes()[i];
-            }
-        }
-        return BuiltinType.ANY;
+        IAObject v = ((AsterixConstantValue) ce.getValue()).getObject();
+        String fieldName = ((AString) v).getStringValue();
+        ARecordType recType = (ARecordType) firstArgType;
+        IAType fieldType = recType.getFieldType(fieldName);
+        return fieldType == null ? BuiltinType.ANY : fieldType;
     }
-
-    static ARecordType getRecordTypeFromType(IAType type0, ILogicalExpression expression) throws AlgebricksException {
-        switch (type0.getTypeTag()) {
-            case RECORD:
-                return (ARecordType) type0;
-            case ANY:
-                return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
-            case UNION:
-                AUnionType u = (AUnionType) type0;
-                IAType t1 = u.getActualType();
-                if (t1.getTypeTag() == ATypeTag.RECORD) {
-                    return (ARecordType) t1;
-                } else if (t1.getTypeTag() == ATypeTag.ANY) {
-                    return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
-                } else {
-                    throw new AlgebricksException(
-                            "Unsupported type " + type0 + " for field access expression: " + expression);
-                }
-            default:
-                throw new AlgebricksException(
-                        "Unsupported type " + type0 + " for field access expression: " + expression);
-        }
-
-    }
-
 }

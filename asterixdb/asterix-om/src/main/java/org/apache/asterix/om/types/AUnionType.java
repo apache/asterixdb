@@ -116,20 +116,10 @@ public class AUnionType extends AbstractComplexType {
         return new AUnionType(unionList, typeName);
     }
 
-    public static IAType createNullableType(IAType t) {
-        if (t != null && t.getTypeTag() == ATypeTag.NULL) {
-            return t;
-        }
-        String s = t != null ? t.getTypeName() : null;
-        return createNullableType(t, s == null ? null : s + "?");
-    }
-
     public static IAType createUnknownableType(IAType type, String typeName) {
-        List<IAType> unionList = new ArrayList<>();
-        unionList.add(type);
-        unionList.add(BuiltinType.ANULL);
-        unionList.add(BuiltinType.AMISSING);
-        return new AUnionType(unionList, typeName);
+        IAType resultType = createNullableType(type, typeName);
+        resultType = createMissableType(resultType, typeName);
+        return resultType;
     }
 
     public static IAType createUnknownableType(IAType t) {

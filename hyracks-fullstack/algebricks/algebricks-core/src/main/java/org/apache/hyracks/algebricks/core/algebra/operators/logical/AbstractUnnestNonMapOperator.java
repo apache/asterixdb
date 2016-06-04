@@ -20,6 +20,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -31,11 +32,6 @@ import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
 public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperator {
 
     protected LogicalVariable positionalVariable;
-
-    /**
-     * Used to set the position offset for positional variable
-     */
-    protected ILogicalExpression positionOffsetExpr;
 
     /**
      * Specify the writer of the positional variable
@@ -88,16 +84,8 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
         return positionalVariableType;
     }
 
-    public void setPositionOffsetExpr(ILogicalExpression posOffsetExpr) {
-        this.positionOffsetExpr = posOffsetExpr;
-    }
-
-    public ILogicalExpression getPositionOffsetExpr() {
-        return this.positionOffsetExpr;
-    }
-
-    protected static <E> ArrayList<E> makeSingletonList(E item) {
-        ArrayList<E> array = new ArrayList<E>(1);
+    protected static <E> List<E> makeSingletonList(E item) {
+        List<E> array = new ArrayList<>(1);
         array.add(item);
         return array;
     }

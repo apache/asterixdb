@@ -343,15 +343,15 @@ public class TypeTranslator {
                     TypeSignature signature = new TypeSignature(defaultDataverse, tre.getIdent().getValue());
                     IAType tref = solveTypeReference(signature, typeMap);
                     if (tref != null) {
-                        if (!rtd.getNullableFields().get(j)) { // not nullable
+                        if (!rtd.getOptionableFields().get(j)) { // not nullable
                             fldTypes[j] = tref;
-                        } else { // nullable
-                            fldTypes[j] = AUnionType.createNullableType(tref);
+                        } else { // optional
+                            fldTypes[j] = AUnionType.createUnknownableType(tref);
                         }
                     } else {
                         addIncompleteFieldTypeReference(recType, j, tre, incompleteFieldTypes);
-                        if (rtd.getNullableFields().get(j)) {
-                            fldTypes[j] = AUnionType.createNullableType(null);
+                        if (rtd.getOptionableFields().get(j)) {
+                            fldTypes[j] = AUnionType.createUnknownableType(null);
                         }
                     }
                     break;
@@ -360,10 +360,10 @@ public class TypeTranslator {
                     RecordTypeDefinition recTypeDef2 = (RecordTypeDefinition) texpr;
                     IAType t2 = computeRecordType(null, recTypeDef2, typeMap, incompleteFieldTypes, incompleteItemTypes,
                             defaultDataverse);
-                    if (!rtd.getNullableFields().get(j)) { // not nullable
+                    if (!rtd.getOptionableFields().get(j)) { // not nullable
                         fldTypes[j] = t2;
                     } else { // nullable
-                        fldTypes[j] = AUnionType.createNullableType(t2);
+                        fldTypes[j] = AUnionType.createUnknownableType(t2);
                     }
                     break;
                 }
@@ -371,14 +371,14 @@ public class TypeTranslator {
                     OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) texpr;
                     IAType t2 = computeOrderedListType(null, oltd, typeMap, incompleteItemTypes, incompleteFieldTypes,
                             defaultDataverse);
-                    fldTypes[j] = (rtd.getNullableFields().get(j)) ? AUnionType.createNullableType(t2) : t2;
+                    fldTypes[j] = rtd.getOptionableFields().get(j) ? AUnionType.createUnknownableType(t2) : t2;
                     break;
                 }
                 case UNORDEREDLIST: {
                     UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) texpr;
                     IAType t2 = computeUnorderedListType(null, ultd, typeMap, incompleteItemTypes, incompleteFieldTypes,
                             defaultDataverse);
-                    fldTypes[j] = (rtd.getNullableFields().get(j)) ? AUnionType.createNullableType(t2) : t2;
+                    fldTypes[j] = rtd.getOptionableFields().get(j) ? AUnionType.createUnknownableType(t2) : t2;
                     break;
                 }
                 default: {

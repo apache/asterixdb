@@ -23,6 +23,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class SubstringTypeComputer extends AbstractResultTypeComputer {
     public static final SubstringTypeComputer INSTANCE = new SubstringTypeComputer();
@@ -47,7 +48,7 @@ public class SubstringTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public IAType getResultType(IAType... types) {
+    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
         return BuiltinType.ASTRING;
     }
 }

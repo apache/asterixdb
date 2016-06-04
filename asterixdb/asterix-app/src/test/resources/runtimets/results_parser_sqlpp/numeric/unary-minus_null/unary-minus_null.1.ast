@@ -1,0 +1,13 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [nullField]
+    :
+    NEGATIVE LiteralExpr [NULL]
+  )
+  (
+    LiteralExpr [STRING] [missingField]
+    :
+    NEGATIVE LiteralExpr [MISSING]
+  )
+]

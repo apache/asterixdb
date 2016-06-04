@@ -540,13 +540,17 @@ public class TestExecutor {
                 }
                 expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
 
-                File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                File actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile,
+                        new File(actualPath));
                 actualResultFile.getParentFile().mkdirs();
                 writeOutputToFile(actualResultFile, resultStream);
 
                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
                         actualResultFile);
                 queryCount.increment();
+
+                // Deletes the matched result file.
+                actualResultFile.getParentFile().delete();
                 break;
             case "mgx":
                 executeManagixCommand(statement);
@@ -642,7 +646,7 @@ public class TestExecutor {
                     resultStream = executeClusterStateQuery(fmt,
                             "http://" + host + ":" + port + Servlets.CLUSTER_STATE.getPath());
                     expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
-                    actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                    actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                     actualResultFile.getParentFile().mkdirs();
                     writeOutputToFile(actualResultFile, resultStream);
                     runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
@@ -653,7 +657,7 @@ public class TestExecutor {
                 }
                 break;
             case "server": // (start <test server name> <port>
-                           // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                               // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                 try {
                     lines = statement.trim().split("\n");
                     String[] command = lines[lines.length - 1].trim().split(" ");
@@ -701,7 +705,7 @@ public class TestExecutor {
                 }
                 break;
             case "lib": // expected format <dataverse-name> <library-name>
-                        // <library-directory>
+                            // <library-directory>
                         // TODO: make this case work well with entity names containing spaces by
                         // looking for \"
                 lines = statement.split("\n");
