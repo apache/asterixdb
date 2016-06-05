@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.adm;
+package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -28,13 +28,12 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ANullableFieldPrinterFactory implements IPrinterFactory {
+public class AOptionalFieldPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
-
     private AUnionType unionType;
 
-    public ANullableFieldPrinterFactory(AUnionType unionType) {
+    public AOptionalFieldPrinterFactory(AUnionType unionType) {
         this.unionType = unionType;
     }
 
@@ -46,16 +45,16 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
+                nullPrinter = (AqlCleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
                         .createPrinter();
-                fieldPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
-                        .createPrinter();
+                fieldPrinter = (AqlCleanJSONPrinterFactoryProvider.INSTANCE
+                        .getPrinterFactory(unionType.getActualType())).createPrinter();
             }
 
             @Override
             public void print(byte[] b, int s, int l, PrintStream ps) throws HyracksDataException {
                 fieldPrinter.init();
-                if (b[s] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                if (b[s] == ATypeTag.SERIALIZED_NULL_TYPE_TAG || b[s] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
                     nullPrinter.print(b, s, l, ps);
                 } else {
                     fieldPrinter.print(b, s, l, ps);

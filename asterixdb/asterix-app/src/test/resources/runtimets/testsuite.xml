@@ -3039,6 +3039,26 @@
         <output-dir compare="Text">query-ASTERIXDB-1131-2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-1212">
+        <output-dir compare="Text">query-ASTERIXDB-1212</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-1212-open">
+        <output-dir compare="Text">query-ASTERIXDB-1212-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-1212-2">
+        <output-dir compare="Text">query-ASTERIXDB-1212-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-1212-2-open">
+        <output-dir compare="Text">query-ASTERIXDB-1212-2-open</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="meta">
     <test-case FilePath="meta">
