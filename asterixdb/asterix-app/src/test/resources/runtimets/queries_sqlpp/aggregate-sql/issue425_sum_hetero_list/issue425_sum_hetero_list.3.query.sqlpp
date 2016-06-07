@@ -17,4 +17,4 @@
  * under the License.
  */
 
-"coll_sql-sum"([23,748374857483]);
+`coll_sql-sum`([23,748374857483]);

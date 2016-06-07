@@ -24,7 +24,7 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  x as [every x in [false,false] satisfies x,every x in [true,false] satisfies x,every x in [false,true] satisfies x,every x in [true,true] satisfies x,every x in [false,false] satisfies test.not(x),every x in [true,false] satisfies test.not(x),every x in [false,true] satisfies test.not(x),every x in [true,true] satisfies test.not(x)]
 select element i

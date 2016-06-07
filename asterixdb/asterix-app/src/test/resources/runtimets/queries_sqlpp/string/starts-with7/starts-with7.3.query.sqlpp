@@ -24,5 +24,5 @@
  */
 
 select element a
-from  [null,"starts-with"('Hello','H'),"starts-with"('Hello',lowercase('He')),"starts-with"('Hello',''),"starts-with"('Hello',' '),"starts-with"('Hello',null),"starts-with"('abcdef',lowercase('ABCDEf')),"starts-with"('abcdef','abcdef'),"starts-with"('abcdef','abc '),"starts-with"('abc\\tdef','abc\\t'),"starts-with"(' abcdef','abc'),"starts-with"('0x1FF','0'),"starts-with"('<ID>','<'),"starts-with"('aBCDEFghI',"codepoint-to-string"([41])),"starts-with"('AbCDEFghI',"codepoint-to-string"([41]))] as a
+from  [null,`starts-with`('Hello','H'),`starts-with`('Hello',lowercase('He')),`starts-with`('Hello',''),`starts-with`('Hello',' '),`starts-with`('Hello',null),`starts-with`('abcdef',lowercase('ABCDEf')),`starts-with`('abcdef','abcdef'),`starts-with`('abcdef','abc '),`starts-with`('abc\\tdef','abc\\t'),`starts-with`(' abcdef','abc'),`starts-with`('0x1FF','0'),`starts-with`('<ID>','<'),`starts-with`('aBCDEFghI',`codepoint-to-string`([41])),`starts-with`('AbCDEFghI',`codepoint-to-string`([41]))] as a
 ;

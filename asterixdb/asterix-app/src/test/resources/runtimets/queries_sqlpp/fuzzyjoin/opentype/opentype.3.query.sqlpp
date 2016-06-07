@@ -20,14 +20,14 @@
 use TinySocial;
 
 
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.3";
+set `simthreshold` `0.3`;
 
 select element {'tweet':t,'similar-tweets':(
-        select element t2."referred-topics"
+        select element t2.`referred-topics`
         from  TweetMessages as t2
-        where ((t2."referred-topics" ~= t."referred-topics") and (t2.tweetid != t.tweetid))
+        where ((t2.`referred-topics` ~= t.`referred-topics`) and (t2.tweetid != t.tweetid))
         order by t2.tweetid
     )}
 from  TweetMessages as t

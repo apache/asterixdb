@@ -24,14 +24,14 @@
 use test;
 
 
-with  i8 as test."coll_sql-max"([test.int8('1'),test.int8('2'),test.int8('3')]),
-      i16 as test."coll_sql-max"([test.int16('1'),test.int16('2'),test.int16('3')]),
-      i32 as test."coll_sql-max"([test.int32('1'),test.int32('2'),test.int32('3')]),
-      i64 as test."coll_sql-max"([test.int64('1'),test.int64('2'),test.int64('3')]),
-      f as test."coll_sql-max"([test.float('1'),test.float('2'),test.float('3')]),
-      d as test."coll_sql-max"([test.double('1'),test.double('2'),test.double('3')]),
-      s as test."coll_sql-max"(['foo','bar','world']),
-      dt as test."coll_sql-max"([test.datetime('2012-03-01T00:00:00Z'),test.datetime('2012-01-01T00:00:00Z'),test.datetime('2012-02-01T00:00:00Z')])
+with  i8 as test.`coll_sql-max`([test.int8('1'),test.int8('2'),test.int8('3')]),
+      i16 as test.`coll_sql-max`([test.int16('1'),test.int16('2'),test.int16('3')]),
+      i32 as test.`coll_sql-max`([test.int32('1'),test.int32('2'),test.int32('3')]),
+      i64 as test.`coll_sql-max`([test.int64('1'),test.int64('2'),test.int64('3')]),
+      f as test.`coll_sql-max`([test.float('1'),test.float('2'),test.float('3')]),
+      d as test.`coll_sql-max`([test.double('1'),test.double('2'),test.double('3')]),
+      s as test.`coll_sql-max`(['foo','bar','world']),
+      dt as test.`coll_sql-max`([test.datetime('2012-03-01T00:00:00Z'),test.datetime('2012-01-01T00:00:00Z'),test.datetime('2012-02-01T00:00:00Z')])
 select element i
 from  [i8,i16,i32,i64,f,d,s,dt] as i
 ;

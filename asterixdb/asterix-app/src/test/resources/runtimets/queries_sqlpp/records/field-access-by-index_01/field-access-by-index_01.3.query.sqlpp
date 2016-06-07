@@ -20,6 +20,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
-test."field-access-by-index"({'foo1':10,'bar1':20,'foo2':30,'bar2':40},test.int32('2'));
+test.`field-access-by-index`({'foo1':10,'bar1':20,'foo2':30,'bar2':40},test.int32('2'));

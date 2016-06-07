@@ -29,8 +29,8 @@ create type test.Schema as
   time : time,
   date : date,
   datetime : datetime,
-  dtduration : "day-time-duration",
-  ymduration : "year-month-duration"
+  dtduration : `day-time-duration`,
+  ymduration : `year-month-duration`
 }
 
 create  table tsdata(Schema) primary key id;

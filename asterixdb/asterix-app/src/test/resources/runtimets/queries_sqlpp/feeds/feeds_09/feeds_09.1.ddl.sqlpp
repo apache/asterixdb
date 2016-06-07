@@ -50,4 +50,4 @@ create  table SyntheticTweets(TweetMessageType) primary key id;
 
 create  index message_text  on SyntheticTweets (message_text) type btree;
 
-create  primary feed SyntheticTweetFeed using twitter_firehose (("duration"="5"),("tps"="50"),("tput-duration"="5"),("type-name"="TweetMessageType"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+create  primary feed SyntheticTweetFeed using twitter_firehose ((`duration`=`5`),(`tps`=`50`),(`tput-duration`=`5`),(`type-name`=`TweetMessageType`),(`dataverse-dataset`=`feeds:SyntheticTweets`),(`mode`=`controlled`));

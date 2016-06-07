@@ -66,6 +66,6 @@ write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_olist-edit-dist
 select element {'ainterests':a.nested.interests,'binterests':b.nested.interests,'ed':ed}
 from  Customers as a,
       Customers as b
-with  ed as test."edit-distance"(a.nested.interests,b.nested.interests)
+with  ed as test.`edit-distance`(a.nested.interests,b.nested.interests)
 where ((ed <= 2) and (a.nested.cid < b.nested.cid))
 ;

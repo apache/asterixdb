@@ -20,5 +20,5 @@
 use test;
 
 
-load  table MyData using localfs (("path"="asterix_nc1://data/spatial/spatialDataNulls.json"),("format"="adm"));
+load  table MyData using localfs ((`path`=`asterix_nc1://data/spatial/spatialDataNulls.json`),(`format`=`adm`));
 

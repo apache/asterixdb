@@ -26,5 +26,5 @@ use test;
 
 
 select element t
-from  "test.Office" as t
+from  `test.Office` as t
 ;

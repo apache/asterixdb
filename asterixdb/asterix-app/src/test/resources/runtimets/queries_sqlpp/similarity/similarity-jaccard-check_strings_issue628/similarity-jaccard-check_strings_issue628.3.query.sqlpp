@@ -20,14 +20,14 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  v1 as ['query','processing','in','multidatabase','systems'],
       v2 as ['query','processing','in','object','oriented','database','systems'],
       v3 as ['dynamic','query','optimization','and','query','processing','in','multidatabase','systems','1'],
       v4 as ['transaction','management','in','multidatabase','systems'],
       v5 as ['overview','of','multidatabase','transaction','management'],
-      results as [test."similarity-jaccard-check"(v1,v2,0.500000f),test."similarity-jaccard-check"(v1,v3,0.500000f),test."similarity-jaccard-check"(v4,v5,0.500000f)]
+      results as [test.`similarity-jaccard-check`(v1,v2,0.500000f),test.`similarity-jaccard-check`(v1,v3,0.500000f),test.`similarity-jaccard-check`(v4,v5,0.500000f)]
 select element i
 from  results as i
 ;

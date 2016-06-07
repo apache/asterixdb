@@ -26,14 +26,14 @@
 use test;
 
 
-select element {'tweetid1':t1.nested.tweetid,'loc1':t1.nested."sender-location",'nearby-message':(
-        select element {'tweetid2':t2.nested.tweetid,'loc2':t2.nested."sender-location"}
+select element {'tweetid1':t1.nested.tweetid,'loc1':t1.nested.`sender-location`,'nearby-message':(
+        select element {'tweetid2':t2.nested.tweetid,'loc2':t2.nested.`sender-location`}
         from  TweetMessages as t2
-        where (test."spatial-intersect"(t2.nested."sender-location",n) and (t1.nested.tweetid != t2.nested.tweetid))
+        where (test.`spatial-intersect`(t2.nested.`sender-location`,n) and (t1.nested.tweetid != t2.nested.tweetid))
         order by t2.nested.tweetid
     )}
 from  TweetMessages as t1
-with  n as test."create-circle"(t1.nested."sender-location",0.5)
+with  n as test.`create-circle`(t1.nested.`sender-location`,0.5)
 where (t1.nested.tweetid < test.int64('10'))
 order by t1.nested.tweetid
 ;

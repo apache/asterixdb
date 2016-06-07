@@ -22,6 +22,6 @@ use test;
 
 select element {'id':o.id,'dblpid':o.dblpid,'title':o.title,'authors':o.authors,'misc':o.misc}
 from  DBLPOpen as o
-with  ed as test."edit-distance-check"(o.authors,'Amihay Motro',1)
+with  ed as test.`edit-distance-check`(o.authors,'Amihay Motro',1)
 where ed[0]
 ;

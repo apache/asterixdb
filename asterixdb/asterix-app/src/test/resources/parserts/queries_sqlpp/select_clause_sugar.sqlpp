@@ -17,6 +17,6 @@
  * under the License.
  */
 
-select x as "value"
+select x as `value`
 from [ 10, 20, 30, 10, 10 ] as x
 where x = 10;

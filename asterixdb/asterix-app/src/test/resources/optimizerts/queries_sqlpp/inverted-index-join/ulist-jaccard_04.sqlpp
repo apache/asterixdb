@@ -58,6 +58,6 @@ write output to asterix_nc1:"rttest/inverted-index-join_ulist-jaccard_04.adm"
 select element {'arec':a,'brec':b,'jacc':jacc}
 from  Customers as a,
       Customers as b
-with  jacc as  /*+ indexnl */ test."similarity-jaccard"(a.interests,b.interests)
+with  jacc as  /*+ indexnl */ test.`similarity-jaccard`(a.interests,b.interests)
 where ((jacc >= 0.700000f) and (a.cid < b.cid))
 ;

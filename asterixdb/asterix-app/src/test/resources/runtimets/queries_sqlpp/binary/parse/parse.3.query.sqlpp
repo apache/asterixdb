@@ -20,4 +20,4 @@
 use test;
 
 
-[test."parse-binary"('ABCDEF0123456789','hex'),test."parse-binary"('abcdef0123456789','HEX'),test."parse-binary"('0A0B0C0D0E0F','hEx'),test."parse-binary"('01020304050607080900','hex'),test."parse-binary"('','hex'),test."parse-binary"('0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/','base64'),test."parse-binary"('','base64'),test."parse-binary"('QXN0ZXJpeA==','BASE64'),test."parse-binary"('QXN0ZXJpeAE=','baSE64'),test."parse-binary"('QXN0ZXJpeAE8','base64')];
+[test.`parse-binary`('ABCDEF0123456789','hex'),test.`parse-binary`('abcdef0123456789','HEX'),test.`parse-binary`('0A0B0C0D0E0F','hEx'),test.`parse-binary`('01020304050607080900','hex'),test.`parse-binary`('','hex'),test.`parse-binary`('0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/','base64'),test.`parse-binary`('','base64'),test.`parse-binary`('QXN0ZXJpeA==','BASE64'),test.`parse-binary`('QXN0ZXJpeAE=','baSE64'),test.`parse-binary`('QXN0ZXJpeAE8','base64')];

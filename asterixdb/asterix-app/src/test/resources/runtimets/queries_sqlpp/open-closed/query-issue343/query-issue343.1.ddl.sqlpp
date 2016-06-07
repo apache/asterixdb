@@ -57,5 +57,5 @@ create type test.AllType as
   circle : circle
 }
 
-create  table "All"(AllType) primary key id;
+create  table `All`(AllType) primary key id;
 

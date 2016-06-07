@@ -22,6 +22,6 @@
 use feeds;
 
 
-set "wait-for-completion-feed" "false";
+set `wait-for-completion-feed` `false`;
 
-connect  feed socket_feed to  table MyTweets using policy "BasicFT";
+connect  feed socket_feed to  table MyTweets using policy `BasicFT`;

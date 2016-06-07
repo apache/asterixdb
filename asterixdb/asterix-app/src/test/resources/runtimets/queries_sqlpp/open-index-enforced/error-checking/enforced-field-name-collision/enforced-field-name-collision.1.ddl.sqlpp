@@ -26,10 +26,10 @@ use test;
 create type test.testType as
 {
   id : int32,
-  "value" : string
+  `value` : string
 }
 
 create  table testDS(testType) primary key id;
 
-create  index testIdx  on testDS ("value":string) type btree enforced;
+create  index testIdx  on testDS (`value`:string) type btree enforced;
 

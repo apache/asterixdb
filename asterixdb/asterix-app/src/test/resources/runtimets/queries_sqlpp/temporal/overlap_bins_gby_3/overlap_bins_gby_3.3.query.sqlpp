@@ -23,16 +23,16 @@ use multitask;
 select element {'timebin':bin,'subgroups':(
         select element {'subgid':subgid,'item_count':multitask.count(i)}
         from  logs as i
-        where multitask."interval-covers"(bin,multitask."interval-start-from-time"(i.time,multitask."duration-from-ms"(i.duration)))
+        where multitask.`interval-covers`(bin,multitask.`interval-start-from-time`(i.time,multitask.`duration-from-ms`(i.duration)))
         group by i.app as subgid
         order by subgid,multitask.count(i)
     )}
-from  multitask."overlap-bins"(multitask.interval(multitask.coll_min((
+from  multitask.`overlap-bins`(multitask.interval(multitask.coll_min((
     select element i.time
     from  logs as i
 )),multitask.coll_max((
-    select element (i.time + multitask."duration-from-ms"((i.duration * 1000)))
+    select element (i.time + multitask.`duration-from-ms`((i.duration * 1000)))
     from  logs as i
-))),multitask.time('00:00:00.000'),multitask."day-time-duration"('PT1M')) as bin
-order by multitask."get-interval-start"(bin)
+))),multitask.time('00:00:00.000'),multitask.`day-time-duration`('PT1M')) as bin
+order by multitask.`get-interval-start`(bin)
 ;

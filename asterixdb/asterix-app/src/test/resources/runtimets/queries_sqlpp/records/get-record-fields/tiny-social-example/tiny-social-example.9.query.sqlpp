@@ -27,8 +27,8 @@ use TinySocial;
 
 select element {'field-name':n,'field-type':t,'count':count}
 from  TweetMessages as r,
-      TinySocial."get-record-fields"(r) as f
-group by f."field-name" as n,f."field-type" as t
+      TinySocial.`get-record-fields`(r) as f
+group by f.`field-name` as n,f.`field-type` as t
 with  count as TinySocial.count(r)
 order by n,t
 ;

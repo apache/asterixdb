@@ -63,5 +63,5 @@ create  index interests_index  on Customers (nested.interests) type keyword;
 write output to asterix_nc1:"rttest/inverted-index-basic_ulist-jaccard.adm"
 select element c
 from  Customers as c
-where (test."similarity-jaccard"(c.nested.interests,{{'computers','databases','wine'}}) >= 0.700000f)
+where (test.`similarity-jaccard`(c.nested.interests,{{'computers','databases','wine'}}) >= 0.700000f)
 ;

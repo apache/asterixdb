@@ -28,7 +28,7 @@ with  a as [],
       f as ['abc','ijk','bcd','efg','fgh','ghi','def','hij','jkl','cde'],
       g as ['Efg','aBc','cdE','DEf','hIJ','IjK','BCD'],
       h as ['abc','ijk','bcd','efg','fgh','ghi','def','hij','jkl','cde'],
-      results as [test."similarity-jaccard"(a,b),test."similarity-jaccard"(b,a),test."similarity-jaccard"(c,d),test."similarity-jaccard"(d,c),test."similarity-jaccard"(e,f),test."similarity-jaccard"(f,e),test."similarity-jaccard"(g,h),test."similarity-jaccard"(h,g)]
+      results as [test.`similarity-jaccard`(a,b),test.`similarity-jaccard`(b,a),test.`similarity-jaccard`(c,d),test.`similarity-jaccard`(d,c),test.`similarity-jaccard`(e,f),test.`similarity-jaccard`(f,e),test.`similarity-jaccard`(g,h),test.`similarity-jaccard`(h,g)]
 select element i
 from  results as i
 ;

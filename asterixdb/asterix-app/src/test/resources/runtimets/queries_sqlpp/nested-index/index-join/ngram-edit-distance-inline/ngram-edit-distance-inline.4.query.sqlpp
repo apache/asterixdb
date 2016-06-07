@@ -29,7 +29,7 @@ use test;
 select element {'arec':a.nested,'brec':b.nested,'ed':ed}
 from  Customers as a,
       Customers2 as b
-with  ed as test."edit-distance"(a.nested.name,b.nested.name)
+with  ed as test.`edit-distance`(a.nested.name,b.nested.name)
 where ((ed <= 4) and (a.nested.cid < b.nested.cid))
 order by ed,a.nested.cid,b.nested.cid
 ;

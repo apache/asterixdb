@@ -52,12 +52,12 @@ create  table CSX(CSXType) primary key id;
 create  index keyword_index  on DBLP (title:string) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.adm"
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.5f";
+set `simthreshold` `0.5f`;
 
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       CSX as b
-where ((test."word-tokens"(a.title) ~= test."word-tokens"(b.title)) and (a.id < b.id))
+where ((test.`word-tokens`(a.title) ~= test.`word-tokens`(b.title)) and (a.id < b.id))
 ;

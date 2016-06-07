@@ -31,21 +31,21 @@ use test;
 
 create type test.TwitterUserType as
  closed {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
-  "friends-count" : int32,
-  "statuses-count" : int32,
+  `friends-count` : int32,
+  `statuses-count` : int32,
   name : string,
-  "followers-count" : int32
+  `followers-count` : int32
 }
 
 create type test.TweetMessageNestedType as
 {
   tweetid : int64,
   user : TwitterUserType,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string,
   countA : int32,
   countB : int32
 }
@@ -57,23 +57,23 @@ create type test.TweetMessageType as
 
 create  table TweetMessages(TweetMessageType) primary key nested.tweetid;
 
-create  index twmSndLocIx  on TweetMessages (nested."sender-location":point) type rtree enforced;
+create  index twmSndLocIx  on TweetMessages (nested.`sender-location`:point) type rtree enforced;
 
 create  index msgCountAIx  on TweetMessages (nested.countA) type btree;
 
 create  index msgCountBIx  on TweetMessages (nested.countB) type btree;
 
-create  index msgTextIx  on TweetMessages (nested."message-text") type keyword;
+create  index msgTextIx  on TweetMessages (nested.`message-text`) type keyword;
 
 write output to asterix_nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_01.adm"
-select element {'tweetid1':t1.nested.tweetid,'loc1':t1.nested."sender-location",'nearby-message':(
-        select element {'tweetid2':t2.nested.tweetid,'loc2':t2.nested."sender-location"}
+select element {'tweetid1':t1.nested.tweetid,'loc1':t1.nested.`sender-location`,'nearby-message':(
+        select element {'tweetid2':t2.nested.tweetid,'loc2':t2.nested.`sender-location`}
         from  TweetMessages as t2
-        where test."spatial-intersect"(t2.nested."sender-location",n)
+        where test.`spatial-intersect`(t2.nested.`sender-location`,n)
         order by t2.tweetid
     )}
 from  TweetMessages as t1
-with  n as test."create-circle"(t1.nested."sender-location",0.5)
+with  n as test.`create-circle`(t1.nested.`sender-location`,0.5)
 where (t1.nested.tweetid < test.int64('10'))
 order by t1.nested.tweetid
 ;

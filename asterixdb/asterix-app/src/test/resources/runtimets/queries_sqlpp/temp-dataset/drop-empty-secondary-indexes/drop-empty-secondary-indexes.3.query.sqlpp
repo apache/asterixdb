@@ -24,6 +24,6 @@
  */
 
 select element l
-from  "Metadata.Index" as l
+from  `Metadata.Index` as l
 where ((l.IsPrimary = false) and (l.DataverseName = 'test'))
 ;

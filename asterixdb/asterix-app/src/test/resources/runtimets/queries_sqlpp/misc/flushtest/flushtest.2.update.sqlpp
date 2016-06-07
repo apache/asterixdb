@@ -20,5 +20,5 @@
 use DMLTest;
 
 
-load  table FacebookUsers1 using localfs (("path"="asterix_nc1://data/fbu.adm"),("format"="adm"));
+load  table FacebookUsers1 using localfs ((`path`=`asterix_nc1://data/fbu.adm`),(`format`=`adm`));
 

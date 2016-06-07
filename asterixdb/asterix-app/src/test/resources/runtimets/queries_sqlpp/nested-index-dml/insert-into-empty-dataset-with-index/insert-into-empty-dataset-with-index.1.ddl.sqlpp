@@ -31,7 +31,7 @@ use TinySocial;
 
 create type TinySocial.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64,
@@ -43,10 +43,10 @@ create type TinySocial.TweetMessageType as
  closed {
   tweetid : string,
   user : TwitterUserType,
-  "sender-location" : point?,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string
+  `sender-location` : point?,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string
 }
 
 create  table TweetMessages(TweetMessageType) primary key tweetid;

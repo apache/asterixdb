@@ -26,11 +26,11 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'a':a.interests,'b':b.interests}
 from  Customers as a,
       Customers2 as b
-where (( /*+ indexnl */ test."similarity-jaccard"(a.interests,b.interests) >= 0.900000f) and (a.cid < b.cid) and (test.len(a.interests) > 1) and (test.len(b.interests) > 1))
+where (( /*+ indexnl */ test.`similarity-jaccard`(a.interests,b.interests) >= 0.900000f) and (a.cid < b.cid) and (test.len(a.interests) > 1) and (test.len(b.interests) > 1))
 order by a.cid,b.cid
 ;

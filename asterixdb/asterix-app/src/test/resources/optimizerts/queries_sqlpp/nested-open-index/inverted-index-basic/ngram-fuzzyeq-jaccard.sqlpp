@@ -28,7 +28,7 @@ create  database test;
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 create type test.DBLPTypetmp as
 {
@@ -48,11 +48,11 @@ create  table DBLP(DBLPType) primary key nested.id;
 create  index ngram_index  on DBLP (nested.title:string) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-basic_ngram-fuzzyeq-jaccard.adm"
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.8f";
+set `simthreshold` `0.8f`;
 
 select element o
 from  DBLP as o
-where (test."gram-tokens"(o.nested.title,3,false) ~= test."gram-tokens"('Transactions for Cooperative Environments',3,false))
+where (test.`gram-tokens`(o.nested.title,3,false) ~= test.`gram-tokens`('Transactions for Cooperative Environments',3,false))
 ;

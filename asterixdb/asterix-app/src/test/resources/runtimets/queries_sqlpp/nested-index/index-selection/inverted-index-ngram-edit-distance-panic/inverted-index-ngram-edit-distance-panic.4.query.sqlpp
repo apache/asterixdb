@@ -22,6 +22,6 @@ use test;
 
 select element o.nested
 from  DBLP as o
-with  ed as test."edit-distance-check"(o.nested.authors,'Amihay Motro',5)
+with  ed as test.`edit-distance-check`(o.nested.authors,'Amihay Motro',5)
 where ed[0]
 ;

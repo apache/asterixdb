@@ -17,20 +17,20 @@
  * under the License.
  */
 
-drop  database "gby-using-orderby-desc" if exists;
-create  database "gby-using-orderby-desc";
+drop  database `gby-using-orderby-desc` if exists;
+create  database `gby-using-orderby-desc`;
 
-use "gby-using-orderby-desc";
+use `gby-using-orderby-desc`;
 
 
-create type "gby-using-orderby-desc".AddressType as
+create type `gby-using-orderby-desc`.AddressType as
  closed {
   number : int32,
   street : string,
   city : string
 }
 
-create type "gby-using-orderby-desc".CustomerType as
+create type `gby-using-orderby-desc`.CustomerType as
  closed {
   cid : int32,
   name : string,
@@ -43,7 +43,7 @@ create type "gby-using-orderby-desc".CustomerType as
 
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;

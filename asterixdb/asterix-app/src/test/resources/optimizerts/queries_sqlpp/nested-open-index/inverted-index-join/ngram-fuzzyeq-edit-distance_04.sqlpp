@@ -63,9 +63,9 @@ create  index ngram_index_DBLP  on DBLP (nested.authors:string) type ngram (3) e
 create  index ngram_index_CSX  on CSX (nested.authors:string) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm"
-set "simfunction" "edit-distance";
+set `simfunction` `edit-distance`;
 
-set "simthreshold" "3";
+set `simthreshold` `3`;
 
 select element {'arec':a,'brec':b}
 from  DBLP as a,

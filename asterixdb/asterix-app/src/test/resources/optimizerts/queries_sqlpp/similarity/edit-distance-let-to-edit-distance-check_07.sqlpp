@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that the SimilarityCheckRule rewrites the edit-distance function with a threshold 
+ * Description    : Tests that the SimilarityCheckRule rewrites the edit-distance function with a threshold
  *                  into edit-distance-check if possible.
  *                  Tests that the optimizer drills through the let clause.
  *                  Replacement should *not* happen because of a ">" condition on the edit distance.
@@ -44,6 +44,6 @@ create  table DBLP(DBLPType) primary key id;
 write output to asterix_nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_07.adm"
 select element ed
 from  DBLP as o
-with  ed as test."edit-distance"(o.authors,'Michael J. Carey')
+with  ed as test.`edit-distance`(o.authors,'Michael J. Carey')
 where (ed > 2)
 ;

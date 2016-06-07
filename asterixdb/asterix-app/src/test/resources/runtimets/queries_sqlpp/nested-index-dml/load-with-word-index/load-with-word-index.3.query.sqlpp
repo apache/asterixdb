@@ -22,7 +22,7 @@ use TinySocial;
 
 select element c
 from  TweetMessages as c
-with  jacc as TinySocial."similarity-jaccard-check"(TinySocial."word-tokens"(c.user.name),TinySocial."word-tokens"('Nathan Giesen'),0.500000f)
+with  jacc as TinySocial.`similarity-jaccard-check`(TinySocial.`word-tokens`(c.user.name),TinySocial.`word-tokens`('Nathan Giesen'),0.500000f)
 where jacc[0]
 order by c.tweetid
 ;

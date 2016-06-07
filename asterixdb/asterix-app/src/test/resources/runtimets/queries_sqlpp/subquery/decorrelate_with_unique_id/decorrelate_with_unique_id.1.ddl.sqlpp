@@ -46,10 +46,10 @@ CREATE TYPE CustomerType AS CLOSED {
 }
 
 
-CREATE EXTERNAL TABLE Customers(CustomerType) USING "localfs"
-(("path"="asterix_nc1://data/tpch0.001/customer.tbl"),
-("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+CREATE EXTERNAL TABLE Customers(CustomerType) USING `localfs`
+((`path`=`asterix_nc1://data/tpch0.001/customer.tbl`),
+(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-CREATE EXTERNAL TABLE Orders(OrderType) USING "localfs"
-(("path"="asterix_nc1://data/tpch0.001/orders.tbl"),
-("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+CREATE EXTERNAL TABLE Orders(OrderType) USING `localfs`
+((`path`=`asterix_nc1://data/tpch0.001/orders.tbl`),
+(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));

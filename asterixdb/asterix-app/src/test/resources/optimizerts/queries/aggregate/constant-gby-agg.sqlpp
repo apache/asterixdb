@@ -25,7 +25,7 @@ use TinySocial;
 
 create type TinySocial.TwitterUserType as
 {
-  "screen-name" : string
+  `screen-name` : string
 }
 
 create type TinySocial.TweetMessageType as {
@@ -39,12 +39,12 @@ create type TinySocial.FacebookUserType as
 
 create type TinySocial.FacebookMessageType as
  open {
-  "message-id" : int64
+  `message-id` : int64
 }
 
 create  table FacebookUsers(FacebookUserType) primary key id;
-create  table FacebookMessages(FacebookMessageType) primary key "message-id";
-create  table TwitterUsers(TwitterUserType) primary key "screen-name";
+create  table FacebookMessages(FacebookMessageType) primary key `message-id`;
+create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
 create  table TweetMessages(TweetMessageType) primary key tweetid hints ("CARDINALITY"="100");
 
 

@@ -25,9 +25,9 @@ use TinySocial;
 
 create type TinySocial.EmploymentType as
 {
-  "organization-name" : string,
-  "start-date" : date,
-  "end-date" : date?
+  `organization-name` : string,
+  `start-date` : date,
+  `end-date` : date?
 }
 
 create type TinySocial.FacebookUserType as
@@ -35,8 +35,8 @@ create type TinySocial.FacebookUserType as
   id : int32,
   alias : string,
   name : string,
-  "user-since" : datetime,
-  "friend-ids" : {{int32}},
+  `user-since` : datetime,
+  `friend-ids` : {{int32}},
   employment : [EmploymentType]
 }
 
@@ -45,12 +45,12 @@ create  table FacebookUsers(FacebookUserType) primary key id;
 with  lonelyusers as (
       select element d
       from  FacebookUsers as d
-      where (TinySocial.coll_count(d."friend-ids") < 2)
+      where (TinySocial.coll_count(d.`friend-ids`) < 2)
   ),
       lonelyusers2 as (
       select element d
       from  FacebookUsers as d
-      where (TinySocial.coll_count(d."friend-ids") < 2)
+      where (TinySocial.coll_count(d.`friend-ids`) < 2)
   )
 select element {'user1':{'id':l1.id,'name':l1.name},'user2':{'id':l2.id,'name':l2.name}}
 from  lonelyusers as l1,

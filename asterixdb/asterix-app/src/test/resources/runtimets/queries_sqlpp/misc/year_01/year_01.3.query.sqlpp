@@ -20,4 +20,4 @@
 use test;
 
 
-select element test."get-year"('1996-12-01');
+select element test.`get-year`('1996-12-01');

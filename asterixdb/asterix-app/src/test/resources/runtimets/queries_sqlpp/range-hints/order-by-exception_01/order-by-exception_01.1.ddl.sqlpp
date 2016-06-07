@@ -25,7 +25,7 @@ use TinySocial;
 
 create type TinySocial.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64,

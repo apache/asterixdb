@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."substring-before"('HEllow','HEllow')};
+{'result1':test.`substring-before`('HEllow','HEllow')};

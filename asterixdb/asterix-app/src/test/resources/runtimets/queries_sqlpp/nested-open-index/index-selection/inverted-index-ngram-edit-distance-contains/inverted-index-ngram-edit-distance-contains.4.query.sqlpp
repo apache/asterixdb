@@ -22,6 +22,6 @@ use test;
 
 select element {'id':paper.nested.id,'title':paper.nested.title}
 from  DBLP as paper
-where test."edit-distance-contains"(paper.nested.title,'Multmedia',1)[0]
+where test.`edit-distance-contains`(paper.nested.title,'Multmedia',1)[0]
 order by paper.nested.id
 ;

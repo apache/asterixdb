@@ -20,4 +20,4 @@
 use test;
 
 
-{'polygonArea':test."spatial-area"(test."create-polygon"([1.0,1.0,1.0,4.0,3.0,4.0,3.0,1.0])),'circleArea':test."spatial-area"(test."create-circle"(test."create-point"(0.0,0.0),1.0)),'rectangleArea':test."spatial-area"(test."create-rectangle"(test."create-point"(0.0,5.0),test."create-point"(8.0,8.0)))};
+{'polygonArea':test.`spatial-area`(test.`create-polygon`([1.0,1.0,1.0,4.0,3.0,4.0,3.0,1.0])),'circleArea':test.`spatial-area`(test.`create-circle`(test.`create-point`(0.0,0.0),1.0)),'rectangleArea':test.`spatial-area`(test.`create-rectangle`(test.`create-point`(0.0,5.0),test.`create-point`(8.0,8.0)))};

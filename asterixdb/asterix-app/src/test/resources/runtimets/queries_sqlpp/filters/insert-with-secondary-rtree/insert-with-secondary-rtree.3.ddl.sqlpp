@@ -20,5 +20,5 @@
 use test;
 
 
-create  index fbSenderLocIndex  on FacebookMessages2 ("sender-location") type rtree;
+create  index fbSenderLocIndex  on FacebookMessages2 (`sender-location`) type rtree;
 

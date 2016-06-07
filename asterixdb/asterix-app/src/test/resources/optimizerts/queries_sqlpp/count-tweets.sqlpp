@@ -32,12 +32,12 @@ create type twitter.Tweet as
   text : string
 }
 
-create external  table TwitterData(Tweet) using localfs(("path"="asterix_nc1://data/twitter/smalltweets.txt"),("format"="adm"));
+create external  table TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/smalltweets.txt`),("format"="adm"));
 
 write output to asterix_nc1:"/tmp/count-tweets.adm"
 select element {'word':tok,'count':count(token)}
 from  TwitterData as t,
       tokens as token
-with  tokens as twitter."word-tokens"(t.text)
+with  tokens as twitter.`word-tokens`(t.text)
 group by token as tok
 ;

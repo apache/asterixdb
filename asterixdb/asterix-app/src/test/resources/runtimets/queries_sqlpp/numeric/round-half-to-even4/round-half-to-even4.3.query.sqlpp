@@ -20,4 +20,4 @@
 use test;
 
 
-{'d0':test."round-half-to-even"(test.double('1.5')),'d1':test."round-half-to-even"(test.double('2.5'))};
+{'d0':test.`round-half-to-even`(test.double('1.5')),'d1':test.`round-half-to-even`(test.double('2.5'))};

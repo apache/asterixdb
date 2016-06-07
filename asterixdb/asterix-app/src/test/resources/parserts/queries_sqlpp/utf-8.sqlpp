@@ -19,4 +19,4 @@
 
 string_to_codepoint('äöß');
 string_to_codepoint('迎');
-/* currently fails (issue 277) string-to-codepoint("欢")  */
+/* currently fails (issue 277) string-to-codepoint(`欢`)  */

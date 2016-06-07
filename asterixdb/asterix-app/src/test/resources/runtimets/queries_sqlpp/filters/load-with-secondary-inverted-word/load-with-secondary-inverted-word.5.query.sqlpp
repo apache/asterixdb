@@ -22,6 +22,6 @@ use test;
 
 select element m
 from  FacebookMessages as m
-where ((test."similarity-jaccard"(test."word-tokens"(m.message),test."word-tokens"('love sprint at&t verizon')) >= 0.200000f) and (m."send-time" < test.datetime('2012-12-20T10:10:00')))
-order by m."send-time"
+where ((test.`similarity-jaccard`(test.`word-tokens`(m.message),test.`word-tokens`('love sprint at&t verizon')) >= 0.200000f) and (m.`send-time` < test.datetime('2012-12-20T10:10:00')))
+order by m.`send-time`
 ;

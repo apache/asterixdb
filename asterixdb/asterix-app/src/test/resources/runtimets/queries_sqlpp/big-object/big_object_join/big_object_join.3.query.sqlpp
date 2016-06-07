@@ -26,9 +26,9 @@
 use test;
 
 
-select element {'c_custkey':c.c_custkey,'o_orderkey':o.o_orderkey,'len_c_comment':test."string-length"(c.c_comment),'len_o_comment':test."string-length"(o.o_comment),'c_comment':c.c_comment}
+select element {'c_custkey':c.c_custkey,'o_orderkey':o.o_orderkey,'len_c_comment':test.`string-length`(c.c_comment),'len_o_comment':test.`string-length`(o.o_comment),'c_comment':c.c_comment}
 from  Customer as c,
-      "Order" as o
+      `Order` as o
 where (c.c_custkey = o.o_custkey)
 order by o.o_orderkey, c.c_custkey
 ;

@@ -26,12 +26,12 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'arec':a,'brec':b,'jacc':jacc}
 from  DBLP as a,
       CSX as b
-with  jacc as test."similarity-jaccard"(test."gram-tokens"(a.title,3,false),test."gram-tokens"(b.title,3,false))
+with  jacc as test.`similarity-jaccard`(test.`gram-tokens`(a.title,3,false),test.`gram-tokens`(b.title,3,false))
 where ((jacc >= 0.500000f) and (a.id < b.id))
 order by jacc,a.id,b.id
 ;

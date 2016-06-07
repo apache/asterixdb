@@ -27,8 +27,8 @@ use TinySocial;
 
 select element result
 from  TweetMessages as r,
-      TinySocial."get-record-fields"(r) as f
-with  result as TinySocial."get-record-field-value"(r,f."field-name")
-where (f."field-type" = 'STRING')
+      TinySocial.`get-record-fields`(r) as f
+with  result as TinySocial.`get-record-field-value`(r,f.`field-name`)
+where (f.`field-type` = 'STRING')
 order by result
 ;

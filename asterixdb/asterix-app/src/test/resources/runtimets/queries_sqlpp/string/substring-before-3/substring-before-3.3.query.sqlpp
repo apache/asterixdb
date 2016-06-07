@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."substring-before"('HEllow',''),'result2':test."substring-before"('HEllow',null),'result3':test."substring-before"('',null),'result4':test."substring-before"('',''),'result5':test."substring-before"(null,null)};
+{'result1':test.`substring-before`('HEllow',''),'result2':test.`substring-before`('HEllow',null),'result3':test.`substring-before`('',null),'result4':test.`substring-before`('',''),'result5':test.`substring-before`(null,null)};

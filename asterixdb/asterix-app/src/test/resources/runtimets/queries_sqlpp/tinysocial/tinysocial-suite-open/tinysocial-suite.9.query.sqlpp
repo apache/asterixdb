@@ -26,8 +26,8 @@ use TinySocial;
 select element {'uname':user.name,'messages':(
         select element message.message
         from  FacebookMessages as message
-        where (message."author-id" = user.id)
-        order by message."message-id"
+        where (message.`author-id` = user.id)
+        order by message.`message-id`
     )}
 from  FacebookUsers as user
 order by user.name

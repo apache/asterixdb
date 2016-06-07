@@ -20,11 +20,11 @@
 use fuzzyjoin;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element tokenGroupped
 from  DBLP as paper,
-      fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+      fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
 with  id as paper.id
 /* +hash */
 group by token as tokenGroupped

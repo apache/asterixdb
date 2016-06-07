@@ -37,7 +37,7 @@ create type rares03.VisitorType as
   lottery_numbers : {{int32}}
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;

@@ -28,7 +28,7 @@
 use fuzzyjoin;
 
 
-set "simthreshold" ".5f";
+set `simthreshold` `.5f`;
 
 select element {'dblp':dblp,'dblp2':dblp2}
 from  DBLP as dblp,

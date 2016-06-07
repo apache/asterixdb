@@ -27,7 +27,7 @@ use feeds;
 
 create type feeds.TwitterUserType as
  closed {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int32,
   statuses_count : int32,
@@ -39,15 +39,15 @@ create type feeds.TweetMessageType as
  closed {
   tweetid : int64,
   user : TwitterUserType,
-  "sender-location" : point,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string
+  `sender-location` : point,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string
 }
 
 create  table MyTweets(TweetMessageType) primary key tweetid;
 
 create  table DummyTweets(TweetMessageType) primary key tweetid;
 
-create  primary feed socket_feed using socket_adapter (("sockets"="127.0.0.1:9009"),("addressType"="IP"),("type-name"="TweetMessageType"),("format"="adm"));
-create  primary feed client_test_feed using socket_client (("sockets"="127.0.0.1:9009"),("type-name"="TweetMessageType"),("addressType"="IP"),("format"="adm"),("file_splits"="data/twitter/tw_messages_100.adm"));
+create  primary feed socket_feed using socket_adapter ((`sockets`=`127.0.0.1:9009`),(`addressType`=`IP`),(`type-name`=`TweetMessageType`),(`format`=`adm`));
+create  primary feed client_test_feed using socket_client ((`sockets`=`127.0.0.1:9009`),(`type-name`=`TweetMessageType`),(`addressType`=`IP`),(`format`=`adm`),(`file_splits`=`data/twitter/tw_messages_100.adm`));

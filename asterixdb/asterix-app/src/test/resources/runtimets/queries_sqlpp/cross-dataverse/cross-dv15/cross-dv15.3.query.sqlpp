@@ -30,6 +30,6 @@ select element {
 'ReturnType': l.ReturnType,
 'Language': l.Language
 }
-from  "Metadata.Function" as l
+from  `Metadata.Function` as l
 where (l.DataverseName = 'testdv1')
 ;

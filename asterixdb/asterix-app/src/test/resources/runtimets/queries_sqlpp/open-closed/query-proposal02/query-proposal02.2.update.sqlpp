@@ -28,7 +28,7 @@ use test;
 
 
 insert into TweetMessages
-select element {'tweetid':'1023','user':{'screen-name':'dflynn24','lang':'en','friends_count':46,'statuses_count':987,'name':'danielle flynn','followers_count':47},'sender-location':test."create-point"(40.904177,-72.958996),'send-time':test.datetime('2010-02-21T11:56:02-05:00'),'referred-topics':{{'verizon'}},'message-text':'i need a #verizon phone like nowwwww! : ('};
+select element {'tweetid':'1023','user':{'screen-name':'dflynn24','lang':'en','friends_count':46,'statuses_count':987,'name':'danielle flynn','followers_count':47},'sender-location':test.`create-point`(40.904177,-72.958996),'send-time':test.datetime('2010-02-21T11:56:02-05:00'),'referred-topics':{{'verizon'}},'message-text':'i need a #verizon phone like nowwwww! : ('};
 insert into TweetMessages
 select element {'tweetid':'1024','user':{'screen-name':'miriamorous','lang':'en','friends_count':69,'statuses_count':1068,'name':'Miriam Songco','followers_count':78},'send-time':test.datetime('2010-02-21T11:11:43-08:00'),'referred-topics':{{'commercials','verizon','att'}},'message-text':'#verizon & #att #commercials, so competitive'};
 insert into TweetMessages

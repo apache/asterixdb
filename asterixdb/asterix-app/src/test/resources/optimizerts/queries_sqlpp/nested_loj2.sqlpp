@@ -68,7 +68,7 @@ create type tpch.CustomerType as
   c_comment : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;

@@ -21,11 +21,11 @@ USE TinySocial;
 
 
 SELECT org AS organization,
-       avg("get-year"(employment."end-date")) AS average,
-       count(employment."end-date") AS count,
-       sum("get-year"(employment."end-date")) AS sum,
-       min(employment."end-date") AS min,
-       max(employment."end-date") AS max
+       avg(`get-year`(employment.`end-date`)) AS average,
+       count(employment.`end-date`) AS count,
+       sum(`get-year`(employment.`end-date`)) AS sum,
+       min(employment.`end-date`) AS min,
+       max(employment.`end-date`) AS max
 FROM  FacebookUsers as fbu, fbu.employment AS employment
-GROUP BY employment."organization-name" AS org
+GROUP BY employment.`organization-name` AS org
 ;

@@ -42,11 +42,11 @@ create type demo0927.CustomerType as
 
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
 create  table Customers(CustomerType) primary key cid on group1;
 
-load  table Customers using localfs (("path"="asterix_nc1:///tmp/customerData.json"),("format"="adm")) pre-sorted;
+load  table Customers using localfs ((`path`=`asterix_nc1:///tmp/customerData.json`),(`format`=`adm`)) pre-sorted;
 

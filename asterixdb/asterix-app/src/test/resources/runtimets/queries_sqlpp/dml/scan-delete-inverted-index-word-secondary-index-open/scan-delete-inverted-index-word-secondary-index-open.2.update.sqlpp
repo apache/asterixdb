@@ -26,9 +26,9 @@
 use test;
 
 
-load  table DBLP using localfs (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+load  table DBLP using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`)) pre-sorted;
 
 insert into test.DBLPOpen
 select element x
-from  "test.DBLP" as x
+from  `test.DBLP` as x
 ;

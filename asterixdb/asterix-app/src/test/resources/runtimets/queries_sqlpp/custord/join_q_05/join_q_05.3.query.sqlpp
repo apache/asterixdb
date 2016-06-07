@@ -21,7 +21,7 @@ USE test;
 
 
 WITH customer AS (SELECT ELEMENT c FROM Customers c),
-     "orders" AS (SELECT ELEMENT o FROM Orders o)
+     `orders` AS (SELECT ELEMENT o FROM Orders o)
 SELECT c.name AS cust_name,
        c.age AS cust_age,
        o.total AS order_total,

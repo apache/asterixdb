@@ -20,5 +20,5 @@
 use test;
 
 
-create  index fbAuthorIdx  on FacebookMessages ("author-id") type btree;
+create  index fbAuthorIdx  on FacebookMessages (`author-id`) type btree;
 

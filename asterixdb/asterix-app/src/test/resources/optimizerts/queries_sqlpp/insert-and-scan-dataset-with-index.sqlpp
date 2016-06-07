@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-and-scan-dataset-with-index.aql
  * Description     : This test is intended to test inserting into a dataset that has a secondary index and scan
  * the data at the same time where we insert a materializing to prevent the possibility of deadlatch.
@@ -42,5 +42,5 @@ create  index idx_employee_first_name  on test.employee (fname) type btree;
 
 insert into test.employee
 select element {'id':(x.id + 10000),'fname':x.fname,'lname':x.lname,'age':x.age,'dept':x.dept}
-from  "test.employee" as x
+from  `test.employee` as x
 ;

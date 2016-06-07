@@ -26,10 +26,10 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element test.coll_sum((
     select element l.sal
     from  tdst as l
-    where test.not(test."is-null"(l.sal))
+    where test.not(test.`is-null`(l.sal))
 ));

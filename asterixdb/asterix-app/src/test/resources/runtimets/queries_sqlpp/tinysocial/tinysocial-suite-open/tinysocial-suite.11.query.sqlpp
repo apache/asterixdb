@@ -23,12 +23,12 @@
 use TinySocial;
 
 
-set "simfunction" "edit-distance";
+set `simfunction` `edit-distance`;
 
-set "simthreshold" "3";
+set `simthreshold` `3`;
 
 select element {'id':fbu.id,'name':fbu.name,'similar-users':(
-        select element {'twitter-screenname':tu."screen-name",'twitter-name':tu.name}
+        select element {'twitter-screenname':tu.`screen-name`,'twitter-name':tu.name}
         from  TweetMessages as t
         with  tu as t.user
         where (tu.name ~= fbu.name)

@@ -23,4 +23,4 @@
  * Date           : 18th April 2012
  */
 
-{'str2':substring('Hello World',10),'str4':substring('This is a test string',21),'str6':substring('This is a test string',22),'str8':substring('This is a test string',0),'str10':substring('This is a test string',-1),'str13':substring("string-concat"(['This is a test string','This is a another test string']),21),'str14':substring('UC Irvine',("string-length"('UC Irvine') / 2))};
+{'str2':substring('Hello World',10),'str4':substring('This is a test string',21),'str6':substring('This is a test string',22),'str8':substring('This is a test string',0),'str10':substring('This is a test string',-1),'str13':substring(`string-concat`(['This is a test string','This is a another test string']),21),'str14':substring('UC Irvine',(`string-length`('UC Irvine') / 2))};

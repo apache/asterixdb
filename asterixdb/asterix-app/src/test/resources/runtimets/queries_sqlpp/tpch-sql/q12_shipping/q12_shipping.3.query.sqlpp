@@ -21,8 +21,8 @@ use tpch;
 
 
 SELECT l_shipmode l_shipmode,
-       sum("switch-case"(o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH',true,1,false,0)) high_line_count,
-       sum("switch-case"(o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH',true,0,false,1)) low_line_count
+       sum(`switch-case`(o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH',true,1,false,0)) high_line_count,
+       sum(`switch-case`(o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH',true,0,false,1)) low_line_count
 FROM  LineItem l,
       Orders o
 WHERE o.o_orderkey = l.l_orderkey AND l.l_commitdate < l.l_receiptdate AND

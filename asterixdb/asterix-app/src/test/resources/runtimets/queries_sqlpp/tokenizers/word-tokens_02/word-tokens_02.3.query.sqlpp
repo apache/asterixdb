@@ -21,7 +21,7 @@ use test;
 
 
 with  txt as 'ΩΣ',
-      tokens as test."word-tokens"(txt)
+      tokens as test.`word-tokens`(txt)
 select element token
 from  tokens as token
 ;

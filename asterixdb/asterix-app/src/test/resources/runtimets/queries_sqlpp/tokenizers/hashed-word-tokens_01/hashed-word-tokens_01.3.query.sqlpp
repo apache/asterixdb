@@ -20,10 +20,10 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  txt as 'Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen.',
-      tokens as test."hashed-word-tokens"(txt)
+      tokens as test.`hashed-word-tokens`(txt)
 select element token
 from  tokens as token
 ;

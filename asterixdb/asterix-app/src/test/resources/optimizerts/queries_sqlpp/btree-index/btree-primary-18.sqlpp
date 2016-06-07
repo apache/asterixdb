@@ -18,8 +18,8 @@
  */
 /*
  *  Description     : BTree Index verification test
- *                  : This test is intended to verify that the primary BTree index is NOT used 
- *                  : in the optimized query plan 
+ *                  : This test is intended to verify that the primary BTree index is NOT used
+ *                  : in the optimized query plan
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */

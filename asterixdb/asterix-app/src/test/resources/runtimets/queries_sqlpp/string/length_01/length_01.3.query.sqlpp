@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."string-length"('hellow'),'result2':test."string-length"(''),'result3':test."string-length"(null)};
+{'result1':test.`string-length`('hellow'),'result2':test.`string-length`(''),'result3':test.`string-length`(null)};

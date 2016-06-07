@@ -20,22 +20,22 @@
 use fuzzyjoin;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'idDBLP':idDBLP,'idCSX':idCSX,'sim':sim[0]}
 from  DBLP as paperDBLP,
-      fuzzyjoin."subset-collection"(tokensDBLP,0,fuzzyjoin."prefix-len-jaccard"(fuzzyjoin.len(tokensDBLP),0.500000f)) as prefixTokenDBLP,
+      fuzzyjoin.`subset-collection`(tokensDBLP,0,fuzzyjoin.`prefix-len-jaccard`(fuzzyjoin.len(tokensDBLP),0.500000f)) as prefixTokenDBLP,
       CSX as paperCSX,
-      fuzzyjoin."subset-collection"(tokensCSX,0,fuzzyjoin."prefix-len-jaccard"(fuzzyjoin.len(tokensCSX),0.500000f)) as prefixTokenCSX
+      fuzzyjoin.`subset-collection`(tokensCSX,0,fuzzyjoin.`prefix-len-jaccard`(fuzzyjoin.len(tokensCSX),0.500000f)) as prefixTokenCSX
 with  idDBLP as paperDBLP.id,
-      tokensUnrankedDBLP as fuzzyjoin."counthashed-word-tokens"(paperDBLP.title),
+      tokensUnrankedDBLP as fuzzyjoin.`counthashed-word-tokens`(paperDBLP.title),
       tokensDBLP as (
       select element i
       from  tokensUnrankedDBLP as tokenUnranked,
             (
           select element tokenGroupped
           from  DBLP as paper,
-                fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+                fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
           with  id as paper.id
           group by token as tokenGroupped
           order by fuzzyjoin.count(id),tokenGroupped
@@ -44,14 +44,14 @@ with  idDBLP as paperDBLP.id,
       order by i
   ),
       idCSX as paperCSX.id,
-      tokensUnrankedCSX as fuzzyjoin."counthashed-word-tokens"(paperCSX.title),
+      tokensUnrankedCSX as fuzzyjoin.`counthashed-word-tokens`(paperCSX.title),
       tokensCSX as (
       select element i
       from  tokensUnrankedCSX as tokenUnranked,
             (
           select element tokenGroupped
           from  DBLP as paper,
-                fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+                fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
           with  id as paper.id
           group by token as tokenGroupped
           order by fuzzyjoin.count(id),tokenGroupped
@@ -59,7 +59,7 @@ with  idDBLP as paperDBLP.id,
       where (tokenUnranked = tokenRanked)
       order by i
   ),
-      sim as fuzzyjoin."similarity-jaccard-prefix"(fuzzyjoin.len(tokensUnrankedDBLP),tokensDBLP,fuzzyjoin.len(tokensUnrankedCSX),tokensCSX,prefixTokenDBLP,0.500000f)
+      sim as fuzzyjoin.`similarity-jaccard-prefix`(fuzzyjoin.len(tokensUnrankedDBLP),tokensDBLP,fuzzyjoin.len(tokensUnrankedCSX),tokensCSX,prefixTokenDBLP,0.500000f)
 where ((prefixTokenDBLP = prefixTokenCSX) and (sim >= 0.500000f))
 group by idDBLP as idDBLP,idCSX as idCSX,sim as sim
 order by idDBLP,idCSX

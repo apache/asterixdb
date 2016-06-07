@@ -43,5 +43,5 @@ create  index ngram_index  on DBLP (authors:string) type ngram (3) enforced;
 write output to asterix_nc1:"rttest/inverted-index-basic_ngram-edit-distance-check.adm"
 select element o
 from  DBLP as o
-where test."edit-distance-check"(o.authors,'Amihay Motro',1)[0]
+where test.`edit-distance-check`(o.authors,'Amihay Motro',1)[0]
 ;

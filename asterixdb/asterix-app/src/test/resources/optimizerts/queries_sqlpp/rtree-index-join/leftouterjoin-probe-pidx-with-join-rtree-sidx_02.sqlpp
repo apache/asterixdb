@@ -18,7 +18,7 @@
  */
 /*
  * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary rtree index in index subtree.
- * Issue        : 730, 741                 
+ * Issue        : 730, 741
  * Expected Res : Success
  * Date         : 8th May 2014
  */
@@ -31,45 +31,45 @@ use test;
 
 create type test.TwitterUserType as
  closed {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
-  "friends-count" : int32,
-  "statuses-count" : int32,
+  `friends-count` : int32,
+  `statuses-count` : int32,
   name : string,
-  "followers-count" : int32
+  `followers-count` : int32
 }
 
 create type test.TweetMessageType as
  closed {
   tweetid : int64,
   user : TwitterUserType,
-  "sender-location" : point,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string,
+  `sender-location` : point,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string,
   countA : int32,
   countB : int32
 }
 
 create  table TweetMessages(TweetMessageType) primary key tweetid;
 
-create  index twmSndLocIx  on TweetMessages ("sender-location") type rtree;
+create  index twmSndLocIx  on TweetMessages (`sender-location`) type rtree;
 
 create  index msgCountAIx  on TweetMessages (countA) type btree;
 
 create  index msgCountBIx  on TweetMessages (countB) type btree;
 
-create  index msgTextIx  on TweetMessages ("message-text") type keyword;
+create  index msgTextIx  on TweetMessages (`message-text`) type keyword;
 
 write output to asterix_nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_02.adm"
-select element {'tweetid1':t1.tweetid,'loc1':t1."sender-location",'nearby-message':(
-        select element {'tweetid2':t2.tweetid,'loc2':t2."sender-location"}
+select element {'tweetid1':t1.tweetid,'loc1':t1.`sender-location`,'nearby-message':(
+        select element {'tweetid2':t2.tweetid,'loc2':t2.`sender-location`}
         from  TweetMessages as t2
-        where (test."spatial-intersect"(t2."sender-location",n) and (t1.tweetid != t2.tweetid))
+        where (test.`spatial-intersect`(t2.`sender-location`,n) and (t1.tweetid != t2.tweetid))
         order by t2.tweetid
     )}
 from  TweetMessages as t1
-with  n as test."create-circle"(t1."sender-location",0.5)
+with  n as test.`create-circle`(t1.`sender-location`,0.5)
 where (t1.tweetid < test.int64('10'))
 order by t1.tweetid
 ;

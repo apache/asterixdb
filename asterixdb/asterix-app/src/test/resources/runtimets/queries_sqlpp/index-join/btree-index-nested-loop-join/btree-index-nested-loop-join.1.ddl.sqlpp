@@ -29,7 +29,7 @@ use test;
 
 create type test.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int32,
   statuses_count : int32,
@@ -41,12 +41,12 @@ create type test.TweetMessageType as
 {
   tweetid : int64,
   user : string,
-  "sender-location" : point,
-  "send-time" : datetime,
-  "forward-from" : int64,
-  "retweet-from" : int64,
-  "referred-topics" : {{string}},
-  "message-text" : string
+  `sender-location` : point,
+  `send-time` : datetime,
+  `forward-from` : int64,
+  `retweet-from` : int64,
+  `referred-topics` : {{string}},
+  `message-text` : string
 }
 
 create type test.ResultType as
@@ -55,7 +55,7 @@ create type test.ResultType as
   rank : double
 }
 
-create  table TwitterUsers(TwitterUserType) primary key "screen-name";
+create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 create  table TweetMessages(TweetMessageType) primary key tweetid;
 

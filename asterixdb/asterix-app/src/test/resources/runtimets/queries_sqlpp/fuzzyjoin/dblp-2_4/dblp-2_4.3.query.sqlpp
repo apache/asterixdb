@@ -20,19 +20,19 @@
 use fuzzyjoin;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'id':idDBLP,'tokens':tokensDBLP}
 from  DBLP as paperDBLP
 with  idDBLP as paperDBLP.id,
-      tokensUnrankedDBLP as fuzzyjoin."counthashed-word-tokens"(paperDBLP.title),
+      tokensUnrankedDBLP as fuzzyjoin.`counthashed-word-tokens`(paperDBLP.title),
       tokensDBLP as (
       select element i
       from  tokensUnrankedDBLP as tokenUnranked,
             (
           select element tokenGroupped
           from  DBLP as paper,
-                fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+                fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
           with  id as paper.id
           group by token as tokenGroupped
           order by fuzzyjoin.count(id),tokenGroupped

@@ -42,9 +42,9 @@ create  table DBLP(DBLPType) primary key id;
 create  index ngram_index  on DBLP (authors) type ngram (3);
 
 write output to asterix_nc1:"rttest/inverted-index-basic_ngram-fuzzyeq-edit-distance.adm"
-set "simfunction" "edit-distance";
+set `simfunction` `edit-distance`;
 
-set "simthreshold" "1";
+set `simthreshold` `1`;
 
 select element o
 from  DBLP as o

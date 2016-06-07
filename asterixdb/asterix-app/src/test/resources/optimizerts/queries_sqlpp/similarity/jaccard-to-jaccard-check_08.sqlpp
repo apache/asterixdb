@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that the SimilarityCheckRule rewrites the similarity-jaccard function with a threshold 
+ * Description    : Tests that the SimilarityCheckRule rewrites the similarity-jaccard function with a threshold
  *                  into similarity-jaccard-check-check if possible.
  *                  Replacement should *not* happen because of a reverse "<" condition on the similarity.
  * Success        : Yes
@@ -43,5 +43,5 @@ create  table DBLP(DBLPType) primary key id;
 write output to asterix_nc1:"rttest/similarity_jaccard-to-jaccard-check_08.adm"
 select element paper
 from  DBLP as paper
-where (0.800000f > test."similarity-jaccard"(test."word-tokens"(paper.title),test."word-tokens"('Transactions for Cooperative Environments')))
+where (0.800000f > test.`similarity-jaccard`(test.`word-tokens`(paper.title),test.`word-tokens`('Transactions for Cooperative Environments')))
 ;

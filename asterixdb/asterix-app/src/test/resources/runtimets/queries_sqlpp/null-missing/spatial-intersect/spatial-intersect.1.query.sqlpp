@@ -18,11 +18,11 @@
  */
 
 {
-  'null1': "spatial-intersect"(null, "create-rectangle"("create-point"(30.0,70.0), "create-point"(40.0,80.0))),
-  'null2': "spatial-intersect"("create-rectangle"("create-point"(30.0,70.0), "create-point"(40.0,80.0)), null),
-  'missing1': "spatial-intersect"(missing, "create-rectangle"("create-point"(30.0,70.0), "create-point"(40.0,80.0))),
-  'missing2': "spatial-intersect"("create-rectangle"("create-point"(30.0,70.0), "create-point"(40.0,80.0)), missing),
-  'missing2': "spatial-intersect"(missing, null),
-  'missing2': "spatial-intersect"(null, missing),
-  'missing2': "spatial-intersect"(missing, missing)
+  'null1': `spatial-intersect`(null, `create-rectangle`(`create-point`(30.0,70.0), `create-point`(40.0,80.0))),
+  'null2': `spatial-intersect`(`create-rectangle`(`create-point`(30.0,70.0), `create-point`(40.0,80.0)), null),
+  'missing1': `spatial-intersect`(missing, `create-rectangle`(`create-point`(30.0,70.0), `create-point`(40.0,80.0))),
+  'missing2': `spatial-intersect`(`create-rectangle`(`create-point`(30.0,70.0), `create-point`(40.0,80.0)), missing),
+  'missing2': `spatial-intersect`(missing, null),
+  'missing2': `spatial-intersect`(null, missing),
+  'missing2': `spatial-intersect`(missing, missing)
 };

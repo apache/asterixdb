@@ -38,4 +38,4 @@ create  table Tweets(TweetType) primary key id;
 
 create  index usernameIdx  on Tweets (username) type btree;
 
-create  primary feed TweetFeed using file_feed (("fs"="hdfs"),("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/obamatweets.adm"),("format"="adm"),("input-format"="text-input-format"),("type-name"="TweetType"),("tuple-interval"="10"));
+create  primary feed TweetFeed using file_feed ((`fs`=`hdfs`),(`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/obamatweets.adm`),(`format`=`adm`),(`input-format`=`text-input-format`),(`type-name`=`TweetType`),(`tuple-interval`=`10`));

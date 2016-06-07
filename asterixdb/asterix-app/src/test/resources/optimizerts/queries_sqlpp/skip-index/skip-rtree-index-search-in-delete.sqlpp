@@ -46,4 +46,4 @@ create  table MyData(MyRecord) primary key id;
 create  index rtree_index_point  on MyData (point) type rtree;
 
 delete m from MyData
- where  /*+ skip-index */ test."spatial-intersect"(m.point,test."create-polygon"([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]));
+ where  /*+ skip-index */ test.`spatial-intersect`(m.point,test.`create-polygon`([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]));

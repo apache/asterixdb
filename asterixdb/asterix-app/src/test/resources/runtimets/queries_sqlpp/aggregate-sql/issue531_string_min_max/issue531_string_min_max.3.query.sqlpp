@@ -27,10 +27,10 @@
 use test;
 
 
-select element {'sql-min':test."coll_sql-min"((
+select element {'sql-min':test.`coll_sql-min`((
         select element l.name
         from  t1 as l
-    )),'sql-max':test."coll_sql-max"((
+    )),'sql-max':test.`coll_sql-max`((
         select element l.name
         from  t1 as l
     ))};

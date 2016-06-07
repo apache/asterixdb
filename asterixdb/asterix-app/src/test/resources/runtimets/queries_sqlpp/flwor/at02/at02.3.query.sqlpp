@@ -26,16 +26,16 @@ use test;
 
 
 select element {'group':g,'item':(
-        select element {'num':p,'mid':a."message-id"}
+        select element {'num':p,'mid':a.`message-id`}
         from  (
             select element ii
             from  m as ii
-            order by ii."message-id"
+            order by ii.`message-id`
         ) as a at p
     )}
 from  FacebookUsers as u,
       FacebookMessages as m
-where (u.id = m."author-id")
+where (u.id = m.`author-id`)
 group by u.id as g
 order by g
 ;

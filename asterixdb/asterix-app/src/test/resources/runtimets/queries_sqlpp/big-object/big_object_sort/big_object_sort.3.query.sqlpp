@@ -26,7 +26,7 @@
 use test;
 
 
-select element {'custkey':o.o_custkey,'orderkey':o.o_orderkey,'len-comment':test."string-length"(o.o_comment),'comment':o.o_comment}
-from  "Order" as o
+select element {'custkey':o.o_custkey,'orderkey':o.o_orderkey,'len-comment':test.`string-length`(o.o_comment),'comment':o.o_comment}
+from  `Order` as o
 order by o.o_custkey,o.o_orderkey
 ;

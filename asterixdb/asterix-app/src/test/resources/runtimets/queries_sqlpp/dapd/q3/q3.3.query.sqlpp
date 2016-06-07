@@ -20,14 +20,14 @@
 use test;
 
 
-set "simthreshold" ".5f";
+set `simthreshold` `.5f`;
 
 select element {'user_name':user.name,'similar_users':similar_users}
 from  User as user
 with  similar_users as (
       select element {'user_name':similar_user.name}
       from  User as similar_user
-      with  sim as test."similarity-jaccard"(user.interests,similar_user.interests)
+      with  sim as test.`similarity-jaccard`(user.interests,similar_user.interests)
       where ((user.name != similar_user.name) and (user.interests ~= similar_user.interests))
       order by sim desc
       limit 10

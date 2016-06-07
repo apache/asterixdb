@@ -26,5 +26,5 @@
 use OpenSocialNetworkData;
 
 
-load  table TweetMessages using localfs (("path"="asterix_nc1://data/twitter/tw_messages.adm"),("format"="adm"));
+load  table TweetMessages using localfs ((`path`=`asterix_nc1://data/twitter/tw_messages.adm`),(`format`=`adm`));
 

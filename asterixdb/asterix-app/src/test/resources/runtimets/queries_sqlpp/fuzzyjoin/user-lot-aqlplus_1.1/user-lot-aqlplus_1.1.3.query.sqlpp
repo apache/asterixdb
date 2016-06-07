@@ -20,12 +20,12 @@
 use fuzzyjoin;
 
 
-set "simthreshold" ".5f";
+set `simthreshold` `.5f`;
 
 select element {'user':user,'user2':user2,'sim':sim}
 from  Users as user,
       Users as user2
-with  sim as fuzzyjoin."similarity-jaccard"(user.lottery_numbers,user2.lottery_numbers)
+with  sim as fuzzyjoin.`similarity-jaccard`(user.lottery_numbers,user2.lottery_numbers)
 where ((user.lottery_numbers ~= user2.lottery_numbers) and (user.uid < user2.uid))
 order by sim desc,user.uid,user2.uid
 limit 3

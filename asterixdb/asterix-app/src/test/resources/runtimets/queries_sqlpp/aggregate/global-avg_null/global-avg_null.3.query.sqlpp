@@ -20,7 +20,7 @@
 use test;
 
 
-{'global-average':test."global-avg"((
+{'global-average':test.`global-avg`((
     select element {'sum':x.doubleField,'count':x.int32Field}
     from  Numeric as x
 ))};

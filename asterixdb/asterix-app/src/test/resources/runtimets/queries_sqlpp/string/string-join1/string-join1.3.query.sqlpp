@@ -20,4 +20,4 @@
 use test;
 
 
-{'result0':test."string-join"(['aa','25991','bb','31526'],'::'),'result1':test."string-join"(['aa','25991','bb','31526'],'')};
+{'result0':test.`string-join`(['aa','25991','bb','31526'],'::'),'result1':test.`string-join`(['aa','25991','bb','31526'],'')};

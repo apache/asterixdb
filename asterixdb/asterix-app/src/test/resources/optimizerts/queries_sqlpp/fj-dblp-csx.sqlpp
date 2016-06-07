@@ -17,13 +17,13 @@
  * under the License.
  */
 
-drop  database "fj-dblp-csx" if exists;
-create  database "fj-dblp-csx";
+drop  database `fj-dblp-csx` if exists;
+create  database `fj-dblp-csx`;
 
-use "fj-dblp-csx";
+use `fj-dblp-csx`;
 
 
-create type "fj-dblp-csx".DBLPType as
+create type `fj-dblp-csx`.DBLPType as
 {
   id : int32,
   dblpid : string,
@@ -32,7 +32,7 @@ create type "fj-dblp-csx".DBLPType as
   misc : string
 }
 
-create type "fj-dblp-csx".CSXType as
+create type `fj-dblp-csx`.CSXType as
 {
   id : int32,
   csxid : string,
@@ -41,7 +41,7 @@ create type "fj-dblp-csx".CSXType as
   misc : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
@@ -56,7 +56,7 @@ from  DBLP as paperDBLP,
       CSX as paperCSX,
       tokensCSX as prefixTokenCSX
 with  idDBLP as paperDBLP.id,
-      unrankedTokensDBLP as "fj-dblp-csx"."counthashed-word-tokens"(paperDBLP.title),
+      unrankedTokensDBLP as `fj-dblp-csx`.`counthashed-word-tokens`(paperDBLP.title),
       tokensDBLP as (
       select element i
       from  unrankedTokensDBLP as token,
@@ -68,7 +68,7 @@ with  idDBLP as paperDBLP.id,
       order by i
   ),
       idCSX as paperCSX.id,
-      unrankedTokensCSX as "fj-dblp-csx"."counthashed-word-tokens"(paperCSX.title),
+      unrankedTokensCSX as `fj-dblp-csx`.`counthashed-word-tokens`(paperCSX.title),
       tokensCSX as (
       select element i
       from  unrankedTokensCSX as token,

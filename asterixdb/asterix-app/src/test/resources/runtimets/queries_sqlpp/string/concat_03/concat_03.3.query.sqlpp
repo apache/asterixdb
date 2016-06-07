@@ -25,7 +25,7 @@ use test;
 
 
 with  k as [{'a':1,'b':'hello'},{'a':2,'b':{'k':[1,2,2]}}]
-select element test."string-concat"([x.b,' world'])
+select element test.`string-concat`([x.b,' world'])
 from  k as x
 where (x.a = 1)
 ;

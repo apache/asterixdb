@@ -20,11 +20,11 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  a as '',
       b as 'abcdefghij',
-      results as [test."edit-distance-string-is-filterable"(a,0,2,false),test."edit-distance-string-is-filterable"(a,0,2,true),test."edit-distance-string-is-filterable"(a,1,2,false),test."edit-distance-string-is-filterable"(a,1,2,true),test."edit-distance-string-is-filterable"(b,0,2,false),test."edit-distance-string-is-filterable"(b,0,2,true),test."edit-distance-string-is-filterable"(b,1,2,false),test."edit-distance-string-is-filterable"(b,1,2,true),test."edit-distance-string-is-filterable"(b,4,2,false),test."edit-distance-string-is-filterable"(b,5,2,true),test."edit-distance-string-is-filterable"(b,5,2,false),test."edit-distance-string-is-filterable"(b,6,2,true),test."edit-distance-string-is-filterable"(b,0,3,false),test."edit-distance-string-is-filterable"(b,0,3,true),test."edit-distance-string-is-filterable"(b,1,3,false),test."edit-distance-string-is-filterable"(b,1,3,true),test."edit-distance-string-is-filterable"(b,2,3,false),test."edit-distance-string-is-filterable"(b,3,3,true),test."edit-distance-string-is-filterable"(b,3,3,false),test."edit-distance-string-is-filterable"(b,4,3,true)]
+      results as [test.`edit-distance-string-is-filterable`(a,0,2,false),test.`edit-distance-string-is-filterable`(a,0,2,true),test.`edit-distance-string-is-filterable`(a,1,2,false),test.`edit-distance-string-is-filterable`(a,1,2,true),test.`edit-distance-string-is-filterable`(b,0,2,false),test.`edit-distance-string-is-filterable`(b,0,2,true),test.`edit-distance-string-is-filterable`(b,1,2,false),test.`edit-distance-string-is-filterable`(b,1,2,true),test.`edit-distance-string-is-filterable`(b,4,2,false),test.`edit-distance-string-is-filterable`(b,5,2,true),test.`edit-distance-string-is-filterable`(b,5,2,false),test.`edit-distance-string-is-filterable`(b,6,2,true),test.`edit-distance-string-is-filterable`(b,0,3,false),test.`edit-distance-string-is-filterable`(b,0,3,true),test.`edit-distance-string-is-filterable`(b,1,3,false),test.`edit-distance-string-is-filterable`(b,1,3,true),test.`edit-distance-string-is-filterable`(b,2,3,false),test.`edit-distance-string-is-filterable`(b,3,3,true),test.`edit-distance-string-is-filterable`(b,3,3,false),test.`edit-distance-string-is-filterable`(b,4,3,true)]
 select element i
 from  results as i
 ;

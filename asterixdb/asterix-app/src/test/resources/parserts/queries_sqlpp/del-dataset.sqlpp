@@ -42,7 +42,7 @@ create type demo0927.CustomerType as
 
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;

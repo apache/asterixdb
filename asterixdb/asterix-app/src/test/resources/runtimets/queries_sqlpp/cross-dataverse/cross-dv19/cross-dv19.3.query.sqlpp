@@ -23,6 +23,6 @@
  */
 
 select element l
-from  "Metadata.Dataset" as l
+from  `Metadata.Dataset` as l
 where ((l.DataverseName = 'test1') or (l.DataverseName = 'test2') or (l.DataverseName = 'TwitterData'))
 ;

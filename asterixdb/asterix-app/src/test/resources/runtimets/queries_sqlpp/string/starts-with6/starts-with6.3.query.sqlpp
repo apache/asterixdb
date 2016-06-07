@@ -20,7 +20,7 @@
 use test;
 
 
-select element [test."starts-with"(x,'ba'),test."starts-with"(y,'ba')]
+select element [test.`starts-with`(x,'ba'),test.`starts-with`(y,'ba')]
 from  ['foofoo'] as x,
       ['barbar'] as y
 ;

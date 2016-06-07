@@ -22,6 +22,6 @@ use test;
 
 select element m
 from  FacebookMessages as m
-where (test.contains(m.message,'love') and (m."send-time" < test.datetime('2012-12-20T10:10:00')))
-order by m."send-time"
+where (test.contains(m.message,'love') and (m.`send-time` < test.datetime('2012-12-20T10:10:00')))
+order by m.`send-time`
 ;

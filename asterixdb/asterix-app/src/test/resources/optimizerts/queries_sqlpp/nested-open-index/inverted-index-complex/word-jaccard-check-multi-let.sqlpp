@@ -49,8 +49,8 @@ create  index keyword_index  on DBLP (nested.title:string) type keyword enforced
 write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-multi-let.adm"
 select element {'Paper':paper_tokens,'Query':query_tokens}
 from  DBLP as paper
-with  paper_tokens as test."word-tokens"(paper.nested.title),
-      query_tokens as test."word-tokens"('Transactions for Cooperative Environments'),
-      jacc as test."similarity-jaccard-check"(paper_tokens,query_tokens,0.800000f)
+with  paper_tokens as test.`word-tokens`(paper.nested.title),
+      query_tokens as test.`word-tokens`('Transactions for Cooperative Environments'),
+      jacc as test.`similarity-jaccard-check`(paper_tokens,query_tokens,0.800000f)
 where jacc[0]
 ;

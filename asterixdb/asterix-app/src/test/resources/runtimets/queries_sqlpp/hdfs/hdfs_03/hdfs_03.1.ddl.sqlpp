@@ -36,5 +36,5 @@ create type test.LineType as
   content : string
 }
 
-create external  table TextDataset(LineType) using "hdfs"(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/large_text"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="."));
+create external  table TextDataset(LineType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/large_text`),(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`.`));
 

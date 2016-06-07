@@ -20,7 +20,7 @@
 use twitter;
 
 
-select element {'tweetid':test.tweetid,'screen-name':test.user."screen-name"}
+select element {'tweetid':test.tweetid,'screen-name':test.user.`screen-name`}
 from  TweetMessages as test
 order by test.tweetid
 ;

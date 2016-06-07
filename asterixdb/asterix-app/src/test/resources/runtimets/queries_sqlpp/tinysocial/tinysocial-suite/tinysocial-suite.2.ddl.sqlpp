@@ -22,17 +22,17 @@ use TinySocial;
 
 create  table FacebookUsers(FacebookUserType) primary key id;
 
-create  table FacebookMessages(FacebookMessageType) primary key "message-id";
+create  table FacebookMessages(FacebookMessageType) primary key `message-id`;
 
-create  table TwitterUsers(TwitterUserType) primary key "screen-name";
+create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
 
-create  table TweetMessages(TweetMessageType) primary key tweetid hints ("CARDINALITY"="100");
+create  table TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
 
-create  index fbUserSinceIdx  on FacebookUsers ("user-since") type btree;
+create  index fbUserSinceIdx  on FacebookUsers (`user-since`) type btree;
 
-create  index fbAuthorIdx  on FacebookMessages ("author-id") type btree;
+create  index fbAuthorIdx  on FacebookMessages (`author-id`) type btree;
 
-create  index fbSenderLocIndex  on FacebookMessages ("sender-location") type rtree;
+create  index fbSenderLocIndex  on FacebookMessages (`sender-location`) type rtree;
 
 create  index fbMessageIdx  on FacebookMessages (message) type keyword;
 

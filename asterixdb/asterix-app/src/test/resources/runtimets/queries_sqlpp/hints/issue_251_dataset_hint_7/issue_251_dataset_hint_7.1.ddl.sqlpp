@@ -39,10 +39,10 @@ create type feeds.TweetType as
   timestamp : string
 }
 
-create  table Tweets(TweetType) primary key id hints ("CARDINALITY"="200");
+create  table Tweets(TweetType) primary key id hints (`CARDINALITY`=`200`);
 
 create  primary feed TweetFeed using localfs(
-("path"="asterix_nc1://data/twitter/obamatweets.adm"),
-("format"="adm"),
-("type-name"="TweetType"),
-("tuple-interval"="10"));
+(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),
+(`format`=`adm`),
+(`type-name`=`TweetType`),
+(`tuple-interval`=`10`));

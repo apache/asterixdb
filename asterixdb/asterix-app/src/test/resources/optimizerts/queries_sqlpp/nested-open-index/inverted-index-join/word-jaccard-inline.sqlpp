@@ -51,6 +51,6 @@ write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_word-jaccard-in
 select element {'atitle':a.nested.title,'btitle':b.nested.title,'jacc':jacc}
 from  DBLP as a,
       DBLP as b
-with  jacc as test."similarity-jaccard"(test."word-tokens"(a.nested.title),test."word-tokens"(b.nested.title))
+with  jacc as test.`similarity-jaccard`(test.`word-tokens`(a.nested.title),test.`word-tokens`(b.nested.title))
 where ((jacc >= 0.500000f) and (a.nested.id < b.nested.id))
 ;

@@ -20,7 +20,7 @@
 use test;
 
 
-load  table Users using localfs (("path"="asterix_nc1://data/users-visitors-small/users.json"),("format"="adm"));
+load  table Users using localfs ((`path`=`asterix_nc1://data/users-visitors-small/users.json`),(`format`=`adm`));
 
-load  table Visitors using localfs (("path"="asterix_nc1://data/users-visitors-small/visitors.json"),("format"="adm"));
+load  table Visitors using localfs ((`path`=`asterix_nc1://data/users-visitors-small/visitors.json`),(`format`=`adm`));
 

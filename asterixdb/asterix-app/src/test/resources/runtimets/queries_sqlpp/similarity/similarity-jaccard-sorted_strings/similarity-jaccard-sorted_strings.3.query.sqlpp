@@ -20,7 +20,7 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  a as [],
       b as ['abc','bcd','cde','def','efg'],
@@ -28,7 +28,7 @@ with  a as [],
       d as ['abc','bcd','cde','def','efg','fgh','ghi','hij','ijk','jkl'],
       e as ['Abc','bCd','cdE','DEf','eFG','HiJ','IJK'],
       f as ['abc','bcd','cde','def','efg','fgh','ghi','hij','ijk','jkl'],
-      results as [test."similarity-jaccard-sorted"(a,b),test."similarity-jaccard-sorted"(b,a),test."similarity-jaccard-sorted"(c,d),test."similarity-jaccard-sorted"(d,c),test."similarity-jaccard-sorted"(e,f),test."similarity-jaccard-sorted"(f,e)]
+      results as [test.`similarity-jaccard-sorted`(a,b),test.`similarity-jaccard-sorted`(b,a),test.`similarity-jaccard-sorted`(c,d),test.`similarity-jaccard-sorted`(d,c),test.`similarity-jaccard-sorted`(e,f),test.`similarity-jaccard-sorted`(f,e)]
 select element i
 from  results as i
 ;

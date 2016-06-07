@@ -23,12 +23,12 @@
 use TinySocial;
 
 
-select element {'message':t."message-text",'nearby-messages':(
-        select element {'msgtxt':t2."message-text"}
+select element {'message':t.`message-text`,'nearby-messages':(
+        select element {'msgtxt':t2.`message-text`}
         from  TweetMessages as t2
-        where (TinySocial."spatial-distance"(t."sender-location",t2."sender-location") <= 1)
-        order by t2."message-text"
+        where (TinySocial.`spatial-distance`(t.`sender-location`,t2.`sender-location`) <= 1)
+        order by t2.`message-text`
     )}
 from  TweetMessages as t
-order by t."message-text"
+order by t.`message-text`
 ;

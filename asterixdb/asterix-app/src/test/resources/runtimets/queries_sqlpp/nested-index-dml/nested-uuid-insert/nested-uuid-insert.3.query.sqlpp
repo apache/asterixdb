@@ -20,6 +20,6 @@
 use twitter;
 
 
-select element test.nested.nested."message-text"
+select element test.nested.nested.`message-text`
 from  doublenests as test
 ;

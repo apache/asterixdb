@@ -22,6 +22,6 @@ use test;
 
 select element {'id':o.id}
 from  MyData as o
-where test."spatial-intersect"(o.poly1,o.poly2)
+where test.`spatial-intersect`(o.poly1,o.poly2)
 order by o.id
 ;

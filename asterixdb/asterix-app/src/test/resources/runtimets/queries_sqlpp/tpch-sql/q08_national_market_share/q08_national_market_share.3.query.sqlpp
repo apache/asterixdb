@@ -21,7 +21,7 @@ USE tpch;
 
 
 SELECT  year AS year,
-        sum( "switch-case"(t.s_name = 'BRAZIL', true, t.revenue, false, 0.0) )
+        sum( `switch-case`(t.s_name = 'BRAZIL', true, t.revenue, false, 0.0) )
         / sum(t.revenue) AS mkt_share
 FROM  (
         SELECT o_year AS year,
@@ -70,7 +70,7 @@ FROM  (
                 WHERE (s.s_suppkey = lnrcop.l_suppkey)
                 ) AS slnrcop,
                 Nation AS n2
-                WITH  o_year AS tpch."get-year"(slnrcop.o_orderdate)
+                WITH  o_year AS tpch.`get-year`(slnrcop.o_orderdate)
              WHERE slnrcop.s_nationkey = n2.n_nationkey
              ) as t
 GROUP BY t.year AS year

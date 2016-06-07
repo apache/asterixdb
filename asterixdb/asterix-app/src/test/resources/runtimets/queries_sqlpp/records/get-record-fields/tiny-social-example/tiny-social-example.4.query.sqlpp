@@ -25,7 +25,7 @@
 use TinySocial;
 
 
-select element TinySocial."get-record-fields"(user)
+select element TinySocial.`get-record-fields`(user)
 from  FacebookUsers as user
 where (user.id = 8)
 ;

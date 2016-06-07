@@ -31,7 +31,7 @@ use SocialNetworkData;
 
 create type SocialNetworkData.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64,
@@ -42,13 +42,13 @@ create type SocialNetworkData.TwitterUserType as
 create type SocialNetworkData.TweetMessageType as
  closed {
   tweetid : string,
-  "tweetid-copy" : string,
+  `tweetid-copy` : string,
   user : TwitterUserType,
-  "sender-location" : point?,
-  "send-time" : datetime,
-  "send-time-copy" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string
+  `sender-location` : point?,
+  `send-time` : datetime,
+  `send-time-copy` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string
 }
 
 create  table TweetMessages(TweetMessageType) primary key tweetid;

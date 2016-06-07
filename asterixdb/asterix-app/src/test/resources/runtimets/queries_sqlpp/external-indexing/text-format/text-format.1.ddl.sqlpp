@@ -37,7 +37,7 @@ create type test.EmployeeType as
   age : int64
 }
 
-create external  table EmployeeDataset(EmployeeType) using "hdfs"(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/external-indexing-test.txt"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+create external  table EmployeeDataset(EmployeeType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/external-indexing-test.txt`),(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
 create  index EmployeeAgeIdx  on EmployeeDataset (age) type btree;
 

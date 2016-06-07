@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."codepoint-to-string"([20013,25991,23383,31526])};
+{'result1':test.`codepoint-to-string`([20013,25991,23383,31526])};

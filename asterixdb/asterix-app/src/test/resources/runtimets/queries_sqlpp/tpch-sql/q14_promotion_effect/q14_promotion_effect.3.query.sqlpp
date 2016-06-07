@@ -21,7 +21,7 @@ use tpch;
 
 
 select element 100.0 *
-     sum("switch-case"(like(p.p_type,'PROMO%'),true,(l.l_extendedprice * (1 - l.l_discount)),false,0.0))
+     sum(`switch-case`(like(p.p_type,'PROMO%'),true,(l.l_extendedprice * (1 - l.l_discount)),false,0.0))
      / sum(l.l_extendedprice * (1 - l.l_discount))
 FROM  LineItem l,
       Part p

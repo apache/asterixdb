@@ -25,7 +25,7 @@ with  t1 as (
       from  FacebookUsers as t
   ),
       t2 as (
-      select element s."message-id"
+      select element s.`message-id`
       from  FacebookMessages as s
   ),
       c as t1

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- *  Description     : This test is intended to verify that the primary BTree index is used 
+ *  Description     : This test is intended to verify that the primary BTree index is used
  *                  : for an invocation of current-datetime()
  *  Expected Result : Success
  *  Date            : 27th Aug 2015
@@ -42,5 +42,5 @@ create  table CHPReports(CHPReport) primary key timestamp;
 
 select element emergency.message
 from  CHPReports as emergency
-where ((emergency.timestamp >= (emergencyTest."current-datetime"() - emergencyTest."day-time-duration"('PT10H'))) and (emergency.title = 'ghost'))
+where ((emergency.timestamp >= (emergencyTest.`current-datetime`() - emergencyTest.`day-time-duration`('PT10H'))) and (emergency.title = 'ghost'))
 ;

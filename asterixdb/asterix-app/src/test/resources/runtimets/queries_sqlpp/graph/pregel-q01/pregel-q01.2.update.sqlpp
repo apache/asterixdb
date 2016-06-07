@@ -27,5 +27,5 @@ select element {{{'tweetid':1,'user':{'screen-name':'NathanGiesen@211','lang':'e
 insert into MyInputGraph
 select element {'tweetid':tm.tweetid,'rank-value':0.0,'populated-by':links}
 from  TwitterMsgs as tm
-with  links as {{{'tweetid':tm."retweeted-from"},{'tweetid':tm."forwarded-from"}}}
+with  links as {{{'tweetid':tm.`retweeted-from`},{'tweetid':tm.`forwarded-from`}}}
 ;

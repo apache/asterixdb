@@ -38,5 +38,5 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLPadm(DBLPType) primary key id hints ("CARDINALITY"="200");
+create  table DBLPadm(DBLPType) primary key id hints (`CARDINALITY`=`200`);
 

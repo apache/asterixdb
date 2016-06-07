@@ -23,4 +23,4 @@
  * Date         : 19th May 2013
  */
 
-"string-length"("string-concat"(['this is a ','test string']));
+`string-length`(`string-concat`(['this is a ','test string']));

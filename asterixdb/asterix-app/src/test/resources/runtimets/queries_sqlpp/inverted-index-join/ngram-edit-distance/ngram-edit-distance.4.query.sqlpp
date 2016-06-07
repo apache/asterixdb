@@ -28,6 +28,6 @@ use test;
 select element {'arec':a,'brec':b}
 from  Customers as a,
       Customers2 as b
-where ((test."edit-distance"(a.name,b.name) <= 4) and (a.cid < b.cid))
+where ((test.`edit-distance`(a.name,b.name) <= 4) and (a.cid < b.cid))
 order by a.cid,b.cid
 ;

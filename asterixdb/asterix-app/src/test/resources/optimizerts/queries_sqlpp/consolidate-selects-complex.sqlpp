@@ -32,21 +32,21 @@ create type test.DBLPType as
   misc : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
 create  table DBLP(DBLPType) primary key id on group1;
 
-load  table DBLP using localfs (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+load  table DBLP using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`)) pre-sorted;
 
 write output to asterix_nc1:"rttest/consolidate-complex-selects.aql"
 select element {'Paper':paper_tokens,'Query':query_tokens}
 from  DBLP as paper
-with  paper_tokens as test."word-tokens"(paper.title),
-      query_tokens as test."word-tokens"('Transactions for Cooperative Environments'),
-      jacca as test."similarity-jaccard-check"(paper_tokens,query_tokens,0.800000f),
-      jaccb as test."similarity-jaccard-check"(paper_tokens,query_tokens,0.500000f),
-      jaccc as test."similarity-jaccard-check"(paper_tokens,query_tokens,0.300000f)
+with  paper_tokens as test.`word-tokens`(paper.title),
+      query_tokens as test.`word-tokens`('Transactions for Cooperative Environments'),
+      jacca as test.`similarity-jaccard-check`(paper_tokens,query_tokens,0.800000f),
+      jaccb as test.`similarity-jaccard-check`(paper_tokens,query_tokens,0.500000f),
+      jaccc as test.`similarity-jaccard-check`(paper_tokens,query_tokens,0.300000f)
 where (jacca[0] and jaccb[0] and (paper.authors = 'testauth') and jaccc)
 ;

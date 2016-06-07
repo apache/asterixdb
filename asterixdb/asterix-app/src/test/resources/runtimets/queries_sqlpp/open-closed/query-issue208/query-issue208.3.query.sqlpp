@@ -28,7 +28,7 @@ use OpenSocialNetworkData;
 
 select element {'user':uid,'count':OpenSocialNetworkData.count(t)}
 from  TweetMessages as t
-where ((t."send-time" >= OpenSocialNetworkData.datetime('2005-04-13T17:17:22')) and (t."send-time" <= OpenSocialNetworkData.datetime('2011-04-13T17:18:22')))
-group by t.user."screen-name" as uid
+where ((t.`send-time` >= OpenSocialNetworkData.datetime('2005-04-13T17:17:22')) and (t.`send-time` <= OpenSocialNetworkData.datetime('2011-04-13T17:18:22')))
+group by t.user.`screen-name` as uid
 order by uid
 ;

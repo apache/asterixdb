@@ -28,6 +28,6 @@ use test;
 select element {'arec':a,'brec':b}
 from  Customers as a,
       Customers2 as b
-where ((test.len(a.interests) > 2) and (test.len(b.interests) > 2) and (test."edit-distance"(a.interests,b.interests) <= 1) and (a.cid < b.cid))
+where ((test.len(a.interests) > 2) and (test.len(b.interests) > 2) and (test.`edit-distance`(a.interests,b.interests) <= 1) and (a.cid < b.cid))
 order by a.cid,b.cid
 ;

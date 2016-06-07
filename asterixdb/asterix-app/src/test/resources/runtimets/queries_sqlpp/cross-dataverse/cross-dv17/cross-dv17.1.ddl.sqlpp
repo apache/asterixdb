@@ -43,8 +43,8 @@ create dataset fest.t1(testtype) primary key id;
 
 create function fest.f1(){
 (
-from "test.t1" as m,
-     "fest.t1" as l
+from `test.t1` as m,
+     `fest.t1` as l
 order by m, l
 select element { 'l':l,'m':m }
 )

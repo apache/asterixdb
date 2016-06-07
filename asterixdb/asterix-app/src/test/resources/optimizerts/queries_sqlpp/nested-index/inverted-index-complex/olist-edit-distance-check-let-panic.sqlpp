@@ -64,7 +64,7 @@ create  index interests_index  on Customers (nested.interests) type keyword;
 write output to asterix_nc1:"rttest/inverted-index-complex_olist-edit-distance-check-let-panic.adm"
 select element c
 from  Customers as c
-with  ed as test."edit-distance-check"(c.nested.interests,['computers','wine','walking'],3)
+with  ed as test.`edit-distance-check`(c.nested.interests,['computers','wine','walking'],3)
 where ed[0]
 order by c.nested.cid
 ;

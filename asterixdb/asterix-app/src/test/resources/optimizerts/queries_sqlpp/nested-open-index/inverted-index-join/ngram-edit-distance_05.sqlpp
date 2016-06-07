@@ -64,5 +64,5 @@ write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_01.a
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       CSX as b
-where ((test."edit-distance"(a.nested.authors,b.nested.authors) < 3) and (a.nested.id < b.nested.id))
+where ((test.`edit-distance`(a.nested.authors,b.nested.authors) < 3) and (a.nested.id < b.nested.id))
 ;

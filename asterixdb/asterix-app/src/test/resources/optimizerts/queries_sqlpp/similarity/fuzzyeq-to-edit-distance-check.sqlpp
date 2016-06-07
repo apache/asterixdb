@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that the FuzzyEqRule rewrites ~= using edit distance 
+ * Description    : Tests that the FuzzyEqRule rewrites ~= using edit distance
  *                  into edit-distance-check.
  * Success        : Yes
  */
@@ -40,9 +40,9 @@ create type test.DBLPType as
 create  table DBLP(DBLPType) primary key id;
 
 write output to asterix_nc1:"rttest/similarity_fuzzyeq-to-edit-distance-check.adm"
-set "simfunction" "edit-distance";
+set `simfunction` `edit-distance`;
 
-set "simthreshold" "1";
+set `simthreshold` `1`;
 
 select element o
 from  DBLP as o

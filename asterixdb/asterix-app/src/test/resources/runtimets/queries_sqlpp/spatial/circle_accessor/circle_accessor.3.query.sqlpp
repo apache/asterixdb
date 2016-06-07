@@ -25,4 +25,4 @@
 use test;
 
 
-{'circle-radius':test."get-radius"(test."create-circle"(test."create-point"(6.0,3.0),1.0)),'circle-center':test."get-center"(test."create-circle"(test."create-point"(6.0,3.0),1.0))};
+{'circle-radius':test.`get-radius`(test.`create-circle`(test.`create-point`(6.0,3.0),1.0)),'circle-center':test.`get-center`(test.`create-circle`(test.`create-point`(6.0,3.0),1.0))};

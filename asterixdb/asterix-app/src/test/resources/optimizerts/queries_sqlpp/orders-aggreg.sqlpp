@@ -17,13 +17,13 @@
  * under the License.
  */
 
-drop  database "orders-aggreg" if exists;
-create  database "orders-aggreg";
+drop  database `orders-aggreg` if exists;
+create  database `orders-aggreg`;
 
-use "orders-aggreg";
+use `orders-aggreg`;
 
 
-create type "orders-aggreg".OrderType as
+create type `orders-aggreg`.OrderType as
  closed {
   oid : int32,
   cid : int32,
@@ -40,10 +40,10 @@ create  nodegroup group1 if not exists  on
 create  table Orders(OrderType) primary key oid on group1;
 
 write output to asterix_nc1:"/tmp/orders-aggreg.adm"
-select element {'cid':cid,'ordpercust':"orders-aggreg".coll_count(o),'totalcust':"orders-aggreg".coll_sum((
+select element {'cid':cid,'ordpercust':`orders-aggreg`.coll_count(o),'totalcust':`orders-aggreg`.coll_sum((
         select element i.total
         from  o as i
-    )),'avgcust':"orders-aggreg".coll_avg((
+    )),'avgcust':`orders-aggreg`.coll_avg((
         select element i.total
         from  o as i
     ))}

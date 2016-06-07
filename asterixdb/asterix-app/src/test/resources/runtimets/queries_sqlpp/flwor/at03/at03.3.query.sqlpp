@@ -37,6 +37,6 @@ from  (
     select element fb
     from  FacebookUsers as fb
 ) as i
-group by test."get-year"(i."user-since") as fus
+group by test.`get-year`(i.`user-since`) as fus
 order by fus
 ;

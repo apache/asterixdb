@@ -22,7 +22,7 @@ use test;
 
 select element {'id':paper.nested.id,'title':paper.nested.title}
 from  DBLP as paper,
-      test."word-tokens"(paper.nested.title) as word
-where test."edit-distance-check"(word,'Multmedia',1)[0]
+      test.`word-tokens`(paper.nested.title) as word
+where test.`edit-distance-check`(word,'Multmedia',1)[0]
 order by paper.nested.id
 ;

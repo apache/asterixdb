@@ -22,6 +22,6 @@
 use feeds;
 
 
-set "wait-for-completion-feed" "true";
+set `wait-for-completion-feed` `true`;
 
-connect  feed SyntheticTweetFeed to  table SyntheticTweets using policy "BasicFT";
+connect  feed SyntheticTweetFeed to  table SyntheticTweets using policy `BasicFT`;

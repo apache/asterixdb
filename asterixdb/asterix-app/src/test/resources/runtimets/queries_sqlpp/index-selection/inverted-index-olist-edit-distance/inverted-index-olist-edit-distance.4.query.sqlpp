@@ -22,7 +22,7 @@ use test;
 
 select element c
 from  Customers as c
-with  ed as test."edit-distance-check"(c.interests,['computers','wine','walking'],1)
+with  ed as test.`edit-distance-check`(c.interests,['computers','wine','walking'],1)
 where ed[0]
 order by c.cid
 ;

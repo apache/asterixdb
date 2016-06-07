@@ -20,19 +20,19 @@
 use tpch;
 
 
-load  collection LineItem using localfs (("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Orders using localfs (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Orders using localfs ((`path`=`asterix_nc1://data/tpch0.001/orders.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Supplier using localfs (("path"="asterix_nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Supplier using localfs ((`path`=`asterix_nc1://data/tpch0.001/supplier.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Region using localfs (("path"="asterix_nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Region using localfs ((`path`=`asterix_nc1://data/tpch0.001/region.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Nation using localfs (("path"="asterix_nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Nation using localfs ((`path`=`asterix_nc1://data/tpch0.001/nation.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Part using localfs (("path"="asterix_nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Part using localfs ((`path`=`asterix_nc1://data/tpch0.001/part.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Partsupp using localfs (("path"="asterix_nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Partsupp using localfs ((`path`=`asterix_nc1://data/tpch0.001/partsupp.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-load  collection Customer using localfs (("path"="asterix_nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
+load  collection Customer using localfs ((`path`=`asterix_nc1://data/tpch0.001/customer.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 

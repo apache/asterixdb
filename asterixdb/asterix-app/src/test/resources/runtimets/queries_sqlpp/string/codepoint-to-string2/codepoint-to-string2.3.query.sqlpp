@@ -20,4 +20,4 @@
 use test;
 
 
-{'f1':test."codepoint-to-string"([]),'f2':test."codepoint-to-string"([97,98,99])};
+{'f1':test.`codepoint-to-string`([]),'f2':test.`codepoint-to-string`([97,98,99])};

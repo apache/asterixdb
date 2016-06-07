@@ -25,6 +25,6 @@ use TinySocial;
 
 select element user
 from  FacebookUsers as user
-where ((user."user-since" >= TinySocial.datetime('2010-07-22T00:00:00')) and (user."user-since" <= TinySocial.datetime('2012-07-29T23:59:59')))
+where ((user.`user-since` >= TinySocial.datetime('2010-07-22T00:00:00')) and (user.`user-since` <= TinySocial.datetime('2012-07-29T23:59:59')))
 order by user.id
 ;

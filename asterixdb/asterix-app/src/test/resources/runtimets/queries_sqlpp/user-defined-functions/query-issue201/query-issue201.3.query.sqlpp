@@ -23,7 +23,7 @@
  * Date         : 26th November 2012
  */
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  x as range(1,100)
 select element i

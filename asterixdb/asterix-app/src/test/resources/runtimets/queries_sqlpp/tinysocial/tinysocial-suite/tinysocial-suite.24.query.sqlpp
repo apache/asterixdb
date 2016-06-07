@@ -24,8 +24,8 @@ SELECT  user.name AS uname,
         substring(message.message, 30) AS msg
 FROM FacebookMessages AS message,
      FacebookUsers AS user
-WHERE message."author-id" = user.id and
-      message."in-response-to" >= 1 and
-      message."in-response-to" < 11
+WHERE message.`author-id` = user.id and
+      message.`in-response-to` >= 1 and
+      message.`in-response-to` < 11
 ORDER BY uname, alias, msg;
 

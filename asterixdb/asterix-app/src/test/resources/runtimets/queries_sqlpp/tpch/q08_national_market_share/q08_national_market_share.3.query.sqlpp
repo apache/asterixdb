@@ -21,7 +21,7 @@ use tpch;
 
 
 select element {'year':year,'mkt_share':(COLL_SUM((
-          select element tpch."switch-case"((i.s_name = 'BRAZIL'),true,i.revenue,false,0.0)
+          select element tpch.`switch-case`((i.s_name = 'BRAZIL'),true,i.revenue,false,0.0)
           from  t as i
       )) / COLL_SUM((
           select element i.revenue
@@ -61,7 +61,7 @@ from  (
         where (s.s_suppkey = lnrcop.l_suppkey)
     ) as slnrcop,
           Nation as n2
-    with  o_year as tpch."get-year"(slnrcop.o_orderdate)
+    with  o_year as tpch.`get-year`(slnrcop.o_orderdate)
     where (slnrcop.s_nationkey = n2.n_nationkey)
 ) as t
 group by t.year as year

@@ -45,6 +45,6 @@ write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_03.a
 select element {'arec':a,'brec':b,'ed':ed}
 from  DBLP as a,
       DBLP as b
-with  ed as test."edit-distance"(a.authors,b.authors)
+with  ed as test.`edit-distance`(a.authors,b.authors)
 where ((ed < 3) and (a.id < b.id))
 ;

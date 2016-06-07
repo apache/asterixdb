@@ -25,20 +25,20 @@ use DMLTest;
 
 create type DMLTest.EmploymentType as
  closed {
-  "organization-name" : string,
-  "start-date" : date,
-  "end-date" : date?
+  `organization-name` : string,
+  `start-date` : date,
+  `end-date` : date?
 }
 
 create type DMLTest.FacebookUserType as
  closed {
   id : int64,
-  "id-copy" : int64,
+  `id-copy` : int64,
   alias : string,
   name : string,
-  "user-since" : datetime,
-  "user-since-copy" : datetime,
-  "friend-ids" : {{int64}},
+  `user-since` : datetime,
+  `user-since-copy` : datetime,
+  `friend-ids` : {{int64}},
   employment : [EmploymentType]
 }
 

@@ -51,7 +51,7 @@ create  index ngram_index  on DBLP (nested.authors) type ngram (3);
 write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let-panic-nopanic_01.adm"
 select element o
 from  DBLP as o
-with  edb as test."edit-distance-check"(o.nested.authors,'Amihay Motro',5),
-      eda as test."edit-distance-check"(o.nested.authors,'Amihay Motro',3)
+with  edb as test.`edit-distance-check`(o.nested.authors,'Amihay Motro',5),
+      eda as test.`edit-distance-check`(o.nested.authors,'Amihay Motro',3)
 where (edb[0] and eda[0])
 ;

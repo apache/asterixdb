@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test."round-half-to-even"(test.float('0.5')),'f1':test."round-half-to-even"(test.float('-20.5')),'f2':test."round-half-to-even"(test.float('NaN')),'f3':test."round-half-to-even"(test.float('INF')),'f4':test."round-half-to-even"(test.float('-INF')),'f5':test."round-half-to-even"(test.float('-0.0')),'f6':test."round-half-to-even"(test.float('0.0'))};
+{'f0':test.`round-half-to-even`(test.float('0.5')),'f1':test.`round-half-to-even`(test.float('-20.5')),'f2':test.`round-half-to-even`(test.float('NaN')),'f3':test.`round-half-to-even`(test.float('INF')),'f4':test.`round-half-to-even`(test.float('-INF')),'f5':test.`round-half-to-even`(test.float('-0.0')),'f6':test.`round-half-to-even`(test.float('0.0'))};

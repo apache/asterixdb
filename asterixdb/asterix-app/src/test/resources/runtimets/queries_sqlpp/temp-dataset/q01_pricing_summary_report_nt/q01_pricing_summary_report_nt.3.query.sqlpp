@@ -25,7 +25,7 @@
 use tpch;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.coll_sum((
         select element i.l_quantity

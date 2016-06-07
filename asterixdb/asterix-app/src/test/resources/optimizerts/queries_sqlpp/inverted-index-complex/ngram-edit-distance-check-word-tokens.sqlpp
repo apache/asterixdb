@@ -45,6 +45,6 @@ create  index ngram_index  on DBLP (title) type ngram (3);
 write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm"
 select element {'id':paper.id,'title':paper.title}
 from  DBLP as paper,
-      test."word-tokens"(paper.title) as word
-where test."edit-distance-check"(word,'Multmedia',1)[0]
+      test.`word-tokens`(paper.title) as word
+where test.`edit-distance-check`(word,'Multmedia',1)[0]
 ;

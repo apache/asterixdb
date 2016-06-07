@@ -23,5 +23,5 @@
  */
 
 select element a
-from  ["string-length"('abcdefghijklmnopqrstu'),"string-length"('ABCDEFGHIJKLMNOPQRSTU'),"string-length"('abcdEFGHijklMNOPqrstu'),"string-length"('abcd EFGH ijkl MNOP qrstu'),"string-length"('   Hello World    !!!!....:-)'),"string-length"('~!@#$%^&*()_+{}:?<>/.,\';`][\\')] as a
+from  [`string-length`('abcdefghijklmnopqrstu'),`string-length`('ABCDEFGHIJKLMNOPQRSTU'),`string-length`('abcdEFGHijklMNOPqrstu'),`string-length`('abcd EFGH ijkl MNOP qrstu'),`string-length`('   Hello World    !!!!....:-)'),`string-length`('~!@#$%^&*()_+{}:?<>/.,\';`][\\')] as a
 ;

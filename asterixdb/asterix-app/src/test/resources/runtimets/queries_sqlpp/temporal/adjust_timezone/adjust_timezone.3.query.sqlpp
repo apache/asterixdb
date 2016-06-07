@@ -20,4 +20,4 @@
 use test;
 
 
-{'time':test."adjust-time-for-timezone"(test.time('20:15:10.327'),'+0800'),'datetime':test."adjust-datetime-for-timezone"(test.datetime('2010-10-23T01:12:13.329Z'),'-0615'),'null1':test."adjust-time-for-timezone"(null,'+0800'),'null2':test."adjust-time-for-timezone"(test.time('20:15:10.327'),null),'null3':test."adjust-datetime-for-timezone"(null,'-0800'),'null4':test."adjust-datetime-for-timezone"(test.datetime('2010-10-23T01:12:13.329Z'),null)};
+{'time':test.`adjust-time-for-timezone`(test.time('20:15:10.327'),'+0800'),'datetime':test.`adjust-datetime-for-timezone`(test.datetime('2010-10-23T01:12:13.329Z'),'-0615'),'null1':test.`adjust-time-for-timezone`(null,'+0800'),'null2':test.`adjust-time-for-timezone`(test.time('20:15:10.327'),null),'null3':test.`adjust-datetime-for-timezone`(null,'-0800'),'null4':test.`adjust-datetime-for-timezone`(test.datetime('2010-10-23T01:12:13.329Z'),null)};
