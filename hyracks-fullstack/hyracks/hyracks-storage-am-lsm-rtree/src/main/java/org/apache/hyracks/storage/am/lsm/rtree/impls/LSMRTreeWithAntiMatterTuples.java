@@ -250,7 +250,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
 
         if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
             filterManager.updateFilterInfo(component.getLSMComponentFilter(), filterTuples);
@@ -303,13 +303,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             cursor.close();
         }
         if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple());
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
             }
             filterManager.updateFilterInfo(component.getLSMComponentFilter(), filterTuples);
-            filterManager.writeFilterInfo(component.getLSMComponentFilter(), component.getBTree());
+            filterManager.writeFilterInfo(component.getLSMComponentFilter(), component.getRTree());
         }
         bulkloader.end();
 
@@ -469,7 +469,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
-        Set<String> files = new HashSet<String>();
+        Set<String> files = new HashSet<>();
         RTree rtree = ((LSMRTreeDiskComponent) lsmComponent).getRTree();
         files.add(rtree.getFileReference().getFile().getAbsolutePath());
         return files;
