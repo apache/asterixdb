@@ -79,6 +79,7 @@ public class AsterixLifecycleIT {
     @Test
     public void test_1_StopActiveInstance() throws Exception {
         try {
+            LOGGER.info("Starting test: test_1_StopActiveInstance");
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
             String command = "stop -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
@@ -86,7 +87,7 @@ public class AsterixLifecycleIT {
                     .getAsterixInstance(AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
             assert (state.getFailedNCs().size() == NUM_NC && !state.isCcRunning());
-            LOGGER.info("Test stop active instance PASSED");
+            LOGGER.info("PASSED: test_1_StopActiveInstance");
         } catch (Exception e) {
             throw new Exception("Test configure installer " + "\" FAILED!", e);
         }
@@ -95,6 +96,7 @@ public class AsterixLifecycleIT {
     @Test
     public void test_2_StartActiveInstance() throws Exception {
         try {
+            LOGGER.info("Starting test: test_2_StartActiveInstance");
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
             String command = "start -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
@@ -102,7 +104,7 @@ public class AsterixLifecycleIT {
                     .getAsterixInstance(AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);
             assert (state.getFailedNCs().size() == 0 && state.isCcRunning());
-            LOGGER.info("Test start active instance PASSED");
+            LOGGER.info("PASSED: test_2_StartActiveInstance");
         } catch (Exception e) {
             throw new Exception("Test configure installer " + "\" FAILED!", e);
         }
@@ -111,13 +113,14 @@ public class AsterixLifecycleIT {
     @Test
     public void test_3_DeleteActiveInstance() throws Exception {
         try {
+            LOGGER.info("Starting test: test_3_DeleteActiveInstance");
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
             String command = "delete -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService()
                     .getAsterixInstance(AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             assert (instance == null);
-            LOGGER.info("Test delete active instance PASSED");
+            LOGGER.info("PASSED: test_3_DeleteActiveInstance");
         } catch (Exception e) {
             throw new Exception("Test delete active instance " + "\" FAILED!", e);
         } finally {

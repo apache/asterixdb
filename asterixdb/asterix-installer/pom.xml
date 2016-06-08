@@ -26,10 +26,6 @@
   <artifactId>asterix-installer</artifactId>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
-    <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
-    <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
-    <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
   </properties>
 
@@ -110,30 +106,6 @@
             <phase>package</phase>
             <goals>
               <goal>attached</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
-          <runOrder>alphabetical</runOrder>
-          <forkMode>pertest</forkMode>
-          <argLine>${coverageArgLine}</argLine>
-          <excludes>
-            <exclude>${failsafe.test.excludes}</exclude>
-            <exclude>${cluster.test.excludes}</exclude>
-            <exclude>${cluster.extest.excludes}</exclude>
-            <exclude>${replication.test.excludes}</exclude>
-          </excludes>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
             </goals>
           </execution>
         </executions>

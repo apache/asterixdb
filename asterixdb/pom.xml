@@ -56,6 +56,12 @@
     <invalid.tests>**/DmlTest.java</invalid.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
     <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests},${repeated.tests}</global.test.excludes>
+
+    <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
+    <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
+    <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
+    <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
+
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.2.18-SNAPSHOT</algebricks.version>
     <hyracks.version>0.2.18-SNAPSHOT</hyracks.version>
@@ -96,6 +102,30 @@
             <exclude>${global.test.excludes},${test.excludes}</exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+          <runOrder>alphabetical</runOrder>
+          <forkMode>pertest</forkMode>
+          <argLine>${coverageArgLine}</argLine>
+          <excludes>
+            <exclude>${failsafe.test.excludes}</exclude>
+            <exclude>${cluster.test.excludes}</exclude>
+            <exclude>${cluster.extest.excludes}</exclude>
+            <exclude>${replication.test.excludes}</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
