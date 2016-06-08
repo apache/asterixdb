@@ -56,6 +56,15 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [unix1]
+    :
+    FunctionCall test.unix-time-from-date-in-days@1[
+      FunctionCall test.date-from-unix-time-in-days@1[
+        LiteralExpr [LONG] [15600]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [duration1]
     :
     OperatorExpr [
@@ -183,6 +192,13 @@ RecordConstructor [
     LiteralExpr [STRING] [null1]
     :
     FunctionCall test.date-from-unix-time-in-days@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [nullunix1]
+    :
+    FunctionCall test.unix-time-from-date-in-days@1[
       LiteralExpr [NULL]
     ]
   )
