@@ -20,10 +20,10 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  txt as 'Jürgen S. Generic\'s Car',
-      tokens as test."hashed-gram-tokens"(txt,3,false)
+      tokens as test.`hashed-gram-tokens`(txt,3,false)
 select element token
 from  tokens as token
 ;

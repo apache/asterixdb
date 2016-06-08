@@ -35,7 +35,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt8PrinterFacto
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AIntervalPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ALinePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullableFieldPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AObjectPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.APointPrinterFactory;
@@ -119,7 +119,7 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     throw new NotImplementedException("'Unorderedlist' type unsupported for CSV output");
                 case UNION: {
                     if (((AUnionType) aqlType).isUnknownableType()) {
-                        return new ANullableFieldPrinterFactory((AUnionType) aqlType);
+                        return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
                     } else {
                         return new AUnionPrinterFactory((AUnionType) aqlType);
                     }

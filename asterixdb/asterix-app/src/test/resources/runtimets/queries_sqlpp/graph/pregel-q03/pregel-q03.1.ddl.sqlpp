@@ -32,7 +32,7 @@ create type Pregelix.EdgeType as
 create type Pregelix.NodeType as
 {
   id : int64,
-  "value" : double?,
+  `value` : double?,
   edges : {{EdgeType}}
 }
 

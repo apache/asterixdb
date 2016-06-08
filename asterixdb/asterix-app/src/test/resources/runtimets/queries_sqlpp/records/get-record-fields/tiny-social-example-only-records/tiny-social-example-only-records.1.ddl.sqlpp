@@ -30,7 +30,7 @@ use TinySocial;
 
 create type TinySocial.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64
@@ -40,17 +40,17 @@ create type TinySocial.TweetMessageType as
  closed {
   tweetid : string,
   user : TwitterUserType,
-  "sender-location" : point?,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string
+  `sender-location` : point?,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string
 }
 
 create type TinySocial.EmploymentType as
 {
-  "organization-name" : string,
-  "start-date" : date,
-  "end-date" : date?
+  `organization-name` : string,
+  `start-date` : date,
+  `end-date` : date?
 }
 
 create type TinySocial.FacebookUserType as
@@ -58,23 +58,23 @@ create type TinySocial.FacebookUserType as
   id : int64,
   alias : string,
   name : string,
-  "user-since" : datetime,
-  "friend-ids" : {{int64}},
+  `user-since` : datetime,
+  `friend-ids` : {{int64}},
   employment : [EmploymentType]
 }
 
 create type TinySocial.FacebookMessageType as
  closed {
-  "message-id" : int64,
-  "author-id" : int64,
-  "in-response-to" : int64?,
-  "sender-location" : point?,
+  `message-id` : int64,
+  `author-id` : int64,
+  `in-response-to` : int64?,
+  `sender-location` : point?,
   message : string
 }
 
 create type TinySocial.TwitterUserAlternateType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64
@@ -84,16 +84,16 @@ create type TinySocial.TweetMessageAlternateType as
  closed {
   tweetid : string,
   user : TwitterUserAlternateType,
-  "sender-location" : point?,
-  "send-time" : datetime,
-  "message-text" : string
+  `sender-location` : point?,
+  `send-time` : datetime,
+  `message-text` : string
 }
 
 create type TinySocial.EmploymentAlternateType as
 {
-  "organization-name" : string,
-  "start-date" : date,
-  "end-date" : date?
+  `organization-name` : string,
+  `start-date` : date,
+  `end-date` : date?
 }
 
 create type TinySocial.FacebookUserAlternateType as
@@ -101,16 +101,16 @@ create type TinySocial.FacebookUserAlternateType as
   id : int64,
   alias : string,
   name : string,
-  "user-since" : datetime,
+  `user-since` : datetime,
   employment : EmploymentAlternateType
 }
 
 create type TinySocial.FacebookMessageAlternateType as
  closed {
-  "message-id" : int64,
-  "author-id" : int64,
-  "in-response-to" : int64?,
-  "sender-location" : point?,
+  `message-id` : int64,
+  `author-id` : int64,
+  `in-response-to` : int64?,
+  `sender-location` : point?,
   message : string
 }
 

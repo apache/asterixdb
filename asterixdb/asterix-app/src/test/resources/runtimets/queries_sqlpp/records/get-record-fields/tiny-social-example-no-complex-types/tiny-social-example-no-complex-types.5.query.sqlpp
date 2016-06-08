@@ -25,7 +25,7 @@
 use TinySocial;
 
 
-select element TinySocial."get-record-fields"(r)
+select element TinySocial.`get-record-fields`(r)
 from  FacebookUsersAlternate as r
 order by r.id
 ;

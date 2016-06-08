@@ -20,4 +20,4 @@
 use test;
 
 
-{'f1':test."ends-with"('ends','s'),'f2':test."ends-with"('start',null),'f3':test."ends-with"(null,null),'f4':test."ends-with"('',null),'f5':test."ends-with"('',''),'f6':test."ends-with"(null,'')};
+{'f1':test.`ends-with`('ends','s'),'f2':test.`ends-with`('start',null),'f3':test.`ends-with`(null,null),'f4':test.`ends-with`('',null),'f5':test.`ends-with`('',''),'f6':test.`ends-with`(null,'')};

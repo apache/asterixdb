@@ -50,4 +50,4 @@ create  table SyntheticTweets(TweetMessageType) primary key id;
 
 create  index ngram_index  on SyntheticTweets (message_text) type ngram (3);
 
-create  primary feed SyntheticTweetFeed using twitter_firehose (("duration"="5"),("tps"="50"),("type-name"="TweetMessageType"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+create  primary feed SyntheticTweetFeed using twitter_firehose ((`duration`=`5`),(`tps`=`50`),(`type-name`=`TweetMessageType`),(`tput-duration`=`5`),(`dataverse-dataset`=`feeds:SyntheticTweets`),(`mode`=`controlled`));

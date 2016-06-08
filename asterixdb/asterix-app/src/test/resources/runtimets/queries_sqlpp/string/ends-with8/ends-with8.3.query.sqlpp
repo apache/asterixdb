@@ -28,6 +28,6 @@ use test;
 
 select element l
 from  testds as l
-where test."ends-with"(l.name,'Jones')
+where test.`ends-with`(l.name,'Jones')
 order by l.name
 ;

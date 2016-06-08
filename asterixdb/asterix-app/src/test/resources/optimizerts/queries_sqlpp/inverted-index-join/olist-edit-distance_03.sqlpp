@@ -57,5 +57,5 @@ write output to asterix_nc1:"rttest/inverted-index-join_olist-edit-distance_03.a
 select element {'arec':a,'brec':b}
 from  Customers as a,
       Customers as b
-where ((test."edit-distance"(a.interests,b.interests) <= 2) and (a.cid < b.cid))
+where ((test.`edit-distance`(a.interests,b.interests) <= 2) and (a.cid < b.cid))
 ;

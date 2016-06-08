@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."string-concat"(['aa','25991','bb','31526']),'result2':test."string-concat"([])};
+{'result1':test.`string-concat`(['aa','25991','bb','31526']),'result2':test.`string-concat`([])};

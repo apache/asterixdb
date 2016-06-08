@@ -25,15 +25,15 @@ use test;
 
 
 select element {'timebin':bin,'count':test.count(i2),'total_ms':test.coll_sum((
-        select element test."ms-from-day-time-duration"(test."duration-from-interval"(test."get-overlapping-interval"(bin,i3.interval)))
+        select element test.`ms-from-day-time-duration`(test.`duration-from-interval`(test.`get-overlapping-interval`(bin,i3.interval)))
         from  i2 as i3
     ))}
 from  (
-    select element {'interval':test."interval-start-from-time"(i1.time,i1.duration)}
+    select element {'interval':test.`interval-start-from-time`(i1.time,i1.duration)}
     from  tsdata as i1
     order by i1.time
 ) as i2,
-      test."overlap-bins"(i2.interval,test.time('00:00:00'),test."day-time-duration"('PT1H30M')) as j
+      test.`overlap-bins`(i2.interval,test.time('00:00:00'),test.`day-time-duration`('PT1H30M')) as j
 group by j as bin
-order by test."get-interval-start"(bin)
+order by test.`get-interval-start`(bin)
 ;

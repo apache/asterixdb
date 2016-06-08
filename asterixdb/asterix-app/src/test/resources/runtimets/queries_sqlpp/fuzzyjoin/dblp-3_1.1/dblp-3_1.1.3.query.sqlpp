@@ -20,23 +20,23 @@
 use fuzzyjoin;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'left':paperLeft,'right':paperRight,'sim':ridpair.sim}
 from  (
     select element {'idLeft':idLeft,'idRight':idRight,'sim':sim[0]}
     from  DBLP as paperLeft,
-          fuzzyjoin."subset-collection"(tokensLeft,0,fuzzyjoin."prefix-len-jaccard"(lenLeft,0.500000f)) as prefixTokenLeft,
+          fuzzyjoin.`subset-collection`(tokensLeft,0,fuzzyjoin.`prefix-len-jaccard`(lenLeft,0.500000f)) as prefixTokenLeft,
           DBLP as paperRight,
-          fuzzyjoin."subset-collection"(tokensRight,0,fuzzyjoin."prefix-len-jaccard"(lenRight,0.500000f)) as prefixTokenRight
-    with  lenLeft as fuzzyjoin.len(fuzzyjoin."counthashed-word-tokens"(paperLeft.title)),
+          fuzzyjoin.`subset-collection`(tokensRight,0,fuzzyjoin.`prefix-len-jaccard`(lenRight,0.500000f)) as prefixTokenRight
+    with  lenLeft as fuzzyjoin.len(fuzzyjoin.`counthashed-word-tokens`(paperLeft.title)),
           tokensLeft as (
           select element i
-          from  fuzzyjoin."counthashed-word-tokens"(paperLeft.title) as tokenUnranked,
+          from  fuzzyjoin.`counthashed-word-tokens`(paperLeft.title) as tokenUnranked,
                 (
               select element tokenGroupped
               from  DBLP as paper,
-                    fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+                    fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
               /* +hash */
               group by token as tokenGroupped
               order by fuzzyjoin.count(paper),tokenGroupped
@@ -44,14 +44,14 @@ from  (
           where (tokenUnranked = tokenRanked)
           order by i
       ),
-          lenRight as fuzzyjoin.len(fuzzyjoin."counthashed-word-tokens"(paperRight.title)),
+          lenRight as fuzzyjoin.len(fuzzyjoin.`counthashed-word-tokens`(paperRight.title)),
           tokensRight as (
           select element i
-          from  fuzzyjoin."counthashed-word-tokens"(paperRight.title) as tokenUnranked,
+          from  fuzzyjoin.`counthashed-word-tokens`(paperRight.title) as tokenUnranked,
                 (
               select element tokenGroupped
               from  DBLP as paper,
-                    fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+                    fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
               /* +hash */
               group by token as tokenGroupped
               order by fuzzyjoin.count(paper),tokenGroupped
@@ -59,7 +59,7 @@ from  (
           where (tokenUnranked = tokenRanked)
           order by i
       ),
-          sim as fuzzyjoin."similarity-jaccard-prefix"(lenLeft,tokensLeft,lenRight,tokensRight,prefixTokenLeft,0.500000f)
+          sim as fuzzyjoin.`similarity-jaccard-prefix`(lenLeft,tokensLeft,lenRight,tokensRight,prefixTokenLeft,0.500000f)
     where ((prefixTokenLeft = prefixTokenRight) and ((sim >= 0.500000f) and (paperLeft.id < paperRight.id)))
     /* +hash */
     group by paperLeft.id as idLeft,paperRight.id as idRight

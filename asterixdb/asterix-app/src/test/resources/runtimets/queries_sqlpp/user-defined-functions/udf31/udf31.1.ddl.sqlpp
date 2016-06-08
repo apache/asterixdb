@@ -28,9 +28,9 @@ use emergencyTest;
 
 create type EmergencyReport as
 {
-  "id": int,
-  "intensity": int,
-  "message": string
+  `id`: int,
+  `intensity`: int,
+  `message`: string
 }
 
 create table EmergencyReports(EmergencyReport)

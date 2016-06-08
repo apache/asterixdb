@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests whether an ngram_index is applied to optimize a selection query using 
+ * Description    : Tests whether an ngram_index is applied to optimize a selection query using
  *                  two edit-distance-check function of which only the second can be optimized with an index.
  *                  Tests that the optimizer rule correctly drills through the let clauses.
  *                  The index should be applied.
@@ -46,7 +46,7 @@ create  index ngram_index  on DBLP (authors) type ngram (3);
 write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let-panic-nopanic_01.adm"
 select element o
 from  DBLP as o
-with  edb as test."edit-distance-check"(o.authors,'Amihay Motro',5),
-      eda as test."edit-distance-check"(o.authors,'Amihay Motro',3)
+with  edb as test.`edit-distance-check`(o.authors,'Amihay Motro',5),
+      eda as test.`edit-distance-check`(o.authors,'Amihay Motro',3)
 where (edb[0] and eda[0])
 ;

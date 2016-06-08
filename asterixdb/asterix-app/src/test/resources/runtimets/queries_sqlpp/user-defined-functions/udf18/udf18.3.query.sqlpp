@@ -25,6 +25,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 test.not(test.fn06());

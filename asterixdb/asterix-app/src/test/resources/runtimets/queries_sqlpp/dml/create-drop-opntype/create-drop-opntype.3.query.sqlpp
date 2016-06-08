@@ -27,6 +27,6 @@ use test;
 
 
 select element l
-from  "Metadata.Datatype" as l
+from  `Metadata.Datatype` as l
 where (l.DatatypeName = 'TestType')
 ;

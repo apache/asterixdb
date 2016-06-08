@@ -18,5 +18,5 @@
  */
 
 with  bla as {'name':'value'}
-select element (bla."name" = bla.name)
+select element (bla.`name` = bla.name)
 ;

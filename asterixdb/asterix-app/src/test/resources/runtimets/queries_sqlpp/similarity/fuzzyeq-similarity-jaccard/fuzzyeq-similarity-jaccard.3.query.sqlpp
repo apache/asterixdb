@@ -20,11 +20,11 @@
 use test;
 
 
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.5f";
+set `simthreshold` `0.5f`;
 
 select element paper
 from  DBLP as paper
-where (test."word-tokens"(paper.title) ~= test."word-tokens"('Transactions for Cooperative Environments'))
+where (test.`word-tokens`(paper.title) ~= test.`word-tokens`('Transactions for Cooperative Environments'))
 ;

@@ -18,13 +18,13 @@
  */
 use TinySocial;
 
-select h as "hour",
-       count(t) as "count",
+select h as `hour`,
+       count(t) as `count`,
        (
-         select min as "minute", count(k) as "sum"
+         select min as `minute`, count(k) as `sum`
          from t as k
-         group by "get-minute"(k."send-time") as min
+         group by `get-minute`(k.`send-time`) as min
          order by min
-       ) as "finer"
+       ) as `finer`
 from TweetMessages as t
-group by "get-hour"(t."send-time") as h;
+group by `get-hour`(t.`send-time`) as h;

@@ -77,8 +77,9 @@ public class ParserTestExecutor extends TestExecutor {
                     }
 
                     // Runs the test query.
-                    File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                     File expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+                    File actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile,
+                            new File(actualPath));
                     testSQLPPParser(testFile, actualResultFile, expectedResultFile);
 
                     LOGGER.info(

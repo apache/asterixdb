@@ -24,6 +24,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
     private static final String ERR_MSG = "Aggregator is not implemented for ";
@@ -57,7 +58,7 @@ public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
-        return AUnionType.createNullableType(strippedInputTypes[0]);
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        return AUnionType.createUnknownableType(strippedInputTypes[0]);
     }
 }

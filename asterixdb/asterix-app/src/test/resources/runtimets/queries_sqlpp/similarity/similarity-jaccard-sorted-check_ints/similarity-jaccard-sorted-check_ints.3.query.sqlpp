@@ -20,13 +20,13 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  a as [],
       b as [1,2,3,4,5],
       c as [1,2,3,4,5,8,9],
       d as [1,2,3,4,5,7,8,9,10,11],
-      results as [test."similarity-jaccard-sorted-check"(a,b,0.000000f),test."similarity-jaccard-sorted-check"(b,a,0.000000f),test."similarity-jaccard-sorted-check"(a,b,0.100000f),test."similarity-jaccard-sorted-check"(b,a,0.100000f),test."similarity-jaccard-sorted-check"(c,d,0.600000f),test."similarity-jaccard-sorted-check"(d,c,0.600000f),test."similarity-jaccard-sorted-check"(c,d,0.800000f),test."similarity-jaccard-sorted-check"(d,c,0.800000f)]
+      results as [test.`similarity-jaccard-sorted-check`(a,b,0.000000f),test.`similarity-jaccard-sorted-check`(b,a,0.000000f),test.`similarity-jaccard-sorted-check`(a,b,0.100000f),test.`similarity-jaccard-sorted-check`(b,a,0.100000f),test.`similarity-jaccard-sorted-check`(c,d,0.600000f),test.`similarity-jaccard-sorted-check`(d,c,0.600000f),test.`similarity-jaccard-sorted-check`(c,d,0.800000f),test.`similarity-jaccard-sorted-check`(d,c,0.800000f)]
 select element i
 from  results as i
 ;

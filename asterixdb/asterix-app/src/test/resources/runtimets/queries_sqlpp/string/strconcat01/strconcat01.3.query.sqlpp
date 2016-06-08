@@ -27,7 +27,7 @@
 use test;
 
 
-select element {'Full Name':test."string-concat"([l.fname,l.lname])}
+select element {'Full Name':test.`string-concat`([l.fname,l.lname])}
 from  testds as l
 order by l.id
 ;

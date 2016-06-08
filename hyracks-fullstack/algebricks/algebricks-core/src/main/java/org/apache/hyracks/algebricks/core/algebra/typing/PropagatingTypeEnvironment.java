@@ -58,7 +58,7 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
         return nonNullVariables;
     }
 
-    public List<List<LogicalVariable>> getCorrelatedNullableVariableLists() {
+    public List<List<LogicalVariable>> getCorrelatedMissableVariableLists() {
         return correlatedNullableVariableLists;
     }
 

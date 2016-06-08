@@ -55,7 +55,7 @@ from  (
         where (CONTAINS(p.p_name,'green') and (p.p_partkey = l2.l_partkey))
     ) as l3
     with  amount as ((l3.l_extendedprice * (1 - l3.l_discount)) - (l3.ps_supplycost * l3.l_quantity)),
-          o_year as tpch."get-year"(o.o_orderdate)
+          o_year as tpch.`get-year`(o.o_orderdate)
     where (o.o_orderkey = l3.l_orderkey)
 ) as profit
 group by profit.nation as nation,profit.o_year as o_year

@@ -50,5 +50,5 @@ create type test.LineItemType as
   l_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber using compaction policy "constant"(("num-components"="2"));
+create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber using compaction policy `constant`((`num-components`=`2`));
 

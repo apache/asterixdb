@@ -43,7 +43,7 @@ public class BooleanFunctionTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) {
         return AUnionType.createUnknownableType(BuiltinType.ABOOLEAN);
     }
 }

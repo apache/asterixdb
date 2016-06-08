@@ -22,4 +22,4 @@
 * Date         : 04 Jun 2015
 */
 
-"get-record-field-value"({'id':1,'project':'AsterixDB','address':{'city':'Irvine','state':'CA'},'related':['Hivestrix','Preglix','Apache VXQuery']},'related');
+`get-record-field-value`({'id':1,'project':'AsterixDB','address':{'city':'Irvine','state':'CA'},'related':['Hivestrix','Preglix','Apache VXQuery']},'related');

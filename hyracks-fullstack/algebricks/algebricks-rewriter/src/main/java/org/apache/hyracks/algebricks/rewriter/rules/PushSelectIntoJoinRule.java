@@ -253,8 +253,8 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
 
     private static void copySelectToBranch(SelectOperator select, Mutable<ILogicalOperator> branch,
             IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator newSelect = new SelectOperator(select.getCondition(), select.getRetainNull(),
-                select.getNullPlaceholderVariable());
+        ILogicalOperator newSelect = new SelectOperator(select.getCondition(), select.getRetainMissing(),
+                select.getMissingPlaceholderVariable());
         Mutable<ILogicalOperator> newRef = new MutableObject<ILogicalOperator>(branch.getValue());
         newSelect.getInputs().add(newRef);
         branch.setValue(newSelect);

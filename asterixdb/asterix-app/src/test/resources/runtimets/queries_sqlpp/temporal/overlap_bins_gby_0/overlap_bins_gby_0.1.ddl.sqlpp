@@ -31,7 +31,7 @@ create type test.Schema as
  closed {
   id : int32,
   time : time,
-  duration : "day-time-duration"
+  duration : `day-time-duration`
 }
 
 create  table tsdata(Schema) primary key id;

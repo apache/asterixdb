@@ -50,11 +50,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -293,8 +293,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     private void mapChildren(ILogicalOperator op, ILogicalOperator opArg) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> inputs = op.getInputs();
         List<Mutable<ILogicalOperator>> inputsArg = opArg.getInputs();
-        if (inputs.size() != inputsArg.size())
+        if (inputs.size() != inputsArg.size()) {
             throw new AlgebricksException("children are not isomoprhic");
+        }
         for (int i = 0; i < inputs.size(); i++) {
             ILogicalOperator input = inputs.get(i).getValue();
             ILogicalOperator inputArg = inputsArg.get(i).getValue();
@@ -311,8 +312,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariables(List<LogicalVariable> variablesLeft, List<LogicalVariable> variablesRight) {
-        if (variablesLeft.size() != variablesRight.size())
+        if (variablesLeft.size() != variablesRight.size()) {
             return;
+        }
         int size = variablesLeft.size();
         for (int i = 0; i < size; i++) {
             LogicalVariable left = variablesLeft.get(i);
@@ -346,8 +348,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
 
     private void mapVarExprPairList(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> leftPairs,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> rightPairs) {
-        if (leftPairs.size() != rightPairs.size())
+        if (leftPairs.size() != rightPairs.size()) {
             return;
+        }
         for (int i = 0; i < leftPairs.size(); i++) {
             ILogicalExpression exprLeft = leftPairs.get(i).second.getValue();
             LogicalVariable leftVar = leftPairs.get(i).first;
@@ -367,8 +370,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     private void mapVariablesForAbstractAssign(List<LogicalVariable> variablesLeft,
             List<Mutable<ILogicalExpression>> exprsLeft, List<LogicalVariable> variablesRight,
             List<Mutable<ILogicalExpression>> exprsRight) {
-        if (variablesLeft.size() != variablesRight.size())
+        if (variablesLeft.size() != variablesRight.size()) {
             return;
+        }
         int size = variablesLeft.size();
         for (int i = 0; i < size; i++) {
             ILogicalExpression exprLeft = exprsLeft.get(i).getValue();
@@ -389,13 +393,15 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
         AbstractOperatorWithNestedPlans argOp = (AbstractOperatorWithNestedPlans) arg;
         List<ILogicalPlan> plans = op.getNestedPlans();
         List<ILogicalPlan> plansArg = argOp.getNestedPlans();
-        if (plans.size() != plansArg.size())
+        if (plans.size() != plansArg.size()) {
             return;
+        }
         for (int i = 0; i < plans.size(); i++) {
             List<Mutable<ILogicalOperator>> roots = plans.get(i).getRoots();
             List<Mutable<ILogicalOperator>> rootsArg = plansArg.get(i).getRoots();
-            if (roots.size() != rootsArg.size())
+            if (roots.size() != rootsArg.size()) {
                 return;
+            }
             for (int j = 0; j < roots.size(); j++) {
                 ILogicalOperator topOp1 = roots.get(j).getValue();
                 ILogicalOperator topOp2 = rootsArg.get(j).getValue();
@@ -411,8 +417,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
 
     private Mutable<ILogicalExpression> copyExpressionAndSubtituteVars(Mutable<ILogicalExpression> expr) {
         ILogicalExpression copy = ((AbstractLogicalExpression) expr.getValue()).cloneExpression();
-        for (Entry<LogicalVariable, LogicalVariable> entry : variableMapping.entrySet())
+        for (Entry<LogicalVariable, LogicalVariable> entry : variableMapping.entrySet()) {
             copy.substituteVar(entry.getKey(), entry.getValue());
+        }
         return new MutableObject<ILogicalExpression>(copy);
     }
 
@@ -424,8 +431,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
 
     private void mapVarTripleList(List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> leftTriples,
             List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> rightTriples) {
-        if (leftTriples.size() != rightTriples.size())
+        if (leftTriples.size() != rightTriples.size()) {
             return;
+        }
         for (int i = 0; i < leftTriples.size(); i++) {
             LogicalVariable leftFirstVar = leftTriples.get(i).first;
             LogicalVariable leftSecondVar = leftTriples.get(i).second;
@@ -459,12 +467,10 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private boolean varEquivalent(LogicalVariable left, LogicalVariable right) {
-        if (variableMapping.get(right) == null)
+        if (variableMapping.get(right) == null) {
             return false;
-        if (variableMapping.get(right).equals(left))
-            return true;
-        else
-            return false;
+        }
+        return variableMapping.get(right).equals(left);
     }
 
     @Override
@@ -474,7 +480,8 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public Void visitOuterUnnestOperator(OuterUnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
+    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
         mapVariablesStandard(op, arg);
         return null;
     }

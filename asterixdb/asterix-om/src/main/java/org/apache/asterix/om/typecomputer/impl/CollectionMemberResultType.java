@@ -24,6 +24,7 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class CollectionMemberResultType extends AbstractResultTypeComputer {
 
@@ -42,7 +43,7 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType type = strippedInputTypes[0];
         if (type.getTypeTag() == ATypeTag.ANY) {
             return BuiltinType.ANY;

@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."starts-with"('start','t')};
+{'result1':test.`starts-with`('start','t')};

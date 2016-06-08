@@ -22,6 +22,6 @@ use test;
 
 select element m
 from  FacebookMessages as m
-where (test."spatial-intersect"(m."sender-location",test."create-polygon"([40.0,79.87,30.0,75.0,50.0,80.0,10.0,10.0])) and (m."send-time" < test.datetime('2012-11-20T10:10:00.000Z')))
-order by m."send-time"
+where (test.`spatial-intersect`(m.`sender-location`,test.`create-polygon`([40.0,79.87,30.0,75.0,50.0,80.0,10.0,10.0])) and (m.`send-time` < test.datetime('2012-11-20T10:10:00.000Z')))
+order by m.`send-time`
 ;

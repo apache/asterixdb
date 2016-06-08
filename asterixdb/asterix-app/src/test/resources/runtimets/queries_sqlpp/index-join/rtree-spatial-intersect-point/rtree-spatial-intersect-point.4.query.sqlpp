@@ -29,6 +29,6 @@ use test;
 select element {'aid':a.id,'bid':b.id,'apt':a.point,'bp':b.point}
 from  MyData1 as a,
       MyData2 as b
-where (test."spatial-intersect"(a.point,b.point) and (a.id != b.id))
+where (test.`spatial-intersect`(a.point,b.point) and (a.id != b.id))
 order by a.id,b.id
 ;

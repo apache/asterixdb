@@ -26,8 +26,8 @@
 
 {'a':(
     select element l
-    from  "fest.t1" as l
+    from  `fest.t1` as l
 ),'b':(
     select element m
-    from  "test.t1" as m
+    from  `test.t1` as m
 )};

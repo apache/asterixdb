@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- *  Description     : This test is intended to verify that the primary BTree index is NOT used 
- *                  : in the optimized query plan. 
+ *  Description     : This test is intended to verify that the primary BTree index is NOT used
+ *                  : in the optimized query plan.
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */

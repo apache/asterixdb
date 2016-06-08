@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."substring-after"('HEllow',''),'result2':test."substring-after"('HEllow',null),'result3':test."substring-after"('',null),'result4':test."substring-after"('',''),'result5':test."substring-after"(null,null)};
+{'result1':test.`substring-after`('HEllow',''),'result2':test.`substring-after`('HEllow',null),'result3':test.`substring-after`('',null),'result4':test.`substring-after`('',''),'result5':test.`substring-after`(null,null)};

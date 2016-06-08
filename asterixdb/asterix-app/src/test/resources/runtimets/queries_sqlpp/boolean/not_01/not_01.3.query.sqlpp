@@ -20,6 +20,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 {'not_x':test.not(true),'not_y':test.not(false),'not_z':test.not(null)};

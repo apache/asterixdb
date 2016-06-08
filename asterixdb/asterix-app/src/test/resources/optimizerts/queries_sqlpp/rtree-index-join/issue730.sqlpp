@@ -18,7 +18,7 @@
  */
 /*
  * Description  : Test that left-outer-join may use an available rtree index in index subtree.
- * Issue        : 730              
+ * Issue        : 730
  * Expected Res : Success
  * Date         : 8th May 2014
  */
@@ -57,9 +57,9 @@ write output to asterix_nc1:"rttest/rtree-index-join_issue730.adm"
 select element {'message':t1.tweetid,'nearby-message':(
         select element t2.tweetid
         from  TweetMessages as t2
-        where test."spatial-intersect"(t2.sender_location,n)
+        where test.`spatial-intersect`(t2.sender_location,n)
     )}
 from  TweetMessages as t1
-with  n as test."create-circle"(t1.sender_location,5.0)
+with  n as test.`create-circle`(t1.sender_location,5.0)
 where ((t1.send_time >= test.datetime('2011-06-18T14:10:17')) and (t1.send_time < test.datetime('2011-06-18T15:10:17')))
 ;

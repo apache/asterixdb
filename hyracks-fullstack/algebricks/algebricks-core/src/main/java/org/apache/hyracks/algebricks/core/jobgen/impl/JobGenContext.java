@@ -183,7 +183,7 @@ public class JobGenContext {
         return expressionTypeComputer.getType(expr, typingContext.getMetadataProvider(), env);
     }
 
-    public IMissingWriterFactory getNullWriterFactory() {
+    public IMissingWriterFactory getMissingWriterFactory() {
         return nonMatchWriterFactory;
     }
 

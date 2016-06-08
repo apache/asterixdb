@@ -28,7 +28,7 @@ create  database test;
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 create type test.DBLPType as
  closed {
@@ -46,5 +46,5 @@ create  index ngram_index  on DBLP (title) type ngram (3);
 write output to asterix_nc1:"rttest/inverted-index-basic_ngram-jaccard.adm"
 select element o
 from  DBLP as o
-where (test."similarity-jaccard"(test."gram-tokens"(o.title,3,false),test."gram-tokens"('Transactions for Cooperative Environments',3,false)) >= 0.500000f)
+where (test.`similarity-jaccard`(test.`gram-tokens`(o.title,3,false),test.`gram-tokens`('Transactions for Cooperative Environments',3,false)) >= 0.500000f)
 ;

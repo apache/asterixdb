@@ -20,9 +20,9 @@
 use fuzzyjoin;
 
 
-set "simfunction" "Jaccard";
+set `simfunction` `Jaccard`;
 
-set "simthreshold" ".6f";
+set `simthreshold` `.6f`;
 
 select element {'user':user,'visitor':visitor}
 from  Users as user,

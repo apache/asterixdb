@@ -53,43 +53,47 @@ public class ARecordPrinter {
     public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
             throws IOException, AsterixException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
-        List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
 
         nameVisitorArg.first = ps;
         itemVisitorArg.first = ps;
 
         ps.print(startRecord);
-
-        // print field 0 to n-2
         final int size = fieldNames.size();
-        for (int i = 0; i < size - 1; i++) {
-            printField(ps, visitor, fieldNames, fieldTags, fieldValues, i);
-            ps.print(fieldSeparator);
-        }
+        IVisitablePointable fieldValue = size > 0 ? fieldValues.get(0) : null;
+        ATypeTag typeTag = fieldValue != null ? EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]) : null;
+        for (int i = 0; i < size; ++i) {
+            IVisitablePointable fieldName = fieldNames.get(i);
 
-        // print field n-1
-        if (size > 0) {
-            printField(ps, visitor, fieldNames, fieldTags, fieldValues, size - 1);
-        }
+            // Prints the current field.
+            if (typeTag != ATypeTag.MISSING) {
+                printField(ps, visitor, fieldName, fieldValue, typeTag);
+            }
 
+            // Prints the field separator.
+            if (i < size - 1) {
+                fieldValue = fieldValues.get(i + 1);
+                ATypeTag nextTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                        .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]);
+                if (!(i == 0 && typeTag == ATypeTag.MISSING) && nextTypeTag != ATypeTag.MISSING) {
+                    ps.print(fieldSeparator);
+                }
+                typeTag = nextTypeTag;
+            }
+        }
         ps.print(endRecord);
     }
 
-    private void printField(PrintStream ps, IPrintVisitor visitor, List<IVisitablePointable> fieldNames,
-            List<IVisitablePointable> fieldTags, List<IVisitablePointable> fieldValues, int i) throws AsterixException {
-        IVisitablePointable itemTypeTag = fieldTags.get(i);
-        IVisitablePointable item = fieldValues.get(i);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
-        itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
-
+    private void printField(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName,
+            IVisitablePointable fieldValue, ATypeTag fieldTypeTag) throws AsterixException {
+        itemVisitorArg.second = fieldTypeTag;
         if (fieldNameSeparator != null) {
             // print field name
-            fieldNames.get(i).accept(visitor, nameVisitorArg);
+            fieldName.accept(visitor, nameVisitorArg);
             ps.print(fieldNameSeparator);
         }
         // print field value
-        item.accept(visitor, itemVisitorArg);
+        fieldValue.accept(visitor, itemVisitorArg);
     }
 }

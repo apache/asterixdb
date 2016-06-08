@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that non-datascan unnests are pushed through join and 
+ * Description    : Tests that non-datascan unnests are pushed through join and
  *                : the query plan is rewritten as hybrid hash join.
  * Success        : Yes
  */

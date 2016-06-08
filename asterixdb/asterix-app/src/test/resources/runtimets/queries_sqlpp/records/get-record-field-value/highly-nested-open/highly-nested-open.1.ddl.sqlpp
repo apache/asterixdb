@@ -48,7 +48,7 @@ create type test.FGS as
 create type test.OFGS as
 {
   id : int64,
-  "Order" : string
+  `Order` : string
 }
 
 create type test.COFGS as

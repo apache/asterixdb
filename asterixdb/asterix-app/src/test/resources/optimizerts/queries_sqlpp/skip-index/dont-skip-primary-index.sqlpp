@@ -18,7 +18,7 @@
  */
 /*
  *  Description     : The hint to skip secondary indexes don't apply to the primary index
- *                  : This test is intended to verify that the primary index is still used instead of a scan 
+ *                  : This test is intended to verify that the primary index is still used instead of a scan
  *  Expected Result : Success
  *  Date            : 21th December 2013
  */

@@ -20,7 +20,7 @@
 use test;
 
 
-load  table MyDatatmp using localfs (("path"="asterix_nc1://data/spatial/spatialDataNulls.json"),("format"="adm"));
+load  table MyDatatmp using localfs ((`path`=`asterix_nc1://data/spatial/spatialDataNulls.json`),(`format`=`adm`));
 
 insert into MyData
 select element {'nested':c}

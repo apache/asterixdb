@@ -22,4 +22,4 @@
  * Date         : 7th Aug 2012
  */
 
-"string-to-codepoint"('"\'-=_+|\\,./<>?:;~`');
+`string-to-codepoint`('"\'-=_+|\\,./<>?:;~`');

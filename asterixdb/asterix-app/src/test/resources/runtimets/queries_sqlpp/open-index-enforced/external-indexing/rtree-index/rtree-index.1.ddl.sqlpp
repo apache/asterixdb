@@ -35,7 +35,7 @@ create type test.MyRecord as
   circle : circle
 }
 
-create external  table MyData(MyRecord) using "hdfs"(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/spatialData.json"),("input-format"="text-input-format"),("format"="adm"));
+create external  table MyData(MyRecord) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/spatialData.json`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
 create  index rtree_index_point  on MyData (point:point) type rtree enforced;
 

@@ -45,5 +45,5 @@ write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_03.ad
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       DBLP as b
-where (test."similarity-jaccard-check"(test."word-tokens"(a.title),test."word-tokens"(b.title),0.500000f)[0] and (a.id < b.id))
+where (test.`similarity-jaccard-check`(test.`word-tokens`(a.title),test.`word-tokens`(b.title),0.500000f)[0] and (a.id < b.id))
 ;

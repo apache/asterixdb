@@ -64,5 +64,5 @@ write output to asterix_nc1:"rttest/inverted-index-join_olist-jaccard-check_01.a
 select element {'arec':a,'brec':b}
 from  Customers as a,
       Customers2 as b
-where ( /*+ indexnl */ test."similarity-jaccard-check"(a.nested.interests,b.nested.interests,0.700000f)[0] and (a.nested.cid < b.nested.cid))
+where ( /*+ indexnl */ test.`similarity-jaccard-check`(a.nested.interests,b.nested.interests,0.700000f)[0] and (a.nested.cid < b.nested.cid))
 ;

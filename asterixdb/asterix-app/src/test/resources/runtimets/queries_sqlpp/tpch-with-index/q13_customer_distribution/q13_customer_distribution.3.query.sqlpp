@@ -20,7 +20,7 @@
 use tpch;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'c_count':c_count,'custdist':custdist}
 from  (

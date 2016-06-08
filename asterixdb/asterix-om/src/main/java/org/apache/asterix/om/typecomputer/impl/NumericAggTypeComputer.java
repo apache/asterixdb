@@ -24,6 +24,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericAggTypeComputer extends AbstractResultTypeComputer {
 
@@ -47,12 +48,12 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
             case ANY:
                 break;
             default:
-                throw new NotImplementedException(ERR_MSG + tag);
+                throw new NotImplementedException(ERR_MSG + type);
         }
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
         IAType type;
         switch (tag) {
@@ -66,7 +67,7 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
                 type = strippedInputTypes[0];
                 break;
             default:
-                throw new NotImplementedException(ERR_MSG + tag);
+                throw new NotImplementedException(ERR_MSG + strippedInputTypes[0]);
         }
         return AUnionType.createNullableType(type, "AggResult");
     }

@@ -20,4 +20,4 @@
 use test;
 
 
-select element {'start-null-interval':test."get-interval-start"(null),'end-null-interval':test."get-interval-end"(null)};
+select element {'start-null-interval':test.`get-interval-start`(null),'end-null-interval':test.`get-interval-end`(null)};

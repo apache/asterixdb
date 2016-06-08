@@ -20,11 +20,11 @@
 use fuzzyjoin;
 
 
-set "simthreshold" ".5f";
+set `simthreshold` `.5f`;
 
 select element {'dblp':dblp,'dblp2':dblp2}
 from  DBLP as dblp,
       DBLP as dblp2
-where ((fuzzyjoin."word-tokens"(dblp.title) ~= fuzzyjoin."word-tokens"(dblp2.title)) and (dblp.id < dblp2.id))
+where ((fuzzyjoin.`word-tokens`(dblp.title) ~= fuzzyjoin.`word-tokens`(dblp2.title)) and (dblp.id < dblp2.id))
 order by dblp.id,dblp2.id
 ;

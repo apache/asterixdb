@@ -40,5 +40,5 @@ create  table Office(Employee) primary key id;
 insert into Office
 select element {'id':1,'name':'clerk#1','salary':120000};
 select element t
-from  "test.Office" as t
+from  `test.Office` as t
 ;

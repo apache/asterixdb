@@ -36,7 +36,7 @@ public class AqlMissingWriterFactory implements IMissingWriterFactory {
 
     @Override
     public IMissingWriter createMissingWriter() {
-        return out -> writeMissing(out);
+        return AqlMissingWriterFactory::writeMissing;
     }
 
     private static void writeMissing(DataOutput out) throws HyracksDataException {

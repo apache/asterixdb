@@ -27,5 +27,5 @@ use test;
 
 
 select element x
-from  "All" as x
+from  `All` as x
 ;

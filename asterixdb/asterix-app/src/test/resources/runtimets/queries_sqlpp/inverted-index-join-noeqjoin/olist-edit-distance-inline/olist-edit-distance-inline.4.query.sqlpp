@@ -27,12 +27,12 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'a':a.interests,'b':b.interests,'ed':ed}
 from  Customers as a,
       Customers2 as b
-with  ed as test."edit-distance"(a.interests,b.interests)
+with  ed as test.`edit-distance`(a.interests,b.interests)
 where ((test.len(a.interests) > 2) and (test.len(b.interests) > 2) and (ed <= 1) and (a.cid < b.cid))
 order by ed,a.cid,b.cid
 ;

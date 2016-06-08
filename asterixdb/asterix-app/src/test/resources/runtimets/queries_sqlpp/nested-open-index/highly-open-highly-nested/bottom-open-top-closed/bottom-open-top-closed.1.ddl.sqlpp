@@ -52,7 +52,7 @@ create type test.FGS as
 create type test.OFGS as
  closed {
   id : int64,
-  "Order" : string,
+  `Order` : string,
   lower : FGS
 }
 

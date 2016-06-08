@@ -26,10 +26,10 @@
 use test;
 
 
-select element {'tweet':{'id':t1.tweetid,'topics':t1."message-text"},'similar-tweets':(
-        select element {'id':t2.tweetid,'topics':t2."message-text"}
+select element {'tweet':{'id':t1.tweetid,'topics':t1.`message-text`},'similar-tweets':(
+        select element {'id':t2.tweetid,'topics':t2.`message-text`}
         from  TweetMessages as t2
-        with  sim as test."edit-distance-check"(t1."message-text",t2."message-text",7)
+        with  sim as test.`edit-distance-check`(t1.`message-text`,t2.`message-text`,7)
         where (sim[0] and (t2.tweetid != t1.tweetid))
         order by t2.tweetid
     )}

@@ -24,4 +24,4 @@
 use test;
 
 
-select element test."coll_sql-min"([]);
+select element test.`coll_sql-min`([]);

@@ -18,9 +18,9 @@
  */
 /*
  * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
- *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint 
+ *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint
  *                  we expect the join to be transformed into an indexed nested-loop join.
- *                  We expect the additional predicates to be put into a select above the 
+ *                  We expect the additional predicates to be put into a select above the
  *                  primary index search.
  * Success        : Yes
  */

@@ -27,6 +27,7 @@ import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericUnaryFunctionTypeComputer extends AbstractResultTypeComputer {
 
@@ -54,7 +55,7 @@ public class NumericUnaryFunctionTypeComputer extends AbstractResultTypeComputer
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
         switch (tag) {
             case INT8:

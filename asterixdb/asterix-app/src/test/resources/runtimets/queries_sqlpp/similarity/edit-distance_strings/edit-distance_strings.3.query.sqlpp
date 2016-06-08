@@ -22,7 +22,7 @@ use test;
 
 with  a as 'Nalini Venkatasubramanian',
       b as 'Nalini Wekatasupramanian',
-      results as [test."edit-distance"(a,b),test."edit-distance"(b,a)]
+      results as [test.`edit-distance`(a,b),test.`edit-distance`(b,a)]
 select element i
 from  results as i
 ;

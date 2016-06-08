@@ -18,7 +18,7 @@
  */
 /*
  * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary rtree index in index subtree.
- * Issue        : 730, 741                
+ * Issue        : 730, 741
  * Expected Res : Success
  * Date         : 8th May 2014
  */
@@ -31,22 +31,22 @@ use test;
 
 create type test.TwitterUserType as
  closed {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
-  "friends-count" : int32,
-  "statuses-count" : int32,
+  `friends-count` : int32,
+  `statuses-count` : int32,
   name : string,
-  "followers-count" : int32
+  `followers-count` : int32
 }
 
 create type test.TweetMessageNestedType as
  closed {
   tweetid : int64,
   user : TwitterUserType,
-  "sender-location" : point,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string,
+  `sender-location` : point,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string,
   countA : int32,
   countB : int32
 }
@@ -58,13 +58,13 @@ create type test.TweetMessageType as
 
 create  table TweetMessages(TweetMessageType) primary key nested.tweetid;
 
-create  index topicKeywordIx  on TweetMessages (nested."referred-topics") type keyword;
+create  index topicKeywordIx  on TweetMessages (nested.`referred-topics`) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-jaccard-check_idx_01.adm"
-select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested."referred-topics"},'similar-tweets':(
-        select element {'id':t2.nested.tweetid,'topics':t2.nested."referred-topics"}
+select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested.`referred-topics`},'similar-tweets':(
+        select element {'id':t2.nested.tweetid,'topics':t2.nested.`referred-topics`}
         from  TweetMessages as t2
-        with  sim as test."similarity-jaccard-check"(t1.nested."referred-topics",t2.nested."referred-topics",0.500000f)
+        with  sim as test.`similarity-jaccard-check`(t1.nested.`referred-topics`,t2.nested.`referred-topics`,0.500000f)
         where (sim[0] and (t2.nested.tweetid != t1.nested.tweetid))
         order by t2.nested.tweetid
     )}

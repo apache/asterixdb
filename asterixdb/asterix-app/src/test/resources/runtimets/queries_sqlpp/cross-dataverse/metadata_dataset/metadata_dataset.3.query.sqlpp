@@ -18,6 +18,6 @@
  */
 
 select element c
-from  "Metadata.Dataset" as c
+from  `Metadata.Dataset` as c
 where (c.DataverseName = 'Metadata')
 ;

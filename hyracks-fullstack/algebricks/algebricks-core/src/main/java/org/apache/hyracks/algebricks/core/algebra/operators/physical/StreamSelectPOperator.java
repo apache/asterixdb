@@ -64,11 +64,12 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         SelectOperator select = (SelectOperator) op;
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
-        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(select.getCondition()
-                .getValue(), context.getTypeEnvironment(op), inputSchemas, context);
+        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(
+                select.getCondition().getValue(), context.getTypeEnvironment(op), inputSchemas, context);
         StreamSelectRuntimeFactory runtime = new StreamSelectRuntimeFactory(cond, null,
-                context.getBinaryBooleanInspectorFactory(), select.getRetainNull(), inputSchemas[0].findVariable(select
-                        .getNullPlaceholderVariable()), context.getNullWriterFactory());
+                context.getBinaryBooleanInspectorFactory(), select.getRetainMissing(),
+                inputSchemas[0].findVariable(select.getMissingPlaceholderVariable()),
+                context.getMissingWriterFactory());
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(select, runtime, recDesc);

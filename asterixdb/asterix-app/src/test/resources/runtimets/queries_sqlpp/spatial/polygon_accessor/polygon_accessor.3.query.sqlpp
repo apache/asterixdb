@@ -25,8 +25,8 @@
 use test;
 
 
-with  polygon as test."create-polygon"([1.0,1.0,2.0,2.0,3.0,3.0,4.0,4.0]),
-      polygon_list as test."get-points"(polygon)
+with  polygon as test.`create-polygon`([1.0,1.0,2.0,2.0,3.0,3.0,4.0,4.0]),
+      polygon_list as test.`get-points`(polygon)
 select element p
 from  polygon_list as p
 ;

@@ -28,7 +28,7 @@ create  database test;
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 create type test.DBLPType as
 {
@@ -43,12 +43,12 @@ create  table DBLP(DBLPType) primary key id;
 create  index ngram_index  on DBLP (title:string) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-jaccard_03.adm"
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.5f";
+set `simthreshold` `0.5f`;
 
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       DBLP as b
-where ((test."gram-tokens"(a.title,3,false) ~= test."gram-tokens"(b.title,3,false)) and (a.id < b.id))
+where ((test.`gram-tokens`(a.title,3,false) ~= test.`gram-tokens`(b.title,3,false)) and (a.id < b.id))
 ;

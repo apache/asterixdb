@@ -31,7 +31,7 @@ use TinySocial;
 
 create type TinySocial.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64,
@@ -39,9 +39,9 @@ create type TinySocial.TwitterUserType as
   followers_count : int64
 }
 
-create  table TwitterUsers(TwitterUserType) primary key "screen-name";
+create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 select element user
 from  TwitterUsers as user
-order by user."screen-name" desc
+order by user.`screen-name` desc
 ;

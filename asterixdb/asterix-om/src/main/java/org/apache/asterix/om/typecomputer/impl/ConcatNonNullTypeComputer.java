@@ -22,6 +22,8 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 /**
  * The type computer for concat-not-null.
@@ -34,7 +36,7 @@ public class ConcatNonNullTypeComputer extends AbstractResultTypeComputer {
     public static final ConcatNonNullTypeComputer INSTANCE = new ConcatNonNullTypeComputer();
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         boolean any = false;
         IAType currentType = null;
         for (IAType type : strippedInputTypes) {

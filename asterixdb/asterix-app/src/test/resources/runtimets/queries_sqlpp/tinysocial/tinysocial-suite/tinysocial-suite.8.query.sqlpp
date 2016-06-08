@@ -26,6 +26,6 @@ use TinySocial;
 select element {'uname':user.name,'message':message.message}
 from  FacebookUsers as user,
       FacebookMessages as message
-where (message."author-id" /*+ indexnl */  = user.id)
-order by user.name,message."message-id"
+where (message.`author-id` /*+ indexnl */  = user.id)
+order by user.name,message.`message-id`
 ;

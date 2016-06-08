@@ -50,7 +50,7 @@ public class RecordBuilder implements IARecordBuilder {
     private int offsetPosition;
     private int headerSize;
     private boolean isOpen;
-    private boolean isNullable;
+    private boolean containsOptionalField;
     private int numberOfSchemaFields;
 
     private int openPartOffset;
@@ -101,7 +101,10 @@ public class RecordBuilder implements IARecordBuilder {
         this.numberOfOpenFields = 0;
         this.offsetPosition = 0;
         if (nullBitMap != null) {
-            Arrays.fill(nullBitMap, (byte) 0);
+            // A default null byte is 10101010 (0xAA):
+            // the null bit is 1, which means the field is not a null,
+            // the missing bit is 0, means the field is missing (by default).
+            Arrays.fill(nullBitMap, (byte) 0xAA);
         }
     }
 
@@ -116,11 +119,11 @@ public class RecordBuilder implements IARecordBuilder {
         this.offsetPosition = 0;
         if (recType != null) {
             this.isOpen = recType.isOpen();
-            this.isNullable = NonTaggedFormatUtil.hasNullableField(recType);
+            this.containsOptionalField = NonTaggedFormatUtil.hasOptionalField(recType);
             this.numberOfSchemaFields = recType.getFieldNames().length;
         } else {
             this.isOpen = true;
-            this.isNullable = false;
+            this.containsOptionalField = false;
             this.numberOfSchemaFields = 0;
         }
         // the header of the record consists of tag + record length (in bytes) +
@@ -145,41 +148,60 @@ public class RecordBuilder implements IARecordBuilder {
                 closedPartOffsets = new int[numberOfSchemaFields];
             }
 
-            if (isNullable) {
-                nullBitMapSize = (int) Math.ceil(numberOfSchemaFields / 8.0);
+            if (containsOptionalField) {
+                nullBitMapSize = (int) Math.ceil(numberOfSchemaFields / 4.0);
                 if (nullBitMap == null || nullBitMap.length < nullBitMapSize) {
                     this.nullBitMap = new byte[nullBitMapSize];
                 }
-                Arrays.fill(nullBitMap, 0, nullBitMapSize, (byte) 0);
+                // A default null byte is 10101010 (0xAA):
+                // the null bit is 1, which means the field is not a null,
+                // the missing bit is 0, means the field is missing (by default).
+                Arrays.fill(nullBitMap, 0, nullBitMapSize, (byte) 0xAA);
                 headerSize += nullBitMap.length;
             }
         }
     }
 
     @Override
-    public void addField(int id, IValueReference value) {
-        closedPartOffsets[id] = closedPartOutputStream.size();
+    public void addField(int fid, IValueReference value) {
+        closedPartOffsets[fid] = closedPartOutputStream.size();
         int len = value.getLength() - 1;
         // +1 because we do not store the value tag.
         closedPartOutputStream.write(value.getByteArray(), value.getStartOffset() + 1, len);
         numberOfClosedFields++;
-        if (isNullable && value.getByteArray()[value.getStartOffset()] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-            nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
-        }
+        addNullOrMissingField(fid, value.getByteArray(), value.getStartOffset());
     }
 
-    public void addField(int id, byte[] value) {
-        closedPartOffsets[id] = closedPartOutputStream.size();
+    public void addField(int fid, byte[] value) {
+        closedPartOffsets[fid] = closedPartOutputStream.size();
         // We assume the tag is not included (closed field)
         closedPartOutputStream.write(value, 0, value.length);
         numberOfClosedFields++;
-        if (isNullable && value[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-            nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
+        addNullOrMissingField(fid, value, 0);
+    }
+
+    private void addNullOrMissingField(int fid, byte[] data, int offset) {
+        if (containsOptionalField) {
+            byte nullByte = (byte) (1 << (7 - 2 * (fid % 4)));
+            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                // unset the null bit, 0 means is null.
+                nullBitMap[fid / 4] &= ~nullByte;
+            }
+            if (data[offset] != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                nullBitMap[fid / 4] |= (byte) (1 << (7 - 2 * (fid % 4) - 1));
+            }
         }
     }
 
     @Override
     public void addField(IValueReference name, IValueReference value) throws HyracksDataException {
+        byte[] data = value.getByteArray();
+        int offset = value.getStartOffset();
+
+        // MISSING for an open field means the field does not exist.
+        if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+            return;
+        }
         if (numberOfOpenFields == openPartOffsets.length) {
             openPartOffsets = Arrays.copyOf(openPartOffsets, openPartOffsets.length + DEFAULT_NUM_OPEN_FIELDS);
             openFieldNameLengths = Arrays.copyOf(openFieldNameLengths,
@@ -196,7 +218,7 @@ public class RecordBuilder implements IARecordBuilder {
             }
         }
         openPartOffsets[this.numberOfOpenFields] = fieldNameHashCode;
-        openPartOffsets[this.numberOfOpenFields] = (openPartOffsets[numberOfOpenFields] << 32);
+        openPartOffsets[this.numberOfOpenFields] = openPartOffsets[numberOfOpenFields] << 32;
         openPartOffsets[numberOfOpenFields] += openPartOutputStream.size();
         openFieldNameLengths[numberOfOpenFields++] = name.getLength() - 1;
         openPartOutputStream.write(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
@@ -267,7 +289,7 @@ public class RecordBuilder implements IARecordBuilder {
             // write the closed part
             if (numberOfSchemaFields > 0) {
                 out.writeInt(numberOfClosedFields);
-                if (isNullable) {
+                if (containsOptionalField) {
                     out.write(nullBitMap, 0, nullBitMapSize);
                 }
                 for (int i = 0; i < numberOfSchemaFields; i++) {

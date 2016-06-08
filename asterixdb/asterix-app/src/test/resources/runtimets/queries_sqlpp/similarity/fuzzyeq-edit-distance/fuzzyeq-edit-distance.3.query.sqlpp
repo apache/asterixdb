@@ -20,9 +20,9 @@
 use test;
 
 
-set "simfunction" "edit-distance";
+set `simfunction` `edit-distance`;
 
-set "simthreshold" "2";
+set `simthreshold` `2`;
 
 select element paper
 from  DBLP as paper

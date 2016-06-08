@@ -27,6 +27,6 @@
 use test;
 
 
-select element test."codepoint-to-string"(l.cpt)
+select element test.`codepoint-to-string`(l.cpt)
 from  testds as l
 ;

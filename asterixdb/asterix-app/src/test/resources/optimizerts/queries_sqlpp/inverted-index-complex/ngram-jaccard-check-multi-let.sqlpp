@@ -29,7 +29,7 @@ create  database test;
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 create type test.DBLPType as
  closed {
@@ -47,8 +47,8 @@ create  index ngram_index  on DBLP (title) type ngram (3);
 write output to asterix_nc1:"rttest/inverted-index-complex_ngram-jaccard-check-multi-let.adm"
 select element {'Paper':paper_tokens,'Query':query_tokens}
 from  DBLP as paper
-with  paper_tokens as test."gram-tokens"(paper.title,3,false),
-      query_tokens as test."gram-tokens"('Transactions for Cooperative Environments',3,false),
-      jacc as test."similarity-jaccard-check"(paper_tokens,query_tokens,0.500000f)
+with  paper_tokens as test.`gram-tokens`(paper.title,3,false),
+      query_tokens as test.`gram-tokens`('Transactions for Cooperative Environments',3,false),
+      jacc as test.`similarity-jaccard-check`(paper_tokens,query_tokens,0.500000f)
 where jacc[0]
 ;

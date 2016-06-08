@@ -20,10 +20,10 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element o.nested
 from  DBLP as o
-with  jacc as test."similarity-jaccard-check"(test."gram-tokens"(o.nested.title,3,false),test."gram-tokens"('Transactions for Cooperative Environments',3,false),0.500000f)
+with  jacc as test.`similarity-jaccard-check`(test.`gram-tokens`(o.nested.title,3,false),test.`gram-tokens`('Transactions for Cooperative Environments',3,false),0.500000f)
 where jacc[0]
 ;

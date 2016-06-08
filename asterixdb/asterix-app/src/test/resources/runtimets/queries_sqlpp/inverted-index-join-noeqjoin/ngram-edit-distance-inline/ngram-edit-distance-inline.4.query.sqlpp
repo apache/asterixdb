@@ -30,7 +30,7 @@ use test;
 select element {'a':a.name,'b':b.name,'ed':ed}
 from  Customers as a,
       Customers2 as b
-with  ed as test."edit-distance"(a.name,b.name)
+with  ed as test.`edit-distance`(a.name,b.name)
 where ((ed <= 4) and (a.cid < b.cid))
 order by ed,a.cid,b.cid
 ;

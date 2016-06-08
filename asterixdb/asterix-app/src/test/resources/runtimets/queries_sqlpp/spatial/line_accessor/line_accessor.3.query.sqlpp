@@ -25,8 +25,8 @@
 use test;
 
 
-with  line as test."create-line"(test."create-point"(100.6,999.4),test."create-point"(-872.0,-876.9)),
-      line_list as test."get-points"(line)
+with  line as test.`create-line`(test.`create-point`(100.6,999.4),test.`create-point`(-872.0,-876.9)),
+      line_list as test.`get-points`(line)
 select element p
 from  line_list as p
 ;

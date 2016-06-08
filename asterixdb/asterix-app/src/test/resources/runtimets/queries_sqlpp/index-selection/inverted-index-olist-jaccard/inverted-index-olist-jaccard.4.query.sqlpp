@@ -22,6 +22,6 @@ use test;
 
 select element c
 from  Customers as c
-with  jacc as test."similarity-jaccard-check"(c.interests,['databases','computers','wine'],0.700000f)
+with  jacc as test.`similarity-jaccard-check`(c.interests,['databases','computers','wine'],0.700000f)
 where jacc[0]
 ;

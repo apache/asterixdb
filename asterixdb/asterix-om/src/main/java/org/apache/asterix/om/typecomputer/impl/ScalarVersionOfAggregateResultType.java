@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComputer {
 
@@ -43,13 +44,13 @@ public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComput
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];
         ATypeTag tag = act.getTypeTag();
         if (tag == ATypeTag.ANY) {
             return BuiltinType.ANY;
         }
         IAType t = act.getItemType();
-        return AUnionType.createNullableType(t);
+        return AUnionType.createUnknownableType(t);
     }
 }

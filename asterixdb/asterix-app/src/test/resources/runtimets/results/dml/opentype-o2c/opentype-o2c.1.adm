@@ -2,4 +2,4 @@
 { "hobby": {{ "football" }}, "id": "002", "name": "Person Three" }
 { "hobby": {{ "movie", "coding", "debugging" }}, "id": "003", "name": "Person Three" }
 { "hobby": {{ "swimming", "music" }}, "id": "004", "name": "Person Three" }
-{ "hobby": null, "id": "005", "name": "Person Five" }
+{ "id": "005", "name": "Person Five" }

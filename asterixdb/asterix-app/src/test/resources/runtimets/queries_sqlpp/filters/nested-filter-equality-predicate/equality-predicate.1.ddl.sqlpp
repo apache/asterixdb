@@ -30,12 +30,12 @@ use test;
 
 create type test.FacebookMessageTypeTmp as
  closed {
-  "message-id" : int32,
-  "author-id" : int32,
-  "in-response-to" : int32?,
-  "sender-location" : point?,
+  `message-id` : int32,
+  `author-id` : int32,
+  `in-response-to` : int32?,
+  `sender-location` : point?,
   message : string,
-  "send-time" : datetime
+  `send-time` : datetime
 }
 
 create type test.FacebookMessageType as
@@ -43,7 +43,7 @@ create type test.FacebookMessageType as
   nested : FacebookMessageTypeTmp
 }
 
-create  table FacebookMessagesTmp(FacebookMessageTypeTmp) primary key "message-id";
+create  table FacebookMessagesTmp(FacebookMessageTypeTmp) primary key `message-id`;
 
-create  table FacebookMessages(FacebookMessageType) primary key nested."message-id" with filter on nested."send-time";
+create  table FacebookMessages(FacebookMessageType) primary key nested.`message-id` with filter on nested.`send-time`;
 

@@ -22,7 +22,7 @@
  * Date            : 24th July 2012
  */
 
-select element "string-concat"([b,'test'])
+select element `string-concat`([b,'test'])
 from  ['ten','twenty','thirty','forty','fifty','sixty','seventy','ninety'] as b
-order by "string-concat"([b,'test'])
+order by `string-concat`([b,'test'])
 ;

@@ -20,15 +20,15 @@
 use test;
 
 
-load  table DBLPtmp using localfs (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+load  table DBLPtmp using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`)) pre-sorted;
 
 insert into test.DBLP
 select element x
-from  "test.DBLPtmp" as x
+from  `test.DBLPtmp` as x
 where (x.id <= 50)
 ;
 insert into test.DBLP
 select element {'id':c.id,'dblpid':c.dblpid,'authors':c.authors,'misc':c.misc}
-from  "test.DBLPtmp" as c
+from  `test.DBLPtmp` as c
 where (c.id > 50)
 ;

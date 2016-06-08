@@ -25,6 +25,6 @@
 use test;
 
 
-{ 'dr1':test."duration-from-interval"(test.interval(date('2010-10-30'),date('2010-12-21'))),
-  'dr2':test."duration-from-interval"(test.interval(datetime('2012-06-26T01:01:01.111'),datetime('2012-07-27T02:02:02.222'))),
-  'dr3':test."duration-from-interval"(test.interval(time('12:32:38'),time('20:29:20'))),'dr4':test."duration-from-interval"(null)};
+{ 'dr1':test.`duration-from-interval`(test.interval(date('2010-10-30'),date('2010-12-21'))),
+  'dr2':test.`duration-from-interval`(test.interval(datetime('2012-06-26T01:01:01.111'),datetime('2012-07-27T02:02:02.222'))),
+  'dr3':test.`duration-from-interval`(test.interval(time('12:32:38'),time('20:29:20'))),'dr4':test.`duration-from-interval`(null)};

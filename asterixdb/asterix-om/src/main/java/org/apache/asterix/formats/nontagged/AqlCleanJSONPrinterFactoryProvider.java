@@ -36,7 +36,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AInt8Print
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AIntervalPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ALinePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ANullPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ANullableFieldPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AObjectPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AOrderedlistPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.APoint3DPrinterFactory;
@@ -125,7 +125,7 @@ public class AqlCleanJSONPrinterFactoryProvider implements IPrinterFactoryProvid
                     return new AUnorderedlistPrinterFactory((AUnorderedListType) aqlType);
                 case UNION: {
                     if (((AUnionType) aqlType).isUnknownableType()) {
-                        return new ANullableFieldPrinterFactory((AUnionType) aqlType);
+                        return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
                     } else {
                         return new AUnionPrinterFactory((AUnionType) aqlType);
                     }

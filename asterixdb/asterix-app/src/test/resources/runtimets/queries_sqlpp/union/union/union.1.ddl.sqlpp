@@ -30,10 +30,10 @@ create type TinySocial.FacebookUserType as
 
 create type TinySocial.FacebookMessageType as
 {
-  "message-id" : int64
+  `message-id` : int64
 }
 
 create  table FacebookUsers(FacebookUserType) primary key id;
 
-create  table FacebookMessages(FacebookMessageType) primary key "message-id";
+create  table FacebookMessages(FacebookMessageType) primary key `message-id`;
 

@@ -20,4 +20,4 @@
 use test;
 
 
-[(test."binary-concat"([test.hex('aa'),test.hex('259911'),test.hex('bb'),test.hex('31')]) = test.hex('AA259911bb31')),(test."binary-concat"([]) = test.hex('')),test."binary-concat"([null]),test."binary-concat"([null,test.hex('55')]),test."binary-concat"([test.hex('aa'),null]),test."binary-concat"([test.hex('aa'),null,test.base64('asdf')])];
+[(test.`binary-concat`([test.hex('aa'),test.hex('259911'),test.hex('bb'),test.hex('31')]) = test.hex('AA259911bb31')),(test.`binary-concat`([]) = test.hex('')),test.`binary-concat`([null]),test.`binary-concat`([null,test.hex('55')]),test.`binary-concat`([test.hex('aa'),null]),test.`binary-concat`([test.hex('aa'),null,test.base64('asdf')])];

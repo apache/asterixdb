@@ -326,8 +326,8 @@ public class JObjectUtil {
                 if (numberOfSchemaFields > 0) {
                     dis.readInt();
                     int nullBitMapOffset = 0;
-                    boolean hasNullableFields = NonTaggedFormatUtil.hasNullableField(recordType);
-                    if (hasNullableFields) {
+                    boolean hasOptionalFields = NonTaggedFormatUtil.hasOptionalField(recordType);
+                    if (hasOptionalFields) {
                         nullBitMapOffset = dis.getInputStream().getPosition();
                         dis.getInputStream();
                     } else {
@@ -337,7 +337,7 @@ public class JObjectUtil {
                         fieldOffsets[i] = dis.readInt();
                     }
                     for (int fieldNumber = 0; fieldNumber < numberOfSchemaFields; fieldNumber++) {
-                        if (hasNullableFields) {
+                        if (hasOptionalFields) {
                             byte b1 = recordBits[nullBitMapOffset + fieldNumber / 8];
                             int p = 1 << (7 - (fieldNumber % 8));
                             if ((b1 & p) == 0) {
@@ -349,7 +349,7 @@ public class JObjectUtil {
 
                         IAType fieldType = fieldTypes[fieldNumber];
                         if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
-                            if (((AUnionType) fieldTypes[fieldNumber]).isNullableType()) {
+                            if (((AUnionType) fieldTypes[fieldNumber]).isUnknownableType()) {
                                 fieldType = ((AUnionType) fieldTypes[fieldNumber]).getActualType();
                                 fieldValueTypeTag = fieldType.getTypeTag();
                             }

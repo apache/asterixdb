@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Load dataset with float numbers containing "E-4f"
+ * Description  : Load dataset with float numbers containing `E-4f`
  * Expected Res : Success
  * Date         : 01 Apr 2013
  */

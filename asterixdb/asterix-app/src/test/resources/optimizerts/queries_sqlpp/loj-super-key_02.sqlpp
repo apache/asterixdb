@@ -17,13 +17,13 @@
  * under the License.
  */
 
-drop  database "loj-super-key_02" if exists;
-create  database "loj-super-key_02";
+drop  database `loj-super-key_02` if exists;
+create  database `loj-super-key_02`;
 
-use "loj-super-key_02";
+use `loj-super-key_02`;
 
 
-create type "loj-super-key_02".SupplierType as
+create type `loj-super-key_02`.SupplierType as
  closed {
   s_suppkey : int32,
   s_name : string,
@@ -34,7 +34,7 @@ create type "loj-super-key_02".SupplierType as
   s_comment : string
 }
 
-create type "loj-super-key_02".NationType as
+create type `loj-super-key_02`.NationType as
  closed {
   n_nationkey : int32,
   n_name : string,
@@ -42,7 +42,7 @@ create type "loj-super-key_02".NationType as
   n_comment : string
 }
 
-create type "loj-super-key_02".LineItemType as
+create type `loj-super-key_02`.LineItemType as
  closed {
   l_orderkey : int32,
   l_partkey : int32,
@@ -62,7 +62,7 @@ create type "loj-super-key_02".LineItemType as
   l_comment : string
 }
 
-create type "loj-super-key_02".PartType as
+create type `loj-super-key_02`.PartType as
  closed {
   p_partkey : int32,
   p_name : string,
@@ -75,7 +75,7 @@ create type "loj-super-key_02".PartType as
   p_comment : string
 }
 
-create type "loj-super-key_02".PartSuppType as
+create type `loj-super-key_02`.PartSuppType as
  closed {
   ps_partkey : int32,
   ps_suppkey : int32,
@@ -84,7 +84,7 @@ create type "loj-super-key_02".PartSuppType as
   ps_comment : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;

@@ -20,6 +20,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
-select element [test."is-null"(null),test."is-null"(10)];
+select element [test.`is-null`(null),test.`is-null`(10)];

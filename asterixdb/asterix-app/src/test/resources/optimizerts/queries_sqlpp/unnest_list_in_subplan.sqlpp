@@ -38,7 +38,7 @@ create type fuzzyjoin.TOKENSRANKEDADMType as
   rank : int32
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
@@ -50,7 +50,7 @@ write output to asterix_nc1:"rttest/unnest_list_in_subplan.adm"
 select element {'id':idDBLP,'tokens':tokensDBLP}
 from  DBLP as paperDBLP
 with  idDBLP as paperDBLP.id,
-      tokensUnrankedDBLP as fuzzyjoin."counthashed-word-tokens"(paperDBLP.title),
+      tokensUnrankedDBLP as fuzzyjoin.`counthashed-word-tokens`(paperDBLP.title),
       tokensDBLP as (
       select element tokenRanked.rank
       from  tokensUnrankedDBLP as tokenUnranked,

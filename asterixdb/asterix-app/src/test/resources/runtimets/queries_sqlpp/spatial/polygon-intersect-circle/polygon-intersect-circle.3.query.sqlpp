@@ -22,6 +22,6 @@ use test;
 
 select element {'id':o.id}
 from  MyData as o
-where test."spatial-intersect"(o.poly1,test."create-circle"(test."create-point"(6.0,3.0),1.0))
+where test.`spatial-intersect`(o.poly1,test.`create-circle`(test.`create-point`(6.0,3.0),1.0))
 order by o.id
 ;

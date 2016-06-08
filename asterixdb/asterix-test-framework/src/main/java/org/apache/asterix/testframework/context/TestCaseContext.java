@@ -177,17 +177,15 @@ public class TestCaseContext {
         return getFilesInDir(testSuite.getResultOffsetPath(), cUnit.getOutputDir().getValue(), false);
     }
 
-    public File getActualResultFile(CompilationUnit cUnit, File actualResultsBase) {
+    public File getActualResultFile(CompilationUnit cUnit, File expectedFile, File actualResultsBase) {
         File path = actualResultsBase;
         path = new File(path, testSuite.getResultOffsetPath());
         path = new File(path, testCase.getFilePath());
-        return new File(path,
-                cUnit.getOutputDir().getValue() + "." + OutputFormat.forCompilationUnit(cUnit).extension());
+        return new File(path, cUnit.getOutputDir().getValue() + File.separator + expectedFile.getName());
     }
 
     @Override
     public String toString() {
-        final TestCase testCase = getTestCase();
         StringBuilder sb = new StringBuilder(testCase.getFilePath());
         sb.append(':');
         for (CompilationUnit cu : testCase.getCompilationUnit()) {

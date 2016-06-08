@@ -24,6 +24,6 @@
  */
 
 select element l
-from  "test.employee" as l
+from  `test.employee` as l
 where ((l.fname = 'Julio') and (l.lname = 'Isa'))
 ;

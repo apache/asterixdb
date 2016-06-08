@@ -48,7 +48,6 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.operators.file.adm.AdmLexer;
@@ -485,7 +484,6 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             } else {
                 return null;
             }
-            // return ATypeHierarchy.canPromote(expectedTypeTag, typeTag) ? typeTag : null;
         } else { // union
             List<IAType> unionList = ((AUnionType) aObjectType).getUnionList();
             for (IAType t : unionList) {
@@ -579,13 +577,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     token = admLexer.next();
                     this.admFromLexerStream(token, fieldType, fieldValueBuffer.getDataOutput());
                     if (openRecordField) {
-                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                            recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
-                        }
-                    } else if (NonTaggedFormatUtil.isOptional(recType)) {
-                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                            recBuilder.addField(fieldId, fieldValueBuffer);
-                        }
+                        recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                     } else {
                         recBuilder.addField(fieldId, fieldValueBuffer);
                     }
@@ -611,7 +603,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         } while (inRecord);
 
         if (recType != null) {
-            nullableFieldId = checkNullConstraints(recType, nulls);
+            nullableFieldId = checkOptionalConstraints(recType, nulls);
             if (nullableFieldId != -1) {
                 throw new ParseException("Field: " + recType.getFieldNames()[nullableFieldId] + " can not be null");
             }
@@ -619,7 +611,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         recBuilder.write(out, true);
     }
 
-    private int checkNullConstraints(ARecordType recType, BitSet nulls) {
+    private int checkOptionalConstraints(ARecordType recType, BitSet nulls) {
         for (int i = 0; i < recType.getFieldTypes().length; i++) {
             if (nulls.get(i) == false) {
                 IAType type = recType.getFieldTypes()[i];
@@ -632,7 +624,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 }
                 // union
                 AUnionType unionType = (AUnionType) type;
-                if (!unionType.isNullableType()) {
+                if (!unionType.isUnknownableType()) {
                     return i;
                 }
             }

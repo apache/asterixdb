@@ -28,7 +28,6 @@ import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -65,12 +64,9 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
             ILogicalExpression e1 = argIter.next().getValue();
             ILogicalExpression e2 = argIter.next().getValue();
             IAType e2Type = (IAType) env.getType(e2);
-            if (e2Type.getTypeTag() == ATypeTag.MISSING) {
-                // Converts missing to null for a closed field.
-                e2Type = BuiltinType.ANULL;
-            } else if (e2Type.getTypeTag() == ATypeTag.UNION) {
+            if (e2Type.getTypeTag() == ATypeTag.UNION) {
                 AUnionType unionType = (AUnionType) e2Type;
-                e2Type = AUnionType.createNullableType(unionType.getActualType());
+                e2Type = AUnionType.createUnknownableType(unionType.getActualType());
             }
             fieldTypes[i] = e2Type;
             if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {

@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."string-to-codepoint"('abcd')};
+{'result1':test.`string-to-codepoint`('abcd')};

@@ -20,13 +20,13 @@
 use fuzzyjoin;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element {'id':idDBLP,'prefixToken':prefixTokenDBLP,'tokens':tokensDBLP}
 from  DBLP as paperDBLP,
-      fuzzyjoin."subset-collection"(tokensDBLP,0,fuzzyjoin."prefix-len-jaccard"(lenDBLP,0.500000f)) as prefixTokenDBLP
+      fuzzyjoin.`subset-collection`(tokensDBLP,0,fuzzyjoin.`prefix-len-jaccard`(lenDBLP,0.500000f)) as prefixTokenDBLP
 with  idDBLP as paperDBLP.id,
-      tokensUnrankedDBLP as fuzzyjoin."counthashed-word-tokens"(paperDBLP.title),
+      tokensUnrankedDBLP as fuzzyjoin.`counthashed-word-tokens`(paperDBLP.title),
       lenDBLP as fuzzyjoin.len(tokensUnrankedDBLP),
       tokensDBLP as (
       select element i
@@ -34,7 +34,7 @@ with  idDBLP as paperDBLP.id,
             (
           select element tokenGroupped
           from  DBLP as paper,
-                fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+                fuzzyjoin.`counthashed-word-tokens`(paper.title) as token
           with  id as paper.id
           /* +hash */
           group by token as tokenGroupped

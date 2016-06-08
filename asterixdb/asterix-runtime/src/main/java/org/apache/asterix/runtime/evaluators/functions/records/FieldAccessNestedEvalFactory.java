@@ -164,6 +164,13 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             result.set(resultStorage);
                             return;
                         }
+                        if (subFieldOffset < 0) {
+                            // the field is missing, we checked the missing bit map
+                            // any path after missing will return null.
+                            missingSerde.serialize(AMissing.MISSING, out);
+                            result.set(resultStorage);
+                            return;
+                        }
                         subType = ((ARecordType) subType).getFieldTypes()[subFieldIndex];
                         if (subType.getTypeTag() == ATypeTag.RECORD && pathIndex + 1 < fieldPointables.length) {
                             // Move to the next Depth

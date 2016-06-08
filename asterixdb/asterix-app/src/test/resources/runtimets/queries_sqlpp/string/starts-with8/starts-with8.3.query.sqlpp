@@ -28,6 +28,6 @@ use test;
 
 select element l
 from  testds as l
-where test."starts-with"(l.name,'John')
+where test.`starts-with`(l.name,'John')
 order by l.name
 ;

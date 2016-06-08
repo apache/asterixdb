@@ -31,7 +31,7 @@ use OpenSocialNetworkData;
 
 create type OpenSocialNetworkData.TwitterUserType as
 {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int64,
   statuses_count : int64,
@@ -42,8 +42,8 @@ create type OpenSocialNetworkData.TwitterUserType as
 create type OpenSocialNetworkData.TweetMessageType as
 {
   tweetid : string,
-  "tweetid-copy" : string,
-  "send-time-copy" : datetime
+  `tweetid-copy` : string,
+  `send-time-copy` : datetime
 }
 
 create  table TweetMessages(TweetMessageType) primary key tweetid;

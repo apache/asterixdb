@@ -25,7 +25,7 @@ use TinySocial;
 
 create type TinySocial.TwitterUserType as
 {
-  "screen-name" : string
+  `screen-name` : string
 }
 
 create type TinySocial.TweetMessageType as {
@@ -39,6 +39,6 @@ create type TinySocial.FacebookUserType as
 
 create type TinySocial.FacebookMessageType as
  open {
-  "message-id" : int64
+  `message-id` : int64
 }
 

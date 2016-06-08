@@ -20,7 +20,7 @@
  * Description    : Equi joins two datasets, Customers and Orders, based on the customer id.
  *                  Given the 'indexnl' hint we expect the join to be transformed
  *                  into an indexed nested-loop join using Customers' primary index.
- *                  We expect the additional predicates to be put into a select above the 
+ *                  We expect the additional predicates to be put into a select above the
  *                  primary index search.
  * Success        : Yes
  */

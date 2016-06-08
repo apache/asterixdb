@@ -46,7 +46,7 @@ from  (
     where (s.s_suppkey = loc.l_suppkey)
 ) as locs,
       tpch.q7_volume_shipping_tmp() as t
-with  l_year0 as tpch."get-year"(locs.l_shipdate)
+with  l_year0 as tpch.`get-year`(locs.l_shipdate)
 where ((locs.c_nationkey = t.c_nationkey) and (locs.s_nationkey = t.s_nationkey))
 group by t.supp_nation as supp_nation,t.cust_nation as cust_nation,l_year0 as l_year
 with  revenue as COLL_SUM((

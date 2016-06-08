@@ -21,7 +21,7 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -31,10 +31,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class FieldAccessByIndexResultType implements IResultTypeComputer {
+public class FieldAccessByIndexResultType extends AbstractResultTypeComputer {
 
     public static final FieldAccessByIndexResultType INSTANCE = new FieldAccessByIndexResultType();
 
@@ -42,37 +40,31 @@ public class FieldAccessByIndexResultType implements IResultTypeComputer {
     }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-        Object obj;
-        try {
-            obj = env.getType(f.getArguments().get(0).getValue());
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
+    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+        if (argIndex == 0 && type.getTypeTag() != ATypeTag.RECORD) {
+            throw new AlgebricksException("The first argument should be a RECORD, but it is " + type + ".");
         }
-        if (obj == null) {
-            return null;
+        if (argIndex == 1 && type.getTypeTag() != ATypeTag.INT32) {
+            throw new AlgebricksException("The second argument should be an INT32, but it is found " + type + ".");
         }
-        IAType type0 = (IAType) obj;
-        ARecordType t0 = FieldAccessByNameResultType.getRecordTypeFromType(type0, expression);
-        if (t0 == null) {
+    }
+
+    @Override
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        IAType firstArgType = strippedInputTypes[0];
+        if (firstArgType.getTypeTag() != ATypeTag.RECORD) {
             return BuiltinType.ANY;
         }
-        ILogicalExpression arg1 = f.getArguments().get(1).getValue();
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return BuiltinType.ANY;
         }
         ConstantExpression ce = (ConstantExpression) arg1;
-        if (!(ce.getValue() instanceof AsterixConstantValue)) {
-            throw new AlgebricksException("Typing error: expecting an integer, found " + ce + " instead.");
-        }
         IAObject v = ((AsterixConstantValue) ce.getValue()).getObject();
-        if (v.getType().getTypeTag() != ATypeTag.INT32) {
-            throw new AlgebricksException("Typing error: expecting an INT32, found " + ce + " instead.");
-        }
         int pos = ((AInt32) v).getIntegerValue();
-        return t0.getFieldTypes()[pos];
+        ARecordType recType = (ARecordType) firstArgType;
+        return recType.getFieldTypes()[pos];
     }
 
 }

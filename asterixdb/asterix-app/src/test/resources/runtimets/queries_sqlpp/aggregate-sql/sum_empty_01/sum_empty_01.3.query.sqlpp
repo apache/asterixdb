@@ -25,7 +25,7 @@
 use test;
 
 
-select element test."coll_sql-sum"((
+select element test.`coll_sql-sum`((
     select element x
     from  [1,2,3] as x
     where (x > 10)

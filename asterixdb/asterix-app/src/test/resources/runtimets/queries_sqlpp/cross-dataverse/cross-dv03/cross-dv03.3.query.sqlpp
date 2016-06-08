@@ -28,6 +28,6 @@
 
 select element coll_count((
     select element l
-    from  "Metadata.Dataset" as l
+    from  `Metadata.Dataset` as l
     where ((l.DataverseName = 'student') or (l.DataverseName = 'teacher'))
 ));

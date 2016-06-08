@@ -29,8 +29,8 @@ use test;
 
 select element {'topic':topic,'count':test.count(tweet)}
 from  TweetMessages as tweet,
-      tweet."referred-topics" as reftopic
-where some reftopic in tweet."referred-topics" satisfies test.contains(reftopic,'verizon')
+      tweet.`referred-topics` as reftopic
+where some reftopic in tweet.`referred-topics` satisfies test.contains(reftopic,'verizon')
 group by reftopic as topic
 order by topic
 ;

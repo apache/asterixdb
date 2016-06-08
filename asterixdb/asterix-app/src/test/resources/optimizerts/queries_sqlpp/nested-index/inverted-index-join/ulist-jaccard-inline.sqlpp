@@ -66,6 +66,6 @@ write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ulist-jaccard-i
 select element {'ainterests':a.nested.interests,'binterests':b.nested.interests,'jacc':jacc}
 from  Customers as a,
       Customers as b
-with  jacc as  /*+ indexnl */ test."similarity-jaccard"(a.nested.interests,b.nested.interests)
+with  jacc as  /*+ indexnl */ test.`similarity-jaccard`(a.nested.interests,b.nested.interests)
 where ((jacc >= 0.700000f) and (a.nested.cid < b.nested.cid))
 ;

@@ -20,5 +20,5 @@
 use test;
 
 
-load  table Temp2 using localfs (("path"="asterix_nc1://data/nontagged/tempData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  table Temp2 using localfs ((`path`=`asterix_nc1://data/nontagged/tempData.txt`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
 

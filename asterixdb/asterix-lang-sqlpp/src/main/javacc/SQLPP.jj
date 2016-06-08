@@ -646,7 +646,7 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
 {
   <DATAVERSE> dvName = Identifier()
   ifNotExists = IfNotExists()
-  ( LOOKAHEAD(1) <WITH> <FORMAT> format = QuotedString() )?
+  ( LOOKAHEAD(1) <WITH> <FORMAT> format = ConstantString() )?
     {
       return new CreateDataverseStatement(new Identifier(dvName), format, ifNotExists);
     }
@@ -731,18 +731,17 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
 {
   (
     <INGESTION> <POLICY>  policyName = Identifier() ifNotExists = IfNotExists()
-      <FROM> 
-      (<POLICY> basePolicyName = Identifier() properties = Configuration() (<DEFINITION> definition = QuotedString())?  
+      <FROM>
+      (<POLICY> basePolicyName = Identifier() properties = Configuration() (<DEFINITION> definition = ConstantString())?
       {
         cfps = new CreateFeedPolicyStatement(policyName,
                                    basePolicyName, properties, definition, ifNotExists);
       }
-     | <PATH> sourcePolicyFile = Identifier() (<DEFINITION> definition = QuotedString())?  
+     | <PATH> sourcePolicyFile = Identifier() (<DEFINITION> definition = ConstantString())?
        {
         cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
        }
-     ) 
-       
+     )
   )
     {
       return cfps;
@@ -1009,7 +1008,7 @@ Statement SetStatement() throws ParseException:
   String pv = null;
 }
 {
-  <SET> pn = Identifier() pv = QuotedString()
+  <SET> pn = Identifier() pv = ConstantString()
     {
       return new SetStatement(pn, pv);
     }
@@ -1024,8 +1023,8 @@ Statement WriteStatement() throws ParseException:
   Pair<Identifier,Identifier> nameComponents = null;
 }
 {
-  <WRITE> <OUTPUT> <TO> nodeName = Identifier() <COLON> fileName = QuotedString()
-    ( <USING> writerClass = QuotedString() )?
+  <WRITE> <OUTPUT> <TO> nodeName = Identifier() <COLON> fileName = ConstantString()
+    ( <USING> writerClass = ConstantString() )?
     {
       return new WriteStatement(new Identifier(nodeName), fileName, writerClass);
     }
@@ -1135,7 +1134,7 @@ Pair<String, String> KeyValuePair() throws ParseException:
   String value;
 }
 {
-  <LEFTPAREN> key = QuotedString() <EQ> value = QuotedString() <RIGHTPAREN>
+  <LEFTPAREN> key = ConstantString() <EQ> value = ConstantString()  <RIGHTPAREN>
     {
       return new Pair<String, String>(key, value);
     }
@@ -1163,11 +1162,13 @@ Map<String,String> Properties() throws ParseException:
 
 Pair<String, String> Property() throws ParseException:
 {
-  String key;
-  String value;
+  String key = null;
+  String value = null;
 }
 {
-  key = Identifier() <EQ> ( value = QuotedString() | <INTEGER_LITERAL>
+  (key = Identifier() | key = StringLiteral())
+  <EQ>
+  ( value = ConstantString() | <INTEGER_LITERAL>
     {
       try {
         value = "" + Long.valueOf(token.image);
@@ -1445,6 +1446,17 @@ Pair<Integer, List<String>> NestedField() throws ParseException:
   )*
   {
     return new Pair<Integer, List<String>>(source, exprList);
+  }
+}
+
+String ConstantString() throws ParseException:
+{
+  String value = null;
+}
+{
+  (value = QuotedString() | value = StringLiteral())
+  {
+     return value;
   }
 }
 
@@ -2857,7 +2869,7 @@ TOKEN :
 }
 
 <DEFAULT,IN_DBL_BRACE>
-TOKEN :
+TOKEN [IGNORE_CASE]:
 {
   <MISSING : "missing">
   |  <NULL : "null">
@@ -2896,7 +2908,7 @@ TOKEN :
 TOKEN :
 {
     // backslash u + 4 hex digits escapes are handled in the underlying JavaCharStream
-    <QUOTED_STRING : "\"" (
+    <QUOTED_STRING : "`" (
           <EscapeQuot>
         | <EscapeBslash>
         | <EscapeSlash>
@@ -2905,10 +2917,9 @@ TOKEN :
         | <EscapeNl>
         | <EscapeCr>
         | <EscapeTab>
-        | ~["\"","\\"])* "\"">
-  | <STRING_LITERAL : "\'" (
+        | ~["`","\\"])* "`">
+  | <STRING_LITERAL : ("\"" (
           <EscapeQuot>
-        | <EscapeApos>
         | <EscapeBslash>
         | <EscapeSlash>
         | <EscapeBspace>
@@ -2916,7 +2927,17 @@ TOKEN :
         | <EscapeNl>
         | <EscapeCr>
         | <EscapeTab>
-        | ~["\'","\\"])* "\'">
+        | ~["\"","\\"])* "\"")
+      | ("\'"(
+          <EscapeApos>
+        | <EscapeBslash>
+        | <EscapeSlash>
+        | <EscapeBspace>
+        | <EscapeFormf>
+        | <EscapeNl>
+        | <EscapeCr>
+        | <EscapeTab>
+        | ~["\'","\\"])* "\'")>
   | < #EscapeQuot: "\\\"" >
   | < #EscapeApos: "\\\'" >
   | < #EscapeBslash: "\\\\" >

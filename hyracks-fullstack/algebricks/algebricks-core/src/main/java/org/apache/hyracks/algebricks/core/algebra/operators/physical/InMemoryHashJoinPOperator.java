@@ -83,8 +83,8 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IBinaryHashFunctionFactory[] hashFunFactories = JobGenHelper.variablesToBinaryHashFunctionFactories(
-                keysLeftBranch, env, context);
+        IBinaryHashFunctionFactory[] hashFunFactories = JobGenHelper
+                .variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
         int i = 0;
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
@@ -93,8 +93,10 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
             comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(t, true);
         }
 
-        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider = context.getPredicateEvaluatorFactoryProvider();
-        IPredicateEvaluatorFactory predEvaluatorFactory = ( predEvaluatorFactoryProvider == null ? null : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight));
+        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider = context
+                .getPredicateEvaluatorFactoryProvider();
+        IPredicateEvaluatorFactory predEvaluatorFactory = (predEvaluatorFactoryProvider == null ? null
+                : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight));
 
         RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
                 propagatedSchema, context);
@@ -108,12 +110,13 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
                 break;
             }
             case LEFT_OUTER: {
-                IMissingWriterFactory[] nullWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
-                for (int j = 0; j < nullWriterFactories.length; j++) {
-                    nullWriterFactories[j] = context.getNullWriterFactory();
+                IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
+                for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+                    nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                 }
                 opDesc = new InMemoryHashJoinOperatorDescriptor(spec, keysLeft, keysRight, hashFunFactories,
-                        comparatorFactories, predEvaluatorFactory, recDescriptor, true, nullWriterFactories, tableSize);
+                        comparatorFactories, predEvaluatorFactory, recDescriptor, true, nonMatchWriterFactories,
+                        tableSize);
                 break;
             }
             default: {
@@ -129,7 +132,8 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
     }
 
     @Override
-    protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op, IOptimizationContext context) {
+    protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op,
+            IOptimizationContext context) {
         AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPhysicalPropertiesVector pv0 = op0.getPhysicalOperator().getDeliveredProperties();
         List<ILocalStructuralProperty> lp0 = pv0.getLocalProperties();

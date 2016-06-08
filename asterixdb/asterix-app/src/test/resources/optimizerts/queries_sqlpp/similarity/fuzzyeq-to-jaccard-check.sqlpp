@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that the FuzzyEqRule rewrites ~= using Jaccard 
+ * Description    : Tests that the FuzzyEqRule rewrites ~= using Jaccard
  *                  into edit-distance-check.
  * Success        : Yes
  */
@@ -40,11 +40,11 @@ create type test.DBLPType as
 create  table DBLP(DBLPType) primary key id;
 
 write output to asterix_nc1:"rttest/similarity_fuzzyeq-to-jaccard-check.adm"
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.8f";
+set `simthreshold` `0.8f`;
 
 select element paper
 from  DBLP as paper
-where (test."word-tokens"(paper.title) ~= test."word-tokens"('Transactions for Cooperative Environments'))
+where (test.`word-tokens`(paper.title) ~= test.`word-tokens`('Transactions for Cooperative Environments'))
 ;

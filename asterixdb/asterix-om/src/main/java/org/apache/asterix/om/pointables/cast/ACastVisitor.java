@@ -52,8 +52,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  */
 public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVisitablePointable, IAType, Boolean>> {
 
-    private final Map<IVisitablePointable, ARecordCaster> raccessorToCaster = new HashMap<IVisitablePointable, ARecordCaster>();
-    private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<IVisitablePointable, AListCaster>();
+    private final Map<IVisitablePointable, ARecordCaster> raccessorToCaster = new HashMap<>();
+    private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<>();
     private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
     @Override
@@ -126,13 +126,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     }
 
     private boolean needPromote(ATypeTag tag0, ATypeTag tag1) {
-        if (tag0 == tag1) {
-            return false;
-        }
-        if (tag0 == ATypeTag.NULL) {
-            return false;
-        }
-        return true;
+        return !(tag0 == tag1 || tag0 == ATypeTag.NULL || tag0 == ATypeTag.MISSING);
     }
 
 }

@@ -22,6 +22,6 @@ use TinySocial;
 
 select element c
 from  TweetMessages as c
-where TinySocial."spatial-intersect"(c.user."sender-location",TinySocial."create-rectangle"(TinySocial."create-point"(0.0,0.0),TinySocial."create-point"(50.0,80.0)))
+where TinySocial.`spatial-intersect`(c.user.`sender-location`,TinySocial.`create-rectangle`(TinySocial.`create-point`(0.0,0.0),TinySocial.`create-point`(50.0,80.0)))
 order by c.tweetid
 ;

@@ -24,4 +24,4 @@
 use test;
 
 
-{'a':test."string-concat"([null]),'b':test."string-concat"([null,'foo']),'c':test."string-concat"(['foo',null])};
+{'a':test.`string-concat`([null]),'b':test.`string-concat`([null,'foo']),'c':test.`string-concat`(['foo',null])};

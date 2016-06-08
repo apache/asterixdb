@@ -20,7 +20,7 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -36,19 +36,16 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -63,77 +60,82 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            return false;
+        ILogicalOperator op = opRef.getValue();
+        if (op.acceptExpressionTransform(exprRef -> rewriteExpressionReference(op, exprRef, context))) {
+            op.removeAnnotation(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS);
+            context.computeAndSetTypeEnvironmentForOperator(op);
+            return true;
         }
-        AssignOperator assign = (AssignOperator) op;
-        if (assign.getExpressions().get(0).getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return false;
-        }
+        return false;
+    }
 
-        List<Mutable<ILogicalExpression>> expressions = assign.getExpressions();
+    // Recursively rewrites expression reference.
+    private boolean rewriteExpressionReference(ILogicalOperator op, Mutable<ILogicalExpression> exprRef,
+            IOptimizationContext context) throws AlgebricksException {
+        ILogicalExpression expr = exprRef.getValue();
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
         boolean changed = false;
-        for (int i = 0; i < expressions.size(); i++) {
-            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expressions.get(i).getValue();
-            if (fce.getFunctionIdentifier() != AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-                continue;
-            }
-            IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
-
-            ILogicalExpression a0 = fce.getArguments().get(0).getValue();
-            if (a0.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                LogicalVariable var1 = context.newVar();
-                ArrayList<LogicalVariable> varArray = new ArrayList<>(1);
-                varArray.add(var1);
-                ArrayList<Mutable<ILogicalExpression>> exprArray = new ArrayList<>(1);
-                exprArray.add(new MutableObject<ILogicalExpression>(a0));
-                AssignOperator assignVar = new AssignOperator(varArray, exprArray);
-                fce.getArguments().get(0).setValue(new VariableReferenceExpression(var1));
-                assignVar.getInputs().add(new MutableObject<ILogicalOperator>(assign.getInputs().get(0).getValue()));
-                assign.getInputs().get(0).setValue(assignVar);
-                context.computeAndSetTypeEnvironmentForOperator(assignVar);
-                context.computeAndSetTypeEnvironmentForOperator(assign);
-                //access by name was not replaced to access by index, but the plan was altered, hence changed is true
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        for (Mutable<ILogicalExpression> funcArgRef : funcExpr.getArguments()) {
+            if (rewriteExpressionReference(op, funcArgRef, context)) {
                 changed = true;
             }
-
-            IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-            switch (t.getTypeTag()) {
-                case ANY:
-                    return changed;
-                case RECORD:
-                    ARecordType recType = (ARecordType) t;
-                    ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
-                    if (fai == null) {
-                        return changed;
-                    }
-                    expressions.get(i).setValue(fai);
-                    changed = true;
-                    break;
-                case UNION:
-                    AUnionType unionT = (AUnionType) t;
-                    if (!unionT.isUnknownableType()) {
-                        throw new NotImplementedException("Union " + unionT);
-                    }
-                    IAType t2 = unionT.getActualType();
-                    if (t2.getTypeTag() != ATypeTag.RECORD) {
-                        throw new AlgebricksException("Cannot call field-access on data of type " + t);
-                    }
-                    recType = (ARecordType) t2;
-                    fai = createFieldAccessByIndex(recType, fce);
-                    if (fai == null) {
-                        return changed;
-                    }
-                    expressions.get(i).setValue(fai);
-                    changed = true;
-                    break;
-                default:
-                    throw new AlgebricksException("Cannot call field-access on data of type " + t);
-            }
         }
-        assign.removeAnnotation(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS);
+        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+        if (fce.getFunctionIdentifier() != AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+            return changed;
+        }
+        changed |= extractFirstArg(fce, op, context);
+        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
+        IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
+        changed |= rewriteFieldAccess(exprRef, fce, getActualType(t));
         return changed;
+    }
+
+    // Extracts the first argument of a field-access expression into an separate assign operator.
+    private boolean extractFirstArg(AbstractFunctionCallExpression fce, ILogicalOperator op,
+            IOptimizationContext context) throws AlgebricksException {
+        ILogicalExpression firstArg = fce.getArguments().get(0).getValue();
+        if (firstArg.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        LogicalVariable var1 = context.newVar();
+        AssignOperator assignOp = new AssignOperator(new ArrayList<>(Collections.singletonList(var1)),
+                new ArrayList<>(Collections.singletonList(new MutableObject<>(firstArg))));
+        fce.getArguments().get(0).setValue(new VariableReferenceExpression(var1));
+        assignOp.getInputs().add(new MutableObject<>(op.getInputs().get(0).getValue()));
+        op.getInputs().get(0).setValue(assignOp);
+        context.computeAndSetTypeEnvironmentForOperator(assignOp);
+        return true;
+    }
+
+    // Rewrites field-access-by-name into field-access-by-index if possible.
+    private boolean rewriteFieldAccess(Mutable<ILogicalExpression> exprRef, AbstractFunctionCallExpression fce,
+            IAType t) throws AlgebricksException {
+        if (t.getTypeTag() != ATypeTag.RECORD) {
+            return false;
+        }
+        ILogicalExpression fai = createFieldAccessByIndex((ARecordType) t, fce);
+        boolean changed = fai != null;
+        if (changed) {
+            exprRef.setValue(fai);
+        }
+        return changed;
+    }
+
+    // Gets the actual type of a given type.
+    private IAType getActualType(IAType t) throws AlgebricksException {
+        switch (t.getTypeTag()) {
+            case ANY:
+            case RECORD:
+                return t;
+            case UNION:
+                return ((AUnionType) t).getActualType();
+            default:
+                throw new AlgebricksException("Cannot call field-access on data of type " + t);
+        }
     }
 
     @SuppressWarnings("unchecked")

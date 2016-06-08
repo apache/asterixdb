@@ -20,8 +20,8 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
-select element [test."prefix-len-jaccard"(5,0.800000f),test."prefix-len-jaccard"(5,0.900000f),test."prefix-len-jaccard"(10,0.800000f),test."prefix-len-jaccard"(10,0.900000f),test."prefix-len-jaccard"(15,0.800000f),test."prefix-len-jaccard"(15,0.900000f)]
+select element [test.`prefix-len-jaccard`(5,0.800000f),test.`prefix-len-jaccard`(5,0.900000f),test.`prefix-len-jaccard`(10,0.800000f),test.`prefix-len-jaccard`(10,0.900000f),test.`prefix-len-jaccard`(15,0.800000f),test.`prefix-len-jaccard`(15,0.900000f)]
 from  [1] as l
 ;

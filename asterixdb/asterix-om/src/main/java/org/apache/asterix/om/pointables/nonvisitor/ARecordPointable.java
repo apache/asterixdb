@@ -49,7 +49,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
  *   byte isExpanded;
  *   int openOffset?;
  *   int numberOfClosedFields;
- *   byte[ceil (numberOfFields / 8)] nullBitMap; // 1 bit per field, "1" means field is Null for this record
+ *   byte[ceil (numberOfFields / 4)] nullBitMap; // 1 bit per field, "1" means field is Null for this record
  *   int[numberOfClosedFields] closedFieldOffset;
  *   IPointable[numberOfClosedFields] fieldValue;
  *   int numberOfOpenFields?;
@@ -68,6 +68,8 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
  * }
  */
 public class ARecordPointable extends AbstractPointable {
+
+    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
@@ -119,8 +121,6 @@ public class ARecordPointable extends AbstractPointable {
         return recordType == null || recordType.isOpen();
     }
 
-    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
-
     public int getSchemeFieldCount(ARecordType recordType) {
         return recordType.getFieldNames().length;
     }
@@ -152,25 +152,25 @@ public class ARecordPointable extends AbstractPointable {
 
     public boolean isExpanded(ARecordType recordType) {
         if (isOpen(recordType)) {
-            return BooleanPointable.getBoolean(bytes, getExpendedOffset(recordType));
+            return BooleanPointable.getBoolean(bytes, getExpandedOffset(recordType));
         }
         return false;
     }
 
-    public int getExpendedOffset(ARecordType recordType) {
+    public int getExpandedOffset(ARecordType recordType) {
         return getLengthOffset() + getLengthSize();
     }
 
     public int getExpandedSize(ARecordType recordType) {
-        return (isOpen(recordType)) ? EXPANDED_SIZE : 0;
+        return isOpen(recordType) ? EXPANDED_SIZE : 0;
     }
 
     public int getOpenPartOffset(ARecordType recordType) {
-        return getExpendedOffset(recordType) + getExpandedSize(recordType);
+        return getExpandedOffset(recordType) + getExpandedSize(recordType);
     }
 
     public int getOpenPartSize(ARecordType recordType) {
-        return (isExpanded(recordType)) ? OPEN_OFFSET_SIZE : 0;
+        return isExpanded(recordType) ? OPEN_OFFSET_SIZE : 0;
     }
 
     public int getClosedFieldCount(ARecordType recordType) {
@@ -195,7 +195,14 @@ public class ARecordPointable extends AbstractPointable {
 
     public boolean isClosedFieldNull(ARecordType recordType, int fieldId) {
         if (getNullBitmapSize(recordType) > 0) {
-            return ((bytes[getNullBitmapOffset(recordType) + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0);
+            return (bytes[getNullBitmapOffset(recordType) + fieldId / 4] & (1 << (7 - 2 * (fieldId % 4)))) == 0;
+        }
+        return false;
+    }
+
+    public boolean isClosedFieldMissing(ARecordType recordType, int fieldId) {
+        if (getNullBitmapSize(recordType) > 0) {
+            return (bytes[getNullBitmapOffset(recordType) + fieldId / 4] & (1 << (7 - 2 * (fieldId % 4) - 1))) == 0;
         }
         return false;
     }
@@ -208,6 +215,8 @@ public class ARecordPointable extends AbstractPointable {
             throws IOException, AsterixException {
         if (isClosedFieldNull(recordType, fieldId)) {
             dOut.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+        } else if (isClosedFieldMissing(recordType, fieldId)) {
+            dOut.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
         } else {
             dOut.write(getClosedFieldTag(recordType, fieldId));
             dOut.write(bytes, getClosedFieldOffset(recordType, fieldId), getClosedFieldSize(recordType, fieldId));
@@ -258,7 +267,7 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public int getOpenFieldCountSize(ARecordType recordType) {
-        return (isExpanded(recordType)) ? OPEN_COUNT_SIZE : 0;
+        return isExpanded(recordType) ? OPEN_COUNT_SIZE : 0;
     }
 
     public int getOpenFieldCountOffset(ARecordType recordType) {

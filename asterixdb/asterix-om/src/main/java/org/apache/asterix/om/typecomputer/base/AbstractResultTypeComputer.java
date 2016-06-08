@@ -37,7 +37,7 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(index, type),
-                types -> getResultType(types), true);
+                this::getResultType, true);
     }
 
     /**
@@ -56,9 +56,13 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
     /**
      * Returns the result type without considering optional types.
      *
+     * @param expr
+     *            the expression under consideration.
      * @param strippedInputTypes,
      *            the stripped input types.
      * @return the result type without considering optional types.
+     * @throws AlgebricksException
      */
-    protected abstract IAType getResultType(IAType... strippedInputTypes);
+    protected abstract IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes)
+            throws AlgebricksException;
 }

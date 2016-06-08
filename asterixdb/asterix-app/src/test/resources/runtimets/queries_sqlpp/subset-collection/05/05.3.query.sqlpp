@@ -20,8 +20,8 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element l
-from  test."subset-collection"(['a','b','c','d'],1,2) as l
+from  test.`subset-collection`(['a','b','c','d'],1,2) as l
 ;

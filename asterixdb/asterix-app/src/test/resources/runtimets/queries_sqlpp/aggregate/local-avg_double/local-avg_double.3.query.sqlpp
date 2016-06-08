@@ -20,7 +20,7 @@
 use test;
 
 
-select element test."local-avg"((
+select element test.`local-avg`((
     select element x
     from  [1.0,2.0,test.double('3.0')] as x
 ));

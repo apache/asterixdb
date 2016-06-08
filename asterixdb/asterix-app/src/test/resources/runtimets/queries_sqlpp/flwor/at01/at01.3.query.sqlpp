@@ -25,7 +25,7 @@
 use test;
 
 
-select element {'num':p,'name':i.name,'user-since':i."user-since"}
+select element {'num':p,'name':i.name,'user-since':i.`user-since`}
 from  (
     select element fb
     from  FacebookUsers as fb

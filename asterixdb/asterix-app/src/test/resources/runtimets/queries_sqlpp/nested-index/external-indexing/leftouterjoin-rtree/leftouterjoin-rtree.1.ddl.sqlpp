@@ -31,22 +31,22 @@ use test;
 
 create type test.TwitterUserType as
  closed {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
-  "friends-count" : int64,
-  "statuses-count" : int64,
+  `friends-count` : int64,
+  `statuses-count` : int64,
   name : string,
-  "followers-count" : int64
+  `followers-count` : int64
 }
 
 create type test.TweetMessageNestedType as
  closed {
   tweetid : int64,
   user : TwitterUserType,
-  "sender-location" : point,
-  "send-time" : datetime,
-  "referred-topics" : {{string}},
-  "message-text" : string,
+  `sender-location` : point,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string,
   countA : int64,
   countB : int64
 }
@@ -56,7 +56,7 @@ create type test.TweetMessageType as
   nested : TweetMessageNestedType
 }
 
-create external  table TweetMessages(TweetMessageType) using "hdfs"(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/tw_for_indexleftouterjoin_nested.adm"),("input-format"="text-input-format"),("format"="adm"));
+create external  table TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin_nested.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
 create  index IdIx  on TweetMessages (nested.tweetid) type btree;
 
@@ -64,5 +64,5 @@ create  index msgCountAIx  on TweetMessages (nested.countA) type btree;
 
 create  index msgCountBIx  on TweetMessages (nested.countB) type btree;
 
-create  index twmSndLocIx  on TweetMessages (nested."sender-location") type rtree;
+create  index twmSndLocIx  on TweetMessages (nested.`sender-location`) type rtree;
 

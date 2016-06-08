@@ -20,6 +20,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
-{'result1':test."string-equal"('test','test')};
+{'result1':test.`string-equal`('test','test')};

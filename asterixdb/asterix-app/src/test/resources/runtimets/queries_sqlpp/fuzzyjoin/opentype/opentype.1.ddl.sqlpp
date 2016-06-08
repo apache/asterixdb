@@ -28,5 +28,5 @@ create type TinySocial.TweetMessageType as
   tweetid : string
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid hints ("CARDINALITY"="100");
+create  table TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
 

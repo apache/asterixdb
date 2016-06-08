@@ -1,0 +1,57 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    OperatorExpr [
+      LiteralExpr [STRING] [AA]
+      >
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      >=
+      LiteralExpr [STRING] [AA]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    OperatorExpr [
+      LiteralExpr [STRING] [AA]
+      <
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      <=
+      LiteralExpr [STRING] [AA]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    OperatorExpr [
+      LiteralExpr [STRING] [AA]
+      =
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result6]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      !=
+      LiteralExpr [STRING] [AA]
+    ]
+  )
+]

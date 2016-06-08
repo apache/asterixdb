@@ -41,7 +41,7 @@ create type test.MyRecord as
   nested : MyRecordNested
 }
 
-create external  table MyData(MyRecord) using "hdfs"(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/spatialDataNested.json"),("input-format"="text-input-format"),("format"="adm"));
+create external  table MyData(MyRecord) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/spatialDataNested.json`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
 create  index rtree_index_point  on MyData (nested.point) type rtree;
 

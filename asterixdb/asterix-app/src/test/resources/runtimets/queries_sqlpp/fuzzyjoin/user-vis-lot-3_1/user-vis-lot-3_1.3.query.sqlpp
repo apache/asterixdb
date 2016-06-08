@@ -24,9 +24,9 @@ select element {'user':user,'visitor':visitor,'sim':ridpair.sim}
 from  (
     select element {'uid':uid,'vid':vid,'sim':sim[0]}
     from  Users as user,
-          fuzzyjoin."subset-collection"(tokensUser,0,fuzzyjoin."prefix-len-jaccard"(lenUser,0.500000f)) as prefixTokenUser,
+          fuzzyjoin.`subset-collection`(tokensUser,0,fuzzyjoin.`prefix-len-jaccard`(lenUser,0.500000f)) as prefixTokenUser,
           Visitors as visitor,
-          fuzzyjoin."subset-collection"(tokensVisitor,0,fuzzyjoin."prefix-len-jaccard"(lenVisitor,0.500000f)) as prefixTokenVisitor
+          fuzzyjoin.`subset-collection`(tokensVisitor,0,fuzzyjoin.`prefix-len-jaccard`(lenVisitor,0.500000f)) as prefixTokenVisitor
     with  lenUser as fuzzyjoin.len(user.lottery_numbers),
           tokensUser as (
           select element i
@@ -55,7 +55,7 @@ from  (
           where (token = tokenRanked)
           order by i
       ),
-          sim as fuzzyjoin."similarity-jaccard-prefix"(lenUser,tokensUser,lenVisitor,tokensVisitor,prefixTokenUser,0.500000f)
+          sim as fuzzyjoin.`similarity-jaccard-prefix`(lenUser,tokensUser,lenVisitor,tokensVisitor,prefixTokenUser,0.500000f)
     where ((prefixTokenUser = prefixTokenVisitor) and (sim >= 0.500000f))
     group by user.uid as uid,visitor.vid as vid
 ) as ridpair,

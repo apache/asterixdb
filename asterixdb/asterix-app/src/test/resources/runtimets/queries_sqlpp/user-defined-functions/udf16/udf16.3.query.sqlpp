@@ -26,4 +26,4 @@
 use test;
 
 
-test."string-length"(test.fn02());
+test.`string-length`(test.fn02());

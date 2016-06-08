@@ -24,4 +24,4 @@
 use test;
 
 
-select element test."coll_sql-count"([]);
+select element test.`coll_sql-count`([]);

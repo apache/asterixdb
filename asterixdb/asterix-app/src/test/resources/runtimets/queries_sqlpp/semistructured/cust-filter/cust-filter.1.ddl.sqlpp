@@ -44,5 +44,5 @@ create type test.CustomerType as
 ]
 }
 
-create external  table Customers(CustomerType) using localfs(("path"="asterix_nc1://data/semistructured/tiny01/customer.adm"),("format"="adm"));
+create external  table Customers(CustomerType) using localfs((`path`=`asterix_nc1://data/semistructured/tiny01/customer.adm`),(`format`=`adm`));
 

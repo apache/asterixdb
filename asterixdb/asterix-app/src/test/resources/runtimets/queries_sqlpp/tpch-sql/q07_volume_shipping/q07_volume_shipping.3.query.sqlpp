@@ -41,7 +41,7 @@ FROM
     SELECT
       t.supp_nation AS supp_nation,
       t.cust_nation AS cust_nation,
-      "get-year"(l3.l_shipdate) AS l_year,
+      `get-year`(l3.l_shipdate) AS l_year,
       l3.l_extendedprice * (1 - l3.l_discount) AS volume
     FROM
       q7_volume_shipping_tmp() AS t JOIN

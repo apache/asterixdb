@@ -20,5 +20,5 @@
 use test;
 
 
-load  table LineItem using "org.apache.asterix.external.dataset.adapter.HDFSAdapter" (("hdfs"="hdfs://localhost:10009"),("path"="/tpch/lineitem.tbl"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+load  table LineItem using `org.apache.asterix.external.dataset.adapter.HDFSAdapter` ((`hdfs`=`hdfs://localhost:10009`),(`path`=`/tpch/lineitem.tbl`),(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));
 

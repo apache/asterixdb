@@ -22,6 +22,8 @@ import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 /**
  * This function is to make a sequence of records and a singleton collection of records
@@ -34,7 +36,7 @@ public class CollectionToSequenceTypeComputer extends AbstractResultTypeComputer
     public static final CollectionToSequenceTypeComputer INSTANCE = new CollectionToSequenceTypeComputer();
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType argType = strippedInputTypes[0];
         ATypeTag argTypeTag = argType.getTypeTag();
         if (argTypeTag == ATypeTag.ORDEREDLIST || argTypeTag == ATypeTag.UNORDEREDLIST) {

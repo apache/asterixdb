@@ -29,7 +29,7 @@ create  database test;
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 create type test.DBLPType as
  closed {
@@ -48,6 +48,6 @@ write output to asterix_nc1:"rttest/inverted-index-join_ngram-jaccard_04.adm"
 select element {'arec':a,'brec':b,'jacc':jacc}
 from  DBLP as a,
       DBLP as b
-with  jacc as test."similarity-jaccard"(test."gram-tokens"(a.title,3,false),test."gram-tokens"(b.title,3,false))
+with  jacc as test.`similarity-jaccard`(test.`gram-tokens`(a.title,3,false),test.`gram-tokens`(b.title,3,false))
 where ((jacc >= 0.500000f) and (a.id < b.id))
 ;

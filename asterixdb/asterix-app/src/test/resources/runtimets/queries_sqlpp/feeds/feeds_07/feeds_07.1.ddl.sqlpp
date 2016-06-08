@@ -27,7 +27,7 @@ use feeds;
 
 create type feeds.TwitterUserType as
  closed {
-  "screen-name" : string,
+  `screen-name` : string,
   lang : string,
   friends_count : int32,
   statuses_count : int32,
@@ -41,7 +41,7 @@ create type feeds.TweetMessageType as
   user : TwitterUserType,
   latitude : double,
   longitude : double,
-  "send-time" : datetime,
+  `send-time` : datetime,
   message_text : string,
   created_at : string,
   country : string
@@ -49,6 +49,6 @@ create type feeds.TweetMessageType as
 
 create  table SyntheticTweets(TweetMessageType) primary key id;
 
-create  index locationIdx  on SyntheticTweets ("sender-location") type rtree;
+create  index locationIdx  on SyntheticTweets (`sender-location`) type rtree;
 
-create  primary feed SyntheticTweetFeed using twitter_firehose (("duration"="5"),("tps"="50"),("type-name"="TweetMessageType"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+create  primary feed SyntheticTweetFeed using twitter_firehose ((`duration`=`5`),(`tps`=`50`),(`type-name`=`TweetMessageType`),(`tput-duration`=`5`),(`dataverse-dataset`=`feeds:SyntheticTweets`),(`mode`=`controlled`));

@@ -31,6 +31,6 @@ insert into LineID
 insert into LineID
 {'l_orderkey':2,'l_linenumber':3,'l_suppkey':4};
 insert into LineID2
-select element test."flow-record"(x)
+select element test.`flow-record`(x)
 from  LineID as x
 ;

@@ -20,6 +20,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
-select element test."closed-record-constructor"('foo1',10,'bar1',20,'foo2',30,'bar2',40);
+select element test.`closed-record-constructor`('foo1',10,'bar1',20,'foo2',30,'bar2',40);

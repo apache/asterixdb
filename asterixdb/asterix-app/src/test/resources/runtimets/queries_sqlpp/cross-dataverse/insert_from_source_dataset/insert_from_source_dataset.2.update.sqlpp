@@ -44,5 +44,5 @@ insert into test.t2
 select element {'id':201,'name':'Kelvin'};
 insert into test.t1
 select element l
-from  "test.t2" as l
+from  `test.t2` as l
 ;

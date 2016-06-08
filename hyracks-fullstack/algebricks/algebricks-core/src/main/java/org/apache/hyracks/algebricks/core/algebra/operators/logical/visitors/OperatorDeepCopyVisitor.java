@@ -47,12 +47,12 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -157,8 +157,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitSelectOperator(SelectOperator op, Void arg) throws AlgebricksException {
-        return new SelectOperator(deepCopyExpressionRef(op.getCondition()), op.getRetainNull(),
-                op.getNullPlaceholderVariable());
+        return new SelectOperator(deepCopyExpressionRef(op.getCondition()), op.getRetainMissing(),
+                op.getMissingPlaceholderVariable());
     }
 
     @Override
@@ -397,8 +397,9 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     }
 
     @Override
-    public ILogicalOperator visitOuterUnnestOperator(OuterUnnestOperator op, Void arg) throws AlgebricksException {
-        return new OuterUnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
+    public ILogicalOperator visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void arg)
+            throws AlgebricksException {
+        return new LeftOuterUnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
                 op.getPositionalVariable(), op.getPositionalVariableType(), op.getPositionWriter());
     }
 }

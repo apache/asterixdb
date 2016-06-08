@@ -20,7 +20,7 @@
 use test;
 
 
-select element [test."ends-with"(x,'ar'),test."ends-with"(y,'ar')]
+select element [test.`ends-with`(x,'ar'),test.`ends-with`(y,'ar')]
 from  ['foofoo'] as x,
       ['barbar'] as y
 ;

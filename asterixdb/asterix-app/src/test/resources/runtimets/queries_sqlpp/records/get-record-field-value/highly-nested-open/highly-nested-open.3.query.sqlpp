@@ -27,6 +27,6 @@ use test;
 
 select element result
 from  Animals as test
-with  result as test."get-record-field-value"(test,'class')
+with  result as test.`get-record-field-value`(test,'class')
 order by result.id
 ;

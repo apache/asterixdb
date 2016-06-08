@@ -25,4 +25,4 @@
 use test;
 
 
-{'x-coordinate':test."get-x"(test."create-point"(2.3,5.0)),'y-coordinate':test."get-y"(test."create-point"(2.3,5.0))};
+{'x-coordinate':test.`get-x`(test.`create-point`(2.3,5.0)),'y-coordinate':test.`get-y`(test.`create-point`(2.3,5.0))};

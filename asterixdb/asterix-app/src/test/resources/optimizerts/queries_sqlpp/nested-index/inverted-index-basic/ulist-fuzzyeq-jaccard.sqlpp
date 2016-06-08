@@ -61,9 +61,9 @@ create  table Customers2(CustomerType) primary key nested.cid;
 create  index interests_index  on Customers (nested.interests) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-basic_ulist-fuzzyeq-jaccard.adm"
-set "simfunction" "jaccard";
+set `simfunction` `jaccard`;
 
-set "simthreshold" "0.8f";
+set `simthreshold` `0.8f`;
 
 select element c
 from  Customers as c

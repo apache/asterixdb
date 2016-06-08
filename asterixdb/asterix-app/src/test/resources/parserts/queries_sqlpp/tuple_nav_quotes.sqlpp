@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{ 'author-id' : 2 }."author-id";
+{ 'author-id' : 2 }.`author-id`;

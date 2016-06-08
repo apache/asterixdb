@@ -25,8 +25,8 @@
 use test;
 
 
-with  rectangle as test."create-rectangle"(test."create-point"(9.2,49.0),test."create-point"(77.8,111.1)),
-      rectangle_list as test."get-points"(rectangle)
+with  rectangle as test.`create-rectangle`(test.`create-point`(9.2,49.0),test.`create-point`(77.8,111.1)),
+      rectangle_list as test.`get-points`(rectangle)
 select element p
 from  rectangle_list as p
 ;

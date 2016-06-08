@@ -20,7 +20,7 @@
 use fuzzyjoin;
 
 
-set "simthreshold" ".5f";
+set `simthreshold` `.5f`;
 
 select element {'user_name':user.name,'similar_users':similar_users}
 from  User as user

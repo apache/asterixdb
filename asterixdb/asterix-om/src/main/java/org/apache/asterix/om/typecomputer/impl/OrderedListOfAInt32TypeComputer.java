@@ -22,6 +22,8 @@ import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class OrderedListOfAInt32TypeComputer extends AbstractResultTypeComputer {
 
@@ -31,7 +33,7 @@ public class OrderedListOfAInt32TypeComputer extends AbstractResultTypeComputer 
     }
 
     @Override
-    protected IAType getResultType(IAType... strippedInputTypes) {
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         return new AOrderedListType(BuiltinType.AINT32, null);
     }
 }

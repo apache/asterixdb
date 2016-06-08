@@ -34,7 +34,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt8PrinterFacto
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AIntervalPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ALinePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ANullPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ANullableFieldPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AOrderedlistPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.APoint3DPrinterFactory;
@@ -125,7 +125,7 @@ public class AqlADMPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return new AUnorderedlistPrinterFactory((AUnorderedListType) aqlType);
                 case UNION: {
                     if (((AUnionType) aqlType).isUnknownableType()) {
-                        return new ANullableFieldPrinterFactory((AUnionType) aqlType);
+                        return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
                     } else {
                         return new AUnionPrinterFactory((AUnionType) aqlType);
                     }

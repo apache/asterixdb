@@ -56,6 +56,6 @@ create  index interests_index  on Customers (interests) type keyword;
 write output to asterix_nc1:"rttest/inverted-index-basic_olist-edit-distance-panic.adm"
 select element c
 from  Customers as c
-where (test."edit-distance"(c.interests,['computers','wine','walking']) <= 3)
+where (test.`edit-distance`(c.interests,['computers','wine','walking']) <= 3)
 order by c.cid
 ;

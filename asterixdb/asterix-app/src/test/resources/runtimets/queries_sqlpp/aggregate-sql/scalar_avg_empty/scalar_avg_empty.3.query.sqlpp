@@ -21,4 +21,4 @@
  * Success        : Yes
  */
 
-select element "coll_sql-avg"([]);
+select element `coll_sql-avg`([]);

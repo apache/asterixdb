@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."ends-with"('ends','ss')};
+{'result1':test.`ends-with`('ends','ss')};

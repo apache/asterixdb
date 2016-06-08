@@ -24,6 +24,6 @@ select element tm.tweetid
 from  TwitterUsers as tu,
       TweetMessages as tm,
       results as r
-where ((r.vertexid /*+ indexnl */  = tm.tweetid) and (tm.user /*+ indexnl */  = tu."screen-name"))
+where ((r.vertexid /*+ indexnl */  = tm.tweetid) and (tm.user /*+ indexnl */  = tu.`screen-name`))
 order by tm.tweetid
 ;

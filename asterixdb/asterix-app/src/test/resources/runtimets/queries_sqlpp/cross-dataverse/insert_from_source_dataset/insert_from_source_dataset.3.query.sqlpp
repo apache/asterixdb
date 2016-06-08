@@ -26,6 +26,6 @@ use test;
 
 
 select element l
-from  "test.t1" as l
+from  `test.t1` as l
 order by l.id
 ;

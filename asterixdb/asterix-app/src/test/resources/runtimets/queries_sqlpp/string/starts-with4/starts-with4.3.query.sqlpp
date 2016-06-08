@@ -20,4 +20,4 @@
 use test;
 
 
-{'f1':test."starts-with"('start',''),'f2':test."starts-with"('start',null),'f3':test."starts-with"(null,null),'f4':test."starts-with"('',null),'f5':test."starts-with"('',''),'f6':test."starts-with"(null,'')};
+{'f1':test.`starts-with`('start',''),'f2':test.`starts-with`('start',null),'f3':test.`starts-with`(null,null),'f4':test.`starts-with`('',null),'f5':test.`starts-with`('',''),'f6':test.`starts-with`(null,'')};

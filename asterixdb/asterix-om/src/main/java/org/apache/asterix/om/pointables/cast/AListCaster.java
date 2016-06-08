@@ -31,9 +31,7 @@ import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
-import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
@@ -50,8 +48,8 @@ class AListCaster {
 
     // for storing the cast result
     private final IVisitablePointable itemTempReference = allocator.allocateEmpty();
-    private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<IVisitablePointable, IAType, Boolean>(
-            itemTempReference, null, null);
+    private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<>(itemTempReference, null,
+            null);
 
     private final UnorderedListBuilder unOrderedListBuilder = new UnorderedListBuilder();
     private final OrderedListBuilder orderedListBuilder = new OrderedListBuilder();
@@ -60,18 +58,14 @@ class AListCaster {
     private final DataOutput dataDos = new DataOutputStream(dataBos);
     private IAType reqItemType;
 
-    public AListCaster() {
-
-    }
-
     public void castList(AListVisitablePointable listAccessor, IVisitablePointable resultAccessor,
             AbstractCollectionType reqType, ACastVisitor visitor) throws IOException, AsterixException {
         if (reqType.getTypeTag().equals(ATypeTag.UNORDEREDLIST)) {
-            unOrderedListBuilder.reset((AUnorderedListType) reqType);
+            unOrderedListBuilder.reset(reqType);
             reqItemType = reqType.getItemType();
         }
         if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
-            orderedListBuilder.reset((AOrderedListType) reqType);
+            orderedListBuilder.reset(reqType);
             reqItemType = reqType.getItemType();
         }
         dataBos.reset();
@@ -83,8 +77,8 @@ class AListCaster {
         for (int i = 0; i < items.size(); i++) {
             IVisitablePointable itemTypeTag = itemTags.get(i);
             IVisitablePointable item = items.get(i);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag.getByteArray()[itemTypeTag
-                    .getStartOffset()]);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
             if (reqItemType == null || reqItemType.getTypeTag().equals(ATypeTag.ANY)) {
                 itemVisitorArg.second = DefaultOpenFieldType.getDefaultOpenFieldType(typeTag);
             } else {

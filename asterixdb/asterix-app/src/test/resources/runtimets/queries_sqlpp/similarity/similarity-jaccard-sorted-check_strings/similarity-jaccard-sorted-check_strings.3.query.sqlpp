@@ -20,7 +20,7 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 with  a as [],
       b as ['abc','bcd','cde','def','efg'],
@@ -28,7 +28,7 @@ with  a as [],
       d as ['abc','bcd','cde','def','efg','fgh','ghi','hij','ijk','jkl'],
       e as ['Abc','bCd','cdE','DEf','eFG','HiJ','IJK'],
       f as ['abc','bcd','cde','def','efg','fgh','ghi','hij','ijk','jkl'],
-      results as [test."similarity-jaccard-sorted-check"(a,b,0.000000f),test."similarity-jaccard-sorted-check"(b,a,0.000000f),test."similarity-jaccard-sorted-check"(a,b,0.100000f),test."similarity-jaccard-sorted-check"(b,a,0.100000f),test."similarity-jaccard-sorted-check"(c,d,0.600000f),test."similarity-jaccard-sorted-check"(d,c,0.600000f),test."similarity-jaccard-sorted-check"(c,d,0.800000f),test."similarity-jaccard-sorted-check"(d,c,0.800000f),test."similarity-jaccard-sorted-check"(e,f,0.600000f),test."similarity-jaccard-sorted-check"(f,e,0.600000f),test."similarity-jaccard-sorted-check"(e,f,0.800000f),test."similarity-jaccard-sorted-check"(f,e,0.800000f)]
+      results as [test.`similarity-jaccard-sorted-check`(a,b,0.000000f),test.`similarity-jaccard-sorted-check`(b,a,0.000000f),test.`similarity-jaccard-sorted-check`(a,b,0.100000f),test.`similarity-jaccard-sorted-check`(b,a,0.100000f),test.`similarity-jaccard-sorted-check`(c,d,0.600000f),test.`similarity-jaccard-sorted-check`(d,c,0.600000f),test.`similarity-jaccard-sorted-check`(c,d,0.800000f),test.`similarity-jaccard-sorted-check`(d,c,0.800000f),test.`similarity-jaccard-sorted-check`(e,f,0.600000f),test.`similarity-jaccard-sorted-check`(f,e,0.600000f),test.`similarity-jaccard-sorted-check`(e,f,0.800000f),test.`similarity-jaccard-sorted-check`(f,e,0.800000f)]
 select element i
 from  results as i
 ;

@@ -52,7 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeO
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -433,7 +433,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitSelectOperator(SelectOperator op, ILogicalOperator arg) throws AlgebricksException {
         SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
-                op.getRetainNull(), deepCopyVariable(op.getNullPlaceholderVariable()));
+                op.getRetainMissing(), deepCopyVariable(op.getMissingPlaceholderVariable()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -551,9 +551,9 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     }
 
     @Override
-    public ILogicalOperator visitOuterUnnestOperator(OuterUnnestOperator op, ILogicalOperator arg)
+    public ILogicalOperator visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, ILogicalOperator arg)
             throws AlgebricksException {
-        OuterUnnestOperator opCopy = new OuterUnnestOperator(deepCopyVariable(op.getVariable()),
+        LeftOuterUnnestOperator opCopy = new LeftOuterUnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
                 deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);

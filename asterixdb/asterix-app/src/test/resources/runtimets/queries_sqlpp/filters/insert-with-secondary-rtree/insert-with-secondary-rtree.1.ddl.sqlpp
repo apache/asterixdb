@@ -30,15 +30,15 @@ use test;
 
 create type test.FacebookMessageType as
  closed {
-  "message-id" : int64,
-  "author-id" : int64,
-  "in-response-to" : int64?,
-  "sender-location" : point?,
+  `message-id` : int64,
+  `author-id` : int64,
+  `in-response-to` : int64?,
+  `sender-location` : point?,
   message : string,
-  "send-time" : datetime
+  `send-time` : datetime
 }
 
-create  table FacebookMessages(FacebookMessageType) primary key "message-id";
+create  table FacebookMessages(FacebookMessageType) primary key `message-id`;
 
-create  table FacebookMessages2(FacebookMessageType) primary key "message-id" with filter on "send-time";
+create  table FacebookMessages2(FacebookMessageType) primary key `message-id` with filter on `send-time`;
 

@@ -20,11 +20,11 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
 select element paper
 from  DBLP as paper
-with  paper_tokens as test."word-tokens"(paper.title),
-      query_tokens as test."word-tokens"('Transactions for Cooperative Environments')
-where (test."similarity-jaccard"(paper_tokens,query_tokens) >= 0.500000f)
+with  paper_tokens as test.`word-tokens`(paper.title),
+      query_tokens as test.`word-tokens`('Transactions for Cooperative Environments')
+where (test.`similarity-jaccard`(paper_tokens,query_tokens) >= 0.500000f)
 ;

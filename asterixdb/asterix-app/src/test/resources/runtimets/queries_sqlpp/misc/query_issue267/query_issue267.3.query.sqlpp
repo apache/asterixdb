@@ -28,6 +28,6 @@ use test;
 select element l
 from  t1 as l,
       t2 as m
-where ((test.lowercase(m.name) = test.lowercase(l.name)) and (test."string-length"(m.name) = test."string-length"(l.name)))
+where ((test.lowercase(m.name) = test.lowercase(l.name)) and (test.`string-length`(m.name) = test.`string-length`(l.name)))
 order by l.name
 ;

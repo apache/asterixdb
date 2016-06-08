@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test."binary-length"(test.hex('00AA')),'result2':test."binary-length"(test.hex('')),'result3':test."binary-length"(null)};
+{'result1':test.`binary-length`(test.hex('00AA')),'result2':test.`binary-length`(test.hex('')),'result3':test.`binary-length`(null)};

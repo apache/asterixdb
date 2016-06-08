@@ -20,4 +20,4 @@
 use test;
 
 
-{'d0':test."round-half-to-even"(test.double('0.015'),2),'d1':test."round-half-to-even"(test.double('0.025'),2),'d2':test."round-half-to-even"(test.double('3.567812E+3'),2),'d3':test."round-half-to-even"(test.double('4.7564E-3'),2),'d4':test."round-half-to-even"(test.double('35612.25'),-2)};
+{'d0':test.`round-half-to-even`(test.double('0.015'),2),'d1':test.`round-half-to-even`(test.double('0.025'),2),'d2':test.`round-half-to-even`(test.double('3.567812E+3'),2),'d3':test.`round-half-to-even`(test.double('4.7564E-3'),2),'d4':test.`round-half-to-even`(test.double('35612.25'),-2)};

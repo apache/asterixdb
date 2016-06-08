@@ -163,7 +163,7 @@ public class ExternalDataUtils {
             ATypeTag tag = null;
             if (recordType.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
                 AUnionType unionType = (AUnionType) recordType.getFieldTypes()[i];
-                if (!unionType.isNullableType()) {
+                if (!unionType.isUnknownableType()) {
                     throw new NotImplementedException("Non-optional UNION type is not supported.");
                 }
                 tag = unionType.getActualType().getTypeTag();

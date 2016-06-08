@@ -22,6 +22,6 @@
  * Date             :  7th July 2012
  */
 
-select element "string-length"(x)
+select element `string-length`(x)
 from  ['ten','twenty','thirty','forty','fifty','sixty','seventy','ninety'] as x
 ;

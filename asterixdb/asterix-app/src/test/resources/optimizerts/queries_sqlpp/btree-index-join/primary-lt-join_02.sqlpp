@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- * Description  : Notice the query hint to use an indexed nested-loops join plan. 
- *              : We expect a plan that broadcasts internal dataset DsTwo, then probes internal dataset DsOne’s primary index. 
+ * Description  : Notice the query hint to use an indexed nested-loops join plan.
+ *              : We expect a plan that broadcasts internal dataset DsTwo, then probes internal dataset DsOne’s primary index.
  * Expected Res : Success
  * Date         : 29th November 2012
  */
@@ -40,7 +40,7 @@ create  table test1.DsTwo(TestType) primary key key1;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-lt-join_02.adm"
 select element x
-from  "test1.DsOne" as x,
-      "test1.DsTwo" as y
+from  `test1.DsOne` as x,
+      `test1.DsTwo` as y
 where (x.key2 /*+ indexnl */  > y.key1)
 ;

@@ -54,9 +54,9 @@ create  table Customers(CustomerType) primary key cid;
 create  index interests_index  on Customers (interests) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-join_olist-fuzzyeq-jaccard_03.adm"
-set "simfunction" "edit-distance";
+set `simfunction` `edit-distance`;
 
-set "simthreshold" "3";
+set `simthreshold` `3`;
 
 select element {'arec':a,'brec':b}
 from  Customers as a,

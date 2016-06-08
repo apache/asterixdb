@@ -23,7 +23,7 @@ use test;
 with  a as '사랑',
       b as '사랑해',
       c as '사과',
-      results as [test."edit-distance-check"(a,b,1),test."edit-distance-check"(b,a,1),test."edit-distance-check"(b,c,1),test."edit-distance-check"(c,b,2)]
+      results as [test.`edit-distance-check`(a,b,1),test.`edit-distance-check`(b,a,1),test.`edit-distance-check`(b,c,1),test.`edit-distance-check`(c,b,2)]
 select element i
 from  results as i
 ;

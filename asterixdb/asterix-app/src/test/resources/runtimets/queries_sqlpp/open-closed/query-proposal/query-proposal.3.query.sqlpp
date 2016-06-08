@@ -30,8 +30,8 @@ select element {'topic':tp2,'count':test.count(tp1)}
 from  (
     select element {'topic':tp}
     from  TweetMessages as tweet,
-          tweet."referred-topics" as tp
-    where some topic in tweet."referred-topics" satisfies test.contains(topic,'verizon')
+          tweet.`referred-topics` as tp
+    where some topic in tweet.`referred-topics` satisfies test.contains(topic,'verizon')
 ) as tp1
 group by tp1.topic as tp2
 order by tp2

@@ -18,7 +18,7 @@
  */
 /*
  * Description  : This is a negative test, mis-spelt/incorrect HINT should result in
- *                a plan not using an indexed-nested loops join strategy. We expect a hash join. 
+ *                a plan not using an indexed-nested loops join strategy. We expect a hash join.
  * Expected Res : Success
  * Date         : 29th November 2012
  */
@@ -40,7 +40,7 @@ create  table test1.DsTwo(TestType) primary key key1;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join-neg_01.adm"
 select element x
-from  "test1.DsOne" as x,
-      "test1.DsTwo" as y
+from  `test1.DsOne` as x,
+      `test1.DsTwo` as y
 where (x.key1 = y.key2)
 ;

@@ -145,12 +145,12 @@ public class NLJoinPOperator extends AbstractJoinPOperator {
                 break;
             }
             case LEFT_OUTER: {
-                IMissingWriterFactory[] nullWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
-                for (int j = 0; j < nullWriterFactories.length; j++) {
-                    nullWriterFactories[j] = context.getNullWriterFactory();
+                IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
+                for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+                    nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                 }
                 opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
-                        nullWriterFactories);
+                        nonMatchWriterFactories);
                 break;
             }
             default: {

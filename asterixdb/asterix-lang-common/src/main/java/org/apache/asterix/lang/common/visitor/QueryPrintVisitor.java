@@ -340,7 +340,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
         out.println("RecordType {");
         Iterator<String> nameIter = r.getFieldNames().iterator();
         Iterator<TypeExpression> typeIter = r.getFieldTypes().iterator();
-        Iterator<Boolean> isnullableIter = r.getNullableFields().iterator();
+        Iterator<Boolean> isOptionalIter = r.getOptionableFields().iterator();
         boolean first = true;
         while (nameIter.hasNext()) {
             if (first) {
@@ -350,7 +350,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
             }
             String name = nameIter.next();
             TypeExpression texp = typeIter.next();
-            Boolean isNullable = isnullableIter.next();
+            Boolean isNullable = isOptionalIter.next();
             out.print(skip(step + 1) + name + " : ");
             texp.accept(this, step + 2);
             if (isNullable) {

@@ -41,5 +41,5 @@ create  table CHPReports(CHPReport) primary key id;
 
 select element emergency
 from  CHPReports as emergency
-where (emergency.timestamp >= emergencyTest."current-datetime"())
+where (emergency.timestamp >= emergencyTest.`current-datetime`())
 ;

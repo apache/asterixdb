@@ -24,4 +24,4 @@
 use test;
 
 
-{'1970-01-01':test."day-of-week"(test.date('1970-01-01')),'2013-08-06':test."day-of-week"(test.date('2013-08-06')),'-2013-08-06':test."day-of-week"(test.date('-2013-08-06')),'1913-08-06T15:53:28Z':test."day-of-week"(test.datetime('1913-08-06T15:53:28Z')),'-1913-08-10T15:53:28Z':test."day-of-week"(test.datetime('-1913-08-10T15:53:28Z')),'null':test."day-of-week"(null)};
+{'1970-01-01':test.`day-of-week`(test.date('1970-01-01')),'2013-08-06':test.`day-of-week`(test.date('2013-08-06')),'-2013-08-06':test.`day-of-week`(test.date('-2013-08-06')),'1913-08-06T15:53:28Z':test.`day-of-week`(test.datetime('1913-08-06T15:53:28Z')),'-1913-08-10T15:53:28Z':test.`day-of-week`(test.datetime('-1913-08-10T15:53:28Z')),'null':test.`day-of-week`(null)};

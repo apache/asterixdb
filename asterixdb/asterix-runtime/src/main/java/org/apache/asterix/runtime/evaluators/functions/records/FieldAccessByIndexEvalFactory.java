@@ -92,7 +92,14 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[offset]));
                     }
                     eval1.evaluate(tuple, inputArg1);
-                    fieldIndex = IntegerPointable.getInteger(inputArg1.getByteArray(), inputArg1.getStartOffset() + 1);
+                    byte[] indexBytes = inputArg1.getByteArray();
+                    int indexOffset = inputArg1.getStartOffset();
+                    if (indexBytes[indexOffset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                        throw new AlgebricksException("Field accessor is not defined for "
+                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(indexBytes[indexOffset])
+                                + " as the second argument.");
+                    }
+                    fieldIndex = IntegerPointable.getInteger(indexBytes, indexOffset + 1);
                     fieldValueType = recordType.getFieldTypes()[fieldIndex];
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, offset, fieldIndex,
                             nullBitmapSize, recordType.isOpen());
@@ -103,9 +110,15 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                         result.set(resultStorage);
                         return;
                     }
+                    if (fieldValueOffset < 0) {
+                        // the field is missing, we checked the missing bit map
+                        out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                        result.set(resultStorage);
+                        return;
+                    }
 
                     if (fieldValueType.getTypeTag().equals(ATypeTag.UNION)) {
-                        if (((AUnionType) fieldValueType).isNullableType()) {
+                        if (((AUnionType) fieldValueType).isUnknownableType()) {
                             fieldValueTypeTag = ((AUnionType) fieldValueType).getActualType().getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset,
                                     fieldValueTypeTag, false);

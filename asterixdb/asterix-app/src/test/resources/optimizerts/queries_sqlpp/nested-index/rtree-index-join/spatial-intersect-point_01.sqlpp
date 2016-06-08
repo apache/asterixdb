@@ -56,5 +56,5 @@ write output to asterix_nc1:"rttest/index-join_rtree-spatial-intersect-point.adm
 select element {'a':a,'b':b}
 from  MyData1 as a,
       MyData2 as b
-where test."spatial-intersect"(a.nested.point,b.point)
+where test.`spatial-intersect`(a.nested.point,b.point)
 ;

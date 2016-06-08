@@ -23,6 +23,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
 
@@ -49,7 +50,7 @@ public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public IAType getResultType(IAType... knownTypes) {
+    public IAType getResultType(ILogicalExpression expr, IAType... knownTypes) throws AlgebricksException {
         ATypeTag tag = knownTypes[0].getTypeTag();
         switch (tag) {
             case INT8:

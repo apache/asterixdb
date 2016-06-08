@@ -20,6 +20,6 @@
 use test;
 
 
-set "import-private-functions" "true";
+set `import-private-functions` `true`;
 
-{'result1':test."string-equal"('',''),'result3':test."string-equal"(null,''),'result4':test."string-equal"('',null),'result5':test."string-equal"(null,null)};
+{'result1':test.`string-equal`('',''),'result3':test.`string-equal`(null,''),'result4':test.`string-equal`('',null),'result5':test.`string-equal`(null,null)};

@@ -17,4 +17,4 @@
  * under the License.
  */
 
-select element "string-concat"(['1\f2\n3\t4\r56\b7"8','\'9']);
+select element `string-concat`(['1\f2\n3\t4\r56\b7"8','\'9']);

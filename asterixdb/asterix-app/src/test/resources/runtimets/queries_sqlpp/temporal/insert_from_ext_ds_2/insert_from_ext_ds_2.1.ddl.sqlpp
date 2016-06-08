@@ -34,11 +34,11 @@ create type timeTest.timesType as
   time : time,
   datetime : datetime,
   duration : duration,
-  "year-month-duration" : "year-month-duration",
-  "day-time-duration" : "day-time-duration",
-  "date-interval" : interval,
-  "time-interval" : interval,
-  "datetime-interval" : interval
+  `year-month-duration` : `year-month-duration`,
+  `day-time-duration` : `day-time-duration`,
+  `date-interval` : interval,
+  `time-interval` : interval,
+  `datetime-interval` : interval
 }
 
 create  table timeData(timesType) primary key date;

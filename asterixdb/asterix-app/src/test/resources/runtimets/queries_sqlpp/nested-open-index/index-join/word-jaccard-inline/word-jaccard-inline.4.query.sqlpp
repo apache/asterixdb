@@ -29,7 +29,7 @@ use test;
 select element {'arec':a.nested,'brec':b.nested,'jacc':jacc}
 from  DBLP as a,
       CSX as b
-with  jacc as test."similarity-jaccard"(test."word-tokens"(a.nested.title),test."word-tokens"(b.nested.title))
+with  jacc as test.`similarity-jaccard`(test.`word-tokens`(a.nested.title),test.`word-tokens`(b.nested.title))
 where ((jacc >= 0.500000f) and (a.nested.id < b.nested.id))
 order by jacc,a.nested.id,b.nested.id
 ;

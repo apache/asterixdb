@@ -26,10 +26,10 @@
 use test;
 
 
-select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested."referred-topics"},'similar-tweets':(
-        select element {'id':t2.nested.tweetid,'topics':t2.nested."referred-topics"}
+select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested.`referred-topics`},'similar-tweets':(
+        select element {'id':t2.nested.tweetid,'topics':t2.nested.`referred-topics`}
         from  TweetMessages as t2
-        with  sim as test."similarity-jaccard-check"(t1.nested."referred-topics",t2.nested."referred-topics",0.500000f)
+        with  sim as test.`similarity-jaccard-check`(t1.nested.`referred-topics`,t2.nested.`referred-topics`,0.500000f)
         where (sim[0] and (t2.nested.tweetid != t1.nested.tweetid))
         order by t2.nested.tweetid
     )}

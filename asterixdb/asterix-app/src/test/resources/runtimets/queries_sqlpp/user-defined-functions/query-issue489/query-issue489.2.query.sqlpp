@@ -25,6 +25,6 @@
 
 select element coll_count((
     select element x
-    from  "Metadata.Function" as x
+    from  `Metadata.Function` as x
     where (x.DataverseName = 'test')
 ));

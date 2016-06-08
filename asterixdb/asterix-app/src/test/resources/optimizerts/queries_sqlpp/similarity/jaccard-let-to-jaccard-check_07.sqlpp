@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that the SimilarityCheckRule rewrites the similarity-jaccard function with a threshold 
+ * Description    : Tests that the SimilarityCheckRule rewrites the similarity-jaccard function with a threshold
  *                  into similarity-jaccard-check-check if possible.
  *                  Tests that the optimizer drills through the let clause.
  *                  Replacement should *not* happen because of a "<" condition on the similarity.
@@ -44,6 +44,6 @@ create  table DBLP(DBLPType) primary key id;
 write output to asterix_nc1:"rttest/similarity_jaccard-let-to-jaccard-check_01.adm"
 select element jacc
 from  DBLP as paper
-with  jacc as test."similarity-jaccard"(test."word-tokens"(paper.title),test."word-tokens"('Transactions for Cooperative Environments'))
+with  jacc as test.`similarity-jaccard`(test.`word-tokens`(paper.title),test.`word-tokens`('Transactions for Cooperative Environments'))
 where (jacc < 0.800000f)
 ;
