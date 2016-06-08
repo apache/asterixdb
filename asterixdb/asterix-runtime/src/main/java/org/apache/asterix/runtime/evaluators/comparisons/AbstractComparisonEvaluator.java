@@ -22,6 +22,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -53,6 +54,9 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ABoolean> serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings("unchecked")
+    protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws AlgebricksException {
@@ -76,18 +80,17 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
             checkTotallyOrderable();
         }
 
-        ABoolean b;
-        // Checks whether two types are comparable
-        if (comparabilityCheck()) {
-            // Two types can be compared
-            int r = compareResults();
-            b = getComparisonResult(r) ? ABoolean.TRUE : ABoolean.FALSE;
-        } else {
-            // result:FALSE - two types cannot be compared. Thus we return FALSE since this is equality comparison
-            b = ABoolean.FALSE;
-        }
         try {
-            serde.serialize(b, out);
+            // Checks whether two types are comparable
+            if (comparabilityCheck()) {
+                // Two types can be compared
+                int r = compareResults();
+                ABoolean b = getComparisonResult(r) ? ABoolean.TRUE : ABoolean.FALSE;
+                serde.serialize(b, out);
+            } else {
+                // result:NULL - two types cannot be compared.
+                nullSerde.serialize(ANull.NULL, out);
+            }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }

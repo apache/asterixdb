@@ -967,6 +967,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="incompatible">
+        <output-dir compare="Text">incompatible</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="int16">
         <output-dir compare="Text">int16</output-dir>
       </compilation-unit>
@@ -3649,6 +3654,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">
+      <compilation-unit name="group-by">
+        <output-dir compare="Text">group-by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="group-by-from-dataset">
+        <output-dir compare="Text">group-by-from-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="length">
         <output-dir compare="Text">length</output-dir>
       </compilation-unit>
@@ -3656,6 +3671,16 @@
     <test-case FilePath="null-missing">
       <compilation-unit name="lower">
         <output-dir compare="Text">lower</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="order-by">
+        <output-dir compare="Text">order-by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="order-by-from-dataset">
+        <output-dir compare="Text">order-by-from-dataset</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">

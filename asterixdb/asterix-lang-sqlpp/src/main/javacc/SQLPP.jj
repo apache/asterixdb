@@ -2869,7 +2869,7 @@ TOKEN :
 }
 
 <DEFAULT,IN_DBL_BRACE>
-TOKEN :
+TOKEN [IGNORE_CASE]:
 {
   <MISSING : "missing">
   |  <NULL : "null">
