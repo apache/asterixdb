@@ -91,10 +91,12 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     private ARecordType recordType;
     private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<IARecordBuilder, ATypeTag>(
             new RecordBuilderFactory());
-    private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool = new ListObjectPool<IAsterixListBuilder, ATypeTag>(
-            new ListBuilderFactory());
-    private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, ATypeTag>(
-            new AbvsBuilderFactory());
+    private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
+            new ListObjectPool<IAsterixListBuilder, ATypeTag>(
+                    new ListBuilderFactory());
+    private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
+            new ListObjectPool<IMutableValueStorage, ATypeTag>(
+                    new AbvsBuilderFactory());
     private final ClassAd rootAd;
     private String exprPrefix = "expr=";
     private String exprSuffix = "";
@@ -1574,7 +1576,6 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             }
 
             isExpr = false;
-            // parse the expression
             parseExpression(tree);
             if (tree.getInnerTree() == null) {
                 throw new HyracksDataException("parse expression returned empty tree");

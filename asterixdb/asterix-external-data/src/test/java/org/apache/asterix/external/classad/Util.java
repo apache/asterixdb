@@ -18,32 +18,36 @@
  */
 package org.apache.asterix.external.classad;
 
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.asterix.om.base.AMutableInt32;
 
 public class Util {
     // convert escapes in-place
     // the string can only shrink while converting escapes so we can safely convert in-place.
-    // needs verification
+    private static final Pattern OCTAL = Pattern.compile("\\\\([0-3][0-7]{0,2})");
+
     public static boolean convertEscapes(AMutableCharArrayString text) {
         boolean validStr = true;
-        if (text.getLength() == 0)
+        if (text.getLength() == 0) {
             return true;
-        int length = text.getLength();
+        }
         int dest = 0;
-        for (int source = 0; source < length; ++source) {
+        boolean hasOctal = false;
+        for (int source = 0; source < text.getLength(); ++source) {
             char ch = text.charAt(source);
             // scan for escapes, a terminating slash cannot be an escape
-            if (ch == '\\' && source < length - 1) {
+            if (ch == '\\' && source < text.getLength() - 1) {
                 ++source; // skip the \ character
                 ch = text.charAt(source);
-
                 // The escape part should be re-validated
                 switch (ch) {
                     case 'b':
@@ -66,29 +70,8 @@ public class Util {
                         break;
                     default:
                         if (Lexer.isodigit(ch)) {
-                            int number = ch - '0';
-                            // There can be up to 3 octal digits in an octal escape
-                            //  \[0..3]nn or \nn or \n. We quit at 3 characters or
-                            // at the first non-octal character.
-                            if (source + 1 < length) {
-                                char digit = text.charAt(source + 1); // is the next digit also
-                                if (Lexer.isodigit(digit)) {
-                                    ++source;
-                                    number = (number << 3) + digit - '0';
-                                    if (number < 0x20 && source + 1 < length) {
-                                        digit = text.charAt(source + 1);
-                                        if (Lexer.isodigit(digit)) {
-                                            ++source;
-                                            number = (number << 3) + digit - '0';
-                                        }
-                                    }
-                                }
-                            }
-                            if (ch == 0) { // "\\0" is an invalid substring within a string literal
-                                validStr = false;
-                            }
-                        } else {
-                            // pass char after \ unmodified.
+                            hasOctal = true;
+                            ++dest;
                         }
                         break;
                 }
@@ -99,39 +82,43 @@ public class Util {
                 // text[dest] = ch;
                 ++dest;
             } else {
-                text.erase(dest);
-                text.setChar(dest, ch);
-                ++dest;
-                --source;
+                try {
+                    text.erase(dest);
+                    text.setChar(dest, ch);
+                    ++dest;
+                    --source;
+                } catch (Throwable th) {
+                    th.printStackTrace();
+                }
             }
         }
 
-        if (dest < length) {
+        if (dest < text.getLength()) {
             text.erase(dest);
-            length = dest;
+            text.setLength(dest);
         }
         // silly, but to fulfull the original contract for this function
         // we need to remove the last character in the string if it is a '\0'
         // (earlier logic guaranteed that a '\0' can ONLY be the last character)
-        if (length > 0 && !(text.charAt(length - 1) == '\0')) {
-            //text.erase(length - 1);
+        if (text.getLength() > 0 && (text.charAt(text.getLength() - 1) == '\0')) {
+            text.erase(text.getLength() - 1);
         }
+        if (hasOctal) {
+            Matcher m = OCTAL.matcher(text.toString());
+            StringBuffer out = new StringBuffer();
+            while (m.find()) {
+                int octet = Integer.parseInt(m.group(1), 8);
+                if (octet == 0 || octet > 255) {
+                    return false;
+                }
+                m.appendReplacement(out, String.valueOf((char) octet));
+            }
+            m.appendTail(out);
+            text.setValue(new String(out.toString().getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+        }
+
         return validStr;
     }
-
-    /***************************************************************
-     * Copyright (C) 1990-2007, Condor Team, Computer Sciences Department,
-     * University of Wisconsin-Madison, WI.
-     * Licensed under the Apache License, Version 2.0 (the "License"); you
-     * may not use this file except in compliance with the License. You may
-     * obtain a copy of the License at
-     * http://www.apache.org/licenses/LICENSE-2.0
-     * Unless required by applicable law or agreed to in writing, software
-     * distributed under the License is distributed on an "AS IS" BASIS,
-     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     * See the License for the specific language governing permissions and
-     * limitations under the License.
-     ***************************************************************/
 
     public static Random initialized = new Random((new Date()).getTime());
 
