@@ -21,6 +21,8 @@ set import-private-functions 'true';
 
 let $d1 := date-from-unix-time-in-days(15600)
 let $null1 := date-from-unix-time-in-days(null)
+let $unix1 := unix-time-from-date-in-days($d1)
+let $nullunix1 := date-from-unix-time-in-days(null)
 let $dt1 := datetime("1327-12-02T23:35:49.938Z")
 let $d2 := get-date-from-datetime($dt1)
 let $null2 := get-date-from-datetime(null)
@@ -39,4 +41,21 @@ let $dr4 := $d4 - $d1
 let $null5 := null - $d2
 let $null6 := $d5 - null
 
-return { "date1": $d1, "date2": $d2, "date3": $d3, "date4": $d4, "date5": $d5, "duration1": $dr3, "duration2": $dr4, "c1": $c1, "c2": $c2, "null1": $null1, "null2": $null2, "null3": $null3, "null4": $null4, "null5": $null5, "null6": $null6 }
+return {
+  "date1": $d1,
+  "date2": $d2,
+  "date3": $d3,
+  "date4": $d4,
+  "date5": $d5,
+  "unix1": $unix1,
+  "duration1": $dr3,
+  "duration2": $dr4,
+  "c1": $c1,
+  "c2": $c2,
+  "null1": $null1,
+  "nullunix1": $nullunix1,
+  "null2": $null2,
+  "null3": $null3,
+  "null4": $null4,
+  "null5": $null5,
+  "null6": $null6 }

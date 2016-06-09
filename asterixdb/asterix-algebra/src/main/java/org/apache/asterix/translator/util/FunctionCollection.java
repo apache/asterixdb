@@ -274,6 +274,10 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.PrintDateTimeDes
 import org.apache.asterix.runtime.evaluators.functions.temporal.PrintTimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDateInDaysDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInMsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInSecsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationLessThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.staticcodegen.CodeGenUtil;
@@ -557,6 +561,10 @@ public class FunctionCollection {
         functionsToInjectUnkownHandling.add(TemporalIntervalEndDatetimeAccessor.FACTORY);
 
         // Temporal functions
+        functionsToInjectUnkownHandling.add(UnixTimeFromDateInDaysDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(UnixTimeFromTimeInMsDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(UnixTimeFromDatetimeInMsDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(UnixTimeFromDatetimeInSecsDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(DateFromUnixTimeInDaysDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(DateFromDatetimeDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(TimeFromUnixTimeInMsDescriptor.FACTORY);

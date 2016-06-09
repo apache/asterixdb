@@ -637,6 +637,14 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "get-overlapping-interval", 2);
 
     // Temporal functions
+    public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "unix-time-from-date-in-days", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_TIME_IN_MS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "unix-time-from-time-in-ms", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_MS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-ms", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_SECS = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-secs", 1);
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
     public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -973,6 +981,10 @@ public class AsterixBuiltinFunctions {
         addFunction(ACCESSOR_TEMPORAL_INTERVAL_END_TIME, ATimeTypeComputer.INSTANCE, true);
 
         // temporal functions
+        addFunction(UNIX_TIME_FROM_DATE_IN_DAYS, AInt64TypeComputer.INSTANCE, true);
+        addFunction(UNIX_TIME_FROM_TIME_IN_MS, AInt64TypeComputer.INSTANCE, true);
+        addFunction(UNIX_TIME_FROM_DATETIME_IN_MS, AInt64TypeComputer.INSTANCE, true);
+        addFunction(UNIX_TIME_FROM_DATETIME_IN_SECS, AInt64TypeComputer.INSTANCE, true);
         addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, ADateTypeComputer.INSTANCE, true);
         addFunction(DATE_FROM_DATETIME, ADateTypeComputer.INSTANCE, true);
         addFunction(TIME_FROM_UNIX_TIME_IN_MS, ATimeTypeComputer.INSTANCE, true);

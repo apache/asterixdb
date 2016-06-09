@@ -56,6 +56,15 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [unix1]
+    :
+    FunctionCall test.unix-time-from-time-in-ms@1[
+      FunctionCall test.time-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [1560074]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [duration1]
     :
     OperatorExpr [
@@ -183,6 +192,13 @@ RecordConstructor [
     LiteralExpr [STRING] [null1]
     :
     FunctionCall test.time-from-unix-time-in-ms@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [nullunix1]
+    :
+    FunctionCall test.unix-time-from-time-in-ms@1[
       LiteralExpr [NULL]
     ]
   )

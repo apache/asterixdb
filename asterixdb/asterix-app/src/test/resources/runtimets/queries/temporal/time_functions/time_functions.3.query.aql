@@ -21,6 +21,8 @@ set import-private-functions 'true';
 
 let $t1 := time-from-unix-time-in-ms(1560074)
 let $null1 := time-from-unix-time-in-ms(null)
+let $unix1 := unix-time-from-time-in-ms($t1)
+let $nullunix1 := unix-time-from-time-in-ms(null)
 let $dt1 := datetime("1327-12-02T23:35:49.938Z")
 let $t2 := get-time-from-datetime($dt1)
 let $null2 := get-time-from-datetime(null)
@@ -42,4 +44,21 @@ let $ct := current-time()
 let $cd := current-date()
 let $cdt := current-datetime()
 
-return { "time1" : $t1, "time2" : $t2, "time3" : $t3, "time4" : $t4, "time5" : $t5, "duration1" : $dr3, "duration2" : $dr4, "c1" : $c1, "c2" : $c2, "null1": $null1, "null2": $null2, "null3": $null3, "null4": $null4, "null5": $null5, "null6": $null6 }
+return {
+  "time1" : $t1,
+  "time2" : $t2,
+  "time3" : $t3,
+  "time4" : $t4,
+  "time5" : $t5,
+  "unix1" : $unix1,
+  "duration1" : $dr3,
+  "duration2" : $dr4,
+  "c1" : $c1,
+  "c2" : $c2,
+  "null1": $null1,
+  "nullunix1": $nullunix1,
+  "null2": $null2,
+  "null3": $null3,
+  "null4": $null4,
+  "null5": $null5,
+  "null6": $null6 }

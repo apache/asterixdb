@@ -1791,7 +1791,7 @@ including [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) and
 
  * Get the time value from the given datetime value `datetime`
  * Arguments:
-    * `datetime`: A `datetime` value to be extracted from
+    * `datetime`: A `datetime` value to be extracted from.
  * Return Value:
     * A `time` value from the datetime.
 
@@ -1889,6 +1889,66 @@ datetime-from-date-time(date,time)
     * `numeric_value`: A `int8`/`int16`/`int32`/`int64` value representing the number of milliseconds.
  * Return Value:
     * A `time` value as the time after `numeric_value` milliseconds since 00:00:00.000Z.
+
+ * Example:
+
+        use dataverse TinySocial;
+
+        let $d := date-from-unix-time-in-days(15800)
+        let $dt := datetime-from-unix-time-in-ms(1365139700000)
+        let $t := time-from-unix-time-in-ms(3748)
+        return {"date": $d, "datetime": $dt, "time": $t}
+
+
+ * The expected result is:
+
+        { "date": date("2013-04-05"), "datetime": datetime("2013-04-05T05:28:20.000Z"), "time": time("00:00:03.748Z") }
+
+
+### unix-time-from-date-in-days ###
+ * Syntax:
+
+        unix-time-from-date-in-days(date_value)
+
+ * Gets an integer value representing the number of days since 1970-01-01 for `date_value`.
+ * Arguments:
+    * `date_value`: A `date` value.
+ * Return Value:
+    * A `int64` value representing the number of days.
+
+### unix-time-from-datetime-in-ms ###
+ * Syntax:
+
+        unix-time-from-datetime-in-ms(datetime_value)
+
+ * Gets an integer value representing the time in milliseconds since 1970-01-01T00:00:00Z for `datetime_value`.
+ * Arguments:
+    * `datetime_value` : A `datetime` value.
+ * Return Value:
+    * A `int64` value representing the number of milliseconds.
+
+### unix-time-from-datetime-in-secs ###
+ * Syntax:
+
+        unix-time-from-datetime-in-secs(datetime_value)
+
+ * Gets an integer value representing the time in seconds since 1970-01-01T00:00:00Z for `datetime_value`.
+ * Arguments:
+    * `datetime_value` : A `datetime` value.
+ * Return Value:
+    * A `int64` value representing the number of seconds.
+
+
+### unix-time-from-time-in-ms ###
+ * Syntax:
+
+        unix-time-from-time-in-ms(time_value)
+
+ * Gets an integer value representing the time the milliseconds since 00:00:00.000Z for `time_value`.
+ * Arguments:
+    * `time_value` : A `time` value.
+ * Return Value:
+    * A `int64` value representing the number of milliseconds.
 
  * Example:
 
