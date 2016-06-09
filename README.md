@@ -48,7 +48,7 @@ Instructions for building the master:
 
 * Checkout AsterixDB master:
 
-        $git clone https://github.com/apache/incubator-asterixdb.git
+        $git clone https://github.com/apache/asterixdb.git
 
 * Build AsterixDB master:
 
