@@ -110,7 +110,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
                 adaptorLibraryName);
         if (classLoader != null) {
             adapterFactory = ((IAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance()));
-            adapterFactory.configure(adaptorConfiguration, adapterOutputType);
+            adapterFactory.setOutputType(adapterOutputType);
+            adapterFactory.configure(adaptorConfiguration);
         } else {
             String message = "Unable to create adapter as class loader not configured for library " + adaptorLibraryName
                     + " in dataverse " + feedId.getDataverse();

@@ -78,13 +78,25 @@ public class ExternalDataUtils {
     }
 
     public static void validateParameters(Map<String, String> configuration) throws AsterixException {
+        validateDataSourceParameters(configuration);
+        validateDataParserParameters(configuration);
+    }
+
+    public static void validateDataParserParameters(Map<String, String> configuration) throws AsterixException {
+        String parser = configuration.get(ExternalDataConstants.KEY_FORMAT);
+        if (parser == null) {
+            String parserFactory = configuration.get(ExternalDataConstants.KEY_PARSER_FACTORY);
+            if (parserFactory == null) {
+                throw new AsterixException("The parameter " + ExternalDataConstants.KEY_FORMAT + " or "
+                        + ExternalDataConstants.KEY_PARSER_FACTORY + " must be specified.");
+            }
+        }
+    }
+
+    public static void validateDataSourceParameters(Map<String, String> configuration) throws AsterixException {
         String reader = configuration.get(ExternalDataConstants.KEY_READER);
         if (reader == null) {
             throw new AsterixException("The parameter " + ExternalDataConstants.KEY_READER + " must be specified.");
-        }
-        String parser = configuration.get(ExternalDataConstants.KEY_FORMAT);
-        if (parser == null) {
-            throw new AsterixException("The parameter " + ExternalDataConstants.KEY_FORMAT + " must be specified.");
         }
     }
 

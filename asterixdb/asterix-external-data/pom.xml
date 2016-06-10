@@ -293,7 +293,7 @@
     <dependency>
       <groupId>com.couchbase.client</groupId>
       <artifactId>core-io</artifactId>
-      <version>1.2.7</version>
+      <version>1.2.8</version>
     </dependency>
     <dependency>
       <groupId>io.reactivex</groupId>

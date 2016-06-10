@@ -96,7 +96,7 @@ public class FeedWorkCollection {
                     }
                 } catch (Exception e) {
                     if (LOGGER.isEnabledFor(Level.FATAL)) {
-                        LOGGER.fatal("Exception in executing " + request);
+                        LOGGER.fatal("Exception in executing " + request, e);
                     }
                 }
             }

@@ -94,8 +94,9 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
             }
             feedLogManager.touch();
         }
-        IDataFlowController controller = DataflowControllerProvider.getDataflowController(recordType, ctx, partition,
-                dataSourceFactory, dataParserFactory, configuration, indexingOp, isFeed, feedLogManager);
+        IDataFlowController controller =
+                DataflowControllerProvider.getDataflowController(recordType, ctx, partition,
+                        dataSourceFactory, dataParserFactory, configuration, indexingOp, isFeed, feedLogManager);
         if (isFeed) {
             return new FeedAdapter((AbstractFeedDataFlowController) controller);
         } else {
@@ -122,17 +123,17 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     }
 
     @Override
-    public void configure(Map<String, String> configuration, ARecordType outputType, ARecordType metaType)
+    public void configure(Map<String, String> configuration)
             throws AsterixException {
-        this.recordType = outputType;
-        this.metaType = metaType;
         this.configuration = configuration;
+        ExternalDataUtils.validateDataSourceParameters(configuration);
         dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(configuration);
-        dataParserFactory = ParserFactoryProvider.getDataParserFactory(configuration);
         if (dataSourceFactory.isIndexible() && (files != null)) {
             ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
         }
         dataSourceFactory.configure(configuration);
+        ExternalDataUtils.validateDataParserParameters(configuration);
+        dataParserFactory = ParserFactoryProvider.getDataParserFactory(configuration);
         dataParserFactory.setRecordType(recordType);
         dataParserFactory.setMetaType(metaType);
         dataParserFactory.configure(configuration);
@@ -159,7 +160,22 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     }
 
     @Override
-    public ARecordType getAdapterOutputType() {
+    public ARecordType getOutputType() {
         return recordType;
+    }
+
+    @Override
+    public void setOutputType(ARecordType recordType) {
+        this.recordType = recordType;
+    }
+
+    @Override
+    public ARecordType getMetaType() {
+        return metaType;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
+        this.metaType = metaType;
     }
 }

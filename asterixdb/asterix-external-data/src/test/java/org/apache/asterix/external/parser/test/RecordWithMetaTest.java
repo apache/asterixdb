@@ -121,7 +121,7 @@ public class RecordWithMetaTest {
                 tb.addFieldEndOffset();
                 parser.parseMeta(tb.getDataOutput());
                 tb.addFieldEndOffset();
-                parser.appendPK(tb);
+                parser.appendLastParsedPrimaryKeyToTuple(tb);
                 //print tuple
                 printTuple(tb, printers, printStream);
 

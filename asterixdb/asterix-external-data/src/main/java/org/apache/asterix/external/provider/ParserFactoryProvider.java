@@ -45,8 +45,11 @@ public class ParserFactoryProvider {
             return ExternalDataUtils.createExternalParserFactory(ExternalDataUtils.getDataverse(configuration),
                     parserFactoryName);
         } else {
-            parserFactory = ParserFactoryProvider
-                    .getDataParserFactory(ExternalDataUtils.getRecordFormat(configuration));
+            String parserFactoryKey = ExternalDataUtils.getRecordFormat(configuration);
+            if (parserFactoryKey == null) {
+                parserFactoryKey = configuration.get(ExternalDataConstants.KEY_PARSER_FACTORY);
+            }
+            parserFactory = ParserFactoryProvider.getDataParserFactory(parserFactoryKey);
         }
         return parserFactory;
     }

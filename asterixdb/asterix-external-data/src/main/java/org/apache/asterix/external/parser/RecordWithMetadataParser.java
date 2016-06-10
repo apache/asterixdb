@@ -26,7 +26,7 @@ import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.external.api.IRecordDataParser;
-import org.apache.asterix.external.api.IRecordWithMetaDataParser;
+import org.apache.asterix.external.api.IRecordWithMetadataParser;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
@@ -39,7 +39,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public class RecordWithMetadataParser<T, O> implements IRecordWithMetaDataParser<T> {
+public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser<T> {
 
     private final IRecordConverter<T, RecordWithMetadataAndPK<O>> converter;
     private RecordWithMetadataAndPK<O> rwm;
@@ -106,7 +106,8 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetaDataParser
         }
     }
 
-    public void appendPK(ArrayTupleBuilder tb) throws IOException {
-        rwm.appendPk(tb);
+    @Override
+    public void appendLastParsedPrimaryKeyToTuple(ArrayTupleBuilder tb) throws IOException {
+        rwm.appendPrimaryKeyToTuple(tb);
     }
 }

@@ -54,7 +54,7 @@ public class StreamRecordReaderProvider {
             }
             throw new AsterixException("Unknown format: " + format);
         }
-        throw new AsterixException("Unspecified paramter: " + ExternalDataConstants.KEY_FORMAT);
+        throw new AsterixException("Unspecified parameter: " + ExternalDataConstants.KEY_FORMAT);
     }
 
     public static StreamRecordReader createRecordReader(Format format, AsterixInputStream inputStream,

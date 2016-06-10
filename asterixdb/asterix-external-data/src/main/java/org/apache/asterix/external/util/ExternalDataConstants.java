@@ -55,7 +55,7 @@ public class ExternalDataConstants {
     public static final String KEY_HADOOP_BUFFER_SIZE = "io.file.buffer.size";
     public static final String KEY_SOURCE_DATATYPE = "type-name";
     public static final String KEY_DELIMITER = "delimiter";
-    public static final String KEY_PARSER_FACTORY = "tuple-parser";
+    public static final String KEY_PARSER_FACTORY = "parser-factory";
     public static final String KEY_DATA_PARSER = "parser";
     public static final String KEY_HEADER = "header";
     public static final String KEY_READER = "reader";

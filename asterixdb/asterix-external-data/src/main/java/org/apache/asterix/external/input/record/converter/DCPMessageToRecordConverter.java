@@ -39,7 +39,7 @@ import com.couchbase.client.core.message.dcp.RemoveMessage;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 
-public class DCPRequestToRecordWithMetadataAndPKConverter
+public class DCPMessageToRecordConverter
         implements IRecordToRecordWithMetadataAndPKConverter<DCPRequest, char[]> {
 
     private final RecordWithMetadataAndPK<char[]> recordWithMetadata;
@@ -47,18 +47,17 @@ public class DCPRequestToRecordWithMetadataAndPKConverter
     private final CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
     private final ByteBuffer bytes = ByteBuffer.allocateDirect(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
     private final CharBuffer chars = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
-    // metaTypes = {key(string), bucket(string), vbucket(int32), seq(long), cas(long),
-    // creationTime(long),expiration(int32),flags(int32),revSeqNumber(long),lockTime(int32)}
-    private static final IAType[] CB_META_TYPES = new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
-            BuiltinType.AINT32, BuiltinType.AINT64, BuiltinType.AINT64, BuiltinType.AINT64, BuiltinType.AINT32,
-            BuiltinType.AINT32, BuiltinType.AINT64, BuiltinType.AINT32 };
+    private static final IAType[] CB_META_TYPES = new IAType[] { /*ID*/BuiltinType.ASTRING,
+            /*VBID*/BuiltinType.AINT32, /*SEQ*/BuiltinType.AINT64, /*CAS*/BuiltinType.AINT64,
+            /*EXPIRATION*/BuiltinType.AINT32,
+            /*FLAGS*/BuiltinType.AINT32, /*REV*/BuiltinType.AINT64, /*LOCK*/BuiltinType.AINT32 };
     private static final int[] PK_INDICATOR = { 1 };
     private static final int[] PK_INDEXES = { 0 };
     private static final IAType[] PK_TYPES = { BuiltinType.ASTRING };
 
-    public DCPRequestToRecordWithMetadataAndPKConverter() {
+    public DCPMessageToRecordConverter() {
         this.value = new CharArrayRecord();
-        this.recordWithMetadata = new RecordWithMetadataAndPK<char[]>(value, CB_META_TYPES,
+        this.recordWithMetadata = new RecordWithMetadataAndPK<>(value, CB_META_TYPES,
                 ARecordType.FULLY_OPEN_RECORD_TYPE, PK_INDICATOR, PK_INDEXES, PK_TYPES);
     }
 
@@ -67,29 +66,29 @@ public class DCPRequestToRecordWithMetadataAndPKConverter
         final DCPRequest dcpRequest = input.get();
         if (dcpRequest instanceof MutationMessage) {
             final MutationMessage message = (MutationMessage) dcpRequest;
-            final String key = message.key();
-            final int vbucket = message.partition();
-            final long seq = message.bySequenceNumber();
-            final String bucket = message.bucket();
-            final long cas = message.cas();
-            final long creationTime = message.creationTime();
-            final int expiration = message.expiration();
-            final int flags = message.flags();
-            final long revSeqNumber = message.revisionSequenceNumber();
-            final int lockTime = message.lockTime();
-            recordWithMetadata.reset();
-            recordWithMetadata.setMetadata(0, key);
-            recordWithMetadata.setMetadata(1, bucket);
-            recordWithMetadata.setMetadata(2, vbucket);
-            recordWithMetadata.setMetadata(3, seq);
-            recordWithMetadata.setMetadata(4, cas);
-            recordWithMetadata.setMetadata(5, creationTime);
-            recordWithMetadata.setMetadata(6, expiration);
-            recordWithMetadata.setMetadata(7, flags);
-            recordWithMetadata.setMetadata(8, revSeqNumber);
-            recordWithMetadata.setMetadata(9, lockTime);
-            DCPRequestToRecordWithMetadataAndPKConverter.set(message.content(), decoder, bytes, chars, value);
-            ReferenceCountUtil.release(message.content());
+            try {
+                final String key = message.key();
+                final int vbucket = message.partition();
+                final long seq = message.bySequenceNumber();
+                final long cas = message.cas();
+                final int expiration = message.expiration();
+                final int flags = message.flags();
+                final long revSeqNumber = message.revisionSequenceNumber();
+                final int lockTime = message.lockTime();
+                int i = 0;
+                recordWithMetadata.reset();
+                recordWithMetadata.setMetadata(i++, key);
+                recordWithMetadata.setMetadata(i++, vbucket);
+                recordWithMetadata.setMetadata(i++, seq);
+                recordWithMetadata.setMetadata(i++, cas);
+                recordWithMetadata.setMetadata(i++, expiration);
+                recordWithMetadata.setMetadata(i++, flags);
+                recordWithMetadata.setMetadata(i++, revSeqNumber);
+                recordWithMetadata.setMetadata(i, lockTime);
+                DCPMessageToRecordConverter.set(message.content(), decoder, bytes, chars, value);
+            } finally {
+                ReferenceCountUtil.release(message.content());
+            }
         } else if (dcpRequest instanceof RemoveMessage) {
             final RemoveMessage message = (RemoveMessage) dcpRequest;
             final String key = message.key();

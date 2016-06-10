@@ -861,7 +861,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                         if (subType.isOpen()) {
                             isOpen = true;
                             break;
-                        } ;
+                        };
                     }
                 }
                 if (fieldExpr.second == null) {
@@ -1379,8 +1379,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 }
             }
 
-            Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList =
-                    new HashMap<FeedConnectionId, Pair<JobSpecification, Boolean>>();
+            Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 // prepare job spec(s) that would disconnect any active feeds involving the dataset.
                 List<FeedConnectionId> feedConnections = FeedLifecycleListener.INSTANCE.getActiveFeedConnections(null);
@@ -1950,7 +1949,7 @@ public class QueryTranslator extends AbstractLangTranslator {
 
     private JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement stmt)
-            throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException {
+                    throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException {
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<Query, Integer> reWrittenQuery = apiFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
@@ -1999,7 +1998,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 default:
                     throw new IllegalStateException();
             }
-
+            FeedMetadataUtil.validateFeed(feed, mdTxnCtx);
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -2260,7 +2259,7 @@ public class QueryTranslator extends AbstractLangTranslator {
      */
     private Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse,
             Feed feed, String dataset, FeedPolicyEntity feedPolicy, MetadataTransactionContext mdTxnCtx)
-            throws MetadataException {
+                    throws MetadataException {
         IFeedJoint sourceFeedJoint = null;
         FeedConnectionRequest request = null;
         List<String> functionsToApply = new ArrayList<String>();
@@ -2920,7 +2919,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     private void prepareRunExternalRuntime(AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc,
             RunStatement pregelixStmt, String dataverseNameFrom, String dataverseNameTo, String datasetNameFrom,
             String datasetNameTo, MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException, AsterixException, Exception {
+                    throws AlgebricksException, AsterixException, Exception {
         // Validates the source/sink dataverses and datasets.
         Dataset fromDataset = metadataProvider.findDataset(dataverseNameFrom, datasetNameFrom);
         if (fromDataset == null) {

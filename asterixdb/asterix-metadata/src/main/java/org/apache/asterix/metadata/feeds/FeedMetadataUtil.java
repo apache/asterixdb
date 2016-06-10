@@ -38,6 +38,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
+import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -453,6 +454,71 @@ public class FeedMetadataUtil {
         return preProcessingRequired;
     }
 
+    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx)
+            throws AsterixException {
+        try {
+            String adapterName = feed.getAdapterName();
+            Map<String, String> configuration = feed.getAdapterConfiguration();
+            ARecordType adapterOutputType = getOutputType(feed, configuration, ExternalDataConstants.KEY_TYPE_NAME);
+            ARecordType metaType = getOutputType(feed, configuration, ExternalDataConstants.KEY_META_TYPE_NAME);
+            ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
+            ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
+            // Get adapter from metadata dataset <Metadata dataverse>
+            DatasourceAdapter adapterEntity =
+                    MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                            adapterName);
+            // Get adapter from metadata dataset <The feed dataverse>
+            if (adapterEntity == null) {
+                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
+            }
+            AdapterType adapterType;
+            IAdapterFactory adapterFactory;
+            if (adapterEntity != null) {
+                adapterType = adapterEntity.getType();
+                String adapterFactoryClassname = adapterEntity.getClassname();
+                switch (adapterType) {
+                    case INTERNAL:
+                        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
+                        break;
+                    case EXTERNAL:
+                        String[] anameComponents = adapterName.split("#");
+                        String libraryName = anameComponents[0];
+                        ClassLoader cl =
+                                ExternalLibraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
+                        break;
+                    default:
+                        throw new AsterixException("Unknown Adapter type " + adapterType);
+                }
+                adapterFactory.setOutputType(adapterOutputType);
+                adapterFactory.setMetaType(metaType);
+                adapterFactory.configure(configuration);
+            } else {
+                AdapterFactoryProvider.getAdapterFactory(adapterName, configuration, adapterOutputType,
+                        metaType);
+            }
+            if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
+                metaType = getOutputType(feed, configuration, ExternalDataConstants.KEY_META_TYPE_NAME);
+                if (metaType == null) {
+                    throw new AsterixException("Unknown specified feed meta output data type "
+                            + configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
+                }
+            }
+            if (adapterOutputType == null) {
+                if (!configuration.containsKey(ExternalDataConstants.KEY_TYPE_NAME)) {
+                    throw new AsterixException("Unspecified feed output data type");
+                }
+                adapterOutputType = getOutputType(feed, configuration, ExternalDataConstants.KEY_TYPE_NAME);
+                if (adapterOutputType == null) {
+                    throw new AsterixException("Unknown specified feed output data type "
+                            + configuration.get(ExternalDataConstants.KEY_TYPE_NAME));
+                }
+            }
+        } catch (Exception e) {
+            throw new AsterixException("Invalid feed parameters", e);
+        }
+    }
+
     @SuppressWarnings("rawtypes")
     public static Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType>
             getPrimaryFeedFactoryAndOutput(Feed feed, FeedPolicyAccessor policyAccessor,
@@ -494,12 +560,25 @@ public class FeedMetadataUtil {
                                 ExternalLibraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
+                    default:
+                        throw new AsterixException("Unknown Adapter type " + adapterType);
                 }
-                adapterFactory.configure(configuration, adapterOutputType, metaType);
+                adapterFactory.setOutputType(adapterOutputType);
+                adapterFactory.setMetaType(metaType);
+                adapterFactory.configure(configuration);
             } else {
                 adapterFactory = AdapterFactoryProvider.getAdapterFactory(adapterName, configuration, adapterOutputType,
                         metaType);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
+            }
+            if (metaType == null) {
+                metaType = getOutputType(feed, configuration, ExternalDataConstants.KEY_META_TYPE_NAME);
+            }
+            if (adapterOutputType == null) {
+                if (!configuration.containsKey(ExternalDataConstants.KEY_TYPE_NAME)) {
+                    throw new AsterixException("Unspecified feed output data type");
+                }
+                adapterOutputType = getOutputType(feed, configuration, ExternalDataConstants.KEY_TYPE_NAME);
             }
             int numOfOutputs = 1;
             if (metaType != null) {
@@ -516,27 +595,7 @@ public class FeedMetadataUtil {
                 serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
             }
             if (ExternalDataUtils.isChangeFeed(configuration)) {
-                int[] pkIndexes = ExternalDataUtils.getPKIndexes(configuration);
-                if (metaType != null) {
-                    int[] pkIndicators = ExternalDataUtils.getPKSourceIndicators(configuration);
-                    for (int j = 0; j < pkIndexes.length; j++) {
-                        int aInt = pkIndexes[j];
-                        if (pkIndicators[j] == 0) {
-                            serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE
-                                    .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
-                        } else if (pkIndicators[j] == 1) {
-                            serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE
-                                    .getSerializerDeserializer(metaType.getFieldTypes()[aInt]);
-                        } else {
-                            throw new AlgebricksException("a key source indicator can only be 0 or 1");
-                        }
-                    }
-                } else {
-                    for (int aInt : pkIndexes) {
-                        serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE
-                                .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
-                    }
-                }
+                getSerdesForPKs(serdes, configuration, metaType, adapterOutputType, i);
             }
             feedProps = new Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType>(adapterFactory,
                     new RecordDescriptor(serdes), adapterType);
@@ -544,6 +603,32 @@ public class FeedMetadataUtil {
             throw new AlgebricksException("unable to create adapter", e);
         }
         return feedProps;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void getSerdesForPKs(ISerializerDeserializer[] serdes, Map<String, String> configuration,
+            ARecordType metaType, ARecordType adapterOutputType, int index) throws AlgebricksException {
+        int[] pkIndexes = ExternalDataUtils.getPKIndexes(configuration);
+        if (metaType != null) {
+            int[] pkIndicators = ExternalDataUtils.getPKSourceIndicators(configuration);
+            for (int j = 0; j < pkIndexes.length; j++) {
+                int aInt = pkIndexes[j];
+                if (pkIndicators[j] == 0) {
+                    serdes[index++] = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
+                } else if (pkIndicators[j] == 1) {
+                    serdes[index++] = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(metaType.getFieldTypes()[aInt]);
+                } else {
+                    throw new AlgebricksException("a key source indicator can only be 0 or 1");
+                }
+            }
+        } else {
+            for (int aInt : pkIndexes) {
+                serdes[index++] = AqlSerializerDeserializerProvider.INSTANCE
+                        .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
+            }
+        }
     }
 
     public static ARecordType getOutputType(IFeed feed, Map<String, String> configuration, String key)
@@ -596,7 +681,7 @@ public class FeedMetadataUtil {
 
     public static String getSecondaryFeedOutput(Feed feed, FeedPolicyAccessor policyAccessor,
             MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
+                    throws AlgebricksException, MetadataException, RemoteException, ACIDException {
         String outputType = null;
         String primaryFeedName = feed.getSourceFeedName();
         Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feed.getDataverseName(), primaryFeedName);

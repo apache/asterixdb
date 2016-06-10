@@ -77,9 +77,11 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 ADMDataParser parser;
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;
-                IAsterixPropertiesProvider propertiesProvider = (IAsterixPropertiesProvider) ((NodeControllerService) ctx
-                        .getJobletContext().getApplicationContext().getControllerService()).getApplicationContext()
-                                .getApplicationObject();
+                IAsterixPropertiesProvider propertiesProvider =
+                        (IAsterixPropertiesProvider) ((NodeControllerService) ctx
+                                .getJobletContext().getApplicationContext().getControllerService())
+                                        .getApplicationContext()
+                                        .getApplicationObject();
                 ClusterPartition nodePartition = propertiesProvider.getMetadataProperties().getNodePartitions()
                         .get(nodeId)[0];
                 try {
@@ -125,13 +127,27 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public ARecordType getAdapterOutputType() {
+    public void configure(Map<String, String> configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public void setOutputType(ARecordType outputType) {
+        this.outputType = outputType;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
+    }
+
+    @Override
+    public ARecordType getOutputType() {
         return outputType;
     }
 
     @Override
-    public void configure(Map<String, String> configuration, ARecordType outputType, ARecordType metaType) {
-        this.configuration = configuration;
-        this.outputType = outputType;
+    public ARecordType getMetaType() {
+        return null;
     }
+
 }

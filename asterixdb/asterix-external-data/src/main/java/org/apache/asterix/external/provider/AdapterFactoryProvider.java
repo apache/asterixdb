@@ -28,7 +28,6 @@ import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IIndexingAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 
@@ -37,13 +36,14 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
  */
 public class AdapterFactoryProvider {
 
-    // Internal Adapters
+    // Adapters
     public static IAdapterFactory getAdapterFactory(String adapterName, Map<String, String> configuration,
             ARecordType itemType, ARecordType metaType) throws AsterixException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
-        ExternalDataUtils.validateParameters(configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
-        adapterFactory.configure(configuration, itemType, metaType);
+        adapterFactory.setOutputType(itemType);
+        adapterFactory.setMetaType(metaType);
+        adapterFactory.configure(configuration);
         return adapterFactory;
     }
 
@@ -52,10 +52,11 @@ public class AdapterFactoryProvider {
             Map<String, String> configuration, ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp,
             ARecordType metaType) throws AsterixException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
-        ExternalDataUtils.validateParameters(configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
+        adapterFactory.setOutputType(itemType);
+        adapterFactory.setMetaType(metaType);
         adapterFactory.setSnapshot(snapshot, indexingOp);
-        adapterFactory.configure(configuration, itemType, metaType);
+        adapterFactory.configure(configuration);
         return adapterFactory;
     }
 
