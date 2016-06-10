@@ -1,0 +1,8 @@
+use dataverse SocialNetworkData;
+
+create dataset GleambookUsers(GleambookUserType)
+primary key id;
+
+create dataset GleambookMessages(GleambookMessageType)
+primary key message_id;
+

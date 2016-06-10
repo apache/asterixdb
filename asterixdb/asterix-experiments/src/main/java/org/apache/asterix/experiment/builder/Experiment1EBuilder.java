@@ -17,22 +17,14 @@
  * under the License.
  */
 
-package org.apache.asterix.experiment.client;
+package org.apache.asterix.experiment.builder;
 
-public class LSMExperimentConstants {
+import org.apache.asterix.experiment.client.LSMExperimentSetRunner.LSMExperimentSetRunnerConfig;
 
-    public static final String CONFIG_DIR = "configs";
+public class Experiment1EBuilder extends AbstractExperiment1Builder {
 
-    public static final String AQL_DIR = "aql";
-
-    public static final String BASE_DIR = "base";
-
-    public static final String DGEN_DIR = "dgen";
-
-    public static final String LOG_DIR = "log";
-
-    public static final String BASE_TYPES = "base/base_types.aql";
-
-    public static final String ASTERIX_CONFIGURATION = "asterix-configuration.xml";
+    public Experiment1EBuilder(LSMExperimentSetRunnerConfig config) {
+        super("1E", config, "nuclear.xml", "nuclear_base_4_ingest.aql", "nuc.dgen");
+    }
 
 }

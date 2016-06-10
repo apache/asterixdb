@@ -16,23 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+use SocialNetworkData;
 
-package org.apache.asterix.experiment.client;
-
-public class LSMExperimentConstants {
-
-    public static final String CONFIG_DIR = "configs";
-
-    public static final String AQL_DIR = "aql";
-
-    public static final String BASE_DIR = "base";
-
-    public static final String DGEN_DIR = "dgen";
-
-    public static final String LOG_DIR = "log";
-
-    public static final String BASE_TYPES = "base/base_types.aql";
-
-    public static final String ASTERIX_CONFIGURATION = "asterix-configuration.xml";
-
+select element {
+'uname': user.name,
+'alias': user.alias,
+'send_time': message.send_time,
+'message': substring(message.message, 1, 31)
 }
+from GleambookMessages as message,
+     GleambookUsers as user
+where message.author_id /*+ indexnl */= user.id and
+      message.send_time >= datetime('2001-10-22T09:18:11') and
+      message.send_time < datetime('2002-04-20T09:18:11');
+

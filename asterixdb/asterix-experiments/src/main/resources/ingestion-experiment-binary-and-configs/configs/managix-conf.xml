@@ -5,13 +5,13 @@
       <version>0.20.2</version>
       <url></url>
     </hdfs>
-    <backupDir>/home/youngsk2/managix/clusters/local/working_dir/backup</backupDir>
+    <backupDir>/home/asterixdb/asterixdb/.installer/zookeeper_home</backupDir>
   </backup>
   <zookeeper>
-    <homeDir>/home/youngsk2/managix/.installer/zookeeper_home</homeDir>
+    <homeDir>/home/asterixdb/asterixdb/.installer/zookeeper_home</homeDir>
     <clientPort>2900</clientPort>
     <servers>
-      <java_home>/home/youngsk2/jdk1.7.0_65</java_home>
+      <java_home>/usr/lib/jvm/jre-1.8.0/</java_home>
       <server>128.195.9.21</server>
     </servers>
   </zookeeper>

@@ -19,7 +19,11 @@
 
 package org.apache.asterix.experiment.client;
 
-public class LSMExperimentConstants {
+public class LSMPerfConstants {
+
+    private LSMPerfConstants(){
+        throw new UnsupportedOperationException();
+    } // never needs to be instantiated
 
     public static final String CONFIG_DIR = "configs";
 
@@ -31,8 +35,9 @@ public class LSMExperimentConstants {
 
     public static final String LOG_DIR = "log";
 
-    public static final String BASE_TYPES = "base/base_types.aql";
+    public static final String BASE_TYPES = "base/perf_types.aql";
+
+    public static final String RESULT_FILE = "agg_results.csv";
 
     public static final String ASTERIX_CONFIGURATION = "asterix-configuration.xml";
-
 }

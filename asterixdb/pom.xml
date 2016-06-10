@@ -166,6 +166,8 @@
           <excludes>
             <exclude>**/*.adm</exclude>
             <exclude>**/*.aql</exclude>
+            <exclude>**/*.dgen</exclude>
+            <exclude>**/*.dqgen</exclude>
             <exclude>**/*.ast</exclude>
             <exclude>**/*.csv</exclude>
             <exclude>**/*.ddl</exclude>
