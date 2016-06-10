@@ -1379,7 +1379,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                 }
             }
 
-            Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<FeedConnectionId, Pair<JobSpecification, Boolean>>();
+            Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList =
+                    new HashMap<FeedConnectionId, Pair<JobSpecification, Boolean>>();
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 // prepare job spec(s) that would disconnect any active feeds involving the dataset.
                 List<FeedConnectionId> feedConnections = FeedLifecycleListener.INSTANCE.getActiveFeedConnections(null);
@@ -2085,6 +2086,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                 if (!stmtFeedDrop.getIfExists()) {
                     throw new AlgebricksException("There is no feed with this name " + feedName + ".");
                 }
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return;
             }
 
             FeedId feedId = new FeedId(dataverseName, feedName);
@@ -2133,6 +2136,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                 if (!stmtFeedPolicyDrop.getIfExists()) {
                     throw new AlgebricksException("Unknown policy " + policyName + " in dataverse " + dataverseName);
                 }
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return;
             }
             MetadataManager.INSTANCE.dropFeedPolicy(mdTxnCtx, dataverseName, policyName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
