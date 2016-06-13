@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.btree.frames;
 import org.apache.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public class BTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
 
@@ -44,8 +43,4 @@ public class BTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
         return tupleWriterFactory;
     }
 
-    @Override
-    public ILargePageHelper getLargePageHelper() {
-        return null;
-    }
 }

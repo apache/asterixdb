@@ -52,8 +52,7 @@ public class TreeIndexStatsGatherer {
 
 		int maxPageId = freePageManager.getMaxPage(metaFrame);
 		for (int pageId = 0; pageId <= maxPageId; pageId++) {
-			ICachedPage page = bufferCache.pin(
-					BufferedFileHandle.getDiskPageId(fileId, pageId), false, leafFrame.getLargePageHelper());
+			ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
 			page.acquireReadLatch();
 			try {
 				metaFrame.setPage(page);

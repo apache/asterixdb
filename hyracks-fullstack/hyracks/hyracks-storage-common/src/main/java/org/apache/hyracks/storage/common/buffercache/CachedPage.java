@@ -39,7 +39,11 @@ public class CachedPage implements ICachedPageInternal {
     volatile boolean valid;
     final AtomicBoolean confiscated;
     private IQueueInfo queueInfo;
-    ILargePageHelper largePageHelper;
+    private int multiplier;
+    private int extraBlockPageId;
+    // DEBUG
+    private static final boolean DEBUG = false;
+    private final StackTraceElement[] ctorStack;
 
     //Constructor for making dummy entry for FIFO queue
     public CachedPage(){
@@ -52,6 +56,7 @@ public class CachedPage implements ICachedPageInternal {
         queueInfo = null;
         replacementStrategyObject = null;
         latch =null;
+        ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
     }
 
     public CachedPage(int cpid, ByteBuffer buffer, IPageReplacementStrategy pageReplacementStrategy) {
@@ -66,6 +71,7 @@ public class CachedPage implements ICachedPageInternal {
         valid = false;
         confiscated = new AtomicBoolean(false);
         queueInfo = null;
+        ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
     }
 
     public void reset(long dpid) {
@@ -75,7 +81,6 @@ public class CachedPage implements ICachedPageInternal {
         confiscated.set(false);
         pageReplacementStrategy.notifyCachePageReset(this);
         queueInfo = null;
-        largePageHelper = null;
     }
 
     public void invalidate() {
@@ -154,6 +159,26 @@ public class CachedPage implements ICachedPageInternal {
         return dpid;
     }
 
+    @Override
+    public int getFrameSizeMultiplier() {
+        return multiplier;
+    }
+
+    @Override
+    public void setFrameSizeMultiplier(int multiplier) {
+        this.multiplier = multiplier;
+    }
+
+    @Override
+    public void setExtraBlockPageId(int extraBlockPageId) {
+        this.extraBlockPageId = extraBlockPageId;
+    }
+
+    @Override
+    public int getExtraBlockPageId() {
+        return extraBlockPageId;
+    }
+
     CachedPage getNext() {
         return next;
     }
@@ -161,13 +186,4 @@ public class CachedPage implements ICachedPageInternal {
     void setNext(CachedPage next) {
         this.next = next;
     }
-
-    public ILargePageHelper getLargePageHelper() {
-        return largePageHelper;
-    }
-
-    public void setLargePageHelper(ILargePageHelper largePageHelper) {
-        this.largePageHelper = largePageHelper;
-    }
-
 }

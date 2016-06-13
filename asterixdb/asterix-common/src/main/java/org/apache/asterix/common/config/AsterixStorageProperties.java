@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.config;
 
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+
 public class AsterixStorageProperties extends AbstractAsterixProperties {
 
     private static final String STORAGE_BUFFERCACHE_PAGESIZE_KEY = "storage.buffercache.pagesize";
@@ -62,7 +64,7 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
     }
 
     public int getBufferCacheNumPages() {
-        return (int) (getBufferCacheSize() / getBufferCachePageSize());
+        return (int) (getBufferCacheSize() / (getBufferCachePageSize() + IBufferCache.RESERVED_HEADER_BYTES));
     }
 
     public int getBufferCacheMaxOpenFiles() {

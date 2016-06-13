@@ -34,8 +34,8 @@ import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 import org.apache.hyracks.storage.common.buffercache.IQueueInfo;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
@@ -66,7 +66,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         this.numPages = 2 * (numPages / 2) + 1;
 
         buckets = new CacheBucket[this.numPages];
-        pages = new ArrayList<VirtualPage>();
+        pages = new ArrayList<>();
         nextFree = 0;
         largePages = new AtomicInteger(0);
         open = false;
@@ -168,11 +168,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException {
-        return pin(dpid, newPage);
-    }
-
-    @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         VirtualPage page = null;
         int hash = hash(dpid);
@@ -213,6 +208,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         synchronized (pages) {
             if (nextFree >= pages.size()) {
                 page = new VirtualPage(allocator.allocate(pageSize, 1)[0]);
+                page.multiplier = 1;
                 pages.add(page);
             } else {
                 page = pages.get(nextFree);
@@ -224,9 +220,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void resizePage(ICachedPage cPage, int multiplier) {
+    public void resizePage(ICachedPage cPage, int multiplier, IExtraPageBlockHelper extraPageBlockHelper) {
         ByteBuffer oldBuffer = cPage.getBuffer();
-        int origMultiplier = oldBuffer.capacity() / pageSize;
+        int origMultiplier = cPage.getFrameSizeMultiplier();
         if (origMultiplier == multiplier) {
             // no-op
             return;
@@ -253,6 +249,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             largePages.getAndAdd(multiplier - origMultiplier);
         }
         ((VirtualPage)cPage).buffer = newBuffer;
+        ((VirtualPage)cPage).multiplier = multiplier;
     }
 
     @Override
@@ -354,6 +351,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         ByteBuffer buffer;
         final ReadWriteLock latch;
         volatile long dpid;
+        int multiplier;
         VirtualPage next;
 
         public VirtualPage(ByteBuffer buffer) {
@@ -406,6 +404,10 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public int getFrameSizeMultiplier() {
+            return multiplier;
+        }
     }
 
     //These 4 methods aren't applicable here.
@@ -447,12 +449,13 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage confiscatePage(long dpid) {
+    public ICachedPage confiscatePage(long dpid) throws HyracksDataException {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
 
     @Override
-    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException {
+    public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
+            throws HyracksDataException {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
 

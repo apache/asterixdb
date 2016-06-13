@@ -24,8 +24,9 @@ import org.apache.hyracks.api.replication.IIOReplicationManager;
 
 public interface IBufferCache {
 
-    public static final long INVALID_DPID = -1l;
-    public static final int INVALID_PAGEID = -1;
+    long INVALID_DPID = -1l;
+    int INVALID_PAGEID = -1;
+    int RESERVED_HEADER_BYTES = 8;
 
     public void createFile(FileReference fileRef) throws HyracksDataException;
 
@@ -43,8 +44,6 @@ public interface IBufferCache {
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
-    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException;
-
     public void unpin(ICachedPage page) throws HyracksDataException;
 
     public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
@@ -53,7 +52,7 @@ public interface IBufferCache {
 
     public ICachedPage confiscatePage(long dpid) throws HyracksDataException;
 
-    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException;
+    public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId) throws HyracksDataException;
 
     public void returnPage(ICachedPage page);
 
@@ -61,7 +60,7 @@ public interface IBufferCache {
 
     public void force(int fileId, boolean metadata) throws HyracksDataException;
 
-    public int getPageSize();
+    int getPageSize();
 
     public int getNumPages();
 
@@ -85,5 +84,6 @@ public interface IBufferCache {
 
     void purgeHandle(int fileId) throws HyracksDataException;
 
-    void resizePage(ICachedPage page, int multiple);
+    void resizePage(ICachedPage page, int multiplier, IExtraPageBlockHelper extraPageBlockHelper)
+            throws HyracksDataException;
 }

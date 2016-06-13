@@ -26,12 +26,20 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.*;
+import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
@@ -62,8 +70,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     protected int bulkloadLeafStart = 0;
 
-    protected final ILargePageHelper largePageHelper;
-
 
     public AbstractTreeIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
                              IMetaDataPageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
@@ -78,7 +84,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         this.cmpFactories = cmpFactories;
         this.fieldCount = fieldCount;
         this.file = file;
-        this.largePageHelper = leafFrameFactory.getLargePageHelper();
     }
 
     public synchronized void create() throws HyracksDataException {
@@ -125,8 +130,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         ITreeIndexFrame frame = leafFrameFactory.createFrame();
         ITreeIndexMetaDataFrame metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
         freePageManager.init(metaFrame, rootPage);
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true,
-                largePageHelper);
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
         rootNode.acquireWriteLatch();
         try {
             frame.setPage(rootNode);
@@ -244,8 +248,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         if(freePageManager.appendOnlyMode() && bufferCache.getNumPagesOfFile(fileId) <= MINIMAL_TREE_PAGE_COUNT){
             return true;
         }
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false,
-                largePageHelper);
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
         rootNode.acquireReadLatch();
         try {
             frame.setPage(rootNode);
@@ -263,8 +266,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
 
     public byte getTreeHeight(ITreeIndexFrame frame) throws HyracksDataException {
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false,
-                largePageHelper);
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
         rootNode.acquireReadLatch();
         try {
             frame.setPage(rootNode);
@@ -394,13 +396,12 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             //move the root page to the first data page if necessary
             bufferCache.finishQueue();
             if (!appendOnly) {
-                ICachedPage newRoot = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true,
-                        largePageHelper);
+                ICachedPage newRoot = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), true);
                 newRoot.acquireWriteLatch();
                 //root will be the highest frontier
                 NodeFrontier lastNodeFrontier = nodeFrontiers.get(nodeFrontiers.size() - 1);
                 ICachedPage oldRoot = bufferCache.pin(
-                        BufferedFileHandle.getDiskPageId(fileId, lastNodeFrontier.pageId), false, largePageHelper);
+                        BufferedFileHandle.getDiskPageId(fileId, lastNodeFrontier.pageId), false);
                 oldRoot.acquireReadLatch();
                 lastNodeFrontier.page = oldRoot;
                 try {

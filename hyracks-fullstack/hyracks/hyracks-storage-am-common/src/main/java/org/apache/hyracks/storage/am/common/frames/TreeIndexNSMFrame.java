@@ -31,7 +31,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
@@ -51,14 +50,12 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     protected ITreeIndexTupleWriter tupleWriter;
     protected ITreeIndexTupleReference frameTuple;
-    protected ILargePageHelper largePageHelper;
 
-    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager, ILargePageHelper largePageHelper) {
+    public TreeIndexNSMFrame(ITreeIndexTupleWriter tupleWriter, ISlotManager slotManager) {
         this.tupleWriter = tupleWriter;
         this.frameTuple = tupleWriter.createTupleReference();
         this.slotManager = slotManager;
         this.slotManager.setFrame(this);
-        this.largePageHelper = largePageHelper;
     }
 
     @Override
@@ -101,12 +98,8 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         }
     }
 
-    public static boolean isLargePage(ByteBuffer buf) {
+    public boolean getLargeFlag() {
         return (buf.get(flagOff) & largeFlagBit) != 0;
-    }
-
-    public boolean isLargePage() {
-        return isLargePage(buf);
     }
 
     @Override
@@ -342,8 +335,4 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         return buf.capacity() - getFreeSpaceOff() - (getTupleCount() * slotManager.getSlotSize());
     }
 
-    @Override
-    public ILargePageHelper getLargePageHelper() {
-        return largePageHelper;
-    }
 }

@@ -27,4 +27,9 @@ public interface ICachedPageInternal extends ICachedPage {
 
     public boolean isGoodVictim();
 
+    void setFrameSizeMultiplier(int multiplier);
+
+    int getExtraBlockPageId();
+
+    void setExtraBlockPageId(int extraBlockPageId);
 }

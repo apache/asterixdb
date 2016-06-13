@@ -28,8 +28,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -49,6 +51,7 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
+
     private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
     private static final int MAP_FACTOR = 3;
 
@@ -68,6 +71,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
     private final Set<Integer> virtualFiles;
     private final AsyncFIFOPageQueueManager fifoWriter;
+    private final Queue<BufferCacheHeaderHelper> headerPageCache = new ConcurrentLinkedQueue<>();
+
     //DEBUG
     private ArrayList<CachedPage> confiscatedPages;
     private Lock confiscateLock;
@@ -124,6 +129,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         return pageSize;
     }
 
+    public int getPageSizeWithHeader() {
+        return pageSize + RESERVED_HEADER_BYTES;
+    }
+
     @Override
     public int getNumPages() {
         return pageReplacementStrategy.getMaxAllowedNumPages();
@@ -176,11 +185,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        return pin(dpid, newPage, null);
-    }
-
-    @Override
-    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException {
         // Calling the pinSanityCheck should be used only for debugging, since
         // the synchronized block over the fileInfoMap is a hot spot.
         if (DEBUG) {
@@ -193,9 +197,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 try {
                     for (CachedPage c : confiscatedPages) {
                         if (c.dpid == dpid && c.confiscated.get()) {
-                            while(confiscatedPages.contains(c)){
-                                throw new IllegalStateException();
-                            }
+                            throw new IllegalStateException();
                         }
                     }
                 } finally{
@@ -206,7 +208,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             // disk.
             synchronized (cPage) {
                 if (!cPage.valid) {
-                    read(cPage, helper);
+                    read(cPage);
                     cPage.valid = true;
                 }
             }
@@ -215,9 +217,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
         pageReplacementStrategy.notifyCachePageAccess(cPage);
         if(DEBUG){
-            pinnedPageOwner.put((CachedPage) cPage, Thread.currentThread().getStackTrace());
+            pinnedPageOwner.put(cPage, Thread.currentThread().getStackTrace());
         }
-        cPage.setLargePageHelper(helper);
         return cPage;
     }
 
@@ -565,26 +566,42 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         return false;
     }
 
-    private void read(CachedPage cPage, ILargePageHelper helper) throws HyracksDataException {
+    private void read(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
         cPage.buffer.clear();
-        ioManager.syncRead(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
-                cPage.buffer);
-        if (helper != null) {
-            int totalPages = helper.getSupplementalBlockNumPages(cPage) + 1;
+        BufferCacheHeaderHelper header = checkoutHeaderHelper();
+        try {
+            long bytesRead = ioManager.syncRead(fInfo.getFileHandle(),
+                    getOffsetForPage(BufferedFileHandle.getPageId(cPage.dpid)), header.prepareRead());
+
+            if (bytesRead != getPageSizeWithHeader()) {
+                if (bytesRead == -1) {
+                    // disk order scan code seems to rely on this behavior, so silently return
+                    return;
+                }
+                throw new HyracksDataException("Failed to read a complete page: " + bytesRead);
+            }
+            int totalPages = header.processRead(cPage);
+
             if (totalPages > 1) {
-                resizePage(cPage, totalPages);
+                pageReplacementStrategy.fixupCapacityOnLargeRead(cPage);
                 cPage.buffer.position(pageSize);
                 cPage.buffer.limit(totalPages * pageSize);
-                ioManager.syncRead(fInfo.getFileHandle(), (long) helper.getSupplementalBlockPageId(cPage) * pageSize,
-                        cPage.buffer);
+                ioManager.syncRead(fInfo.getFileHandle(), getOffsetForPage(cPage.getExtraBlockPageId()), cPage.buffer);
             }
+        } finally {
+            returnHeaderHelper(header);
         }
     }
 
+    private long getOffsetForPage(long pageId) {
+        return pageId * getPageSizeWithHeader();
+    }
+
     @Override
-    public void resizePage(ICachedPage cPage, int totalPages) {
-        pageReplacementStrategy.resizePage((ICachedPageInternal) cPage, totalPages);
+    public void resizePage(ICachedPage cPage, int totalPages, IExtraPageBlockHelper extraPageBlockHelper)
+            throws HyracksDataException {
+        pageReplacementStrategy.resizePage((ICachedPageInternal) cPage, totalPages, extraPageBlockHelper);
     }
 
     BufferedFileHandle getFileInfo(CachedPage cPage) throws HyracksDataException {
@@ -600,6 +617,17 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             return fInfo;
         }
     }
+    private BufferCacheHeaderHelper checkoutHeaderHelper() {
+        BufferCacheHeaderHelper helper = headerPageCache.poll();
+        if (helper == null) {
+            helper = new BufferCacheHeaderHelper(pageSize);
+        }
+        return helper;
+    }
+
+    private void returnHeaderHelper(BufferCacheHeaderHelper buffer) {
+        headerPageCache.offer(buffer);
+    }
 
     void write(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
@@ -607,21 +635,29 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         synchronized (fInfo) {
             if (!fInfo.fileHasBeenDeleted()) {
                 ByteBuffer buf = cPage.buffer.duplicate();
-                buf.position(0);
-                buf.limit(pageSize);
-                ioManager.syncWrite(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
-                        buf);
-                if (cPage.largePageHelper != null) {
-                    int totalPages = cPage.largePageHelper.getSupplementalBlockNumPages(cPage) + 1;
-                    if (totalPages > 1) {
-                        buf.limit(totalPages * pageSize);
-                        long offset = (long) cPage.largePageHelper.getSupplementalBlockPageId(cPage) * pageSize;
-                        ioManager.syncWrite(fInfo.getFileHandle(), offset, buf);
+                final int totalPages = cPage.getFrameSizeMultiplier();
+                final int extraBlockPageId = cPage.getExtraBlockPageId();
+                final boolean contiguousLargePages = (BufferedFileHandle.getPageId(cPage.dpid) + 1) == extraBlockPageId;
+                BufferCacheHeaderHelper header = checkoutHeaderHelper();
+                try {
+                    buf.limit(contiguousLargePages ? pageSize * totalPages : pageSize);
+                    buf.position(0);
+                    long bytesWritten = ioManager.syncWrite(fInfo.getFileHandle(),
+                            getOffsetForPage(BufferedFileHandle.getPageId(cPage.dpid)),
+                            header.prepareWrite(cPage, buf));
+
+                    if (bytesWritten !=
+                            (contiguousLargePages ? pageSize * (totalPages - 1) : 0) + getPageSizeWithHeader()) {
+                        throw new HyracksDataException("Failed to write completely: " + bytesWritten);
                     }
-                    assert buf.capacity() == (pageSize * totalPages);
-                } else {
-                    assert buf.capacity() == pageSize;
+                } finally {
+                    returnHeaderHelper(header);
                 }
+                if (totalPages > 1 && !contiguousLargePages) {
+                    buf.limit(totalPages * pageSize);
+                    ioManager.syncWrite(fInfo.getFileHandle(), getOffsetForPage(extraBlockPageId), buf);
+                }
+                assert buf.capacity() == (pageSize * totalPages);
             }
         }
     }
@@ -1134,9 +1170,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 throw new HyracksDataException("No such file mapped for fileId:" + fileId);
             }
             if(DEBUG) {
-                assert ioManager.getSize(fInfo.getFileHandle()) % getPageSize() == 0;
+                assert ioManager.getSize(fInfo.getFileHandle()) % getPageSizeWithHeader() == 0;
             }
-            return (int) (ioManager.getSize(fInfo.getFileHandle()) / getPageSize());
+            return (int) (ioManager.getSize(fInfo.getFileHandle()) / getPageSizeWithHeader());
         }
     }
 
@@ -1151,8 +1187,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
-    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException {
-        return confiscatePage(dpid, () -> pageReplacementStrategy.findVictim(multiplier));
+    public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
+            throws HyracksDataException {
+        ICachedPage cachedPage = confiscatePage(dpid, () -> pageReplacementStrategy.findVictim(multiplier));
+        ((ICachedPageInternal)cachedPage).setExtraBlockPageId(extraBlockPageId);
+        return cachedPage;
     }
 
     private ICachedPage confiscatePage(long dpid, Supplier<ICachedPageInternal> victimSupplier)
@@ -1236,7 +1275,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             // if we found a page after all that, go ahead and finish
             if (returnPage != null) {
                 ((CachedPage) returnPage).confiscated.set(true);
-                ((CachedPage) returnPage).setLargePageHelper(null);
                 if (DEBUG) {
                     confiscateLock.lock();
                     try{
@@ -1336,7 +1374,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             }
         }
         pageReplacementStrategy.adviseWontNeed(cPage);
-        cPage.largePageHelper = null;
     }
 
     @Override
@@ -1390,4 +1427,41 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
     }
 
+    static class BufferCacheHeaderHelper {
+        private static final int FRAME_MULTIPLIER_OFF = 0;
+        private static final int EXTRA_BLOCK_PAGE_ID_OFF = FRAME_MULTIPLIER_OFF + 4;  // 4
+
+        private final ByteBuffer buf;
+        private final ByteBuffer [] array;
+
+        private BufferCacheHeaderHelper(int pageSize) {
+            buf = ByteBuffer.allocate(RESERVED_HEADER_BYTES + pageSize);
+            array = new ByteBuffer[] { buf, null };
+        }
+
+        private ByteBuffer[] prepareWrite(CachedPage cPage, ByteBuffer pageBuffer) {
+            buf.position(0);
+            buf.limit(RESERVED_HEADER_BYTES);
+            buf.putInt(FRAME_MULTIPLIER_OFF, cPage.getFrameSizeMultiplier());
+            buf.putInt(EXTRA_BLOCK_PAGE_ID_OFF, cPage.getExtraBlockPageId());
+            array[1] = pageBuffer;
+            return array;
+        }
+
+        private ByteBuffer prepareRead() {
+            buf.position(0);
+            buf.limit(buf.capacity());
+            return buf;
+        }
+
+        private int processRead(CachedPage cPage) {
+            buf.position(RESERVED_HEADER_BYTES);
+            cPage.buffer.position(0);
+            cPage.buffer.put(buf);
+            int multiplier = buf.getInt(FRAME_MULTIPLIER_OFF);
+            cPage.setFrameSizeMultiplier(multiplier);
+            cPage.setExtraBlockPageId(buf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));
+            return multiplier;
+        }
+    }
 }

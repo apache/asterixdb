@@ -16,27 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache;
+/*
+ * Test case Name  : big_object_bulkload.aql
+ * Description     : bulkload insert of large objects
+ * Expected Result : Success
+ * Date            : 20th April 2016
+ */
 
-import java.nio.ByteBuffer;
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use dataverse testdv2;
 
-public interface ICachedPage {
-
-    ByteBuffer getBuffer();
-
-    void acquireReadLatch();
-
-    void releaseReadLatch();
-
-    void acquireWriteLatch();
-
-    void releaseWriteLatch(boolean markDirty);
-
-    boolean confiscated();
-
-    IQueueInfo getQueueInfo();
-
-    void setQueueInfo(IQueueInfo queueInfo);
-
-    int getFrameSizeMultiplier();
+create type testtype as closed {
+  id: int64,
+  name: string,
+  hobbies: {{string}}
 }
+
+create dataset testds(testtype) primary key id;

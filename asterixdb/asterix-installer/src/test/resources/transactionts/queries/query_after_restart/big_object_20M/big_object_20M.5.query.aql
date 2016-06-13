@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache;
+use dataverse testdv2;
 
-public interface ILargePageHelper {
-
-    int getSupplementalBlockNumPages(CachedPage cPage);
-    int getSupplementalBlockPageId(CachedPage cPage);
-}
+for $d in dataset("testds")
+where $d.id = 1
+return $d

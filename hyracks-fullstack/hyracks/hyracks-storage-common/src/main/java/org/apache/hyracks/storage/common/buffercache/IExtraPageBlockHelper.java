@@ -18,25 +18,9 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import java.nio.ByteBuffer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface ICachedPage {
-
-    ByteBuffer getBuffer();
-
-    void acquireReadLatch();
-
-    void releaseReadLatch();
-
-    void acquireWriteLatch();
-
-    void releaseWriteLatch(boolean markDirty);
-
-    boolean confiscated();
-
-    IQueueInfo getQueueInfo();
-
-    void setQueueInfo(IQueueInfo queueInfo);
-
-    int getFrameSizeMultiplier();
+public interface IExtraPageBlockHelper {
+    int getFreeBlock(int size) throws HyracksDataException;
+    void returnFreePageBlock(int blockPageId, int size) throws HyracksDataException;
 }

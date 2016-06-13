@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     private static final Logger LOGGER = Logger.getLogger(ClockPageReplacementStrategy.class.getName());
     private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 3;
@@ -80,13 +82,13 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
 
     @Override
     public ICachedPageInternal findVictim(int multiplier) {
-        while (numPages.get() + (multiplier - 1) >= maxAllowedNumPages) {
+        while (numPages.get() + multiplier > maxAllowedNumPages) {
             // TODO: is dropping pages on the floor enough to adhere to memory budget?
             ICachedPageInternal victim = findVictimByEviction();
             if (victim == null) {
                 return null;
             }
-            int multiple = victim.getBuffer().capacity() / pageSize;
+            int multiple = victim.getFrameSizeMultiplier();
             if (multiple == multiplier) {
                 return victim;
             } else if (bufferCache.removePage(victim)) {
@@ -153,50 +155,79 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
             cpId = cpIdCounter.getAndIncrement();
         }
         CachedPage cPage = new CachedPage(cpId, allocator.allocate(pageSize * multiplier, 1)[0], this);
+        cPage.setFrameSizeMultiplier(multiplier);
         bufferCache.addPage(cPage);
         numPages.getAndAdd(multiplier);
         return cPage;
     }
 
     @Override
-    public void resizePage(ICachedPageInternal cPage, int multiplier) {
-        ByteBuffer oldBuffer = cPage.getBuffer();
-        int origMultiplier = oldBuffer.capacity() / pageSize;
+    public void resizePage(ICachedPageInternal cPage, int multiplier, IExtraPageBlockHelper extraPageBlockHelper)
+            throws HyracksDataException {
+        int origMultiplier = cPage.getFrameSizeMultiplier();
         if (origMultiplier == multiplier) {
             // no-op
             return;
         }
         final int newSize = pageSize * multiplier;
+        ByteBuffer oldBuffer = ((CachedPage)cPage).buffer;
         oldBuffer.position(0);
+        final int delta = multiplier - origMultiplier;
         if (multiplier < origMultiplier) {
             oldBuffer.limit(newSize);
+            final int gap = -delta;
+            // we return the unused portion of our block to the page manager
+            extraPageBlockHelper.returnFreePageBlock(cPage.getExtraBlockPageId() + gap, gap);
         } else {
-            while (numPages.get() + (multiplier - origMultiplier) >= maxAllowedNumPages) {
-                ICachedPageInternal victim = findVictimByEviction();
-                if (victim != null) {
-                    int multiple = victim.getBuffer().capacity() / pageSize;
-                    if (bufferCache.removePage(victim)) {
-                        // TODO(mblow): is dropping pages on the floor enough to adhere to memory budget?
-                        cpIdFreeList.add(victim.getCachedPageId());
-                        numPages.getAndAdd(-multiple);
-                    }
-                } else {
-                    // TODO(mblow): what should we do with we need to resize and don't have the budget?
-                    // we don't have the budget to resize- proceed anyway, but log
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Exceeding buffer cache budget of " + maxAllowedNumPages + " by "
-                                + (numPages.get() + (multiplier - origMultiplier) - maxAllowedNumPages)
-                                + " pages in order to satisfy large page read");
-                    }
-                    break;
-
-                }
+            ensureBudgetForLargePages(delta);
+            if (origMultiplier != 1) {
+                // return the old block to the page manager
+                extraPageBlockHelper.returnFreePageBlock(cPage.getExtraBlockPageId(), origMultiplier);
             }
+            cPage.setExtraBlockPageId(extraPageBlockHelper.getFreeBlock(multiplier));
         }
+        cPage.setFrameSizeMultiplier(multiplier);
         ByteBuffer newBuffer = allocator.allocate(newSize, 1)[0];
         newBuffer.put(oldBuffer);
-        numPages.getAndAdd(multiplier - origMultiplier);
+        numPages.getAndAdd(delta);
         ((CachedPage) cPage).buffer = newBuffer;
+    }
+
+    @Override
+    public void fixupCapacityOnLargeRead(ICachedPageInternal cPage)
+            throws HyracksDataException {
+        ByteBuffer oldBuffer = ((CachedPage) cPage).buffer;
+        final int multiplier = cPage.getFrameSizeMultiplier();
+        final int newSize = pageSize * multiplier;
+        final int delta = multiplier - 1;
+        oldBuffer.position(0);
+        ensureBudgetForLargePages(delta);
+        ByteBuffer newBuffer = allocator.allocate(newSize, 1)[0];
+        newBuffer.put(oldBuffer);
+        numPages.getAndAdd(delta);
+        ((CachedPage) cPage).buffer = newBuffer;
+    }
+
+    private void ensureBudgetForLargePages(int delta) {
+        while (numPages.get() + delta >= maxAllowedNumPages) {
+            ICachedPageInternal victim = findVictimByEviction();
+            if (victim != null) {
+                final int victimMultiplier = victim.getFrameSizeMultiplier();
+                if (bufferCache.removePage(victim)) {
+                    cpIdFreeList.add(victim.getCachedPageId());
+                    numPages.getAndAdd(-victimMultiplier);
+                }
+            } else {
+                // we don't have the budget to resize- proceed anyway, but log
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exceeding buffer cache budget of " + maxAllowedNumPages + " by "
+                            + (numPages.get() + delta - maxAllowedNumPages)
+                            + " pages in order to satisfy large page read");
+                }
+                break;
+
+            }
+        }
     }
 
     //derived from RoundRobinAllocationPolicy in Apache directmemory
@@ -232,4 +263,5 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         //make the page appear as if it wasn't accessed even if it was
         getPerPageObject(cPage).set(false);
     }
+
 }
