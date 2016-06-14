@@ -22,5 +22,5 @@ package org.apache.hyracks.storage.am.common.api;
 import java.io.Serializable;
 
 public interface IPrimitiveValueProviderFactory extends Serializable {
-	public IPrimitiveValueProvider createPrimitiveValueProvider();
+    public IPrimitiveValueProvider createPrimitiveValueProvider();
 }

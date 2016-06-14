@@ -62,7 +62,7 @@ public class ChannelSet {
 
     ChannelControlBlock allocateChannel() throws NetException {
         synchronized (mConn) {
-       	    cleanupClosedChannels();
+            cleanupClosedChannels();
             int idx = allocationBitmap.nextClearBit(0);
             if (idx < 0 || idx >= ccbArray.length) {
                 cleanupClosedChannels();

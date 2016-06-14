@@ -30,40 +30,40 @@ import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
  *
  */
 public class LSMBTreeRefrencingTupleWriterFactory extends TypeAwareTupleWriterFactory{
-	private static final long serialVersionUID = 1L;
-	private final ITypeTraits[] typeTraits;
-	private final int numKeyFields;
-	private boolean isDelete;
-	private LSMBTreeTupleWriter createdTupleWriter;
+    private static final long serialVersionUID = 1L;
+    private final ITypeTraits[] typeTraits;
+    private final int numKeyFields;
+    private boolean isDelete;
+    private LSMBTreeTupleWriter createdTupleWriter;
 
-	public LSMBTreeRefrencingTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
-		super(typeTraits);
-		this.typeTraits = typeTraits;
-		this.numKeyFields = numKeyFields;
-		this.isDelete = isDelete;
-	}
+    public LSMBTreeRefrencingTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
+        super(typeTraits);
+        this.typeTraits = typeTraits;
+        this.numKeyFields = numKeyFields;
+        this.isDelete = isDelete;
+    }
 
-	@Override
-	public ITreeIndexTupleWriter createTupleWriter() {
-		createdTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, isDelete);
-		return createdTupleWriter;
-	}
+    @Override
+    public ITreeIndexTupleWriter createTupleWriter() {
+        createdTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, isDelete);
+        return createdTupleWriter;
+    }
 
-	public void setMode(IndexOperation op){
-		if(op == IndexOperation.INSERT){
-			this.isDelete = false;
-			if(createdTupleWriter != null){
-				this.createdTupleWriter.setAntimatter(false);
-			}
-		} else if(op == IndexOperation.DELETE){
-			this.isDelete = true;
-			if(createdTupleWriter != null){
-				this.createdTupleWriter.setAntimatter(true);
-			}
-		}
-	}
+    public void setMode(IndexOperation op){
+        if(op == IndexOperation.INSERT){
+            this.isDelete = false;
+            if(createdTupleWriter != null){
+                this.createdTupleWriter.setAntimatter(false);
+            }
+        } else if(op == IndexOperation.DELETE){
+            this.isDelete = true;
+            if(createdTupleWriter != null){
+                this.createdTupleWriter.setAntimatter(true);
+            }
+        }
+    }
 
-	public LSMBTreeTupleWriter getCreatedTupleWriter() {
-		return createdTupleWriter;
-	}
+    public LSMBTreeTupleWriter getCreatedTupleWriter() {
+        return createdTupleWriter;
+    }
 }

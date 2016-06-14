@@ -36,7 +36,7 @@ public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
     private static final int numDeleteRounds = AccessMethodTestsConfig.RTREE_NUM_DELETE_ROUNDS;
 
     public AbstractRTreeDeleteTest(boolean testRstarPolicy) {
-    	super(testRstarPolicy);
+        super(testRstarPolicy);
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 

@@ -35,11 +35,11 @@ import org.apache.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 @SuppressWarnings("rawtypes")
 public class RTreeInsertTest extends AbstractRTreeInsertTest {
 
-	private final RTreeTestHarness harness = new RTreeTestHarness();
+    private final RTreeTestHarness harness = new RTreeTestHarness();
 
-	public RTreeInsertTest() {
-		super(AccessMethodTestsConfig.RTREE_TEST_RSTAR_POLICY);
-	}
+    public RTreeInsertTest() {
+        super(AccessMethodTestsConfig.RTREE_TEST_RSTAR_POLICY);
+    }
 
     @Before
     public void setUp() throws HyracksDataException {

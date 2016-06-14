@@ -21,19 +21,19 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 public class UTF8NGramTokenFactory extends AbstractUTF8TokenFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public UTF8NGramTokenFactory() {
-		super();
-	}
+    public UTF8NGramTokenFactory() {
+        super();
+    }
 
-	public UTF8NGramTokenFactory(byte tokenTypeTag, byte countTypeTag) {
-		super(tokenTypeTag, countTypeTag);
-	}
+    public UTF8NGramTokenFactory(byte tokenTypeTag, byte countTypeTag) {
+        super(tokenTypeTag, countTypeTag);
+    }
 
-	@Override
-	public IToken createToken() {
-		return new UTF8NGramToken(tokenTypeTag, countTypeTag);
-	}
+    @Override
+    public IToken createToken() {
+        return new UTF8NGramToken(tokenTypeTag, countTypeTag);
+    }
 
 }

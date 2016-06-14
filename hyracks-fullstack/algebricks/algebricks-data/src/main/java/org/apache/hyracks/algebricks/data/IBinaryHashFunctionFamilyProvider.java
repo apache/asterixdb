@@ -24,6 +24,6 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 
 public interface IBinaryHashFunctionFamilyProvider {
 
-	public IBinaryHashFunctionFamily getBinaryHashFunctionFamily(Object type)
-			throws AlgebricksException;
+    public IBinaryHashFunctionFamily getBinaryHashFunctionFamily(Object type)
+            throws AlgebricksException;
 }

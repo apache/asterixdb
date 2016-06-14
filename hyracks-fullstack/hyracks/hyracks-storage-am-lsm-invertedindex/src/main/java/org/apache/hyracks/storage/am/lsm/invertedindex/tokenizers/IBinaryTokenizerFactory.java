@@ -22,5 +22,5 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 import java.io.Serializable;
 
 public interface IBinaryTokenizerFactory extends Serializable {
-	public IBinaryTokenizer createTokenizer();
+    public IBinaryTokenizer createTokenizer();
 }

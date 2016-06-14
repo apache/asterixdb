@@ -29,31 +29,31 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * @author alexander.behm
  */
 public class ArrayTupleReference implements ITupleReference {
-	private int[] fEndOffsets;
-	private byte[] tupleData;
+    private int[] fEndOffsets;
+    private byte[] tupleData;
 
-	public void reset(int[] fEndOffsets, byte[] tupleData) {
-		this.fEndOffsets = fEndOffsets;
-		this.tupleData = tupleData;
-	}
+    public void reset(int[] fEndOffsets, byte[] tupleData) {
+        this.fEndOffsets = fEndOffsets;
+        this.tupleData = tupleData;
+    }
 
-	@Override
-	public int getFieldCount() {
-		return fEndOffsets.length;
-	}
+    @Override
+    public int getFieldCount() {
+        return fEndOffsets.length;
+    }
 
-	@Override
-	public byte[] getFieldData(int fIdx) {
-		return tupleData;
-	}
+    @Override
+    public byte[] getFieldData(int fIdx) {
+        return tupleData;
+    }
 
-	@Override
-	public int getFieldStart(int fIdx) {
-		return (fIdx == 0) ? 0 : fEndOffsets[fIdx - 1];
-	}
+    @Override
+    public int getFieldStart(int fIdx) {
+        return (fIdx == 0) ? 0 : fEndOffsets[fIdx - 1];
+    }
 
-	@Override
-	public int getFieldLength(int fIdx) {
-		return (fIdx == 0) ? fEndOffsets[0] : fEndOffsets[fIdx] - fEndOffsets[fIdx - 1];
-	}
+    @Override
+    public int getFieldLength(int fIdx) {
+        return (fIdx == 0) ? fEndOffsets[0] : fEndOffsets[fIdx] - fEndOffsets[fIdx - 1];
+    }
 }

@@ -29,5 +29,5 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  *
  */
 public interface ITupleUpdater {
-	public void updateTuple(ITupleReference tuple);
+    public void updateTuple(ITupleReference tuple);
 }

@@ -22,5 +22,5 @@ package org.apache.hyracks.storage.am.common.api;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public interface ITupleFilter {
-	public boolean accept(IFrameTupleReference tuple) throws Exception;
+    public boolean accept(IFrameTupleReference tuple) throws Exception;
 }

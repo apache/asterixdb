@@ -20,5 +20,5 @@
 package org.apache.hyracks.storage.am.common.ophelpers;
 
 public enum IndexOp {
-	INSERT, DELETE, UPDATE, UPSERT, SEARCH, DISKORDERSCAN, PHYSICALDELETE
+    INSERT, DELETE, UPDATE, UPSERT, SEARCH, DISKORDERSCAN, PHYSICALDELETE
 }

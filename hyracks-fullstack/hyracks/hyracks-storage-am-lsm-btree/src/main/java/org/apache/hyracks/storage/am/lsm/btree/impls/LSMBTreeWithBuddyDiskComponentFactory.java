@@ -29,37 +29,37 @@ import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class LSMBTreeWithBuddyDiskComponentFactory implements
-		ILSMComponentFactory {
+        ILSMComponentFactory {
 
-	private final TreeIndexFactory<BTree> btreeFactory;
-	private final TreeIndexFactory<BTree> buddyBtreeFactory;
-	private final BloomFilterFactory bloomFilterFactory;
+    private final TreeIndexFactory<BTree> btreeFactory;
+    private final TreeIndexFactory<BTree> buddyBtreeFactory;
+    private final BloomFilterFactory bloomFilterFactory;
 
-	public LSMBTreeWithBuddyDiskComponentFactory(
-			TreeIndexFactory<BTree> btreeFactory,
-			TreeIndexFactory<BTree> buddyBtreeFactory,
-			BloomFilterFactory bloomFilterFactory) {
-		this.btreeFactory = btreeFactory;
-		this.buddyBtreeFactory = buddyBtreeFactory;
-		this.bloomFilterFactory = bloomFilterFactory;
-	}
+    public LSMBTreeWithBuddyDiskComponentFactory(
+            TreeIndexFactory<BTree> btreeFactory,
+            TreeIndexFactory<BTree> buddyBtreeFactory,
+            BloomFilterFactory bloomFilterFactory) {
+        this.btreeFactory = btreeFactory;
+        this.buddyBtreeFactory = buddyBtreeFactory;
+        this.bloomFilterFactory = bloomFilterFactory;
+    }
 
-	@Override
-	public ILSMComponent createLSMComponentInstance(
-			LSMComponentFileReferences cfr) throws IndexException,
-			HyracksDataException {
-		return new LSMBTreeWithBuddyDiskComponent(
-				btreeFactory.createIndexInstance(cfr
-						.getInsertIndexFileReference()),
-				buddyBtreeFactory.createIndexInstance(cfr
-						.getDeleteIndexFileReference()),
-				bloomFilterFactory.createBloomFiltertInstance(cfr
-						.getBloomFilterFileReference()));
-	}
+    @Override
+    public ILSMComponent createLSMComponentInstance(
+            LSMComponentFileReferences cfr) throws IndexException,
+            HyracksDataException {
+        return new LSMBTreeWithBuddyDiskComponent(
+                btreeFactory.createIndexInstance(cfr
+                        .getInsertIndexFileReference()),
+                buddyBtreeFactory.createIndexInstance(cfr
+                        .getDeleteIndexFileReference()),
+                bloomFilterFactory.createBloomFiltertInstance(cfr
+                        .getBloomFilterFileReference()));
+    }
 
-	@Override
-	public IBufferCache getBufferCache() {
-		return btreeFactory.getBufferCache();
-	}
+    @Override
+    public IBufferCache getBufferCache() {
+        return btreeFactory.getBufferCache();
+    }
 
 }

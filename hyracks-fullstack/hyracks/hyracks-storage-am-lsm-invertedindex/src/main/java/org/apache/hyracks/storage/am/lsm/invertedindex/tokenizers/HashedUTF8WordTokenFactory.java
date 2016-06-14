@@ -21,18 +21,18 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 public class HashedUTF8WordTokenFactory extends AbstractUTF8TokenFactory {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public HashedUTF8WordTokenFactory() {
-		super();
-	}
+    public HashedUTF8WordTokenFactory() {
+        super();
+    }
 
-	public HashedUTF8WordTokenFactory(byte tokenTypeTag, byte countTypeTag) {
-		super(tokenTypeTag, countTypeTag);
-	}
+    public HashedUTF8WordTokenFactory(byte tokenTypeTag, byte countTypeTag) {
+        super(tokenTypeTag, countTypeTag);
+    }
 
-	@Override
-	public IToken createToken() {
-		return new HashedUTF8WordToken(tokenTypeTag, countTypeTag);
-	}
+    @Override
+    public IToken createToken() {
+        return new HashedUTF8WordToken(tokenTypeTag, countTypeTag);
+    }
 }

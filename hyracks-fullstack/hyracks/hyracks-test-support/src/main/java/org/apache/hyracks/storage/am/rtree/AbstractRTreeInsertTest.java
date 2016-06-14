@@ -39,7 +39,7 @@ public abstract class AbstractRTreeInsertTest extends AbstractRTreeTestDriver {
     private final RTreeTestUtils rTreeTestUtils;
 
     public AbstractRTreeInsertTest(boolean testRstarPolicy) {
-    	super(testRstarPolicy);
+        super(testRstarPolicy);
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 

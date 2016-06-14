@@ -21,22 +21,22 @@ package org.apache.hyracks.storage.am.common.api;
 
 public class TreeIndexException extends IndexException {
 
-	private static final long serialVersionUID = 1L;
-	private boolean handled = false;
+    private static final long serialVersionUID = 1L;
+    private boolean handled = false;
 
-	public TreeIndexException(Exception e) {
-		super(e);
-	}
+    public TreeIndexException(Exception e) {
+        super(e);
+    }
 
-	public TreeIndexException(String message) {
-		super(message);
-	}
+    public TreeIndexException(String message) {
+        super(message);
+    }
 
-	public void setHandled(boolean handled) {
-		this.handled = handled;
-	}
+    public void setHandled(boolean handled) {
+        this.handled = handled;
+    }
 
-	public boolean getHandled() {
-		return handled;
-	}
+    public boolean getHandled() {
+        return handled;
+    }
 }

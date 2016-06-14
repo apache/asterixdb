@@ -22,5 +22,5 @@ package org.apache.hyracks.storage.am.common.api;
 import java.io.Serializable;
 
 public interface ITreeIndexTupleWriterFactory extends Serializable {
-	public ITreeIndexTupleWriter createTupleWriter();
+    public ITreeIndexTupleWriter createTupleWriter();
 }
