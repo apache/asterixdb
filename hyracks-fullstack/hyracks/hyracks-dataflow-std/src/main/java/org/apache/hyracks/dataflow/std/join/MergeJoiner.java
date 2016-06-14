@@ -200,11 +200,11 @@ public class MergeJoiner extends AbstractMergeJoiner {
             memoryAccessor.reset();
             memoryAccessor.next();
             while (memoryAccessor.exists()) {
-                TuplePrinterUtil.printTuple("     --- A outer", inputAccessor[LEFT_PARTITION]);
-                TuplePrinterUtil.printTuple("     --- A inner", memoryAccessor);
+                //                TuplePrinterUtil.printTuple("     --- A outer", inputAccessor[LEFT_PARTITION]);
+                //                TuplePrinterUtil.printTuple("     --- A inner", memoryAccessor);
                 if (mjc.checkToSaveInResult(inputAccessor[LEFT_PARTITION], memoryAccessor)) {
                     // add to result
-                    System.err.println("  -- Matched --");
+                    //                    System.err.println("  -- Matched --");
                     addToResult(inputAccessor[LEFT_PARTITION], memoryAccessor, writer);
                 }
                 if (mjc.checkToRemoveInMemory(inputAccessor[LEFT_PARTITION], memoryAccessor)) {
