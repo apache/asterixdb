@@ -149,7 +149,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                     first = false;
                 }
                 try {
-                    state.indexJoiner.setLeftFrame(buffer);
+                    state.indexJoiner.setFrame(LEFT_ACTIVITY_ID, buffer);
                     state.indexJoiner.processMergeUsingLeftTuple(writer);
                 } finally {
                     locks.getLock(partition).unlock();
@@ -257,7 +257,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                         // Wait for the state to request right frame unless left has finished.
                         locks.getRight(partition).await();
                     }
-                    state.indexJoiner.setRightFrame(buffer);
+                    state.indexJoiner.setFrame(RIGHT_ACTIVITY_ID, buffer);
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

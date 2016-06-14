@@ -146,7 +146,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     first = false;
                 }
                 try {
-                    state.joiner.setLeftFrame(buffer);
+                    state.joiner.setFrame(LEFT_ACTIVITY_ID, buffer);
                     state.joiner.processMergeUsingLeftTuple(writer);
                 } finally {
                     locks.getLock(partition).unlock();
@@ -259,7 +259,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                         // Wait for the state to request right frame unless left has finished.
                         locks.getRight(partition).await();
                     }
-                    state.joiner.setRightFrame(buffer);
+                    state.joiner.setFrame(RIGHT_ACTIVITY_ID, buffer);
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

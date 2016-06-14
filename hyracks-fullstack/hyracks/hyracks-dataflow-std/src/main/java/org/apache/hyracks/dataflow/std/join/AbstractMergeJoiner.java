@@ -27,6 +27,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleAccessor;
+import org.apache.hyracks.dataflow.std.join.AbstractMergeJoiner.TupleStatus;
 import org.apache.hyracks.dataflow.std.join.MergeBranchStatus.Stage;
 
 public abstract class AbstractMergeJoiner implements IMergeJoiner {
@@ -49,14 +50,11 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
     protected static final int LEFT_PARTITION = 0;
     protected static final int RIGHT_PARTITION = 1;
 
-    protected final ITupleAccessor leftInputAccessor;
-    protected final ITupleAccessor rightInputAccessor;
+    protected final ITupleAccessor[] inputAccessor;
+    protected ByteBuffer[] inputBuffer;
 
     private MergeJoinLocks locks;
     private MergeStatus status;
-
-    protected ByteBuffer leftBuffer;
-    protected ByteBuffer rightBuffer;
 
     private final int partition;
 
@@ -68,11 +66,13 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         this.status = status;
         this.locks = locks;
 
-        leftInputAccessor = new TupleAccessor(leftRd);
-        leftBuffer = ctx.allocateFrame();
+        inputAccessor = new TupleAccessor[JOIN_PARTITIONS];
+        inputAccessor[LEFT_PARTITION] = new TupleAccessor(leftRd);
+        inputAccessor[RIGHT_PARTITION] = new TupleAccessor(rightRd);
 
-        rightInputAccessor = new TupleAccessor(rightRd);
-        rightBuffer = ctx.allocateFrame();
+        inputBuffer = new ByteBuffer[JOIN_PARTITIONS];
+        inputBuffer[LEFT_PARTITION] = ctx.allocateFrame();
+        inputBuffer[RIGHT_PARTITION] = ctx.allocateFrame();
 
         // Result
         resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
@@ -89,7 +89,7 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        if (rightInputAccessor != null && !rightInputAccessor.exists()
+        if (inputAccessor[RIGHT_PARTITION] != null && !inputAccessor[RIGHT_PARTITION].exists()
                 && status.branch[RIGHT_PARTITION].getStatus() == Stage.CLOSED) {
             status.branch[RIGHT_PARTITION].noMore();
             return TupleStatus.EMPTY;
@@ -97,26 +97,29 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         return TupleStatus.LOADED;
     }
 
-    @Override
-    public void setLeftFrame(ByteBuffer buffer) {
-        leftBuffer.clear();
-        if (leftBuffer.capacity() < buffer.capacity()) {
-            leftBuffer.limit(buffer.capacity());
+    protected TupleStatus loadMemoryTuple(int partition) {
+        TupleStatus loaded;
+        if (inputAccessor[partition] != null && inputAccessor[partition].exists()) {
+            // Still processing frame.
+            loaded = TupleStatus.LOADED;
+        } else if (status.branch[partition].hasMore()) {
+            loaded = TupleStatus.UNKNOWN;
+        } else {
+            // No more frames or tuples to process.
+            loaded = TupleStatus.EMPTY;
         }
-        leftBuffer.put(buffer.array(), 0, buffer.capacity());
-        leftInputAccessor.reset(leftBuffer);
-        leftInputAccessor.next();
+        return loaded;
     }
 
     @Override
-    public void setRightFrame(ByteBuffer buffer) {
-        rightBuffer.clear();
-        if (rightBuffer.capacity() < buffer.capacity()) {
-            rightBuffer.limit(buffer.capacity());
+    public void setFrame(int partition, ByteBuffer buffer) {
+        inputBuffer[partition].clear();
+        if (inputBuffer[partition].capacity() < buffer.capacity()) {
+            inputBuffer[partition].limit(buffer.capacity());
         }
-        rightBuffer.put(buffer.array(), 0, buffer.capacity());
-        rightInputAccessor.reset(rightBuffer);
-        rightInputAccessor.next();
+        inputBuffer[partition].put(buffer.array(), 0, buffer.capacity());
+        inputAccessor[partition].reset(inputBuffer[partition]);
+        inputAccessor[partition].next();
         status.continueRightLoad = false;
     }
 

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
@@ -31,6 +34,8 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
     private final long partitionStart;
     private final long partitionDuration;
 
+    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionComputerFactory.class.getName());
+
     public IntervalPartitionComputerFactory(int intervalFieldId, int k, long partitionStart, long partitionEnd)
             throws HyracksDataException {
         this.intervalFieldId = intervalFieldId;
@@ -39,7 +44,14 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
         if (k <= 2) {
             throw new HyracksDataException("k is to small for interval partitioner.");
         }
-        this.partitionDuration = (partitionEnd - partitionStart) / (k - 2);
+        long duration = (partitionEnd - partitionStart) / (k - 2);
+        if (duration <= 0) {
+            duration = 1;
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.fine("The interval partitioner using the smallest duration (1).");
+            }
+        }
+        partitionDuration = duration;
     }
 
     @Override

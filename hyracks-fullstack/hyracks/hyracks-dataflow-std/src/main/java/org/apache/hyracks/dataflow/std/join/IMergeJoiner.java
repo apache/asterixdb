@@ -29,8 +29,6 @@ public interface IMergeJoiner {
 
     void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException;
 
-    void setLeftFrame(ByteBuffer buffer);
-
-    void setRightFrame(ByteBuffer buffer);
+    void setFrame(int partition, ByteBuffer buffer);
 
 }

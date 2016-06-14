@@ -125,15 +125,9 @@ public class MergeJoiner extends AbstractMergeJoiner {
      * @throws HyracksDataException
      */
     private TupleStatus loadRightTuple() throws HyracksDataException {
-        TupleStatus loaded;
-        if (rightInputAccessor != null && rightInputAccessor.exists()) {
-            // Still processing frame.
-            loaded = TupleStatus.LOADED;
-        } else if (status.branch[RIGHT_PARTITION].hasMore()) {
+        TupleStatus loaded = loadMemoryTuple(RIGHT_PARTITION);
+        if (loaded == TupleStatus.UNKNOWN) {
             loaded = pauseAndLoadRightTuple();
-        } else {
-            // No more frames or tuples to process.
-            loaded = TupleStatus.EMPTY;;
         }
         return loaded;
     }
@@ -146,29 +140,20 @@ public class MergeJoiner extends AbstractMergeJoiner {
     private TupleStatus loadLeftTuple() throws HyracksDataException {
         TupleStatus loaded;
         if (status.branch[LEFT_PARTITION].isRunFileReading()) {
-            loaded = loadLeftSpilledTuple();
+            loaded = loadSpilledTuple(LEFT_PARTITION);
             if (loaded.isEmpty()) {
-                continueStream(leftInputAccessor);
+                continueStream(inputAccessor[LEFT_PARTITION]);
                 loaded = loadLeftTuple();
             }
         } else {
-            if (leftInputAccessor != null && leftInputAccessor.exists()) {
-                // Still processing frame.
-                loaded = TupleStatus.LOADED;
-            } else if (status.branch[LEFT_PARTITION].hasMore()) {
-                loaded = TupleStatus.UNKNOWN;
-            } else {
-                // No more frames or tuples to process.
-                loaded = TupleStatus.EMPTY;
-            }
-
+            loaded = loadMemoryTuple(LEFT_PARTITION);
         }
         return loaded;
     }
 
-    private TupleStatus loadLeftSpilledTuple() throws HyracksDataException {
-        if (!leftInputAccessor.exists()) {
-            if (!runFileStream.loadNextBuffer(leftInputAccessor)) {
+    private TupleStatus loadSpilledTuple(int partition) throws HyracksDataException {
+        if (!inputAccessor[partition].exists()) {
+            if (!runFileStream.loadNextBuffer(inputAccessor[partition])) {
                 return TupleStatus.EMPTY;
             }
         }
@@ -189,7 +174,7 @@ public class MergeJoiner extends AbstractMergeJoiner {
                 processLeftTupleSpill(writer);
                 ts = loadLeftTuple();
             } else if (loadRightTuple().isLoaded()
-                    && mjc.checkToLoadNextRightTuple(leftInputAccessor, rightInputAccessor)) {
+                    && mjc.checkToLoadNextRightTuple(inputAccessor[LEFT_PARTITION], inputAccessor[RIGHT_PARTITION])) {
                 // Right side from stream
                 processRightTuple();
             } else {
@@ -201,11 +186,11 @@ public class MergeJoiner extends AbstractMergeJoiner {
     }
 
     private void processLeftTupleSpill(IFrameWriter writer) throws HyracksDataException {
-        runFileStream.addToRunFile(leftInputAccessor);
+        runFileStream.addToRunFile(inputAccessor[LEFT_PARTITION]);
         processLeftTuple(writer);
         // Memory is empty and we can start processing the run file.
         if (!memoryHasTuples() && status.branch[LEFT_PARTITION].isRunFileWriting()) {
-            unfreezeAndContinue(leftInputAccessor);
+            unfreezeAndContinue(inputAccessor[LEFT_PARTITION]);
         }
     }
 
@@ -215,30 +200,33 @@ public class MergeJoiner extends AbstractMergeJoiner {
             memoryAccessor.reset();
             memoryAccessor.next();
             while (memoryAccessor.exists()) {
-                if (mjc.checkToSaveInResult(leftInputAccessor, memoryAccessor)) {
+                TuplePrinterUtil.printTuple("     --- A outer", inputAccessor[LEFT_PARTITION]);
+                TuplePrinterUtil.printTuple("     --- A inner", memoryAccessor);
+                if (mjc.checkToSaveInResult(inputAccessor[LEFT_PARTITION], memoryAccessor)) {
                     // add to result
-                    addToResult(leftInputAccessor, memoryAccessor, writer);
+                    System.err.println("  -- Matched --");
+                    addToResult(inputAccessor[LEFT_PARTITION], memoryAccessor, writer);
                 }
-                if (mjc.checkToRemoveInMemory(leftInputAccessor, memoryAccessor)) {
+                if (mjc.checkToRemoveInMemory(inputAccessor[LEFT_PARTITION], memoryAccessor)) {
                     // remove from memory
                     removeFromMemory();
                 }
                 memoryAccessor.next();
             }
         }
-        leftInputAccessor.next();
+        inputAccessor[LEFT_PARTITION].next();
     }
 
     private void processRightTuple() throws HyracksDataException {
         // append to memory
-        if (mjc.checkToSaveInMemory(leftInputAccessor, rightInputAccessor)) {
-            if (!addToMemory(rightInputAccessor)) {
+        if (mjc.checkToSaveInMemory(inputAccessor[LEFT_PARTITION], inputAccessor[RIGHT_PARTITION])) {
+            if (!addToMemory(inputAccessor[RIGHT_PARTITION])) {
                 // go to log saving state
                 freezeAndSpill();
                 return;
             }
         }
-        rightInputAccessor.next();
+        inputAccessor[RIGHT_PARTITION].next();
     }
 
     private void freezeAndSpill() throws HyracksDataException {
@@ -251,7 +239,7 @@ public class MergeJoiner extends AbstractMergeJoiner {
 
     private void continueStream(ITupleAccessor accessor) throws HyracksDataException {
         runFileStream.closeRunFile();
-        accessor.reset(leftBuffer);
+        accessor.reset(inputBuffer[LEFT_PARTITION]);
         accessor.setTupleId(leftStreamIndex);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Continue with left stream.");
