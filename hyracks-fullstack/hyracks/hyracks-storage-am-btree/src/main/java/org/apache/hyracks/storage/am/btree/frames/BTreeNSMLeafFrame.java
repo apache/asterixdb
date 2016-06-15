@@ -304,8 +304,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     public void growCapacity(IExtraPageBlockHelper extraPageBlockHelper,
             IBufferCache bufferCache, int delta) throws HyracksDataException {
+        setLargeFlag(true);
         if (delta <= 0) {
-            setLargeFlag(true);
             return;
         }
         int deltaPages = (int) Math.ceil((double) delta / bufferCache.getPageSize());
