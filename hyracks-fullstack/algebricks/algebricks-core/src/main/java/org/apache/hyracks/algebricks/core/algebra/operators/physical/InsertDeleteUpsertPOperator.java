@@ -83,7 +83,11 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         List<LogicalVariable> scanVariables = new ArrayList<LogicalVariable>();
         scanVariables.addAll(keys);
+        // Why do we add $$-1 and not the payLoad variable?
         scanVariables.add(new LogicalVariable(-1));
+        if (additionalNonFilteringFields != null) {
+            scanVariables.addAll(additionalNonFilteringFields);
+        }
         IPhysicalPropertiesVector r = dataSource.getPropertiesProvider().computePropertiesVector(scanVariables);
         r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
