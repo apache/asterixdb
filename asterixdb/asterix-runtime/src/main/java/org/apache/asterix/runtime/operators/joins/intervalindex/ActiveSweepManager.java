@@ -44,18 +44,18 @@ public class ActiveSweepManager {
     private EndPointIndexItem item = null;
     private final LinkedList<TuplePointer> active = new LinkedList<>();
 
-    public ActiveSweepManager(IPartitionedDeletableTupleBufferManager bufferManager, int key, int partition,
+    public ActiveSweepManager(IPartitionedDeletableTupleBufferManager bufferManager, int key, int joinBranch,
             Comparator<EndPointIndexItem> endPointComparator) {
         this.bufferManager = bufferManager;
         this.key = key;
-        this.partition = partition;
+        this.partition = joinBranch;
         indexQueue = new PriorityQueue<>(16, endPointComparator);
     }
 
-    public boolean addTuple(ITupleAccessor leftInputAccessor, TuplePointer tp) throws HyracksDataException {
-        if (bufferManager.insertTuple(partition, leftInputAccessor, leftInputAccessor.getTupleId(), tp)) {
+    public boolean addTuple(ITupleAccessor accessor, TuplePointer tp) throws HyracksDataException {
+        if (bufferManager.insertTuple(partition, accessor, accessor.getTupleId(), tp)) {
             EndPointIndexItem e = new EndPointIndexItem(tp, EndPointIndexItem.END_POINT,
-                    IntervalJoinUtil.getIntervalEnd(leftInputAccessor, leftInputAccessor.getTupleId(), key));
+                    IntervalJoinUtil.getIntervalEnd(accessor, accessor.getTupleId(), key));
             indexQueue.add(e);
             active.add(tp);
             item = indexQueue.peek();

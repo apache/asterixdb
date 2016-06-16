@@ -27,7 +27,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleAccessor;
-import org.apache.hyracks.dataflow.std.join.AbstractMergeJoiner.TupleStatus;
 import org.apache.hyracks.dataflow.std.join.MergeBranchStatus.Stage;
 
 public abstract class AbstractMergeJoiner implements IMergeJoiner {
@@ -43,6 +42,10 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
 
         public boolean isEmpty() {
             return this.equals(EMPTY);
+        }
+
+        public boolean isKnown() {
+            return !this.equals(UNKNOWN);
         }
     }
 
@@ -97,12 +100,12 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         return TupleStatus.LOADED;
     }
 
-    protected TupleStatus loadMemoryTuple(int partition) {
+    protected TupleStatus loadMemoryTuple(int joinId) {
         TupleStatus loaded;
-        if (inputAccessor[partition] != null && inputAccessor[partition].exists()) {
+        if (inputAccessor[joinId] != null && inputAccessor[joinId].exists()) {
             // Still processing frame.
             loaded = TupleStatus.LOADED;
-        } else if (status.branch[partition].hasMore()) {
+        } else if (status.branch[joinId].hasMore()) {
             loaded = TupleStatus.UNKNOWN;
         } else {
             // No more frames or tuples to process.
@@ -120,7 +123,6 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         inputBuffer[partition].put(buffer.array(), 0, buffer.capacity());
         inputAccessor[partition].reset(inputBuffer[partition]);
         inputAccessor[partition].next();
-        status.continueRightLoad = false;
     }
 
 }

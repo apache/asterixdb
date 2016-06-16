@@ -92,4 +92,10 @@ public class MergeBranchStatus implements IRunFileStreamStatus, Serializable {
         this.runFileReading = runFileReading;
     }
 
+    @Override
+    public String toString() {
+        return "Branch status is " + stage + ": the stream " + (hasMore ? "has more" : "is empty")
+                + " and the run file is " + (runFileWriting ? "WRITING " : "") + (runFileReading ? "READING " : "");
+
+    }
 }

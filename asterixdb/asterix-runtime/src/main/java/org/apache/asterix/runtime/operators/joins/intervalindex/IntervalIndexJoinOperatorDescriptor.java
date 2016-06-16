@@ -258,6 +258,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                         locks.getRight(partition).await();
                     }
                     state.indexJoiner.setFrame(RIGHT_ACTIVITY_ID, buffer);
+                    state.status.continueRightLoad = false;
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

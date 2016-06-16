@@ -125,7 +125,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             LOGGER.fine("IntervalIndexJoiner has started partition " + partition + " with " + memorySize
                     + " frames of memory.");
         }
-
     }
 
     private void addToResult(IFrameTupleAccessor accessor1, int index1, IFrameTupleAccessor accessor2, int index2,
@@ -134,7 +133,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             FrameUtils.appendConcatToWriter(writer, resultAppender, accessor2, index2, accessor1, index1);
         } else {
             FrameUtils.appendConcatToWriter(writer, resultAppender, accessor1, index1, accessor2, index2);
-
         }
     }
 
@@ -200,7 +198,8 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
     public void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException {
         TupleStatus leftTs = loadLeftTuple();
         TupleStatus rightTs = loadRightTuple();
-        while (checkHasMoreProcessing(leftTs, LEFT_PARTITION) && checkHasMoreProcessing(rightTs, RIGHT_PARTITION)) {
+        while (leftTs.isKnown() && checkHasMoreProcessing(leftTs, LEFT_PARTITION, RIGHT_PARTITION)
+                && checkHasMoreProcessing(rightTs, RIGHT_PARTITION, LEFT_PARTITION)) {
             if (status.branch[RIGHT_PARTITION].isRunFileWriting()) {
                 // Right side from disk
                 rightTs = processRightTupleSpill(writer);
@@ -221,9 +220,13 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         }
     }
 
-    private boolean checkHasMoreProcessing(TupleStatus ts, int partition) {
-        return ts.isLoaded() || (ts.isEmpty()
-                && (activeManager[partition].hasRecords() || status.branch[partition].isRunFileWriting()));
+    private boolean checkHasMoreProcessing(TupleStatus ts, int partition, int joinPartition) {
+        return ts.isLoaded() || status.branch[partition].isRunFileWriting()
+                || (checkHasMoreTuples(joinPartition) && activeManager[partition].hasRecords());
+    }
+
+    private boolean checkHasMoreTuples(int partition) {
+        return status.branch[partition].hasMore() || status.branch[partition].isRunFileReading();
     }
 
     private boolean checkToProcessRightTuple() {
@@ -244,7 +247,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
 
     private TupleStatus processLeftTupleSpill(IFrameWriter writer) throws HyracksDataException {
         // Process left tuples one by one, check them with active memory from the right branch.
-        //        System.err.println("  -  Start processLeftTupleSpill");
         int count = 0;
         TupleStatus ts = loadLeftTuple();
         while (ts.isLoaded() && activeManager[RIGHT_PARTITION].hasRecords()) {
@@ -273,12 +275,10 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             unfreezeAndContinue(LEFT_PARTITION, inputAccessor[LEFT_PARTITION], RIGHT_PARTITION);
             ts = loadLeftTuple();
         }
-        //        System.err.println("  -  End processLeftTupleSpill");
         return ts;
     }
 
     private TupleStatus processRightTupleSpill(IFrameWriter writer) throws HyracksDataException {
-        //        System.err.println("  -  Start processRightTupleSpill");
         // Process left tuples one by one, check them with active memory from the right branch.
         int count = 0;
         TupleStatus ts = loadRightTuple();
@@ -308,12 +308,10 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             unfreezeAndContinue(RIGHT_PARTITION, inputAccessor[RIGHT_PARTITION], LEFT_PARTITION);
             ts = loadRightTuple();
         }
-        //        System.err.println("  -  End processRightTupleSpill");
         return ts;
     }
 
     private void processLeftTuple(IFrameWriter writer) throws HyracksDataException {
-        //        System.err.println(" +++ Start processLeftTuple");
         // Process endpoints
         do {
             if ((!activeManager[LEFT_PARTITION].hasRecords()
@@ -341,11 +339,9 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             processActiveJoin(activeManager[RIGHT_PARTITION].getActiveList(), memoryAccessor[RIGHT_PARTITION], buffer,
                     memoryAccessor[LEFT_PARTITION], true, writer);
         }
-        //        System.err.println(" +++ End processLeftTuple");
     }
 
     private void processRightTuple(IFrameWriter writer) throws HyracksDataException {
-        //        System.err.println(" +++ Start processRightTuple");
         // Process endpoints
         do {
             if ((!activeManager[RIGHT_PARTITION].hasRecords()
@@ -373,7 +369,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             processActiveJoin(activeManager[LEFT_PARTITION].getActiveList(), memoryAccessor[LEFT_PARTITION], buffer,
                     memoryAccessor[RIGHT_PARTITION], false, writer);
         }
-        //        System.err.println(" +++ End processRightTuple");
     }
 
     private void processActiveJoin(List<TuplePointer> outer, ITuplePointerAccessor outerAccessor,
@@ -383,11 +378,8 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             outerAccessor.reset(outerTp);
             for (TuplePointer innerTp : inner) {
                 innerAccessor.reset(innerTp);
-                //                TuplePrinterUtil.printTuple("     --- A outer", outerAccessor, outerTp.tupleIndex);
-                //                TuplePrinterUtil.printTuple("     --- A inner", innerAccessor, innerTp.tupleIndex);
                 if (imjc.checkToSaveInResult(outerAccessor, outerTp.tupleIndex, innerAccessor, innerTp.tupleIndex,
                         reversed)) {
-                    //                    System.err.println("  -- Matched --");
                     addToResult(outerAccessor, outerTp.tupleIndex, innerAccessor, innerTp.tupleIndex, reversed, writer);
                 }
             }
@@ -402,11 +394,8 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             ITupleAccessor tupleAccessor, boolean reversed, IFrameWriter writer) throws HyracksDataException {
         for (TuplePointer outerTp : outer) {
             outerAccessor.reset(outerTp);
-            //            TuplePrinterUtil.printTuple("     --- outer", outerAccessor, outerTp.tupleIndex);
-            //            TuplePrinterUtil.printTuple("     --- inner", tupleAccessor);
             if (imjc.checkToSaveInResult(outerAccessor, outerTp.tupleIndex, tupleAccessor, tupleAccessor.getTupleId(),
                     reversed)) {
-                //                System.err.println("  -- Matched --");
                 addToResult(outerAccessor, outerTp.tupleIndex, tupleAccessor, tupleAccessor.getTupleId(), reversed,
                         writer);
             }

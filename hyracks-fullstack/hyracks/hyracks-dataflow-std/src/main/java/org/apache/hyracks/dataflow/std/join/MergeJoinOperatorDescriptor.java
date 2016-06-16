@@ -260,6 +260,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                         locks.getRight(partition).await();
                     }
                     state.joiner.setFrame(RIGHT_ACTIVITY_ID, buffer);
+                    state.status.continueRightLoad = false;
                     locks.getLeft(partition).signal();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
