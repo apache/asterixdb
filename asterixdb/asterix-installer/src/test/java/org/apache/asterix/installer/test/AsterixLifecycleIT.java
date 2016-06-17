@@ -76,6 +76,11 @@ public class AsterixLifecycleIT {
         return testArgs;
     }
 
+    public static void restartInstance() throws Exception {
+        AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
+        AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
+    }
+
     @Test
     public void test_1_StopActiveInstance() throws Exception {
         try {

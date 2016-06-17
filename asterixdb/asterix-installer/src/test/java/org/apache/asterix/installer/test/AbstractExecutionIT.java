@@ -76,6 +76,17 @@ public abstract class AbstractExecutionIT {
 
         AsterixLifecycleIT.setUp();
 
+        File externalTestsJar = new File(StringUtils.join(
+                new String[] { "..", "asterix-external-data", "target" } , File.separator)).listFiles(
+                (dir, name) -> name.matches("asterix-external-data-.*-tests.jar"))[0];
+
+        FileUtils.copyFile(externalTestsJar, new File(
+                AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/asterix/repo/",
+                externalTestsJar.getName()));
+
+        AsterixLifecycleIT.restartInstance();
+
+
         FileUtils.copyDirectoryStructure(
                 new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/data"));

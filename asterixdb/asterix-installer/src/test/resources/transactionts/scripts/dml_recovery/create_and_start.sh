@@ -15,4 +15,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+$MANAGIX_HOME/bin/managix stop -n asterix 1>/dev/null 2>&1;
+$MANAGIX_HOME/bin/managix delete -n asterix 1>/dev/null 2>&1;
 $MANAGIX_HOME/bin/managix create -n asterix -c $MANAGIX_HOME/clusters/local/local.xml;
