@@ -92,6 +92,42 @@
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-with-mixed-index">
+        <output-dir compare="Text">change-feed-with-meta-with-mixed-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-pk-in-meta-index-with-missing-after-ingest">
+        <output-dir compare="Text">change-feed-with-meta-pk-in-meta-index-with-missing-after-ingest</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-pk-in-meta-open-index-with-missing">
+        <output-dir compare="Text">change-feed-with-meta-pk-in-meta-open-index-with-missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-open-index-in-meta">
+        <output-dir compare="Text">change-feed-with-meta-open-index-in-meta</output-dir>
+        <expected-error>Typed open index can only be created on the record part</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-pk-in-meta-open-index-in-value">
+        <output-dir compare="Text">change-feed-with-meta-pk-in-meta-open-index-in-value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-pk-in-meta-index-after-ingest">
+        <output-dir compare="Text">change-feed-with-meta-pk-in-meta-index-after-ingest</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-pk-in-meta-index-in-meta">
+        <output-dir compare="Text">change-feed-with-meta-pk-in-meta-index-in-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="drop-nonexistent-feed">
         <output-dir compare="Text">drop-nonexistent-feed</output-dir>
       </compilation-unit>

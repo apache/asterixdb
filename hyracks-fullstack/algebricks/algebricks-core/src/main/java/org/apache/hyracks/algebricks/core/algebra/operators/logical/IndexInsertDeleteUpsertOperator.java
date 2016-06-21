@@ -49,16 +49,19 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
     // used for upsert operations
     private List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs;
     private Mutable<ILogicalExpression> prevAdditionalFilteringExpression;
+    private final int numberOfAdditionalNonFilteringFields;
 
     public IndexInsertDeleteUpsertOperator(IDataSourceIndex<?, ?> dataSourceIndex,
             List<Mutable<ILogicalExpression>> primaryKeyExprs, List<Mutable<ILogicalExpression>> secondaryKeyExprs,
-            Mutable<ILogicalExpression> filterExpr, Kind operation, boolean bulkload) {
+            Mutable<ILogicalExpression> filterExpr, Kind operation, boolean bulkload,
+            int numberOfAdditionalNonFilteringFields) {
         this.dataSourceIndex = dataSourceIndex;
         this.primaryKeyExprs = primaryKeyExprs;
         this.secondaryKeyExprs = secondaryKeyExprs;
         this.filterExpr = filterExpr;
         this.operation = operation;
         this.bulkload = bulkload;
+        this.numberOfAdditionalNonFilteringFields = numberOfAdditionalNonFilteringFields;
     }
 
     @Override
@@ -180,5 +183,9 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     public void setPrevAdditionalFilteringExpression(Mutable<ILogicalExpression> prevAdditionalFilteringExpression) {
         this.prevAdditionalFilteringExpression = prevAdditionalFilteringExpression;
+    }
+
+    public int getNumberOfAdditionalNonFilteringFields() {
+        return numberOfAdditionalNonFilteringFields;
     }
 }

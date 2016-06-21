@@ -43,8 +43,8 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentP
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -95,8 +95,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
     @Override
     @SuppressWarnings("rawtypes")
     protected void setSecondaryRecDescAndComparators(IndexType indexType, List<List<String>> secondaryKeyFields,
-            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadata) throws AlgebricksException,
-            AsterixException {
+            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadata)
+            throws AlgebricksException, AsterixException {
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new AsterixException("Cannot create inverted index on dataset with composite primary key.");
@@ -250,10 +250,11 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
 
         AbstractOperatorDescriptor sourceOp = primaryScanOp;
         if (isEnforcingKeyTypes) {
-            sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
+            sourceOp = createCastOp(spec, dataset.getDatasetType());
             spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
         }
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp, numSecondaryKeys, secondaryRecDesc);
+        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp, numSecondaryKeys,
+                secondaryRecDesc);
 
         // If any of the secondary fields are nullable, then add a select op
         // that filters nulls.
@@ -266,7 +267,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         AbstractOperatorDescriptor tokenizerOp = createTokenizerOp(spec);
 
         // Sort by token + primary keys.
-        ExternalSortOperatorDescriptor sortOp = createSortOp(spec, tokenKeyPairComparatorFactories, tokenKeyPairRecDesc);
+        ExternalSortOperatorDescriptor sortOp = createSortOp(spec, tokenKeyPairComparatorFactories,
+                tokenKeyPairRecDesc);
 
         // Create secondary inverted index bulk load op.
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = createInvertedIndexBulkLoadOp(spec);
@@ -296,8 +298,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         for (int i = 0; i < primaryKeyFields.length; i++) {
             primaryKeyFields[i] = numSecondaryKeys + i;
         }
-        BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec,
-                tokenKeyPairRecDesc, tokenizerFactory, docField, primaryKeyFields, isPartitioned, false);
+        BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc,
+                tokenizerFactory, docField, primaryKeyFields, isPartitioned, false);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, tokenizerOp,
                 primaryPartitionConstraint);
         return tokenizerOp;
@@ -337,18 +339,18 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         boolean temp = dataset.getDatasetDetails().isTemp();
         if (!isPartitioned) {
-            return new LSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
-                    dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
-                    new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+            return new LSMInvertedIndexDataflowHelperFactory(
+                    new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), mergePolicyFactory,
+                    mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                     LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                     storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
                     invertedIndexFieldsForNonBulkLoadOps, !temp);
         } else {
-            return new PartitionedLSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
-                    dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
-                    new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+            return new PartitionedLSMInvertedIndexDataflowHelperFactory(
+                    new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), mergePolicyFactory,
+                    mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                     LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                     storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,

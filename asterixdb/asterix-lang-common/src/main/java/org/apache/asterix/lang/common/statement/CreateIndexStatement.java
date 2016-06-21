@@ -123,6 +123,17 @@ public class CreateIndexStatement implements Statement {
         return Kind.CREATE_INDEX;
     }
 
+    public boolean hasMetaField() {
+        if (fieldIndexIndicators != null) {
+            for (Integer indicator : fieldIndexIndicators) {
+                if (indicator.intValue() != 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);

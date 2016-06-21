@@ -204,6 +204,6 @@ public class KeyFieldTypeUtils {
      */
     public static ARecordType chooseSource(List<Integer> keySourceIndicators, int index, ARecordType recordType,
             ARecordType metaRecordType) {
-        return keySourceIndicators.get(0) == 0 ? recordType : metaRecordType;
+        return keySourceIndicators.get(index) == 0 ? recordType : metaRecordType;
     }
 }

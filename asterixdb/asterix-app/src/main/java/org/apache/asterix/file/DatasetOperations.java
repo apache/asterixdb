@@ -159,7 +159,7 @@ public class DatasetOperations {
         }
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                itemType, format.getBinaryComparatorFactoryProvider());
+                itemType, metaItemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
         int[] bloomFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
 
@@ -227,7 +227,7 @@ public class DatasetOperations {
         ARecordType metaItemType = DatasetUtils.getMetaType(metadata, dataset);
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                itemType, format.getBinaryComparatorFactoryProvider());
+                itemType, metaItemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
         int[] blooFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
         ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);

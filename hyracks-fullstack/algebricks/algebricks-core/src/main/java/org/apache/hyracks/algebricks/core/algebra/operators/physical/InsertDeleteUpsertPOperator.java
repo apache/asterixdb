@@ -83,8 +83,7 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         List<LogicalVariable> scanVariables = new ArrayList<LogicalVariable>();
         scanVariables.addAll(keys);
-        // Why do we add $$-1 and not the payLoad variable?
-        scanVariables.add(new LogicalVariable(-1));
+        scanVariables.add(payload);
         if (additionalNonFilteringFields != null) {
             scanVariables.addAll(additionalNonFilteringFields);
         }
@@ -99,7 +98,7 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op;
         IMetadataProvider mp = context.getMetadataProvider();
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);

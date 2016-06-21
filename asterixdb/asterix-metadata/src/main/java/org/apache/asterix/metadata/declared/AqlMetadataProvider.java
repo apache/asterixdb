@@ -581,6 +581,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             ARecordType itemType =
                     (ARecordType) this.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+            ARecordType metaType = null;
+            List<Integer> primaryKeyIndicators = null;
+            if (dataset.hasMetaPart()) {
+                metaType =
+                        (ARecordType) findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+                primaryKeyIndicators = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
+            }
+
             ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
             IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
                     itemType, context.getBinaryComparatorFactoryProvider());
@@ -598,7 +606,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 Pair<IBinaryComparatorFactory[], ITypeTraits[]> comparatorFactoriesAndTypeTraits =
                         getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(secondaryIndex.getIndexType(),
                                 secondaryIndex.getKeyFieldNames(), secondaryIndex.getKeyFieldTypes(),
-                                DatasetUtils.getPartitioningKeys(dataset), itemType, dataset.getDatasetType());
+                                DatasetUtils.getPartitioningKeys(dataset), itemType, dataset.getDatasetType(),
+                                dataset.hasMetaPart(), primaryKeyIndicators,
+                                secondaryIndex.getKeyFieldSourceIndicators(), metaType);
                 comparatorFactories = comparatorFactoriesAndTypeTraits.first;
                 typeTraits = comparatorFactoriesAndTypeTraits.second;
                 if (filterTypeTraits != null) {
@@ -618,7 +628,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 // get meta item type
                 ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
                 typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
-                comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset, itemType,
+                comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset, itemType, metaItemType,
                         context.getBinaryComparatorFactoryProvider());
                 filterFields = DatasetUtils.createFilterFields(dataset);
                 btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
@@ -699,7 +709,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private Pair<IBinaryComparatorFactory[], ITypeTraits[]> getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
             IndexType indexType, List<List<String>> sidxKeyFieldNames, List<IAType> sidxKeyFieldTypes,
-            List<List<String>> pidxKeyFieldNames, ARecordType recType, DatasetType dsType) throws AlgebricksException {
+            List<List<String>> pidxKeyFieldNames, ARecordType recType, DatasetType dsType, boolean hasMeta,
+            List<Integer> primaryIndexKeyIndicators, List<Integer> secondaryIndexIndicators, ARecordType metaType)
+            throws AlgebricksException {
 
         IBinaryComparatorFactory[] comparatorFactories;
         ITypeTraits[] typeTraits;
@@ -711,7 +723,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         int i = 0;
         for (; i < sidxKeyFieldCount; ++i) {
             Pair<IAType, Boolean> keyPairType =
-                    Index.getNonNullableOpenFieldType(sidxKeyFieldTypes.get(i), sidxKeyFieldNames.get(i), recType);
+                    Index.getNonNullableOpenFieldType(sidxKeyFieldTypes.get(i), sidxKeyFieldNames.get(i),
+                            (hasMeta && secondaryIndexIndicators.get(i).intValue() == 1) ? metaType : recType);
             IAType keyType = keyPairType.first;
             comparatorFactories[i] =
                     AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType, true);
@@ -723,7 +736,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             try {
                 switch (dsType) {
                     case INTERNAL:
-                        keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
+                        keyType = (hasMeta && primaryIndexKeyIndicators.get(j).intValue() == 1)
+                                ? metaType.getSubFieldType(pidxKeyFieldNames.get(j))
+                                : recType.getSubFieldType(pidxKeyFieldNames.get(j));
                         break;
                     case EXTERNAL:
                         keyType = IndexingConstants.getFieldType(j);
@@ -794,9 +809,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
                     splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), dataset.getDatasetName(),
                             indexName, temp);
+            ARecordType metaType = null;
+            if (dataset.hasMetaPart()) {
+                metaType =
+                        (ARecordType) findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+            }
 
             IBinaryComparatorFactory[] primaryComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+                    dataset, recType, metaType, context.getBinaryComparatorFactoryProvider());
             int[] btreeFields = new int[primaryComparatorFactories.length];
             for (int i = 0; i < btreeFields.length; i++) {
                 btreeFields[i] = i + numNestedSecondaryKeyFields;
@@ -1015,12 +1035,18 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     dataset.getDatasetName(), dataset.getDatasetName());
             String indexName = primaryIndex.getIndexName();
 
+            ARecordType metaType = null;
+            if (dataset.hasMetaPart()) {
+                metaType =
+                        (ARecordType) findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+            }
+
             String itemTypeName = dataset.getItemTypeName();
             ARecordType itemType = (ARecordType) MetadataManager.INSTANCE
                     .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
             ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, null);
             IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                    itemType, context.getBinaryComparatorFactoryProvider());
+                    itemType, metaType, context.getBinaryComparatorFactoryProvider());
 
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     splitProviderAndPartitionConstraintsForDataset(dataSource.getId().getDataverseName(), datasetName,
@@ -1111,7 +1137,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                    itemType, context.getBinaryComparatorFactoryProvider());
+                    itemType, metaItemType, context.getBinaryComparatorFactoryProvider());
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     splitProviderAndPartitionConstraintsForDataset(dataSource.getId().getDataverseName(), datasetName,
                             indexName, temp);
@@ -1749,11 +1775,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 numTokenFields = secondaryKeys.size() + 1;
             }
 
+            ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
             ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
             ITypeTraits[] invListsTypeTraits = new ITypeTraits[primaryKeys.size()];
             IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
             IBinaryComparatorFactory[] invListComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+                    dataset, recType, metaItemType, context.getBinaryComparatorFactoryProvider());
 
             IAType secondaryKeyType = null;
 
@@ -1936,9 +1963,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
                 ++i;
             }
-
+            ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
             IBinaryComparatorFactory[] primaryComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+                    dataset, recType, metaItemType, context.getBinaryComparatorFactoryProvider());
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, indexName, temp);
@@ -2276,7 +2303,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
-                    itemType, context.getBinaryComparatorFactoryProvider());
+                    itemType, metaItemType, context.getBinaryComparatorFactoryProvider());
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     splitProviderAndPartitionConstraintsForDataset(dataSource.getId().getDataverseName(), datasetName,
                             indexName, temp);
@@ -2315,17 +2342,27 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     btreeFields, filterFields, !temp);
             AsterixLSMTreeUpsertOperatorDescriptor op;
 
-            ITypeTraits[] outputTypeTraits = new ITypeTraits[recordDesc.getFieldCount() + 1 + numFilterFields];
+            ITypeTraits[] outputTypeTraits =
+                    new ITypeTraits[recordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
             ISerializerDeserializer[] outputSerDes =
-                    new ISerializerDeserializer[recordDesc.getFieldCount() + 1 + numFilterFields];
+                    new ISerializerDeserializer[recordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1)
+                            + numFilterFields];
             for (int j = 0; j < recordDesc.getFieldCount(); j++) {
                 outputTypeTraits[j] = recordDesc.getTypeTraits()[j];
                 outputSerDes[j] = recordDesc.getFields()[j];
             }
-            outputSerDes[outputSerDes.length - 1 - numFilterFields] =
+            outputSerDes[outputSerDes.length - (dataset.hasMetaPart() ? 2 : 1) - numFilterFields] =
                     FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(itemType);
-            outputTypeTraits[outputTypeTraits.length - 1 - numFilterFields] =
+            outputTypeTraits[outputTypeTraits.length - (dataset.hasMetaPart() ? 2 : 1) - numFilterFields] =
                     FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(itemType);
+
+            if (dataset.hasMetaPart()) {
+                outputSerDes[outputSerDes.length - 1 - numFilterFields] =
+                        FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(metaItemType);
+                outputTypeTraits[outputTypeTraits.length - 1 - numFilterFields] =
+                        FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(metaItemType);
+            }
+
             int fieldIdx = -1;
             if (numFilterFields > 0) {
                 String filterField = DatasetUtils.getFilterField(dataset).get(0);
@@ -2531,11 +2568,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 numTokenFields = secondaryKeys.size() + 1;
             }
 
+            ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
             ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
             ITypeTraits[] invListsTypeTraits = new ITypeTraits[primaryKeys.size()];
             IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
             IBinaryComparatorFactory[] invListComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+                    dataset, recType, metaItemType, context.getBinaryComparatorFactoryProvider());
 
             IAType secondaryKeyType = null;
 
@@ -2736,8 +2774,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 ++i;
             }
 
+            ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
             IBinaryComparatorFactory[] primaryComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
-                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+                    dataset, recType, metaItemType, context.getBinaryComparatorFactoryProvider());
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, indexName, temp);

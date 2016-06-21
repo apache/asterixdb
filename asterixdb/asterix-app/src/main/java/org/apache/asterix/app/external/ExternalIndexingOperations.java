@@ -20,7 +20,6 @@ package org.apache.asterix.app.external;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -107,13 +106,9 @@ import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class ExternalIndexingOperations {
 
-    public static final List<List<String>> FILE_INDEX_FIELD_NAMES = new ArrayList<List<String>>();
-    public static final ArrayList<IAType> FILE_INDEX_FIELD_TYPES = new ArrayList<IAType>();
-
-    static {
-        FILE_INDEX_FIELD_NAMES.add(new ArrayList<String>(Arrays.asList("")));
-        FILE_INDEX_FIELD_TYPES.add(BuiltinType.ASTRING);
-    }
+    public static final List<List<String>> FILE_INDEX_FIELD_NAMES = Collections
+            .singletonList(Collections.singletonList(""));
+    public static final List<IAType> FILE_INDEX_FIELD_TYPES = Collections.singletonList(BuiltinType.ASTRING);
 
     public static boolean isIndexible(ExternalDatasetDetails ds) {
         String adapter = ds.getAdapter();
@@ -151,7 +146,7 @@ public class ExternalIndexingOperations {
 
     public static ArrayList<ExternalFile> getSnapshotFromExternalFileSystem(Dataset dataset)
             throws AlgebricksException {
-        ArrayList<ExternalFile> files = new ArrayList<ExternalFile>();
+        ArrayList<ExternalFile> files = new ArrayList<>();
         ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         try {
             // Create the file system object
@@ -259,27 +254,27 @@ public class ExternalIndexingOperations {
      * @param files
      * @param indexerDesc
      * @return
+     * @throws AsterixException
      * @throws Exception
      */
     private static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint> getExternalDataIndexingOperator(
             JobSpecification jobSpec, IAType itemType, Dataset dataset, List<ExternalFile> files,
-            RecordDescriptor indexerDesc, AqlMetadataProvider metadataProvider) throws Exception {
+            RecordDescriptor indexerDesc) throws AsterixException {
         ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         Map<String, String> configuration = externalDatasetDetails.getProperties();
         IAdapterFactory adapterFactory = AdapterFactoryProvider.getIndexingAdapterFactory(
                 externalDatasetDetails.getAdapter(), configuration, (ARecordType) itemType, files, true, null);
-        return new Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>(
-                new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
+        return new Pair<>(new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());
     }
 
     public static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint> createExternalIndexingOp(
             JobSpecification spec, AqlMetadataProvider metadataProvider, Dataset dataset, ARecordType itemType,
-            RecordDescriptor indexerDesc, List<ExternalFile> files) throws Exception {
+            RecordDescriptor indexerDesc, List<ExternalFile> files) throws AsterixException {
         if (files == null) {
             files = MetadataManager.INSTANCE.getDatasetExternalFiles(metadataProvider.getMetadataTxnContext(), dataset);
         }
-        return getExternalDataIndexingOperator(spec, itemType, dataset, files, indexerDesc, metadataProvider);
+        return getExternalDataIndexingOperator(spec, itemType, dataset, files, indexerDesc);
     }
 
     /**
@@ -431,7 +426,7 @@ public class ExternalIndexingOperations {
     public static JobSpecification buildFilesIndexUpdateOp(Dataset ds, List<ExternalFile> metadataFiles,
             List<ExternalFile> deletedFiles, List<ExternalFile> addedFiles, List<ExternalFile> appendedFiles,
             AqlMetadataProvider metadataProvider) throws MetadataException, AlgebricksException {
-        ArrayList<ExternalFile> files = new ArrayList<ExternalFile>();
+        ArrayList<ExternalFile> files = new ArrayList<>();
         for (ExternalFile file : metadataFiles) {
             if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
                 files.add(file);
@@ -456,7 +451,7 @@ public class ExternalIndexingOperations {
             List<ExternalFile> deletedFiles, List<ExternalFile> addedFiles, List<ExternalFile> appendedFiles,
             AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         // Create files list
-        ArrayList<ExternalFile> files = new ArrayList<ExternalFile>();
+        ArrayList<ExternalFile> files = new ArrayList<>();
 
         for (ExternalFile metadataFile : metadataFiles) {
             if (metadataFile.getPendingOp() != ExternalFilePendingOp.PENDING_APPEND_OP) {
@@ -478,7 +473,7 @@ public class ExternalIndexingOperations {
         CompiledCreateIndexStatement ccis = new CompiledCreateIndexStatement(index.getIndexName(),
                 index.getDataverseName(), index.getDatasetName(), index.getKeyFieldNames(), index.getKeyFieldTypes(),
                 index.isEnforcingKeyFileds(), index.getGramLength(), index.getIndexType());
-        return IndexOperations.buildSecondaryIndexLoadingJobSpec(ccis, null, null, metadataProvider, files);
+        return IndexOperations.buildSecondaryIndexLoadingJobSpec(ccis, null, null, null, null, metadataProvider, files);
     }
 
     public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, AqlMetadataProvider metadataProvider)
@@ -500,10 +495,10 @@ public class ExternalIndexingOperations {
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
 
-        ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory>();
-        ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<IndexInfoOperatorDescriptor>();
-        ArrayList<ExternalRTreeDataflowHelperFactory> rtreeDataflowHelperFactories = new ArrayList<ExternalRTreeDataflowHelperFactory>();
-        ArrayList<IndexInfoOperatorDescriptor> rtreeInfos = new ArrayList<IndexInfoOperatorDescriptor>();
+        ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<>();
+        ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<>();
+        ArrayList<ExternalRTreeDataflowHelperFactory> rtreeDataflowHelperFactories = new ArrayList<>();
+        ArrayList<IndexInfoOperatorDescriptor> rtreeInfos = new ArrayList<>();
 
         for (Index index : indexes) {
             if (isValidIndexName(index.getDatasetName(), index.getIndexName())) {
@@ -634,10 +629,10 @@ public class ExternalIndexingOperations {
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
 
-        ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory>();
-        ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<IndexInfoOperatorDescriptor>();
-        ArrayList<ExternalRTreeDataflowHelperFactory> rtreeDataflowHelperFactories = new ArrayList<ExternalRTreeDataflowHelperFactory>();
-        ArrayList<IndexInfoOperatorDescriptor> rtreeInfos = new ArrayList<IndexInfoOperatorDescriptor>();
+        ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<>();
+        ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<>();
+        ArrayList<ExternalRTreeDataflowHelperFactory> rtreeDataflowHelperFactories = new ArrayList<>();
+        ArrayList<IndexInfoOperatorDescriptor> rtreeInfos = new ArrayList<>();
 
         for (Index index : indexes) {
             if (isValidIndexName(index.getDatasetName(), index.getIndexName())) {
@@ -692,10 +687,10 @@ public class ExternalIndexingOperations {
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
 
-        ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory>();
-        ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<IndexInfoOperatorDescriptor>();
-        ArrayList<ExternalRTreeDataflowHelperFactory> rtreeDataflowHelperFactories = new ArrayList<ExternalRTreeDataflowHelperFactory>();
-        ArrayList<IndexInfoOperatorDescriptor> rtreeInfos = new ArrayList<IndexInfoOperatorDescriptor>();
+        ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<>();
+        ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<>();
+        ArrayList<ExternalRTreeDataflowHelperFactory> rtreeDataflowHelperFactories = new ArrayList<>();
+        ArrayList<IndexInfoOperatorDescriptor> rtreeInfos = new ArrayList<>();
 
         for (Index index : indexes) {
             if (isValidIndexName(index.getDatasetName(), index.getIndexName())) {

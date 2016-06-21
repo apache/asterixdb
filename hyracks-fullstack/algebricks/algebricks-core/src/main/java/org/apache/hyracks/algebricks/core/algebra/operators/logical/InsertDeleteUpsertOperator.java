@@ -56,6 +56,9 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     // previous filter (for UPSERT)
     private LogicalVariable prevFilterVar;
     private Object prevFilterType;
+    // previous additional fields (for UPSERT)
+    private List<LogicalVariable> prevAdditionalNonFilteringVars;
+    private List<Object> prevAdditionalNonFilteringTypes;
 
     public InsertDeleteUpsertOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payloadExpr,
             List<Mutable<ILogicalExpression>> primaryKeyExprs,
@@ -85,6 +88,9 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
         if (operation == Kind.UPSERT) {
             // The upsert case also produces the previous record
             schema.add(prevRecordVar);
+            if (additionalNonFilteringExpressions != null) {
+                schema.addAll(prevAdditionalNonFilteringVars);
+            }
             if (prevFilterVar != null) {
                 schema.add(prevFilterVar);
             }
@@ -94,6 +100,9 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     public void getProducedVariables(Collection<LogicalVariable> producedVariables) {
         if (prevRecordVar != null) {
             producedVariables.add(prevRecordVar);
+        }
+        if (prevAdditionalNonFilteringVars != null) {
+            producedVariables.addAll(prevAdditionalNonFilteringVars);
         }
         if (prevFilterVar != null) {
             producedVariables.add(prevFilterVar);
@@ -140,6 +149,11 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
                 target.addAllVariables(sources[0]);
                 if (operation == Kind.UPSERT) {
                     target.addVariable(prevRecordVar);
+                    if (prevAdditionalNonFilteringVars != null) {
+                        for (LogicalVariable var : prevAdditionalNonFilteringVars) {
+                            target.addVariable(var);
+                        }
+                    }
                     if (prevFilterVar != null) {
                         target.addVariable(prevFilterVar);
                     }
@@ -158,6 +172,11 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
         PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
         if (operation == Kind.UPSERT) {
             env.setVarType(prevRecordVar, prevRecordType);
+            if (prevAdditionalNonFilteringVars != null) {
+                for (int i = 0; i < prevAdditionalNonFilteringVars.size(); i++) {
+                    env.setVarType(prevAdditionalNonFilteringVars.get(i), prevAdditionalNonFilteringTypes.get(i));
+                }
+            }
             if (prevFilterVar != null) {
                 env.setVarType(prevFilterVar, prevFilterType);
             }
@@ -223,5 +242,21 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     public void setPrevFilterType(Object prevFilterType) {
         this.prevFilterType = prevFilterType;
+    }
+
+    public List<LogicalVariable> getPrevAdditionalNonFilteringVars() {
+        return prevAdditionalNonFilteringVars;
+    }
+
+    public void setPrevAdditionalNonFilteringVars(List<LogicalVariable> prevAdditionalNonFilteringVars) {
+        this.prevAdditionalNonFilteringVars = prevAdditionalNonFilteringVars;
+    }
+
+    public List<Object> getPrevAdditionalNonFilteringTypes() {
+        return prevAdditionalNonFilteringTypes;
+    }
+
+    public void setPrevAdditionalNonFilteringTypes(List<Object> prevAdditionalNonFilteringTypes) {
+        this.prevAdditionalNonFilteringTypes = prevAdditionalNonFilteringTypes;
     }
 }

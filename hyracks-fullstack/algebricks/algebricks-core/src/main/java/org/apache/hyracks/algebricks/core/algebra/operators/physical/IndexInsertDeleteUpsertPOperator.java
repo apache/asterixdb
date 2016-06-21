@@ -56,11 +56,12 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
     private final List<LogicalVariable> additionalFilteringKeys;
     private final List<LogicalVariable> prevSecondaryKeys;
     private final LogicalVariable prevAdditionalFilteringKey;
+    private final int numOfAdditionalNonFilteringFields;
 
     public IndexInsertDeleteUpsertPOperator(List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalFilteringKeys, Mutable<ILogicalExpression> filterExpr,
             IDataSourceIndex<?, ?> dataSourceIndex, List<LogicalVariable> prevSecondaryKeys,
-            LogicalVariable prevAdditionalFilteringKey) {
+            LogicalVariable prevAdditionalFilteringKey, int numOfAdditionalNonFilteringFields) {
         this.primaryKeys = primaryKeys;
         this.secondaryKeys = secondaryKeys;
         if (filterExpr != null) {
@@ -72,6 +73,7 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         this.additionalFilteringKeys = additionalFilteringKeys;
         this.prevSecondaryKeys = prevSecondaryKeys;
         this.prevAdditionalFilteringKey = prevAdditionalFilteringKey;
+        this.numOfAdditionalNonFilteringFields = numOfAdditionalNonFilteringFields;
     }
 
     @Override
@@ -91,6 +93,9 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         List<LogicalVariable> scanVariables = new ArrayList<LogicalVariable>();
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
+        for (int i = 0; i < numOfAdditionalNonFilteringFields; i++) {
+            scanVariables.add(new LogicalVariable(-1));
+        }
         IPhysicalPropertiesVector r = dataSourceIndex.getDataSource().getPropertiesProvider()
                 .computePropertiesVector(scanVariables);
         r.getLocalProperties().clear();
@@ -103,7 +108,7 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         IndexInsertDeleteUpsertOperator insertDeleteUpsertOp = (IndexInsertDeleteUpsertOperator) op;
         IMetadataProvider mp = context.getMetadataProvider();
 

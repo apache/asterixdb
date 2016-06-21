@@ -238,4 +238,15 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         }
         return dataverseName.compareTo(otherIndex.getDataverseName());
     }
+
+    public boolean hasMetaFields() {
+        if (keyFieldSourceIndicators != null) {
+            for (Integer indicator : keyFieldSourceIndicators) {
+                if (indicator.intValue() != 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
