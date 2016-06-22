@@ -130,8 +130,8 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
             }
             if (looped && clockPtr >= startClockPtr) {
                 cycleCount++;
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("completed " + cycleCount + "/" + MAX_UNSUCCESSFUL_CYCLE_COUNT
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("completed " + cycleCount + "/" + MAX_UNSUCCESSFUL_CYCLE_COUNT
                             + " clock cycle(s) without finding victim");
                 }
                 if (cycleCount >= MAX_UNSUCCESSFUL_CYCLE_COUNT) {

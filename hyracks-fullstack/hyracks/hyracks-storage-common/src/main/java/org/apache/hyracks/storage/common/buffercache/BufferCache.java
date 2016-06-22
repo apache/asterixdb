@@ -473,6 +473,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     Thread.currentThread().interrupt();
                 }
             }
+            finishQueue();
         }
         throw new HyracksDataException("Unable to find free page in buffer cache after " + MAX_PIN_ATTEMPT_CYCLES +
                 " cycles (buffer cache undersized?)");
@@ -1314,6 +1315,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     Thread.currentThread().interrupt();
                 }
             }
+            finishQueue();
         }
         throw new HyracksDataException("Unable to find free page in buffer cache after " + MAX_PIN_ATTEMPT_CYCLES +
                 " cycles (buffer cache undersized?)");
