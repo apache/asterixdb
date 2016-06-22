@@ -24,10 +24,14 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 public class AsterixExternalLibraryIT {
 
@@ -39,7 +43,14 @@ public class AsterixExternalLibraryIT {
             + File.separator + "testlib-zip-binary-assembly.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
+    private static String reportPath =
+            new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
+
     private final TestExecutor testExecutor = new TestExecutor();
+
+    @Rule
+    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(
+            AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
 
     @BeforeClass
     public static void setUp() throws Exception {

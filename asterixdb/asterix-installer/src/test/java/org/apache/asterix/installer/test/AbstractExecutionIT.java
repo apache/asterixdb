@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestFileContext;
@@ -32,7 +33,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -51,9 +54,16 @@ public abstract class AbstractExecutionIT {
 
     protected static final String HDFS_BASE = "../asterix-app/";
 
-    protected final static TestExecutor testExecutor = new TestExecutor();
+    protected static final TestExecutor testExecutor = new TestExecutor();
 
     private static final String EXTERNAL_LIBRARY_TEST_GROUP = "lib";
+
+    private static String reportPath =
+            new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
+
+    @Rule
+    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(
+            AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -103,6 +113,9 @@ public abstract class AbstractExecutionIT {
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
+
+        reportPath = new File(StringUtils.join(new String[]{"target", "failsafe-reports"}, File.separator))
+                .getAbsolutePath();
     }
 
     @AfterClass
