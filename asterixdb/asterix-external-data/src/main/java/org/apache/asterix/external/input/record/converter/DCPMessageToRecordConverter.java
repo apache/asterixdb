@@ -39,17 +39,15 @@ import com.couchbase.client.core.message.dcp.RemoveMessage;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 
-public class DCPMessageToRecordConverter
-        implements IRecordToRecordWithMetadataAndPKConverter<DCPRequest, char[]> {
+public class DCPMessageToRecordConverter implements IRecordToRecordWithMetadataAndPKConverter<DCPRequest, char[]> {
 
     private final RecordWithMetadataAndPK<char[]> recordWithMetadata;
     private final CharArrayRecord value;
     private final CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
-    private final ByteBuffer bytes = ByteBuffer.allocateDirect(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+    private final ByteBuffer bytes = ByteBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
     private final CharBuffer chars = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
-    private static final IAType[] CB_META_TYPES = new IAType[] { /*ID*/BuiltinType.ASTRING,
-            /*VBID*/BuiltinType.AINT32, /*SEQ*/BuiltinType.AINT64, /*CAS*/BuiltinType.AINT64,
-            /*EXPIRATION*/BuiltinType.AINT32,
+    private static final IAType[] CB_META_TYPES = new IAType[] { /*ID*/BuiltinType.ASTRING, /*VBID*/BuiltinType.AINT32,
+            /*SEQ*/BuiltinType.AINT64, /*CAS*/BuiltinType.AINT64, /*EXPIRATION*/BuiltinType.AINT32,
             /*FLAGS*/BuiltinType.AINT32, /*REV*/BuiltinType.AINT64, /*LOCK*/BuiltinType.AINT32 };
     private static final int[] PK_INDICATOR = { 1 };
     private static final int[] PK_INDEXES = { 0 };
@@ -105,16 +103,22 @@ public class DCPMessageToRecordConverter
         int position = content.readerIndex();
         final int limit = content.writerIndex();
         final int contentSize = content.readableBytes();
+        bytes.clear();
         while (position < limit) {
-            bytes.clear();
             chars.clear();
             if ((contentSize - position) < bytes.capacity()) {
                 bytes.limit(contentSize - position);
             }
-            content.getBytes(position, bytes);
+            content.getBytes(position + bytes.position(), bytes);
             position += bytes.position();
             bytes.flip();
             decoder.decode(bytes, chars, false);
+            if (bytes.hasRemaining()) {
+                bytes.compact();
+                position -= bytes.position();
+            } else {
+                bytes.clear();
+            }
             chars.flip();
             record.append(chars);
         }

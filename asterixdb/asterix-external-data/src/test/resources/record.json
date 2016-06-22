@@ -1,0 +1,375 @@
+{
+  "quoted_status": {
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_status_id": null,
+    "possibly_sensitive": false,
+    "coordinates": null,
+    "created_at": "Wed Sep 02 07:24:48 +0000 2015",
+    "truncated": false,
+    "in_reply_to_user_id_str": null,
+    "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+    "retweet_count": 0,
+    "retweeted": false,
+    "geo": null,
+    "filter_level": "low",
+    "in_reply_to_screen_name": null,
+    "entities": {
+      "urls": [
+        {
+          "expanded_url": "http://www.bigdata-insider.de/infrastruktur/articles/498946/?cmp=sm-tw-swyn&utm_source=twitter&utm_medium=sm&utm_campaign=twitter-swyn",
+          "display_url": "bigdata-insider.de/infrastruktur/…",
+          "indices": [
+            54,
+            76
+          ],
+          "url": "http://t.co/8inseWDWIE"
+        }
+      ],
+      "hashtags": [
+        {
+          "indices": [
+            16,
+            22
+          ],
+          "text": "NoSQL"
+        },
+        {
+          "indices": [
+            24,
+            36
+          ],
+          "text": "Datenbanken"
+        }
+      ],
+      "user_mentions": [
+        {
+          "name": "EnterpriseDB_DE",
+          "indices": [
+            77,
+            93
+          ],
+          "id": 1219531897,
+          "screen_name": "EnterpriseDB_DE",
+          "id_str": "1219531897"
+        }
+      ],
+      "trends": [],
+      "symbols": []
+    },
+    "id_str": "638975848138285056",
+    "in_reply_to_user_id": null,
+    "favorite_count": 0,
+    "id": 638975848138285000,
+    "text": "Relationale und #NoSQL- #Datenbanken wachsen zusammen http://t.co/8inseWDWIE @EnterpriseDB_DE",
+    "place": null,
+    "contributors": null,
+    "lang": "de",
+    "user": {
+      "utc_offset": null,
+      "friends_count": 1440,
+      "profile_image_url_https": "https://pbs.twimg.com/profile_images/494807363572875265/EUm9CELG_normal.jpeg",
+      "listed_count": 54,
+      "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+      "default_profile_image": false,
+      "favourites_count": 11,
+      "description": "BigData-Insider.de – Entscheiderwissen für Big Data Professionals",
+      "created_at": "Mon Jun 30 10:40:17 +0000 2014",
+      "is_translator": false,
+      "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+      "protected": false,
+      "screen_name": "bigdata_insider",
+      "id_str": "2596163432",
+      "profile_link_color": "177535",
+      "id": 2596163432,
+      "geo_enabled": false,
+      "profile_background_color": "55965F",
+      "lang": "de",
+      "profile_sidebar_border_color": "FFFFFF",
+      "profile_text_color": "333333",
+      "verified": false,
+      "profile_image_url": "http://pbs.twimg.com/profile_images/494807363572875265/EUm9CELG_normal.jpeg",
+      "time_zone": null,
+      "url": "http://www.bigdata-insider.de",
+      "contributors_enabled": false,
+      "profile_background_tile": false,
+      "profile_banner_url": "https://pbs.twimg.com/profile_banners/2596163432/1405605723",
+      "statuses_count": 325,
+      "follow_request_sent": null,
+      "followers_count": 817,
+      "profile_use_background_image": false,
+      "default_profile": false,
+      "following": null,
+      "name": "BigData-Insider",
+      "location": "Augsburg, Germany",
+      "profile_sidebar_fill_color": "DDEEF6",
+      "notifications": null
+    },
+    "favorited": false
+  },
+  "in_reply_to_status_id_str": null,
+  "in_reply_to_status_id": null,
+  "created_at": "Wed Sep 02 08:17:29 +0000 2015",
+  "in_reply_to_user_id_str": null,
+  "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+  "quoted_status_id": 638975848138285000,
+  "retweet_count": 0,
+  "retweeted": false,
+  "geo": null,
+  "filter_level": "low",
+  "in_reply_to_screen_name": null,
+  "id_str": "638989106882736128",
+  "in_reply_to_user_id": null,
+  "favorite_count": 0,
+  "id": 638989106882736100,
+  "text": "RT: Datenbanken im IoT-Zeitalter - mehr lesen auf @bigdata_insider  https://t.co/Yt0Pzij3tK",
+  "place": null,
+  "lang": "de",
+  "favorited": false,
+  "possibly_sensitive": false,
+  "coordinates": null,
+  "truncated": false,
+  "timestamp_ms": "1441181849581",
+  "entities": {
+    "urls": [
+      {
+        "expanded_url": "https://twitter.com/bigdata_insider/status/638975848138285056",
+        "display_url": "twitter.com/bigdata_inside…",
+        "indices": [
+          68,
+          91
+        ],
+        "url": "https://t.co/Yt0Pzij3tK"
+      }
+    ],
+    "hashtags": [],
+    "user_mentions": [
+      {
+        "name": "BigData-Insider",
+        "indices": [
+          50,
+          66
+        ],
+        "id": 2596163432,
+        "screen_name": "bigdata_insider",
+        "id_str": "2596163432"
+      }
+    ],
+    "trends": [],
+    "symbols": []
+  },
+  "quoted_status_id_str": "638975848138285056",
+  "contributors": null,
+  "user": {
+    "utc_offset": 7200,
+    "friends_count": 382,
+    "profile_image_url_https": "https://pbs.twimg.com/profile_images/600331462982946816/IzBC43SR_normal.png",
+    "listed_count": 22,
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme14/bg.gif",
+    "default_profile_image": false,
+    "favourites_count": 56,
+    "description": "EnterpriseDB ist weltgrößter und führender Anbieter von Enterprise Lösungen und Services basierend auf PostgreSQL, die fortschrittlichste Open Source Datenbank.",
+    "created_at": "Mon Feb 25 18:37:11 +0000 2013",
+    "is_translator": false,
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme14/bg.gif",
+    "protected": false,
+    "screen_name": "EnterpriseDB_DE",
+    "id_str": "1219531897",
+    "profile_link_color": "EC7224",
+    "id": 1219531897,
+    "geo_enabled": false,
+    "profile_background_color": "EC7224",
+    "lang": "de",
+    "profile_sidebar_border_color": "FFFFFF",
+    "profile_text_color": "333333",
+    "verified": false,
+    "profile_image_url": "http://pbs.twimg.com/profile_images/600331462982946816/IzBC43SR_normal.png",
+    "time_zone": "Berlin",
+    "url": "http://www.enterprisedb.com",
+    "contributors_enabled": false,
+    "profile_background_tile": false,
+    "statuses_count": 941,
+    "follow_request_sent": null,
+    "followers_count": 336,
+    "profile_use_background_image": true,
+    "default_profile": false,
+    "following": null,
+    "name": "EnterpriseDB_DE",
+    "location": "Berlin, Germany",
+    "profile_sidebar_fill_color": "DDEEF6",
+    "notifications": null
+  }
+}
+{
+  "in_reply_to_status_id_str": null,
+  "in_reply_to_status_id": null,
+  "created_at": "Fri May 06 12:36:44 +0000 2016",
+  "in_reply_to_user_id_str": null,
+  "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+  "retweeted_status": {
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_status_id": null,
+    "created_at": "Fri May 06 11:09:20 +0000 2016",
+    "in_reply_to_user_id_str": null,
+    "source": "<a href=\"http://jp.techcrunch.com/\" rel=\"nofollow\">TC Japan RTbot</a>",
+    "retweet_count": 4,
+    "retweeted": false,
+    "geo": null,
+    "filter_level": "low",
+    "in_reply_to_screen_name": null,
+    "is_quote_status": false,
+    "id_str": "728542158676852736",
+    "in_reply_to_user_id": null,
+    "favorite_count": 3,
+    "id": 728542158676852700,
+    "text": "16shares: Bashoが時系列データ専用NoSQLデータベースRiak TSをオープンソース化してIoTへの浸透をねらう https://t.co/vYi3iI3XkZ",
+    "place": null,
+    "lang": "ja",
+    "favorited": false,
+    "possibly_sensitive": false,
+    "coordinates": null,
+    "truncated": false,
+    "entities": {
+      "urls": [
+        {
+          "expanded_url": "http://jp.techcrunch.com/2016/05/06/20160505basho-open-sources-its-riak-ts-database-for-the-internet-of-things/",
+          "display_url": "jp.techcrunch.com/2016/05/06/201…",
+          "indices": [
+            65,
+            88
+          ],
+          "url": "https://t.co/vYi3iI3XkZ"
+        }
+      ],
+      "hashtags": [],
+      "user_mentions": [],
+      "symbols": []
+    },
+    "contributors": null,
+    "user": {
+      "utc_offset": 32400,
+      "friends_count": 456,
+      "profile_image_url_https": "https://pbs.twimg.com/profile_images/542903207098212352/S02CeC4c_normal.png",
+      "listed_count": 4277,
+      "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+      "default_profile_image": false,
+      "favourites_count": 420,
+      "description": "TechCrunch Japanの公式アカウントです",
+      "created_at": "Fri Apr 22 10:46:18 +0000 2011",
+      "is_translator": false,
+      "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+      "protected": false,
+      "screen_name": "jptechcrunch",
+      "id_str": "286106104",
+      "profile_link_color": "0A9E01",
+      "id": 286106104,
+      "geo_enabled": false,
+      "profile_background_color": "FFFFFF",
+      "lang": "ja",
+      "profile_sidebar_border_color": "C0DEED",
+      "profile_text_color": "333333",
+      "verified": false,
+      "profile_image_url": "http://pbs.twimg.com/profile_images/542903207098212352/S02CeC4c_normal.png",
+      "time_zone": "Tokyo",
+      "url": "http://jp.techcrunch.com",
+      "contributors_enabled": false,
+      "profile_background_tile": false,
+      "profile_banner_url": "https://pbs.twimg.com/profile_banners/286106104/1427898894",
+      "statuses_count": 24997,
+      "follow_request_sent": null,
+      "followers_count": 58290,
+      "profile_use_background_image": true,
+      "default_profile": false,
+      "following": null,
+      "name": "TechCrunch Japan",
+      "location": "Tokyo",
+      "profile_sidebar_fill_color": "DDEEF6",
+      "notifications": null
+    }
+  },
+  "retweet_count": 0,
+  "retweeted": false,
+  "geo": null,
+  "filter_level": "low",
+  "in_reply_to_screen_name": null,
+  "is_quote_status": false,
+  "id_str": "728564152130658304",
+  "in_reply_to_user_id": null,
+  "favorite_count": 0,
+  "id": 728564152130658300,
+  "text": "RT @jptechcrunch: 16shares: Bashoが時系列データ専用NoSQLデータベースRiak TSをオープンソース化してIoTへの浸透をねらう https://t.co/vYi3iI3XkZ",
+  "place": null,
+  "lang": "ja",
+  "favorited": false,
+  "possibly_sensitive": false,
+  "coordinates": null,
+  "truncated": false,
+  "timestamp_ms": "1462538204592",
+  "entities": {
+    "urls": [
+      {
+        "expanded_url": "http://jp.techcrunch.com/2016/05/06/20160505basho-open-sources-its-riak-ts-database-for-the-internet-of-things/",
+        "display_url": "jp.techcrunch.com/2016/05/06/201…",
+        "indices": [
+          83,
+          106
+        ],
+        "url": "https://t.co/vYi3iI3XkZ"
+      }
+    ],
+    "hashtags": [],
+    "user_mentions": [
+      {
+        "name": "TechCrunch Japan",
+        "indices": [
+          3,
+          16
+        ],
+        "id": 286106104,
+        "screen_name": "jptechcrunch",
+        "id_str": "286106104"
+      }
+    ],
+    "symbols": []
+  },
+  "contributors": null,
+  "user": {
+    "utc_offset": -25200,
+    "friends_count": 184,
+    "profile_image_url_https": "https://pbs.twimg.com/profile_images/615865274592432128/fYOAh2iR_normal.jpg",
+    "listed_count": 10,
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+    "default_profile_image": false,
+    "favourites_count": 1523,
+    "description": "自作系、ランニング、筋トレを主とする生態系 。宗教上の理由でASRock、nVIDIAを崇拝。水冷化に向けて倹約中の身。炭酸飲料は血液。今後ともよろしく……",
+    "created_at": "Fri Jun 26 19:56:49 +0000 2015",
+    "is_translator": false,
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+    "protected": false,
+    "screen_name": "774Inside_X79",
+    "id_str": "3257040751",
+    "profile_link_color": "0084B4",
+    "id": 3257040751,
+    "geo_enabled": true,
+    "profile_background_color": "C0DEED",
+    "lang": "ja",
+    "profile_sidebar_border_color": "C0DEED",
+    "profile_text_color": "333333",
+    "verified": false,
+    "profile_image_url": "http://pbs.twimg.com/profile_images/615865274592432128/fYOAh2iR_normal.jpg",
+    "time_zone": "Pacific Time (US & Canada)",
+    "url": "http://twpf.jp/774Inside_X79",
+    "contributors_enabled": false,
+    "profile_background_tile": false,
+    "profile_banner_url": "https://pbs.twimg.com/profile_banners/3257040751/1458988346",
+    "statuses_count": 3694,
+    "follow_request_sent": null,
+    "followers_count": 144,
+    "profile_use_background_image": true,
+    "default_profile": true,
+    "following": null,
+    "name": "ﾗｫ",
+    "location": "背後",
+    "profile_sidebar_fill_color": "DDEEF6",
+    "notifications": null
+  }
+}
