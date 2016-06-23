@@ -94,14 +94,15 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         int missingBytesLen = bos.size();
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
-            private ArrayTupleBuilder tupleBuilder;
+            private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private IUnnestingEvaluator unnest = unnestingFactory.createUnnestingEvaluator(ctx);
 
             @Override
             public void open() throws HyracksDataException {
                 writer.open();
-                initAccessAppendRef(ctx);
-                tupleBuilder = new ArrayTupleBuilder(projectionList.length);
+                if (tRef == null) {
+                    initAccessAppendRef(ctx);
+                }
             }
 
             @Override
