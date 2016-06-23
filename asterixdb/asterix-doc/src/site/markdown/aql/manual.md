@@ -480,11 +480,12 @@ It is useful to note that if the set were instead the empty set, the first expre
                       | SetStatement
                       | InsertStatement
                       | DeleteStatement
+                      | UpsertStatement
                       | Query
 
 In addition to expresssions for queries, AQL supports a variety of statements for data
 definition and manipulation purposes as well as controlling the context to be used in
-evaluating AQL expressions. AQL supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, or searched while a given AQL statement is being executed.
+evaluating AQL expressions. AQL supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, upserted, or searched while a given AQL statement is being executed.
 
 This section details the statements supported in the AQL language.
 
@@ -860,6 +861,27 @@ The following example illustrates a single-object deletion.
 ##### Example
 
     delete $user from dataset FacebookUsers where $user.id = 8;
+
+#### Upsert
+
+    UpsertStatement ::= "upsert" "into" "dataset" QualifiedName Query
+
+The AQL upsert statement is used to couple delete (if found) with insert data into a dataset.
+The data to be upserted comes from an AQL query expression.
+The expression can be as simple as a constant expression, or in general it can be any legal AQL query.
+Upserts in AsterixDB are processed transactionally, with the scope of each upsert transaction
+being the upsertion (deletion if found + insertion) of a single object plus its affiliated
+secondary index entries (if any).
+If the query part of an upsert returns a single object, then the upsert statement itself will
+be a single, atomic transaction.
+If the query part returns multiple objects, then each object upserted will be handled independently
+as a tranaction.
+
+The following example illustrates a query-based upsertion.
+
+##### Example
+
+    upsert into dataset Users (for $user in dataset FacebookUsers return $user)
 
 We close this guide to AQL with one final example of a query expression.
 
