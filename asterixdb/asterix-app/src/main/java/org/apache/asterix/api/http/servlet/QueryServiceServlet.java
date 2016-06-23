@@ -68,8 +68,7 @@ public class QueryServiceServlet extends HttpServlet {
     }
 
     public enum Header {
-        Accept("Accept"),
-        ContentLength("Content-Length");
+        Accept("Accept");
 
         private final String str;
 
@@ -334,7 +333,6 @@ public class QueryServiceServlet extends HttpServlet {
         GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, result);
         //result = JSONUtil.indent(result);
 
-        response.setIntHeader(Header.ContentLength.str(), result.length());
         response.getWriter().print(result);
         if (response.getWriter().checkError()) {
             LOGGER.warning("Error flushing output writer");
