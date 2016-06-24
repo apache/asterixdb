@@ -175,10 +175,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     boolean isLargeTuple(int tupleSize) {
-        // TODO(mblow): make page size available to avoid calculating it
-        int pageSize = getLargeFlag() ? buf.capacity() / page.getFrameSizeMultiplier() : buf.capacity();
-
-        return tupleSize > getMaxTupleSize(pageSize);
+        return tupleSize > getMaxTupleSize(page.getPageSize());
     }
 
     @Override
@@ -247,9 +244,11 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
                 targetFrame = this;
             }
             int tuplesToRight = tupleCount - tuplesToLeft;
-            if (getLargeFlag()) {
-                ((BTreeNSMLeafFrame) rightFrame).growCapacity(extraPageBlockHelper, bufferCache,
-                        buf.capacity() - rightFrame.getBuffer().capacity());
+
+            ((BTreeNSMLeafFrame) rightFrame).setLargeFlag(getLargeFlag());
+            int deltaPages = page.getFrameSizeMultiplier() - rightFrame.getPage().getFrameSizeMultiplier();
+            if (deltaPages > 0) {
+                ((BTreeNSMLeafFrame) rightFrame).growCapacity(extraPageBlockHelper, bufferCache, deltaPages);
             }
 
             ByteBuffer right = rightFrame.getBuffer();
@@ -298,18 +297,18 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     public void ensureCapacity(IBufferCache bufferCache, ITupleReference tuple,
                                IExtraPageBlockHelper extraPageBlockHelper) throws HyracksDataException {
+        // we call ensureCapacity() for large tuples- ensure large flag is set
+        setLargeFlag(true);
         int gapBytes = getBytesRequiredToWriteTuple(tuple) - getFreeContiguousSpace();
-        growCapacity(extraPageBlockHelper, bufferCache, gapBytes);
+        if (gapBytes > 0) {
+            int deltaPages = (int) Math.ceil((double) gapBytes / bufferCache.getPageSize());
+            growCapacity(extraPageBlockHelper, bufferCache, deltaPages);
+        }
     }
 
-    public void growCapacity(IExtraPageBlockHelper extraPageBlockHelper,
-            IBufferCache bufferCache, int delta) throws HyracksDataException {
-        setLargeFlag(true);
-        if (delta <= 0) {
-            return;
-        }
-        int deltaPages = (int) Math.ceil((double) delta / bufferCache.getPageSize());
-        int framePagesOld = getBuffer().capacity() / bufferCache.getPageSize();
+    private void growCapacity(IExtraPageBlockHelper extraPageBlockHelper,
+            IBufferCache bufferCache, int deltaPages) throws HyracksDataException {
+        int framePagesOld = page.getFrameSizeMultiplier();
         int newMultiplier = framePagesOld + deltaPages;
 
         // we need to get the old slot offsets before we grow

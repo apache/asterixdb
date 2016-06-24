@@ -405,6 +405,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
 
         @Override
+        public int getPageSize() {
+            return pageSize;
+        }
+
+        @Override
         public int getFrameSizeMultiplier() {
             return multiplier;
         }

@@ -165,6 +165,11 @@ public class CachedPage implements ICachedPageInternal {
     }
 
     @Override
+    public int getPageSize() {
+        return pageReplacementStrategy.getPageSize();
+    }
+
+    @Override
     public void setFrameSizeMultiplier(int multiplier) {
         this.multiplier = multiplier;
     }

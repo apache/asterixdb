@@ -38,5 +38,7 @@ public interface ICachedPage {
 
     void setQueueInfo(IQueueInfo queueInfo);
 
+    int getPageSize();
+
     int getFrameSizeMultiplier();
 }
