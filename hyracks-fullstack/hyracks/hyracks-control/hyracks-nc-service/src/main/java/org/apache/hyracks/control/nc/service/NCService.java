@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.nc.service;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.hyracks.control.common.controllers.IniUtils;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -71,23 +72,13 @@ public class NCService {
 
     private static final String MAGIC_COOKIE = "hyncmagic";
 
-    private static String getStringINIOpt(Ini ini, String section, String key, String default_value) {
-        String value = ini.get(section, key, String.class);
-        return (value != null) ? value : default_value;
-    }
-
-    private static int getIntINIOpt(Ini ini, String section, String key, int default_value) {
-        Integer value = ini.get(section, key, Integer.class);
-        return (value != null) ? value : default_value;
-    }
-
     private static List<String> buildCommand() throws IOException {
         List<String> cList = new ArrayList<String>();
 
         // Find the command to run. For now, we allow overriding the name, but
         // still assume it's located in the bin/ directory of the deployment.
         // Even this is likely more configurability than we need.
-        String command = getStringINIOpt(ini, nodeSection, "command", "hyracksnc");
+        String command = IniUtils.getString(ini, nodeSection, "command", "hyracksnc");
         // app.home is specified by the Maven appassembler plugin. If it isn't set,
         // fall back to user's home dir. Again this is likely more flexibility
         // than we need.
@@ -110,10 +101,16 @@ public class NCService {
 
     private static void configEnvironment(Map<String,String> env) {
         if (env.containsKey("JAVA_OPTS")) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Keeping JAVA_OPTS from environment");
+            }
             return;
         }
-        String jvmargs = getStringINIOpt(ini, nodeSection, "jvm.args", "-Xmx1536m");
+        String jvmargs = IniUtils.getString(ini, nodeSection, "jvm.args", "-Xmx1536m");
         env.put("JAVA_OPTS", jvmargs);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Setting JAVA_OPTS to " + jvmargs);
+        }
     }
 
     /**
@@ -146,6 +143,8 @@ public class NCService {
                     // If the directory IS there, all is well
                 }
                 File logfile = new File(config.logdir, "nc-" + ncId + ".log");
+                // Don't care if this succeeds or fails:
+                logfile.delete();
                 pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logfile));
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Logging to " + logfile.getCanonicalPath());
@@ -192,7 +191,7 @@ public class NCService {
             }
             String iniString = ois.readUTF();
             ini = new Ini(new StringReader(iniString));
-            ncId = getStringINIOpt(ini, "localnc", "id", "");
+            ncId = IniUtils.getString(ini, "localnc", "id", "");
             nodeSection = "nc/" + ncId;
             return launchNCProcess();
         } catch (Exception e) {

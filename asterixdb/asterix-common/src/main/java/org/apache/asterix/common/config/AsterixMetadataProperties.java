@@ -39,7 +39,7 @@ public class AsterixMetadataProperties extends AbstractAsterixProperties {
     }
 
     public ClusterPartition getMetadataPartition() {
-        return accessor.getMetadataPartiton();
+        return accessor.getMetadataPartition();
     }
 
     public Map<String, String[]> getStores() {

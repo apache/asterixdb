@@ -18,25 +18,28 @@
  */
 package org.apache.hyracks.server.process;
 
+import org.apache.hyracks.control.nc.service.NCService;
+
+import java.io.File;
 import java.util.List;
 
-import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.control.nc.NCDriver;
-
 public class HyracksNCProcess extends HyracksServerProcess {
-    private NCConfig config;
 
-    public HyracksNCProcess(NCConfig config) {
-        this.config = config;
-    }
-
-    @Override
-    protected void addCmdLineArgs(List<String> cList) {
-        config.toCommandLine(cList);
+    public HyracksNCProcess(File configFile, File logFile, File appHome, File workingDir) {
+        this.configFile = configFile;
+        this.logFile = logFile;
+        this.appHome = appHome;
+        this.workingDir = workingDir;
     }
 
     @Override
     protected String getMainClassName() {
-        return NCDriver.class.getName();
+        return NCService.class.getName();
+    }
+
+    @Override
+    protected void addJvmArgs(List<String> cList) {
+        // NCService needs little memory
+        cList.add("-Xmx128m");
     }
 }

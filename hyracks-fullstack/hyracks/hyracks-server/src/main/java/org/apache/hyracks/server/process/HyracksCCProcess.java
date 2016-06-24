@@ -18,25 +18,28 @@
  */
 package org.apache.hyracks.server.process;
 
+import org.apache.hyracks.control.cc.CCDriver;
+
+import java.io.File;
 import java.util.List;
 
-import org.apache.hyracks.control.cc.CCDriver;
-import org.apache.hyracks.control.common.controllers.CCConfig;
-
 public class HyracksCCProcess extends HyracksServerProcess {
-    private CCConfig config;
 
-    public HyracksCCProcess(CCConfig config) {
-        this.config = config;
-    }
-
-    @Override
-    protected void addCmdLineArgs(List<String> cList) {
-        config.toCommandLine(cList);
+    public HyracksCCProcess(File configFile, File logFile, File appHome, File workingDir) {
+        this.configFile = configFile;
+        this.logFile = logFile;
+        this.appHome = appHome;
+        this.workingDir = workingDir;
     }
 
     @Override
     protected String getMainClassName() {
         return CCDriver.class.getName();
+    }
+
+    @Override
+    protected void addJvmArgs(List<String> cList) {
+        // CC needs more than default memory
+        cList.add("-Xmx1024m");
     }
 }

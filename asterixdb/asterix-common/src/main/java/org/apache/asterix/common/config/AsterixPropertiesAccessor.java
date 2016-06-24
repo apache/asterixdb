@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -53,10 +54,12 @@ public class AsterixPropertiesAccessor {
     private final List<String> nodeNames = new ArrayList<>();;
     private final Map<String, String[]> stores = new HashMap<>();;
     private final Map<String, String> coredumpConfig = new HashMap<>();
+
+    // This can be removed when asterix-configuration.xml is no longer required.
     private final Map<String, Property> asterixConfigurationParams;
     private final IApplicationConfig cfg;
     private final Map<String, String> transactionLogDirs = new HashMap<>();
-    private final Map<String, String> asterixBuildProperties;
+    private final Map<String, String> asterixBuildProperties = new HashMap<>();
     private final Map<String, ClusterPartition[]> nodePartitionsMap;
     private final SortedMap<Integer, ClusterPartition> clusterPartitions = new TreeMap<>();
 
@@ -94,6 +97,13 @@ public class AsterixPropertiesAccessor {
         List<Store> configuredStores = asterixConfiguration.getStore();
         nodePartitionsMap = new HashMap<>();
         int uniquePartitionId = 0;
+        // Here we iterate through all <store> elements in asterix-configuration.xml.
+        // For each one, we create an array of ClusterPartitions and store this array
+        // in nodePartitionsMap, keyed by the node name. The array is the same length
+        // as the comma-separated <storeDirs> child element, because Managix will have
+        // arranged for that element to be populated with the full paths to each
+        // partition directory (as formed by appending the <store> subdirectory to
+        // each <iodevices> path from the user's original cluster.xml).
         for (Store store : configuredStores) {
             String trimmedStoreDirs = store.getStoreDirs().trim();
             String[] nodeStores = trimmedStoreDirs.split(",");
@@ -117,35 +127,29 @@ public class AsterixPropertiesAccessor {
         for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
             transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
         }
-        Properties gitProperties = new Properties();
-        try {
-            gitProperties.load(getClass().getClassLoader().getResourceAsStream("git.properties"));
-            asterixBuildProperties = new HashMap<String, String>();
-            for (final String name : gitProperties.stringPropertyNames()) {
-                asterixBuildProperties.put(name, gitProperties.getProperty(name));
-            }
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
+        loadAsterixBuildProperties();
     }
 
     /**
      * Constructor which wraps an IApplicationConfig.
      */
-    public AsterixPropertiesAccessor(IApplicationConfig cfg) {
+    public AsterixPropertiesAccessor(IApplicationConfig cfg) throws AsterixException {
         this.cfg = cfg;
         instanceName = cfg.getString("asterix", "instance", "DEFAULT_INSTANCE");
         String mdNode = null;
         nodePartitionsMap = new HashMap<>();
         int uniquePartitionId = 0;
+
+        // Iterate through each configured NC.
         for (String section : cfg.getSections()) {
             if (!section.startsWith("nc/")) {
                 continue;
             }
             String ncId = section.substring(3);
 
+            // Here we figure out which is the metadata node. If any NCs
+            // declare "metadata.port", use that one; otherwise just use the first.
             if (mdNode == null) {
-                // Default is first node == metadata node
                 mdNode = ncId;
             }
             if (cfg.getString(section, "metadata.port") != null) {
@@ -153,27 +157,46 @@ public class AsterixPropertiesAccessor {
                 mdNode = ncId;
             }
 
+            // Now we assign the coredump and txnlog directories for this node.
             // QQQ Default values? Should they be specified here? Or should there
-            // be a default.ini? They can't be inserted by TriggerNCWork except
-            // possibly for hyracks-specified values. Certainly wherever they are,
-            // they should be platform-dependent.
+            // be a default.ini? Certainly wherever they are, they should be platform-dependent.
             coredumpConfig.put(ncId, cfg.getString(section, "coredumpdir", "/var/lib/asterixdb/coredump"));
             transactionLogDirs.put(ncId, cfg.getString(section, "txnlogdir", "/var/lib/asterixdb/txn-log"));
-            String[] storeDirs = cfg.getString(section, "storagedir", "storage").trim().split(",");
-            ClusterPartition[] nodePartitions = new ClusterPartition[storeDirs.length];
+
+            // Now we create an array of ClusterPartitions for all the partitions
+            // on this NC.
+            String[] iodevices = cfg.getString(section, "iodevices", "/var/lib/asterixdb/iodevice").split(",");
+            String storageSubdir = cfg.getString(section, "storagedir", "storage");
+            String[] nodeStores = new String[iodevices.length];
+            ClusterPartition[] nodePartitions = new ClusterPartition[iodevices.length];
             for (int i = 0; i < nodePartitions.length; i++) {
+                // Construct final storage path from iodevice dir + storage subdir.
+                nodeStores[i] = iodevices[i] + File.separator + storageSubdir;
+                // Create ClusterPartition instances for this NC.
                 ClusterPartition partition = new ClusterPartition(uniquePartitionId++, ncId, i);
                 clusterPartitions.put(partition.getPartitionId(), partition);
                 nodePartitions[i] = partition;
             }
-            stores.put(ncId, storeDirs);
+            stores.put(ncId, nodeStores);
             nodePartitionsMap.put(ncId, nodePartitions);
             nodeNames.add(ncId);
         }
 
         metadataNodeName = mdNode;
         asterixConfigurationParams = null;
-        asterixBuildProperties = null;
+        loadAsterixBuildProperties();
+    }
+
+    private void loadAsterixBuildProperties() throws AsterixException {
+        Properties gitProperties = new Properties();
+        try {
+            gitProperties.load(getClass().getClassLoader().getResourceAsStream("git.properties"));
+            for (final String name : gitProperties.stringPropertyNames()) {
+                asterixBuildProperties.put(name, gitProperties.getProperty(name));
+            }
+        } catch (IOException e) {
+            throw new AsterixException(e);
+        }
     }
 
     public String getMetadataNodeName() {
@@ -204,20 +227,6 @@ public class AsterixPropertiesAccessor {
         return asterixBuildProperties;
     }
 
-    public void putCoredumpPaths(String nodeId, String coredumpPath) {
-        if (coredumpConfig.containsKey(nodeId)) {
-            throw new IllegalStateException("Cannot override value for coredump path");
-        }
-        coredumpConfig.put(nodeId, coredumpPath);
-    }
-
-    public void putTransactionLogDir(String nodeId, String txnLogDir) {
-        if (transactionLogDirs.containsKey(nodeId)) {
-            throw new IllegalStateException("Cannot override value for txnLogDir");
-        }
-        transactionLogDirs.put(nodeId, txnLogDir);
-    }
-
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {
         String value;
         Property p = null;
@@ -246,18 +255,11 @@ public class AsterixPropertiesAccessor {
         }
     }
 
-    private static <T> void logConfigurationError(Property p, T defaultValue) {
-        if (LOGGER.isLoggable(Level.SEVERE)) {
-            LOGGER.severe("Invalid property value '" + p.getValue() + "' for property '" + p.getName()
-                    + "'.\n See the description: \n" + p.getDescription() + "\nDefault = " + defaultValue);
-        }
-    }
-
     public String getInstanceName() {
         return instanceName;
     }
 
-    public ClusterPartition getMetadataPartiton() {
+    public ClusterPartition getMetadataPartition() {
         // metadata partition is always the first partition on the metadata node
         return nodePartitionsMap.get(metadataNodeName)[0];
     }

@@ -86,10 +86,6 @@
                   <mainClass>org.apache.hyracks.control.nc.service.NCService</mainClass>
                   <name>hyracksncservice</name>
                 </program>
-                <program>
-                  <mainClass>org.apache.hyracks.server.drivers.VirtualClusterDriver</mainClass>
-                  <name>hyracks-virtual-cluster</name>
-                </program>
               </programs>
               <repositoryLayout>flat</repositoryLayout>
               <repositoryName>lib</repositoryName>

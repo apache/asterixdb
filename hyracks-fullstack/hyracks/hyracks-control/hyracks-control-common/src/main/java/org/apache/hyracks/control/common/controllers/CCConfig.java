@@ -152,47 +152,4 @@ public class CCConfig {
     public IApplicationConfig getAppConfig() {
         return new IniApplicationConfig(ini);
     }
-
-    public void toCommandLine(List<String> cList) {
-        cList.add("-client-net-ip-address");
-        cList.add(clientNetIpAddress);
-        cList.add("-client-net-port");
-        cList.add(String.valueOf(clientNetPort));
-        cList.add("-cluster-net-ip-address");
-        cList.add(clusterNetIpAddress);
-        cList.add("-cluster-net-port");
-        cList.add(String.valueOf(clusterNetPort));
-        cList.add("-http-port");
-        cList.add(String.valueOf(httpPort));
-        cList.add("-heartbeat-period");
-        cList.add(String.valueOf(heartbeatPeriod));
-        cList.add("-max-heartbeat-lapse-periods");
-        cList.add(String.valueOf(maxHeartbeatLapsePeriods));
-        cList.add("-profile-dump-period");
-        cList.add(String.valueOf(profileDumpPeriod));
-        cList.add("-default-max-job-attempts");
-        cList.add(String.valueOf(defaultMaxJobAttempts));
-        cList.add("-job-history-size");
-        cList.add(String.valueOf(jobHistorySize));
-        cList.add("-result-time-to-live");
-        cList.add(String.valueOf(resultTTL));
-        cList.add("-result-sweep-threshold");
-        cList.add(String.valueOf(resultSweepThreshold));
-        cList.add("-cc-root");
-        cList.add(ccRoot);
-        if (clusterTopologyDefinition != null) {
-            cList.add("-cluster-topology");
-            cList.add(clusterTopologyDefinition.getAbsolutePath());
-        }
-        if (appCCMainClass != null) {
-            cList.add("-app-cc-main-class");
-            cList.add(appCCMainClass);
-        }
-        if (appArgs != null && !appArgs.isEmpty()) {
-            cList.add("--");
-            for (String appArg : appArgs) {
-                cList.add(appArg);
-            }
-        }
-    }
 }

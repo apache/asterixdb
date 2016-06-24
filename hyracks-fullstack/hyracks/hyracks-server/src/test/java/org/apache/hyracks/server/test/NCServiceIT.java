@@ -23,6 +23,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.server.process.HyracksVirtualCluster;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
@@ -30,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,23 +40,29 @@ import java.util.logging.Logger;
 public class NCServiceIT {
 
     private static final String TARGET_DIR = StringUtils
-            .join(new String[]{System.getProperty("basedir"), "target"}, File.separator);
+            .join(new String[] { System.getProperty("basedir"), "target" }, File.separator);
     private static final String LOG_DIR = StringUtils
-            .join(new String[]{TARGET_DIR, "surefire-reports"}, File.separator);
+            .join(new String[] { TARGET_DIR, "failsafe-reports" }, File.separator);
     private static final String RESOURCE_DIR = StringUtils
-            .join(new String[]{TARGET_DIR, "test-classes", "NCServiceIT"}, File.separator);
-    private static final String APP_DIR = StringUtils
-            .join(new String[]{TARGET_DIR, "appassembler", "bin"}, File.separator);
+            .join(new String[] { TARGET_DIR, "test-classes", "NCServiceIT" }, File.separator);
+    private static final String APP_HOME = StringUtils
+            .join(new String[] { TARGET_DIR, "appassembler" }, File.separator);
     private static final Logger LOGGER = Logger.getLogger(NCServiceIT.class.getName());
-    private static List<Process> procs = new ArrayList<>();
+
+    private static HyracksVirtualCluster cluster = null;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        // Start two NC Services - don't read their output as they don't terminate
-        procs.add(invoke("nc-red.log", APP_DIR + File.separator + "hyracksncservice",
-                "-config-file", RESOURCE_DIR + File.separator + "nc-red.conf"));
-        procs.add(invoke("nc-blue.log", APP_DIR + File.separator + "hyracksncservice",
-                "-config-file", RESOURCE_DIR + File.separator + "nc-blue.conf"));
+        cluster = new HyracksVirtualCluster(new File(APP_HOME), null);
+        cluster.addNC(
+                new File(RESOURCE_DIR, "nc-red.conf"),
+                new File(LOG_DIR, "nc-red.log")
+        );
+        cluster.addNC(
+                new File(RESOURCE_DIR, "nc-blue.conf"),
+                new File(LOG_DIR, "nc-blue.log")
+        );
+
         try {
             Thread.sleep(2000);
         }
@@ -62,8 +70,11 @@ public class NCServiceIT {
         }
 
         // Start CC
-        procs.add(invoke("cc.log", APP_DIR + File.separator + "hyrackscc",
-                "-config-file", RESOURCE_DIR + File.separator + "cc.conf"));
+        cluster.start(
+                new File(RESOURCE_DIR, "cc.conf"),
+                new File(LOG_DIR, "cc.log")
+        );
+
         try {
             Thread.sleep(10000);
         }
@@ -72,11 +83,8 @@ public class NCServiceIT {
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
-        for (Process p : procs) {
-            p.destroy();
-            p.waitFor();
-        }
+    public static void tearDown() throws IOException {
+        cluster.stop();
     }
 
     private static String getHttp(String url) throws Exception {
@@ -95,18 +103,6 @@ public class NCServiceIT {
         } else {
             throw new Exception("HTTP error " + statusCode + ":\n" + response);
         }
-    }
-
-    private static Process invoke(String logfile, String... args) throws Exception {
-        ProcessBuilder pb = new ProcessBuilder(args);
-        pb.redirectErrorStream(true);
-        File logDir = new File(LOG_DIR);
-        logDir.mkdirs();
-        File log = new File(logDir, logfile);
-        log.delete();
-        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
-        Process p = pb.start();
-        return p;
     }
 
     @Test
@@ -138,5 +134,4 @@ public class NCServiceIT {
             tearDown();
         }
     }
-
 }

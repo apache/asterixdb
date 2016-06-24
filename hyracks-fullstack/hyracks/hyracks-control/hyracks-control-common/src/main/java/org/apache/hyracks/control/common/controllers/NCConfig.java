@@ -191,66 +191,6 @@ public class NCConfig implements Serializable {
         return new IniApplicationConfig(ini);
     }
 
-    public void toCommandLine(List<String> cList) {
-        cList.add("-cc-host");
-        cList.add(ccHost);
-        cList.add("-cc-port");
-        cList.add(String.valueOf(ccPort));
-        cList.add("-cluster-net-ip-address");
-        cList.add(clusterNetIPAddress);
-        cList.add("-cluster-net-port");
-        cList.add(String.valueOf(clusterNetPort));
-        cList.add("-cluster-net-public-ip-address");
-        cList.add(clusterNetPublicIPAddress);
-        cList.add("-cluster-net-public-port");
-        cList.add(String.valueOf(clusterNetPublicPort));
-        cList.add("-node-id");
-        cList.add(nodeId);
-        cList.add("-data-ip-address");
-        cList.add(dataIPAddress);
-        cList.add("-data-port");
-        cList.add(String.valueOf(dataPort));
-        cList.add("-data-public-ip-address");
-        cList.add(dataPublicIPAddress);
-        cList.add("-data-public-port");
-        cList.add(String.valueOf(dataPublicPort));
-        cList.add("-result-ip-address");
-        cList.add(resultIPAddress);
-        cList.add("-result-port");
-        cList.add(String.valueOf(resultPort));
-        cList.add("-result-public-ip-address");
-        cList.add(resultPublicIPAddress);
-        cList.add("-result-public-port");
-        cList.add(String.valueOf(resultPublicPort));
-        cList.add("-retries");
-        cList.add(String.valueOf(retries));
-        cList.add("-iodevices");
-        cList.add(ioDevices);
-        cList.add("-net-thread-count");
-        cList.add(String.valueOf(nNetThreads));
-        cList.add("-net-buffer-count");
-        cList.add(String.valueOf(nNetBuffers));
-        cList.add("-max-memory");
-        cList.add(String.valueOf(maxMemory));
-        cList.add("-result-time-to-live");
-        cList.add(String.valueOf(resultTTL));
-        cList.add("-result-sweep-threshold");
-        cList.add(String.valueOf(resultSweepThreshold));
-        cList.add("-result-manager-memory");
-        cList.add(String.valueOf(resultManagerMemory));
-
-        if (appNCMainClass != null) {
-            cList.add("-app-nc-main-class");
-            cList.add(appNCMainClass);
-        }
-        if (appArgs != null && !appArgs.isEmpty()) {
-            cList.add("--");
-            for (String appArg : appArgs) {
-                cList.add(appArg);
-            }
-        }
-    }
-
     public void toMap(Map<String, String> configuration) {
         configuration.put("cc-host", ccHost);
         configuration.put("cc-port", (String.valueOf(ccPort)));

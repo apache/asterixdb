@@ -276,7 +276,7 @@ public class ClusterControllerService implements IControllerService {
                 continue;
             }
             String ncid = section.substring(3);
-            String address = ini.get(section, "address");
+            String address = IniUtils.getString(ini, section, "address", null);
             int port = IniUtils.getInt(ini, section, "port", 9090);
             if (address == null) {
                 address = InetAddress.getLoopbackAddress().getHostAddress();

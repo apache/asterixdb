@@ -87,37 +87,15 @@ public class TriggerNCWork extends AbstractWork {
     }
 
     /**
-     * Utility routine to copy all keys from a named section in Ini a
-     * to a named section in Ini b. We need to do this the hard way
-     * because Ini4j reacts inscrutably when attempting to copy
-     * Ini.Sections directly from one Ini to another.
-     */
-    private void copyIniSection(Ini a, String asect, Ini b, String bsect) {
-        Ini.Section source = a.get(asect);
-        for (String key : source.keySet()) {
-            b.put(bsect, key, source.get(key));
-        }
-    }
-    /**
      * Given an Ini object, serialize it to String with some enhancements.
      * @param ccini
      */
     String serializeIni(Ini ccini) throws IOException {
-        Ini ini = new Ini();
-
-        // First copy the global [nc] section to a new section named for
-        // *this* NC, so that those values serve as defaults.
-        String ncsection = "nc/" + ncId;
-        copyIniSection(ccini, "nc", ini, ncsection);
-        // Now copy all sections to their same name in the derived config.
-        for (String section : ccini.keySet()) {
-            copyIniSection(ccini, section, ini, section);
-        }
+        StringWriter iniString = new StringWriter();
+        ccini.store(iniString);
         // Finally insert *this* NC's name into localnc section - this is a fixed
         // entry point so that NCs can determine where all their config is.
-        ini.put("localnc", "id", ncId);
-        StringWriter iniString = new StringWriter();
-        ini.store(iniString);
+        iniString.append("\n[localnc]\nid=" + ncId + "\n");
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Returning Ini file:\n" + iniString.toString());
         }
