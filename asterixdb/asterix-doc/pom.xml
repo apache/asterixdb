@@ -24,7 +24,7 @@
     <version>0.8.9-SNAPSHOT</version>
   </parent>
 
-  <url>http://asterixdb.incubator.apache.org/</url>
+  <url>http://asterixdb.apache.org/</url>
 
   <licenses>
     <license>
@@ -72,7 +72,7 @@
     <site>
       <id>site</id>
       <name>site</name>
-      <url>file:../../../../site/incubator-asterixdb-site</url>
+      <url>file:../../../../site/asterixdb-site</url>
     </site>
   </distributionManagement>
 

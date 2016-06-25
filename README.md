@@ -22,7 +22,7 @@ AsterixDB is a BDMS (Big Data Management System) with a rich feature set that se
 
  * A semistructured NoSQL style data model (ADM) resulting from extending JSON with object database ideas
  * An expressive and declarative query language (AQL) that supports a broad range of queries and analysis over semistructured data
- * A parallel runtime query execution engine, Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
+ * A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
  * Partitioned LSM-based data storage and indexing to support efficient ingestion and management of semistructured data
  * Support for query access to externally stored data (e.g., data in HDFS) as well as to data stored natively by AsterixDB
  * A rich set of primitive data types, including spatial and temporal data in addition to integer, floating point, and textual data
@@ -52,7 +52,7 @@ Instructions for building the master:
 
 * Build AsterixDB master:
 
-        $cd incubator-asterixdb
+        $cd asterixdb
         $mvn clean package -DskipTests
 
 

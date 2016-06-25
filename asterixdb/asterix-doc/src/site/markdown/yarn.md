@@ -251,5 +251,5 @@ A: This is a complex question. Generally, one can use the `refresh` option to up
 
 ###Q: Does AsterixDB work on YARN for Windows?
 
-A: In general, yes! It has been done without much real issue. However it is a infrequent use case, so expect the deployment to have some hiccups. We're always listening on the users@asterixdb.incubator.apache.org mailing list for any issues.
+A: In general, yes! It has been done without much real issue. However it is a infrequent use case, so expect the deployment to have some hiccups. We're always listening on the users@asterixdb.apache.org mailing list for any issues.
 
