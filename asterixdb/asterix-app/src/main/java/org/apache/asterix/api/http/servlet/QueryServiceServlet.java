@@ -352,8 +352,7 @@ public class QueryServiceServlet extends HttpServlet {
             printStatus(resultWriter, ResultStatus.fatal);
             respCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         }
-        printMetrics(resultWriter, (System.nanoTime() - elapsedStart) / 1000, (execEnd - execStart) / 1000, stats.count,
-                stats.size);
+        printMetrics(resultWriter, System.nanoTime() - elapsedStart, execEnd - execStart, stats.count, stats.size);
         resultWriter.print("}\n");
         resultWriter.flush();
         String result = stringWriter.toString();
