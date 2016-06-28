@@ -18,8 +18,8 @@
  */
 package org.apache.hyracks.control.nc.resources;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.resources.IDeallocatableRegistry;
@@ -28,21 +28,17 @@ public class DefaultDeallocatableRegistry implements IDeallocatableRegistry {
     private final List<IDeallocatable> deallocatables;
 
     public DefaultDeallocatableRegistry() {
-        deallocatables = new Vector<IDeallocatable>();
+        deallocatables = new ArrayList<>();
     }
 
     @Override
-    public void registerDeallocatable(IDeallocatable deallocatable) {
+    public synchronized void registerDeallocatable(IDeallocatable deallocatable) {
         deallocatables.add(deallocatable);
     }
 
-    public void close() {
+    public synchronized void close() {
         for (IDeallocatable d : deallocatables) {
-            try {
-                d.deallocate();
-            } catch (Exception e) {
-                // ignore
-            }
+            d.deallocate();
         }
     }
 }
