@@ -1,5 +1,5 @@
-{ "vbucket": 0i32, "tuple_count": 1 }
-{ "vbucket": 1i32, "tuple_count": 1 }
-{ "vbucket": 2i32, "tuple_count": 1 }
-{ "vbucket": 3i32, "tuple_count": 1 }
-{ "vbucket": 4i32, "tuple_count": 1 }
+{ "vbucket": 0, "tuple_count": 1 }
+{ "vbucket": 1, "tuple_count": 1 }
+{ "vbucket": 2, "tuple_count": 1 }
+{ "vbucket": 3, "tuple_count": 1 }
+{ "vbucket": 4, "tuple_count": 1 }

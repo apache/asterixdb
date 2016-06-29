@@ -1,1 +1,1 @@
-{ "double1": NaNd, "double2": Infinityd, "double3": -Infinityd, "double4": -80.2d, "double5": -2.056E-29d, "double6": -2.056E-299d }
+{ "double1": NaN, "double2": Infinity, "double3": -Infinity, "double4": -80.2, "double5": -2.056E-29, "double6": -2.056E-299 }

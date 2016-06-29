@@ -30,7 +30,7 @@ public class AFloatPrinterFactory implements IPrinterFactory {
     public static final AFloatPrinterFactory INSTANCE = new AFloatPrinterFactory();
 
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(AFloatSerializerDeserializer.getFloat(b, s + 1) + "f");
+            .print(AFloatSerializerDeserializer.getFloat(b, s + 1));
 
     @Override
     public IPrinter createPrinter() {

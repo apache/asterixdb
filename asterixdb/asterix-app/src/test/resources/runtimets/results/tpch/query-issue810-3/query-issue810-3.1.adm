@@ -1,4 +1,4 @@
-{ "l_returnflag": "A", "l_linestatus": "F", "count_cheaps": 680, "avg_expensive_discounts": 0.025714285714285662d, "sum_disc_prices": 3.5676192097E7d, "total_charges": 3.7101416222424E7d }
-{ "l_returnflag": "N", "l_linestatus": "F", "count_cheaps": 12, "avg_expensive_discounts": 0.024615384615384615d, "sum_disc_prices": 999060.898d, "total_charges": 1036450.80228d }
-{ "l_returnflag": "N", "l_linestatus": "O", "count_cheaps": 1345, "avg_expensive_discounts": 0.024699248120300644d, "sum_disc_prices": 7.165316630340001E7d, "total_charges": 7.4498798133073E7d }
-{ "l_returnflag": "R", "l_linestatus": "F", "count_cheaps": 679, "avg_expensive_discounts": 0.0244601542416452d, "sum_disc_prices": 3.473847287579999E7d, "total_charges": 3.616906011219301E7d }
+{ "l_returnflag": "A", "l_linestatus": "F", "count_cheaps": 680, "avg_expensive_discounts": 0.02571428571428567, "sum_disc_prices": 3.5676192097E7, "total_charges": 3.710141622242399E7 }
+{ "l_returnflag": "N", "l_linestatus": "F", "count_cheaps": 12, "avg_expensive_discounts": 0.024615384615384615, "sum_disc_prices": 999060.898, "total_charges": 1036450.80228 }
+{ "l_returnflag": "N", "l_linestatus": "O", "count_cheaps": 1345, "avg_expensive_discounts": 0.02469924812030065, "sum_disc_prices": 7.165316630340001E7, "total_charges": 7.449879813307299E7 }
+{ "l_returnflag": "R", "l_linestatus": "F", "count_cheaps": 679, "avg_expensive_discounts": 0.024460154241645205, "sum_disc_prices": 3.47384728758E7, "total_charges": 3.616906011219301E7 }

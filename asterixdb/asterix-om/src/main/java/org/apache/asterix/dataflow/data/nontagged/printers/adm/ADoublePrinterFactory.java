@@ -30,7 +30,7 @@ public class ADoublePrinterFactory implements IPrinterFactory {
     public static final ADoublePrinterFactory INSTANCE = new ADoublePrinterFactory();
 
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(ADoubleSerializerDeserializer.getDouble(b, s + 1) + "d");
+            .print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
 
     @Override
     public IPrinter createPrinter() {

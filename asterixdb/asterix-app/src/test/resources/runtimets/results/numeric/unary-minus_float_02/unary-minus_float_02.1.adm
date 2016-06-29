@@ -1,1 +1,1 @@
-{ "float1": 80.2f, "float2": NaNf, "float3": -Infinityf, "float4": Infinityf }
+{ "float1": 80.2, "float2": NaN, "float3": -Infinity, "float4": Infinity }

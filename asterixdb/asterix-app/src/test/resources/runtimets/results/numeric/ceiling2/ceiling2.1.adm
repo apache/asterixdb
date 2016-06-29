@@ -1,1 +1,1 @@
-{ "f0": 21.0f, "f1": -0.0f, "f2": NaNf, "f3": Infinityf, "f4": -Infinityf, "f5": -0.0f, "f6": 0.0f }
+{ "f0": 21.0, "f1": -0.0, "f2": NaN, "f3": Infinity, "f4": -Infinity, "f5": -0.0, "f6": 0.0 }

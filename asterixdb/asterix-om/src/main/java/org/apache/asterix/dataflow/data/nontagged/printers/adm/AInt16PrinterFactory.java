@@ -30,13 +30,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class AInt16PrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
-    private static final String SUFFIX_STRING = "i16";
     public static final AInt16PrinterFactory INSTANCE = new AInt16PrinterFactory();
 
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
         try {
             WriteValueTools.writeInt(AInt16SerializerDeserializer.getShort(b, s + 1), ps);
-            WriteValueTools.writeUTF8StringNoQuotes(SUFFIX_STRING, ps);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

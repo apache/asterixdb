@@ -1,1 +1,1 @@
-{ "avgpay": 3000.0d, "topstar_details": [ { "id": "123", "salary": 2000, "bonus": 1000 } ], "deptId": "K55" }
+{ "avgpay": 3000.0, "topstar_details": [ { "id": "123", "salary": 2000, "bonus": 1000 } ], "deptId": "K55" }
