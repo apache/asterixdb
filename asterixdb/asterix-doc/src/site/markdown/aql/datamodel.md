@@ -27,6 +27,7 @@
     * [Float](#PrimitiveTypesFloat)
     * [Double](#PrimitiveTypesDouble)
     * [String](#PrimitiveTypesString)
+    * [Binary](#PrimitiveTypesBinary)
     * [Point](#PrimitiveTypesPoint)
     * [Line](#PrimitiveTypesLine)
     * [Rectangle](#PrimitiveTypesRectangle)
@@ -120,7 +121,7 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
 
 
 ### <a id="PrimitiveTypesString">String</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
-`string` represents a sequence of characters.
+`string` represents a sequence of characters. The total length of the sequence can be up to 2,147,483,648.
 
  * Example:
 
@@ -132,6 +133,26 @@ Integer types using 8, 16, 32, or 64 bits. The ranges of these types are:
  * The expected result is:
 
         { "v1": "This is a string.", "v2": "\"This is a quoted string\"" }
+
+
+### <a id="PrimitiveTypesBinary">Binary</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+`binary` represents a sequence of bytes. It can be constructed from a `hex` or a `base64` string sequence.
+The total length of the byte sequence can be up to 2,147,483,648.
+
+ * Example:
+
+        let $hex1 := hex("ABCDEF0123456789")
+        let $hex2 := hex("abcdef0123456789")
+        let $base64_1 := base64("0123456789qwertyui+/")
+        let $base64_2 := base64('QXN0ZXJpeA==')
+        return { "hex1" : $hex1, "hex2": $hex2, "base64_1" : $base64_1, "base64_2" : $base64_2}
+
+ * The default output format is in `hex` format. Thus, the expected result is:
+
+      { "hex1": hex("ABCDEF0123456789"),
+        "hex2": hex("ABCDEF0123456789"),
+        "base64_1": hex("D35DB7E39EBBF3DAB07ABB72BA2FBF"),
+        "base64_2": hex("41737465726978") }
 
 
 ### <a id="PrimitiveTypesPoint">Point</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
@@ -344,4 +365,3 @@ An example would be
 
 
         {{"hello", 9328, "world", [1, 2, null]}}
-
