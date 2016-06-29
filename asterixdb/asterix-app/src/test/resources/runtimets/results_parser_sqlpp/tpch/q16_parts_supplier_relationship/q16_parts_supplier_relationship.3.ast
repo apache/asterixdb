@@ -103,7 +103,7 @@ FunctionDecl tmp([]) {
               LiteralExpr [STRING] [Brand#45]
             ]
             and
-            FunctionCall tpch.not@1[
+            FunctionCall null.not@1[
               FunctionCall tpch.like@2[
                 FieldAccessor [
                   Variable [ Name=$p ]
@@ -133,7 +133,7 @@ FunctionDecl tmp([]) {
           ]
         ]
         and
-        FunctionCall tpch.not@1[
+        FunctionCall null.not@1[
           FunctionCall tpch.like@2[
             FieldAccessor [
               Variable [ Name=$s ]

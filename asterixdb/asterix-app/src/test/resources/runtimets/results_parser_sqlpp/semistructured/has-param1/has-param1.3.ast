@@ -10,8 +10,8 @@ FROM [  FunctionCall Metadata.dataset@1[
   AS Variable [ Name=$o ]
 ]
 Where
-  FunctionCall test.not@1[
-    FunctionCall test.is-missing@1[
+  FunctionCall null.not@1[
+    FunctionCall null.is-missing@1[
       FieldAccessor [
         Variable [ Name=$o ]
         Field=param1

@@ -83,7 +83,7 @@ FROM [  (
                       ]
                     ]
                     and
-                    FunctionCall tpch.not@1[
+                    FunctionCall null.not@1[
                       FunctionCall tpch.like@2[
                         FieldAccessor [
                           Variable [ Name=$o ]

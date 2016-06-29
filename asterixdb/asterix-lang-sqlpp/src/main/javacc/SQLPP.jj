@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -776,7 +777,7 @@ boolean IfNotExists() throws ParseException:
 {
 }
 {
-  ( LOOKAHEAD(1) <IF> ("not exists"|"NOT EXISTS")
+  ( LOOKAHEAD(1) <IF> <NOT> <EXISTS>
     {
       return true;
     }
@@ -1666,7 +1667,7 @@ Expression RelExpr()throws ParseException:
   IExpressionAnnotation annotation = null;
 }
 {
-    operand = AddExpr()
+    operand = IsExpr()
     {
       if (operand instanceof VariableExpr) {
         String hint = getHint(token);
@@ -1696,7 +1697,7 @@ Expression RelExpr()throws ParseException:
         op.addOperator(token.image);
       }
 
-       operand = AddExpr()
+       operand = IsExpr()
       {
          broadcast = false;
          if (operand instanceof VariableExpr) {
@@ -1717,6 +1718,31 @@ Expression RelExpr()throws ParseException:
      }
 }
 
+Expression IsExpr() throws ParseException:
+{
+    Expression expr = null;
+    Expression operand = null;
+    boolean not = false;
+}
+{
+    operand = AddExpr()
+    ( <IS> (<NOT> { not = true; })? (<NULL> | <MISSING> | <UNKOWN>)
+      {
+        String functionName = "is-" + token.image.toLowerCase();
+        FunctionSignature signature = new FunctionSignature(null, functionName, 1);
+        expr = new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(operand)));
+        if(not) {
+           FunctionSignature notSignature = new FunctionSignature(null, "not", 1);
+           expr = new CallExpr(notSignature, new ArrayList<Expression>(Collections.singletonList(expr)));
+        }
+      }
+    )?
+    {
+        return expr = expr==null? operand : expr;
+    }
+}
+
+
 Expression AddExpr()throws ParseException:
 {
   OperatorExpr op = null;
@@ -1724,7 +1750,7 @@ Expression AddExpr()throws ParseException:
 }
 {
     operand = MultExpr()
-    ( 
+    (
        LOOKAHEAD(1)
       (<PLUS> | <MINUS>)
       {
@@ -1779,17 +1805,24 @@ Expression UnaryExpr() throws ParseException:
 {
     Expression uexpr = null;
     Expression expr = null;
+    FunctionSignature signature = null;
 }
-{   
-    ( (<PLUS> | <MINUS>)
+{
+    ( (<PLUS> | <MINUS> | <NOT>)
     {
-        uexpr = new UnaryExpr();
-        if("+".equals(token.image))
-            ((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
-        else if("-".equals(token.image))
-            ((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
-        else
-            throw new ParseException();
+        switch(token.image){
+            case "+":
+                uexpr = new UnaryExpr();
+                ((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
+                break;
+            case "-":
+                uexpr = new UnaryExpr();
+                ((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
+                break;
+            default:
+                signature = new FunctionSignature(null, "not", 1);
+                break;
+        }
     }
     )?
 
@@ -1798,8 +1831,9 @@ Expression UnaryExpr() throws ParseException:
         if(uexpr!=null){
             ((UnaryExpr)uexpr).setExpr(expr);
             return uexpr;
-        }
-        else{
+        } else if (signature!=null){
+            return new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(expr)));
+        } else{
             return expr;
         }
     }
@@ -2757,6 +2791,7 @@ TOKEN [IGNORE_CASE]:
   | <INSERT : "insert">
   | <INTERNAL : "internal">
   | <INTERSECT : "intersect">
+  | <IS : "is">
   | <JOIN : "join">
   | <KEYWORD : "keyword">
   | <KEY : "key">
@@ -2768,6 +2803,7 @@ TOKEN [IGNORE_CASE]:
   | <NEST : "nest">
   | <NODEGROUP : "nodegroup">
   | <NGRAM : "ngram">
+  | <NOT : "not">
   | <OFFSET : "offset">
   | <ON : "on">
   | <OPEN : "open">
@@ -2794,15 +2830,16 @@ TOKEN [IGNORE_CASE]:
   | <TYPE : "type">
   | <TO : "to">
   | <UNION : "union">
+  | <UNKOWN : "unknown">
   | <UNNEST : "unnest">
+  | <UPDATE : "update">
+  | <USE : "use">
+  | <USING : "using">
   | <VALUE : "value">
   | <WHEN : "when">
   | <WHERE : "where">
   | <WITH : "with">
   | <WRITE : "write">
-  | <UPDATE : "update">
-  | <USE : "use">
-  | <USING : "using">
 }
 
 <DEFAULT,IN_DBL_BRACE>

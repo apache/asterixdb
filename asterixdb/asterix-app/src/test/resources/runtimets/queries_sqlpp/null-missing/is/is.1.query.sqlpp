@@ -16,17 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description      :   sql-coll_sum() aggregate function must return the numeric coll_sql-sum, when non null values are given as input to sql-coll_sum().
- *                  :   Get the coll_sql-sum for those tuples which are non null for salary fields.
- * Expected result  :   Success
- * Date             :   July 20th 2012
- */
 
-use test;
-
-select element test.`coll_sql-sum`((
-    select element l.sal
-    from  tdst as l
-    where l.sal IS NOT NULL
-));
+{
+  "1": null is null,
+  "2": missing is null,
+  "3": 1 is null,
+  "4": null is not null,
+  "5": missing is not null,
+  "6": 1 is not null,
+  "7": null is missing,
+  "8": missing is missing,
+  "9": 1 is missing,
+  "10": null is not missing,
+  "11": missing is not missing,
+  "12": 1 is not missing,
+  "13": null is unknown,
+  "14": missing is unknown,
+  "15": 1 is unknown,
+  "16": null is not unknown,
+  "17": missing is not unknown,
+  "18": 1 is not unknown
+};

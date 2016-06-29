@@ -3703,6 +3703,11 @@
         <output-dir compare="Text">upper</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="is">
+        <output-dir compare="Text">is</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="numeric">
     <test-case FilePath="numeric">

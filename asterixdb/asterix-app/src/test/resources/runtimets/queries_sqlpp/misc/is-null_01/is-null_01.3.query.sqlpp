@@ -22,4 +22,4 @@ use test;
 
 set `import-private-functions` `true`;
 
-select element [test.`is-null`(null),test.`is-null`(10)];
+select element [null IS NULL, 10 is null];

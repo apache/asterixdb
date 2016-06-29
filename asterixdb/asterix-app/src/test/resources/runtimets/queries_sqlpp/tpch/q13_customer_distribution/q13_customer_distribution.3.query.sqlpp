@@ -32,7 +32,7 @@ from  (
         select element {'c_custkey':c.c_custkey,'o_orderkey_count':coll_count((
                 select element o.o_orderkey
                 from  Orders as o
-                where ((c.c_custkey = o.o_custkey) and tpch.not(tpch.like(o.o_comment,'%special%requests%')))
+                where c.c_custkey = o.o_custkey and NOT like(o.o_comment,'%special%requests%')
             ))}
         from  Customer as c
     ) as co

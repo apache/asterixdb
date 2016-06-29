@@ -1,5 +1,4 @@
 DataverseUse test
-Set import-private-functions=true
 Query:
 Let Variable [ Name=$x ]
   :=
@@ -61,7 +60,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall test.not@1[
+        FunctionCall null.not@1[
           Variable [ Name=$x ]
         ]
       ]
@@ -75,7 +74,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall test.not@1[
+        FunctionCall null.not@1[
           Variable [ Name=$x ]
         ]
       ]
@@ -89,7 +88,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall test.not@1[
+        FunctionCall null.not@1[
           Variable [ Name=$x ]
         ]
       ]
@@ -103,7 +102,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall test.not@1[
+        FunctionCall null.not@1[
           Variable [ Name=$x ]
         ]
       ]
