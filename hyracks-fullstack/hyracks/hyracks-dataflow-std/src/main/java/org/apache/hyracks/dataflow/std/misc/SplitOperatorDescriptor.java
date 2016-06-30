@@ -140,9 +140,9 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void flush() throws HyracksDataException {
-                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
-                        writers[i].flush();
-                    }
+//                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+//                        writers[i].flush();
+//                    }
                 }
 
                 @Override

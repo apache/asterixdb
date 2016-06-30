@@ -67,6 +67,22 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         this.rangeMap = rangeMap;
     }
 
+    public List<LogicalVariable> getKeysLeftBranch() {
+        return keysLeftBranch;
+    }
+
+    public List<LogicalVariable> getKeysRightBranch() {
+        return keysRightBranch;
+    }
+
+    public IIntervalMergeJoinCheckerFactory getIntervalMergeJoinCheckerFactory() {
+        return mjcf;
+    }
+
+    public IRangeMap getRangeMap() {
+        return rangeMap;
+    }
+
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.EXTENSION_OPERATOR;
@@ -154,4 +170,5 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
     abstract IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight,
             IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf,
             IRangeMap rangeMap);
+
 }

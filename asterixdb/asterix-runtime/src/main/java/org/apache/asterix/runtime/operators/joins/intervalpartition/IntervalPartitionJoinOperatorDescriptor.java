@@ -19,9 +19,6 @@
 
 package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;

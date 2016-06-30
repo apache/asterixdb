@@ -30,19 +30,19 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
-public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
+public class IntervalJoinPOperator extends AbstractIntervalJoinPOperator {
 
     private final int memSizeInFrames;
 
-    private static final Logger LOGGER = Logger.getLogger(IntervalIndexJoinPOperator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(IntervalJoinPOperator.class.getName());
 
-    public IntervalIndexJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
+    public IntervalJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
             int memSizeInFrames, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
         super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, rangeMap);
         this.memSizeInFrames = memSizeInFrames;
 
-        LOGGER.fine("IntervalIndexJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
+        LOGGER.fine("IntervalJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                 + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
                 + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames
                 + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap + ".");
@@ -50,7 +50,7 @@ public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
 
     @Override
     public String getIntervalJoin() {
-        return "INTERVAL_INDEX_JOIN";
+        return "INTERVAL_JOIN";
     }
 
     @Override
@@ -59,4 +59,5 @@ public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
         return new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames, keysLeft, keysRight, recordDescriptor,
                 mjcf);
     }
+
 }

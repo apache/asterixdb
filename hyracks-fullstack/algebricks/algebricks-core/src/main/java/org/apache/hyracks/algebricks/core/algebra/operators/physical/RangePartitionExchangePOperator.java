@@ -79,6 +79,14 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
         return partitioningFields;
     }
 
+    public RangePartitioningType getRangeType() {
+        return rangeType;
+    }
+
+    public IRangeMap getRangeMap() {
+        return rangeMap;
+    }
+
     public INodeDomain getDomain() {
         return domain;
     }

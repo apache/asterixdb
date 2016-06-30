@@ -82,6 +82,14 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
         return partitioningFields;
     }
 
+    public RangePartitioningType getRangeType() {
+        return rangeType;
+    }
+
+    public IRangeMap getRangeMap() {
+        return rangeMap;
+    }
+
     public INodeDomain getDomain() {
         return domain;
     }

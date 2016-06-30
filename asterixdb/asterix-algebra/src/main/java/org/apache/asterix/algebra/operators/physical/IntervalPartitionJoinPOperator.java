@@ -62,6 +62,26 @@ public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperato
                 + ".");
     }
 
+    public int getProbeTupleCount() {
+        return probeTupleCount;
+    }
+
+    public int getProbeMaxDuration() {
+        return probeMaxDuration;
+    }
+
+    public int getBuildTupleCount() {
+        return buildTupleCount;
+    }
+
+    public int getBuildMaxDuration() {
+        return buildMaxDuration;
+    }
+
+    public int getAvgTuplesInFrame() {
+        return avgTuplesInFrame;
+    }
+
     @Override
     public String getIntervalJoin() {
         return "INTERVAL_PARTITION_JOIN";

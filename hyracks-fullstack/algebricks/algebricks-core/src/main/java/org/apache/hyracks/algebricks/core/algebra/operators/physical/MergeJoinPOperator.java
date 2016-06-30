@@ -75,6 +75,22 @@ public class MergeJoinPOperator extends AbstractJoinPOperator {
                 + mjcf + ", IRangeMap rangeMap=" + rangeMap + ".");
     }
 
+    public List<LogicalVariable> getKeysLeftBranch() {
+        return keysLeftBranch;
+    }
+
+    public List<LogicalVariable> getKeysRightBranch() {
+        return keysRightBranch;
+    }
+
+    public IMergeJoinCheckerFactory getMergeJoinCheckerFactory() {
+        return mjcf;
+    }
+
+    public IRangeMap getRangeMap() {
+        return rangeMap;
+    }
+
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.MERGE_JOIN;

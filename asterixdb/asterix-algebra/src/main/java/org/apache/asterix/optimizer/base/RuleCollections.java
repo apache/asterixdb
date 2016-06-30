@@ -39,6 +39,7 @@ import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
 import org.apache.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import org.apache.asterix.optimizer.rules.InlineUnnestFunctionRule;
+import org.apache.asterix.optimizer.rules.IntervalSplitPartitioningRule;
 import org.apache.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
 import org.apache.asterix.optimizer.rules.IntroduceDynamicTypeCastForExternalFunctionRule;
 import org.apache.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
@@ -332,6 +333,7 @@ public final class RuleCollections {
         prepareForJobGenRewrites
                 .add(new IsolateHyracksOperatorsRule(HeuristicOptimizer.hyraxOperatorsBelowWhichJobGenIsDisabled));
         prepareForJobGenRewrites.add(new ExtractCommonOperatorsRule());
+        prepareForJobGenRewrites.add(new IntervalSplitPartitioningRule());
         // Re-infer all types, so that, e.g., the effect of not-is-null is
         // propagated.
         prepareForJobGenRewrites.add(new ReinferAllTypesRule());
