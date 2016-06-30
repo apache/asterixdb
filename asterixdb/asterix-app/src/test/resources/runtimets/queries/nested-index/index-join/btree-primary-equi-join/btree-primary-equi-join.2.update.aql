@@ -35,16 +35,16 @@ using localfs
 
 insert into dataset Orders
 (
-	for $c in dataset('Orderstmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('Orderstmp')
+    return {
+        "nested" : $c
+    }
 );
 
 insert into dataset Customers
 (
-	for $c in dataset('Customerstmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('Customerstmp')
+    return {
+        "nested" : $c
+    }
 );

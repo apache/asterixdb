@@ -18,7 +18,7 @@
  */
 use dataverse test;
 
-load dataset LineID 
+load dataset LineID
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
@@ -27,9 +27,9 @@ let $x:=1
 let $y:=2
 let $z:=3
 return {
-	"l_orderkey": $x,
-	"l_linenumber": $y,
-	"l_suppkey": $z
+    "l_orderkey": $x,
+    "l_linenumber": $y,
+    "l_suppkey": $z
 }
 );
 
@@ -38,9 +38,9 @@ let $x:=2
 let $y:=3
 let $z:=4
 return {
-	"l_orderkey": $x,
-	"l_linenumber": $y,
-	"l_suppkey": $z
+    "l_orderkey": $x,
+    "l_linenumber": $y,
+    "l_suppkey": $z
 }
 );
 

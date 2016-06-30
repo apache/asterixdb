@@ -28,7 +28,7 @@ create dataverse twitter;
 use dataverse twitter;
 
 create type TwitterUserType as open {
-	userid: uuid,
+    userid: uuid,
     screen-name: string,
     lang: string,
     friends_count: int64,

@@ -238,6 +238,8 @@
               <module name="FileTabCharacter"/>
             </module>
           </checkstyleRules>
+          <includes>**/*.java,**/*.jj</includes>
+          <resourceIncludes>**/*.properties,**/*.xml,**/*.xsd,**/*.aql,**/*.sqlpp,**/*.sh</resourceIncludes>
           <sourceDirectories>${project.build.sourceDirectory},${project.build.testSourceDirectory}</sourceDirectories>
         </configuration>
       </plugin>

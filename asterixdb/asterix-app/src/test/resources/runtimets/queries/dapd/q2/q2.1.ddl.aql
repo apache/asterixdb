@@ -31,7 +31,7 @@ create type AddressType as closed {
 create type EventType as closed {
   event_id: int64,
   name: string,
-  location: AddressType	?,
+  location: AddressType    ?,
   organizers: {{
    {
      name: string

@@ -25,9 +25,9 @@ using localfs
 
 insert into dataset MyData
 (
-	for $c in dataset('MyDatatmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('MyDatatmp')
+    return {
+        "nested" : $c
+    }
 );
 

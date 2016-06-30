@@ -30,13 +30,13 @@ using localfs
 (("path"="asterix_nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
 
 insert into dataset test.CustomersOpen (
-	for $x in dataset test.Customers
-		return {
-			"cid": $x.cid,
-			"name": $x.name,
-			"age": $x.age,
-			"address": $x.address,
-			"interests": $x.interests,
-			"children": $x.children
-		}
+    for $x in dataset test.Customers
+        return {
+            "cid": $x.cid,
+            "name": $x.name,
+            "age": $x.age,
+            "address": $x.address,
+            "interests": $x.interests,
+            "children": $x.children
+        }
 );

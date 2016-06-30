@@ -31,8 +31,8 @@ using localfs
 
 insert into dataset TweetMessages
 (
-	for $c in dataset('TweetMessagesTmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('TweetMessagesTmp')
+    return {
+        "nested" : $c
+    }
 );

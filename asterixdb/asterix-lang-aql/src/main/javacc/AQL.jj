@@ -684,7 +684,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
   FunctionSignature appliedFunction = null;
   CreateFeedStatement cfs = null;
   Pair<Identifier,Identifier> sourceNameComponents = null;
-  
+
 }
 {
   (
@@ -696,7 +696,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
       }
      |
      ("primary")? "feed" nameComponents = QualifiedName() ifNotExists = IfNotExists()
-      "using" adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?  
+      "using" adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?
        {
         cfs = new CreatePrimaryFeedStatement(nameComponents,
                                     adapterName, properties, appliedFunction, ifNotExists);
@@ -709,8 +709,8 @@ CreateFeedStatement FeedSpecification() throws ParseException:
 
 CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
 {
-  String policyName = null;  
-  String basePolicyName = null; 
+  String policyName = null;
+  String basePolicyName = null;
   String sourcePolicyFile = null;
   String definition = null;
   boolean ifNotExists = false;
@@ -720,18 +720,18 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
 {
   (
     "ingestion" "policy"  policyName = Identifier() ifNotExists = IfNotExists()
-      <FROM> 
-      ("policy" basePolicyName = Identifier() properties = Configuration() ("definition" definition = StringLiteral())?  
+      <FROM>
+      ("policy" basePolicyName = Identifier() properties = Configuration() ("definition" definition = StringLiteral())?
       {
         cfps = new CreateFeedPolicyStatement(policyName,
                                    basePolicyName, properties, definition, ifNotExists);
       }
-     | "path" sourcePolicyFile = Identifier() ("definition" definition = StringLiteral())?  
+     | "path" sourcePolicyFile = Identifier() ("definition" definition = StringLiteral())?
        {
         cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
        }
-     ) 
-       
+     )
+
   )
     {
       return cfps;
@@ -1322,11 +1322,11 @@ FunctionName FunctionName() throws ParseException:
   boolean secondAfterDot = false;
 }
 {
-  first = Identifier() 
+  first = Identifier()
   {
     FunctionName result = new FunctionName();
     result.hint = getHint(token);
-  } 
+  }
   ( <DOT> second = Identifier()
     {
       secondAfterDot = true;
@@ -2468,8 +2468,8 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     createNewScope();
   }
 
-   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
-        | (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
+   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);    })
+        | (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);    }))
     var = Variable() <IN> inExpr = Expression()
     {
       pair = new QuantifiedPair(var, inExpr);

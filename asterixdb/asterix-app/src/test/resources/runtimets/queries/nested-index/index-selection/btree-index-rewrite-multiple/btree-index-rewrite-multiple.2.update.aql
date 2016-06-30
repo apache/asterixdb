@@ -32,9 +32,9 @@ using localfs
 
 insert into dataset Orders
 (
-	for $c in dataset('Orderstmp')
-	return {
-		"nested" : {
+    for $c in dataset('Orderstmp')
+    return {
+        "nested" : {
   "o_orderkey": $c.o_orderkey,
   "o_custkey": $c.o_custkey,
   "o_orderstatus": $c.o_orderstatus,
@@ -45,5 +45,5 @@ insert into dataset Orders
   "o_shippriority": $c.o_shippriority,
   "o_comment": $c.o_comment
 }
-	}	
+    }
 );

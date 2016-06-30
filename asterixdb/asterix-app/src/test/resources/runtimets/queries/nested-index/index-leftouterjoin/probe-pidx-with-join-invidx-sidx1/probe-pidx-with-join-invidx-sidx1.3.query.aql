@@ -32,7 +32,7 @@ return {
     "tweet": {"id": $t1.nested.tweetid, "topics" : $t1.nested.referred-topics} ,
     "similar-tweets": for $t2 in dataset('TweetMessages')
                       let $sim := similarity-jaccard-check($t1.nested.referred-topics, $t2.nested.referred-topics, 0.5f)
-		      where $sim[0] and
+              where $sim[0] and
                       $t2.nested.tweetid != $t1.nested.tweetid
                       order by $t2.nested.tweetid
                       return {"id": $t2.nested.tweetid, "topics" : $t2.nested.referred-topics}

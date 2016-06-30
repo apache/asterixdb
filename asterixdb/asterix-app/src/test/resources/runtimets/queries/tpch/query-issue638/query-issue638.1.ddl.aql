@@ -88,10 +88,10 @@ create type NationType as closed {
 }
 
 create type RegionType as closed {
-	r_regionkey: int32,
-	r_name: string,
-	r_comment: string
-} 
+    r_regionkey: int32,
+    r_name: string,
+    r_comment: string
+}
 
 create type PartType as closed {
   p_partkey: int32,
@@ -106,11 +106,11 @@ create type PartType as closed {
 }
 
 create type PartSuppType as closed {
-  ps_partkey: int32, 
+  ps_partkey: int32,
   ps_suppkey: int32,
   ps_availqty: int32,
   ps_supplycost: double,
-  ps_comment: string 
+  ps_comment: string
 }
 
 create external dataset LineItem(LineItemType)
@@ -125,11 +125,11 @@ create external dataset Supplier(SupplierType)
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external dataset Region(RegionType) 
+create external dataset Region(RegionType)
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external dataset Nation(NationType) 
+create external dataset Nation(NationType)
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
@@ -139,9 +139,9 @@ using localfs
 
 create external dataset Partsupp(PartSuppType)
 using localfs
-(("path"="asterix_nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|")); 
+(("path"="asterix_nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
 
-create external dataset Customer(CustomerType) 
+create external dataset Customer(CustomerType)
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
 

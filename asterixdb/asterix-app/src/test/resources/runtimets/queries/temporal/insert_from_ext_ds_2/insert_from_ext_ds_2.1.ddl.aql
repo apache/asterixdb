@@ -21,7 +21,7 @@
  * Description: verify external data loading on temporal types
  * Expected result: success
  */
- 
+
 drop dataverse timeTest if exists;
 create dataverse timeTest;
 use dataverse timeTest;
@@ -33,9 +33,9 @@ create type timesType as open {
     duration: duration,
     year-month-duration: year-month-duration,
     day-time-duration: day-time-duration,
-	date-interval: interval,
-	time-interval: interval,
-	datetime-interval: interval
+    date-interval: interval,
+    time-interval: interval,
+    datetime-interval: interval
 }
 
 create dataset timeData(timesType)

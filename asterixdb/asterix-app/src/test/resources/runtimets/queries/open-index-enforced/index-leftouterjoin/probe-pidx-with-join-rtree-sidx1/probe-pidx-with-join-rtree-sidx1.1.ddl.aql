@@ -28,22 +28,22 @@ create dataverse test;
 use dataverse test;
 
 create type TwitterUserType as closed {
-	screen-name: string,
-	lang: string,
-	friends-count: int64,
-	statuses-count: int64,
-	name: string,
-	followers-count: int64
+    screen-name: string,
+    lang: string,
+    friends-count: int64,
+    statuses-count: int64,
+    name: string,
+    followers-count: int64
 }
 
 create type TweetMessageType as open {
-	tweetid: int64,
+    tweetid: int64,
         user: TwitterUserType,
-	send-time: datetime,
+    send-time: datetime,
         referred-topics: {{ string }},
-	message-text: string,
-	countA: int64,
-	countB: int64
+    message-text: string,
+    countA: int64,
+    countB: int64
 }
 
 create dataset TweetMessages(TweetMessageType)

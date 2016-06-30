@@ -28,7 +28,7 @@ create dataverse test;
 use dataverse test;
 
 create type Name as open {
-	id: int32
+    id: int32
 }
 
 create dataset Names(Name) primary key id;
@@ -36,7 +36,7 @@ create index Name_idx on Names(fname: string,lname: string) enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_secondary-composite-key-prefix-prefix-join_02.adm";
 
-for $emp1 in dataset('Names') 
-for $emp2 in dataset('Names') 
+for $emp1 in dataset('Names')
+for $emp2 in dataset('Names')
 where $emp1.fname /*+ indexnl*/> $emp2.fname and $emp1.lname /*+ indexnl*/< $emp2.lname
 return {"emp1": $emp1, "emp2": $emp2 }

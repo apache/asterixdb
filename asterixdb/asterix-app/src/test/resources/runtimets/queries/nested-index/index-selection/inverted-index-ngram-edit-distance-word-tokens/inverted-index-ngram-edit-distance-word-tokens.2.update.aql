@@ -23,8 +23,8 @@ using localfs
 (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 insert into dataset test.DBLP (
-	for $x in dataset test.DBLPtmp
-	return {
-		"nested": $x
-	}
+    for $x in dataset test.DBLPtmp
+    return {
+        "nested": $x
+    }
 );

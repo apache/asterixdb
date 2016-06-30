@@ -29,10 +29,10 @@ using localfs
 
 insert into dataset UserOpen(
 for $l in dataset('UserCopyClose')
-	where $l.id>10
-	return {
-		"id": $l.id,
-		"name": $l.name,
-		"md5": $l.md5
-	}
+    where $l.id>10
+    return {
+        "id": $l.id,
+        "name": $l.name,
+        "md5": $l.md5
+    }
 );

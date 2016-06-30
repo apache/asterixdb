@@ -29,6 +29,6 @@ load dataset DBLP using localfs
 (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 insert into dataset test.DBLPOpen (
-	for $x in dataset test.DBLP
-		return $x
+    for $x in dataset test.DBLP
+        return $x
 );

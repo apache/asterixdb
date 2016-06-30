@@ -18,7 +18,7 @@
  */
 /*
  * Description  : Test that left-outer-join may use an available inverted index in index subtree.
- * Issue        : 741              
+ * Issue        : 741
  * Expected Res : Success
  * Date         : 16th May 2014
  */
@@ -37,7 +37,7 @@ followers_count: int32
 }
 
 create type TweetMessageType as {
-tweetid: int64,     
+tweetid: int64,
 user: TwitterUserType,
 sender_location: point?,
 send_time: datetime,
@@ -53,13 +53,13 @@ write output to asterix_nc1:"rttest/inverted-index-join_issue741.adm";
 
 for $t in dataset('TweetMessages')
 where $t.send_time >= datetime('2011-06-18T14:10:17')
-and 
+and
 $t.send_time < datetime('2011-06-18T15:10:17')
-return {                     
-    "tweet": $t.tweetid,               
+return {
+    "tweet": $t.tweetid,
     "similar-tweets": for $t2 in dataset('TweetMessages')
                       let $sim := similarity-jaccard-check($t.referred_topics, $t2.referred_topics, 0.6f)
-		      where $sim[0] and 
+              where $sim[0] and
                       $t2.tweetid != $t.tweetid
                       return $t2.tweetid
 }

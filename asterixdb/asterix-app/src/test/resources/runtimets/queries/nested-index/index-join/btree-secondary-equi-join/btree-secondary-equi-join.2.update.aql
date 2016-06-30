@@ -36,16 +36,16 @@ using localfs
 
 insert into dataset DBLP
 (
-	for $c in dataset('DBLPtmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('DBLPtmp')
+    return {
+        "nested" : $c
+    }
 );
 
 insert into dataset CSX
 (
-	for $c in dataset('CSXtmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('CSXtmp')
+    return {
+        "nested" : $c
+    }
 );

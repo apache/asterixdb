@@ -16,8 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-for $user in 
-	let $data := dataset('User')
-	return $data
+for $user in
+    let $data := dataset('User')
+    return $data
 where some $i in $user.interests satisfies $i = "movies"
 return { "name": $user.name }

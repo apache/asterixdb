@@ -27,28 +27,28 @@ create dataverse test;
 use dataverse test;
 
 create type TwitterUserType as {
-	screen-name: string,
-	lang: string,
-	friends_count: int32,
-	statuses_count: int32,
-	name: string,
-	followers_count: int32
+    screen-name: string,
+    lang: string,
+    friends_count: int32,
+    statuses_count: int32,
+    name: string,
+    followers_count: int32
 }
 
 create type TweetMessageType as {
-	tweetid: int64,
-	user: string,
-	sender-location: point,
-	send-time: datetime,
-	forward-from: int64,
-	retweet-from: int64,
-	referred-topics: {{ string }},
-	message-text: string
+    tweetid: int64,
+    user: string,
+    sender-location: point,
+    send-time: datetime,
+    forward-from: int64,
+    retweet-from: int64,
+    referred-topics: {{ string }},
+    message-text: string
 }
 
 create type ResultType as {
-	vertexid: int64,
-	rank: double
+    vertexid: int64,
+    rank: double
 }
 
 create dataset TwitterUsers(TwitterUserType) primary key screen-name;

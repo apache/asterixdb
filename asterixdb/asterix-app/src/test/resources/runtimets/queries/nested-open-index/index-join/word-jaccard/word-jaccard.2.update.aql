@@ -34,29 +34,29 @@ using localfs
 
 
 insert into dataset DBLP(
-	for $x in dataset DBLPtmp
-		where ($x.id<50)
-		return {
-			"nested" : $x
-		}
+    for $x in dataset DBLPtmp
+        where ($x.id<50)
+        return {
+            "nested" : $x
+        }
 );
 
 insert into dataset DBLP(
-	for $x in dataset DBLPtmp
-		where ($x.id>=50)
-		return {
-					"nested" : {
-						"id": $x.id,
-						"dblpid": $x.dblpid,
-						"authors": $x.title,
-						"misc": $x.misc
-					}
-				}
+    for $x in dataset DBLPtmp
+        where ($x.id>=50)
+        return {
+                    "nested" : {
+                        "id": $x.id,
+                        "dblpid": $x.dblpid,
+                        "authors": $x.title,
+                        "misc": $x.misc
+                    }
+                }
 );
 
 insert into dataset CSX(
-	for $x in dataset CSXtmp
-	return {
-		"nested": $x
-	}
+    for $x in dataset CSXtmp
+    return {
+        "nested": $x
+    }
 );

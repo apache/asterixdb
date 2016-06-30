@@ -18,7 +18,7 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue51
- 				: https://code.google.com/p/asterixdb/issues/detail?id=51
+                 : https://code.google.com/p/asterixdb/issues/detail?id=51
  * Expected Res : SUCCESS
  * Date         : 14th May 2013
  */
@@ -28,10 +28,10 @@ use dataverse test;
 for $c in dataset Customers
 order by $c.name
 return {
-		"cust_name": $c.name,
-		"order_ids":
-			for $o in dataset Orders
-				where $c.cid = $o.cid 
-			order by $o.oid
-			return $o.oid 
-} 
+        "cust_name": $c.name,
+        "order_ids":
+            for $o in dataset Orders
+                where $c.cid = $o.cid
+            order by $o.oid
+            return $o.oid
+}

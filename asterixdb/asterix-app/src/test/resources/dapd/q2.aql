@@ -19,10 +19,10 @@
 use dataverse events;
 
 declare type EventType as closed {
-  event_id: int64, 
+  event_id: int64,
   name: string,
-  location: AddressType	?,
-  organizers: {{ 
+  location: AddressType ?,
+  organizers: {{
    {
      name: string
    }
@@ -49,15 +49,15 @@ declare type AddressType as closed {
 declare nodegroup group1 on asterix_nc1;
 
 /*
-declare dataset Event(EventType) 
+declare dataset Event(EventType)
   splits asterix_nc1:"/home/nicnic/Work/Asterix/adg/event.adm";
 */
 
 drop dataset Event;
-declare dataset Event(EventType) 
+declare dataset Event(EventType)
   primary key event_id on group1;
 
-load dataset Event 
+load dataset Event
 using localfs
 (("path"="asterix_nc1:///home/nicnic/Work/Asterix/adg/event.adm"),("format"="adm"));
 

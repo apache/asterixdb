@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -40,6 +41,10 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class APolygonConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
+
+    private static final Pattern WS = Pattern.compile("\\s+");
+    private static final Pattern COMMA = Pattern.compile(",");
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -76,15 +81,16 @@ public class APolygonConstructorDescriptor extends AbstractScalarFunctionDynamic
                             if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 String s = utf8Ptr.toString();
-                                String[] points = s.split(" ");
+                                String[] points = WS.split(s.trim());
                                 if (points.length <= 2) {
                                     throw new AlgebricksException(errorMessage);
                                 }
                                 out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 out.writeShort(points.length);
                                 for (int i = 0; i < points.length; i++) {
-                                    APointSerializerDeserializer.serialize(Double.parseDouble(points[i].split(",")[0]),
-                                            Double.parseDouble(points[i].split(",")[1]), out);
+                                    final String[] point = COMMA.split(points[i]);
+                                    APointSerializerDeserializer.serialize(Double.parseDouble(point[0]),
+                                            Double.parseDouble(point[1]), out);
                                 }
                             } else {
                                 throw new AlgebricksException(errorMessage);

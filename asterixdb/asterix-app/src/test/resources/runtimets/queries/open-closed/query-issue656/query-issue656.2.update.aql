@@ -22,11 +22,11 @@
  * Date            : 6 December 2013
  * Notes           : This test was written to verify the fix for issue656.
  */
-use dataverse test; 
- 
+use dataverse test;
+
 insert into dataset barset(
-	{
-	}
+    {
+    }
 );
 
- 
+

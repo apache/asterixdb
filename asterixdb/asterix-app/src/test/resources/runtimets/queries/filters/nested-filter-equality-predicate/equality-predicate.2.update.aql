@@ -23,8 +23,8 @@ load dataset FacebookMessagesTmp using localfs
 
 insert into dataset FacebookMessages
 (
-	for $c in dataset('FacebookMessagesTmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('FacebookMessagesTmp')
+    return {
+        "nested" : $c
+    }
 );

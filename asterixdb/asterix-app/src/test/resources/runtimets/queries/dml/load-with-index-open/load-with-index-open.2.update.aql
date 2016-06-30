@@ -18,11 +18,11 @@
  */
 use dataverse test;
 
-load dataset LineItem 
+load dataset LineItem
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 insert into dataset test.LineItemOpen (
-	for $x in dataset test.LineItem
-		return $x
+    for $x in dataset test.LineItem
+        return $x
 );

@@ -696,7 +696,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
   FunctionSignature appliedFunction = null;
   CreateFeedStatement cfs = null;
   Pair<Identifier,Identifier> sourceNameComponents = null;
-  
+
 }
 {
   (
@@ -708,7 +708,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
       }
      |
      (<PRIMARY>)? <FEED> nameComponents = QualifiedName() ifNotExists = IfNotExists()
-      <USING> adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?  
+      <USING> adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?
        {
         cfs = new CreatePrimaryFeedStatement(nameComponents,
                                     adapterName, properties, appliedFunction, ifNotExists);
@@ -721,8 +721,8 @@ CreateFeedStatement FeedSpecification() throws ParseException:
 
 CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
 {
-  String policyName = null;  
-  String basePolicyName = null; 
+  String policyName = null;
+  String basePolicyName = null;
   String sourcePolicyFile = null;
   String definition = null;
   boolean ifNotExists = false;
@@ -1323,11 +1323,11 @@ FunctionName FunctionName() throws ParseException:
   boolean secondAfterDot = false;
 }
 {
-  first = Identifier() 
+  first = Identifier()
   {
     FunctionName result = new FunctionName();
     result.hint = getHint(token);
-  } 
+  }
   ( <DOT> second = Identifier()
     {
       secondAfterDot = true;
@@ -2304,10 +2304,10 @@ SelectClause SelectClause() throws ParseException: {
   boolean distinct = false;
 }
 {
-  <SELECT> (<ALL>|<DISTINCT> {distinct = true; } )? 
+  <SELECT> (<ALL>|<DISTINCT> {distinct = true; } )?
   (
     selectRegular = SelectRegular()
-    | 
+    |
     selectElement = SelectElement()
   )
   {
@@ -2316,14 +2316,14 @@ SelectClause SelectClause() throws ParseException: {
 }
 
 SelectRegular SelectRegular() throws ParseException: {
-  List<Projection> projections = new ArrayList<Projection>(); 
+  List<Projection> projections = new ArrayList<Projection>();
 }
 {
    {
       Projection projection = null;
    }
-   projection = Projection() { projections.add(projection); } 
-   ( LOOKAHEAD(2) <COMMA> 
+   projection = Projection() { projections.add(projection); }
+   ( LOOKAHEAD(2) <COMMA>
       projection = Projection() {projections.add(projection);}
    )*
   {
@@ -2370,7 +2370,7 @@ FromClause FromClause() throws ParseException :
   {
     FromTerm fromTerm = null;
   }
-    <FROM> fromTerm = FromTerm() { fromTerms.add(fromTerm); } 
+    <FROM> fromTerm = FromTerm() { fromTerms.add(fromTerm); }
     (LOOKAHEAD(2) <COMMA> fromTerm = FromTerm() { fromTerms.add(fromTerm); } )*
   {
     return new FromClause(fromTerms);
@@ -2380,7 +2380,7 @@ FromClause FromClause() throws ParseException :
 FromTerm FromTerm() throws ParseException :
 {
   Expression leftExpr = null;
-  VariableExpr leftVar = null; 
+  VariableExpr leftVar = null;
   VariableExpr posVar = null;
   List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
 }
@@ -2658,8 +2658,8 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     createNewScope();
   }
 
-   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
-        | (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
+   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);    })
+        | (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);    }))
     var = Variable() <IN> inExpr = Expression()
     {
       pair = new QuantifiedPair(var, inExpr);

@@ -32,10 +32,10 @@ using localfs
 
 insert into dataset Orders
 (
-	for $c in dataset('Orderstmp')
-	where $c.o_orderkey <= 4000
-	return {
-		"nested" : {
+    for $c in dataset('Orderstmp')
+    where $c.o_orderkey <= 4000
+    return {
+        "nested" : {
   "o_orderkey": $c.o_orderkey,
   "o_custkey": $c.o_custkey,
   "o_orderstatus": $c.o_orderstatus,
@@ -46,15 +46,15 @@ insert into dataset Orders
   "o_shippriority": $c.o_shippriority,
   "o_comment": $c.o_comment
 }
-	}	
+    }
 );
 
 insert into dataset Orders
 (
-	for $c in dataset('Orderstmp')
-	where $c.o_orderkey > 4000
-	return {
-		"nested" : {
+    for $c in dataset('Orderstmp')
+    where $c.o_orderkey > 4000
+    return {
+        "nested" : {
   "o_orderkey": $c.o_orderkey,
   "o_orderstatus": $c.o_orderstatus,
   "o_totalprice": $c.o_totalprice,
@@ -64,5 +64,5 @@ insert into dataset Orders
   "o_shippriority": $c.o_shippriority,
   "o_comment": $c.o_comment
 }
-	}	
+    }
 );

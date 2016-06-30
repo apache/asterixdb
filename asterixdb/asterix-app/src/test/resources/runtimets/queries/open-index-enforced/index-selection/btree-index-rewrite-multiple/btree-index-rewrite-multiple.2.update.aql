@@ -31,22 +31,22 @@ using localfs
 (("path"="asterix_nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 insert into dataset OrdersOpen (
-	for $x in dataset Orders
-	where $x.o_orderkey <= 4000
-	return $x
+    for $x in dataset Orders
+    where $x.o_orderkey <= 4000
+    return $x
 );
 
 insert into dataset OrdersOpen (
-	for $x in dataset Orders
-	where $x.o_orderkey > 4000
-	return {
-	  "o_orderkey": $x.o_orderkey,
-	  "o_orderstatus": $x.o_orderstatus,
-	  "o_totalprice": $x.o_totalprice,
-	  "o_orderdate": $x.o_orderdate,
-	  "o_orderpriority": $x.o_orderpriority,
-	  "o_clerk": $x.o_clerk,
-	  "o_shippriority": $x.o_shippriority,
-	  "o_comment": $x.o_comment
-	}
+    for $x in dataset Orders
+    where $x.o_orderkey > 4000
+    return {
+      "o_orderkey": $x.o_orderkey,
+      "o_orderstatus": $x.o_orderstatus,
+      "o_totalprice": $x.o_totalprice,
+      "o_orderdate": $x.o_orderdate,
+      "o_orderpriority": $x.o_orderpriority,
+      "o_clerk": $x.o_clerk,
+      "o_shippriority": $x.o_shippriority,
+      "o_comment": $x.o_comment
+    }
 );

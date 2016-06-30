@@ -29,6 +29,6 @@ create type TempType as closed {
   duration: duration
 }
 
-create dataset Temp2(TempType) 
-	primary key id;
+create dataset Temp2(TempType)
+    primary key id;
 

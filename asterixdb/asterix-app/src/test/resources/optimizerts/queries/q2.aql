@@ -30,8 +30,8 @@ create type AddressType as closed {
 
 create type EventType as closed {
   name: string,
-  location: AddressType	?,
-  organizers: {{ 
+  location: AddressType    ?,
+  organizers: {{
    {
      name: string,
      role: string

@@ -35,20 +35,20 @@ using localfs
 
 insert into dataset Customers
 (
-	for $c in dataset('Customerstmp')
-	where $c.cid < 500
-	return  $c
+    for $c in dataset('Customerstmp')
+    where $c.cid < 500
+    return  $c
 );
 
 insert into dataset Customers
 (
-	for $c in dataset('Customerstmp')
-	where $c.cid >= 500
-	return {
-		"cid": $c.cid,
-		"age": $c.age,
-		"address": $c.address,
-		"interests": $c.interests,
-		"children": $c.children
-	}	
+    for $c in dataset('Customerstmp')
+    where $c.cid >= 500
+    return {
+        "cid": $c.cid,
+        "age": $c.age,
+        "address": $c.address,
+        "interests": $c.interests,
+        "children": $c.children
+    }
 );

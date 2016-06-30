@@ -30,20 +30,20 @@ using localfs
 (("path"="asterix_nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000")) pre-sorted;
 
 insert into dataset DBLPOpen(
-	for $x in dataset DBLP
-		where ($x.id<50)
-		return $x
+    for $x in dataset DBLP
+        where ($x.id<50)
+        return $x
 );
 
 insert into dataset DBLPOpen(
-	for $x in dataset DBLP
-		where ($x.id>=50)
-		return {
-					"id": $x.id,
-					"dblpid": $x.dblpid,
-					"authors": $x.title,
-					"misc": $x.misc
-				}
+    for $x in dataset DBLP
+        where ($x.id>=50)
+        return {
+                    "id": $x.id,
+                    "dblpid": $x.dblpid,
+                    "authors": $x.title,
+                    "misc": $x.misc
+                }
 );
 
 load dataset CSX

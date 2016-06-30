@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : opentype-o2o.aql
  * Description     : verify that the dynamic type cast from one open type to another compatible open type
- *					 verify the bag-based fields
+ *                     verify the bag-based fields
  * Expected Result : Success
  */
 

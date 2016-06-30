@@ -30,6 +30,6 @@ using localfs
 (("path"="asterix_nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
 
 insert into dataset test.MyDataOpen (
-	for $x in dataset test.MyData
-		return $x
+    for $x in dataset test.MyData
+        return $x
 );

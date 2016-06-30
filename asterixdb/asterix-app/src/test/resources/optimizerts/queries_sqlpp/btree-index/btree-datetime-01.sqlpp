@@ -21,7 +21,7 @@
  *                  : for an invocation of current-datetime()
  *  Expected Result : Success
  *  Date            : 27th Aug 2015
- *	Author			: Steven Jacobs
+ *    Author            : Steven Jacobs
  */
 
 drop  database emergencyTest if exists;
