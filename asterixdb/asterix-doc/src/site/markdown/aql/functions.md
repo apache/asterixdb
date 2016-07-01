@@ -591,7 +591,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         " the voice-command is bad:("
         " the voicemail-service is awesome"
 
-## <a id="BinaryFunctions">String Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="BinaryFunctions">Binary Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### parse-binary ###
   * Syntax:
 
