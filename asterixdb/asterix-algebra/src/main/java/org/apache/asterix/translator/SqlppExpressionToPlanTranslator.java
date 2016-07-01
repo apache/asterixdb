@@ -49,6 +49,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -66,6 +67,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -76,6 +78,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -151,6 +154,20 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             context.exitSubplan();
         }
         return result;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(IndependentSubquery independentSubquery,
+            Mutable<ILogicalOperator> tupleSource) throws AsterixException {
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(independentSubquery.getExpr(),
+                tupleSource);
+        // Replaces nested tuple source with empty tuple source so that the subquery can be independent
+        // from its input operators.
+        replaceNtsWithEts(eo.second.getValue());
+        LogicalVariable var = context.newVar();
+        AssignOperator assignOp = new AssignOperator(var, new MutableObject<ILogicalExpression>(eo.first));
+        assignOp.getInputs().add(eo.second);
+        return new Pair<>(assignOp, var);
     }
 
     @Override
@@ -496,6 +513,32 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             ProjectOperator pr = new ProjectOperator(resVar);
             pr.getInputs().add(returnOpRef);
             return new Pair<>(pr, resVar);
+        }
+    }
+
+    // Replaces nested tuple source with empty tuple source in nested subplans of
+    // a subplan operator.
+    private void replaceNtsWithEts(ILogicalOperator op) {
+        if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
+            return;
+        }
+        SubplanOperator subplanOp = (SubplanOperator) op;
+        for (ILogicalPlan plan : subplanOp.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+                replaceNtsWithEtsTopDown(rootRef);
+            }
+        }
+    }
+
+    // Recursively replaces nested tuple source with empty tuple source
+    // in the operator tree under opRef.
+    private void replaceNtsWithEtsTopDown(Mutable<ILogicalOperator> opRef) {
+        ILogicalOperator op = opRef.getValue();
+        if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            opRef.setValue(new EmptyTupleSourceOperator());
+        }
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            replaceNtsWithEtsTopDown(childRef);
         }
     }
 

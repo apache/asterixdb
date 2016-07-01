@@ -26,7 +26,6 @@ public interface Expression extends ILangExpression {
         FLWOGR_EXPRESSION,
         IF_EXPRESSION,
         QUANTIFIED_EXPRESSION,
-        // PARENTHESIZED_EXPRESSION,
         LIST_CONSTRUCTOR_EXPRESSION,
         RECORD_CONSTRUCTOR_EXPRESSION,
         VARIABLE_EXPRESSION,
@@ -39,7 +38,8 @@ public interface Expression extends ILangExpression {
         UNION_EXPRESSION,
         SELECT_EXPRESSION,
         PRIMARY_EXPRESSION,
-        VALUE_EXPRESSION
+        VALUE_EXPRESSION,
+        INDEPENDENT_SUBQUERY
     }
 
 }

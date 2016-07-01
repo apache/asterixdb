@@ -37,10 +37,10 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionV
 public class SqlppGlobalAggregationSugarVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
-    public Expression visit(SelectBlock selectBlock, Expression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
         SelectClause selectClause = selectBlock.getSelectClause();
         if (!selectBlock.hasGroupbyClause() && selectBlock.hasFromClause()) {
-            boolean addImplicitGby = false;
+            boolean addImplicitGby;
             if (selectClause.selectRegular()) {
                 addImplicitGby = isSql92Aggregate(selectClause.getSelectRegular(), selectBlock);
             } else {

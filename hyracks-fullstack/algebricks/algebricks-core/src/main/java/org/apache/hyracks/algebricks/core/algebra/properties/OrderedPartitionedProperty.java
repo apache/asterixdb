@@ -28,20 +28,20 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class OrderedPartitionedProperty implements IPartitioningProperty {
 
-    private ArrayList<OrderColumn> orderColumns;
+    private List<OrderColumn> orderColumns;
     private INodeDomain domain;
 
-    public OrderedPartitionedProperty(ArrayList<OrderColumn> orderColumns, INodeDomain domain) {
+    public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain) {
         this.domain = domain;
         this.orderColumns = orderColumns;
     }
 
-    public ArrayList<OrderColumn> getOrderColumns() {
+    public List<OrderColumn> getOrderColumns() {
         return orderColumns;
     }
 
-    public ArrayList<LogicalVariable> getColumns() {
-        ArrayList<LogicalVariable> cols = new ArrayList<LogicalVariable>(orderColumns.size());
+    public List<LogicalVariable> getColumns() {
+        ArrayList<LogicalVariable> cols = new ArrayList<>(orderColumns.size());
         for (OrderColumn oc : orderColumns) {
             cols.add(oc.getColumn());
         }
@@ -59,9 +59,11 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
     }
 
     @Override
-    public void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
-        orderColumns = PropertiesUtil.replaceOrderColumnsByEqClasses(orderColumns, equivalenceClasses);
-        orderColumns = PropertiesUtil.applyFDsToOrderColumns(orderColumns, fds);
+    public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
+        List<OrderColumn> columns = PropertiesUtil.replaceOrderColumnsByEqClasses(orderColumns, equivalenceClasses);
+        columns = PropertiesUtil.applyFDsToOrderColumns(columns, fds);
+        return new OrderedPartitionedProperty(columns, domain);
     }
 
     @Override

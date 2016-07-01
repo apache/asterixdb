@@ -28,9 +28,13 @@ public class IntSerDeUtils {
 
     /**
      * put integer value into the array bytes at the offset offset
-     * @param bytes byte array to put data in
-     * @param offset offset from the beginning of the array to write the {@code value} in
-     * @param value value to write to {@code bytes[offset]}
+     *
+     * @param bytes
+     *            byte array to put data in
+     * @param offset
+     *            offset from the beginning of the array to write the {@code value} in
+     * @param value
+     *            value to write to {@code bytes[offset]}
      */
     public static void putInt(byte[] bytes, int offset, int value) {
 

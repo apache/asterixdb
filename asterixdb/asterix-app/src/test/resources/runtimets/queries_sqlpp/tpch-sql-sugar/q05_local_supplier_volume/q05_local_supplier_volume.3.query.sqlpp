@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+SELECT n_name, sum(l_extendedprice * (1 - l_discount)) AS revenue
+FROM
+  Customer JOIN
+    ( SELECT n_name, l_extendedprice, l_discount, s_nationkey, o_custkey
+      FROM Orders JOIN
+      ( SELECT n_name, l_extendedprice, l_discount, l_orderkey, s_nationkey
+        FROM LineItem JOIN
+            (   SELECT n_name, s_suppkey, s_nationkey
+                FROM Supplier JOIN
+                (   SELECT n_name, n_nationkey
+                    FROM Nation n JOIN Region r
+                    ON n_regionkey = r_regionkey
+                ) n1 ON s_nationkey = n_nationkey
+            ) s1
+        ON l_suppkey = s_suppkey
+      ) l1 ON l_orderkey = o_orderkey AND o_orderdate >= '1990-01-01'
+              AND o_orderdate < '1995-01-01'
+   ) o1
+ON c_nationkey = s_nationkey AND c_custkey = o_custkey
+GROUP BY n_name
+ORDER BY revenue DESC;

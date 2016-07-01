@@ -1,0 +1,28 @@
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "AIR" }
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "FOB" }
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "MAIL" }
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "RAIL" }
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "REG AIR" }
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "SHIP" }
+{ "l_returnflag": "A", "l_linestatus": "F", "l_shipmode": "TRUCK" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "AIR" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "FOB" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "MAIL" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "RAIL" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "REG AIR" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "SHIP" }
+{ "l_returnflag": "N", "l_linestatus": "F", "l_shipmode": "TRUCK" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "AIR" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "FOB" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "MAIL" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "RAIL" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "REG AIR" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "SHIP" }
+{ "l_returnflag": "N", "l_linestatus": "O", "l_shipmode": "TRUCK" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "AIR" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "FOB" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "MAIL" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "RAIL" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "REG AIR" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "SHIP" }
+{ "l_returnflag": "R", "l_linestatus": "F", "l_shipmode": "TRUCK" }

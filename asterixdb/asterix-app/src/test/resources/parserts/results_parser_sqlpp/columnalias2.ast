@@ -25,13 +25,13 @@ FROM [  FunctionCall Metadata.dataset@1[
   AS Variable [ Name=$root ]
 ]
 Groupby
-  Variable [ Name=#1 ]
+  Variable [ Name=$id ]
   :=
   FieldAccessor [
     Variable [ Name=$root ]
     Field=id
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#1 ]
   (
     root:=Variable [ Name=$root ]
   )

@@ -42,6 +42,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
@@ -289,6 +290,12 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             }
         }
         out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(IndependentSubquery independentSubquery, Integer arg) throws AsterixException {
+        independentSubquery.getExpr().accept(this, arg);
         return null;
     }
 

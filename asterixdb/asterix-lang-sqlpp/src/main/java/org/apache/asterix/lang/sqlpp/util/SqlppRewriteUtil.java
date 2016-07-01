@@ -33,11 +33,15 @@ import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 
 public class SqlppRewriteUtil {
 
+    private SqlppRewriteUtil() {
+    }
+
     // Applying sugar rewriting for group-by.
     public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
-            Collection<VariableExpr> targetVarList, ILangExpression expr, LangRewritingContext context)
-                    throws AsterixException {
-        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, targetVarList);
+            Collection<VariableExpr> targetVarList, Collection<VariableExpr> allVisableVars, ILangExpression expr,
+            LangRewritingContext context) throws AsterixException {
+        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, targetVarList,
+                allVisableVars);
         return expr.accept(visitor, null);
     }
 

@@ -2104,8 +2104,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public Dataset findDataset(String dataverse, String dataset) throws AlgebricksException {
+        String dv = dataverse == null ? (defaultDataverse == null ? null : defaultDataverse.getDataverseName())
+                : dataverse;
+        if (dv == null) {
+            return null;
+        }
         try {
-            return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, dataset);
+            return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dv, dataset);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }

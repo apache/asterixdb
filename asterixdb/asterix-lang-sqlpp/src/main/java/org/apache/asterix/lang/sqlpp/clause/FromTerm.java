@@ -40,8 +40,7 @@ public class FromTerm implements Clause {
         this.leftExpr = leftExpr;
         this.leftVar = leftVar;
         this.posVar = posVar;
-        this.correlateClauses = correlateClauses == null ? new ArrayList<AbstractBinaryCorrelateClause>()
-                : correlateClauses;
+        this.correlateClauses = correlateClauses == null ? new ArrayList<>() : correlateClauses;
     }
 
     @Override
@@ -71,7 +70,7 @@ public class FromTerm implements Clause {
     }
 
     public boolean hasCorrelateClauses() {
-        return correlateClauses != null && correlateClauses.size() > 0;
+        return correlateClauses != null && !correlateClauses.isEmpty();
     }
 
     public List<AbstractBinaryCorrelateClause> getCorrelateClauses() {
@@ -84,6 +83,6 @@ public class FromTerm implements Clause {
 
     @Override
     public String toString() {
-        return String.valueOf(leftExpr) + " AS " + String.valueOf(leftVar);
+        return String.valueOf(leftExpr) + " AS " + leftVar;
     }
 }

@@ -143,6 +143,7 @@ import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -2352,11 +2353,14 @@ Projection Projection() throws ParseException: {
 {
   (
     LOOKAHEAD(2)
-    expr= Expression() (<AS>)? name = Identifier()
+    expr = Expression() ((<AS>)? name = Identifier())?
     | expr = Expression() <DOT> <MUL> {exprStar = true; }
     | <MUL> {star = true; }
   )
   {
+    if(name == null){
+       name = SqlppVariableUtil.toUserDefinedName(ExpressionToVariableUtil.getGeneratedIdentifier(expr));
+    }
     return new Projection(expr, name, star, exprStar);
   }
 }
@@ -2385,7 +2389,7 @@ FromTerm FromTerm() throws ParseException :
   List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
 }
 {
-  leftExpr = Expression() (<AS>)? leftVar = Variable() (<AT> posVar = Variable())?
+  leftExpr = Expression() ((<AS>)? leftVar = Variable())? (<AT> posVar = Variable())?
   (
      {JoinType joinType = JoinType.INNER; }
      (joinType = JoinType())?
@@ -2403,6 +2407,9 @@ FromTerm FromTerm() throws ParseException :
      }
   )*
   {
+    if(leftVar==null){
+        leftVar = ExpressionToVariableUtil.getGeneratedVariable(leftExpr);
+    }
     return new FromTerm(leftExpr, leftVar, posVar, correlateClauses);
   }
 }
@@ -2415,8 +2422,11 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
     Expression conditionExpr = null;
 }
 {
-  <JOIN> rightExpr = Expression() (<AS>)? rightVar = Variable() (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
+  <JOIN> rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
   {
+    if(rightVar==null){
+        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
+    }
     return new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
   }
 }
@@ -2429,8 +2439,11 @@ NestClause NestClause(JoinType joinType) throws ParseException :
     Expression conditionExpr = null;
 }
 {
-  <NEST> rightExpr = Expression() (<AS>)? rightVar = Variable() (<AT> posVar = Variable())?  <ON> conditionExpr = Expression()
+  <NEST> rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?  <ON> conditionExpr = Expression()
   {
+    if(rightVar==null){
+        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
+    }
     return new NestClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
   }
 }
@@ -2442,8 +2455,11 @@ UnnestClause UnnestClause(JoinType joinType) throws ParseException :
     VariableExpr posVar = null;
 }
 {
-  (<UNNEST>|<CORRELATE>|<FLATTEN>) rightExpr = Expression() (<AS>)? rightVar = Variable() (<AT> posVar = Variable())?
+  (<UNNEST>|<CORRELATE>|<FLATTEN>) rightExpr = Expression() ((<AS>)? rightVar = Variable()) (<AT> posVar = Variable())?
   {
+    if(rightVar==null){
+        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
+    }
     return new UnnestClause(joinType, rightExpr, rightVar, posVar);
   }
 }
@@ -2572,15 +2588,24 @@ GroupbyClause GroupbyClause()throws ParseException :
         var = Variable()
         )?
         {
+            if(var==null){
+                var = ExpressionToVariableUtil.getGeneratedVariable(expr);
+            }
             GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);
             vePairList.add(pair1);
         }
        ( LOOKAHEAD(1) <COMMA>
+         {
+            var = null;
+         }
          expr = Expression()
          (LOOKAHEAD(1)  (<AS>)?
          var = Variable()
          )?
          {
+             if(var==null){
+                var = ExpressionToVariableUtil.getGeneratedVariable(expr);
+             }
              GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);
              vePairList.add(pair2);
          }

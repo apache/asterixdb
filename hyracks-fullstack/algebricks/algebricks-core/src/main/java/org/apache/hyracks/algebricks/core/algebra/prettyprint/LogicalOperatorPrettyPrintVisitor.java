@@ -143,7 +143,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("nested tuple source");
+        addIndent(buffer, indent).append("nested tuple source" + op.getDataSourceReference().getValue());
         return buffer.toString();
     }
 

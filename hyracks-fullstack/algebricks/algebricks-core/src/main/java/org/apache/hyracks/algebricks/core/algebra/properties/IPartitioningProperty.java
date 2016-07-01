@@ -27,7 +27,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface IPartitioningProperty extends IStructuralProperty {
     enum PartitioningType {
-        UNPARTITIONED, RANDOM, BROADCAST, UNORDERED_PARTITIONED, ORDERED_PARTITIONED
+        UNPARTITIONED,
+        RANDOM,
+        BROADCAST,
+        UNORDERED_PARTITIONED,
+        ORDERED_PARTITIONED
     }
 
     INodeDomain DOMAIN_FOR_UNPARTITIONED_DATA = new INodeDomain() {
@@ -50,8 +54,9 @@ public interface IPartitioningProperty extends IStructuralProperty {
         }
 
         @Override
-        public void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
-            // do nothing
+        public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+                List<FunctionalDependency> fds) {
+            return UNPARTITIONED;
         }
 
         @Override
@@ -80,7 +85,7 @@ public interface IPartitioningProperty extends IStructuralProperty {
 
     PartitioningType getPartitioningType();
 
-    void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+    IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
             List<FunctionalDependency> fds);
 
     INodeDomain getNodeDomain();

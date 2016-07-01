@@ -45,6 +45,9 @@ public class SqlppVariableSubstitutionUtil {
      */
     public static ILangExpression substituteVariableWithoutContext(ILangExpression expression,
             Map<VariableExpr, Expression> varExprMap) throws AsterixException {
+        if (varExprMap.isEmpty()) {
+            return expression;
+        }
         VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
         return substituteVariableWithoutContext(expression, env);
     }

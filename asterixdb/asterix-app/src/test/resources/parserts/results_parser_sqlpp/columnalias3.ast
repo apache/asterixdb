@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [root]
     :
-    Variable [ Name=#1 ]
+    Variable [ Name=$root ]
   )
 ]
 ]
@@ -14,7 +14,7 @@ FROM [  FunctionCall Metadata.dataset@1[
   AS Variable [ Name=$t ]
 ]
 Groupby
-  Variable [ Name=#1 ]
+  Variable [ Name=$root ]
   :=
   FunctionCall null.SQRT@1[
     OperatorExpr [
@@ -29,17 +29,17 @@ Groupby
       ]
     ]
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#1 ]
   (
     t:=Variable [ Name=$t ]
   )
 
 Let Variable [ Name=$u ]
   :=
-  Variable [ Name=#1 ]
+  Variable [ Name=$root ]
  HAVING
   OperatorExpr [
-    Variable [ Name=#1 ]
+    Variable [ Name=$root ]
     >
     LiteralExpr [LONG] [0]
   ]

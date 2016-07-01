@@ -47,7 +47,6 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
-import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -65,6 +64,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
@@ -75,11 +75,6 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVi
 public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisitor<Void, Boolean> {
 
     private final ScopeChecker scopeChecker = new ScopeChecker();
-    private final LangRewritingContext context;
-
-    public InlineColumnAliasVisitor(LangRewritingContext context) {
-        this.context = context;
-    }
 
     @Override
     public Void visit(WhereClause whereClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
@@ -311,7 +306,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     @Override
     public Void visit(OrderbyClause oc, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
         VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        List<Expression> orderExprs = new ArrayList<Expression>();
+        List<Expression> orderExprs = new ArrayList<>();
         for (Expression orderExpr : oc.getOrderbyList()) {
             orderExprs.add((Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(orderExpr, env));
             orderExpr.accept(this, overwriteWithGbyKeyVarRefs);
@@ -330,9 +325,6 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
                     env);
             newExpr.accept(this, overwriteWithGbyKeyVarRefs);
             gbyVarExpr.setExpr(newExpr);
-            if (gbyVarExpr.getVar() == null) {
-                gbyVarExpr.setVar(new VariableExpr(context.newVariable()));
-            }
             if (oldGbyExpr.getKind() == Kind.VARIABLE_EXPRESSION) {
                 VariableExpr oldGbyVarExpr = (VariableExpr) oldGbyExpr;
                 if (env.findSubstitution(oldGbyVarExpr) != null) {
@@ -458,6 +450,13 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
         if (indexExpr != null) {
             indexExpr.accept(this, overwriteWithGbyKeyVarRefs);
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(IndependentSubquery independentSubquery, Boolean overwriteWithGbyKeyVarRefs)
+            throws AsterixException {
+        independentSubquery.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
         return null;
     }
 

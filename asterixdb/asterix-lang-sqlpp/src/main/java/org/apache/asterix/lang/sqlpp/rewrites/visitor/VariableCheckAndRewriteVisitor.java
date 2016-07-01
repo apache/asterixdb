@@ -20,11 +20,13 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -35,9 +37,12 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopingVisitor {
 
+    protected final FunctionSignature datasetFunction = new FunctionSignature(MetadataConstants.METADATA_DATAVERSE_NAME,
+            "dataset", 1);
     protected final boolean overwrite;
     protected final AqlMetadataProvider metadataProvider;
 
@@ -57,17 +62,28 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     @Override
-    public Expression visit(VariableExpr varExpr, Expression arg) throws AsterixException {
+    public Expression visit(VariableExpr varExpr, ILangExpression arg) throws AsterixException {
         String varName = varExpr.getVar().getValue();
         if (scopeChecker.isInForbiddenScopes(varName)) {
             throw new AsterixException(
-                    "Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
+                    "Inside limit clauses, it is disallowed to reference a variable having the same name"
+                            + " as any variable bound in the same scope as the limit clause.");
         }
-        if (rewriteNeeded(varExpr)) {
-            return datasetRewrite(varExpr);
-        } else {
+        if (!rewriteNeeded(varExpr)) {
             return varExpr;
         }
+        boolean resolveAsDataset = resolveDatasetFirst(arg)
+                && datasetExists(SqlppVariableUtil.toUserDefinedVariableName(varName).getValue());
+        if (resolveAsDataset) {
+            return wrapWithDatasetFunction(varExpr);
+        }
+        Set<VariableExpr> liveVars = SqlppVariableUtil.getLiveUserDefinedVariables(scopeChecker.getCurrentScope());
+        return wrapWithResolveFunction(varExpr, liveVars);
+    }
+
+    // For From/Join/UNNEST/NEST, we resolve the undefined identifier reference as dataset reference first.
+    private boolean resolveDatasetFirst(ILangExpression arg) {
+        return arg != null;
     }
 
     // Whether a rewrite is needed for a variable reference expression.
@@ -81,22 +97,41 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return false;
         } else {
             // Meets a undefined variable
-            return true;
+            return overwrite;
         }
     }
 
-    // Rewrites for global variable (e.g., dataset) references.
-    private Expression datasetRewrite(VariableExpr expr) throws AsterixException {
-        if (!overwrite) {
-            return expr;
-        }
-        String funcName = "dataset";
-        String dataverse = MetadataConstants.METADATA_DATAVERSE_NAME;
-        FunctionSignature signature = new FunctionSignature(dataverse, funcName, 1);
-        List<Expression> argList = new ArrayList<Expression>();
+    private Expression wrapWithDatasetFunction(VariableExpr expr) throws AsterixException {
+        List<Expression> argList = new ArrayList<>();
         //Ignore the parser-generated prefix "$" for a dataset.
-        String dataset = SqlppVariableUtil.toUserDefinedVariableName(expr.getVar()).getValue();
-        argList.add(new LiteralExpr(new StringLiteral(dataset)));
-        return new CallExpr(signature, argList);
+        String varName = SqlppVariableUtil.toUserDefinedVariableName(expr.getVar()).getValue();
+        argList.add(new LiteralExpr(new StringLiteral(varName)));
+        return new CallExpr(datasetFunction, argList);
     }
+
+    private boolean datasetExists(String name) throws AsterixException {
+        try {
+            if (metadataProvider.findDataset(null, name) != null) {
+                return true;
+            }
+            return pathDatasetExists(name);
+        } catch (AlgebricksException e) {
+            throw new AsterixException(e);
+        }
+    }
+
+    private boolean pathDatasetExists(String name) throws AlgebricksException {
+        if (!name.contains(".")) {
+            return false;
+        }
+        String[] path = name.split("\\.");
+        if (path.length != 2) {
+            return false;
+        }
+        if (metadataProvider.findDataset(path[0], path[1]) != null) {
+            return true;
+        }
+        return false;
+    }
+
 }

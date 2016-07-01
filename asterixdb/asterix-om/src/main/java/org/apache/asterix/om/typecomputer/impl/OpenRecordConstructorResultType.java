@@ -20,8 +20,10 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -52,29 +54,45 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
          * if type has been top-down propagated, use the enforced type
          */
         ARecordType type = (ARecordType) TypeCastUtils.getRequiredType(f);
-        if (type != null)
+        if (type != null) {
             return type;
+        }
 
-        int n = 0;
         Iterator<Mutable<ILogicalExpression>> argIter = f.getArguments().iterator();
-        List<String> namesList = new ArrayList<String>();
-        List<IAType> typesList = new ArrayList<IAType>();
+        List<String> namesList = new ArrayList<>();
+        List<IAType> typesList = new ArrayList<>();
+        // The following set of names do not belong to the closed part,
+        // but are additional possible field names. For example, a field "foo" with type
+        // ANY cannot be in the closed part, but "foo" is a possible field name.
+        Set<String> allPossibleAdditionalFieldNames = new HashSet<>();
+        boolean canProvideAdditionFieldInfo = true;
+        boolean isOpen = false;
         while (argIter.hasNext()) {
             ILogicalExpression e1 = argIter.next().getValue();
             ILogicalExpression e2 = argIter.next().getValue();
             IAType t2 = (IAType) env.getType(e2);
-            if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT && t2 != null && TypeHelper.isClosed(t2)) {
+            String fieldName = null;
+            if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 ConstantExpression nameExpr = (ConstantExpression) e1;
                 AsterixConstantValue acv = (AsterixConstantValue) nameExpr.getValue();
-                namesList.add(((AString) acv.getObject()).getStringValue());
+                fieldName = ((AString) acv.getObject()).getStringValue();
+            }
+            if (fieldName != null && t2 != null && TypeHelper.isClosed(t2)) {
+                namesList.add(fieldName);
                 typesList.add(t2);
-                n++;
+            } else {
+                if (canProvideAdditionFieldInfo && fieldName != null) {
+                    allPossibleAdditionalFieldNames.add(fieldName);
+                } else {
+                    canProvideAdditionFieldInfo = false;
+                }
+                isOpen = true;
             }
         }
-        String[] fieldNames = new String[n];
-        IAType[] fieldTypes = new IAType[n];
-        fieldNames = namesList.toArray(fieldNames);
-        fieldTypes = typesList.toArray(fieldTypes);
-        return new ARecordType(null, fieldNames, fieldTypes, true);
+        String[] fieldNames = namesList.toArray(new String[0]);
+        IAType[] fieldTypes = typesList.toArray(new IAType[0]);
+        return canProvideAdditionFieldInfo
+                ? new ARecordType(null, fieldNames, fieldTypes, isOpen, allPossibleAdditionalFieldNames)
+                : new ARecordType(null, fieldNames, fieldTypes, isOpen);
     }
 }

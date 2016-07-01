@@ -81,7 +81,7 @@ public class SelectExpression implements Expression {
     }
 
     public boolean hasLetClauses() {
-        return letList != null && letList.size() > 0;
+        return letList != null && !letList.isEmpty();
     }
 
     public boolean isSubquery() {

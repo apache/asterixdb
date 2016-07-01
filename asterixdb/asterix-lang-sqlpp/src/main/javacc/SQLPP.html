@@ -833,7 +833,7 @@
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod100">Projection</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod44">Expression</A> ( &lt;AS&gt; )? <A HREF="#prod18">Identifier</A> | <A HREF="#prod44">Expression</A> &lt;DOT&gt; &lt;MUL&gt; | &lt;MUL&gt; )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod18">Identifier</A> )? | <A HREF="#prod44">Expression</A> &lt;DOT&gt; &lt;MUL&gt; | &lt;MUL&gt; )</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod94">FromClause</A></TD>
@@ -843,22 +843,22 @@
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod101">FromTerm</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod44">Expression</A> ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? ( ( <A HREF="#prod102">JoinType</A> )? ( <A HREF="#prod103">JoinClause</A> | <A HREF="#prod104">NestClause</A> | <A HREF="#prod105">UnnestClause</A> ) )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? ( ( <A HREF="#prod102">JoinType</A> )? ( <A HREF="#prod103">JoinClause</A> | <A HREF="#prod104">NestClause</A> | <A HREF="#prod105">UnnestClause</A> ) )*</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod103">JoinClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;JOIN&gt; <A HREF="#prod44">Expression</A> ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? &lt;ON&gt; <A HREF="#prod44">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;JOIN&gt; <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? &lt;ON&gt; <A HREF="#prod44">Expression</A></TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod104">NestClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;NEST&gt; <A HREF="#prod44">Expression</A> ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? &lt;ON&gt; <A HREF="#prod44">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;NEST&gt; <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? &lt;ON&gt; <A HREF="#prod44">Expression</A></TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod105">UnnestClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;UNNEST&gt; | &lt;CORRELATE&gt; | &lt;FLATTEN&gt; ) <A HREF="#prod44">Expression</A> ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )?</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;UNNEST&gt; | &lt;CORRELATE&gt; | &lt;FLATTEN&gt; ) <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> ) ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )?</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod102">JoinType</A></TD>

@@ -25,12 +25,12 @@ RecordConstructor [
             (
               SELECT ELEMENT [
               FieldAccessor [
-                Variable [ Name=#2 ]
+                Variable [ Name=#3 ]
                 Field=i
               ]
               ]
               FROM [                Variable [ Name=#1 ]
-                AS Variable [ Name=#2 ]
+                AS Variable [ Name=#3 ]
               ]
             )
           ]
@@ -78,12 +78,12 @@ RecordConstructor [
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=#3 ]
+              Variable [ Name=#2 ]
               Field=i
             ]
             ]
             FROM [              Variable [ Name=#1 ]
-              AS Variable [ Name=#3 ]
+              AS Variable [ Name=#2 ]
             ]
           )
         ]
