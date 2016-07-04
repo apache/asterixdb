@@ -21,7 +21,6 @@ package org.apache.asterix.app.external;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -379,8 +378,7 @@ public class ExternalLibraryUtils {
         }
 
         // create and return the class loader
-        ClassLoader classLoader = new URLClassLoader(urls, parentClassLoader);
-        return classLoader;
+        return new ExternalLibraryClassLoader(urls, parentClassLoader);
     }
 
     /**
