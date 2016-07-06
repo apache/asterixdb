@@ -56,6 +56,18 @@ public class SqlppVariableUtil {
         return new VarIdentifier(varName);
     }
 
+    public static String variableNameToDisplayedFieldName(String varName) {
+        if (varName.startsWith(USER_VAR_PREFIX)) {
+            return varName.substring(1);
+        } else {
+            // We use prefix "$" for user-defined variables and "#" for system-generated variables.
+            // However, in displayed query results, "$" is the prefix for
+            // system-generated variables/alias. Therefore we need to replace the prefix
+            // "#" with "$" if the system-generated alias needs to present in the final result.
+            return USER_VAR_PREFIX + varName.substring(1);
+        }
+    }
+
     public static String toUserDefinedName(String varName) {
         if (varName.startsWith(USER_VAR_PREFIX)) {
             return varName.substring(1);

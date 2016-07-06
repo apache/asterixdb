@@ -100,14 +100,14 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Inlines WITH expressions.
         inlineWithExpressions();
 
-        // Rewrites like/not-like expressions.
-        rewriteOperatorExpression();
-
         // Rewrites SQL-92 global aggregations.
         rewriteGlobalAggregations();
 
         // Group-by core/sugar rewrites.
         rewriteGroupBys();
+
+        // Rewrites like/not-like expressions.
+        rewriteOperatorExpression();
 
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite(true);
@@ -165,9 +165,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
         if (topExpr == null) {
             return;
         }
-        // Rewrites like/not-like operators into function call expressions.
-        OperatorExpressionVisitor likeExpressionVisitor = new OperatorExpressionVisitor(context);
-        likeExpressionVisitor.visit(topExpr, null);
+        // Rewrites like/not-like/in/not-in operators into function call expressions.
+        OperatorExpressionVisitor operatorExpressionVisitor = new OperatorExpressionVisitor(context);
+        operatorExpressionVisitor.visit(topExpr, null);
     }
 
     protected void inlineColumnAlias() throws AsterixException {
@@ -317,7 +317,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
         @Override
         public Void visit(Projection projection, Void arg) throws AsterixException {
-            projection.getExpression().accept(this, arg);
+            if (!projection.star()) {
+                projection.getExpression().accept(this, arg);
+            }
             return null;
         }
 

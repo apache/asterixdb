@@ -4494,6 +4494,33 @@
         </test-case>
         -->
   </test-group>
+  <test-group name="select-star">
+    <test-case FilePath="select-star">
+      <compilation-unit name="group_by">
+        <output-dir compare="Text">group_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="from">
+        <output-dir compare="Text">from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="join">
+        <output-dir compare="Text">join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="mixed">
+        <output-dir compare="Text">mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="no_star">
+        <output-dir compare="Text">no_star</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="semistructured">
     <test-case FilePath="semistructured">
       <compilation-unit name="count-nullable">

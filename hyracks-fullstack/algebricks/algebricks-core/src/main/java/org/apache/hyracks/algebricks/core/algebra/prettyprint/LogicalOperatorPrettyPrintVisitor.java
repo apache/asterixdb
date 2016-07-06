@@ -143,7 +143,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append("nested tuple source" + op.getDataSourceReference().getValue());
+        addIndent(buffer, indent).append("nested tuple source");
         return buffer.toString();
     }
 
@@ -387,10 +387,11 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         buffer.append(" partitioned by ");
         pprintExprList(op.getPrimaryKeyExpressions(), buffer, indent);
         if (op.getOperation() == Kind.UPSERT) {
-            buffer.append(" out: ([record-before-upsert:" + op.getPrevRecordVar()
-                    + ((op.getPrevAdditionalNonFilteringVars() != null)
-                            ? (", additional-before-upsert: " + op.getPrevAdditionalNonFilteringVars()) : "")
-                    + "]) ");
+            buffer.append(
+                    " out: ([record-before-upsert:" + op.getPrevRecordVar()
+                            + ((op.getPrevAdditionalNonFilteringVars() != null)
+                                    ? (", additional-before-upsert: " + op.getPrevAdditionalNonFilteringVars()) : "")
+                            + "]) ");
         }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");

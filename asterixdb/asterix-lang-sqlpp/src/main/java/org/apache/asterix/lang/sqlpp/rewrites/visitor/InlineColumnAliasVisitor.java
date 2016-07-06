@@ -130,6 +130,9 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
 
     @Override
     public Void visit(Projection projection, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
+        if (projection.star()) {
+            return null;
+        }
         projection.getExpression().accept(this, overwriteWithGbyKeyVarRefs);
         VariableExpr columnAlias = new VariableExpr(
                 SqlppVariableUtil.toInternalVariableIdentifier(projection.getName()));

@@ -2315,8 +2315,14 @@ SelectClause SelectClause() throws ParseException: {
     selectRegular = SelectRegular()
     |
     selectElement = SelectElement()
-  )
+  )?
   {
+    if(selectRegular == null && selectElement == null){
+        Projection projection = new Projection(null, null, true, false);
+        List<Projection> projections = new ArrayList<Projection>();
+        projections.add(projection);
+        selectRegular = new SelectRegular(projections);
+    }
     return new SelectClause(selectElement, selectRegular, distinct);
   }
 }
@@ -2329,9 +2335,9 @@ SelectRegular SelectRegular() throws ParseException: {
       Projection projection = null;
    }
    projection = Projection() { projections.add(projection); }
-   ( LOOKAHEAD(2) <COMMA>
-      projection = Projection() {projections.add(projection);}
-   )*
+    ( LOOKAHEAD(2) <COMMA>
+       projection = Projection() {projections.add(projection);}
+    )*
   {
     return new SelectRegular(projections);
   }
@@ -2363,7 +2369,7 @@ Projection Projection() throws ParseException: {
     | <MUL> {star = true; }
   )
   {
-    if(name == null){
+    if(!star && name == null){
        name = SqlppVariableUtil.toUserDefinedName(ExpressionToVariableUtil.getGeneratedIdentifier(expr));
     }
     return new Projection(expr, name, star, exprStar);
