@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
@@ -90,71 +91,12 @@ public class OperatorExpr extends AbstractExpression {
     }
 
     public void addOperator(String strOp) {
-        switch (strOp) {
-            case "or":
-                opList.add(OperatorType.OR);
-                break;
-            case "and":
-                opList.add(OperatorType.AND);
-                break;
-            case "<":
-                opList.add(OperatorType.LT);
-                break;
-            case ">":
-                opList.add(OperatorType.GT);
-                break;
-            case "<=":
-                opList.add(OperatorType.LE);
-                break;
-            case ">=":
-                opList.add(OperatorType.GE);
-                break;
-            case "=":
-                opList.add(OperatorType.EQ);
-                break;
-            case "!=":
-                opList.add(OperatorType.NEQ);
-                break;
-            case "+":
-                opList.add(OperatorType.PLUS);
-                break;
-            case "-":
-                opList.add(OperatorType.MINUS);
-                break;
-            case "*":
-                opList.add(OperatorType.MUL);
-                break;
-            case "/":
-                opList.add(OperatorType.DIV);
-                break;
-            case "%":
-                opList.add(OperatorType.MOD);
-                break;
-            case "^":
-                opList.add(OperatorType.CARET);
-                break;
-            case "idiv":
-                opList.add(OperatorType.IDIV);
-                break;
-            case "~=":
-                opList.add(OperatorType.FUZZY_EQ);
-                break;
-            case "like":
-                opList.add(OperatorType.LIKE);
-                break;
-            case "not_like":
-                opList.add(OperatorType.NOT_LIKE);
-                break;
-            case "in":
-                opList.add(OperatorType.IN);
-                break;
-            case "not_in":
-                opList.add(OperatorType.NOT_IN);
-                break;
-            default:
-                throw new UnsupportedOperationException("Unsupported operator: " + strOp);
+        Optional<OperatorType> op = OperatorType.fromSymbol(strOp);
+        if (op.isPresent()) {
+            opList.add(op.get());
+        } else {
+            throw new UnsupportedOperationException("Unsupported operator: " + strOp);
         }
-
     }
 
     @Override

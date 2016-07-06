@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.lang.common.struct;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum OperatorType {
     OR("or"),
     AND("and"),
@@ -43,12 +46,16 @@ public enum OperatorType {
 
     private final String symbol;
 
-    private OperatorType(String s) {
+    OperatorType(String s) {
         symbol = s;
     }
 
     @Override
     public String toString() {
         return symbol;
+    }
+
+    public static Optional<OperatorType> fromSymbol(String symbol) {
+        return Arrays.stream(OperatorType.values()).filter(o -> o.symbol.equals(symbol)).findFirst();
     }
 }
