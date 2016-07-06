@@ -35,9 +35,9 @@ public class OperatorExpr extends AbstractExpression {
 
     public OperatorExpr() {
         super();
-        exprList = new ArrayList<Expression>();
-        exprBroadcastIdx = new ArrayList<Integer>();
-        opList = new ArrayList<OperatorType>();
+        exprList = new ArrayList<>();
+        exprBroadcastIdx = new ArrayList<>();
+        opList = new ArrayList<>();
     }
 
     public OperatorExpr(List<Expression> exprList, List<Integer> exprBroadcastIdx, List<OperatorType> opList,
@@ -83,47 +83,78 @@ public class OperatorExpr extends AbstractExpression {
         exprList.add(operand);
     }
 
-    public final static boolean opIsComparison(OperatorType t) {
-        return t == OperatorType.EQ || t == OperatorType.NEQ || t == OperatorType.GT || t == OperatorType.GE
-                || t == OperatorType.LT || t == OperatorType.LE;
+    public static final boolean opIsComparison(OperatorType t) {
+        boolean cmp = t == OperatorType.EQ || t == OperatorType.NEQ || t == OperatorType.GT;
+        cmp = cmp || t == OperatorType.GE || t == OperatorType.LT || t == OperatorType.LE;
+        return cmp;
     }
 
     public void addOperator(String strOp) {
-        if ("or".equals(strOp)) {
-            opList.add(OperatorType.OR);
-        } else if ("and".equals(strOp)) {
-            opList.add(OperatorType.AND);
-        } else if ("<".equals(strOp)) {
-            opList.add(OperatorType.LT);
-        } else if (">".equals(strOp)) {
-            opList.add(OperatorType.GT);
-        } else if ("<=".equals(strOp)) {
-            opList.add(OperatorType.LE);
-        } else if ("<=".equals(strOp)) {
-            opList.add(OperatorType.LE);
-        } else if (">=".equals(strOp)) {
-            opList.add(OperatorType.GE);
-        } else if ("=".equals(strOp)) {
-            opList.add(OperatorType.EQ);
-        } else if ("!=".equals(strOp)) {
-            opList.add(OperatorType.NEQ);
-        } else if ("+".equals(strOp)) {
-            opList.add(OperatorType.PLUS);
-        } else if ("-".equals(strOp)) {
-            opList.add(OperatorType.MINUS);
-        } else if ("*".equals(strOp)) {
-            opList.add(OperatorType.MUL);
-        } else if ("/".equals(strOp)) {
-            opList.add(OperatorType.DIV);
-        } else if ("%".equals(strOp)) {
-            opList.add(OperatorType.MOD);
-        } else if ("^".equals(strOp)) {
-            opList.add(OperatorType.CARET);
-        } else if ("idiv".equals(strOp)) {
-            opList.add(OperatorType.IDIV);
-        } else if ("~=".equals(strOp)) {
-            opList.add(OperatorType.FUZZY_EQ);
+        switch (strOp) {
+            case "or":
+                opList.add(OperatorType.OR);
+                break;
+            case "and":
+                opList.add(OperatorType.AND);
+                break;
+            case "<":
+                opList.add(OperatorType.LT);
+                break;
+            case ">":
+                opList.add(OperatorType.GT);
+                break;
+            case "<=":
+                opList.add(OperatorType.LE);
+                break;
+            case ">=":
+                opList.add(OperatorType.GE);
+                break;
+            case "=":
+                opList.add(OperatorType.EQ);
+                break;
+            case "!=":
+                opList.add(OperatorType.NEQ);
+                break;
+            case "+":
+                opList.add(OperatorType.PLUS);
+                break;
+            case "-":
+                opList.add(OperatorType.MINUS);
+                break;
+            case "*":
+                opList.add(OperatorType.MUL);
+                break;
+            case "/":
+                opList.add(OperatorType.DIV);
+                break;
+            case "%":
+                opList.add(OperatorType.MOD);
+                break;
+            case "^":
+                opList.add(OperatorType.CARET);
+                break;
+            case "idiv":
+                opList.add(OperatorType.IDIV);
+                break;
+            case "~=":
+                opList.add(OperatorType.FUZZY_EQ);
+                break;
+            case "like":
+                opList.add(OperatorType.LIKE);
+                break;
+            case "not_like":
+                opList.add(OperatorType.NOT_LIKE);
+                break;
+            case "in":
+                opList.add(OperatorType.IN);
+                break;
+            case "not_in":
+                opList.add(OperatorType.NOT_IN);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported operator: " + strOp);
         }
+
     }
 
     @Override

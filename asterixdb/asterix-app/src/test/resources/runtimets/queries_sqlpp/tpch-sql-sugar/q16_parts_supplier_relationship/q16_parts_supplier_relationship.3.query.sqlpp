@@ -28,10 +28,10 @@ WITH tmp AS
             FROM  Partsupp,
                   Part
             WHERE p_partkey = ps_partkey AND p_brand != 'Brand#45' AND
-              not(like(p_type,'MEDIUM POLISHED%'))
+                  p_type NOT LIKE 'MEDIUM POLISHED%'
            ) AS psp,
            Supplier
-    WHERE ps_suppkey = s_suppkey AND not(like(s_comment,'%Customer%Complaints%'))
+    WHERE ps_suppkey = s_suppkey AND s_comment NOT LIKE '%Customer%Complaints%'
 )
 
 SELECT p_brand, p_type, p_size, count(ps_suppkey) supplier_cnt

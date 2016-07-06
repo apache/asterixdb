@@ -28,7 +28,7 @@ FROM  (
                            (
                             select element o_orderkey
                             from  Orders
-                            where c_custkey = o_custkey and not(like(o_comment,'%special%requests%'))
+                            where c_custkey = o_custkey and o_comment NOT LIKE '%special%requests%'
                            )
                          ) AS o_orderkey_count
                 from  Customer

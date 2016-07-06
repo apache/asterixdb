@@ -930,7 +930,6 @@ class LangExpressionToPlanTranslator
                     }
                 } else {
                     AbstractFunctionCallExpression f = createFunctionCallExpressionForBuiltinOperator(ops.get(i));
-
                     if (i == 0) {
                         f.getArguments().add(new MutableObject<>(e));
                         currExpr = f;
@@ -1182,53 +1181,40 @@ class LangExpressionToPlanTranslator
 
     protected AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t)
             throws AsterixException {
-
-        FunctionIdentifier fid = null;
+        FunctionIdentifier fid;
         switch (t) {
-            case PLUS: {
+            case PLUS:
                 fid = AlgebricksBuiltinFunctions.NUMERIC_ADD;
                 break;
-            }
-            case MINUS: {
+            case MINUS:
                 fid = AsterixBuiltinFunctions.NUMERIC_SUBTRACT;
                 break;
-            }
-            case MUL: {
+            case MUL:
                 fid = AsterixBuiltinFunctions.NUMERIC_MULTIPLY;
                 break;
-            }
-            case DIV: {
+            case DIV:
                 fid = AsterixBuiltinFunctions.NUMERIC_DIVIDE;
                 break;
-            }
-            case MOD: {
+            case MOD:
                 fid = AsterixBuiltinFunctions.NUMERIC_MOD;
                 break;
-            }
-            case IDIV: {
+            case IDIV:
                 fid = AsterixBuiltinFunctions.NUMERIC_IDIV;
                 break;
-            }
-            case CARET: {
+            case CARET:
                 fid = AsterixBuiltinFunctions.CARET;
                 break;
-            }
-            case AND: {
+            case AND:
                 fid = AlgebricksBuiltinFunctions.AND;
                 break;
-            }
-            case OR: {
+            case OR:
                 fid = AlgebricksBuiltinFunctions.OR;
                 break;
-            }
-            case FUZZY_EQ: {
+            case FUZZY_EQ:
                 fid = AsterixBuiltinFunctions.FUZZY_EQ;
                 break;
-            }
-
-            default: {
+            default:
                 throw new NotImplementedException("Operator " + t + " is not yet implemented");
-            }
         }
         return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
     }

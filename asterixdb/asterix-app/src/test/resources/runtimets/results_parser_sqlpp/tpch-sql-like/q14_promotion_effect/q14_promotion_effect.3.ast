@@ -8,11 +8,12 @@ OperatorExpr [
     (
       SELECT ELEMENT [
       FunctionCall tpch.switch-case@5[
-        FunctionCall tpch.like@2[
+        OperatorExpr [
           FieldAccessor [
             Variable [ Name=$i ]
             Field=p_type
           ]
+          like
           LiteralExpr [STRING] [PROMO%]
         ]
         LiteralExpr [TRUE]

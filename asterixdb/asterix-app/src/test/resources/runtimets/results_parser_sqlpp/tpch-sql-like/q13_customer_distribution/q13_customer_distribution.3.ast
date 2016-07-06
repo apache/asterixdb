@@ -83,14 +83,13 @@ FROM [  (
                       ]
                     ]
                     and
-                    FunctionCall null.not@1[
-                      FunctionCall tpch.like@2[
-                        FieldAccessor [
-                          Variable [ Name=$o ]
-                          Field=o_comment
-                        ]
-                        LiteralExpr [STRING] [%special%requests%]
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=$o ]
+                        Field=o_comment
                       ]
+                      not_like
+                      LiteralExpr [STRING] [%special%requests%]
                     ]
                   ]
               )

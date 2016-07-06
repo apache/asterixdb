@@ -51,6 +51,7 @@ import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGlobalAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
@@ -87,6 +88,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
             LangRewritingContext context) throws AsterixException {
+        // Marks the current variable counter.
+        context.markCounter();
+
         // Sets up parameters.
         setup(declaredFunctions, topExpr, metadataProvider, context);
 
@@ -95,6 +99,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
         // Inlines WITH expressions.
         inlineWithExpressions();
+
+        // Rewrites like/not-like expressions.
+        rewriteOperatorExpression();
 
         // Rewrites SQL-92 global aggregations.
         rewriteGlobalAggregations();
@@ -112,6 +119,11 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // This should be done after inlineDeclaredUdfs() because user-defined function
         // names could be case sensitive.
         rewriteFunctionNames();
+
+        // Resets the variable counter to the previous marked value.
+        // Therefore, the variable ids in the final query plans will not be perturbed
+        // by the additon or removal of intermediate AST rewrites.
+        context.resetCounter();
 
         // Replace global variable access with the dataset function for inlined expressions.
         variableCheckAndRewrite(true);
@@ -147,6 +159,15 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Inlines with expressions.
         InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor(context);
         inlineWithExpressionVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteOperatorExpression() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        // Rewrites like/not-like operators into function call expressions.
+        OperatorExpressionVisitor likeExpressionVisitor = new OperatorExpressionVisitor(context);
+        likeExpressionVisitor.visit(topExpr, null);
     }
 
     protected void inlineColumnAlias() throws AsterixException {

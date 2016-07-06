@@ -5230,6 +5230,21 @@
         <output-dir compare="Text">decorrelate_with_unique_id_2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="in">
+        <output-dir compare="Text">in</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="in_correlated">
+        <output-dir compare="Text">in</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="not_in">
+        <output-dir compare="Text">not_in</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">

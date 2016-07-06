@@ -103,14 +103,13 @@ FunctionDecl tmp([]) {
               LiteralExpr [STRING] [Brand#45]
             ]
             and
-            FunctionCall null.not@1[
-              FunctionCall tpch.like@2[
-                FieldAccessor [
-                  Variable [ Name=$p ]
-                  Field=p_type
-                ]
-                LiteralExpr [STRING] [MEDIUM POLISHED%]
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=$p ]
+                Field=p_type
               ]
+              not_like
+              LiteralExpr [STRING] [MEDIUM POLISHED%]
             ]
           ]
       )
@@ -133,14 +132,13 @@ FunctionDecl tmp([]) {
           ]
         ]
         and
-        FunctionCall null.not@1[
-          FunctionCall tpch.like@2[
-            FieldAccessor [
-              Variable [ Name=$s ]
-              Field=s_comment
-            ]
-            LiteralExpr [STRING] [%Customer%Complaints%]
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=$s ]
+            Field=s_comment
           ]
+          not_like
+          LiteralExpr [STRING] [%Customer%Complaints%]
         ]
       ]
   )

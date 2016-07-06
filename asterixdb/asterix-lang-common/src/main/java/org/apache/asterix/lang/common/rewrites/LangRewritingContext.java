@@ -23,8 +23,9 @@ import java.util.HashMap;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 
 public final class LangRewritingContext {
+    private int mark = 0;
     private int varCounter;
-    private HashMap<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<Integer, VarIdentifier>();
+    private HashMap<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
 
     public LangRewritingContext(int varCounter) {
         this.varCounter = varCounter;
@@ -63,6 +64,14 @@ public final class LangRewritingContext {
         int id = newId();
         // Prefixes system-generated variables with "#".
         return new VarIdentifier("#" + id, id);
+    }
+
+    public void markCounter() {
+        mark = varCounter;
+    }
+
+    public void resetCounter() {
+        varCounter = mark;
     }
 
     private int newId() {

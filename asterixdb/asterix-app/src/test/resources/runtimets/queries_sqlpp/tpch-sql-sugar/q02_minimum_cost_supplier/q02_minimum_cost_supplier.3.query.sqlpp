@@ -26,7 +26,7 @@ WITH q2_minimum_cost_supplier_tmp1 AS
  FROM Nation JOIN Region ON n_regionkey = r_regionkey and r_name = 'EUROPE'
  JOIN Supplier ON s_nationkey = n_nationkey
  JOIN Partsupp ON s_suppkey = ps_suppkey
- JOIN Part ON p_partkey = ps_partkey AND like(p_type, '%BRASS')
+ JOIN Part ON p_partkey = ps_partkey AND p_type LIKE '%BRASS'
 ),
 q2_minimum_cost_supplier_tmp2 AS
 (

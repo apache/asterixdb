@@ -35,7 +35,11 @@ public enum OperatorType {
     MOD("%"),
     CARET("^"),
     IDIV("idiv"), // integer divide
-    FUZZY_EQ("~=");
+    FUZZY_EQ("~="),
+    LIKE("like"),
+    NOT_LIKE("not_like"),
+    IN("in"),
+    NOT_IN("not_in");
 
     private final String symbol;
 

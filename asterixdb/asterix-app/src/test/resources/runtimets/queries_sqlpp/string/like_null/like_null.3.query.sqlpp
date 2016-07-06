@@ -20,4 +20,4 @@
 use test;
 
 
-{'field1':test.like('A8BBB',null),'field2':test.like(null,'_6%')};
+{'field1': 'A8BBB' LIKE null,'field2': null LIKE '_6%'};

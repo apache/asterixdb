@@ -40,6 +40,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Inlines WITH expressions.
         inlineWithExpressions();
 
+        // Rewrites like/not-like expressions.
+        rewriteOperatorExpression();
+
         // Rewrites SQL-92 global aggregations.
         rewriteGlobalAggregations();
 

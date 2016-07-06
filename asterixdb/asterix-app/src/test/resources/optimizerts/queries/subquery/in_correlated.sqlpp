@@ -17,13 +17,30 @@
  * under the License.
  */
 
-use tpch;
+
+DROP DATABASE test IF EXISTS;
+CREATE DATABASE test;
+USE test;
 
 
-select element 100.0 *
-     sum(`switch-case`(p_type LIKE 'PROMO%',true, l_extendedprice * (1 - l_discount), false, 0.0))
-     / sum(l_extendedprice * (1 - l_discount))
-FROM  LineItem,
-      Part
-WHERE l_partkey = p_partkey AND l_shipdate >= '1995-09-01' AND l_shipdate < '1995-10-01'
-;
+CREATE TYPE OrderType AS {
+  o_orderkey: int32
+}
+
+CREATE TYPE CustomerType AS {
+  c_custkey: int32
+}
+
+
+CREATE COLLECTION Customers(CustomerType) PRIMARY KEY c_custkey;
+
+CREATE COLLECTION Orders(OrderType) PRIMARY KEY o_orderkey;
+
+SELECT c.c_custkey customer_name
+FROM Customers c
+WHERE c.c_custkey IN (
+    SELECT VALUE o.o_custkey
+    FROM Orders o
+    WHERE c.c_custkey = o.o_custkey
+  )  AND c.c_nationkey = 5
+ORDER BY customer_name;

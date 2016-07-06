@@ -313,11 +313,12 @@ FunctionDecl tmp1([]) {
           ]
         ]
         and
-        FunctionCall tpch.like@2[
+        OperatorExpr [
           FieldAccessor [
             Variable [ Name=$p ]
             Field=p_type
           ]
+          like
           LiteralExpr [STRING] [%BRASS]
         ]
       ]
@@ -588,11 +589,12 @@ FunctionDecl tmp2([]) {
           ]
         ]
         and
-        FunctionCall tpch.like@2[
+        OperatorExpr [
           FieldAccessor [
             Variable [ Name=$p ]
             Field=p_type
           ]
+          like
           LiteralExpr [STRING] [%BRASS]
         ]
       ]
