@@ -20,5 +20,5 @@
 use test;
 
 
-delete c from Customers
- where (c.nested.cid >= 200);
+delete from Customers c
+ where c.nested.cid >= 200;

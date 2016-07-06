@@ -36,17 +36,16 @@ load  table Partsupp using localfs ((`path`=`asterix_nc1://data/tpch0.001/partsu
 
 load  table Customer using localfs ((`path`=`asterix_nc1://data/tpch0.001/customer.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-delete l from LineItem
-;
-delete o from Orders
-;
-delete s from Supplier
-;
-delete s from Region
-;
-delete s from Nation
-;
-delete s from Part
-;
-delete s from Partsupp
-;
+delete from LineItem;
+
+delete from Orders;
+
+delete from Supplier;
+
+delete from Region;
+
+delete from Nation;
+
+delete from Part;
+
+delete from Partsupp;

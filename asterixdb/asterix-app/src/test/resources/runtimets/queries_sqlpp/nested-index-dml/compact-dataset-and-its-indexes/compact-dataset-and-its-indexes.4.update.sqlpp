@@ -20,5 +20,5 @@
 use test;
 
 
-delete l from LineItem
- where ((l.nested.l_suppkey >= 2) or (l.nested.l_linenumber > 1));
+delete from LineItem
+ where nested.l_suppkey >= 2 or nested.l_linenumber > 1;

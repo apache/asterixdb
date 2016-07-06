@@ -20,5 +20,5 @@
 use TinySocial;
 
 
-delete l from TweetMessages
- where ((l.user.name >= 'Oli Jackson') or (l.user.statuses_count > 362));
+delete from TweetMessages
+ where user.name >= 'Oli Jackson' or user.statuses_count > 362;

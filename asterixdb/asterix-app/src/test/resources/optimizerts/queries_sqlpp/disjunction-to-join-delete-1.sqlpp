@@ -34,5 +34,5 @@ create  table TestSet(TestType) primary key id;
 
 create  index TestSetIndex  on TestSet (idx) type btree;
 
-delete x from TestSet
- where ((x.id = 'one') or (x.id = 'two'));
+delete from TestSet
+ where id = 'one' or id = 'two';

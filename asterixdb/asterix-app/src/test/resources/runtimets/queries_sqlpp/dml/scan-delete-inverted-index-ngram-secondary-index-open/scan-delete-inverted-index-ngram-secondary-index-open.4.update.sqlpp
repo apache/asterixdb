@@ -26,5 +26,5 @@
 use test;
 
 
-delete o from DBLPOpen
- where (o.id > 50);
+delete from DBLPOpen
+ where id > 50;

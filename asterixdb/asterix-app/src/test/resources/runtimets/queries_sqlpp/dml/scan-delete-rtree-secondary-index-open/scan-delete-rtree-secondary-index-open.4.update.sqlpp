@@ -26,5 +26,5 @@
 use test;
 
 
-delete m from MyDataOpen
- where (m.id > 10);
+delete from MyDataOpen
+ where id > 10;

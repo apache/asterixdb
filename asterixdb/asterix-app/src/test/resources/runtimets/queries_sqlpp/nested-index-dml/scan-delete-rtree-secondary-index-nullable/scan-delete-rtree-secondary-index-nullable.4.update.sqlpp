@@ -20,5 +20,5 @@
 use test;
 
 
-delete m from MyData
- where (m.nested.id > 10);
+delete from MyData
+ where nested.id > 10;

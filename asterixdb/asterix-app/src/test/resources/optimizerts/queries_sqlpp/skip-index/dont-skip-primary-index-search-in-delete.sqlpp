@@ -52,5 +52,5 @@ create type test.CustomerType as
 
 create  table Customers(CustomerType) primary key cid;
 
-delete c from Customers
- where (c.cid /*+ skip-index */  < 10);
+delete from Customers
+ where cid /*+ skip-index */  < 10;

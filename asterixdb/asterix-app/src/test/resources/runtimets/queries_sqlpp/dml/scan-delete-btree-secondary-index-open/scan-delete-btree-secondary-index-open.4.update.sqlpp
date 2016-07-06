@@ -20,5 +20,5 @@
 use test;
 
 
-delete c from CustomersOpen
- where (c.cid >= 200);
+delete from CustomersOpen
+ where cid >= 200;

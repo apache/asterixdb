@@ -1,0 +1,13 @@
+FunctionDecl abc([$y]) {
+  LiteralExpr [LONG] [3]
+}
+
+Query:
+Let Variable [ Name=$z ]
+  :=
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [y]
+  ]
+SELECT ELEMENT [
+Variable [ Name=$z ]
+]

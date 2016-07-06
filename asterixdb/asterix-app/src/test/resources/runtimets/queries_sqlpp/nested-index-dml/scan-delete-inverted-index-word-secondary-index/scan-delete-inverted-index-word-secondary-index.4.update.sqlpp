@@ -26,5 +26,5 @@
 use test;
 
 
-delete o from DBLP
- where (o.nested.id < 50);
+delete from DBLP
+ where nested.id < 50;

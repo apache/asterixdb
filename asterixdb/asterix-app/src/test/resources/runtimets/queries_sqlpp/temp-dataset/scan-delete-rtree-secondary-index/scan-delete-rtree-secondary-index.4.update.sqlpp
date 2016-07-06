@@ -25,5 +25,5 @@
 use test;
 
 
-delete m from MyData
- where (m.id > 10);
+delete from MyData
+ where id > 10;
