@@ -52,7 +52,12 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
             case FUNCTION_CALL:
                 return getTypeForFunction((AbstractFunctionCallExpression) expr, env, metadataProvider);
             case VARIABLE:
-                return env.getVarType(((VariableReferenceExpression) expr).getVariableReference());
+                try {
+                    return env.getVarType(((VariableReferenceExpression) expr).getVariableReference());
+                } catch (Exception e) {
+                    throw new AlgebricksException("Could not resolve type for " + expr.toString() + ","
+                            + "please check whether the used variable has been defined!", e);
+                }
             default:
                 throw new IllegalStateException();
         }
