@@ -6534,7 +6534,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Error:</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Undefined alias (variable) reference for identifier y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

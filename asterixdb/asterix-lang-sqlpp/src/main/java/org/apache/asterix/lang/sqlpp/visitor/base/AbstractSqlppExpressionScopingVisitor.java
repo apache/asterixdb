@@ -274,7 +274,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // variables defined in the parent scope.
         Scope scope = new Scope(scopeChecker, scopeChecker.getCurrentScope(), true);
         scopeChecker.pushExistingScope(scope);
-        independentSubquery.getExpr().accept(this, arg);
+        independentSubquery.setExpr(independentSubquery.getExpr().accept(this, arg));
         scopeChecker.removeCurrentScope();
         return independentSubquery;
     }
