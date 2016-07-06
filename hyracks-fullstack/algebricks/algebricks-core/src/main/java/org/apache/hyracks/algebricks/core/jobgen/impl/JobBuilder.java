@@ -49,19 +49,19 @@ public class JobBuilder implements IHyracksJobBuilder {
     private final AlgebricksAbsolutePartitionConstraint clusterLocations;
     private final AlgebricksAbsolutePartitionConstraint countOneLocation;
 
-    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> outEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
-    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> inEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
-    private final Map<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>> connectors = new HashMap<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>>();
+    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> outEdges = new HashMap<>();
+    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> inEdges = new HashMap<>();
+    private final Map<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>> connectors = new HashMap<>();
 
-    private final Map<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>> microOps = new HashMap<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>>();
-    private final Map<IPushRuntimeFactory, ILogicalOperator> revMicroOpMap = new HashMap<IPushRuntimeFactory, ILogicalOperator>();
-    private final Map<ILogicalOperator, IOperatorDescriptor> hyracksOps = new HashMap<ILogicalOperator, IOperatorDescriptor>();
-    private final Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<ILogicalOperator, AlgebricksPartitionConstraint>();
+    private final Map<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>> microOps = new HashMap<>();
+    private final Map<IPushRuntimeFactory, ILogicalOperator> revMicroOpMap = new HashMap<>();
+    private final Map<ILogicalOperator, IOperatorDescriptor> hyracksOps = new HashMap<>();
+    private final Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<>();
 
-    private final Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<ILogicalOperator, Integer>();
-    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>>();
-    private final Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<Integer, AlgebricksMetaOperatorDescriptor>();
-    private final Map<IOperatorDescriptor, AlgebricksPartitionConstraint> partitionConstraintMap = new HashMap<IOperatorDescriptor, AlgebricksPartitionConstraint>();
+    private final Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<>();
+    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<>();
+    private final Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<>();
+    private final Map<IOperatorDescriptor, AlgebricksPartitionConstraint> partitionConstraintMap = new HashMap<>();
 
     private int aodCounter = 0;
 
@@ -123,14 +123,14 @@ public class JobBuilder implements IHyracksJobBuilder {
             int destInputIndex) {
         ArrayList<ILogicalOperator> outputs = outEdges.get(src);
         if (outputs == null) {
-            outputs = new ArrayList<ILogicalOperator>();
+            outputs = new ArrayList<>();
             outEdges.put(src, outputs);
         }
         addAtPos(outputs, dest, srcOutputIndex);
 
         ArrayList<ILogicalOperator> inp = inEdges.get(dest);
         if (inp == null) {
-            inp = new ArrayList<ILogicalOperator>();
+            inp = new ArrayList<>();
             inEdges.put(dest, inp);
         }
         addAtPos(inp, src, destInputIndex);
@@ -270,7 +270,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     }
 
     private Map<IConnectorDescriptor, TargetConstraint> setupConnectors() throws AlgebricksException {
-        Map<IConnectorDescriptor, TargetConstraint> tgtConstraints = new HashMap<IConnectorDescriptor, TargetConstraint>();
+        Map<IConnectorDescriptor, TargetConstraint> tgtConstraints = new HashMap<>();
         for (ILogicalOperator exchg : connectors.keySet()) {
             ILogicalOperator inOp = inEdges.get(exchg).get(0);
             ILogicalOperator outOp = outEdges.get(exchg).get(0);

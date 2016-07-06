@@ -45,20 +45,21 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
     private static final long serialVersionUID = 1L;
     private static final int PARTITION_ACTIVITY_ID = 0;
 
+    private static final int OUTPUT_ARITY = 3;
+
     private static final int INPUT_STARTS = 0;
     private static final int INPUT_COVERS = 2;
     private static final int INPUT_ENDS = 1;
-
-//    private static final int INPUT_STARTS = 0;
-//    private static final int INPUT_COVERS = 0;
-//    private static final int INPUT_ENDS = 0;
 
     private final int key;
     private final IRangeMap rangeMap;
 
     public IntervalLocalRangeOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys,
             RecordDescriptor recordDescriptor, IRangeMap rangeMap) {
-        super(spec, 1, 3);
+        super(spec, 1, OUTPUT_ARITY);
+        for (int i = 0; i < outputArity; i++) {
+            recordDescriptors[i] = recordDescriptor;
+        }
         key = keys[0];
         this.rangeMap = rangeMap;
     }
@@ -105,7 +106,7 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
                 @Override
                 public void flush() throws HyracksDataException {
                     for (int i = 0; i < getOutputArity(); i++) {
-                        resultAppender[i].flush(writers[i]);
+                        FrameUtils.flushFrame(resultAppender[i].getBuffer(), writers[i]);
                     }
                 }
 

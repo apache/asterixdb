@@ -342,4 +342,5 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         return prepareForJobGenRewrites;
     }
+
 }

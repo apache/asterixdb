@@ -54,7 +54,7 @@ public class IntervalLocalRangeSplitterOperator extends AbstractExtensibleLogica
 
     @Override
     public String toString() {
-        return "IntervalLocalRangeSplitterOperator";
+        return "IntervalLocalRangeSplitterOperator " + joinKeyLogicalVars;
     }
 
     @Override
