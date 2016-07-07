@@ -46,6 +46,7 @@ import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
@@ -277,33 +278,74 @@ public class TestExecutor {
         return statusCode;
     }
 
-    // Executes Query and returns results as JSONArray
-    public InputStream executeQuery(String str, OutputFormat fmt, String url, List<CompilationUnit.Parameter> params)
-            throws Exception {
-        HttpMethodBase method = null;
-        if (str.length() + url.length() < MAX_URL_LENGTH) {
-            // Use GET for small-ish queries
-            method = new GetMethod(url);
-            NameValuePair[] parameters = new NameValuePair[params.size() + 1];
-            parameters[0] = new NameValuePair("query", str);
-            int i = 1;
-            for (CompilationUnit.Parameter param : params) {
-                parameters[i++] = new NameValuePair(param.getName(), param.getValue());
-            }
-            method.setQueryString(parameters);
-        } else {
-            // Use POST for bigger ones to avoid 413 FULL_HEAD
-            // QQQ POST API doesn't allow encoding additional parameters
-            method = new PostMethod(url);
-            ((PostMethod) method).setRequestEntity(new StringRequestEntity(str));
-        }
-
+    public InputStream executeQuery(String str, OutputFormat fmt, String url,
+            List<CompilationUnit.Parameter> params) throws Exception {
+        HttpMethod method = constructHttpMethod(str, url, "query", false, params);
         // Set accepted output response type
         method.setRequestHeader("Accept", fmt.mimeType());
-        // Provide custom retry handler is necessary
-        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
         executeHttpMethod(method);
         return method.getResponseBodyAsStream();
+    }
+
+    public InputStream executeQueryService(String str, OutputFormat fmt, String url,
+            List<CompilationUnit.Parameter> params) throws Exception {
+        setFormatParam(params, fmt);
+        HttpMethod method = constructHttpMethod(str, url, "statement", true, params);
+        // Set accepted output response type
+        method.setRequestHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
+        executeHttpMethod(method);
+        return method.getResponseBodyAsStream();
+    }
+
+    private void setFormatParam(List<CompilationUnit.Parameter> params, OutputFormat fmt) {
+        boolean formatSet = false;
+        for (CompilationUnit.Parameter param : params) {
+            if ("format".equals(param.getName())) {
+                param.setValue(fmt.mimeType());
+                formatSet = true;
+            }
+        }
+        if (!formatSet) {
+            CompilationUnit.Parameter formatParam = new CompilationUnit.Parameter();
+            formatParam.setName("format");
+            formatParam.setValue(fmt.mimeType());
+            params.add(formatParam);
+        }
+    }
+
+    private HttpMethod constructHttpMethod(String statement, String endpoint, String stmtParam, boolean postStmtAsParam,
+            List<CompilationUnit.Parameter> otherParams) {
+        HttpMethod method;
+        if (statement.length() + endpoint.length() < MAX_URL_LENGTH) {
+            // Use GET for small-ish queries
+            GetMethod getMethod = new GetMethod(endpoint);
+            NameValuePair[] parameters = new NameValuePair[otherParams.size() + 1];
+            parameters[0] = new NameValuePair(stmtParam, statement);
+            int i = 1;
+            for (CompilationUnit.Parameter param : otherParams) {
+                parameters[i++] = new NameValuePair(param.getName(), param.getValue());
+            }
+            getMethod.setQueryString(parameters);
+            method = getMethod;
+        } else {
+            // Use POST for bigger ones to avoid 413 FULL_HEAD
+            PostMethod postMethod = new PostMethod(endpoint);
+            if (postStmtAsParam) {
+                for (CompilationUnit.Parameter param : otherParams) {
+                    postMethod.setParameter(param.getName(), param.getValue());
+                }
+                postMethod.setParameter("statement", statement);
+            } else {
+                // this seems pretty bad - we should probably fix the API and not the client
+                postMethod.setRequestEntity(new StringRequestEntity(statement));
+            }
+            method = postMethod;
+        }
+        // Provide custom retry handler is necessary
+        HttpMethodParams httpMethodParams = method.getParams();
+        httpMethodParams.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+        httpMethodParams.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, StandardCharsets.UTF_8.name());
+        return method;
     }
 
     public InputStream executeClusterStateQuery(OutputFormat fmt, String url) throws Exception {
@@ -473,6 +515,7 @@ public class TestExecutor {
         executeTest(actualPath, testCaseCtx, pb, isDmlRecoveryTest, null);
     }
 
+
     public void executeTest(TestCaseContext testCaseCtx, TestFileContext ctx, String statement,
             boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
             List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath) throws Exception {
@@ -523,8 +566,9 @@ public class TestExecutor {
                     }
                 } else {
                     if (ctx.getType().equalsIgnoreCase("query")) {
-                        resultStream = executeQuery(statement, fmt,
-                                "http://" + host + ":" + port + Servlets.SQLPP_QUERY.getPath(), cUnit.getParameter());
+                        resultStream = executeQueryService(statement, fmt,
+                                "http://" + host + ":" + port + Servlets.QUERY_SERVICE.getPath(), cUnit.getParameter());
+                        resultStream = ResultExtractor.extract(resultStream);
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
                         resultStream = executeAnyAQLAsync(statement, false, fmt,
                                 "http://" + host + ":" + port + Servlets.SQLPP.getPath());
@@ -533,7 +577,6 @@ public class TestExecutor {
                                 "http://" + host + ":" + port + Servlets.SQLPP.getPath());
                     }
                 }
-
                 if (queryCount.intValue() >= expectedResultFileCtxs.size()) {
                     throw new IllegalStateException("no result file for " + testFile.toString() + "; queryCount: "
                             + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
@@ -770,6 +813,7 @@ public class TestExecutor {
                     } else {
                         // Get the expected exception
                         String expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
+                        System.err.println("+++++\n" + expectedError + "\n+++++\n");
                         if (e.toString().contains(expectedError)) {
                             System.err.println("...but that was expected.");
                         } else {

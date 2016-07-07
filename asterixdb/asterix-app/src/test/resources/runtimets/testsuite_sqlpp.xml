@@ -17,10 +17,9 @@
  ! under the License.
  !-->
 <!DOCTYPE test-suite [
+  <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
 
-             <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
-
-             ]>
+]>
 <test-suite
              xmlns="urn:xml.testframework.asterix.apache.org"
              ResultOffsetPath="results"
@@ -1076,43 +1075,43 @@
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_duration">
         <output-dir compare="Text">issue363_inequality_duration</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_interval">
         <output-dir compare="Text">issue363_inequality_interval</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_point">
         <output-dir compare="Text">issue363_inequality_point</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_line">
         <output-dir compare="Text">issue363_inequality_line</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_polygon">
         <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_rectangle">
         <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_circle">
         <output-dir compare="Text">issue363_inequality_circle</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -1350,7 +1349,7 @@
     <test-case FilePath="custord">
       <compilation-unit name="join_q_07">
         <output-dir compare="Text">join_q_06</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Undefined alias (variable) reference for identifier c</expected-error>
+        <expected-error>Undefined alias (variable) reference for identifier c</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
@@ -2336,19 +2335,19 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: The first argument should be a RECORD, but it is</expected-error>
+        <expected-error>The first argument should be a RECORD, but it is [ FacebookUserType: open</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q06_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>Caused by: org.apache.asterix.common.exceptions.AsterixException: Unsupported type: STRING</expected-error>
+        <expected-error>Unsupported type: STRING</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q07_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>org.apache.asterix.common.exceptions.AsterixException: COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function coll_count could potentially express the intent.</expected-error>
+        <expected-error>COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function coll_count could potentially express the intent.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -2805,8 +2804,8 @@
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>java.lang.NullPointerException</expected-error>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot find dataset</expected-error>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Undefined alias (variable) reference for identifier testds</expected-error>
+        <expected-error>Cannot find dataset</expected-error>
+        <expected-error>Undefined alias (variable) reference for identifier testds</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -6332,7 +6331,7 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv13">
         <output-dir compare="Text">cross-dv13</output-dir>
-        <expected-error>Error: Recursive invocation testdv2.fun03@0</expected-error>
+        <expected-error>Recursive invocation testdv2.fun03@0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">
@@ -6348,7 +6347,7 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv16">
         <output-dir compare="Text">cross-dv16</output-dir>
-        <expected-error>Error: Recursive invocation testdv1.fun04@0</expected-error>
+        <expected-error>Recursive invocation testdv1.fun04@0</expected-error>
       </compilation-unit>
     </test-case>
     <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
@@ -6410,7 +6409,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>Error: function test.printName@0 is undefined</expected-error>
+        <expected-error>function test.printName@0 is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6554,7 +6553,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf26">
         <output-dir compare="Text">udf26</output-dir>
-        <expected-error>Error: function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
+        <expected-error>function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6576,13 +6575,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Undefined alias (variable) reference for identifier y</expected-error>
+        <expected-error>Undefined alias (variable) reference for identifier y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>Error: function test.int8@0 is undefined</expected-error>
+        <expected-error>function test.int8@0 is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->

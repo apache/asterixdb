@@ -39,7 +39,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.app.external.FeedJoint;
 import org.apache.asterix.app.external.FeedLifecycleListener;
@@ -2562,15 +2561,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                         hcc.waitForCompletion(jobId);
                         ResultReader resultReader = new ResultReader(hcc, hdc);
                         resultReader.open(jobId, metadataProvider.getResultSetId());
-
-                        // In this case (the normal case), we don't use the
-                        // "response" JSONObject - just stream the results
-                        // to the "out" PrintWriter
-                        if (sessionConfig.fmt() == OutputFormat.CSV
-                                && sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
-                            ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
-                        }
-                        ResultUtils.displayResults(resultReader, sessionConfig, stats);
+                        ResultUtils.displayResults(resultReader, sessionConfig, stats,
+                                metadataProvider.findOutputRecordType());
                         break;
                     case ASYNC_DEFERRED:
                         handle = new JSONArray();

@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.servlet;
+package org.apache.asterix.common.utils;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,21 +27,23 @@ import org.json.JSONObject;
 
 public class JSONUtil {
 
-    static final String INDENT = "\t";
+    private static final Logger LOGGER = Logger.getLogger(JSONUtil.class.getName());
 
-    public static String indent(String str) {
-        return indent(str, 0);
+    private static final String INDENT = "\t";
+
+    private JSONUtil() {
     }
 
     public static String indent(String str, int initialIndent) {
         try {
             return append(new StringBuilder(), new JSONObject(str), initialIndent).toString();
         } catch (JSONException e) {
+            LOGGER.finest("Could not indent JSON string, returning the input string: " + str);
             return str;
         }
     }
 
-    static StringBuilder append(StringBuilder sb, Object o, int indent) throws JSONException {
+    private static StringBuilder append(StringBuilder sb, Object o, int indent) throws JSONException {
         if (o instanceof JSONObject) {
             return append(sb, (JSONObject) o, indent);
         } else if (o instanceof JSONArray) {
@@ -53,8 +56,8 @@ public class JSONUtil {
         throw new UnsupportedOperationException(o.getClass().getSimpleName());
     }
 
-    static StringBuilder append(StringBuilder sb, JSONObject jobj, int indent) throws JSONException {
-        sb = sb.append("{\n");
+    private static StringBuilder append(StringBuilder builder, JSONObject jobj, int indent) throws JSONException {
+        StringBuilder sb = builder.append("{\n");
         boolean first = true;
         for (Iterator it = jobj.keys(); it.hasNext();) {
             final String key = (String) it.next();
@@ -72,8 +75,8 @@ public class JSONUtil {
         return indent(sb, indent).append("}");
     }
 
-    static StringBuilder append(StringBuilder sb, JSONArray jarr, int indent) throws JSONException {
-        sb = sb.append("[\n");
+    private static StringBuilder append(StringBuilder builder, JSONArray jarr, int indent) throws JSONException {
+        StringBuilder sb = builder.append("[\n");
         for (int i = 0; i < jarr.length(); ++i) {
             if (i > 0) {
                 sb = sb.append(",\n");
@@ -85,11 +88,12 @@ public class JSONUtil {
         return indent(sb, indent).append("]");
     }
 
-    static StringBuilder quote(StringBuilder sb, String str) {
+    private static StringBuilder quote(StringBuilder sb, String str) {
         return sb.append('"').append(str).append('"');
     }
 
-    static StringBuilder indent(StringBuilder sb, int indent) {
+    private static StringBuilder indent(StringBuilder sb, int i) {
+        int indent = i;
         while (indent > 0) {
             sb.append(INDENT);
             --indent;
@@ -97,40 +101,49 @@ public class JSONUtil {
         return sb;
     }
 
-    public static String escape(String str) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < str.length(); ++i) {
-            appendEsc(result, str.charAt(i));
-        }
-        return result.toString();
+    public static String quoteAndEscape(String str) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('"');
+        escape(sb, str);
+        return sb.append('"').toString();
     }
 
-    public static StringBuilder appendEsc(StringBuilder sb, char c) {
+    public static String escape(String str) {
+        return escape(new StringBuilder(), str).toString();
+    }
+
+    private static StringBuilder escape(StringBuilder sb, String str) {
+        for (int i = 0; i < str.length(); ++i) {
+            appendEsc(sb, str.charAt(i));
+        }
+        return sb;
+    }
+
+    private static StringBuilder appendEsc(StringBuilder sb, char c) {
+        CharSequence cs = esc(c);
+        return cs != null ? sb.append(cs) : sb.append(c);
+    }
+
+    public static CharSequence esc(char c) {
         switch (c) {
             case '"':
-                return sb.append("\\\"");
+                return "\\\"";
             case '\\':
-                return sb.append("\\\\");
+                return "\\\\";
             case '/':
-                return sb.append("\\/");
+                return "\\/";
             case '\b':
-                return sb.append("\\b");
+                return "\\b";
             case '\n':
-                return sb.append("\\n");
+                return "\\n";
             case '\f':
-                return sb.append("\\f");
+                return "\\f";
             case '\r':
-                return sb.append("\\r");
+                return "\\r";
             case '\t':
-                return sb.append("\\t");
+                return "\\t";
             default:
-                return sb.append(c);
+                return null;
         }
-    }
-
-    public static void main(String[] args) {
-        String json = args.length > 0 ? args[0] : "{\"a\":[\"b\",\"c\\\nd\"],\"e\":42}";
-        System.out.println(json);
-        System.out.println(indent(json));
     }
 }
