@@ -18,23 +18,11 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-public class ExpressionAnnotationNoCopyImpl implements IExpressionAnnotation {
-
-    private Object object;
+public class ExpressionAnnotationNoCopyImpl extends AbstractExpressionAnnotation {
 
     @Override
     public IExpressionAnnotation copy() {
         return this;
-    }
-
-    @Override
-    public Object getObject() {
-        return object;
-    }
-
-    @Override
-    public void setObject(Object object) {
-        this.object = object;
     }
 
 }

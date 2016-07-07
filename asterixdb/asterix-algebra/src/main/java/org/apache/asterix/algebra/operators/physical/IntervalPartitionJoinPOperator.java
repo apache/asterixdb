@@ -33,18 +33,18 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperator {
 
     private final int memSizeInFrames;
-    private final int probeTupleCount;
-    private final int probeMaxDuration;
-    private final int buildTupleCount;
-    private final int buildMaxDuration;
+    private final long probeTupleCount;
+    private final long probeMaxDuration;
+    private final long buildTupleCount;
+    private final long buildMaxDuration;
     private final int avgTuplesInFrame;
 
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinPOperator.class.getName());
 
     public IntervalPartitionJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            int memSizeInFrames, int buildTupleCount, int probeTupleCount, int buildMaxDuration, int probeMaxDuration,
-            int avgTuplesInFrame, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
+            int memSizeInFrames, long buildTupleCount, long probeTupleCount, long buildMaxDuration,
+            long probeMaxDuration, int avgTuplesInFrame, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
         super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, rangeMap);
         this.memSizeInFrames = memSizeInFrames;
         this.buildTupleCount = buildTupleCount;
@@ -62,19 +62,19 @@ public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperato
                 + ".");
     }
 
-    public int getProbeTupleCount() {
+    public long getProbeTupleCount() {
         return probeTupleCount;
     }
 
-    public int getProbeMaxDuration() {
+    public long getProbeMaxDuration() {
         return probeMaxDuration;
     }
 
-    public int getBuildTupleCount() {
+    public long getBuildTupleCount() {
         return buildTupleCount;
     }
 
-    public int getBuildMaxDuration() {
+    public long getBuildMaxDuration() {
         return buildMaxDuration;
     }
 

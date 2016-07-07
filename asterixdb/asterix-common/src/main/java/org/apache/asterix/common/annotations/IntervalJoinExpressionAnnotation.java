@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.common.annotations;
 
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
-public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
+public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotation {
 
     private static final String RAW_HINT_STRING = "interval-raw-join";
     private static final String PARTITION_HINT_STRING = "interval-partition-join";
@@ -30,19 +31,13 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
     private static final String INDEX_HINT_STRING = "interval-index-join";
     public static final IntervalJoinExpressionAnnotation INSTANCE = new IntervalJoinExpressionAnnotation();
 
-    private Object object;
-    private IRangeMap map;
-    private String joinType;
+    private IRangeMap map = null;
+    private String joinType = null;
+    private long leftMaxDuration = -1;
+    private long rightMaxDuration = -1;
+    private long leftRecordCount = -1;
+    private long rightRecordCount = -1;
 
-    @Override
-    public Object getObject() {
-        return object;
-    }
-
-    @Override
-    public void setObject(Object object) {
-        this.object = object;
-    }
 
     @Override
     public IExpressionAnnotation copy() {
@@ -51,15 +46,25 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
         return clone;
     }
 
-    public void setRangeMap(IRangeMap map) {
-        this.map = map;
+    @Override
+    public void setObject(Object object) {
+        super.setObject(object);
+        parseHint();
     }
 
-    public IRangeMap getRangeMap() {
-        return map;
+    private void parseHint() {
+        String[] args = ((String) object).split(" ");
+        setJoinType(args[0]);
+
+        if (joinType.equals(PARTITION_HINT_STRING) && args.length == 6) {
+            leftRecordCount = Long.valueOf(args[2]);
+            rightRecordCount = Long.valueOf(args[3]);
+            leftMaxDuration = Long.valueOf(args[4]);
+            rightMaxDuration = Long.valueOf(args[5]);
+        }
     }
 
-    public void setJoinType(String hint) {
+    private void setJoinType(String hint) {
         if (hint.startsWith(RAW_HINT_STRING)) {
             joinType = RAW_HINT_STRING;
         } else if (hint.startsWith(PARTITION_HINT_STRING)) {
@@ -71,6 +76,30 @@ public class IntervalJoinExpressionAnnotation implements IExpressionAnnotation {
         } else if (hint.startsWith(INDEX_HINT_STRING)) {
             joinType = INDEX_HINT_STRING;
         }
+    }
+
+    public long getLeftMaxDuration() {
+        return leftMaxDuration;
+    }
+
+    public long getRightMaxDuration() {
+        return rightMaxDuration;
+    }
+
+    public long getLeftRecordCount() {
+        return leftRecordCount;
+    }
+
+    public long getRightRecordCount() {
+        return rightRecordCount;
+    }
+
+    public void setRangeMap(IRangeMap map) {
+        this.map = map;
+    }
+
+    public IRangeMap getRangeMap() {
+        return map;
     }
 
     public String getRangeType() {

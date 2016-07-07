@@ -27,6 +27,8 @@ import java.util.logging.Logger;
 import org.apache.asterix.algebra.operators.physical.IntervalIndexJoinPOperator;
 import org.apache.asterix.algebra.operators.physical.IntervalPartitionJoinPOperator;
 import org.apache.asterix.common.annotations.IntervalJoinExpressionAnnotation;
+import org.apache.asterix.common.annotations.JoinIntervalMaxDurationExpressionAnnotation;
+import org.apache.asterix.common.annotations.JoinRecordCountsExpressionAnnotation;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.runtime.operators.joins.AfterIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.BeforeIntervalMergeJoinCheckerFactory;
@@ -89,7 +91,7 @@ public class JoinUtils {
             } else if (ijea.isPartitionJoin()) {
                 // Overlapping Interval Partition.
                 LOGGER.fine("Interval Join - Cluster Parititioning");
-                setIntervalPartitionJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), context);
+                setIntervalPartitionJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), ijea, context);
             } else if (ijea.isSpatialJoin()) {
                 // Spatial Partition.
                 LOGGER.fine("Interval Join - Spatial Partitioning");
@@ -112,6 +114,7 @@ public class JoinUtils {
         return null;
     }
 
+
     private static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IOptimizationContext context) {
@@ -122,12 +125,20 @@ public class JoinUtils {
 
     private static void setIntervalPartitionJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
-            IOptimizationContext context) {
+            IntervalJoinExpressionAnnotation ijea, IOptimizationContext context) {
+        long leftCount = ijea.getLeftRecordCount() > 0 ? ijea.getLeftRecordCount()
+                : getCardinality(sideLeft, context);
+        long rightCount = ijea.getRightRecordCount() > 0 ? ijea.getRightRecordCount()
+                : getCardinality(sideRight, context);
+        long leftMaxDuration = ijea.getLeftMaxDuration() > 0 ? ijea.getLeftMaxDuration()
+                : getMaxDuration(sideLeft, context);
+        long rightMaxDuration = ijea.getRightMaxDuration() > 0 ? ijea.getRightMaxDuration()
+                : getMaxDuration(sideRight, context);
+
         IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new IntervalPartitionJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(),
-                getCardinality(sideLeft, context), getCardinality(sideRight, context),
-                getMaxDuration(sideLeft, context), getMaxDuration(sideRight, context),
+                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), leftCount,
+                rightCount, leftMaxDuration, rightMaxDuration,
                 context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), mjcf, rangeMap));
     }
 

@@ -16,17 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description      :   Check temporal join functionality for interval
- * Expected Result  :   Success
- * Date             :   26th Jun, 2015
- */
+package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-use dataverse TinyCollege;
+public abstract class AbstractExpressionAnnotation implements IExpressionAnnotation {
 
-for $f in dataset Staff
-for $d in dataset Students
-where /*+ interval-partition-join [10000,11000,12000,14000,15000] 7 7 400 400 */ interval-overlapping($d.attendance, $f.employment)
-/*+ range ["F", "L", "R"] */
-order by $f.name, $d.name
-return { "staff" : $f.name, "student" : $d.name }
+    protected Object object;
+
+    @Override
+    public Object getObject() {
+        return object;
+    }
+
+    @Override
+    public void setObject(Object object) {
+        this.object = object;
+    }
+
+}

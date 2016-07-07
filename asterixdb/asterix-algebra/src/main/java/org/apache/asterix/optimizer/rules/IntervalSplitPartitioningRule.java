@@ -370,7 +370,6 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
             flags[i] = true;
         }
         ReplicateOperator splitOperator = new ReplicateOperator(flags.length, flags);
-        //        ReplicatePOperator splitPOperator = new ReplicatePOperator();
         IntervalLocalRangeSplitterPOperator splitPOperator = new IntervalLocalRangeSplitterPOperator(joinKeyLogicalVars,
                 rangeMap);
         splitOperator.setPhysicalOperator(splitPOperator);

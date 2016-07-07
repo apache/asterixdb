@@ -37,15 +37,15 @@ public class IntervalPartitionUtil {
     private IntervalPartitionUtil() {
     }
 
-    public static int determineK(int countR, int maxDurationR, int countS, int maxDurationS, int avgTuplePerFrame) {
+    public static int determineK(long countR, long maxDurationR, long countS, long maxDurationS, int avgTuplePerFrame) {
         double deltaR = 1.0 / maxDurationR;
         double deltaS = 1.0 / maxDurationS;
 
-        int knMinusTwo = 0;
-        int knMinusOne = 0;
-        int kn = 1;
+        long knMinusTwo = 0;
+        long knMinusOne = 0;
+        long kn = 1;
 
-        int prn = determinePn(kn, countR, deltaR);
+        long prn = determinePn(kn, countR, deltaR);
         double tn = determineTn(kn, determinePn(kn, countS, deltaS));
 
         while ((kn != knMinusOne) && (kn != knMinusTwo)) {
@@ -55,21 +55,25 @@ public class IntervalPartitionUtil {
             prn = determinePn(kn, countR, deltaR);
             tn = determineTn(kn, determinePn(kn, countS, deltaS));
         }
-        return kn;
+        if (kn > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        } else {
+            return (int) kn;
+        }
     }
 
-    public static int determineKn(int countR, int countS, int avgTuplePerFrame, int prn, double tn) {
+    public static long determineKn(long countR, long countS, int avgTuplePerFrame, long prn, double tn) {
         double factorS = (3.0 * countS) / (2 * (C_IO + 2 * C_CPU) * tn);
         double factorR = (C_IO / avgTuplePerFrame) + ((4.0 * countR * C_CPU) / prn);
-        return (int) Math.cbrt(factorS * factorR);
+        return (long) Math.cbrt(factorS * factorR);
     }
 
-    public static int determinePn(int kn, int count, double delta) {
+    public static long determinePn(long kn, long count, double delta) {
         long knDelta = (long) Math.ceil(kn * delta);
-        return Math.min((int) ((kn * knDelta) + kn - ((knDelta * knDelta) / 2.0) - (knDelta / 2.0)), count);
+        return Math.min((long) ((kn * knDelta) + kn - ((knDelta * knDelta) / 2.0) - (knDelta / 2.0)), count);
     }
 
-    public static double determineTn(int kn, int pn) {
+    public static double determineTn(long kn, long pn) {
         return pn / ((kn * kn + kn) / 2.0);
     }
 

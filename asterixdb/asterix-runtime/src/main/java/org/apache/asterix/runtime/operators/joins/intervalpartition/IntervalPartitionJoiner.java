@@ -50,7 +50,7 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  * This class mainly applies one level of HHJ on a pair of
  * relations. It is always called by the descriptor.
  */
-public class IntervalPartitionJoin {
+public class IntervalPartitionJoiner {
 
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigProbeFrameAppender;
@@ -85,7 +85,7 @@ public class IntervalPartitionJoin {
     private final FrameTupleAccessor accessorBuild;
     private final FrameTupleAccessor accessorProbe;
 
-    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoin.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoiner.class.getName());
 
     // stats information
     private IntervalPartitionJoinData ipjd;
@@ -95,7 +95,7 @@ public class IntervalPartitionJoin {
 
     private IIntervalMergeJoinChecker imjc;
 
-    public IntervalPartitionJoin(IHyracksTaskContext ctx, int memForJoin, int k, int numOfPartitions,
+    public IntervalPartitionJoiner(IHyracksTaskContext ctx, int memForJoin, int k, int numOfPartitions,
             String buildRelName, String probeRelName, IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd,
             RecordDescriptor probeRd, ITuplePartitionComputer buildHpc, ITuplePartitionComputer probeHpc) {
         this.ctx = ctx;

@@ -18,22 +18,10 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-public class IndexedNLJoinExpressionAnnotation implements IExpressionAnnotation {
+public class IndexedNLJoinExpressionAnnotation extends AbstractExpressionAnnotation {
 
     public static final String HINT_STRING = "indexnl";
     public static final IndexedNLJoinExpressionAnnotation INSTANCE = new IndexedNLJoinExpressionAnnotation();
-
-    private Object object;
-
-    @Override
-    public Object getObject() {
-        return object;
-    }
-
-    @Override
-    public void setObject(Object object) {
-        this.object = object;
-    }
 
     @Override
     public IExpressionAnnotation copy() {

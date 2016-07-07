@@ -2112,10 +2112,10 @@ Expression FunctionCallExpr() throws ParseException:
         if (IntervalJoinExpressionAnnotation.isIntervalJoinHint(hint)) {
           IntervalJoinExpressionAnnotation ijea = IntervalJoinExpressionAnnotation.INSTANCE;
           ijea.setObject(hint);
-          ijea.setJoinType(hint);
           try {
             if (ijea.hasRangeArgument()) {
-              ijea.setRangeMap(RangeMapBuilder.parseHint(hint.substring(IntervalJoinExpressionAnnotation.getHintLength(hint))));
+              String rangeHint = hint.substring(IntervalJoinExpressionAnnotation.getHintLength(hint), hint.indexOf(']', 0) + 1);
+              ijea.setRangeMap(RangeMapBuilder.parseHint(rangeHint));
             }
           } catch (AsterixException e) {
             {if (true) throw new ParseException(e.getMessage());}

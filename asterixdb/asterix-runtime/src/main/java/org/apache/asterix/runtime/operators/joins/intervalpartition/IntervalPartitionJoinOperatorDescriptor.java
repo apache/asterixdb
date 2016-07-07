@@ -57,10 +57,10 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
     private final int[] probeKeys;
     private final int[] buildKeys;
 
-    private final int probeTupleCount;
-    private final int probeMaxDuration;
-    private final int buildTupleCount;
-    private final int buildMaxDuration;
+    private final long probeTupleCount;
+    private final long probeMaxDuration;
+    private final long buildTupleCount;
+    private final long buildMaxDuration;
     private final int avgTuplesPerFrame;
     private final int probeKey;
     private final int buildKey;
@@ -69,8 +69,8 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinOperatorDescriptor.class.getName());
 
-    public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int leftTupleCount,
-            int rightTupleCount, int leftMaxDuration, int rightMaxDuration, int avgTuplesPerFrame, int[] leftKeys,
+    public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, long leftTupleCount,
+            long rightTupleCount, long leftMaxDuration, long rightMaxDuration, int avgTuplesPerFrame, int[] leftKeys,
             int[] rightKeys, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory imjcf,
             IRangeMap rangeMap) {
         super(spec, 2, 1);
@@ -108,7 +108,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
     }
 
     public static class BuildAndPartitionTaskState extends AbstractStateObject {
-        private IntervalPartitionJoin ipj;
+        private IntervalPartitionJoiner ipj;
         private int intervalPartitions;
         private int partition;
         private int k;
@@ -169,7 +169,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                     state.intervalPartitions = IntervalPartitionUtil.getMaxPartitions(state.k);
                     state.memoryForJoin = memsize;
                     IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(buildKeys, probeKeys, partition);
-                    state.ipj = new IntervalPartitionJoin(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
+                    state.ipj = new IntervalPartitionJoiner(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
                             BUILD_REL, PROBE_REL, imjc, buildRd, probeRd, buildHpc, probeHpc);
 
                     state.ipj.initBuild();
