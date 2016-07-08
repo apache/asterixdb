@@ -23,9 +23,9 @@ import org.apache.hyracks.control.nc.service.NCService;
 import java.io.File;
 import java.util.List;
 
-public class HyracksNCProcess extends HyracksServerProcess {
+public class HyracksNCServiceProcess extends HyracksServerProcess {
 
-    public HyracksNCProcess(File configFile, File logFile, File appHome, File workingDir) {
+    public HyracksNCServiceProcess(File configFile, File logFile, File appHome, File workingDir) {
         this.configFile = configFile;
         this.logFile = logFile;
         this.appHome = appHome;

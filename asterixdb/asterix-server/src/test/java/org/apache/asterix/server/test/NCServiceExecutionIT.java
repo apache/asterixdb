@@ -111,11 +111,11 @@ public class NCServiceExecutionIT {
         HDFSCluster.getInstance().setup(ASTERIX_APP_DIR + File.separator);
 
         cluster = new HyracksVirtualCluster(new File(APP_HOME), new File(ASTERIX_APP_DIR));
-        cluster.addNC(
+        cluster.addNCService(
                 new File(CONF_DIR, "ncservice1.conf"),
                 new File(LOG_DIR, "ncservice1.log")
         );
-        cluster.addNC(
+        cluster.addNCService(
                 new File(CONF_DIR, "ncservice2.conf"),
                 new File(LOG_DIR, "ncservice2.log")
         );

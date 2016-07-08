@@ -30,7 +30,7 @@ import java.util.List;
 public class HyracksVirtualCluster {
     private final File appHome;
     private final File workingDir;
-    private List<HyracksNCProcess> ncProcs = new ArrayList<>(3);
+    private List<HyracksNCServiceProcess> ncProcs = new ArrayList<>(3);
     private HyracksCCProcess ccProc = null;
 
     /**
@@ -51,15 +51,15 @@ public class HyracksVirtualCluster {
      * @param configFile - full path to an ncservice.conf. May be null to accept all defaults.
      * @throws IOException - if there are errors starting the process.
      */
-    public void addNC(File configFile, File logFile) throws IOException {
-        HyracksNCProcess proc = new HyracksNCProcess(configFile, logFile, appHome, workingDir);
+    public void addNCService(File configFile, File logFile) throws IOException {
+        HyracksNCServiceProcess proc = new HyracksNCServiceProcess(configFile, logFile, appHome, workingDir);
         proc.start();
         ncProcs.add(proc);
     }
 
     /**
      * Starts the CC, initializing the cluster. Expects that any NCs referenced
-     * in the cluster configuration have already been started with addNC().
+     * in the cluster configuration have already been started with addNCService().
      * @param ccConfigFile - full path to a cluster conf file. May be null to accept all
      *                     defaults, although this is seldom useful since there are no NCs.
      * @throws IOException - if there are errors starting the process.
@@ -76,7 +76,7 @@ public class HyracksVirtualCluster {
      */
     public void stop() {
         ccProc.stop();
-        for (HyracksNCProcess proc : ncProcs) {
+        for (HyracksNCServiceProcess proc : ncProcs) {
             proc.stop();
         }
     }

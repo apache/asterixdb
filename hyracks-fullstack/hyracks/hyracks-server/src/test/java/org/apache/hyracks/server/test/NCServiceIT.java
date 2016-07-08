@@ -33,8 +33,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class NCServiceIT {
@@ -54,11 +52,11 @@ public class NCServiceIT {
     @BeforeClass
     public static void setUp() throws Exception {
         cluster = new HyracksVirtualCluster(new File(APP_HOME), null);
-        cluster.addNC(
+        cluster.addNCService(
                 new File(RESOURCE_DIR, "nc-red.conf"),
                 new File(LOG_DIR, "nc-red.log")
         );
-        cluster.addNC(
+        cluster.addNCService(
                 new File(RESOURCE_DIR, "nc-blue.conf"),
                 new File(LOG_DIR, "nc-blue.log")
         );
