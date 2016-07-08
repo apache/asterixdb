@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -82,6 +83,8 @@ public interface IAsterixAppRuntimeContext {
     public IReplicationManager getReplicationManager();
 
     public IReplicationChannel getReplicationChannel();
+
+    public ILibraryManager getLibraryManager();
 
     public void initializeResourceIdFactory() throws HyracksDataException;
 

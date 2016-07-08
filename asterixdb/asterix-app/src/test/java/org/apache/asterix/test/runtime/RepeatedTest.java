@@ -23,8 +23,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Collection;
 
-import org.apache.asterix.app.external.TestLibrarian;
-import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.runtime.RepeatRule.Repeat;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.Rule;
@@ -84,7 +82,6 @@ class RepeatRule implements MethodRule {
 public class RepeatedTest extends ExecutionTest {
 
     private int count;
-    private final TestExecutor testExecutor = new TestExecutor();
 
     @Parameters(name = "RepeatedTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
@@ -94,7 +91,6 @@ public class RepeatedTest extends ExecutionTest {
 
     public RepeatedTest(TestCaseContext tcCtx) {
         super(tcCtx);
-        testExecutor.setLibrarian(new TestLibrarian());
         count = 0;
     }
 

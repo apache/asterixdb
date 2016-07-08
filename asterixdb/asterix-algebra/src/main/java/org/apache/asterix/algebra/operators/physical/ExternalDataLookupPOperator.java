@@ -124,7 +124,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         UnnestMapOperator unnestMap = (UnnestMapOperator) op;
         ILogicalExpression expr = unnestMap.getExpressionRef().getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -145,7 +145,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         }
 
         AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = AqlMetadataProvider
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = metadataProvider
                 .buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, secondaryIndex, ridIndexes, retainInput,
                         typeEnv, outputVars, opSchema, context, metadataProvider, retainNull);
         builder.contributeHyracksOperator(unnestMap, externalLoopup.first);

@@ -35,6 +35,7 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl>
 
     @Override
     public void configure(Map<String, String> configuration) {
+        // Nothing to be configured.
     }
 
     @Override

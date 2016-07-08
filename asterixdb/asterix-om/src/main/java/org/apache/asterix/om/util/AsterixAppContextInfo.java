@@ -33,6 +33,7 @@ import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.ICCApplicationContext;
@@ -60,13 +61,14 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixReplicationProperties replicationProperties;
     private final IGlobalRecoveryMaanger globalRecoveryMaanger;
     private IHyracksClientConnection hcc;
+    private final ILibraryManager libraryManager;
 
     public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
-            IGlobalRecoveryMaanger globalRecoveryMaanger) throws AsterixException {
+            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager) throws AsterixException {
         if (INSTANCE != null) {
             return;
         }
-        INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc, globalRecoveryMaanger);
+        INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc, globalRecoveryMaanger, libraryManager);
 
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
@@ -92,10 +94,11 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     }
 
     private AsterixAppContextInfo(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
-            IGlobalRecoveryMaanger globalRecoveryMaanger) {
+            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager) {
         this.appCtx = ccAppCtx;
         this.hcc = hcc;
         this.globalRecoveryMaanger = globalRecoveryMaanger;
+        this.libraryManager = libraryManager;
     }
 
     public static AsterixAppContextInfo getInstance() {
@@ -164,5 +167,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public IGlobalRecoveryMaanger getGlobalRecoveryManager() {
         return globalRecoveryMaanger;
+    }
+
+    @Override
+    public ILibraryManager getLibraryManager() {
+        return libraryManager;
     }
 }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
@@ -37,18 +38,18 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 public class AdapterFactoryProvider {
 
     // Adapters
-    public static IAdapterFactory getAdapterFactory(String adapterName, Map<String, String> configuration,
-            ARecordType itemType, ARecordType metaType) throws AsterixException {
+    public static IAdapterFactory getAdapterFactory(ILibraryManager libraryManager, String adapterName,
+            Map<String, String> configuration, ARecordType itemType, ARecordType metaType) throws AsterixException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(itemType);
         adapterFactory.setMetaType(metaType);
-        adapterFactory.configure(configuration);
+        adapterFactory.configure(libraryManager, configuration);
         return adapterFactory;
     }
 
     // Indexing Adapters
-    public static IIndexingAdapterFactory getIndexingAdapterFactory(String adapterName,
+    public static IIndexingAdapterFactory getIndexingAdapterFactory(ILibraryManager libraryManager, String adapterName,
             Map<String, String> configuration, ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp,
             ARecordType metaType) throws AsterixException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
@@ -56,17 +57,17 @@ public class AdapterFactoryProvider {
         adapterFactory.setOutputType(itemType);
         adapterFactory.setMetaType(metaType);
         adapterFactory.setSnapshot(snapshot, indexingOp);
-        adapterFactory.configure(configuration);
+        adapterFactory.configure(libraryManager, configuration);
         return adapterFactory;
     }
 
     // Lookup Adapters
-    public static LookupAdapterFactory<?> getLookupAdapterFactory(Map<String, String> configuration,
-            ARecordType recordType, int[] ridFields, boolean retainInput, boolean retainMissing,
-            IMissingWriterFactory missingWriterFactory) throws AsterixException {
+    public static LookupAdapterFactory<?> getLookupAdapterFactory(ILibraryManager libraryManager,
+            Map<String, String> configuration, ARecordType recordType, int[] ridFields, boolean retainInput,
+            boolean retainMissing, IMissingWriterFactory missingWriterFactory) throws AsterixException {
         LookupAdapterFactory<?> adapterFactory = new LookupAdapterFactory<>(recordType, ridFields, retainInput,
                 retainMissing, missingWriterFactory);
-        adapterFactory.configure(configuration);
+        adapterFactory.configure(libraryManager, configuration);
         return adapterFactory;
     }
 }

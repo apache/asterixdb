@@ -79,12 +79,11 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
         CmdLineParser parser = new CmdLineParser(this);
-
         try {
             parser.parseArgument(args);
         } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            System.err.println("Usage:");
+            LOGGER.severe(e.getMessage());
+            LOGGER.severe("Usage:");
             parser.printUsage(System.err);
             throw e;
         }
@@ -211,7 +210,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (isMetadataNode && !pendingFailbackCompletion) {
             runtimeContext.initializeMetadata(systemState == SystemState.NEW_UNIVERSE);
         }
-        ExternalLibraryUtils.setUpExternaLibraries(isMetadataNode && !pendingFailbackCompletion);
+        ExternalLibraryUtils.setUpExternaLibraries(runtimeContext.getLibraryManager(),
+                isMetadataNode && !pendingFailbackCompletion);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting lifecycle components");

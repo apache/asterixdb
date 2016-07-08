@@ -21,10 +21,12 @@ package org.apache.asterix.test.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.asterix.app.external.TestLibrarian;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
@@ -49,9 +51,10 @@ public class ExecutionTest {
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     protected static AsterixTransactionProperties txnProperties;
-    private static final TestExecutor testExecutor = new TestExecutor();
+    protected static final TestExecutor testExecutor = new TestExecutor();
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
+    private static TestLibrarian librarian;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -60,8 +63,9 @@ public class ExecutionTest {
             outdir.mkdirs();
             // remove library directory
             TestLibrarian.removeLibraryDir();
-            testExecutor.setLibrarian(new TestLibrarian());
-            ExecutionTestUtil.setUp(cleanupOnStart);
+            List<ILibraryManager> libraryManagers = ExecutionTestUtil.setUp(cleanupOnStart);
+            librarian = new TestLibrarian(libraryManagers);
+            testExecutor.setLibrarian(librarian);
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;
@@ -102,7 +106,7 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        TestLibrarian.cleanup();
+        librarian.cleanup();
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
     }
 }

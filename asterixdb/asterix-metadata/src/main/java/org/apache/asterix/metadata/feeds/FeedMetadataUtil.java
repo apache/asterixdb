@@ -36,6 +36,7 @@ import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDesc
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
@@ -44,7 +45,6 @@ import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedMetaOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
@@ -150,8 +150,7 @@ public class FeedMetadataUtil {
         boolean preProcessingRequired = preProcessingRequired(feedConnectionId);
         // copy operators
         String operandId = null;
-        Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID =
-                new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
+        Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<>();
         FeedMetaOperatorDescriptor metaOp = null;
         for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
             operandId = FeedRuntimeId.DEFAULT_TARGET_ID;
@@ -197,8 +196,7 @@ public class FeedMetadataUtil {
         }
 
         // copy connectors
-        Map<ConnectorDescriptorId, ConnectorDescriptorId> connectorMapping =
-                new HashMap<ConnectorDescriptorId, ConnectorDescriptorId>();
+        Map<ConnectorDescriptorId, ConnectorDescriptorId> connectorMapping = new HashMap<>();
         for (Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : spec.getConnectorMap().entrySet()) {
             IConnectorDescriptor connDesc = entry.getValue();
             ConnectorDescriptorId newConnId;
@@ -229,9 +227,8 @@ public class FeedMetadataUtil {
         }
 
         // prepare for setting partition constraints
-        Map<OperatorDescriptorId, List<LocationConstraint>> operatorLocations =
-                new HashMap<OperatorDescriptorId, List<LocationConstraint>>();
-        Map<OperatorDescriptorId, Integer> operatorCounts = new HashMap<OperatorDescriptorId, Integer>();
+        Map<OperatorDescriptorId, List<LocationConstraint>> operatorLocations = new HashMap<>();
+        Map<OperatorDescriptorId, Integer> operatorCounts = new HashMap<>();
 
         for (Constraint constraint : spec.getUserConstraints()) {
             LValueConstraintExpression lexpr = constraint.getLValue();
@@ -454,7 +451,7 @@ public class FeedMetadataUtil {
         return preProcessingRequired;
     }
 
-    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx)
+    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ILibraryManager libraryManager)
             throws AsterixException {
         try {
             String adapterName = feed.getAdapterName();
@@ -464,9 +461,8 @@ public class FeedMetadataUtil {
             ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
             ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
             // Get adapter from metadata dataset <Metadata dataverse>
-            DatasourceAdapter adapterEntity =
-                    MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
-                            adapterName);
+            DatasourceAdapter adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx,
+                    MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
             // Get adapter from metadata dataset <The feed dataverse>
             if (adapterEntity == null) {
                 adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
@@ -483,8 +479,7 @@ public class FeedMetadataUtil {
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
-                        ClassLoader cl =
-                                ExternalLibraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        ClassLoader cl = libraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
@@ -492,9 +487,9 @@ public class FeedMetadataUtil {
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(configuration);
+                adapterFactory.configure(null, configuration);
             } else {
-                AdapterFactoryProvider.getAdapterFactory(adapterName, configuration, adapterOutputType,
+                AdapterFactoryProvider.getAdapterFactory(libraryManager, adapterName, configuration, adapterOutputType,
                         metaType);
             }
             if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
@@ -520,9 +515,9 @@ public class FeedMetadataUtil {
     }
 
     @SuppressWarnings("rawtypes")
-    public static Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType>
-            getPrimaryFeedFactoryAndOutput(Feed feed, FeedPolicyAccessor policyAccessor,
-                    MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+    public static Triple<IAdapterFactory, RecordDescriptor, AdapterType> getPrimaryFeedFactoryAndOutput(Feed feed,
+            FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx, ILibraryManager libraryManager)
+            throws AlgebricksException {
         // This method needs to be re-visited
         String adapterName = null;
         DatasourceAdapter adapterEntity = null;
@@ -556,8 +551,7 @@ public class FeedMetadataUtil {
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
-                        ClassLoader cl =
-                                ExternalLibraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        ClassLoader cl = libraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
@@ -565,10 +559,10 @@ public class FeedMetadataUtil {
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(configuration);
+                adapterFactory.configure(null, configuration);
             } else {
-                adapterFactory = AdapterFactoryProvider.getAdapterFactory(adapterName, configuration, adapterOutputType,
-                        metaType);
+                adapterFactory = AdapterFactoryProvider.getAdapterFactory(libraryManager, adapterName, configuration,
+                        adapterOutputType, metaType);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
             }
             if (metaType == null) {
@@ -681,7 +675,7 @@ public class FeedMetadataUtil {
 
     public static String getSecondaryFeedOutput(Feed feed, FeedPolicyAccessor policyAccessor,
             MetadataTransactionContext mdTxnCtx)
-                    throws AlgebricksException, MetadataException, RemoteException, ACIDException {
+            throws AlgebricksException, MetadataException, RemoteException, ACIDException {
         String outputType = null;
         String primaryFeedName = feed.getSourceFeedName();
         Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feed.getDataverseName(), primaryFeedName);

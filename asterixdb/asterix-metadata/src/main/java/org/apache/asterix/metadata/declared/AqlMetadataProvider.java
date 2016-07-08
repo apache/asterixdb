@@ -42,6 +42,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactor
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -194,6 +195,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private boolean isTemporaryDatasetWriteJob = true;
 
     private final AsterixStorageProperties storageProperties;
+    private final ILibraryManager libraryManager;
 
     public String getPropertyValue(String propertyName) {
         return config.get(propertyName);
@@ -215,6 +217,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         this.storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
+        this.libraryManager = AsterixAppContextInfo.getInstance().getLibraryManager();
+    }
+
+    public ILibraryManager getLibraryManager() {
+        return libraryManager;
     }
 
     public void setJobId(JobId jobId) {
@@ -482,8 +489,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<List<String>> primaryKeys, ARecordType metaType) throws AlgebricksException {
         try {
             configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName());
-            IAdapterFactory adapterFactory =
-                    AdapterFactoryProvider.getAdapterFactory(adapterName, configuration, itemType, metaType);
+            IAdapterFactory adapterFactory = AdapterFactoryProvider.getAdapterFactory(libraryManager, adapterName,
+                    configuration, itemType, metaType);
 
             // check to see if dataset is indexed
             Index filesIndex =
@@ -535,7 +542,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> buildFeedIntakeRuntime(
             JobSpecification jobSpec, Feed primaryFeed, FeedPolicyAccessor policyAccessor) throws Exception {
         Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> factoryOutput = null;
-        factoryOutput = FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
+        factoryOutput =
+                FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx, libraryManager);
         ARecordType recordType = FeedMetadataUtil.getOutputType(primaryFeed, primaryFeed.getAdapterConfiguration(),
                 ExternalDataConstants.KEY_TYPE_NAME);
         IAdapterFactory adapterFactory = factoryOutput.first;
@@ -2080,8 +2088,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 
-    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint>
-            splitProviderAndPartitionConstraintsForDataverse(String dataverse) {
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataverse(
+            String dataverse) {
         return SplitsAndConstraintsUtil.splitProviderAndPartitionConstraintsForDataverse(dataverse);
     }
 
@@ -2104,8 +2112,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public Dataset findDataset(String dataverse, String dataset) throws AlgebricksException {
-        String dv = dataverse == null ? (defaultDataverse == null ? null : defaultDataverse.getDataverseName())
-                : dataverse;
+        String dv =
+                dataverse == null ? (defaultDataverse == null ? null : defaultDataverse.getDataverseName()) : dataverse;
         if (dv == null) {
             return null;
         }
@@ -2195,7 +2203,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         this.locks = locks;
     }
 
-    public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
             JobSpecification jobSpec, Dataset dataset, Index secondaryIndex, int[] ridIndexes, boolean retainInput,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> outputVars, IOperatorSchema opSchema,
             JobGenContext context, AqlMetadataProvider metadataProvider, boolean retainMissing)
@@ -2209,7 +2217,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // Create the adapter factory <- right now there is only one. if there are more in the future, we can create
             // a map->
             ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
-            LookupAdapterFactory<?> adapterFactory = AdapterFactoryProvider.getLookupAdapterFactory(
+            LookupAdapterFactory<?> adapterFactory = AdapterFactoryProvider.getLookupAdapterFactory(libraryManager,
                     datasetDetails.getProperties(), (ARecordType) itemType, ridIndexes, retainInput, retainMissing,
                     context.getMissingWriterFactory());
 
@@ -2349,9 +2357,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             ITypeTraits[] outputTypeTraits =
                     new ITypeTraits[recordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
-            ISerializerDeserializer[] outputSerDes =
-                    new ISerializerDeserializer[recordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1)
-                            + numFilterFields];
+            ISerializerDeserializer[] outputSerDes = new ISerializerDeserializer[recordDesc.getFieldCount()
+                    + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
             for (int j = 0; j < recordDesc.getFieldCount(); j++) {
                 outputTypeTraits[j] = recordDesc.getTypeTraits()[j];
                 outputSerDes[j] = recordDesc.getFields()[j];

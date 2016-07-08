@@ -20,18 +20,21 @@ package org.apache.asterix.test.runtime;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.hyracks.storage.common.buffercache.BufferCache;
 
 public class ExecutionTestUtil {
 
@@ -43,7 +46,7 @@ public class ExecutionTestUtil {
 
     protected static TestGroup FailedGroup;
 
-    public static void setUp(boolean cleanup) throws Exception {
+    public static List<ILibraryManager> setUp(boolean cleanup) throws Exception {
         System.out.println("Starting setup");
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting setup");
@@ -69,16 +72,17 @@ public class ExecutionTestUtil {
 
         FailedGroup = new TestGroup();
         FailedGroup.setName("failed");
-    }
 
-    private static void validateBufferCacheState() {
+        List<ILibraryManager> libraryManagers = new ArrayList<>();
+        // Adds the library manager for CC.
+        libraryManagers.add(AsterixAppContextInfo.getInstance().getLibraryManager());
+        // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : AsterixHyracksIntegrationUtil.ncs) {
-            IAsterixAppRuntimeContext appCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext()
+            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext()
                     .getApplicationObject();
-            if (!((BufferCache) appCtx.getBufferCache()).isClean()) {
-                throw new IllegalStateException();
-            }
+            libraryManagers.add(runtimeCtx.getLibraryManager());
         }
+        return libraryManagers;
     }
 
     public static void tearDown(boolean cleanup) throws Exception {

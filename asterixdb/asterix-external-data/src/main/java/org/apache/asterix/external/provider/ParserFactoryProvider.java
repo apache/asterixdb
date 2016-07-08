@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.external.parser.factory.DelimitedDataParserFactory;
@@ -38,12 +39,13 @@ public class ParserFactoryProvider {
     private ParserFactoryProvider() {
     }
 
-    public static IDataParserFactory getDataParserFactory(Map<String, String> configuration) throws AsterixException {
+    public static IDataParserFactory getDataParserFactory(ILibraryManager libraryManager,
+            Map<String, String> configuration) throws AsterixException {
         IDataParserFactory parserFactory;
         String parserFactoryName = configuration.get(ExternalDataConstants.KEY_DATA_PARSER);
         if ((parserFactoryName != null) && ExternalDataUtils.isExternal(parserFactoryName)) {
-            return ExternalDataUtils.createExternalParserFactory(ExternalDataUtils.getDataverse(configuration),
-                    parserFactoryName);
+            return ExternalDataUtils.createExternalParserFactory(libraryManager,
+                    ExternalDataUtils.getDataverse(configuration), parserFactoryName);
         } else {
             String parserFactoryKey = ExternalDataUtils.getRecordFormat(configuration);
             if (parserFactoryKey == null) {

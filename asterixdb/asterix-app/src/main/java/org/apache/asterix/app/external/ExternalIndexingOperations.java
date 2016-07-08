@@ -258,12 +258,13 @@ public class ExternalIndexingOperations {
      * @throws Exception
      */
     private static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint> getExternalDataIndexingOperator(
-            JobSpecification jobSpec, IAType itemType, Dataset dataset, List<ExternalFile> files,
-            RecordDescriptor indexerDesc) throws AsterixException {
+            AqlMetadataProvider metadataProvider, JobSpecification jobSpec, IAType itemType, Dataset dataset,
+            List<ExternalFile> files, RecordDescriptor indexerDesc) throws AsterixException {
         ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         Map<String, String> configuration = externalDatasetDetails.getProperties();
         IAdapterFactory adapterFactory = AdapterFactoryProvider.getIndexingAdapterFactory(
-                externalDatasetDetails.getAdapter(), configuration, (ARecordType) itemType, files, true, null);
+                metadataProvider.getLibraryManager(), externalDatasetDetails.getAdapter(), configuration,
+                (ARecordType) itemType, files, true, null);
         return new Pair<>(new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());
     }
@@ -274,7 +275,7 @@ public class ExternalIndexingOperations {
         if (files == null) {
             files = MetadataManager.INSTANCE.getDatasetExternalFiles(metadataProvider.getMetadataTxnContext(), dataset);
         }
-        return getExternalDataIndexingOperator(spec, itemType, dataset, files, indexerDesc);
+        return getExternalDataIndexingOperator(metadataProvider, spec, itemType, dataset, files, indexerDesc);
     }
 
     /**

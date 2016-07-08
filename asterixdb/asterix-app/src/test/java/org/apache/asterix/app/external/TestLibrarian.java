@@ -26,8 +26,8 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.event.service.AsterixEventServiceUtil;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.test.aql.ITestLibrarian;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -36,6 +36,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class TestLibrarian implements ITestLibrarian {
 
     public static final String LIBRARY_DIR_NAME = "library";
+
+    // The following list includes a library manager for the CC
+    // and library managers for NCs (one-per-NC).
+    private final List<ILibraryManager> libraryManagers;
+
+    public TestLibrarian(List<ILibraryManager> libraryManagers) {
+        this.libraryManagers = libraryManagers;
+    }
 
     @Override
     public void install(String dvName, String libName, String libPath) throws Exception {
@@ -56,8 +64,10 @@ public class TestLibrarian implements ITestLibrarian {
 
             throw new Exception("Couldn't unzip the file: " + libPath, e);
         }
-        // for each file (library), register library
-        ExternalLibraryUtils.registerLibrary(dvName, libName, true, destinationDir);
+
+        for (ILibraryManager libraryManager : libraryManagers) {
+            ExternalLibraryUtils.registerLibrary(libraryManager, dvName, libName);
+        }
         // get library file
         // install if needed (add functions, adapters, datasources, parsers to the metadata)
         // <Not required for use>
@@ -67,7 +77,9 @@ public class TestLibrarian implements ITestLibrarian {
     @Override
     public void uninstall(String dvName, String libName) throws RemoteException, AsterixException, ACIDException {
         ExternalLibraryUtils.uninstallLibrary(dvName, libName);
-        ExternalLibraryManager.deregisterLibraryClassLoader(dvName, libName);
+        for (ILibraryManager libraryManager : libraryManagers) {
+            libraryManager.deregisterLibraryClassLoader(dvName, libName);
+        }
     }
 
     public static void removeLibraryDir() throws IOException {
@@ -78,11 +90,16 @@ public class TestLibrarian implements ITestLibrarian {
         FileUtils.deleteQuietly(installLibDir);
     }
 
-    public static void cleanup() throws AsterixException, RemoteException, ACIDException {
-        List<Pair<String, String>> libs = ExternalLibraryManager.getAllLibraries();
-        for (Pair<String, String> dvAndLib : libs) {
-            ExternalLibraryUtils.uninstallLibrary(dvAndLib.first, dvAndLib.second);
-            ExternalLibraryManager.deregisterLibraryClassLoader(dvAndLib.first, dvAndLib.second);
+    public void cleanup() throws AsterixException, RemoteException, ACIDException {
+        for (ILibraryManager libraryManager : libraryManagers) {
+            List<Pair<String, String>> libs = libraryManager.getAllLibraries();
+            for (Pair<String, String> dvAndLib : libs) {
+                ExternalLibraryUtils.uninstallLibrary(dvAndLib.first, dvAndLib.second);
+                libraryManager.deregisterLibraryClassLoader(dvAndLib.first, dvAndLib.second);
+            }
         }
+        // get the directory of the to be installed libraries
+        File installLibDir = ExternalLibraryUtils.getLibraryInstallDir();
+        FileUtils.deleteQuietly(installLibDir);
     }
 }

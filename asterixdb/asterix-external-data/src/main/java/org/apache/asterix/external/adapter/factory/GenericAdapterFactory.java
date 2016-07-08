@@ -21,7 +21,9 @@ package org.apache.asterix.external.adapter.factory;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
@@ -83,8 +85,10 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     @Override
     public synchronized IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
         try {
-            restoreExternalObjects();
+            restoreExternalObjects(runtimeCtx.getLibraryManager());
         } catch (AsterixException e) {
             throw new HyracksDataException(e);
         }
@@ -94,9 +98,8 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
             }
             feedLogManager.touch();
         }
-        IDataFlowController controller =
-                DataflowControllerProvider.getDataflowController(recordType, ctx, partition,
-                        dataSourceFactory, dataParserFactory, configuration, indexingOp, isFeed, feedLogManager);
+        IDataFlowController controller = DataflowControllerProvider.getDataflowController(recordType, ctx, partition,
+                dataSourceFactory, dataParserFactory, configuration, indexingOp, isFeed, feedLogManager);
         if (isFeed) {
             return new FeedAdapter((AbstractFeedDataFlowController) controller);
         } else {
@@ -104,9 +107,9 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         }
     }
 
-    private void restoreExternalObjects() throws AsterixException {
+    private void restoreExternalObjects(ILibraryManager libraryManager) throws AsterixException {
         if (dataSourceFactory == null) {
-            dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(configuration);
+            dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(libraryManager, configuration);
             // create and configure parser factory
             if (dataSourceFactory.isIndexible() && (files != null)) {
                 ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
@@ -115,7 +118,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         }
         if (dataParserFactory == null) {
             // create and configure parser factory
-            dataParserFactory = ParserFactoryProvider.getDataParserFactory(configuration);
+            dataParserFactory = ParserFactoryProvider.getDataParserFactory(libraryManager, configuration);
             dataParserFactory.setRecordType(recordType);
             dataParserFactory.setMetaType(metaType);
             dataParserFactory.configure(configuration);
@@ -123,17 +126,16 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     }
 
     @Override
-    public void configure(Map<String, String> configuration)
-            throws AsterixException {
+    public void configure(ILibraryManager libraryManager, Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         ExternalDataUtils.validateDataSourceParameters(configuration);
-        dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(configuration);
+        dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(libraryManager, configuration);
         if (dataSourceFactory.isIndexible() && (files != null)) {
             ((IIndexibleExternalDataSource) dataSourceFactory).setSnapshot(files, indexingOp);
         }
         dataSourceFactory.configure(configuration);
         ExternalDataUtils.validateDataParserParameters(configuration);
-        dataParserFactory = ParserFactoryProvider.getDataParserFactory(configuration);
+        dataParserFactory = ParserFactoryProvider.getDataParserFactory(libraryManager, configuration);
         dataParserFactory.setRecordType(recordType);
         dataParserFactory.setMetaType(metaType);
         dataParserFactory.configure(configuration);

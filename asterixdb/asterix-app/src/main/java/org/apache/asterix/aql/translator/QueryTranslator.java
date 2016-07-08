@@ -2003,7 +2003,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 default:
                     throw new IllegalStateException();
             }
-            FeedMetadataUtil.validateFeed(feed, mdTxnCtx);
+            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, metadataProvider.getLibraryManager());
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {

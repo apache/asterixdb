@@ -54,16 +54,17 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     private final ClusterControllerService ccs;
 
     public CCApplicationContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext,
-                                IApplicationConfig appConfig) throws IOException {
+            IApplicationConfig appConfig) throws IOException {
         super(serverCtx, appConfig);
         this.ccContext = ccContext;
         this.ccs = ccs;
-        initPendingNodeIds = new HashSet<String>();
-        deinitPendingNodeIds = new HashSet<String>();
-        jobLifecycleListeners = new ArrayList<IJobLifecycleListener>();
-        clusterLifecycleListeners = new ArrayList<IClusterLifecycleListener>();
+        initPendingNodeIds = new HashSet<>();
+        deinitPendingNodeIds = new HashSet<>();
+        jobLifecycleListeners = new ArrayList<>();
+        clusterLifecycleListeners = new ArrayList<>();
     }
 
+    @Override
     public ICCContext getCCContext() {
         return ccContext;
     }

@@ -19,6 +19,7 @@
 package org.apache.asterix.common.dataflow;
 
 import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
@@ -50,5 +51,13 @@ public interface IAsterixApplicationContextInfo {
      */
     public ICCApplicationContext getCCApplicationContext();
 
+    /**
+     * @return the global recovery manager.
+     */
     public IGlobalRecoveryMaanger getGlobalRecoveryManager();
+
+    /**
+     * @return the library manager (at CC side).
+     */
+    public ILibraryManager getLibraryManager();
 }

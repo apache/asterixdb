@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.ILookupReaderFactory;
 import org.apache.asterix.external.api.ILookupRecordReader;
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -76,10 +77,11 @@ public class LookupAdapterFactory<T> implements Serializable {
         }
     }
 
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(ILibraryManager libraryManager, Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         readerFactory = LookupReaderFactoryProvider.getLookupReaderFactory(configuration);
-        dataParserFactory = (IRecordDataParserFactory<T>) ParserFactoryProvider.getDataParserFactory(configuration);
+        dataParserFactory = (IRecordDataParserFactory<T>) ParserFactoryProvider.getDataParserFactory(libraryManager,
+                configuration);
         dataParserFactory.setRecordType(recordType);
         readerFactory.configure(configuration);
         dataParserFactory.configure(configuration);

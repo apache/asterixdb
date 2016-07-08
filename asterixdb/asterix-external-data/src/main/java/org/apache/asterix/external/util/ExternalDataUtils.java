@@ -22,11 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -114,8 +114,8 @@ public class ExternalDataUtils {
                 && (aString.trim().length() > 1));
     }
 
-    public static ClassLoader getClassLoader(String dataverse, String library) {
-        return ExternalLibraryManager.getLibraryClassLoader(dataverse, library);
+    public static ClassLoader getClassLoader(ILibraryManager libraryManager, String dataverse, String library) {
+        return libraryManager.getLibraryClassLoader(dataverse, library);
     }
 
     public static String getLibraryName(String aString) {
@@ -126,12 +126,12 @@ public class ExternalDataUtils {
         return aString.trim().split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[1];
     }
 
-    public static IInputStreamFactory createExternalInputStreamFactory(String dataverse, String stream)
-            throws AsterixException {
+    public static IInputStreamFactory createExternalInputStreamFactory(ILibraryManager libraryManager, String dataverse,
+            String stream) throws AsterixException {
         try {
             String libraryName = getLibraryName(stream);
             String className = getExternalClassName(stream);
-            ClassLoader classLoader = getClassLoader(dataverse, libraryName);
+            ClassLoader classLoader = getClassLoader(libraryManager, dataverse, libraryName);
             return ((IInputStreamFactory) (classLoader.loadClass(className).newInstance()));
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new AsterixException("Failed to create stream factory", e);
@@ -210,8 +210,8 @@ public class ExternalDataUtils {
         return false;
     }
 
-    public static IRecordReaderFactory<?> createExternalRecordReaderFactory(Map<String, String> configuration)
-            throws AsterixException {
+    public static IRecordReaderFactory<?> createExternalRecordReaderFactory(ILibraryManager libraryManager,
+            Map<String, String> configuration) throws AsterixException {
         String readerFactory = configuration.get(ExternalDataConstants.KEY_READER_FACTORY);
         if (readerFactory == null) {
             throw new AsterixException("to use " + ExternalDataConstants.EXTERNAL + " reader, the parameter "
@@ -228,8 +228,7 @@ public class ExternalDataUtils {
                     + " must follow the format \"DataverseName.LibraryName#ReaderFactoryFullyQualifiedName\"");
         }
 
-        ClassLoader classLoader = ExternalLibraryManager.getLibraryClassLoader(dataverseAndLibrary[0],
-                dataverseAndLibrary[1]);
+        ClassLoader classLoader = libraryManager.getLibraryClassLoader(dataverseAndLibrary[0], dataverseAndLibrary[1]);
         try {
             return (IRecordReaderFactory<?>) classLoader.loadClass(libraryAndFactory[1]).newInstance();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -237,12 +236,12 @@ public class ExternalDataUtils {
         }
     }
 
-    public static IDataParserFactory createExternalParserFactory(String dataverse, String parserFactoryName)
-            throws AsterixException {
+    public static IDataParserFactory createExternalParserFactory(ILibraryManager libraryManager, String dataverse,
+            String parserFactoryName) throws AsterixException {
         try {
             String library = parserFactoryName.substring(0,
                     parserFactoryName.indexOf(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR));
-            ClassLoader classLoader = ExternalLibraryManager.getLibraryClassLoader(dataverse, library);
+            ClassLoader classLoader = libraryManager.getLibraryClassLoader(dataverse, library);
             return (IDataParserFactory) classLoader
                     .loadClass(parserFactoryName
                             .substring(parserFactoryName.indexOf(ExternalDataConstants.EXTERNAL_LIBRARY_SEPARATOR) + 1))
