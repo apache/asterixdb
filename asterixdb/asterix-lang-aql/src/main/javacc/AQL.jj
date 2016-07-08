@@ -2313,7 +2313,7 @@ Clause OrderbyClause()throws ParseException :
           }
           if (hint.startsWith(RANGE_HINT)) {
             try{
-              oc.setRangeMap(RangeMapBuilder.parseHint(hint.substring(RANGE_HINT.length())));
+              oc.setRangeMap(RangeMapBuilder.parseHint(hint.substring(RANGE_HINT.length(), hint.indexOf(']', 0) + 1)));
             } catch (AsterixException e) {
               throw new ParseException(e.getMessage());
             }

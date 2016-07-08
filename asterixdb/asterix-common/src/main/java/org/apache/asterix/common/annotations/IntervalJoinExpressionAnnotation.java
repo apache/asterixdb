@@ -54,15 +54,18 @@ public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotati
     }
 
     private void parseHint() {
-        String[] args = ((String) object).split(" ");
-        setJoinType(args[0]);
+        String hint = (String) object;
+        setJoinType(hint);
 
-        if (joinType.equals(PARTITION_HINT_STRING) && args.length == 7) {
-            leftRecordCount = Long.valueOf(args[2]);
-            rightRecordCount = Long.valueOf(args[3]);
-            leftMaxDuration = Long.valueOf(args[4]);
-            rightMaxDuration = Long.valueOf(args[5]);
-            tuplesPerFrame = Integer.valueOf(args[6]);
+        hint = hint.substring(hint.indexOf(']', 0) + 2);
+        String[] args = hint.split(" ");
+
+        if (joinType.equals(PARTITION_HINT_STRING) && args.length == 5) {
+            leftRecordCount = Long.valueOf(args[0]);
+            rightRecordCount = Long.valueOf(args[1]);
+            leftMaxDuration = Long.valueOf(args[2]);
+            rightMaxDuration = Long.valueOf(args[3]);
+            tuplesPerFrame = Integer.valueOf(args[4]);
         }
     }
 
