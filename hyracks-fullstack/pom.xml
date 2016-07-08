@@ -275,7 +275,6 @@
             <configuration>
               <resourceBundles combine.children="append">
                 <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
               </resourceBundles>
             </configuration>
           </execution>
@@ -372,13 +371,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <scm>
-    <connection>scm:git:https://github.com/apache/incubator-asterixdb-hyracks</connection>
-    <developerConnection>scm:git:ssh://fulliautomatix.ics.uci.edu:29418/hyracks</developerConnection>
-    <url>https://github.com/apache/incubator-asterixdb-hyracks</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <profiles>
     <profile>

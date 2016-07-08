@@ -206,7 +206,6 @@
               <appendedResourcesDirectory>${appendedResourcesDirectory}</appendedResourcesDirectory>
               <resourceBundles>
                 <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
               </resourceBundles>
             </configuration>
           </execution>
@@ -361,10 +360,9 @@
   </build>
 
   <scm>
-    <connection>scm:git:https://github.com/apache/incubator-asterixdb</connection>
+    <connection>scm:git:https://github.com/apache/asterixdb</connection>
     <developerConnection>scm:git:ssh://asterix-gerrit.ics.uci.edu:29418/asterixdb</developerConnection>
-    <url>https://github.com/apache/incubator-asterixdb</url>
-
+    <url>https://github.com/apache/asterixdb</url>
     <tag>HEAD</tag>
   </scm>
 
