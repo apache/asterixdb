@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.algebra.operators.IntervalLocalRangeSplitterOperator;
 import org.apache.asterix.algebra.operators.physical.IntervalIndexJoinPOperator;
 import org.apache.asterix.algebra.operators.physical.IntervalLocalRangeSplitterPOperator;
 import org.apache.asterix.algebra.operators.physical.IntervalPartitionJoinPOperator;
@@ -43,13 +42,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -97,21 +94,21 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
 
     private static final int START_SPLITS = 3;
 
-    private static final Set<FunctionIdentifier> intervalJoinConditions = new HashSet<>();
+    private static final Set<FunctionIdentifier> INTERVAL_JOIN_CONDITIONS = new HashSet<>();
     static {
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_AFTER);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_BEFORE);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_COVERED_BY);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_COVERS);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_ENDS);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_MEETS);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_MET_BY);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_OVERLAPS);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_STARTED_BY);
-        intervalJoinConditions.add(AsterixBuiltinFunctions.INTERVAL_STARTS);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_AFTER);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_BEFORE);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_COVERED_BY);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_COVERS);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_ENDS);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_MEETS);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_MET_BY);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_OVERLAPS);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_STARTED_BY);
+        INTERVAL_JOIN_CONDITIONS.add(AsterixBuiltinFunctions.INTERVAL_STARTS);
     }
 
     @Override
@@ -321,7 +318,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         }
         // Check whether the function is a function we want to alter.
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        if (!intervalJoinConditions.contains(funcExpr.getFunctionIdentifier())) {
+        if (!INTERVAL_JOIN_CONDITIONS.contains(funcExpr.getFunctionIdentifier())) {
             return null;
         }
         ILogicalExpression funcArg = funcExpr.getArguments().get(branch).getValue();

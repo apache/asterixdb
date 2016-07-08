@@ -19,16 +19,16 @@
 package org.apache.asterix.optimizer.rules.util;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.algebra.operators.physical.IntervalIndexJoinPOperator;
 import org.apache.asterix.algebra.operators.physical.IntervalPartitionJoinPOperator;
 import org.apache.asterix.common.annotations.IntervalJoinExpressionAnnotation;
-import org.apache.asterix.common.annotations.JoinIntervalMaxDurationExpressionAnnotation;
-import org.apache.asterix.common.annotations.JoinRecordCountsExpressionAnnotation;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.runtime.operators.joins.AfterIntervalMergeJoinCheckerFactory;
 import org.apache.asterix.runtime.operators.joins.BeforeIntervalMergeJoinCheckerFactory;
@@ -62,6 +62,30 @@ import org.apache.hyracks.dataflow.std.join.IMergeJoinCheckerFactory;
 public class JoinUtils {
 
     private static final Logger LOGGER = Logger.getLogger(JoinUtils.class.getName());
+
+    private static final Map<FunctionIdentifier, FunctionIdentifier> INTERVAL_JOIN_CONDITIONS = new HashMap<>();
+    static {
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_AFTER, AsterixBuiltinFunctions.INTERVAL_BEFORE);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_BEFORE, AsterixBuiltinFunctions.INTERVAL_AFTER);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_COVERED_BY,
+                AsterixBuiltinFunctions.INTERVAL_COVERS);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_COVERS,
+                AsterixBuiltinFunctions.INTERVAL_COVERED_BY);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_ENDED_BY, AsterixBuiltinFunctions.INTERVAL_ENDS);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_ENDS, AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_MEETS, AsterixBuiltinFunctions.INTERVAL_MET_BY);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_MET_BY, AsterixBuiltinFunctions.INTERVAL_MEETS);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY,
+                AsterixBuiltinFunctions.INTERVAL_OVERLAPS);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING,
+                AsterixBuiltinFunctions.INTERVAL_OVERLAPPING);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_OVERLAPS,
+                AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_STARTED_BY,
+                AsterixBuiltinFunctions.INTERVAL_STARTS);
+        INTERVAL_JOIN_CONDITIONS.put(AsterixBuiltinFunctions.INTERVAL_STARTS,
+                AsterixBuiltinFunctions.INTERVAL_STARTED_BY);
+    }
 
     private JoinUtils() {
     }
@@ -114,7 +138,6 @@ public class JoinUtils {
         return null;
     }
 
-
     private static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IOptimizationContext context) {
@@ -126,20 +149,20 @@ public class JoinUtils {
     private static void setIntervalPartitionJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
             IntervalJoinExpressionAnnotation ijea, IOptimizationContext context) {
-        long leftCount = ijea.getLeftRecordCount() > 0 ? ijea.getLeftRecordCount()
-                : getCardinality(sideLeft, context);
+        long leftCount = ijea.getLeftRecordCount() > 0 ? ijea.getLeftRecordCount() : getCardinality(sideLeft, context);
         long rightCount = ijea.getRightRecordCount() > 0 ? ijea.getRightRecordCount()
                 : getCardinality(sideRight, context);
         long leftMaxDuration = ijea.getLeftMaxDuration() > 0 ? ijea.getLeftMaxDuration()
                 : getMaxDuration(sideLeft, context);
         long rightMaxDuration = ijea.getRightMaxDuration() > 0 ? ijea.getRightMaxDuration()
                 : getMaxDuration(sideRight, context);
+        int tuplesPerFrame = ijea.getTuplesPerFrame() > 0 ? ijea.getTuplesPerFrame()
+                : context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame();
 
         IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
         op.setPhysicalOperator(new IntervalPartitionJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), leftCount,
-                rightCount, leftMaxDuration, rightMaxDuration,
-                context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame(), mjcf, rangeMap));
+                rightCount, leftMaxDuration, rightMaxDuration, tuplesPerFrame, mjcf, rangeMap));
     }
 
     private static void setIntervalIndexJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
@@ -235,48 +258,12 @@ public class JoinUtils {
     }
 
     private static boolean isIntervalFunction(FunctionIdentifier fi) {
-        return fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPS)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_AFTER)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_MEETS)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_MET_BY)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTS)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTED_BY)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDS)
-                || fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
+        return INTERVAL_JOIN_CONDITIONS.containsKey(fi);
     }
 
     private static FunctionIdentifier reverseIntervalExpression(FunctionIdentifier fi) {
-        if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPS)) {
-            return AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
-            return AsterixBuiltinFunctions.INTERVAL_OVERLAPS;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)) {
-            return AsterixBuiltinFunctions.INTERVAL_OVERLAPPING;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERS)) {
-            return AsterixBuiltinFunctions.INTERVAL_COVERED_BY;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)) {
-            return AsterixBuiltinFunctions.INTERVAL_COVERS;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTS)) {
-            return AsterixBuiltinFunctions.INTERVAL_STARTED_BY;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_STARTED_BY)) {
-            return AsterixBuiltinFunctions.INTERVAL_STARTS;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDS)) {
-            return AsterixBuiltinFunctions.INTERVAL_ENDED_BY;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_ENDED_BY)) {
-            return AsterixBuiltinFunctions.INTERVAL_ENDS;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_AFTER)) {
-            return AsterixBuiltinFunctions.INTERVAL_BEFORE;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)) {
-            return AsterixBuiltinFunctions.INTERVAL_AFTER;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_MET_BY)) {
-            return AsterixBuiltinFunctions.INTERVAL_MEETS;
-        } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_MEETS)) {
-            return AsterixBuiltinFunctions.INTERVAL_MET_BY;
+        if (INTERVAL_JOIN_CONDITIONS.containsKey(fi)) {
+            return INTERVAL_JOIN_CONDITIONS.get(fi);
         }
         return null;
     }

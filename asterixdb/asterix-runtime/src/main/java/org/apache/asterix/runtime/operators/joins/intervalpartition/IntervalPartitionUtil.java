@@ -27,14 +27,42 @@ import java.util.Map.Entry;
 
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class IntervalPartitionUtil {
     public static final double C_CPU = 0.5;
-    public static final double C_IO = 10;
+    public static final double C_IO = 100;
 
     private IntervalPartitionUtil() {
+    }
+
+    public static void main(String[] args) {
+
+//
+//        PhysicalOptimizationConfig poc = new PhysicalOptimizationConfig();
+//
+//        long[] countList = { poc.getMaxFramesForJoinLeftInput() };
+//        long[] maxDurationList = { poc.getMaxIntervalDuration() };
+//        int[] tuplesList = { poc.getMaxRecordsPerFrame() };
+
+        long[] countList = { 2441, 9766, 39063, 156250, 625000, 2500000, 10000000 };
+        long[] maxDurationList = { 1, 3, 30, 300, 3000, 30000, 300000 };
+        int[] tuplesList = { 5, 50, 300, 900 };
+
+
+        int k;
+        for (long count : countList) {
+            for (long maxDuration : maxDurationList) {
+                for (int tuples : tuplesList) {
+                    k = determineK(count, maxDuration, count, maxDuration, tuples);
+                    System.err.println(
+                            "size: " + count + " duration: " + maxDuration + " tuples: " + tuples + " k: " + k);
+                }
+            }
+        }
+
     }
 
     public static int determineK(long countR, long maxDurationR, long countS, long maxDurationS, int avgTuplePerFrame) {

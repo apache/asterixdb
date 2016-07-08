@@ -37,6 +37,7 @@ public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotati
     private long rightMaxDuration = -1;
     private long leftRecordCount = -1;
     private long rightRecordCount = -1;
+    private int tuplesPerFrame = -1;
 
 
     @Override
@@ -56,11 +57,12 @@ public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotati
         String[] args = ((String) object).split(" ");
         setJoinType(args[0]);
 
-        if (joinType.equals(PARTITION_HINT_STRING) && args.length == 6) {
+        if (joinType.equals(PARTITION_HINT_STRING) && args.length == 7) {
             leftRecordCount = Long.valueOf(args[2]);
             rightRecordCount = Long.valueOf(args[3]);
             leftMaxDuration = Long.valueOf(args[4]);
             rightMaxDuration = Long.valueOf(args[5]);
+            tuplesPerFrame = Integer.valueOf(args[6]);
         }
     }
 
@@ -92,6 +94,10 @@ public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotati
 
     public long getRightRecordCount() {
         return rightRecordCount;
+    }
+
+    public int getTuplesPerFrame() {
+        return tuplesPerFrame;
     }
 
     public void setRangeMap(IRangeMap map) {
