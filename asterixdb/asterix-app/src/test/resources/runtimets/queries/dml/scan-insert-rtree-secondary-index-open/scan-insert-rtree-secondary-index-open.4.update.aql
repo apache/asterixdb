@@ -27,10 +27,10 @@ use dataverse test;
 
 insert into dataset MyOpenData
 (
-	for $m in dataset('MyData')
-	return {
-		"id": $m.id,
-		"point": $m.point
-	}
+    for $m in dataset('MyData')
+    return {
+        "id": $m.id,
+        "point": $m.point
+    }
 );
 

@@ -20,23 +20,23 @@
 package org.apache.hyracks.storage.am.common.ophelpers;
 
 public class SlotOffTupleOff implements Comparable<SlotOffTupleOff> {
-	public int tupleIndex;
-	public int slotOff;
-	public int tupleOff;
+    public int tupleIndex;
+    public int slotOff;
+    public int tupleOff;
 
-	public SlotOffTupleOff(int tupleIndex, int slotOff, int recOff) {
-		this.tupleIndex = tupleIndex;
-		this.slotOff = slotOff;
-		this.tupleOff = recOff;
-	}
+    public SlotOffTupleOff(int tupleIndex, int slotOff, int recOff) {
+        this.tupleIndex = tupleIndex;
+        this.slotOff = slotOff;
+        this.tupleOff = recOff;
+    }
 
-	@Override
-	public int compareTo(SlotOffTupleOff o) {
-		return tupleOff - o.tupleOff;
-	}
+    @Override
+    public int compareTo(SlotOffTupleOff o) {
+        return tupleOff - o.tupleOff;
+    }
 
-	@Override
-	public String toString() {
-		return tupleIndex + " " + slotOff + " " + tupleOff;
-	}
+    @Override
+    public String toString() {
+        return tupleIndex + " " + slotOff + " " + tupleOff;
+    }
 }

@@ -1,1 +1,1 @@
-{ "average": 2010.0d, "count": 3, "sum": 6030, "min": date("2009-12-13"), "max": date("2011-11-05") }
+{ "average": 2010.0, "count": 3, "sum": 6030, "min": date("2009-12-13"), "max": date("2011-11-05") }

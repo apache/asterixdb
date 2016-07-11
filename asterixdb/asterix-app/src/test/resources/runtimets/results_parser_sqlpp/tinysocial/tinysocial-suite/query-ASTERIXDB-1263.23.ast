@@ -7,12 +7,12 @@ FunctionCall TinySocial.sql-count@1[
   (
     SELECT ELEMENT [
     FieldAccessor [
-      Variable [ Name=#2 ]
+      Variable [ Name=#4 ]
       Field=t
     ]
     ]
     FROM [      Variable [ Name=#1 ]
-      AS Variable [ Name=#2 ]
+      AS Variable [ Name=#4 ]
     ]
   )
 ]
@@ -25,12 +25,12 @@ count
     (
       SELECT ELEMENT [
       FieldAccessor [
-        Variable [ Name=#4 ]
+        Variable [ Name=#3 ]
         Field=k
       ]
       ]
-      FROM [        Variable [ Name=#3 ]
-        AS Variable [ Name=#4 ]
+      FROM [        Variable [ Name=#2 ]
+        AS Variable [ Name=#3 ]
       ]
     )
   ]
@@ -48,7 +48,7 @@ count
         Field=send-time
       ]
     ]
-    GROUP AS Variable [ Name=#3 ]
+    GROUP AS Variable [ Name=#2 ]
     (
       k:=Variable [ Name=$k ]
       t:=Variable [ Name=$t ]

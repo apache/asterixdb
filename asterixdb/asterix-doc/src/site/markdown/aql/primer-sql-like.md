@@ -903,5 +903,5 @@ more declarative Big Data management.
 AsterixDB is powerful, so use it wisely, and remember: "With great power comes great responsibility..." :-)
 
 Please e-mail the AsterixDB user group
-(users (at) asterixdb.incubator.apache.org)
+(users (at) asterixdb.apache.org)
 if you run into any problems or simply have further questions about the AsterixDB system, its features, or their proper use.

@@ -34,8 +34,7 @@ import java.util.regex.Pattern;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.api.http.servlet.JSONUtil;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -74,35 +73,25 @@ public class ResultUtils {
         return s;
     }
 
-    public static void displayCSVHeader(ARecordType recordType, SessionConfig conf) throws AsterixException {
-        if (recordType == null) {
-            throw new AsterixException("Cannot output CSV with header without specifying output-record-type");
-        }
-        // If HTML-ifying, we have to output this here before the header -
-        // pretty ugly
-        if (conf.is(SessionConfig.FORMAT_HTML)) {
-            conf.out().println("<h4>Results:</h4>");
-            conf.out().println("<pre>");
-        }
-
+    private static void printCSVHeader(ARecordType recordType, PrintWriter out) {
         String[] fieldNames = recordType.getFieldNames();
         boolean notfirst = false;
         for (String name : fieldNames) {
             if (notfirst) {
-                conf.out().print(',');
+                out.print(',');
             }
             notfirst = true;
-            conf.out().print('"');
-            conf.out().print(name.replace("\"", "\"\""));
-            conf.out().print('"');
+            out.print('"');
+            out.print(name.replace("\"", "\"\""));
+            out.print('"');
         }
-        conf.out().print("\r\n");
+        out.print("\r\n");
     }
 
     public static FrameManager resultDisplayFrameMgr = new FrameManager(ResultReader.FRAME_SIZE);
 
-    public static void displayResults(ResultReader resultReader, SessionConfig conf, Stats stats)
-            throws HyracksDataException {
+    public static void displayResults(ResultReader resultReader, SessionConfig conf, Stats stats,
+            ARecordType recordType) throws HyracksDataException {
         // Whether we are wrapping the output sequence in an array
         boolean wrap_array = false;
         // Whether this is the first instance being output
@@ -110,31 +99,37 @@ public class ResultUtils {
 
         // If we're outputting CSV with a header, the HTML header was already
         // output by displayCSVHeader(), so skip it here
-        if (conf.is(SessionConfig.FORMAT_HTML)
-                && !(conf.fmt() == OutputFormat.CSV && conf.is(SessionConfig.FORMAT_CSV_HEADER))) {
+        if (conf.is(SessionConfig.FORMAT_HTML)) {
             conf.out().println("<h4>Results:</h4>");
             conf.out().println("<pre>");
         }
 
         conf.resultPrefix(conf.out());
 
-        switch (conf.fmt()) {
-            case LOSSLESS_JSON:
-            case CLEAN_JSON:
-            case ADM:
-                if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
-                    // Conveniently, LOSSLESS_JSON and ADM have the same syntax for an
-                    // "ordered list", and our representation of the result of a
-                    // statement is an ordered list of instances.
-                    conf.out().print("[ ");
-                    wrap_array = true;
-                }
-                break;
-            default:
-                break;
+        if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
+            conf.out().print("[ ");
+            wrap_array = true;
         }
 
-        final boolean indentJSON = conf.is(SessionConfig.INDENT_JSON);
+        final boolean indentJSON = conf.is(SessionConfig.FORMAT_INDENT_JSON);
+        final boolean quoteRecord = conf.is(SessionConfig.FORMAT_QUOTE_RECORD);
+
+        if (conf.fmt() == OutputFormat.CSV && conf.is(SessionConfig.FORMAT_CSV_HEADER)) {
+            if (recordType == null) {
+                throw new HyracksDataException("Cannot print CSV with header without specifying output-record-type");
+            }
+            if (quoteRecord) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                printCSVHeader(recordType, pw);
+                pw.close();
+                conf.out().print(JSONUtil.quoteAndEscape(sw.toString()));
+                conf.out().print("\n");
+                notfirst = true;
+            } else {
+                printCSVHeader(recordType, conf.out());
+            }
+        }
 
         final IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
         final IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
@@ -161,10 +156,15 @@ public class ResultUtils {
                     // TODO(tillw): this is inefficient - do this during result generation
                     result = JSONUtil.indent(result, 2);
                 }
-                conf.out().print(result);
                 if (conf.fmt() == OutputFormat.CSV) {
-                    conf.out().print("\r\n");
+                    // TODO(tillw): this is inefficient as well
+                    result = result + "\r\n";
                 }
+                if (quoteRecord) {
+                    // TODO(tillw): this is inefficient as well
+                    result = JSONUtil.quoteAndEscape(result);
+                }
+                conf.out().print(result);
                 ++stats.count;
                 // TODO(tillw) fix this approximation
                 stats.size += result.length();
@@ -193,7 +193,7 @@ public class ResultUtils {
         errorArray.put(errorMessage);
         try {
             errorResp.put("error-code", errorArray);
-            if (! "".equals(errorSummary)) {
+            if (!"".equals(errorSummary)) {
                 errorResp.put("summary", errorSummary);
             } else {
                 //parse exception

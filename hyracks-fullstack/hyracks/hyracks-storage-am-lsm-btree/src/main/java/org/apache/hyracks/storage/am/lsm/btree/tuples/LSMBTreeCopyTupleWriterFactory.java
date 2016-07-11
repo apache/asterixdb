@@ -24,18 +24,18 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
 public class LSMBTreeCopyTupleWriterFactory extends TypeAwareTupleWriterFactory {
-	private static final long serialVersionUID = 1L;
-	private final ITypeTraits[] typeTraits;
-	private final int numKeyFields;
+    private static final long serialVersionUID = 1L;
+    private final ITypeTraits[] typeTraits;
+    private final int numKeyFields;
 
-	public LSMBTreeCopyTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields) {
-		super(typeTraits);
-		this.typeTraits = typeTraits;
-		this.numKeyFields = numKeyFields;
-	}
+    public LSMBTreeCopyTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields) {
+        super(typeTraits);
+        this.typeTraits = typeTraits;
+        this.numKeyFields = numKeyFields;
+    }
 
-	@Override
-	public ITreeIndexTupleWriter createTupleWriter() {
-		return new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields);
-	}
+    @Override
+    public ITreeIndexTupleWriter createTupleWriter() {
+        return new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields);
+    }
 }

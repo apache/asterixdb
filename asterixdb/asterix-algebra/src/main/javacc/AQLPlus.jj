@@ -1491,8 +1491,8 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     createNewScope();
   }
 
-   (      ("some"  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
-        | ("every" {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
+   (      ("some"  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);    })
+        | ("every" {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);    }))
     var = Variable() "in" inExpr = Expression()
     {
       pair = new QuantifiedPair(var, inExpr);

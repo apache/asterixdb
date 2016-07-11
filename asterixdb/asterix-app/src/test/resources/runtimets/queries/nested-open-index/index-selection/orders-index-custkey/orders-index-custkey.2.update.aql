@@ -24,27 +24,27 @@ using localfs
 
 insert into dataset Orders
 (
-	for $c in dataset('Orderstmp')
-	where $c.o_orderkey <= 3000
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('Orderstmp')
+    where $c.o_orderkey <= 3000
+    return {
+        "nested" : $c
+    }
 );
 
 insert into dataset Orders
 (
-	for $c in dataset('Orderstmp')
-	where $c.o_orderkey > 3000
-	return {
-		"nested" : {
-			"o_orderkey": $c.o_orderkey,
-			"o_orderstatus": $c.o_orderstatus,
-			"o_totalprice": $c.o_totalprice,
-			"o_orderdate": $c.o_orderdate,
-			"o_orderpriority": $c.o_orderpriority,
-			"o_clerk": $c.o_clerk,
-			"o_shippriority": $c.o_shippriority,
-			"o_comment": $c.o_comment
-		}
-	}	
+    for $c in dataset('Orderstmp')
+    where $c.o_orderkey > 3000
+    return {
+        "nested" : {
+            "o_orderkey": $c.o_orderkey,
+            "o_orderstatus": $c.o_orderstatus,
+            "o_totalprice": $c.o_totalprice,
+            "o_orderdate": $c.o_orderdate,
+            "o_orderpriority": $c.o_orderpriority,
+            "o_clerk": $c.o_clerk,
+            "o_shippriority": $c.o_shippriority,
+            "o_comment": $c.o_comment
+        }
+    }
 );

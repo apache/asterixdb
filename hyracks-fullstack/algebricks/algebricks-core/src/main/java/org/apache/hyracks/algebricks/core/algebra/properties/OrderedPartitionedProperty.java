@@ -55,7 +55,7 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
     }
 
     public List<LogicalVariable> getColumns() {
-        ArrayList<LogicalVariable> cols = new ArrayList<LogicalVariable>(orderColumns.size());
+        ArrayList<LogicalVariable> cols = new ArrayList<>(orderColumns.size());
         for (OrderColumn oc : orderColumns) {
             cols.add(oc.getColumn());
         }
@@ -77,9 +77,11 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
     }
 
     @Override
-    public void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
-        orderColumns = PropertiesUtil.replaceOrderColumnsByEqClasses(orderColumns, equivalenceClasses);
-        orderColumns = PropertiesUtil.applyFDsToOrderColumns(orderColumns, fds);
+    public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
+        List<OrderColumn> columns = PropertiesUtil.replaceOrderColumnsByEqClasses(orderColumns, equivalenceClasses);
+        columns = PropertiesUtil.applyFDsToOrderColumns(columns, fds);
+        return new OrderedPartitionedProperty(columns, domain, rangeMap);
     }
 
     @Override

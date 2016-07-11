@@ -232,7 +232,7 @@
 
   <property>
     <name>log.level</name>
-    <value>ALL</value>
+    <value>INFO</value>
     <description>The minimum log level to be displayed. (Default = INFO)
     </description>
   </property>

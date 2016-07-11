@@ -21,19 +21,24 @@ package org.apache.hyracks.storage.common.buffercache;
 import java.nio.ByteBuffer;
 
 public interface ICachedPage {
-    public ByteBuffer getBuffer();
 
-    public void acquireReadLatch();
+    ByteBuffer getBuffer();
 
-    public void releaseReadLatch();
+    void acquireReadLatch();
 
-    public void acquireWriteLatch();
+    void releaseReadLatch();
 
-    public void releaseWriteLatch(boolean markDirty);
+    void acquireWriteLatch();
 
-    public boolean confiscated();
+    void releaseWriteLatch(boolean markDirty);
 
-    public IQueueInfo getQueueInfo();
+    boolean confiscated();
 
-    public void setQueueInfo(IQueueInfo queueInfo);
+    IQueueInfo getQueueInfo();
+
+    void setQueueInfo(IQueueInfo queueInfo);
+
+    int getPageSize();
+
+    int getFrameSizeMultiplier();
 }

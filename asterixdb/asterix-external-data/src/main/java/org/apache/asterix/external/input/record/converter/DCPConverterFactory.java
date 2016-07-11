@@ -51,7 +51,7 @@ public class DCPConverterFactory implements IRecordConverterFactory<DCPRequest, 
 
     @Override
     public IRecordConverter<DCPRequest, RecordWithMetadataAndPK<char[]>> createConverter() {
-        return new DCPRequestToRecordWithMetadataAndPKConverter();
+        return new DCPMessageToRecordConverter();
     }
 
     @Override

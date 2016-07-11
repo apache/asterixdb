@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>LATEST</version>
+    <version>16</version>
     <relativePath/>
   </parent>
 
@@ -275,8 +275,54 @@
             <configuration>
               <resourceBundles combine.children="append">
                 <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
-                <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
               </resourceBundles>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.17</version>
+        <executions>
+          <execution>
+            <id>verify-style</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <logViolationsToConsole>true</logViolationsToConsole>
+          <checkstyleRules>
+            <module name="Checker">
+              <!-- Checks for whitespace                               -->
+              <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+              <module name="FileTabCharacter"/>
+            </module>
+          </checkstyleRules>
+          <includes>**/*.java,**/*.jj</includes>
+          <resourceIncludes>**/*.properties,**/*.xml,**/*.xsd,**/*.sh</resourceIncludes>
+          <sourceDirectories>${project.build.sourceDirectory},${project.build.testSourceDirectory}</sourceDirectories>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.4.1</version>
+        <executions>
+          <execution>
+            <id>enforce-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.3.9,)</version>
+                </requireMavenVersion>
+              </rules>
             </configuration>
           </execution>
         </executions>
@@ -305,6 +351,19 @@
                     <ignore></ignore>
                   </action>
                 </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <versionRange>[2.17,)</versionRange>
+                    <goals>
+                      <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
@@ -312,13 +371,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <scm>
-    <connection>scm:git:https://github.com/apache/incubator-asterixdb-hyracks</connection>
-    <developerConnection>scm:git:ssh://fulliautomatix.ics.uci.edu:29418/hyracks</developerConnection>
-    <url>https://github.com/apache/incubator-asterixdb-hyracks</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <profiles>
     <profile>

@@ -47,6 +47,7 @@ import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -107,6 +108,9 @@ public abstract class SecondaryIndexOperationsHelper {
     protected String datasetName;
     protected Dataset dataset;
     protected ARecordType itemType;
+    protected ARecordType metaType;
+    protected List<Integer> keySourceIndicators;
+    protected ISerializerDeserializer metaSerde;
     protected ISerializerDeserializer payloadSerde;
     protected IFileSplitProvider primaryFileSplitProvider;
     protected AlgebricksPartitionConstraint primaryPartitionConstraint;
@@ -131,7 +135,7 @@ public abstract class SecondaryIndexOperationsHelper {
     protected Map<String, String> mergePolicyFactoryProperties;
     protected RecordDescriptor enforcedRecDesc;
     protected ARecordType enforcedItemType;
-
+    protected ARecordType enforcedMetaType;
     protected int numFilterFields;
     protected List<String> filterFieldName;
     protected ITypeTraits[] filterTypeTraits;
@@ -152,8 +156,8 @@ public abstract class SecondaryIndexOperationsHelper {
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(IndexType indexType, String dataverseName,
             String datasetName, String indexName, List<List<String>> secondaryKeyFields, List<IAType> secondaryKeyTypes,
             boolean isEnforced, int gramLength, AqlMetadataProvider metadataProvider,
-            PhysicalOptimizationConfig physOptConf, ARecordType recType, ARecordType enforcedType)
-            throws AsterixException, AlgebricksException {
+            PhysicalOptimizationConfig physOptConf, ARecordType recType, ARecordType metaType,
+            List<Integer> keySourceIndicators, ARecordType enforcedType) throws AsterixException, AlgebricksException {
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.getInstance();
         SecondaryIndexOperationsHelper indexOperationsHelper = null;
         switch (indexType) {
@@ -178,7 +182,8 @@ public abstract class SecondaryIndexOperationsHelper {
             }
         }
         indexOperationsHelper.init(indexType, dataverseName, datasetName, indexName, secondaryKeyFields,
-                secondaryKeyTypes, isEnforced, gramLength, metadataProvider, recType, enforcedType);
+                secondaryKeyTypes, isEnforced, gramLength, metadataProvider, recType, metaType, keySourceIndicators,
+                enforcedType);
         return indexOperationsHelper;
     }
 
@@ -190,7 +195,8 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected void init(IndexType indexType, String dvn, String dsn, String in, List<List<String>> secondaryKeyFields,
             List<IAType> secondaryKeyTypes, boolean isEnforced, int gramLength, AqlMetadataProvider metadataProvider,
-            ARecordType aRecType, ARecordType enforcedType) throws AsterixException, AlgebricksException {
+            ARecordType aRecType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType)
+            throws AsterixException, AlgebricksException {
         this.metadataProvider = metadataProvider;
         dataverseName = dvn == null ? metadataProvider.getDefaultDataverseName() : dvn;
         datasetName = dsn;
@@ -202,8 +208,12 @@ public abstract class SecondaryIndexOperationsHelper {
         }
         boolean temp = dataset.getDatasetDetails().isTemp();
         itemType = aRecType;
+        this.metaType = metaType;
+        this.keySourceIndicators = keySourceIndicators;
         enforcedItemType = enforcedType;
         payloadSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+        metaSerde = metaType == null ? null
+                : AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
         numSecondaryKeys = secondaryKeyFields.size();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, secondaryIndexName, temp);
@@ -266,13 +276,20 @@ public abstract class SecondaryIndexOperationsHelper {
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
         List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numPrimaryKeys = partitioningKeys.size();
-        ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1];
-        ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1];
+        ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1
+                + (dataset.hasMetaPart() ? 1 : 0)];
+        ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)];
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
         primaryBloomFilterKeyFields = new int[numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
+        List<Integer> indicators = null;
+        if (dataset.hasMetaPart()) {
+            indicators = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
+        }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
+            IAType keyType = (indicators == null || indicators.get(i) == 0)
+                    ? itemType.getSubFieldType(partitioningKeys.get(i))
+                    : metaType.getSubFieldType(partitioningKeys.get(i));
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(keyType, true);
@@ -281,6 +298,10 @@ public abstract class SecondaryIndexOperationsHelper {
         }
         primaryRecFields[numPrimaryKeys] = payloadSerde;
         primaryTypeTraits[numPrimaryKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
+        if (dataset.hasMetaPart()) {
+            primaryRecFields[numPrimaryKeys + 1] = payloadSerde;
+            primaryTypeTraits[numPrimaryKeys + 1] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
+        }
         primaryRecDesc = new RecordDescriptor(primaryRecFields, primaryTypeTraits);
     }
 
@@ -376,14 +397,13 @@ public abstract class SecondaryIndexOperationsHelper {
         return asterixAssignOp;
     }
 
-    protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec,
-            AbstractOperatorDescriptor primaryScanOp, int numSecondaryKeyFields, DatasetType dsType) {
+    protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType) {
         CastRecordDescriptor castFuncDesc = (CastRecordDescriptor) CastRecordDescriptor.FACTORY
                 .createFunctionDescriptor();
         castFuncDesc.reset(enforcedItemType, itemType);
 
         int[] outColumns = new int[1];
-        int[] projectionList = new int[1 + numPrimaryKeys];
+        int[] projectionList = new int[(dataset.hasMetaPart() ? 2 : 1) + numPrimaryKeys];
         int recordIdx;
         //external datascan operator returns a record as the first field, instead of the last in internal case
         if (dsType == DatasetType.EXTERNAL) {
@@ -395,6 +415,9 @@ public abstract class SecondaryIndexOperationsHelper {
         }
         for (int i = 0; i <= numPrimaryKeys; i++) {
             projectionList[i] = i;
+        }
+        if (dataset.hasMetaPart()) {
+            projectionList[numPrimaryKeys + 1] = numPrimaryKeys + 1;
         }
         IScalarEvaluatorFactory[] castEvalFact = new IScalarEvaluatorFactory[] {
                 new ColumnAccessEvalFactory(recordIdx) };
@@ -440,10 +463,10 @@ public abstract class SecondaryIndexOperationsHelper {
         for (int i = 0; i < numSecondaryKeyFields; i++) {
             // Access column i, and apply 'is not null'.
             ColumnAccessEvalFactory columnAccessEvalFactory = new ColumnAccessEvalFactory(i);
-            IScalarEvaluatorFactory isNullEvalFactory = isUnknownDesc
+            IScalarEvaluatorFactory isUnknownEvalFactory = isUnknownDesc
                     .createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
             IScalarEvaluatorFactory notEvalFactory = notDesc
-                    .createEvaluatorFactory(new IScalarEvaluatorFactory[] { isNullEvalFactory });
+                    .createEvaluatorFactory(new IScalarEvaluatorFactory[] { isUnknownEvalFactory });
             andArgsEvalFactories[i] = notEvalFactory;
         }
         IScalarEvaluatorFactory selectCond = null;

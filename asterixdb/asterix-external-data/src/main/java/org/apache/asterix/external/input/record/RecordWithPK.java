@@ -86,7 +86,7 @@ public class RecordWithPK<T> implements IRawRecord<T> {
         record.set(t);
     }
 
-    public void appendPk(final ArrayTupleBuilder tb) throws IOException {
+    public void appendPrimaryKeyToTuple(final ArrayTupleBuilder tb) throws IOException {
         for (final ArrayBackedValueStorage pkStorage : pkFieldValueBuffers) {
             tb.addField(pkStorage);
         }

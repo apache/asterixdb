@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -49,9 +50,16 @@ public class ARecordType extends AbstractComplexType {
     private static final long serialVersionUID = 1L;
     private final String[] fieldNames;
     private final IAType[] fieldTypes;
-    private final Map<String, Integer> fieldNameToIndexMap = new HashMap<String, Integer>();
+    private final Map<String, Integer> fieldNameToIndexMap = new HashMap<>();
     private final boolean isOpen;
-    private final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
+    private final transient List<IRecordTypeAnnotation> annotations = new ArrayList<>();
+    // The following set of names do not belong to the closed part,
+    // but are additional possible field names. For example, a field "foo" with type
+    // ANY cannot be in the closed part, but "foo" is a possible field name.
+    // This is used for resolve a field access with prefix path missing.
+    // If allPossibleAdditionalFieldNames is null, that means compiler does not know
+    // the bounded set of all possible additional field names.
+    private final Set<String> allPossibleAdditionalFieldNames;
 
     /**
      * @param typeName
@@ -64,6 +72,23 @@ public class ARecordType extends AbstractComplexType {
      *            whether the record is open
      */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
+        this(typeName, fieldNames, fieldTypes, isOpen, null);
+    }
+
+    /**
+     * @param typeName
+     *            the name of the type
+     * @param fieldNames
+     *            the names of the closed fields
+     * @param fieldTypes
+     *            the types of the closed fields
+     * @param isOpen
+     *            whether the record is open
+     * @param allPossibleAdditionalFieldNames,
+     *            all possible additional field names.
+     */
+    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen,
+            Set<String> allPossibleAdditionalFieldNames) {
         super(typeName);
         this.fieldNames = fieldNames;
         this.fieldTypes = fieldTypes;
@@ -72,6 +97,22 @@ public class ARecordType extends AbstractComplexType {
         // Puts field names to the field name to field index map.
         for (int index = 0; index < fieldNames.length; ++index) {
             fieldNameToIndexMap.put(fieldNames[index], index);
+        }
+        this.allPossibleAdditionalFieldNames = allPossibleAdditionalFieldNames;
+    }
+
+    public boolean canContainField(String fieldName) {
+        if (this.isOpen && allPossibleAdditionalFieldNames == null) {
+            // An open record type without information on possible additional fields can potentially contain
+            // a field with any name.
+            return true;
+        }
+        if (isOpen) {
+            // An open record type with information on possible additional fields can determine whether
+            // a field can potentially be contained in a record.
+            return fieldNameToIndexMap.containsKey(fieldName) || allPossibleAdditionalFieldNames.contains(fieldName);
+        } else {
+            return fieldNameToIndexMap.containsKey(fieldName);
         }
     }
 
@@ -248,7 +289,7 @@ public class ARecordType extends AbstractComplexType {
         for (int i = 0; i < fieldTypes.length; i++) {
             IAType fieldType = fieldTypes[i];
             if (fieldType.getTypeTag().isDerivedType() && (fieldType.getTypeName() == null)) {
-                AbstractComplexType nestedType = ((AbstractComplexType) fieldType);
+                AbstractComplexType nestedType = (AbstractComplexType) fieldType;
                 nestedType.setTypeName(getTypeName() + "_" + fieldNames[i]);
                 nestedType.generateNestedDerivedTypeNames();
             }

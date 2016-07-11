@@ -24,18 +24,18 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
 public class TypeAwareTupleWriterFactory implements
-		ITreeIndexTupleWriterFactory {
+        ITreeIndexTupleWriterFactory {
 
-	private static final long serialVersionUID = 1L;
-	protected ITypeTraits[] typeTraits;
+    private static final long serialVersionUID = 1L;
+    protected ITypeTraits[] typeTraits;
 
-	public TypeAwareTupleWriterFactory(ITypeTraits[] typeTraits) {
-		this.typeTraits = typeTraits;
-	}
+    public TypeAwareTupleWriterFactory(ITypeTraits[] typeTraits) {
+        this.typeTraits = typeTraits;
+    }
 
-	@Override
-	public ITreeIndexTupleWriter createTupleWriter() {
-		return new TypeAwareTupleWriter(typeTraits);
-	}
+    @Override
+    public ITreeIndexTupleWriter createTupleWriter() {
+        return new TypeAwareTupleWriter(typeTraits);
+    }
 
 }

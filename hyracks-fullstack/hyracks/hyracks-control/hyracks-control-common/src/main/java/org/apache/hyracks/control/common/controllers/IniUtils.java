@@ -26,21 +26,39 @@ import java.io.IOException;
 
 /**
  * Some utility functions for reading Ini4j objects with default values.
+ * For all getXxx() methods: if the 'section' contains a slash, and the 'key'
+ * is not found in that section, we will search for the key in the section named
+ * by stripping the leaf of the section name (final slash and anything following).
+ * eg. getInt(ini, "nc/red", "dir", null) will first look for the key "dir" in
+ * the section "nc/red", but if it is not found, will look in the section "nc".
  */
 public class IniUtils {
+    private static <T> T getIniValue(Ini ini, String section, String key, T default_value, Class<T> clazz) {
+        T value;
+        while (true) {
+            value = ini.get(section, key, clazz);
+            if (value == null) {
+                int idx = section.lastIndexOf('/');
+                if (idx > -1) {
+                    section = section.substring(0, idx);
+                    continue;
+                }
+            }
+            break;
+        }
+        return (value != null) ? value : default_value;
+    }
+
     public static String getString(Ini ini, String section, String key, String defaultValue) {
-        String value = ini.get(section, key, String.class);
-        return (value != null) ? value : defaultValue;
+        return getIniValue(ini, section, key, defaultValue, String.class);
     }
 
     public static int getInt(Ini ini, String section, String key, int defaultValue) {
-        Integer value = ini.get(section, key, Integer.class);
-        return (value != null) ? value : defaultValue;
+        return getIniValue(ini, section, key, defaultValue, Integer.class);
     }
 
     public static long getLong(Ini ini, String section, String key, long defaultValue) {
-        Long value = ini.get(section, key, Long.class);
-        return (value != null) ? value : defaultValue;
+        return getIniValue(ini, section, key, defaultValue, Long.class);
     }
 
     public static Ini loadINIFile(String configFile) throws IOException {

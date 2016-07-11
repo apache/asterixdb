@@ -95,7 +95,12 @@ public class SessionConfig {
     /**
      * Format flag: indent JSON results.
      */
-    public static final String INDENT_JSON = "indent-json";
+    public static final String FORMAT_INDENT_JSON = "indent-json";
+
+    /**
+     * Format flag: quote records in the results array.
+     */
+    public static final String FORMAT_QUOTE_RECORD = "quote-record";
 
     public interface ResultDecorator {
         PrintWriter print(PrintWriter pw);

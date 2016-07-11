@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
+import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
 public interface ITreeIndexFrame {
 
@@ -73,7 +73,7 @@ public interface ITreeIndexFrame {
     public String printHeader();
 
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
-                      IMetaDataPageManager freePageManager, ITreeIndexMetaDataFrame metaFrame, IBufferCache bufferCache)
+                      IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
             throws HyracksDataException, TreeIndexException;
 
     public ISlotManager getSlotManager();
@@ -104,6 +104,4 @@ public interface ITreeIndexFrame {
     public ITreeIndexTupleReference createTupleReference();
 
     public void setMultiComparator(MultiComparator cmp);
-
-    ILargePageHelper getLargePageHelper();
 }

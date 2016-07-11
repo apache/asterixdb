@@ -19,8 +19,8 @@
 /*
  * Description    : Fuzzy self joins a dataset, TweetMessages, based on the similarity-jaccard-check function of its text-messages' word tokens.
  *                  TweetMessages has a keyword index on text-message and btree index on the primary key tweetid, and we expect the join to be
- *					transformed into btree and inverted indexed nested-loop joins. We test whether the join condition can be transformed into
- *					multiple indexed nested loop joins of various type of indexes.
+ *                    transformed into btree and inverted indexed nested-loop joins. We test whether the join condition can be transformed into
+ *                    multiple indexed nested loop joins of various type of indexes.
  * Success        : Yes
  */
 
@@ -29,22 +29,22 @@ create dataverse test;
 use dataverse test;
 
 create type TwitterUserType as closed {
-	screen-name: string,
-	lang: string,
-	friends-count: int32,
-	statuses-count: int32,
-	name: string,
-	followers-count: int32
+    screen-name: string,
+    lang: string,
+    friends-count: int32,
+    statuses-count: int32,
+    name: string,
+    followers-count: int32
 }
 
 create type TweetMessageType as open {
-	tweetid: int64,
-	user: TwitterUserType,
-	sender-location: point,
-	send-time: datetime,
-	referred-topics: {{ string }},
-	countA: int32,
-	countB: int32
+    tweetid: int64,
+    user: TwitterUserType,
+    sender-location: point,
+    send-time: datetime,
+    referred-topics: {{ string }},
+    countA: int32,
+    countB: int32
 }
 
 create dataset TweetMessages(TweetMessageType)

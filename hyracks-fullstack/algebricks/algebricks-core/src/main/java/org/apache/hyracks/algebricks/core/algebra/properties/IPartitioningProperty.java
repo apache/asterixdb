@@ -73,9 +73,9 @@ public interface IPartitioningProperty extends IStructuralProperty {
         }
 
         @Override
-        public void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+        public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
                 List<FunctionalDependency> fds) {
-            // do nothing
+            return UNPARTITIONED;
         }
 
         @Override
@@ -104,7 +104,7 @@ public interface IPartitioningProperty extends IStructuralProperty {
 
     PartitioningType getPartitioningType();
 
-    void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+    IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
             List<FunctionalDependency> fds);
 
     INodeDomain getNodeDomain();

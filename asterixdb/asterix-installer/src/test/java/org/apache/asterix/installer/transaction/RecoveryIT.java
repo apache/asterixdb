@@ -26,17 +26,18 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.apache.asterix.test.runtime.HDFSCluster;
-import org.apache.asterix.testframework.context.TestCaseContext;
 @RunWith(Parameterized.class)
 public class RecoveryIT {
 
@@ -50,9 +51,13 @@ public class RecoveryIT {
     private static String managixHomeDirName;
     private static String managixHomePath;
     private static String scriptHomePath;
+    private static String reportPath;
     private static ProcessBuilder pb;
     private static Map<String, String> env;
     private final TestExecutor testExecutor = new TestExecutor();
+
+    @Rule
+    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(managixHomePath, reportPath);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -61,6 +66,7 @@ public class RecoveryIT {
 
         asterixInstallerPath = new File(System.getProperty("user.dir"));
         installerTargetPath = new File(asterixInstallerPath, "target");
+        reportPath = new File(installerTargetPath, "failsafe-reports").getAbsolutePath();
         managixHomeDirName = installerTargetPath.list(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {

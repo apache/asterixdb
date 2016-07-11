@@ -64,14 +64,15 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
     }
 
     private boolean positionToNextLeaf(boolean skipCurrent) throws HyracksDataException {
-        while ((frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) && (currentPageId <= maxPageId)) {
-            currentPageId++;
+        while (frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) {
+            if (++currentPageId > maxPageId) {
+                break;
+            }
 
             page.releaseReadLatch();
             bufferCache.unpin(page);
 
-            ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false,
-                    frame.getLargePageHelper());
+            ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
             nextPage.acquireReadLatch();
 
             page = nextPage;

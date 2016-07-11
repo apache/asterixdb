@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -65,23 +66,17 @@ public interface IAdapterFactory extends Serializable {
     public IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws HyracksDataException;
 
     /**
+     * @param libraryManager
      * @param configuration
-     * @param outputType
-     * @param metaType
      * @throws Exception
      */
-    public void configure(Map<String, String> configuration, ARecordType outputType, ARecordType metaType)
-            throws AsterixException;
+    public void configure(ILibraryManager libraryManager, Map<String, String> configuration) throws AsterixException;
 
-    public default void configure(final Map<String, String> configuration, final ARecordType outputType)
-            throws AsterixException {
-        configure(configuration, outputType, null);
-    }
+    public void setOutputType(ARecordType outputType);
 
-    /**
-     * Gets the record type associated with the output of the adapter
-     *
-     * @return
-     */
-    public ARecordType getAdapterOutputType();
+    public void setMetaType(ARecordType metaType);
+
+    public ARecordType getOutputType();
+
+    public ARecordType getMetaType();
 }

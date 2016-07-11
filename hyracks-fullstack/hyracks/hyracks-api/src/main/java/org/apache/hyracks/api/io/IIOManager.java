@@ -43,6 +43,8 @@ public interface IIOManager {
 
     public int syncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
+    public long syncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException;
+
     public int syncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
     public IIOFuture asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data);

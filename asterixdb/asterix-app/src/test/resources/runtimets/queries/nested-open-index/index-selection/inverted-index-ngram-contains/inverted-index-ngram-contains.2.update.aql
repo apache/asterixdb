@@ -24,23 +24,23 @@ using localfs
 
 insert into dataset DBLP
 (
-	for $c in dataset('DBLPtmp')
-	where $c.id <= 50
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('DBLPtmp')
+    where $c.id <= 50
+    return {
+        "nested" : $c
+    }
 );
 
 insert into dataset DBLP
 (
-	for $c in dataset('DBLPtmp')
-	where $c.id > 50
-	return {
-		"nested" : {
-			"id": $c.id,
-			"dblpid": $c.dblpid,
-			"authors": $c.authors,
-			"misc": $c.misc
-		}
-	}	
+    for $c in dataset('DBLPtmp')
+    where $c.id > 50
+    return {
+        "nested" : {
+            "id": $c.id,
+            "dblpid": $c.dblpid,
+            "authors": $c.authors,
+            "misc": $c.misc
+        }
+    }
 );

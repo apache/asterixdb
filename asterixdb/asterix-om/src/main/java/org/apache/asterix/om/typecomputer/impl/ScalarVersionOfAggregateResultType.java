@@ -45,11 +45,14 @@ public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComput
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];
-        ATypeTag tag = act.getTypeTag();
+        ATypeTag tag = strippedInputTypes[0].getTypeTag();
         if (tag == ATypeTag.ANY) {
             return BuiltinType.ANY;
         }
+        if (tag != ATypeTag.ORDEREDLIST && tag != ATypeTag.UNORDEREDLIST) {
+            return strippedInputTypes[0];
+        }
+        AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];
         IAType t = act.getItemType();
         return AUnionType.createUnknownableType(t);
     }

@@ -43,7 +43,7 @@ public class TestRecordWithPKParser<T> implements IRecordWithPKDataParser<Record
     @Override
     public void appendKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends RecordWithPK<T>> record)
             throws IOException {
-        record.get().appendPk(tb);
+        record.get().appendPrimaryKeyToTuple(tb);
     }
 
 }

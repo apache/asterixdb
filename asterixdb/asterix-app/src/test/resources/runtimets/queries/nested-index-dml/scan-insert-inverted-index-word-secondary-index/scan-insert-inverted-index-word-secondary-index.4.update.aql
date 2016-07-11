@@ -31,12 +31,12 @@ for $o in dataset('DBLPtmp')
 order by $o.id
 return { "nested" : {
 
-		"id": $o.id,
-		"dblpid": $o.dblpid,
-		"title": $o.title,
-		"authors": $o.authors,
+        "id": $o.id,
+        "dblpid": $o.dblpid,
+        "title": $o.title,
+        "authors": $o.authors,
 
-		"misc": $o.misc }
+        "misc": $o.misc }
 
-	}
+    }
 );

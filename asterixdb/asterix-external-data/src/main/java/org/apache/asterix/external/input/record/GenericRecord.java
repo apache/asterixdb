@@ -54,4 +54,9 @@ public class GenericRecord<T> implements IRawRecord<T> {
     @Override
     public void reset() {
     }
+
+    @Override
+    public String toString() {
+        return record == null ? null : record.toString();
+    }
 }

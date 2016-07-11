@@ -29,8 +29,8 @@ RecordConstructor [
           AS Variable [ Name=$j ]
         ]
         Where
-          FunctionCall test.not@1[
-            FunctionCall test.is-null@1[
+          FunctionCall null.not@1[
+            FunctionCall null.is-null@1[
               FieldAccessor [
                 Variable [ Name=$j ]
                 Field=value

@@ -43,6 +43,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
@@ -223,6 +224,13 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         return p.first;
     }
 
+    @Override
+    public Boolean visit(IndependentSubquery independentSubquery, List<FunctionDecl> funcs) throws AsterixException {
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(independentSubquery.getExpr(), funcs);
+        independentSubquery.setExpr(p.second);
+        return p.first;
+    }
+
     private Map<VariableExpr, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
             throws AsterixException {
         Map<VariableExpr, Expression> varExprMap = new HashMap<VariableExpr, Expression>();
@@ -234,4 +242,5 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         }
         return varExprMap;
     }
+
 }

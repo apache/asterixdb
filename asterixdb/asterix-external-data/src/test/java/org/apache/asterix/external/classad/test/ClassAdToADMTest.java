@@ -138,6 +138,44 @@ public class ClassAdToADMTest extends TestCase {
     }
 
     /**
+    *
+    */
+    public void testEscaping() {
+        try {
+            ClassAdObjectPool objectPool = new ClassAdObjectPool();
+            ClassAd pAd = new ClassAd(objectPool);
+            String[] files = new String[] { "/escapes.txt" };
+            ClassAdParser parser = new ClassAdParser(objectPool);
+            CharArrayLexerSource lexerSource = new CharArrayLexerSource();
+            for (String path : files) {
+                List<Path> paths = new ArrayList<>();
+                paths.add(Paths.get(getClass().getResource(path).toURI()));
+                FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
+                LocalFSInputStream in = new LocalFSInputStream(watcher);
+                SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "[", "]");
+                try {
+                    Value val = new Value(objectPool);
+                    while (recordReader.hasNext()) {
+                        val.reset();
+                        IRawRecord<char[]> record = recordReader.next();
+                        lexerSource.setNewSource(record.get());
+                        parser.setLexerSource(lexerSource);
+                        parser.parseNext(pAd);
+                        Assert.assertEquals(
+                                "[ Args = \"“-1 0.1 0.1 0.5 2e-07 0.001 10 -1”\"; GlobalJobId = \"submit-4.chtc.wisc.edu#3724038.0#1462893042\" ]",
+                                pAd.toString());
+                    }
+                } finally {
+                    recordReader.close();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+
+    /**
      *
      */
     public void testSchemaless() {
@@ -153,33 +191,36 @@ public class ClassAdToADMTest extends TestCase {
                 FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
                 LocalFSInputStream in = new LocalFSInputStream(watcher);
                 SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "[", "]");
-                Value val = new Value(objectPool);
-                while (recordReader.hasNext()) {
-                    val.reset();
-                    IRawRecord<char[]> record = recordReader.next();
-                    lexerSource.setNewSource(record.get());
-                    parser.setLexerSource(lexerSource);
-                    parser.parseNext(pAd);
-                    Map<CaseInsensitiveString, ExprTree> attrs = pAd.getAttrList();
-                    for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
-                        ExprTree tree = entry.getValue();
-                        switch (tree.getKind()) {
-                            case ATTRREF_NODE:
-                            case CLASSAD_NODE:
-                            case EXPR_ENVELOPE:
-                            case EXPR_LIST_NODE:
-                            case FN_CALL_NODE:
-                            case OP_NODE:
-                                break;
-                            case LITERAL_NODE:
-                                break;
-                            default:
-                                System.out.println("Something is wrong");
-                                break;
+                try {
+                    Value val = new Value(objectPool);
+                    while (recordReader.hasNext()) {
+                        val.reset();
+                        IRawRecord<char[]> record = recordReader.next();
+                        lexerSource.setNewSource(record.get());
+                        parser.setLexerSource(lexerSource);
+                        parser.parseNext(pAd);
+                        Map<CaseInsensitiveString, ExprTree> attrs = pAd.getAttrList();
+                        for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
+                            ExprTree tree = entry.getValue();
+                            switch (tree.getKind()) {
+                                case ATTRREF_NODE:
+                                case CLASSAD_NODE:
+                                case EXPR_ENVELOPE:
+                                case EXPR_LIST_NODE:
+                                case FN_CALL_NODE:
+                                case OP_NODE:
+                                    break;
+                                case LITERAL_NODE:
+                                    break;
+                                default:
+                                    System.out.println("Something is wrong");
+                                    break;
+                            }
                         }
                     }
+                } finally {
+                    recordReader.close();
                 }
-                recordReader.close();
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -31,7 +31,7 @@ public class HilbertDoubleComparatorFactory implements ILinearizeComparatorFacto
     }
 
     public HilbertDoubleComparatorFactory(int dim) {
-    	this.dim = dim;
+        this.dim = dim;
     }
 
     @Override

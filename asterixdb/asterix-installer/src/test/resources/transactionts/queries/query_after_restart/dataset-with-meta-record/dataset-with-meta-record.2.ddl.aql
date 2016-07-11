@@ -31,11 +31,9 @@ create type DocumentType as open{
 
 create type KVMetaType as open{
 "key":string,
-bucket:string,
 vbucket:int32,
 seq:int64,
 cas:int64,
-creationTime:int64,
 expiration:int32,
 flags:int32,
 revSeq:int64,

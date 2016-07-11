@@ -19,8 +19,8 @@
 /*
  * Description    : Fuzzy self joins a dataset, TweetMessages, based on the similarity-jaccard-check function of its text-messages' word tokens.
  *                  TweetMessages has a keyword index on text-message and btree index on the primary key tweetid, and we expect the join to be
- *					transformed into btree and inverted indexed nested-loop joins. We test whether the join condition can be transformed into
- *					multiple indexed nested loop joins of various type of indexes.
+ *                    transformed into btree and inverted indexed nested-loop joins. We test whether the join condition can be transformed into
+ *                    multiple indexed nested loop joins of various type of indexes.
  * Success        : Yes
  */
 

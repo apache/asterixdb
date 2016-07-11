@@ -34,4 +34,5 @@ public class LSMExperimentConstants {
     public static final String BASE_TYPES = "base/base_types.aql";
 
     public static final String ASTERIX_CONFIGURATION = "asterix-configuration.xml";
+
 }

@@ -23,17 +23,17 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class LSMBTreeCopyTupleWriter extends LSMBTreeTupleWriter {
-	public LSMBTreeCopyTupleWriter(ITypeTraits[] typeTraits, int numKeyFields){
-		// Third parameter is never used locally, just give false.
-	    super(typeTraits, numKeyFields, false);
-	}
+    public LSMBTreeCopyTupleWriter(ITypeTraits[] typeTraits, int numKeyFields){
+        // Third parameter is never used locally, just give false.
+        super(typeTraits, numKeyFields, false);
+    }
 
-	@Override
+    @Override
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
-		int tupleSize = bytesRequired(tuple);
-		byte[] buf = tuple.getFieldData(0);
-		int tupleStartOff = ((LSMBTreeTupleReference)tuple).getTupleStart();
-		System.arraycopy(buf, tupleStartOff, targetBuf, targetOff, tupleSize);
+        int tupleSize = bytesRequired(tuple);
+        byte[] buf = tuple.getFieldData(0);
+        int tupleStartOff = ((LSMBTreeTupleReference)tuple).getTupleStart();
+        System.arraycopy(buf, tupleStartOff, targetBuf, targetOff, tupleSize);
         return tupleSize;
     }
 }

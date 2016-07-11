@@ -84,7 +84,7 @@ fi
 # Try to find directory where this script is located
 COMMAND="${PWD}/$0"
 if [ ! -f "${COMMAND}" ]; then
-	COMMAND="$0"
+    COMMAND="$0"
 fi
 BASEDIR=`expr "${COMMAND}" : '\(.*\)/\.*'`
 

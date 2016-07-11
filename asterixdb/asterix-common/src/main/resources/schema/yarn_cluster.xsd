@@ -25,7 +25,7 @@
     targetNamespace="yarn_cluster"
     elementFormDefault="qualified">
 
-	<!-- definition of simple types -->
+    <!-- definition of simple types -->
     <xs:element
         name="instance_name"
         type="xs:string" />
@@ -92,7 +92,7 @@
     <xs:element name="result_sweep_threshold" type="xs:long" />
     <xs:element name="cc_root" type="xs:string" />
 
-	<!-- definition of complex elements -->
+    <!-- definition of complex elements -->
 
     <xs:element name="master_node">
         <xs:complexType>
@@ -208,4 +208,4 @@
         </xs:complexType>
     </xs:element>
 
-</xs:schema>     
+</xs:schema>

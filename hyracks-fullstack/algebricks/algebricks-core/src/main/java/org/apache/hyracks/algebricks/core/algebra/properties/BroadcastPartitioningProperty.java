@@ -39,8 +39,9 @@ public class BroadcastPartitioningProperty implements IPartitioningProperty {
     }
 
     @Override
-    public void normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
-        // do nothing
+    public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
+        return this;
     }
 
     @Override

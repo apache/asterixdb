@@ -20,5 +20,5 @@
 package org.apache.hyracks.storage.am.common.ophelpers;
 
 public enum FindTupleNoExactMatchPolicy {
-	LOWER_KEY, HIGHER_KEY, NONE
+    LOWER_KEY, HIGHER_KEY, NONE
 }

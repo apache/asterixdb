@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +50,7 @@ public class IOManager implements IIOManager {
 
     public IOManager(List<IODeviceHandle> devices) throws HyracksException {
         this.ioDevices = Collections.unmodifiableList(devices);
-        workAreaIODevices = new ArrayList<IODeviceHandle>();
+        workAreaIODevices = new ArrayList<>();
         for (IODeviceHandle d : ioDevices) {
             if (d.getWorkAreaPath() != null) {
                 new File(d.getPath(), d.getWorkAreaPath()).mkdirs();
@@ -109,13 +110,48 @@ public class IOManager implements IIOManager {
         }
     }
 
+    @Override
+    public long syncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException {
+        try {
+            if (fHandle == null) {
+                throw new IllegalStateException("Trying to write to a deleted file.");
+            }
+            int n = 0;
+            int remaining = 0;
+            for (ByteBuffer buf : dataArray) {
+                remaining += buf.remaining();
+            }
+            final FileChannel fileChannel = ((FileHandle) fHandle).getFileChannel();
+            while (remaining > 0) {
+                long len;
+                synchronized (fileChannel) {
+                    fileChannel.position(offset);
+                    len = fileChannel.write(dataArray);
+                }
+                if (len < 0) {
+                    throw new HyracksDataException(
+                            "Error writing to file: " + ((FileHandle) fHandle).getFileReference().toString());
+                }
+                remaining -= len;
+                offset += len;
+                n += len;
+            }
+            return n;
+        } catch (HyracksDataException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
     /**
      * Please do check the return value of this read!
      *
      * @param fHandle
      * @param offset
      * @param data
-     * @return The number of bytes read, possibly zero, or -1 if the given offset is greater than or equal to the file's current size
+     * @return The number of bytes read, possibly zero, or -1 if the given offset is greater than or equal to the file's
+     * current size
      * @throws HyracksDataException
      */
     @Override

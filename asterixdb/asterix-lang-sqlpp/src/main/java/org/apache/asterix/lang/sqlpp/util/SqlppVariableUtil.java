@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.util;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
@@ -37,7 +39,10 @@ import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 
 public class SqlppVariableUtil {
 
-    private static String USER_VAR_PREFIX = "$";
+    private static final String USER_VAR_PREFIX = "$";
+
+    private SqlppVariableUtil() {
+    }
 
     public static VarIdentifier toUserDefinedVariableName(VarIdentifier var) {
         String varName = var.getValue();
@@ -49,6 +54,42 @@ public class SqlppVariableUtil {
             return new VarIdentifier(varName.substring(1));
         }
         return new VarIdentifier(varName);
+    }
+
+    public static String variableNameToDisplayedFieldName(String varName) {
+        if (varName.startsWith(USER_VAR_PREFIX)) {
+            return varName.substring(1);
+        } else {
+            // We use prefix "$" for user-defined variables and "#" for system-generated variables.
+            // However, in displayed query results, "$" is the prefix for
+            // system-generated variables/alias. Therefore we need to replace the prefix
+            // "#" with "$" if the system-generated alias needs to present in the final result.
+            return USER_VAR_PREFIX + varName.substring(1);
+        }
+    }
+
+    public static String toUserDefinedName(String varName) {
+        if (varName.startsWith(USER_VAR_PREFIX)) {
+            return varName.substring(1);
+        }
+        return varName;
+    }
+
+    public static Set<VariableExpr> getLiveUserDefinedVariables(Scope scope) {
+        Set<VariableExpr> results = new HashSet<>();
+        Set<VariableExpr> liveVars = scope.getLiveVariables();
+        Iterator<VariableExpr> liveVarIter = liveVars.iterator();
+        while (liveVarIter.hasNext()) {
+            VariableExpr var = liveVarIter.next();
+            if (SqlppVariableUtil.isUserDefinedVariable(var)) {
+                results.add(var);
+            }
+        }
+        return results;
+    }
+
+    private static boolean isUserDefinedVariable(VariableExpr varExpr) {
+        return varExpr.getVar().getValue().startsWith(USER_VAR_PREFIX);
     }
 
     public static String toInternalVariableName(String varName) {

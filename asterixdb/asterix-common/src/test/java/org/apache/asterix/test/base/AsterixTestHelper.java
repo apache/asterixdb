@@ -20,10 +20,15 @@ package org.apache.asterix.test.base;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 public class AsterixTestHelper {
 
@@ -76,5 +81,55 @@ public class AsterixTestHelper {
             }
         }
         path.delete();
+    }
+
+    public static void deepSelectiveCopy(File srcDir, File destDir, FileFilter filter) throws IOException {
+        if (!srcDir.isDirectory()) {
+            throw new IllegalArgumentException("Not a directory: " + srcDir);
+        }
+        if (destDir.exists() && !destDir.isDirectory()) {
+            throw new IllegalArgumentException("Exists and not a directory: " + destDir);
+        }
+        for (File child : srcDir.listFiles()) {
+            if (child.isDirectory()) {
+                deepSelectiveCopy(child, new File(destDir, child.getName()), filter);
+            } else if (filter.accept(child)) {
+                destDir.mkdirs();
+                FileUtils.copyFile(child, new File(destDir, child.getName()));
+            }
+        }
+    }
+
+    public static class RetainLogsRule extends TestWatcher {
+        private final File baseDir;
+        private final File destDir;
+        private long startTime;
+
+        public RetainLogsRule(File baseDir, File destDir) {
+            this.baseDir = baseDir;
+            this.destDir = destDir;
+        }
+
+        public RetainLogsRule(String baseDir, String destDir) {
+            this(new File(baseDir), new File(destDir));
+        }
+
+        @Override
+        protected void starting(Description description) {
+            startTime = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void failed(Throwable e, Description description) {
+            File reportDir = new File(destDir, description.getTestClass().getName() + "." + description.getMethodName());
+            reportDir.mkdirs();
+            try {
+                AsterixTestHelper.deepSelectiveCopy(baseDir, reportDir,
+                        pathname -> pathname.getName().endsWith("log") &&
+                                pathname.lastModified() > startTime);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        }
     }
 }

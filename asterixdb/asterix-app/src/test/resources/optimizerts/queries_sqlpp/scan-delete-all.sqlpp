@@ -58,5 +58,4 @@ create  table LineItems_q1(LineItemType) primary key l_orderkey on group1;
 
 create  table LineID(LineIDType) primary key l_orderkey on group1;
 
-delete l from LineItems_q1
-;
+delete from LineItems_q1;

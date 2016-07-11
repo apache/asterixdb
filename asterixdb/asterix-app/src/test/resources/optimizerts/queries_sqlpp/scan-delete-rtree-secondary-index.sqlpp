@@ -46,5 +46,5 @@ load  table MyData using localfs ((`path`=`asterix_nc1://data/spatial/spatialDat
 
 create  index rtree_index_point  on MyData (point) type rtree;
 
-delete m from MyData
- where (m.id > 5);
+delete from MyData
+ where id > 5;

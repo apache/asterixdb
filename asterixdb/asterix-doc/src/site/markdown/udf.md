@@ -176,7 +176,7 @@ allowing a few moments for the feed to start ingesting data:
         for $i in dataset ProcessedTweets limit 10 return $i;
 
 For an example of how to write a Java UDF from scratch, the source for the example
-UDF that has been used in this tutorial is available [here] (https://github.com/apache/incubator-asterixdb/tree/master/asterix-external-data/src/test/java/org/apache/asterix/external/library)
+UDF that has been used in this tutorial is available [here] (https://github.com/apache/asterixdb/tree/master/asterixdb/asterix-external-data/src/test/java/org/apache/asterix/external/library)
 
 ## <a name="installingUDF">Unstalling an AsterixDB Library</a>###
 

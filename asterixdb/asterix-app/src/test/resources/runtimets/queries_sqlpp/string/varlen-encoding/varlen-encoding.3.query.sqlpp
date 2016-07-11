@@ -17,6 +17,8 @@
  * under the License.
  */
 
+set inline_with "false"
+
 let str127 = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 , str128 = `string-concat`([ 'y', str127 ])
 , str256 = `string-concat`([ str128, str128 ])

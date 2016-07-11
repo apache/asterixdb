@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletContext;
@@ -57,53 +58,34 @@ import org.apache.hyracks.client.dataset.HyracksDataset;
 public class APIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
+    private static final Logger LOGGER = Logger.getLogger(APIServlet.class.getName());
 
+    private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
     private static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
 
     private final ILangCompilationProvider aqlCompilationProvider;
-    private final IParserFactory aqlParserFactory;
     private final ILangCompilationProvider sqlppCompilationProvider;
-    private final IParserFactory sqlppParserFactory;
 
     public APIServlet() {
         this.aqlCompilationProvider = new AqlCompilationProvider();
-        this.aqlParserFactory = aqlCompilationProvider.getParserFactory();
-
         this.sqlppCompilationProvider = new SqlppCompilationProvider();
-        this.sqlppParserFactory = sqlppCompilationProvider.getParserFactory();
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Query language
-        ILangCompilationProvider compilationProvider;
-        IParserFactory parserFactory;
-        String lang = request.getParameter("query-language");
-        if (lang.equals("AQL")) {
-            // Uses AQL compiler.
-            compilationProvider = aqlCompilationProvider;
-            parserFactory = aqlParserFactory;
-        } else {
-            // Uses SQL++ compiler.
-            compilationProvider = sqlppCompilationProvider;
-            parserFactory = sqlppParserFactory;
-        }
+        ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language"))
+                ? aqlCompilationProvider : sqlppCompilationProvider;
+        IParserFactory parserFactory = compilationProvider.getParserFactory();
 
         // Output format.
         OutputFormat format;
         boolean csv_and_header = false;
         String output = request.getParameter("output-format");
-        if (output.equals("ADM")) {
-            format = OutputFormat.ADM;
-        } else if (output.equals("CSV")) {
-            format = OutputFormat.CSV;
-        } else if (output.equals("CSV-Header")) {
-            format = OutputFormat.CSV;
-            csv_and_header = true;
-        } else if (output.equals("LOSSLESS_JSON")) {
-            format = OutputFormat.LOSSLESS_JSON;
-        } else {
+        try {
+            format = OutputFormat.valueOf(output);
+        } catch (IllegalArgumentException e) {
+            LOGGER.info(output + ": unsupported output-format, using " + OutputFormat.CLEAN_JSON + " instead");
             // Default output format
             format = OutputFormat.CLEAN_JSON;
         }

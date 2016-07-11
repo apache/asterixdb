@@ -296,7 +296,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             // Assign op.
             AbstractOperatorDescriptor sourceOp = primaryScanOp;
             if (isEnforcingKeyTypes) {
-                sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
+                sourceOp = createCastOp(spec, dataset.getDatasetType());
                 spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
             }
             AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp,
@@ -354,7 +354,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             ExternalDataScanOperatorDescriptor primaryScanOp = createExternalIndexingOp(spec);
             AbstractOperatorDescriptor sourceOp = primaryScanOp;
             if (isEnforcingKeyTypes) {
-                sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
+                sourceOp = createCastOp(spec, dataset.getDatasetType());
                 spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
             }
             // Assign op.

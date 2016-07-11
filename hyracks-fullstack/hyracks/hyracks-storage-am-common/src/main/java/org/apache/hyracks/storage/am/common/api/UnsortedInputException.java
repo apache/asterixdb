@@ -23,13 +23,13 @@ package org.apache.hyracks.storage.am.common.api;
  * Thrown when trying to bulk load an index with an unsorted input stream.
  */
 public class UnsortedInputException extends IndexException {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public UnsortedInputException(Exception e) {
-		super(e);
-	}
+    public UnsortedInputException(Exception e) {
+        super(e);
+    }
 
-	public UnsortedInputException(String message) {
+    public UnsortedInputException(String message) {
         super(message);
     }
 }

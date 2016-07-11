@@ -20,7 +20,7 @@
  *  Description     : This test makes sure that the plan is still okay when not converted to index search
  *  Expected Result : Success
  *  Date            : 27th Aug 2015
- *	Author			: Steven Jacobs
+ *    Author            : Steven Jacobs
  */
 
 drop  database emergencyTest if exists;

@@ -27,37 +27,37 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent
  * This class is also not needed at the moment but is implemented anyway
  */
 public class LSMBTreeWithBuddyMemoryComponent extends
-		AbstractMemoryLSMComponent {
+        AbstractMemoryLSMComponent {
 
-	private final BTree btree;
-	private final BTree buddyBtree;
+    private final BTree btree;
+    private final BTree buddyBtree;
 
-	public LSMBTreeWithBuddyMemoryComponent(BTree btree, BTree buddyBtree,
-			IVirtualBufferCache vbc, boolean isActive) {
-		super(vbc, isActive);
-		this.btree = btree;
-		this.buddyBtree = buddyBtree;
-	}
+    public LSMBTreeWithBuddyMemoryComponent(BTree btree, BTree buddyBtree,
+            IVirtualBufferCache vbc, boolean isActive) {
+        super(vbc, isActive);
+        this.btree = btree;
+        this.buddyBtree = buddyBtree;
+    }
 
-	public BTree getBTree() {
-		return btree;
-	}
+    public BTree getBTree() {
+        return btree;
+    }
 
-	public BTree getBuddyBTree() {
-		return buddyBtree;
-	}
+    public BTree getBuddyBTree() {
+        return buddyBtree;
+    }
 
-	@Override
-	protected void reset() throws HyracksDataException {
-		super.reset();
-		btree.deactivate();
-		btree.destroy();
-		btree.create();
-		btree.activate();
-		buddyBtree.deactivate();
-		buddyBtree.destroy();
-		buddyBtree.create();
-		buddyBtree.activate();
-	}
+    @Override
+    protected void reset() throws HyracksDataException {
+        super.reset();
+        btree.deactivate();
+        btree.destroy();
+        btree.create();
+        btree.activate();
+        buddyBtree.deactivate();
+        buddyBtree.destroy();
+        buddyBtree.create();
+        buddyBtree.activate();
+    }
 
 }

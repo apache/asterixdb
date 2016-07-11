@@ -51,42 +51,43 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 public class IndexOperations {
 
-    private static final PhysicalOptimizationConfig physicalOptimizationConfig = OptimizationConfUtil
-            .getPhysicalOptimizationConfig();
+    private static final PhysicalOptimizationConfig physicalOptimizationConfig =
+            OptimizationConfUtil.getPhysicalOptimizationConfig();
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(CompiledCreateIndexStatement createIndexStmt,
-            ARecordType recType, ARecordType enforcedType, AqlMetadataProvider metadataProvider)
-            throws AsterixException, AlgebricksException {
+            ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
+            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
                         createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
                         createIndexStmt.getKeyFields(), createIndexStmt.getKeyFieldTypes(),
                         createIndexStmt.isEnforced(), createIndexStmt.getGramLength(), metadataProvider,
-                        physicalOptimizationConfig, recType, enforcedType);
+                        physicalOptimizationConfig, recType, metaType, keySourceIndicators, enforcedType);
         return secondaryIndexHelper.buildCreationJobSpec();
     }
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
-            ARecordType recType, ARecordType enforcedType, AqlMetadataProvider metadataProvider)
+            ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
+            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
+                        createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
+                        createIndexStmt.getKeyFields(), createIndexStmt.getKeyFieldTypes(),
+                        createIndexStmt.isEnforced(), createIndexStmt.getGramLength(), metadataProvider,
+                        physicalOptimizationConfig, recType, metaType, keySourceIndicators, enforcedType);
+        return secondaryIndexHelper.buildLoadingJobSpec();
+    }
+
+    public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
+            ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
+            AqlMetadataProvider metadataProvider, List<ExternalFile> files)
             throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
                         createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
                         createIndexStmt.getKeyFields(), createIndexStmt.getKeyFieldTypes(),
                         createIndexStmt.isEnforced(), createIndexStmt.getGramLength(), metadataProvider,
-                        physicalOptimizationConfig, recType, enforcedType);
-        return secondaryIndexHelper.buildLoadingJobSpec();
-    }
-
-    public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
-            ARecordType recType, ARecordType enforcedType, AqlMetadataProvider metadataProvider,
-            List<ExternalFile> files) throws AsterixException, AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
-                .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
-                        createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
-                        createIndexStmt.getKeyFields(), createIndexStmt.getKeyFieldTypes(),
-                        createIndexStmt.isEnforced(), createIndexStmt.getGramLength(), metadataProvider,
-                        physicalOptimizationConfig, recType, enforcedType);
+                        physicalOptimizationConfig, recType, metaType, keySourceIndicators, enforcedType);
         secondaryIndexHelper.setExternalFiles(files);
         return secondaryIndexHelper.buildLoadingJobSpec();
     }
@@ -103,33 +104,34 @@ public class IndexOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, indexName, temp);
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
-                metadataProvider.getMetadataTxnContext());
+        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
+                DatasetUtils.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
 
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
         IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                splitsAndConstraint.first, new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
-                        dataset.getDatasetId()), compactionInfo.first, compactionInfo.second,
+                splitsAndConstraint.first,
+                new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
+                        compactionInfo.first, compactionInfo.second,
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), false, null, null, null, null, !temp));
-        AlgebricksPartitionConstraintHelper
-                .setPartitionConstraintInJobSpec(spec, btreeDrop, splitsAndConstraint.second);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
+                splitsAndConstraint.second);
         spec.addRoot(btreeDrop);
 
         return spec;
     }
 
     public static JobSpecification buildSecondaryIndexCompactJobSpec(CompiledIndexCompactStatement indexCompactStmt,
-            ARecordType recType, ARecordType enforcedType, AqlMetadataProvider metadataProvider, Dataset dataset)
-            throws AsterixException, AlgebricksException {
+            ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
+            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(indexCompactStmt.getIndexType(), indexCompactStmt.getDataverseName(),
                         indexCompactStmt.getDatasetName(), indexCompactStmt.getIndexName(),
                         indexCompactStmt.getKeyFields(), indexCompactStmt.getKeyTypes(), indexCompactStmt.isEnforced(),
                         indexCompactStmt.getGramLength(), metadataProvider, physicalOptimizationConfig, recType,
-                        enforcedType);
+                        metaType, keySourceIndicators, enforcedType);
         return secondaryIndexHelper.buildCompactJobSpec();
     }
 }

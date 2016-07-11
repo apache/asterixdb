@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-into-empty-dataset.aql
- * Description     : Check that we can insert into an empty dataset 
+ * Description     : Check that we can insert into an empty dataset
  * Expected Result : Success
  * Date            : May 2 2012
  */
@@ -30,9 +30,9 @@ let $x:=1
 let $y:=2
 let $z:=3
 return {
-	"l_orderkey": $x,
-	"l_linenumber": $y,
-	"l_suppkey": $z
+    "l_orderkey": $x,
+    "l_linenumber": $y,
+    "l_suppkey": $z
 }
 );
 
@@ -41,9 +41,9 @@ let $x:=2
 let $y:=3
 let $z:=4
 return {
-	"l_orderkey": $x,
-	"l_linenumber": $y,
-	"l_suppkey": $z
+    "l_orderkey": $x,
+    "l_linenumber": $y,
+    "l_suppkey": $z
 }
 );
 

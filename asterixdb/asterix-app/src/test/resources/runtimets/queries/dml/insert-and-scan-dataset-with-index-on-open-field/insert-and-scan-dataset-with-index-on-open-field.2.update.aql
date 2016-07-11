@@ -33,10 +33,10 @@ using localfs
 insert into dataset test.employee (
 for $x in dataset test.employeeClosed
 return {
-	"id": $x.id,
-	"fname": $x.fname,
-	"lname": $x.lname,
-	"age": $x.age,
-	"dept": $x.dept
+    "id": $x.id,
+    "fname": $x.fname,
+    "lname": $x.lname,
+    "age": $x.age,
+    "dept": $x.dept
 }
 );

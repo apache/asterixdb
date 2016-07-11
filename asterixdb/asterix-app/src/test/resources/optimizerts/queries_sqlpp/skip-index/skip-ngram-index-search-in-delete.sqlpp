@@ -41,5 +41,5 @@ create  table DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (title) type ngram (3);
 
-delete o from DBLP
- where  /*+ skip-index */ test.contains(o.title,'Multimedia');
+delete from DBLP
+ where  /*+ skip-index */ contains(title,'Multimedia');

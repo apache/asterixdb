@@ -154,7 +154,7 @@ public class RecordWithMetadataAndPK<T> extends RecordWithPK<T> {
     }
 
     @Override
-    public void appendPk(final ArrayTupleBuilder tb) throws IOException {
+    public void appendPrimaryKeyToTuple(final ArrayTupleBuilder tb) throws IOException {
         for (int i = 0; i < pkIndexes.length; i++) {
             if (keyIndicator[i] == 1) {
                 tb.addField(getMetadata(pkIndexes[i]));

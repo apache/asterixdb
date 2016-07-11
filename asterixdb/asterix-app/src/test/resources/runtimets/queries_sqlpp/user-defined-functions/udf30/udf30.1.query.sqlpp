@@ -28,5 +28,5 @@ declare function abc(y) {
 };
 
 let z =y
-select element z
+select element z;
 

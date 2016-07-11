@@ -30,5 +30,5 @@ insert into Employees
 select element {'id':'1234','stat':{'age':50,'salary':120000},'deptCode':32};
 insert into Employees
 select element {'id':'5678','stat':{'age':40,'salary':100000},'deptCode':16};
-delete l from Employees
- where (l.id = '1234');
+
+delete from Employees where id = '1234';

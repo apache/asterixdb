@@ -53,5 +53,5 @@ create  table Customers(CustomerType) primary key cid;
 
 create  index age_index  on Customers (age) type btree;
 
-delete c from Customers
- where (c.age /*+ skip-index */  < 20);
+delete from Customers
+ where age /*+ skip-index */  < 20;

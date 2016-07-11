@@ -110,6 +110,7 @@
       <!-- Dependency management inherited from top-level hyracks -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>

@@ -37,52 +37,52 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
         fields[pos++] = e;
     }
 
-	@Override
-	public int compareTo(T o) {
-		CheckTuple<T> other = (CheckTuple<T>) o;
-		int cmpFieldCount = Math.min(other.getNumKeys(), numKeys);
-		for (int i = 0; i < cmpFieldCount; i++) {
-			int cmp = fields[i].compareTo(other.getField(i));
-			if (cmp != 0) {
-				return cmp;
-			}
-		}
-		if (other.getNumKeys() == numKeys) {
-		    return 0;
-		}
-		if (other.getNumKeys() < numKeys) {
-		    return (other.isHighKey) ? -1 : 1;
-		}
-		if (other.getNumKeys() > numKeys) {
+    @Override
+    public int compareTo(T o) {
+        CheckTuple<T> other = (CheckTuple<T>) o;
+        int cmpFieldCount = Math.min(other.getNumKeys(), numKeys);
+        for (int i = 0; i < cmpFieldCount; i++) {
+            int cmp = fields[i].compareTo(other.getField(i));
+            if (cmp != 0) {
+                return cmp;
+            }
+        }
+        if (other.getNumKeys() == numKeys) {
+            return 0;
+        }
+        if (other.getNumKeys() < numKeys) {
+            return (other.isHighKey) ? -1 : 1;
+        }
+        if (other.getNumKeys() > numKeys) {
             return (isHighKey) ? 1 : -1;
         }
-		return 0;
-	}
+        return 0;
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof Comparable<?>)) {
-			return false;
-		}
-		return compareTo((T) o) == 0;
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Comparable<?>)) {
+            return false;
+        }
+        return compareTo((T) o) == 0;
+    }
 
-	@Override
-	public int hashCode() {
-		int hash = 0;
-		for (int i = 0; i < numKeys; i++) {
-			hash = 37 * hash + fields[i].hashCode();
-		}
-		return hash;
-	}
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        for (int i = 0; i < numKeys; i++) {
+            hash = 37 * hash + fields[i].hashCode();
+        }
+        return hash;
+    }
 
-	public void setIsHighKey(boolean isHighKey) {
-	    this.isHighKey = isHighKey;
-	}
+    public void setIsHighKey(boolean isHighKey) {
+        this.isHighKey = isHighKey;
+    }
 
-	public T getField(int idx) {
-		return (T) fields[idx];
-	}
+    public T getField(int idx) {
+        return (T) fields[idx];
+    }
 
     public void setField(int idx, T e) {
         fields[idx] = e;

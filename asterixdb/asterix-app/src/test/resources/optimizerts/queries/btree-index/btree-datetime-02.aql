@@ -17,11 +17,11 @@
  * under the License.
  */
 /*
- *  Description     : This test is intended to verify that the primary BTree index is used 
+ *  Description     : This test is intended to verify that the primary BTree index is used
  *                  : for an invocation of current-datetime()
  *  Expected Result : Success
  *  Date            : 27th Aug 2015
- *	Author			: Steven Jacobs
+ *    Author            : Steven Jacobs
  */
 
 drop dataverse emergencyTest if exists;
@@ -29,7 +29,7 @@ create dataverse emergencyTest;
 use dataverse emergencyTest;
 create type CHPReport as {
         "id":int,
-	"timestamp":datetime,
+    "timestamp":datetime,
         "title":string,
         "message":string
 }

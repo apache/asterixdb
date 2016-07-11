@@ -60,14 +60,14 @@ export HADOOP_HOME=`dirname "$this"`/..
 if [ $# -gt 1 ]
 then
     if [ "--config" = "$1" ]
-	  then
-	      shift
-	      confdir=$1
-	      shift
-	      HADOOP_CONF_DIR=$confdir
+      then
+          shift
+          confdir=$1
+          shift
+          HADOOP_CONF_DIR=$confdir
     fi
 fi
- 
+
 # Allow alternate conf dir location.
 HADOOP_CONF_DIR="${HADOOP_CONF_DIR:-$HADOOP_HOME/conf}"
 

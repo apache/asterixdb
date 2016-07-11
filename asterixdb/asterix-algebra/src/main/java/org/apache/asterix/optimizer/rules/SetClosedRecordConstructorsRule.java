@@ -22,11 +22,9 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
-import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeHelper;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -172,39 +170,12 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 throw new AlgebricksException(
                         "Could not infer type for variable '" + expr.getVariableReference() + "'.");
             }
-            boolean dataIsClosed = isClosed((IAType) varType);
-            return new ClosedDataInfo(false, dataIsClosed, expr);
+            return new ClosedDataInfo(false, TypeHelper.isClosed((IAType) varType), expr);
         }
 
         private boolean hasClosedType(ILogicalExpression expr) throws AlgebricksException {
             IAType t = (IAType) context.getExpressionTypeComputer().getType(expr, context.getMetadataProvider(), env);
-            return isClosed(t);
-        }
-
-        private static boolean isClosed(IAType t) throws AlgebricksException {
-            switch (t.getTypeTag()) {
-                case MISSING:
-                case ANY:
-                    return false;
-                case SHORTWITHOUTTYPEINFO:
-                    return true;
-                case RECORD:
-                    return !((ARecordType) t).isOpen();
-                case UNION:
-                    AUnionType ut = (AUnionType) t;
-                    if (!isClosed(ut.getActualType())) {
-                        return false;
-                    }
-                    return true;
-                case ORDEREDLIST:
-                    AOrderedListType ol = (AOrderedListType) t;
-                    return isClosed(ol.getItemType());
-                case UNORDEREDLIST:
-                    AUnorderedListType ul = (AUnorderedListType) t;
-                    return isClosed(ul.getItemType());
-                default:
-                    return true;
-            }
+            return TypeHelper.isClosed(t);
         }
     }
 

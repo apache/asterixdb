@@ -23,13 +23,13 @@ import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 
 public class TreeIndexNonExistentKeyException extends TreeIndexException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public TreeIndexNonExistentKeyException(Exception e) {
-		super(e);
-	}
+    public TreeIndexNonExistentKeyException(Exception e) {
+        super(e);
+    }
 
-	public TreeIndexNonExistentKeyException(String message) {
-		super(message);
-	}
+    public TreeIndexNonExistentKeyException(String message) {
+        super(message);
+    }
 }

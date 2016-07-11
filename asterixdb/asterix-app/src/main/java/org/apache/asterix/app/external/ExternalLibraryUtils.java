@@ -21,7 +21,6 @@ package org.apache.asterix.app.external;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,10 +35,10 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.library.ExternalLibrary;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.library.LibraryAdapter;
 import org.apache.asterix.external.library.LibraryFunction;
 import org.apache.asterix.metadata.MetadataManager;
@@ -53,10 +52,13 @@ import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class ExternalLibraryUtils {
 
-    private static Logger LOGGER = Logger.getLogger(ExternalLibraryUtils.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ExternalLibraryUtils.class.getName());
 
-    public static void setUpExternaLibraries(boolean isMetadataNode) throws Exception {
+    private ExternalLibraryUtils() {
+    }
 
+    public static void setUpExternaLibraries(ILibraryManager externalLibraryManager, boolean isMetadataNode)
+            throws Exception {
         // start by un-installing removed libraries (Metadata Node only)
         Map<String, List<String>> uninstalledLibs = null;
         if (isMetadataNode) {
@@ -73,7 +75,7 @@ public class ExternalLibraryUtils {
                 String[] libraries = dataverseDir.list();
                 for (String library : libraries) {
                     // for each file (library), register library
-                    registerLibrary(dataverse, library, isMetadataNode, installLibDir);
+                    registerLibrary(externalLibraryManager, dataverse, library);
                     // is metadata node?
                     if (isMetadataNode) {
                         // get library file
@@ -89,6 +91,7 @@ public class ExternalLibraryUtils {
 
     /**
      * un-install libraries.
+     *
      * @return a map from dataverse -> list of uninstalled libraries.
      * @throws Exception
      */
@@ -127,6 +130,7 @@ public class ExternalLibraryUtils {
      * TODO Currently, external libraries only include functions and adapters. we need to extend this to include:
      * 1. external data source
      * 2. data parser
+     *
      * @param dataverse
      * @param libraryName
      * @return true if the library was found and removed, false otherwise
@@ -182,9 +186,9 @@ public class ExternalLibraryUtils {
     }
 
     /**
-     *  Each element of a library is installed as part of a transaction. Any
-     *  failure in installing an element does not effect installation of other
-     *  libraries.
+     * Each element of a library is installed as part of a transaction. Any
+     * failure in installing an element does not effect installation of other
+     * libraries.
      */
     protected static void installLibraryIfNeeded(String dataverse, final File libraryDir,
             Map<String, List<String>> uninstalledLibs) throws Exception {
@@ -285,22 +289,23 @@ public class ExternalLibraryUtils {
 
     /**
      * register the library class loader with the external library manager
+     *
      * @param dataverse
      * @param libraryName
-     * @param isMetadataNode
      * @param installLibDir
      * @throws Exception
      */
-    protected static void registerLibrary(String dataverse, String libraryName, boolean isMetadataNode,
-            File installLibDir) throws Exception {
+    protected static void registerLibrary(ILibraryManager externalLibraryManager, String dataverse, String libraryName)
+            throws Exception {
         // get the class loader
         ClassLoader classLoader = getLibraryClassLoader(dataverse, libraryName);
         // register it with the external library manager
-        ExternalLibraryManager.registerLibraryClassLoader(dataverse, libraryName, classLoader);
+        externalLibraryManager.registerLibraryClassLoader(dataverse, libraryName, classLoader);
     }
 
     /**
      * Get the library from the xml file
+     *
      * @param libraryXMLPath
      * @return
      * @throws Exception
@@ -314,6 +319,7 @@ public class ExternalLibraryUtils {
 
     /**
      * Get the class loader for the library
+     *
      * @param dataverse
      * @param libraryName
      * @return
@@ -379,12 +385,11 @@ public class ExternalLibraryUtils {
         }
 
         // create and return the class loader
-        ClassLoader classLoader = new URLClassLoader(urls, parentClassLoader);
-        return classLoader;
+        return new ExternalLibraryClassLoader(urls, parentClassLoader);
     }
 
     /**
-     *  @return the directory "$(pwd)/library": This needs to be improved
+     * @return the directory "$(pwd)/library": This needs to be improved
      */
     protected static File getLibraryInstallDir() {
         String workingDir = System.getProperty("user.dir");

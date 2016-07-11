@@ -23,6 +23,7 @@
 
 * [Numeric Functions](#NumericFunctions)
 * [String Functions](#StringFunctions)
+* [Binary Functions](#BinaryFunctions)
 * [Aggregate Functions](#AggregateFunctions)
 * [Spatial Functions](#SpatialFunctions)
 * [Similarity Functions](#SimilarityFunctions)
@@ -589,6 +590,110 @@ Asterix provides various classes of functions to support operations on numeric, 
         " its touch-screen is horrible"
         " the voice-command is bad:("
         " the voicemail-service is awesome"
+
+## <a id="BinaryFunctions">Binary Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+### parse-binary ###
+  * Syntax:
+
+      parse-binary(string, encoding)
+
+  * Creates a `binary` from an string encoded in `encoding` format.
+  * Arguments:
+    * `string` : An encoded `string`
+    * `encoding` : A string notation specifies the encoding type of the given `string`.
+    Currently we support `hex` and `base64` format.
+  * Return Value:
+    * A `binary` that is decoded from the given `string`.
+
+  * Example:
+
+        let $c1 := parse-binary("ABCDEF0123456789","hex")
+        let $c2 := parse-binary("abcdef0123456789","HEX")
+        let $c3 := parse-binary('QXN0ZXJpeAE=',"base64")
+        return [ $c1, $c2, $c3 ]
+
+  * The expected result is:
+
+      [ hex("ABCDEF0123456789"), hex("ABCDEF0123456789"), hex("4173746572697801") ]
+
+### print-binary ###
+  * Syntax:
+
+      print-binary(binary, encoding)
+
+  * Prints a `binary` to the required encoding `string` format.
+  * Arguments:
+    * `binary` : A `binary` data need to be printed.
+    * `encoding` : A string notation specifies the expected encoding type.
+    Currently we support `hex` and `base64` format.
+  * Return Value:
+    * A `string` that represents the encoded format of a `binary`.
+
+  * Example:
+
+        print-binary(hex("ABCDEF0123456789"), "base64")
+        print-binary(base64("q83vASNFZ4k="), "hex")
+
+  * The expected result is:
+
+        "q83vASNFZ4k="
+        "ABCDEF0123456789"
+
+### binary-length ###
+  * Syntax:
+
+      binary-length(binary)
+
+  * Returns the number of bytes storing the binary data.
+  * Arguments:
+    * `binary` : A `binary` data to be checked.
+  * Return Value:
+    * An `int64` that represents the number of bytes
+  * Example:
+
+        binary-length(hex("00AA"))
+
+  * The expected result is:
+
+       2
+
+### sub-binary ###
+  * Syntax:
+
+      sub-binary(binary, offset[, length])
+
+  * Returns the sub binary from the given `binary` based on the given start offset with the optional `length`.
+  * Arguments:
+    * `binary` : A `binary` to be extracted.
+    * `offset` : An `int64` as the starting offset of the sub binary in `binary`.
+    * `length` : (Optional) An `int64` as the length of the sub binary.
+  * Return Value:
+    * A `binary` that represents the sub binary.
+  * Example:
+
+        sub-binary(hex("AABBCCDD"), 4)
+
+  * The expected result is
+
+        hex("DD")
+
+### binary-concat ###
+  * Syntax:
+
+      binary-concat(list)
+
+  * Concatenates a list of binary `list` into a single binary.
+  * Arguments:
+    * `list` : An OrderedList of binaries (could be null) to be concatenated.
+  * Return Value  :
+    * Returns the concatenated `binary` value.
+  * Example:
+
+      binary-concat([hex("42"), hex(""), hex('42')])
+
+  * The expected result is
+
+      hex("4242")
 
 ## <a id="AggregateFunctions">Aggregate Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### count ###

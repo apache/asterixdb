@@ -39,6 +39,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
+    private CastRecordDescriptor() {
+    }
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {

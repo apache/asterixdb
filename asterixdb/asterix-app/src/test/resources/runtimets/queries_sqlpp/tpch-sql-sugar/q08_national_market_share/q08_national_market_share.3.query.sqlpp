@@ -1,0 +1,67 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+
+SELECT  year,
+        sum( `switch-case`(s_name = 'BRAZIL', true, revenue, false, 0.0) )
+        / sum(revenue) AS mkt_share
+FROM  (
+        SELECT o_year AS year,
+               l_extendedprice * (1 - l_discount) AS revenue,
+               n_name AS s_name
+        FROM  (
+                SELECT o_orderdate, l_discount, l_extendedprice, l_suppkey, s_nationkey
+                FROM  Supplier,
+                (
+                  SELECT o_orderdate, l_discount, l_extendedprice, l_suppkey
+                  FROM  (
+                         SELECT o_orderdate, l_partkey, l_discount, l_extendedprice, l_suppkey
+                         FROM  LineItem,
+                               (
+                                SELECT o_orderdate, o_orderkey
+                                FROM  Orders,
+                                      (
+                                        SELECT c_custkey
+                                        FROM  Customer,
+                                              (
+                                                SELECT n_nationkey
+                                                FROM  Nation,
+                                                      Region
+                                                WHERE n_regionkey = r_regionkey AND r_name = 'AMERICA'
+                                                ) AS nr
+                                         WHERE c_nationkey = n_nationkey
+                                       ) AS nrc
+                                WHERE c_custkey = o_custkey
+                                ) AS nrco
+                        WHERE l_orderkey = o_orderkey and o_orderdate >= '1995-01-01' and o_orderdate < '1996-12-31'
+                        ) AS lnrco,
+                        Part
+                        WHERE p_partkey = l_partkey and p_type = 'ECONOMY ANODIZED STEEL'
+                    ) AS lnrcop
+                WHERE s_suppkey = l_suppkey
+                ) AS slnrcop,
+                Nation
+                LET o_year = `get-year`(o_orderdate)
+                WHERE s_nationkey = n_nationkey
+             ) as t
+GROUP BY year
+ORDER BY year
+;

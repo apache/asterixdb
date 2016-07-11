@@ -51,7 +51,7 @@ public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Voi
 
     @Override
     public Void visit(DeleteStatement deleteStmt, Void visitArg) {
-        List<Expression> arguments = new ArrayList<Expression>();
+        List<Expression> arguments = new ArrayList<>();
         Identifier dataverseName = deleteStmt.getDataverseName();
         Identifier datasetName = deleteStmt.getDatasetName();
         String arg = dataverseName == null ? datasetName.getValue()

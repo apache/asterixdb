@@ -234,7 +234,12 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             if (metaTypeName == null) {
                 throw new AlgebricksException("Feed to a dataset with metadata doesn't have meta type specified");
             }
-            metaType = (ARecordType) metadataProvider.findType(aqlId.getDataverseName(), metaTypeName);
+            String dataverseName = aqlId.getDataverseName();
+            if (metaTypeName.contains(".")) {
+                dataverseName = metaTypeName.substring(0, metaTypeName.indexOf('.'));
+                metaTypeName = metaTypeName.substring(metaTypeName.indexOf('.') + 1);
+            }
+            metaType = (ARecordType) metadataProvider.findType(dataverseName, metaTypeName);
         }
         // Is a change feed?
         List<IAType> pkTypes = null;

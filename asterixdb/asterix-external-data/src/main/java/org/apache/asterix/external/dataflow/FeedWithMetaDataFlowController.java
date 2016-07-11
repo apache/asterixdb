@@ -22,27 +22,23 @@ import java.io.IOException;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.parser.RecordWithMetadataParser;
+import org.apache.asterix.external.api.IRecordWithMetadataParser;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public class FeedWithMetaDataFlowController<T, O> extends FeedRecordDataFlowController<T> {
-
-    //This field mask a super class field dataParser. We do this to avoid down-casting when calling parseMeta
-    protected RecordWithMetadataParser<T, O> dataParser;
+public class FeedWithMetaDataFlowController<T> extends FeedRecordDataFlowController<T> {
 
     public FeedWithMetaDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            FeedLogManager feedLogManager, int numOfOutputFields, RecordWithMetadataParser<T, O> dataParser,
+            FeedLogManager feedLogManager, int numOfOutputFields, IRecordWithMetadataParser<T> dataParser,
             IRecordReader<T> recordReader) throws HyracksDataException {
         super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
-        this.dataParser = dataParser;
     }
 
     @Override
     protected void addMetaPart(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws IOException {
-        dataParser.parseMeta(tb.getDataOutput());
+        ((IRecordWithMetadataParser<T>) dataParser).parseMeta(tb.getDataOutput());
         tb.addFieldEndOffset();
     }
 }

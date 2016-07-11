@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -44,8 +45,9 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 import org.apache.hyracks.storage.common.arraylist.LongArrayList;
+import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
-public class BTreeOpContext implements IIndexOperationContext {
+public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHelper {
     private final int INIT_ARRAYLIST_SIZE = 6;
 
     public IIndexAccessor accessor;
@@ -54,7 +56,8 @@ public class BTreeOpContext implements IIndexOperationContext {
     public ITreeIndexFrameFactory interiorFrameFactory;
     public IBTreeLeafFrame leafFrame;
     public IBTreeInteriorFrame interiorFrame;
-    public ITreeIndexMetaDataFrame metaFrame;
+    public final IMetaDataPageManager freePageManager;
+    public final ITreeIndexMetaDataFrame metaFrame;
     public IndexOperation op;
     public ITreeIndexCursor cursor;
     public BTreeCursorInitialState cursorInitialState;
@@ -76,9 +79,9 @@ public class BTreeOpContext implements IIndexOperationContext {
     public final ITreeIndexTupleReference leafFrameTuple;
 
     public BTreeOpContext(IIndexAccessor accessor, ITreeIndexFrameFactory leafFrameFactory,
-            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexMetaDataFrame metaFrame,
-            IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+                          ITreeIndexFrameFactory interiorFrameFactory, IMetaDataPageManager freePageManager,
+                          IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
+                          ISearchOperationCallback searchCallback) {
         this.accessor = accessor;
 
         if (cmpFactories[0] != null) {
@@ -98,7 +101,8 @@ public class BTreeOpContext implements IIndexOperationContext {
         if (interiorFrame != null && this.cmp != null) {
             interiorFrame.setMultiComparator(cmp);
         }
-        this.metaFrame = metaFrame;
+        this.freePageManager = freePageManager;
+        this.metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
         this.pageLsns = new LongArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
         this.smoCount = 0;
         this.modificationCallback = modificationCallback;
@@ -233,5 +237,15 @@ public class BTreeOpContext implements IIndexOperationContext {
             ISearchOperationCallback searchCallback) {
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
+    }
+
+    @Override
+    public int getFreeBlock(int size) throws HyracksDataException {
+        return freePageManager.getFreePageBlock(metaFrame, size);
+    }
+
+    @Override
+    public void returnFreePageBlock(int blockPageId, int size) throws HyracksDataException {
+        freePageManager.addFreePageBlock(metaFrame, blockPageId, size);
     }
 }

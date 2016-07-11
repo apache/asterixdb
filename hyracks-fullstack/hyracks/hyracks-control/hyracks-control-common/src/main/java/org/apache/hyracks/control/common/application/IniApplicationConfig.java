@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.common.application;
 
 import org.apache.hyracks.api.application.IApplicationConfig;
+import org.apache.hyracks.control.common.controllers.IniUtils;
 import org.ini4j.Ini;
 
 import java.util.Set;
@@ -37,39 +38,34 @@ public class IniApplicationConfig implements IApplicationConfig {
         }
     }
 
-    private <T> T getIniValue(String section, String key, T default_value, Class<T> clazz) {
-        T value = ini.get(section, key, clazz);
-        return (value != null) ? value : default_value;
-    }
-
     @Override
     public String getString(String section, String key) {
-        return getIniValue(section, key, null, String.class);
+        return IniUtils.getString(ini, section, key, null);
     }
 
     @Override
     public String getString(String section, String key, String defaultValue) {
-        return getIniValue(section, key, defaultValue, String.class);
+        return IniUtils.getString(ini, section, key, defaultValue);
     }
 
     @Override
     public int getInt(String section, String key) {
-        return getIniValue(section, key, 0, Integer.class);
+        return IniUtils.getInt(ini, section, key, 0);
     }
 
     @Override
     public int getInt(String section, String key, int defaultValue) {
-        return getIniValue(section, key, defaultValue, Integer.class);
+        return IniUtils.getInt(ini, section, key, defaultValue);
     }
 
     @Override
     public long getLong(String section, String key) {
-        return getIniValue(section, key, (long) 0, Long.class);
+        return IniUtils.getLong(ini, section, key, (long) 0);
     }
 
     @Override
     public long getLong(String section, String key, long defaultValue) {
-        return getIniValue(section, key, defaultValue, Long.class);
+        return IniUtils.getLong(ini, section, key, defaultValue);
     }
 
     @Override

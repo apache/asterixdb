@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-and-scan-dataset.aql
  * Description     : This test is intended to test inserting into a dataset and scan it at the same time
  * where we insert a materializing to prevent the possibility of deadlatch.
  * Expected Result : Success
  * Date            : July 11 2013
  */
- 
+
 drop dataverse test if exists;
 create dataverse test;
 
@@ -39,6 +39,6 @@ create dataset myData(myDataType)
 insert into dataset myData (
 for $x in dataset myData
 return {
-	"id": $x.id + 1
+    "id": $x.id + 1
 }
 );

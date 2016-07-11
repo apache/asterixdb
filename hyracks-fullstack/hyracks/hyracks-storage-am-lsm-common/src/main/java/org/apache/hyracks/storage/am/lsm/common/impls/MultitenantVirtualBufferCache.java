@@ -25,8 +25,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
@@ -69,11 +69,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         return vbc.pin(dpid, newPage);
-    }
-
-    @Override
-    public ICachedPage pin(long dpid, boolean newPage, ILargePageHelper helper) throws HyracksDataException {
-        return vbc.pin(dpid, newPage, helper);
     }
 
     @Override
@@ -163,8 +158,9 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage confiscateLargePage(long dpid, int multiplier) throws HyracksDataException {
-        return vbc.confiscateLargePage(dpid, multiplier);
+    public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
+            throws HyracksDataException {
+        return vbc.confiscateLargePage(dpid, multiplier, extraBlockPageId);
     }
 
     @Override
@@ -218,7 +214,8 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void resizePage(ICachedPage page, int multiple) {
-        vbc.resizePage(page, multiple);
+    public void resizePage(ICachedPage page, int multiplier, IExtraPageBlockHelper extraPageBlockHelper)
+            throws HyracksDataException {
+        vbc.resizePage(page, multiplier, extraPageBlockHelper);
     }
 }

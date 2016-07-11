@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
@@ -31,11 +32,11 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionV
 public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
-    public Expression visit(CallExpr callExpr, Expression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
         //TODO(buyingyi): rewrite SQL temporal functions
         FunctionSignature functionSignature = callExpr.getFunctionSignature();
         callExpr.setFunctionSignature(FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, true));
-        List<Expression> newExprList = new ArrayList<Expression>();
+        List<Expression> newExprList = new ArrayList<>();
         for (Expression expr : callExpr.getExprList()) {
             newExprList.add(expr.accept(this, arg));
         }

@@ -88,7 +88,7 @@ public class QueryResultAPIServlet extends HttpServlet {
             // originally determined there. Need to save this value on
             // some object that we can obtain here.
             SessionConfig sessionConfig = RESTAPIServlet.initResponse(request, response);
-            ResultUtils.displayResults(resultReader, sessionConfig, new ResultUtils.Stats());
+            ResultUtils.displayResults(resultReader, sessionConfig, new ResultUtils.Stats(), null);
 
         } catch (Exception e) {
             out.println(e.getMessage());

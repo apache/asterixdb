@@ -18,15 +18,9 @@
  */
 package org.apache.hyracks.storage.common;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.io.FileReference;
@@ -34,12 +28,18 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IIOManager.FileReadWriteMode;
 import org.apache.hyracks.api.io.IIOManager.FileSyncMode;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 public class BufferCacheRegressionTest {
     protected static final String tmpDir = System.getProperty("java.io.tmpdir");
@@ -126,9 +126,9 @@ public class BufferCacheRegressionTest {
         FileReference testFileRef = new FileReference(new File(fileName));
         IFileHandle testFileHandle = ioManager.open(testFileRef, FileReadWriteMode.READ_ONLY,
                 FileSyncMode.METADATA_SYNC_DATA_SYNC);
-        ByteBuffer testBuffer = ByteBuffer.allocate(PAGE_SIZE);
+        ByteBuffer testBuffer = ByteBuffer.allocate(PAGE_SIZE + BufferCache.RESERVED_HEADER_BYTES);
         ioManager.syncRead(testFileHandle, 0, testBuffer);
-        for (int i = 0; i < testBuffer.capacity(); i++) {
+        for (int i = BufferCache.RESERVED_HEADER_BYTES; i < testBuffer.capacity(); i++) {
             if (deleteFile) {
                 // We deleted the file. We expect to see a clean buffer.
                 if (testBuffer.get(i) == Byte.MAX_VALUE) {

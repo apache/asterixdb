@@ -23,5 +23,5 @@
 use TinySocial;
 
 
-delete tm from TweetMessages
- where (tm.tweetid = '13');
+delete from TweetMessages
+ where tweetid = '13';

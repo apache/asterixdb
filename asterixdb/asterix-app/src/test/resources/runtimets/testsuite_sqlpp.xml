@@ -17,10 +17,9 @@
  ! under the License.
  !-->
 <!DOCTYPE test-suite [
+  <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
 
-             <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
-
-             ]>
+]>
 <test-suite
              xmlns="urn:xml.testframework.asterix.apache.org"
              ResultOffsetPath="results"
@@ -1076,43 +1075,43 @@
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_duration">
         <output-dir compare="Text">issue363_inequality_duration</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_interval">
         <output-dir compare="Text">issue363_inequality_interval</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_point">
         <output-dir compare="Text">issue363_inequality_point</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_line">
         <output-dir compare="Text">issue363_inequality_line</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_polygon">
         <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_rectangle">
         <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_circle">
         <output-dir compare="Text">issue363_inequality_circle</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
+        <expected-error>Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -1350,7 +1349,7 @@
     <test-case FilePath="custord">
       <compilation-unit name="join_q_07">
         <output-dir compare="Text">join_q_06</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset c in dataverse test</expected-error>
+        <expected-error>Undefined alias (variable) reference for identifier c</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
@@ -1397,6 +1396,26 @@
     </test-case>
     <test-case FilePath="dapd">
       <compilation-unit name="q2">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-2">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-3">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-4">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-5">
         <output-dir compare="Text">q2</output-dir>
       </compilation-unit>
     </test-case>
@@ -1623,7 +1642,6 @@
     <test-case FilePath="dml">
       <compilation-unit name="load-with-autogenerated-pk_csv_02">
         <output-dir compare="Text">load-with-autogenerated-pk_csv_02</output-dir>
-        <expected-error>java.lang.Exception: Result</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2317,19 +2335,19 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: The first argument should be a RECORD, but it is</expected-error>
+        <expected-error>The first argument should be a RECORD, but it is [ FacebookUserType: open</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q06_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>Caused by: org.apache.asterix.common.exceptions.AsterixException: Unsupported type: STRING</expected-error>
+        <expected-error>Unsupported type: STRING</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q07_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>org.apache.asterix.common.exceptions.AsterixException: COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function coll_count could potentially express the intent.</expected-error>
+        <expected-error>COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function coll_count could potentially express the intent.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -2786,8 +2804,8 @@
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>java.lang.NullPointerException</expected-error>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot find dataset</expected-error>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset</expected-error>
+        <expected-error>Cannot find dataset</expected-error>
+        <expected-error>Undefined alias (variable) reference for identifier testds</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -3703,6 +3721,11 @@
         <output-dir compare="Text">upper</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="is">
+        <output-dir compare="Text">is</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="numeric">
     <test-case FilePath="numeric">
@@ -4245,7 +4268,6 @@
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
         <expected-error>java.lang.IllegalStateException: type mismatch: missing a required closed field name:string</expected-error>
-        <expected-error>java.lang.Exception: Result</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
@@ -4470,6 +4492,33 @@
           </compilation-unit>
         </test-case>
         -->
+  </test-group>
+  <test-group name="select-star">
+    <test-case FilePath="select-star">
+      <compilation-unit name="group_by">
+        <output-dir compare="Text">group_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="from">
+        <output-dir compare="Text">from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="join">
+        <output-dir compare="Text">join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="mixed">
+        <output-dir compare="Text">mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="no_star">
+        <output-dir compare="Text">no_star</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="semistructured">
     <test-case FilePath="semistructured">
@@ -5207,6 +5256,21 @@
         <output-dir compare="Text">decorrelate_with_unique_id_2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="in">
+        <output-dir compare="Text">in</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="in_correlated">
+        <output-dir compare="Text">in</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="not_in">
+        <output-dir compare="Text">not_in</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">
@@ -5676,6 +5740,193 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="tpch-sql-sugar">
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="distinct_by">
+        <output-dir compare="Text">distinct_by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="group_no_agg">
+        <output-dir compare="Text">group_no_agg</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="nest_aggregate">
+        <output-dir compare="Text">nest_aggregate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="nest_aggregate2">
+        <output-dir compare="Text">nest_aggregate2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue638">
+        <output-dir compare="Text">query-issue638</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue785">
+        <output-dir compare="Text">query-issue785</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue785-2">
+        <output-dir compare="Text">query-issue785-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue786">
+        <output-dir compare="Text">query-issue786</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue601">
+        <output-dir compare="Text">query-issue601</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q10_returned_item">
+        <output-dir compare="Text">q10_returned_item</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q10_returned_item_int64">
+        <output-dir compare="Text">q10_returned_item_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q11_important_stock">
+        <output-dir compare="Text">q11_important_stock</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q12_shipping">
+        <output-dir compare="Text">q12_shipping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q13_customer_distribution">
+        <output-dir compare="Text">q13_customer_distribution</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q14_promotion_effect">
+        <output-dir compare="Text">q14_promotion_effect</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q15_top_supplier">
+        <output-dir compare="Text">q15_top_supplier</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q16_parts_supplier_relationship">
+        <output-dir compare="Text">q16_parts_supplier_relationship</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q17_small_quantity_order_revenue">
+        <output-dir compare="Text">q17_small_quantity_order_revenue</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q17_large_gby_variant">
+        <output-dir compare="Text">q17_large_gby_variant</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q18_large_volume_customer">
+        <output-dir compare="Text">q18_large_volume_customer</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q19_discounted_revenue">
+        <output-dir compare="Text">q19_discounted_revenue</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q01_pricing_summary_report_nt">
+        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q20_potential_part_promotion">
+        <output-dir compare="Text">q20_potential_part_promotion</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q21_suppliers_who_kept_orders_waiting">
+        <output-dir compare="Text">q21_suppliers_who_kept_orders_waiting</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q22_global_sales_opportunity">
+        <output-dir compare="Text">q22_global_sales_opportunity</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q02_minimum_cost_supplier">
+        <output-dir compare="Text">q02_minimum_cost_supplier</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q03_shipping_priority_nt">
+        <output-dir compare="Text">q03_shipping_priority_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q04_order_priority">
+        <output-dir compare="Text">q04_order_priority</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q05_local_supplier_volume">
+        <output-dir compare="Text">q05_local_supplier_volume</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q06_forecast_revenue_change">
+        <output-dir compare="Text">q06_forecast_revenue_change</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q07_volume_shipping">
+        <output-dir compare="Text">q07_volume_shipping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q08_national_market_share">
+        <output-dir compare="Text">q08_national_market_share</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q09_product_type_profit_nt">
+        <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue562">
+        <output-dir compare="Text">query-issue562</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue810">
+        <output-dir compare="Text">query-issue810</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue810-2">
+        <output-dir compare="Text">query-issue810-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="query-issue810-3">
+        <output-dir compare="Text">query-issue810-3</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="tpch-with-index">
     <test-case FilePath="tpch-with-index">
       <compilation-unit name="distinct_by">
@@ -6080,7 +6331,7 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv13">
         <output-dir compare="Text">cross-dv13</output-dir>
-        <expected-error>Error: Recursive invocation testdv2.fun03@0</expected-error>
+        <expected-error>Recursive invocation testdv2.fun03@0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">
@@ -6096,7 +6347,7 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv16">
         <output-dir compare="Text">cross-dv16</output-dir>
-        <expected-error>Error: Recursive invocation testdv1.fun04@0</expected-error>
+        <expected-error>Recursive invocation testdv1.fun04@0</expected-error>
       </compilation-unit>
     </test-case>
     <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
@@ -6158,7 +6409,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>Error: function test.printName@0 is undefined</expected-error>
+        <expected-error>function test.printName@0 is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6302,7 +6553,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf26">
         <output-dir compare="Text">udf26</output-dir>
-        <expected-error>Error: function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
+        <expected-error>function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6324,13 +6575,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Error:</expected-error>
+        <expected-error>Undefined alias (variable) reference for identifier y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>Error: function test.int8@0 is undefined</expected-error>
+        <expected-error>function test.int8@0 is undefined</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->
@@ -6365,21 +6616,18 @@
       <compilation-unit name="csv_05">
         <output-dir compare="Text">csv_05</output-dir>
         <expected-error>java.io.IOException: At record:</expected-error>
-        <expected-error>java.lang.Exception: Result</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_06">
         <output-dir compare="Text">csv_06</output-dir>
         <expected-error>java.io.IOException: At record:</expected-error>
-        <expected-error>java.lang.Exception: Result</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_07">
         <output-dir compare="Text">csv_07</output-dir>
         <expected-error>java.io.IOException: At record:</expected-error>
-        <expected-error>java.lang.Exception: Result</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
@@ -6400,13 +6648,13 @@
     <test-case FilePath="load">
       <compilation-unit name="issue14_query">
         <output-dir compare="Text">issue14_query</output-dir>
-        <expected-error>The parameter format must be specified</expected-error>
+        <expected-error>Unspecified parameter: format</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="issue315_query">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The parameter format must be specified</expected-error>
+        <expected-error>Invalid path</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

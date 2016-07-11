@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -125,13 +126,27 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public ARecordType getAdapterOutputType() {
+    public void configure(ILibraryManager context, Map<String, String> configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public void setOutputType(ARecordType outputType) {
+        this.outputType = outputType;
+    }
+
+    @Override
+    public void setMetaType(ARecordType metaType) {
+    }
+
+    @Override
+    public ARecordType getOutputType() {
         return outputType;
     }
 
     @Override
-    public void configure(Map<String, String> configuration, ARecordType outputType, ARecordType metaType) {
-        this.configuration = configuration;
-        this.outputType = outputType;
+    public ARecordType getMetaType() {
+        return null;
     }
+
 }

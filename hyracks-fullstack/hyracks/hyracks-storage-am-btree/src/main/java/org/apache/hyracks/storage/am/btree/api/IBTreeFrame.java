@@ -38,5 +38,7 @@ public interface IBTreeFrame extends ITreeIndexFrame {
 
     public void setLargeFlag(boolean largePage);
 
+    public boolean getLargeFlag();
+
     public void validate(PageValidationInfo pvi) throws HyracksDataException;
 }

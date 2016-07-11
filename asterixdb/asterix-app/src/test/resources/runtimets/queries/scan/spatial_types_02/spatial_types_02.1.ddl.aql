@@ -30,9 +30,9 @@ create type SpatialType as open {
   circle: circle
 }
 
-create dataset Spatial2(SpatialType) 
-	primary key id;
+create dataset Spatial2(SpatialType)
+    primary key id;
 
-load dataset Spatial2 
+load dataset Spatial2
 using localfs
 (("path"="asterix_nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

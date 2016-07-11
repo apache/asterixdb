@@ -32,9 +32,9 @@ using localfs
 
 insert into dataset t1
 (
-	for $c in dataset('t1tmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('t1tmp')
+    return {
+        "nested" : $c
+    }
 );
 

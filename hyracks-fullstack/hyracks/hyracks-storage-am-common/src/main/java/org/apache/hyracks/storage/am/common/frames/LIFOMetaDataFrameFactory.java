@@ -23,8 +23,8 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 
 public class LIFOMetaDataFrameFactory implements ITreeIndexMetaDataFrameFactory {
-	@Override
-	public ITreeIndexMetaDataFrame createFrame() {
-		return new LIFOMetaDataFrame();
-	}
+    @Override
+    public ITreeIndexMetaDataFrame createFrame() {
+        return new LIFOMetaDataFrame();
+    }
 }

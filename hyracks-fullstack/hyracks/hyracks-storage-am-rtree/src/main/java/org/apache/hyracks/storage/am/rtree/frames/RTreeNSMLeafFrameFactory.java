@@ -24,7 +24,6 @@ import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
-import org.apache.hyracks.storage.common.buffercache.ILargePageHelper;
 
 public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
@@ -61,8 +60,4 @@ public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
         return tupleWriterFactory;
     }
 
-    @Override
-    public ILargePageHelper getLargePageHelper() {
-        return null;
-    }
 }

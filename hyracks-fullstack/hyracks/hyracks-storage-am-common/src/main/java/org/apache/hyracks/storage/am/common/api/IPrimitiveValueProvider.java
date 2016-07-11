@@ -20,5 +20,5 @@
 package org.apache.hyracks.storage.am.common.api;
 
 public interface IPrimitiveValueProvider {
-	public double getValue(byte[] bytes, int offset);
+    public double getValue(byte[] bytes, int offset);
 }

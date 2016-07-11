@@ -43,6 +43,7 @@ import org.apache.asterix.common.context.AsterixFileMapManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -52,6 +53,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.external.feed.management.FeedManager;
+import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -126,6 +128,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IRemoteRecoveryManager remoteRecoveryManager;
     private IReplicaResourcesManager replicaResourcesManager;
     private final int metadataRmiPort;
+
+    private ILibraryManager libraryManager;
 
     public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext, int metadataRmiPort)
             throws AsterixException {
@@ -265,6 +269,11 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         lccm.register((ILifeCycleComponent) datasetLifecycleManager);
         lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
+
+        /**
+         * Initializes the library manager.
+         */
+        libraryManager = new ExternalLibraryManager();
     }
 
     @Override
@@ -407,13 +416,18 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
+    public ILibraryManager getLibraryManager() {
+        return libraryManager;
+    }
+
+    @Override
     public void initializeResourceIdFactory() throws HyracksDataException {
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncApplicationContext).createResourceIdFactory();
     }
 
     @Override
     public void initializeMetadata(boolean newUniverse) throws Exception {
-        IAsterixStateProxy proxy = null;
+        IAsterixStateProxy proxy;
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Bootstrapping metadata");
         }
@@ -446,4 +460,5 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     public void unexportMetadataNodeStub() throws RemoteException {
         UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
     }
+
 }

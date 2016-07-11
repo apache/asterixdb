@@ -576,9 +576,6 @@ public class MetadataNode implements IMetadataNode {
             IValueExtractor<Dataverse> valueExtractor = new MetadataEntityValueExtractor<Dataverse>(tupleReaderWriter);
             List<Dataverse> results = new ArrayList<Dataverse>();
             searchIndex(jobId, MetadataPrimaryIndexes.DATAVERSE_DATASET, null, valueExtractor, results);
-            if (results.isEmpty()) {
-                return null;
-            }
             return results;
         } catch (IndexException | IOException e) {
             throw new MetadataException(e);

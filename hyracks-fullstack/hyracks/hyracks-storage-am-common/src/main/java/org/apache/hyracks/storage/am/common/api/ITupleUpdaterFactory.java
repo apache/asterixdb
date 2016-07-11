@@ -22,5 +22,5 @@ package org.apache.hyracks.storage.am.common.api;
 import java.io.Serializable;
 
 public interface ITupleUpdaterFactory extends Serializable {
-	public ITupleUpdater createTupleUpdater();
+    public ITupleUpdater createTupleUpdater();
 }

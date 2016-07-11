@@ -20,5 +20,5 @@
 package org.apache.hyracks.storage.am.common.api;
 
 public interface ITreeIndexMetaDataFrameFactory {
-	public ITreeIndexMetaDataFrame createFrame();
+    public ITreeIndexMetaDataFrame createFrame();
 }

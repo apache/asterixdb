@@ -41,7 +41,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * The wrapper to generate TaskTattemptContext
  */
 public class MRContextUtil {
-    //	public static Reducer.Context = create
+    //public static Reducer.Context = create
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Mapper.Context createMapContext(Configuration conf, TaskAttemptID taskid, RecordReader reader,

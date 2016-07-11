@@ -18,7 +18,7 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue443
- 				: https://code.google.com/p/asterixdb/issues/detail?id=443
+                 : https://code.google.com/p/asterixdb/issues/detail?id=443
  * Expected Res : Fail
  * Date         : 22th May 2013
  */

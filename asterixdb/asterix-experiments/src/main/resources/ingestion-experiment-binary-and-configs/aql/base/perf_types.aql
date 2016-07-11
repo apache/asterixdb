@@ -1,0 +1,45 @@
+drop dataverse SocialNetworkData if exists;
+create dataverse SocialNetworkData;
+use dataverse SocialNetworkData;
+
+  create type EmploymentType as {
+    organization: string,
+    start_date: date,
+    end_date: date?
+  }
+
+  create type GleambookUserType as {
+    id: string,
+    alias: string,
+    name: string,
+    user_since: datetime,
+    friend_ids: {{ string }},
+    employment: [EmploymentType]
+  }
+
+  create type GleambookMessageType as {
+    message_id: string,
+    author_id: string,
+    in_response_to: string?,
+    sender_location: point,
+    send_time: datetime,
+    message: string
+  }
+
+  create type ChirpUserType as {
+    screen_name: string,
+    lang: string,
+    friends_count: int32,
+    statuses_count: int32,
+    name: string,
+    followers_count: int32
+  }
+
+  create type ChirpMessageType as {
+    chirpid: string,
+    user: ChirpUserType,
+    sender_location: point,
+    send_time: datetime,
+    referred_topics: {{ string }},
+    message_text: string
+  }

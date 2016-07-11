@@ -39,7 +39,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.app.external.FeedJoint;
 import org.apache.asterix.app.external.FeedLifecycleListener;
@@ -875,6 +874,9 @@ public class QueryTranslator extends AbstractLangTranslator {
                         throw new AlgebricksException("Typed index on \"" + fieldExpr.first
                                 + "\" field could be created only for open datatype");
                     }
+                    if (stmtCreateIndex.hasMetaField()) {
+                        throw new AlgebricksException("Typed open index can only be created on the record part");
+                    }
                     Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(mdTxnCtx, fieldExpr.second,
                             indexName, dataverseName);
                     TypeSignature typeSignature = new TypeSignature(dataverseName, indexName);
@@ -1013,7 +1015,8 @@ public class QueryTranslator extends AbstractLangTranslator {
             CompiledCreateIndexStatement cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName,
                     index.getDatasetName(), index.getKeyFieldNames(), index.getKeyFieldTypes(),
                     index.isEnforcingKeyFileds(), index.getGramLength(), index.getIndexType());
-            spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, aRecordType, enforcedType, metadataProvider);
+            spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, aRecordType, metaRecordType,
+                    keySourceIndicators, enforcedType, metadataProvider);
             if (spec == null) {
                 throw new AsterixException("Failed to create job spec for creating index '"
                         + stmtCreateIndex.getDatasetName() + "." + stmtCreateIndex.getIndexName() + "'");
@@ -1034,7 +1037,9 @@ public class QueryTranslator extends AbstractLangTranslator {
             cis = new CompiledCreateIndexStatement(index.getIndexName(), dataverseName, index.getDatasetName(),
                     index.getKeyFieldNames(), index.getKeyFieldTypes(), index.isEnforcingKeyFileds(),
                     index.getGramLength(), index.getIndexType());
-            spec = IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, aRecordType, enforcedType, metadataProvider);
+
+            spec = IndexOperations.buildSecondaryIndexLoadingJobSpec(cis, aRecordType, metaRecordType,
+                    keySourceIndicators, enforcedType, metadataProvider);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
@@ -1379,7 +1384,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 }
             }
 
-            Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<FeedConnectionId, Pair<JobSpecification, Boolean>>();
+            Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 // prepare job spec(s) that would disconnect any active feeds involving the dataset.
                 List<FeedConnectionId> feedConnections = FeedLifecycleListener.INSTANCE.getActiveFeedConnections(null);
@@ -1998,7 +2003,7 @@ public class QueryTranslator extends AbstractLangTranslator {
                 default:
                     throw new IllegalStateException();
             }
-
+            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, metadataProvider.getLibraryManager());
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -2085,6 +2090,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                 if (!stmtFeedDrop.getIfExists()) {
                     throw new AlgebricksException("There is no feed with this name " + feedName + ".");
                 }
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return;
             }
 
             FeedId feedId = new FeedId(dataverseName, feedName);
@@ -2133,6 +2140,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                 if (!stmtFeedPolicyDrop.getIfExists()) {
                     throw new AlgebricksException("Unknown policy " + policyName + " in dataverse " + dataverseName);
                 }
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return;
             }
             MetadataManager.INSTANCE.dropFeedPolicy(mdTxnCtx, dataverseName, policyName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2441,7 +2450,6 @@ public class QueryTranslator extends AbstractLangTranslator {
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockManager.INSTANCE.compactBegin(dataverseName, dataverseName + "." + datasetName);
-
         List<JobSpecification> jobsToExecute = new ArrayList<JobSpecification>();
         try {
             Dataset ds = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
@@ -2449,24 +2457,27 @@ public class QueryTranslator extends AbstractLangTranslator {
                 throw new AlgebricksException(
                         "There is no dataset with this name " + datasetName + " in dataverse " + dataverseName + ".");
             }
-
             String itemTypeName = ds.getItemTypeName();
             Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                     ds.getItemTypeDataverseName(), itemTypeName);
-
+            ARecordType metaRecordType = null;
+            if (ds.hasMetaPart()) {
+                metaRecordType = (ARecordType) MetadataManager.INSTANCE
+                        .getDatatype(metadataProvider.getMetadataTxnContext(), ds.getMetaItemTypeDataverseName(),
+                                ds.getMetaItemTypeName())
+                        .getDatatype();
+            }
             // Prepare jobs to compact the datatset and its indexes
             List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
             if (indexes.size() == 0) {
                 throw new AlgebricksException(
                         "Cannot compact the extrenal dataset " + datasetName + " because it has no indexes");
             }
-
             Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
                     dataverseName);
             jobsToExecute.add(DatasetOperations.compactDatasetJobSpec(dataverse, datasetName, metadataProvider));
             ARecordType aRecordType = (ARecordType) dt.getDatatype();
             ARecordType enforcedType = IntroduceSecondaryIndexInsertDeleteRule.createEnforcedType(aRecordType, indexes);
-
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 for (int j = 0; j < indexes.size(); j++) {
                     if (indexes.get(j).isSecondaryIndex()) {
@@ -2475,18 +2486,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                     }
                 }
             } else {
-                for (int j = 0; j < indexes.size(); j++) {
-                    if (!ExternalIndexingOperations.isFileIndex(indexes.get(j))) {
-                        CompiledIndexCompactStatement cics = new CompiledIndexCompactStatement(dataverseName,
-                                datasetName, indexes.get(j).getIndexName(), indexes.get(j).getKeyFieldNames(),
-                                indexes.get(j).getKeyFieldTypes(), indexes.get(j).isEnforcingKeyFileds(),
-                                indexes.get(j).getGramLength(), indexes.get(j).getIndexType());
-                        jobsToExecute.add(IndexOperations.buildSecondaryIndexCompactJobSpec(cics, aRecordType,
-                                enforcedType, metadataProvider, ds));
-                    }
-
-                }
-                jobsToExecute.add(ExternalIndexingOperations.compactFilesIndexJobSpec(ds, metadataProvider));
+                prepareCompactJobsForExternalDataset(indexes, dataverseName, datasetName, ds, jobsToExecute,
+                        aRecordType, metaRecordType, metadataProvider, enforcedType);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -2503,6 +2504,28 @@ public class QueryTranslator extends AbstractLangTranslator {
         } finally {
             MetadataLockManager.INSTANCE.compactEnd(dataverseName, dataverseName + "." + datasetName);
         }
+    }
+
+    private void prepareCompactJobsForExternalDataset(List<Index> indexes, String dataverseName, String datasetName,
+            Dataset ds, List<JobSpecification> jobsToExecute, ARecordType aRecordType, ARecordType metaRecordType,
+            AqlMetadataProvider metadataProvider, ARecordType enforcedType)
+            throws MetadataException, AlgebricksException {
+        for (int j = 0; j < indexes.size(); j++) {
+            if (!ExternalIndexingOperations.isFileIndex(indexes.get(j))) {
+                CompiledIndexCompactStatement cics = new CompiledIndexCompactStatement(dataverseName, datasetName,
+                        indexes.get(j).getIndexName(), indexes.get(j).getKeyFieldNames(),
+                        indexes.get(j).getKeyFieldTypes(), indexes.get(j).isEnforcingKeyFileds(),
+                        indexes.get(j).getGramLength(), indexes.get(j).getIndexType());
+                List<Integer> keySourceIndicators = null;
+                if (ds.hasMetaPart()) {
+                    keySourceIndicators = indexes.get(j).getKeyFieldSourceIndicators();
+                }
+                jobsToExecute.add(IndexOperations.buildSecondaryIndexCompactJobSpec(cics, aRecordType, metaRecordType,
+                        keySourceIndicators, enforcedType, metadataProvider));
+            }
+
+        }
+        jobsToExecute.add(ExternalIndexingOperations.compactFilesIndexJobSpec(ds, metadataProvider));
     }
 
     private void handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
@@ -2538,15 +2561,8 @@ public class QueryTranslator extends AbstractLangTranslator {
                         hcc.waitForCompletion(jobId);
                         ResultReader resultReader = new ResultReader(hcc, hdc);
                         resultReader.open(jobId, metadataProvider.getResultSetId());
-
-                        // In this case (the normal case), we don't use the
-                        // "response" JSONObject - just stream the results
-                        // to the "out" PrintWriter
-                        if (sessionConfig.fmt() == OutputFormat.CSV
-                                && sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
-                            ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
-                        }
-                        ResultUtils.displayResults(resultReader, sessionConfig, stats);
+                        ResultUtils.displayResults(resultReader, sessionConfig, stats,
+                                metadataProvider.findOutputRecordType());
                         break;
                     case ASYNC_DEFERRED:
                         handle = new JSONArray();

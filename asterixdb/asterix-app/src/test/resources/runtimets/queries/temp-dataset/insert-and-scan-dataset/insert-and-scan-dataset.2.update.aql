@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-and-scan-dataset.aql
  * Description     : This test is intended to test inserting into a temporary dataset and scan it at the same time
  * where we insert a materializing to prevent the possibility of deadlatch.
  * Expected Result : Success
  * Date            : March 27 2015
  */
- 
+
 use dataverse test;
 
-load dataset myData 
+load dataset myData
 using localfs
 (("path"="asterix_nc1://data/odd-numbers.adm"),("format"="adm"))pre-sorted;
 
@@ -34,6 +34,6 @@ using localfs
 insert into dataset myData (
 for $x in dataset myData
 return {
-	"id": $x.id + 1
+    "id": $x.id + 1
 }
 );

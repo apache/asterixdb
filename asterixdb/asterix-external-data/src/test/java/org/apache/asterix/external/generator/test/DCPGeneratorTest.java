@@ -20,7 +20,7 @@ package org.apache.asterix.external.generator.test;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
-import org.apache.asterix.external.input.record.converter.DCPRequestToRecordWithMetadataAndPKConverter;
+import org.apache.asterix.external.input.record.converter.DCPMessageToRecordConverter;
 import org.apache.asterix.external.input.record.reader.kv.KVTestReader;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class DCPGeneratorTest {
         try (KVTestReader cbreader = new KVTestReader(0, "TestBucket",
                 new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 150, 0, 0, 0)) {
             final UTF8StringPointable pointable = new UTF8StringPointable();
-            final DCPRequestToRecordWithMetadataAndPKConverter converter = new DCPRequestToRecordWithMetadataAndPKConverter();
+            final DCPMessageToRecordConverter converter = new DCPMessageToRecordConverter();
             while (cbreader.hasNext()) {
                 final IRawRecord<DCPRequest> dcp = cbreader.next();
                 final RecordWithMetadataAndPK<char[]> record = converter.convert(dcp);

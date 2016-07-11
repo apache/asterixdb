@@ -20,4 +20,4 @@
 use test;
 
 
-select element [test.like('A6BBB','_6%'),test.like('A8BBB','_6%')];
+select element ['A6BBB' LIKE '_6%', 'A8BBB' LIKE '_6%' ];

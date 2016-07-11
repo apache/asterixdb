@@ -184,7 +184,7 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
         ComparableFileName cmpBTreeFileName = null;
         ComparableFileName cmpBloomFilterFileName = null;
-        while (btreeFileIter.hasNext() && bloomFilterFileIter.hasNext()) {
+        while (btreeFileIter.hasNext() && (hasBloomFilter ? bloomFilterFileIter.hasNext() : true)) {
             cmpBTreeFileName = btreeFileIter.next();
             if (hasBloomFilter) {
                 cmpBloomFilterFileName = bloomFilterFileIter.next();

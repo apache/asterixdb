@@ -20,5 +20,5 @@
 use test;
 
 
-delete l from LineItem
- where ((l.l_suppkey >= 2) or (l.l_linenumber > 1));
+delete from LineItem
+ where l_suppkey >= 2 or l_linenumber > 1;

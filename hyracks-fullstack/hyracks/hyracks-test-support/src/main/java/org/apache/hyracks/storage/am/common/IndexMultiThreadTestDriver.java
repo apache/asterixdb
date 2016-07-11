@@ -51,11 +51,11 @@ public class IndexMultiThreadTestDriver {
 
     public long[] run(int numThreads, int numRepeats, int numOps, int batchSize) throws InterruptedException,
             TreeIndexException, HyracksDataException {
-    	int numBatches = (batchSize < 1 ? numOps : numOps / batchSize);
-    	if (numBatches < numThreads) {
-    		numThreads = numBatches;
-    	}
-    	int threadNumBatches = numBatches / numThreads;
+        int numBatches = (batchSize < 1 ? numOps : numOps / batchSize);
+        if (numBatches < numThreads) {
+            numThreads = numBatches;
+        }
+        int threadNumBatches = numBatches / numThreads;
         long[] times = new long[numRepeats];
         for (int i = 0; i < numRepeats; i++) {
             DataGenThread dataGen = createDatagenThread(numThreads, numBatches, batchSize);

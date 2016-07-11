@@ -27,17 +27,17 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 @SuppressWarnings("rawtypes")
 public class TreeIndexUtils {
-	public static String printFrameTuples(ITreeIndexFrame frame, ISerializerDeserializer[] fieldSerdes) throws HyracksDataException {
-		StringBuilder strBuilder = new StringBuilder();
-		ITreeIndexTupleReference tuple = frame.createTupleReference();
-		for (int i = 0; i < frame.getTupleCount(); i++) {
-			tuple.resetByTupleIndex(frame, i);
-			String tupleString = TupleUtils.printTuple(tuple, fieldSerdes);
-			strBuilder.append(tupleString);
-			if (i != frame.getTupleCount() - 1) {
-				strBuilder.append(" | ");
-			}
-		}
-		return strBuilder.toString();
+    public static String printFrameTuples(ITreeIndexFrame frame, ISerializerDeserializer[] fieldSerdes) throws HyracksDataException {
+        StringBuilder strBuilder = new StringBuilder();
+        ITreeIndexTupleReference tuple = frame.createTupleReference();
+        for (int i = 0; i < frame.getTupleCount(); i++) {
+            tuple.resetByTupleIndex(frame, i);
+            String tupleString = TupleUtils.printTuple(tuple, fieldSerdes);
+            strBuilder.append(tupleString);
+            if (i != frame.getTupleCount() - 1) {
+                strBuilder.append(" | ");
+            }
+        }
+        return strBuilder.toString();
     }
 }

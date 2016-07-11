@@ -900,6 +900,55 @@ To achieve the effect of an update, two statements are currently needed---one to
 dataset where it resides, and another to insert the new replacement record (with the same primary key but with
 different field values for some of the associated data content).
 
+### Upserting Data  ###
+In addition to loading, querying, inserting, and deleting data, AsterixDB supports upserting
+records using the AQL _upsert_ statement.
+
+The following example deletes the tweet with the tweetid = 20 (if exists) and inserts the
+new tweet with tweetid=20 and the user "SwanSmitty" to the TweetMessages dataset. The two
+operations (delete if found and insert) are performed as an atomic operation that is either
+performed completely or not at all.
+
+        use dataverse TinySocial;
+        upsert into dataset TweetMessages
+        (
+           {"tweetid":"20",
+            "user":
+                {"screen-name":"SwanSmitty",
+                 "lang":"en",
+                 "friends_count":91345,
+                 "statuses_count":4079,
+                 "name":"Swanson Smith",
+                 "followers_count":50420
+                },
+            "sender-location":point("47.44,80.65"),
+            "send-time":datetime("2008-04-26T10:10:35"),
+            "referred-topics":{{"football"}},
+            "message-text":"football is the best sport, period.!"
+           }
+        );
+
+The data to be upserted may be specified using any valid AQL query expression.
+For example, the following statement might be used to double the followers count of all existing users.
+
+        use dataverse TinySocial;
+        upsert into dataset TweetUsers
+        (
+           for $user in dataset TweetUsers
+           return {
+            "screen-name":$user.screen-name,
+            "lang":$user.lang,
+            "friends_count":$user.friends_count,
+            "statuses_count":$user.statuses_count,
+            "name":$user.name,
+            "followers_count":$user.followers_count*2
+           }
+        );
+
+Note that an upsert operation is executed in two steps, the query is performed,query locks
+are released, and then its result is upserted into the dataset. This means that the record
+can be modified between computing the query result and performing the upsert.
+
 ### Transaction Support
 
 AsterixDB supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, or searched while a given AQL statement is being executed. This is quite similar to the level of transaction support found in today's NoSQL stores. AsterixDB does not support multi-statement transactions, and in fact an AQL statement that involves multiple records can itself involve multiple independent record-level transactions. An example consequence of this is that, when an AQL statement attempts to insert 1000 records, it is possible that the first 800 records could end up being committed while the remaining 200 records fail to be inserted. This situation could happen, for example, if a duplicate key exception occurs as the 801st insertion is attempted. If this happens, AsterixDB will report the error (e.g., a duplicate key exception) as the result of the offending AQL insert statement, and the application logic above will need to take the appropriate action(s) needed to assess the resulting state and to clean up and/or continue as appropriate.
@@ -912,5 +961,5 @@ more declarative Big Data management.
 AsterixDB is powerful, so use it wisely, and remember: "With great power comes great responsibility..." :-)
 
 Please e-mail the AsterixDB user group
-(users (at) asterixdb.incubator.apache.org)
+(users (at) asterixdb.apache.org)
 if you run into any problems or simply have further questions about the AsterixDB system, its features, or their proper use.

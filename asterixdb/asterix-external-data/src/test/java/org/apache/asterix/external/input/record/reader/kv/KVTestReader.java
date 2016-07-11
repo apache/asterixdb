@@ -153,8 +153,21 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
         // reset the string
         strBuilder.setLength(0);
         strBuilder.append("{\"id\":" + (counter + upsertCounter) + ",\"name\":\""
-                + names[(counter + upsertCounter) % names.length] + "\",\"exp\":" + ((counter + upsertCounter) * 3)
-                + "}");
+                + names[(counter + upsertCounter) % names.length] + "\"");
+        switch (counter % 3) {
+            case 0:
+                // Missing
+                break;
+            case 1:
+                strBuilder.append(",\"exp\":null");
+                break;
+            case 2:
+                strBuilder.append(",\"exp\":" + ((counter + upsertCounter) * 3));
+                break;
+            default:
+                break;
+        }
+        strBuilder.append("}");
         byteBuff.clear();
         byteBuff.writeBytes(strBuilder.toString().getBytes(StandardCharsets.UTF_8));
     }

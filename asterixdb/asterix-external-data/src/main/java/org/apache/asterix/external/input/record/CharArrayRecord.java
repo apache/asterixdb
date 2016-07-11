@@ -69,7 +69,7 @@ public class CharArrayRecord implements IRawRecord<char[]> {
                 throw new IOException(
                         "Record is too large!. Maximum record size is " + ExternalDataConstants.MAX_RECORD_SIZE);
             }
-            int newSize = Math.min((int)(len * ExternalDataConstants.DEFAULT_BUFFER_INCREMENT_FACTOR),
+            int newSize = Math.min((int) (len * ExternalDataConstants.DEFAULT_BUFFER_INCREMENT_FACTOR),
                     ExternalDataConstants.MAX_RECORD_SIZE);
             value = Arrays.copyOf(value, newSize);
         }
@@ -88,7 +88,7 @@ public class CharArrayRecord implements IRawRecord<char[]> {
 
     @Override
     public String toString() {
-        return String.valueOf(value, 0, size);
+        return String.valueOf(value, 0, size == 0 ? 0 : size - 1);
     }
 
     public void endRecord() throws IOException {

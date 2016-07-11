@@ -24,19 +24,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class ExternalLibraryManager {
+public class ExternalLibraryManager implements ILibraryManager {
 
-    private static final Map<String, ClassLoader> libraryClassLoaders = new HashMap<String, ClassLoader>();
+    private final Map<String, ClassLoader> libraryClassLoaders = new HashMap<>();
 
-    /**
-     * Register the library class loader with the external library manager
-     * @param dataverseName
-     * @param libraryName
-     * @param classLoader
-     */
-    public static void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader) {
+    @Override
+    public void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader) {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
             if (libraryClassLoaders.get(key) != null) {
@@ -46,7 +42,8 @@ public class ExternalLibraryManager {
         }
     }
 
-    public static List<Pair<String, String>> getAllLibraries() {
+    @Override
+    public List<Pair<String, String>> getAllLibraries() {
         ArrayList<Pair<String, String>> libs = new ArrayList<>();
         synchronized (libraryClassLoaders) {
             for (Entry<String, ClassLoader> entry : libraryClassLoaders.entrySet()) {
@@ -56,7 +53,8 @@ public class ExternalLibraryManager {
         return libs;
     }
 
-    public static void deregisterLibraryClassLoader(String dataverseName, String libraryName) {
+    @Override
+    public void deregisterLibraryClassLoader(String dataverseName, String libraryName) {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
             if (libraryClassLoaders.get(key) != null) {
@@ -65,7 +63,8 @@ public class ExternalLibraryManager {
         }
     }
 
-    public static ClassLoader getLibraryClassLoader(String dataverseName, String libraryName) {
+    @Override
+    public ClassLoader getLibraryClassLoader(String dataverseName, String libraryName) {
         String key = getKey(dataverseName, libraryName);
         return libraryClassLoaders.get(key);
     }
@@ -75,10 +74,10 @@ public class ExternalLibraryManager {
     }
 
     private static Pair<String, String> getDataverseAndLibararyName(String key) {
-        int index = key.indexOf(".");
+        int index = key.indexOf('.');
         String dataverse = key.substring(0, index);
         String library = key.substring(index + 1);
-        return new Pair<String, String>(dataverse, library);
+        return new Pair<>(dataverse, library);
     }
 
 }

@@ -28,27 +28,27 @@ create dataverse test;
 use dataverse test;
 
 create type TwitterUserType as closed {
-	screen-name: string,
-	lang: string,
-	friends-count: int32,
-	statuses-count: int32,
-	name: string,
-	followers-count: int32
-} 
+    screen-name: string,
+    lang: string,
+    friends-count: int32,
+    statuses-count: int32,
+    name: string,
+    followers-count: int32
+}
 
 create type TweetMessageNestedType as closed {
-	tweetid: int64,
+    tweetid: int64,
         user: TwitterUserType,
         sender-location: point,
-	send-time: datetime,
+    send-time: datetime,
         referred-topics: {{ string }},
-	message-text: string,
-	countA: int32,
-	countB: int32
+    message-text: string,
+    countA: int32,
+    countB: int32
 }
 
 create type TweetMessageType as closed {
-	nested: TweetMessageNestedType
+    nested: TweetMessageNestedType
 }
 
 create dataset TweetMessages(TweetMessageType)

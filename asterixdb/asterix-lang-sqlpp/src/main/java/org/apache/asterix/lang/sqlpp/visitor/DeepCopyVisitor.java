@@ -46,6 +46,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -59,6 +60,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -389,7 +391,11 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public VariableExpr visit(VariableExpr varExpr, Void arg) throws AsterixException {
-        return new VariableExpr(varExpr.getVar());
+        VariableExpr clonedVar = new VariableExpr(
+                new VarIdentifier(varExpr.getVar().getValue(), varExpr.getVar().getId()));
+        clonedVar.setIsNewVar(varExpr.getIsNewVar());
+        clonedVar.setNamedValueAccess(varExpr.namedValueAccess());
+        return clonedVar;
     }
 
     @Override
@@ -410,6 +416,11 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             indexExpr = ia.getIndexExpr();
         }
         return new IndexAccessor(expr, indexExpr);
+    }
+
+    @Override
+    public ILangExpression visit(IndependentSubquery independentSubquery, Void arg) throws AsterixException {
+        return new IndependentSubquery((Expression) independentSubquery.getExpr().accept(this, arg));
     }
 
 }

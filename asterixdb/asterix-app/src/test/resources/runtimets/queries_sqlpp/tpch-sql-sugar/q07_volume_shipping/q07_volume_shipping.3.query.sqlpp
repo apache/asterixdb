@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+WITH q7_volume_shipping_tmp AS
+(
+    SELECT n1.n_name AS supp_nation,
+           n2.n_name AS cust_nation,
+           n1.n_nationkey AS s_nationkey,
+           n2.n_nationkey AS c_nationkey
+    from  Nation as n1,
+          Nation as n2
+    where n2.n_name = 'GERMANY' or n1.n_name = 'GERMANY'
+)
+
+SELECT supp_nation, cust_nation, l_year, sum(volume) AS revenue
+FROM
+  (
+    SELECT supp_nation, cust_nation,
+      `get-year`(l_shipdate) AS l_year,
+       l_extendedprice * (1 - l_discount) AS volume
+    FROM
+      q7_volume_shipping_tmp t JOIN
+        (SELECT l_shipdate, l_extendedprice, l_discount, c_nationkey, s_nationkey
+         FROM Supplier JOIN
+           (SELECT l_shipdate, l_extendedprice, l_discount, l_suppkey, c_nationkey
+            FROM Customer JOIN
+              (SELECT l_shipdate, l_extendedprice, l_discount, l_suppkey, o_custkey
+               FROM Orders
+               JOIN LineItem ON o_orderkey = l_orderkey AND l_shipdate >= '1992-01-01'
+                    AND l_shipdate <= '1996-12-31'
+               ) l1 ON c_custkey = o_custkey
+            ) l2 ON s_suppkey = l_suppkey
+         ) l3 ON t.c_nationkey = l3.c_nationkey AND t.s_nationkey = l3.s_nationkey
+   ) shipping
+GROUP BY supp_nation, cust_nation, l_year
+ORDER BY supp_nation, cust_nation, l_year;

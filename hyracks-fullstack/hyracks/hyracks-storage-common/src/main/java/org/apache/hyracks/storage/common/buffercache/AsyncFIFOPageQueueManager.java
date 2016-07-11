@@ -89,30 +89,38 @@ public class AsyncFIFOPageQueueManager implements Runnable {
 
     public void destroyQueue(){
         poisoned.set(true);
-        //Dummy cached page to act as poison pill
-        CachedPage poisonPill = new CachedPage();
-        poisonPill.setQueueInfo(new QueueInfo(true,true));
-        if(writerThread == null){
-            synchronized (this){
-                if(writerThread == null) {
+        if (writerThread == null) {
+            synchronized (this) {
+                if (writerThread == null) {
                     return;
                 }
             }
         }
 
+        //Dummy cached page to act as poison pill
+        CachedPage poisonPill = new CachedPage();
+        poisonPill.setQueueInfo(new QueueInfo(true,true));
+
         try{
-            synchronized(poisonPill){
+            synchronized (poisonPill) {
                 queue.put(poisonPill);
                 while(queue.contains(poisonPill)){
                     poisonPill.wait();
                 }
             }
         } catch (InterruptedException e){
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 
     public void finishQueue() {
+        if (writerThread == null) {
+            synchronized (this) {
+                if (writerThread == null) {
+                    return;
+                }
+            }
+        }
         if(DEBUG) System.out.println("[FIFO] Finishing Queue");
         try {
             //Dummy cached page to act as low water mark

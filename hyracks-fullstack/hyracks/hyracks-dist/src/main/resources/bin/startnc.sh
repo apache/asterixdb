@@ -41,8 +41,8 @@ mkdir $NCLOGS_DIR
 io_dirs=$(echo $IO_DIRS | tr "," "\n")
 for io_dir in $io_dirs
 do
-	rm -rf $io_dir
-	mkdir $io_dir
+    rm -rf $io_dir
+    mkdir $io_dir
 done
 
 #Set JAVA_HOME

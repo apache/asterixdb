@@ -39,7 +39,7 @@ FROM
   JOIN Partsupp ps
   ON s.s_suppkey = ps.ps_suppkey
   JOIN Part p
-  ON p.p_partkey = ps.ps_partkey AND like(p.p_type, '%BRASS')
+  ON p.p_partkey = ps.ps_partkey AND p.p_type LIKE '%BRASS'
 ),
 q2_minimum_cost_supplier_tmp2 AS
 (SELECT

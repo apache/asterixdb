@@ -48,8 +48,7 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
         if (type.getTypeTag() == ATypeTag.ANY) {
             return BuiltinType.ANY;
         }
-        IAType itemType = ((AbstractCollectionType) type).getItemType();
-        return itemType;
+        return ((AbstractCollectionType) type).getItemType();
     }
 
 }

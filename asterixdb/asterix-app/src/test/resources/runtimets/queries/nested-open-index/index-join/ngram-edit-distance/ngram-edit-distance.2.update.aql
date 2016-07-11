@@ -34,32 +34,32 @@ using localfs
 
 insert into dataset Customers
 (
-	for $c in dataset('Customerstmp')
-	where $c.cid < 500
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('Customerstmp')
+    where $c.cid < 500
+    return {
+        "nested" : $c
+    }
 );
 
 insert into dataset Customers
 (
-	for $c in dataset('Customerstmp')
-	where $c.cid >= 500
-	return {
-		"nested" : {
-			"cid": $c.cid,
-			"age": $c.age,
-			"address": $c.address,
-			"interests": $c.interests,
-			"children": $c.children
-		}
-	}	
+    for $c in dataset('Customerstmp')
+    where $c.cid >= 500
+    return {
+        "nested" : {
+            "cid": $c.cid,
+            "age": $c.age,
+            "address": $c.address,
+            "interests": $c.interests,
+            "children": $c.children
+        }
+    }
 );
 
 insert into dataset Customers2
 (
-	for $c in dataset('Customers2tmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('Customers2tmp')
+    return {
+        "nested" : $c
+    }
 );

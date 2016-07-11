@@ -155,8 +155,8 @@ public class RTree extends AbstractTreeIndex {
 
     private RTreeOpContext createOpContext(IModificationOperationCallback modificationCallback) {
         return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
-                (IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
-                freePageManager.getMetaDataFrameFactory().createFrame(), cmpFactories, modificationCallback);
+                (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager, cmpFactories,
+                modificationCallback);
     }
 
     private void insert(ITupleReference tuple, IIndexOperationContext ictx)
@@ -412,7 +412,7 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
-                        ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey, freePageManager, ctx.metaFrame,
+                        ctx.interiorFrame.split(rightFrame, tuple, ctx.splitKey, ctx,
                                 bufferCache);
                         ctx.interiorFrame.setRightPage(rightPageId);
                     } else {
@@ -421,7 +421,7 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setRightPage(ctx.interiorFrame.getRightPage());
                         ctx.modificationCallback.found(null, tuple);
-                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey, freePageManager, ctx.metaFrame,
+                        ctx.leafFrame.split(rightFrame, tuple, ctx.splitKey, ctx,
                                 bufferCache);
                         ctx.leafFrame.setRightPage(rightPageId);
                     }

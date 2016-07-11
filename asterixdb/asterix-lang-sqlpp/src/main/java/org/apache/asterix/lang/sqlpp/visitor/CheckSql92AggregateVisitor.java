@@ -55,6 +55,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
@@ -200,6 +201,9 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
 
     @Override
     public Boolean visit(Projection projection, ILangExpression parentSelectBlock) throws AsterixException {
+        if (projection.star()) {
+            return false;
+        }
         return projection.getExpression().accept(this, parentSelectBlock);
     }
 
@@ -259,6 +263,11 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
                 return true;
             }
         }
+        return false;
+    }
+
+    @Override
+    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
         return false;
     }
 

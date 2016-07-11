@@ -26,23 +26,23 @@ import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
 public class LSMTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory {
 
-	private static final long serialVersionUID = 1L;
-	private ITypeTraits[] typeTraits;
-	private final boolean isDelete;
+    private static final long serialVersionUID = 1L;
+    private ITypeTraits[] typeTraits;
+    private final boolean isDelete;
 
-	public LSMTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean isDelete) {
-		super(typeTraits);
-		this.typeTraits = typeTraits;
-		this.isDelete = isDelete;
-	}
+    public LSMTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean isDelete) {
+        super(typeTraits);
+        this.typeTraits = typeTraits;
+        this.isDelete = isDelete;
+    }
 
-	@Override
-	public ITreeIndexTupleWriter createTupleWriter() {
-	    if (isDelete) {
-	        return new TypeAwareTupleWriter(typeTraits);
-	    } else {
-	        return new RTreeTypeAwareTupleWriter(typeTraits);
-	    }
-	}
+    @Override
+    public ITreeIndexTupleWriter createTupleWriter() {
+        if (isDelete) {
+            return new TypeAwareTupleWriter(typeTraits);
+        } else {
+            return new RTreeTypeAwareTupleWriter(typeTraits);
+        }
+    }
 
 }

@@ -83,7 +83,10 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         List<LogicalVariable> scanVariables = new ArrayList<LogicalVariable>();
         scanVariables.addAll(keys);
-        scanVariables.add(new LogicalVariable(-1));
+        scanVariables.add(payload);
+        if (additionalNonFilteringFields != null) {
+            scanVariables.addAll(additionalNonFilteringFields);
+        }
         IPhysicalPropertiesVector r = dataSource.getPropertiesProvider().computePropertiesVector(scanVariables);
         r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
@@ -95,7 +98,7 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op;
         IMetadataProvider mp = context.getMetadataProvider();
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);

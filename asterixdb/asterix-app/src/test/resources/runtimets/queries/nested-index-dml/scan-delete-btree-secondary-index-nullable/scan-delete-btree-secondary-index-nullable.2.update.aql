@@ -32,9 +32,9 @@ using localfs
 
 insert into dataset Customers
 (
-	for $c in dataset('Customerstmp')
-	return {
-		"nested" : $c
-	}	
+    for $c in dataset('Customerstmp')
+    return {
+        "nested" : $c
+    }
 );
 

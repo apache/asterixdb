@@ -40,10 +40,12 @@ import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.event.service.ILookupService;
+import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -87,8 +89,10 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
         GlobalRecoveryManager.INSTANCE = new GlobalRecoveryManager((HyracksConnection) getNewHyracksClientConnection());
-
-        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), GlobalRecoveryManager.INSTANCE);
+        ILibraryManager libraryManager = new ExternalLibraryManager();
+        ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
+        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), GlobalRecoveryManager.INSTANCE,
+                libraryManager);
 
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);
@@ -107,7 +111,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         setupFeedServer(externalProperties);
         feedServer.start();
-        ExternalLibraryUtils.setUpExternaLibraries(false);
+
         ClusterManager.INSTANCE.registerSubscriber(GlobalRecoveryManager.INSTANCE);
 
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);

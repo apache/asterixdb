@@ -22,7 +22,7 @@
  * Expected Result : Success
  * Date            : March 28 2015
  */
- 
+
 use dataverse test;
 
 load dataset test.employee
@@ -33,10 +33,10 @@ using localfs
 insert into dataset test.employee (
 for $x in dataset test.employee
 return {
-	"id": $x.id + 10000,
-	"fname": $x.fname,
-	"lname": $x.lname,
-	"age": $x.age,
-	"dept": $x.dept
+    "id": $x.id + 10000,
+    "fname": $x.fname,
+    "lname": $x.lname,
+    "age": $x.age,
+    "dept": $x.dept
 }
 );

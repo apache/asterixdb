@@ -20,7 +20,7 @@
  *  Description     : This test makes sure that the plan is still okay when not converted to index search
  *  Expected Result : Success
  *  Date            : 27th Aug 2015
- *	Author			: Steven Jacobs
+ *    Author            : Steven Jacobs
  */
 
 drop dataverse emergencyTest if exists;
@@ -28,7 +28,7 @@ create dataverse emergencyTest;
 use dataverse emergencyTest;
 create type CHPReport as {
         "id":int,
-	"timestamp":datetime,
+    "timestamp":datetime,
         "title":string,
         "message":string
 }

@@ -1,5 +1,5 @@
 { "count": 2, "max": 5 }
 { "count": 2, "a": null, "max": 7 }
 { "count": 2, "a": 1, "max": 3 }
-{ "count": 1, "a": 3.0d, "max": 9 }
+{ "count": 1, "a": 3.0, "max": 9 }
 { "count": 1, "a": "1", "max": 8 }

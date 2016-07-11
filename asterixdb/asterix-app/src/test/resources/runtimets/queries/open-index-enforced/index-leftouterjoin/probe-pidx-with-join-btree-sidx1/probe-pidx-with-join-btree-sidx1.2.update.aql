@@ -32,22 +32,22 @@ using localfs
 
 insert into dataset TweetMessages
 (
-	for $c in dataset('TweetMessagesTmp')
-	where $c.tweetid < int64("125")
-	return $c
+    for $c in dataset('TweetMessagesTmp')
+    where $c.tweetid < int64("125")
+    return $c
 );
 
 insert into dataset TweetMessages
 (
-	for $c in dataset('TweetMessagesTmp')
-	where $c.tweetid >= int64("125")
-	return {
-		"tweetid": $c.tweetid,
-		"user": $c.user,
-		"sender-location": $c.sender-location,
-		"send-time": $c.send-time,
-		"referred-topics": $c.referred-topics,
-		"message-text": $c.message-text,
-		"countA": $c.countA
-	}	
+    for $c in dataset('TweetMessagesTmp')
+    where $c.tweetid >= int64("125")
+    return {
+        "tweetid": $c.tweetid,
+        "user": $c.user,
+        "sender-location": $c.sender-location,
+        "send-time": $c.send-time,
+        "referred-topics": $c.referred-topics,
+        "message-text": $c.message-text,
+        "countA": $c.countA
+    }
 );

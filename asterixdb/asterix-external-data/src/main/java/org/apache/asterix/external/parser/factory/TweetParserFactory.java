@@ -35,6 +35,7 @@ public class TweetParserFactory implements IRecordDataParserFactory<Status> {
 
     @Override
     public void configure(Map<String, String> configuration) {
+        // Nothing to be configured.
     }
 
     @Override

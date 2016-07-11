@@ -1,0 +1,14 @@
+use dataverse experiments;
+
+create feed TweetFeed1 using socket_adapter
+(
+    ("sockets"="radium.ics.uci.edu:10001,promethium.ics.uci.edu:10001,actinium.ics.uci.edu:10001"),
+    ("address-type"="IP"),
+    ("type-name"="TweetMessageType"),
+    ("format"="adm"),
+    ("duration"="1200")
+);
+
+set wait-for-completion-feed "false";
+
+connect feed TweetFeed1 to dataset Tweets;

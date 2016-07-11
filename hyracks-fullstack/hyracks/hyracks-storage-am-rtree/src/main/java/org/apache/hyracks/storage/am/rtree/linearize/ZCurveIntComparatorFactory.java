@@ -31,7 +31,7 @@ public class ZCurveIntComparatorFactory implements ILinearizeComparatorFactory {
     }
 
     public ZCurveIntComparatorFactory(int dim) {
-    	this.dim = dim;
+        this.dim = dim;
     }
 
     @Override

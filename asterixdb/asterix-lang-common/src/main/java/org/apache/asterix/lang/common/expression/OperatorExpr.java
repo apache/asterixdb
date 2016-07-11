@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
@@ -35,9 +36,9 @@ public class OperatorExpr extends AbstractExpression {
 
     public OperatorExpr() {
         super();
-        exprList = new ArrayList<Expression>();
-        exprBroadcastIdx = new ArrayList<Integer>();
-        opList = new ArrayList<OperatorType>();
+        exprList = new ArrayList<>();
+        exprBroadcastIdx = new ArrayList<>();
+        opList = new ArrayList<>();
     }
 
     public OperatorExpr(List<Expression> exprList, List<Integer> exprBroadcastIdx, List<OperatorType> opList,
@@ -83,46 +84,18 @@ public class OperatorExpr extends AbstractExpression {
         exprList.add(operand);
     }
 
-    public final static boolean opIsComparison(OperatorType t) {
-        return t == OperatorType.EQ || t == OperatorType.NEQ || t == OperatorType.GT || t == OperatorType.GE
-                || t == OperatorType.LT || t == OperatorType.LE;
+    public static final boolean opIsComparison(OperatorType t) {
+        boolean cmp = t == OperatorType.EQ || t == OperatorType.NEQ || t == OperatorType.GT;
+        cmp = cmp || t == OperatorType.GE || t == OperatorType.LT || t == OperatorType.LE;
+        return cmp;
     }
 
     public void addOperator(String strOp) {
-        if ("or".equals(strOp)) {
-            opList.add(OperatorType.OR);
-        } else if ("and".equals(strOp)) {
-            opList.add(OperatorType.AND);
-        } else if ("<".equals(strOp)) {
-            opList.add(OperatorType.LT);
-        } else if (">".equals(strOp)) {
-            opList.add(OperatorType.GT);
-        } else if ("<=".equals(strOp)) {
-            opList.add(OperatorType.LE);
-        } else if ("<=".equals(strOp)) {
-            opList.add(OperatorType.LE);
-        } else if (">=".equals(strOp)) {
-            opList.add(OperatorType.GE);
-        } else if ("=".equals(strOp)) {
-            opList.add(OperatorType.EQ);
-        } else if ("!=".equals(strOp)) {
-            opList.add(OperatorType.NEQ);
-        } else if ("+".equals(strOp)) {
-            opList.add(OperatorType.PLUS);
-        } else if ("-".equals(strOp)) {
-            opList.add(OperatorType.MINUS);
-        } else if ("*".equals(strOp)) {
-            opList.add(OperatorType.MUL);
-        } else if ("/".equals(strOp)) {
-            opList.add(OperatorType.DIV);
-        } else if ("%".equals(strOp)) {
-            opList.add(OperatorType.MOD);
-        } else if ("^".equals(strOp)) {
-            opList.add(OperatorType.CARET);
-        } else if ("idiv".equals(strOp)) {
-            opList.add(OperatorType.IDIV);
-        } else if ("~=".equals(strOp)) {
-            opList.add(OperatorType.FUZZY_EQ);
+        Optional<OperatorType> op = OperatorType.fromSymbol(strOp);
+        if (op.isPresent()) {
+            opList.add(op.get());
+        } else {
+            throw new UnsupportedOperationException("Unsupported operator: " + strOp);
         }
     }
 

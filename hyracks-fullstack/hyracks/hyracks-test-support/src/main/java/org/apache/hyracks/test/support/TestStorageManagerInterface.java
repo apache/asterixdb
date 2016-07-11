@@ -19,7 +19,6 @@
 package org.apache.hyracks.test.support;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -44,8 +43,8 @@ public class TestStorageManagerInterface implements IStorageManagerInterface {
         return TestStorageManagerComponentHolder.getLocalResourceRepository(ctx);
     }
 
-	@Override
-	public ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
-		return TestStorageManagerComponentHolder.getResourceIdFactory(ctx);
-	}
+    @Override
+    public ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getResourceIdFactory(ctx);
+    }
 }

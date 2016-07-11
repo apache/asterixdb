@@ -28,8 +28,10 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.FieldBinding;
+import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -49,8 +51,10 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.base.AInt32;
@@ -66,6 +70,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -76,6 +81,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -154,6 +160,20 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     }
 
     @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(IndependentSubquery independentSubquery,
+            Mutable<ILogicalOperator> tupleSource) throws AsterixException {
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(independentSubquery.getExpr(),
+                tupleSource);
+        // Replaces nested tuple source with empty tuple source so that the subquery can be independent
+        // from its input operators.
+        replaceNtsWithEts(eo.second.getValue());
+        LogicalVariable var = context.newVar();
+        AssignOperator assignOp = new AssignOperator(var, new MutableObject<ILogicalExpression>(eo.first));
+        assignOp.getInputs().add(eo.second);
+        return new Pair<>(assignOp, var);
+    }
+
+    @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectSetOperation selectSetOperation,
             Mutable<ILogicalOperator> tupSource) throws AsterixException {
         Mutable<ILogicalOperator> currentOpRef = tupSource;
@@ -191,7 +211,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         if (selectBlock.hasHavingClause()) {
             currentOpRef = new MutableObject<>(selectBlock.getHavingClause().accept(this, currentOpRef).first);
         }
-        return selectBlock.getSelectClause().accept(this, currentOpRef);
+        return processSelectClause(selectBlock, currentOpRef);
     }
 
     @Override
@@ -436,17 +456,73 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectClause selectClause, Mutable<ILogicalOperator> tupSrc)
             throws AsterixException {
+        throw new UnsupportedOperationException(ERR_MSG);
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(SelectElement selectElement, Mutable<ILogicalOperator> arg)
+            throws AsterixException {
+        throw new UnsupportedOperationException(ERR_MSG);
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(SelectRegular selectRegular, Mutable<ILogicalOperator> arg)
+            throws AsterixException {
+        throw new UnsupportedOperationException(ERR_MSG);
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(Projection projection, Mutable<ILogicalOperator> arg)
+            throws AsterixException {
+        throw new UnsupportedOperationException(ERR_MSG);
+    }
+
+    private Pair<ILogicalOperator, LogicalVariable> produceSelectPlan(boolean isSubquery,
+            Mutable<ILogicalOperator> returnOpRef, LogicalVariable resVar) {
+        if (isSubquery) {
+            return aggListifyForSubquery(resVar, returnOpRef, false);
+        } else {
+            ProjectOperator pr = new ProjectOperator(resVar);
+            pr.getInputs().add(returnOpRef);
+            return new Pair<>(pr, resVar);
+        }
+    }
+
+    // Replaces nested tuple source with empty tuple source in nested subplans of
+    // a subplan operator.
+    private void replaceNtsWithEts(ILogicalOperator op) {
+        if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
+            return;
+        }
+        SubplanOperator subplanOp = (SubplanOperator) op;
+        for (ILogicalPlan plan : subplanOp.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+                replaceNtsWithEtsTopDown(rootRef);
+            }
+        }
+    }
+
+    // Recursively replaces nested tuple source with empty tuple source
+    // in the operator tree under opRef.
+    private void replaceNtsWithEtsTopDown(Mutable<ILogicalOperator> opRef) {
+        ILogicalOperator op = opRef.getValue();
+        if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            opRef.setValue(new EmptyTupleSourceOperator());
+        }
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            replaceNtsWithEtsTopDown(childRef);
+        }
+    }
+
+    // Generates the return expression for a select clause.
+    private Pair<ILogicalOperator, LogicalVariable> processSelectClause(SelectBlock selectBlock,
+            Mutable<ILogicalOperator> tupSrc) throws AsterixException {
+        SelectClause selectClause = selectBlock.getSelectClause();
         Expression returnExpr;
         if (selectClause.selectElement()) {
             returnExpr = selectClause.getSelectElement().getExpression();
         } else {
-            List<Projection> projections = selectClause.getSelectRegular().getProjections();
-            List<FieldBinding> fieldBindings = new ArrayList<>();
-            for (Projection projection : projections) {
-                fieldBindings.add(new FieldBinding(new LiteralExpr(new StringLiteral(projection.getName())),
-                        projection.getExpression()));
-            }
-            returnExpr = new RecordConstructor(fieldBindings);
+            returnExpr = generateReturnExpr(selectClause, selectBlock);
         }
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(returnExpr, tupSrc);
         LogicalVariable returnVar;
@@ -470,33 +546,62 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         }
     }
 
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(SelectElement selectElement, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
-        throw new UnsupportedOperationException(ERR_MSG);
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(SelectRegular selectRegular, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
-        throw new UnsupportedOperationException(ERR_MSG);
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(Projection projection, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
-        throw new IllegalStateException();
-    }
-
-    private Pair<ILogicalOperator, LogicalVariable> produceSelectPlan(boolean isSubquery,
-            Mutable<ILogicalOperator> returnOpRef, LogicalVariable resVar) {
-        if (isSubquery) {
-            return aggListifyForSubquery(resVar, returnOpRef, false);
-        } else {
-            ProjectOperator pr = new ProjectOperator(resVar);
-            pr.getInputs().add(returnOpRef);
-            return new Pair<>(pr, resVar);
+    // Generates the return expression for a select clause.
+    private Expression generateReturnExpr(SelectClause selectClause, SelectBlock selectBlock) {
+        SelectRegular selectRegular = selectClause.getSelectRegular();
+        List<FieldBinding> fieldBindings = new ArrayList<>();
+        List<Projection> projections = selectRegular.getProjections();
+        for (Projection projection : projections) {
+            if (projection.star()) {
+                if (selectBlock.hasGroupbyClause()) {
+                    fieldBindings.addAll(getGroupBindings(selectBlock.getGroupbyClause()));
+                } else if (selectBlock.hasFromClause()) {
+                    fieldBindings.addAll(getFromBindings(selectBlock.getFromClause()));
+                }
+            } else {
+                fieldBindings.add(new FieldBinding(new LiteralExpr(new StringLiteral(projection.getName())),
+                        projection.getExpression()));
+            }
         }
+        return new RecordConstructor(fieldBindings);
+    }
+
+    // Generates all field bindings according to the from clause.
+    private List<FieldBinding> getFromBindings(FromClause fromClause) {
+        List<FieldBinding> fieldBindings = new ArrayList<>();
+        for (FromTerm fromTerm : fromClause.getFromTerms()) {
+            fieldBindings.add(getFieldBinding(fromTerm.getLeftVariable()));
+            if (fromTerm.hasPositionalVariable()) {
+                fieldBindings.add(getFieldBinding(fromTerm.getPositionalVariable()));
+            }
+            if (!fromTerm.hasCorrelateClauses()) {
+                continue;
+            }
+            for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
+                fieldBindings.add(getFieldBinding(correlateClause.getRightVariable()));
+                if (correlateClause.hasPositionalVariable()) {
+                    fieldBindings.add(getFieldBinding(correlateClause.getPositionalVariable()));
+                }
+            }
+        }
+        return fieldBindings;
+    }
+
+    // Generates all field bindings according to the from clause.
+    private List<FieldBinding> getGroupBindings(GroupbyClause groupbyClause) {
+        List<FieldBinding> fieldBindings = new ArrayList<>();
+        for (GbyVariableExpressionPair pair : groupbyClause.getGbyPairList()) {
+            fieldBindings.add(getFieldBinding(pair.getVar()));
+        }
+        fieldBindings.add(getFieldBinding(groupbyClause.getGroupVar()));
+        return fieldBindings;
+    }
+
+    // Generates a field binding for a variable.
+    private FieldBinding getFieldBinding(VariableExpr var) {
+        LiteralExpr fieldName = new LiteralExpr(
+                new StringLiteral(SqlppVariableUtil.variableNameToDisplayedFieldName(var.getVar().getValue())));
+        return new FieldBinding(fieldName, var);
     }
 
 }

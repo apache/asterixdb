@@ -59,7 +59,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 public class DatasetUtils {
     public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset, ARecordType itemType,
-            IBinaryComparatorFactoryProvider comparatorFactoryProvider) throws AlgebricksException {
+            ARecordType metaItemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
+            throws AlgebricksException {
         List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[partitioningKeys.size()];
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
@@ -72,8 +73,11 @@ public class DatasetUtils {
                 }
             }
         } else {
+            InternalDatasetDetails dsd = (InternalDatasetDetails) dataset.getDatasetDetails();
             for (int i = 0; i < partitioningKeys.size(); i++) {
-                IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
+                IAType keyType = (dataset.hasMetaPart() && dsd.getKeySourceIndicator().get(i).intValue() == 1)
+                        ? metaItemType.getSubFieldType(partitioningKeys.get(i))
+                        : itemType.getSubFieldType(partitioningKeys.get(i));
                 bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
             }
         }

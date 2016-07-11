@@ -40,7 +40,7 @@ create  table test(TestType) primary key key1;
 select element {'gid':aid,'avg':test.coll_avg((
         select element j.`value`
         from  i as j
-        where test.not(test.`is-null`(j.`value`))
+        where j.`value` is not null
     ))}
 from  test as i
 group by i.key1 as aid

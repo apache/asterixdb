@@ -29,21 +29,21 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * concurrent operations).
  */
 public interface ITreeIndexAccessor extends IIndexAccessor {
-	/**
-	 * Creates a cursor appropriate for passing into diskOrderScan().
-	 *
-	 */
-	public ITreeIndexCursor createDiskOrderScanCursor();
+    /**
+     * Creates a cursor appropriate for passing into diskOrderScan().
+     *
+     */
+    public ITreeIndexCursor createDiskOrderScanCursor();
 
-	/**
-	 * Open the given cursor for a disk-order scan, positioning the cursor to
-	 * the first leaf tuple.
-	 *
-	 * @param icursor
-	 *            Cursor to be opened for disk-order scanning.
-	 * @throws HyracksDataException
-	 *             If the BufferCache throws while un/pinning or un/latching.
-	 */
-	public void diskOrderScan(ITreeIndexCursor cursor)
-			throws HyracksDataException;
+    /**
+     * Open the given cursor for a disk-order scan, positioning the cursor to
+     * the first leaf tuple.
+     *
+     * @param icursor
+     *            Cursor to be opened for disk-order scanning.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     */
+    public void diskOrderScan(ITreeIndexCursor cursor)
+            throws HyracksDataException;
 }

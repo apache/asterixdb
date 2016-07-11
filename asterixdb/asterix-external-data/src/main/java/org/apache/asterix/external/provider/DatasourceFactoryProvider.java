@@ -21,6 +21,7 @@ package org.apache.asterix.external.provider;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -41,24 +42,25 @@ public class DatasourceFactoryProvider {
     private DatasourceFactoryProvider() {
     }
 
-    public static IExternalDataSourceFactory getExternalDataSourceFactory(Map<String, String> configuration)
-            throws AsterixException {
+    public static IExternalDataSourceFactory getExternalDataSourceFactory(ILibraryManager libraryManager,
+            Map<String, String> configuration) throws AsterixException {
         if (ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.RECORDS)) {
             String reader = configuration.get(ExternalDataConstants.KEY_READER);
-            return DatasourceFactoryProvider.getRecordReaderFactory(reader, configuration);
+            return DatasourceFactoryProvider.getRecordReaderFactory(libraryManager, reader, configuration);
         } else {
             // get stream source
             String streamSource = configuration.get(ExternalDataConstants.KEY_STREAM_SOURCE);
-            return DatasourceFactoryProvider.getInputStreamFactory(streamSource, configuration);
+            return DatasourceFactoryProvider.getInputStreamFactory(libraryManager, streamSource, configuration);
         }
     }
 
-    public static IInputStreamFactory getInputStreamFactory(String streamSource, Map<String, String> configuration)
-            throws AsterixException {
+    public static IInputStreamFactory getInputStreamFactory(ILibraryManager libraryManager, String streamSource,
+            Map<String, String> configuration) throws AsterixException {
         IInputStreamFactory streamSourceFactory;
         if (ExternalDataUtils.isExternal(streamSource)) {
             String dataverse = ExternalDataUtils.getDataverse(configuration);
-            streamSourceFactory = ExternalDataUtils.createExternalInputStreamFactory(dataverse, streamSource);
+            streamSourceFactory = ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse,
+                    streamSource);
         } else {
             switch (streamSource) {
                 case ExternalDataConstants.STREAM_LOCAL_FILESYSTEM:
@@ -85,10 +87,10 @@ public class DatasourceFactoryProvider {
         return streamSourceFactory;
     }
 
-    public static IRecordReaderFactory<?> getRecordReaderFactory(String reader, Map<String, String> configuration)
-            throws AsterixException {
+    public static IRecordReaderFactory<?> getRecordReaderFactory(ILibraryManager libraryManager, String reader,
+            Map<String, String> configuration) throws AsterixException {
         if (reader.equals(ExternalDataConstants.EXTERNAL)) {
-            return ExternalDataUtils.createExternalRecordReaderFactory(configuration);
+            return ExternalDataUtils.createExternalRecordReaderFactory(libraryManager, configuration);
         }
         switch (reader) {
             case ExternalDataConstants.READER_HDFS:

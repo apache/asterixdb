@@ -50,7 +50,8 @@ public class TestRecordWithPKParserFactory<T> implements IRecordDataParserFactor
         TreeMap<String, String> parserConf = new TreeMap<String, String>();
         format = configuration.get(ExternalDataConstants.KEY_RECORD_FORMAT);
         parserConf.put(ExternalDataConstants.KEY_FORMAT, format);
-        recordParserFactory = (IRecordDataParserFactory<char[]>) ParserFactoryProvider.getDataParserFactory(parserConf);
+        recordParserFactory =
+                (IRecordDataParserFactory<char[]>) ParserFactoryProvider.getDataParserFactory(null, parserConf);
         recordParserFactory.setRecordType(recordType);
         recordParserFactory.configure(configuration);
     }

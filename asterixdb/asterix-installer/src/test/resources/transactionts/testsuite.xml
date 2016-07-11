@@ -28,6 +28,11 @@
         <output-dir compare="Text">external_index</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="query_after_restart">
+      <compilation-unit name="big_object_20M">
+        <output-dir compare="Text">big_object_20M</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="recover_after_abort">
 

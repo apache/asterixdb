@@ -22,23 +22,23 @@ import java.io.IOException;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.parser.RecordWithMetadataParser;
+import org.apache.asterix.external.api.IRecordWithMetadataParser;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public class ChangeFeedWithMetaDataFlowController<T, O> extends FeedWithMetaDataFlowController<T, O> {
+public class ChangeFeedWithMetaDataFlowController<T> extends FeedWithMetaDataFlowController<T> {
 
     public ChangeFeedWithMetaDataFlowController(final IHyracksTaskContext ctx, final FeedTupleForwarder tupleForwarder,
             final FeedLogManager feedLogManager, final int numOfOutputFields,
-            final RecordWithMetadataParser<T, O> dataParser, final IRecordReader<T> recordReader)
-            throws HyracksDataException {
+            final IRecordWithMetadataParser<T> dataParser, final IRecordReader<T> recordReader)
+                    throws HyracksDataException {
         super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
     }
 
     @Override
     protected void addPrimaryKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends T> record) throws IOException {
-        dataParser.appendPK(tb);
+        ((IRecordWithMetadataParser<T>) dataParser).appendLastParsedPrimaryKeyToTuple(tb);
     }
 }

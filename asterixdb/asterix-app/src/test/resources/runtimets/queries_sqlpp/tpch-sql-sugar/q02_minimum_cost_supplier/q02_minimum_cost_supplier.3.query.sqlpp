@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+
+WITH q2_minimum_cost_supplier_tmp1 AS
+(
+ SELECT s_acctbal, s_name, n_name, p_partkey, ps_supplycost, p_mfgr, s_address, s_phone, s_comment
+ FROM Nation JOIN Region ON n_regionkey = r_regionkey and r_name = 'EUROPE'
+ JOIN Supplier ON s_nationkey = n_nationkey
+ JOIN Partsupp ON s_suppkey = ps_suppkey
+ JOIN Part ON p_partkey = ps_partkey AND p_type LIKE '%BRASS'
+),
+q2_minimum_cost_supplier_tmp2 AS
+(
+  SELECT p_partkey, min(ps_supplycost) AS ps_min_supplycost
+  FROM q2_minimum_cost_supplier_tmp1
+  GROUP BY p_partkey
+)
+
+SELECT s_acctbal, s_name, n_name, t1.p_partkey, p_mfgr, s_address, s_phone, s_comment
+FROM
+  q2_minimum_cost_supplier_tmp1 t1 JOIN q2_minimum_cost_supplier_tmp2 t2
+ON
+  t1.p_partkey = t2.p_partkey AND ps_supplycost=ps_min_supplycost
+ORDER BY s_acctbal DESC, n_name, s_name, t1.p_partkey
+LIMIT 100;

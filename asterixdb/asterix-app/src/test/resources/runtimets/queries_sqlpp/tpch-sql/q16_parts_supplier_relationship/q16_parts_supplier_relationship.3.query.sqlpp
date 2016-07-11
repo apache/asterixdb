@@ -27,11 +27,10 @@ declare function tmp() {
             SELECT p.p_brand p_brand, p.p_type p_type, p.p_size p_size, ps.ps_suppkey ps_suppkey
             FROM  Partsupp AS ps,
                   Part AS p
-            WHERE p.p_partkey = ps.ps_partkey AND p.p_brand != 'Brand#45' AND
-              not(tpch.like(p.p_type,'MEDIUM POLISHED%'))
+            WHERE p.p_partkey = ps.ps_partkey AND p.p_brand != 'Brand#45' AND p.p_type not like 'MEDIUM POLISHED%'
            ) AS psp,
            Supplier AS s
-    WHERE psp.ps_suppkey = s.s_suppkey AND not(like(s.s_comment,'%Customer%Complaints%'))
+    WHERE psp.ps_suppkey = s.s_suppkey AND s.s_comment not like '%Customer%Complaints%'
 )
 };
 

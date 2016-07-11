@@ -32,6 +32,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 
 public interface ISqlppVisitor<R, T> extends ILangVisitor<R, T> {
@@ -61,4 +62,6 @@ public interface ISqlppVisitor<R, T> extends ILangVisitor<R, T> {
     R visit(UnnestClause unnestClause, T arg) throws AsterixException;
 
     R visit(HavingClause havingClause, T arg) throws AsterixException;
+
+    R visit(IndependentSubquery independentSubquery, T arg) throws AsterixException;
 }

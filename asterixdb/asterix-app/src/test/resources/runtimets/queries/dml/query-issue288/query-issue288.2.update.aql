@@ -18,14 +18,14 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue288
- 				: https://code.google.com/p/asterixdb/issues/detail?id=288
+                 : https://code.google.com/p/asterixdb/issues/detail?id=288
  * Expected Res : Success
  * Date         : 3th April 2013
  */
 
 use dataverse test;
 
-load dataset LineID 
+load dataset LineID
 using localfs
 (("path"="asterix_nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
@@ -35,9 +35,9 @@ let $x:=1
 let $y:=2
 let $z:=3
 return {
-	"l_orderkey": $x,
-	"l_linenumber": $y,
-	"l_suppkey": $z
+    "l_orderkey": $x,
+    "l_linenumber": $y,
+    "l_suppkey": $z
 }
 );
 

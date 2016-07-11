@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.context.Scope;
@@ -84,7 +85,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
     }
 
     @Override
-    public Expression visit(SelectBlock selectBlock, Expression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
         // Traverses the select block in the order of "from", "let"s, "where",
         // "group by", "let"s, "having" and "select".
         if (selectBlock.hasFromClause()) {
@@ -103,43 +104,53 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             selectBlock.getGroupbyClause().accept(this, arg);
             Set<VariableExpr> withVarSet = new HashSet<>(selectBlock.getGroupbyClause().getWithVarList());
             withVarSet.remove(selectBlock.getGroupbyClause().getGroupVar());
+
+            Set<VariableExpr> allVisableVars = SqlppVariableUtil
+                    .getLiveUserDefinedVariables(scopeChecker.getCurrentScope());
             if (selectBlock.hasLetClausesAfterGroupby()) {
                 List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
                 for (LetClause letClauseAfterGby : letListAfterGby) {
+                    letClauseAfterGby.accept(this, arg);
                     // Rewrites each let clause after the group-by.
                     SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                            withVarSet, letClauseAfterGby, context);
-                    letClauseAfterGby.accept(this, arg);
+                            withVarSet, allVisableVars, letClauseAfterGby, context);
+                    // Adds let vars to all visiable vars.
+                    allVisableVars.add(letClauseAfterGby.getVarExpr());
                 }
             }
+
             if (selectBlock.hasHavingClause()) {
+                selectBlock.getHavingClause().accept(this, arg);
                 // Rewrites the having clause.
                 SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                        withVarSet, selectBlock.getHavingClause(), context);
-                selectBlock.getHavingClause().accept(this, arg);
+                        withVarSet, allVisableVars, selectBlock.getHavingClause(), context);
             }
-            // Rewrites the select clause.
-            SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                    withVarSet, selectBlock.getSelectClause(), context);
 
             SelectExpression parentSelectExpression = (SelectExpression) arg;
             if (parentSelectExpression.hasOrderby()) {
                 // Rewrites the order-by clause.
                 SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                        withVarSet, parentSelectExpression.getOrderbyClause(), context);
+                        withVarSet, allVisableVars, parentSelectExpression.getOrderbyClause(), context);
             }
             if (parentSelectExpression.hasLimit()) {
                 // Rewrites the limit clause.
                 SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                        withVarSet, parentSelectExpression.getLimitClause(), context);
+                        withVarSet, allVisableVars, parentSelectExpression.getLimitClause(), context);
             }
+
+            // Visits the select clause.
+            selectBlock.getSelectClause().accept(this, arg);
+            // Rewrites the select clause.
+            SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
+                    withVarSet, allVisableVars, selectBlock.getSelectClause(), context);
+        } else {
+            selectBlock.getSelectClause().accept(this, arg);
         }
-        selectBlock.getSelectClause().accept(this, arg);
         return null;
     }
 
     @Override
-    public Expression visit(GroupbyClause gc, Expression arg) throws AsterixException {
+    public Expression visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
         Scope newScope = scopeChecker.extendCurrentScopeNoPush(true);
         // Puts all group-by variables into the symbol set of the new scope.
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
@@ -150,7 +161,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             }
         }
         // Puts all live variables into withVarList.
-        List<VariableExpr> withVarList = new ArrayList<VariableExpr>();
+        List<VariableExpr> withVarList = new ArrayList<>();
         Iterator<Identifier> varIterator = scopeChecker.getCurrentScope().liveSymbols();
         while (varIterator.hasNext()) {
             Identifier ident = varIterator.next();

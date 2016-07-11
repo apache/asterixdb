@@ -30,9 +30,9 @@ use dataverse test;
 for $l in dataset('employeeOpen')
 where $l.fname="Julio" and $l.lname="Isa"
 return {
-	"id": $l.id,
-	"fname": $l.fname,
-	"lname": $l.lname,
-	"age": $l.age,
-	"dept": $l.dept
+    "id": $l.id,
+    "fname": $l.fname,
+    "lname": $l.lname,
+    "age": $l.age,
+    "dept": $l.dept
 }

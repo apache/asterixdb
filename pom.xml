@@ -20,9 +20,16 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache</groupId>
   <artifactId>apache-asterixdb-fullstack</artifactId>
-  <version>0.8.9</version>
+  <version>0.8.9-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-asterix</name>
+
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>16</version>
+    <relativePath/>
+  </parent>
 
   <licenses>
     <license>
@@ -37,4 +44,5 @@
     <module>hyracks-fullstack</module>
     <module>asterixdb</module>
   </modules>
+
 </project>
