@@ -6118,6 +6118,11 @@
   </test-group>
   <test-group name="user-defined-functions">
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="single-line-definition">
+        <output-dir compare="Text">single-line-definition</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue218-2">
         <output-dir compare="Text">query-issue218-2</output-dir>
       </compilation-unit>

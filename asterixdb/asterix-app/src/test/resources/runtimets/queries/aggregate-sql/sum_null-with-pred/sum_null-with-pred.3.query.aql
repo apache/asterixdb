@@ -27,5 +27,5 @@ use dataverse test;
 set import-private-functions 'true';
 
 sql-sum(for $l in dataset('tdst')
-where not(is-null($l.sal))
+where "not"(is-null($l.sal))
 return $l.sal)
