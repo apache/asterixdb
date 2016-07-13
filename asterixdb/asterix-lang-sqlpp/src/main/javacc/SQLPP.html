@@ -76,7 +76,6 @@
 | &lt;LIKE: "like"&gt;
 | &lt;LIMIT: "limit"&gt;
 | &lt;LOAD: "load"&gt;
-| &lt;NEST: "nest"&gt;
 | &lt;NODEGROUP: "nodegroup"&gt;
 | &lt;NGRAM: "ngram"&gt;
 | &lt;NOT: "not"&gt;
@@ -845,7 +844,7 @@
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod101">FromTerm</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? ( ( <A HREF="#prod102">JoinType</A> )? ( <A HREF="#prod103">JoinClause</A> | <A HREF="#prod104">NestClause</A> | <A HREF="#prod105">UnnestClause</A> ) )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? ( ( <A HREF="#prod102">JoinType</A> )? ( <A HREF="#prod103">JoinClause</A> | <A HREF="#prod104">UnnestClause</A> ) )*</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod103">JoinClause</A></TD>
@@ -853,12 +852,7 @@
 <TD ALIGN=LEFT VALIGN=BASELINE>&lt;JOIN&gt; <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? &lt;ON&gt; <A HREF="#prod44">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod104">NestClause</A></TD>
-<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;NEST&gt; <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> )? ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )? &lt;ON&gt; <A HREF="#prod44">Expression</A></TD>
-</TR>
-<TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod105">UnnestClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod104">UnnestClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
 <TD ALIGN=LEFT VALIGN=BASELINE>( &lt;UNNEST&gt; | &lt;CORRELATE&gt; | &lt;FLATTEN&gt; ) <A HREF="#prod44">Expression</A> ( ( &lt;AS&gt; )? <A HREF="#prod50">Variable</A> ) ( &lt;AT&gt; <A HREF="#prod50">Variable</A> )?</TD>
 </TR>
@@ -870,7 +864,7 @@
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod88">LetClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( ( &lt;LET&gt; | &lt;LETTING&gt; ) <A HREF="#prod106">LetElement</A> ( &lt;COMMA&gt; <A HREF="#prod106">LetElement</A> )* | &lt;WITH&gt; <A HREF="#prod107">WithElement</A> ( &lt;COMMA&gt; <A HREF="#prod107">WithElement</A> )* )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( ( &lt;LET&gt; | &lt;LETTING&gt; ) <A HREF="#prod105">LetElement</A> ( &lt;COMMA&gt; <A HREF="#prod105">LetElement</A> )* | &lt;WITH&gt; <A HREF="#prod106">WithElement</A> ( &lt;COMMA&gt; <A HREF="#prod106">WithElement</A> )* )</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod95">WhereClause</A></TD>
@@ -903,12 +897,12 @@
 <TD ALIGN=LEFT VALIGN=BASELINE>( ( &lt;SOME&gt; ) | ( &lt;EVERY&gt; ) ) <A HREF="#prod50">Variable</A> &lt;IN&gt; <A HREF="#prod44">Expression</A> ( &lt;COMMA&gt; <A HREF="#prod50">Variable</A> &lt;IN&gt; <A HREF="#prod44">Expression</A> )* &lt;SATISFIES&gt; <A HREF="#prod44">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod106">LetElement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod105">LetElement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
 <TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod50">Variable</A> &lt;EQ&gt; <A HREF="#prod44">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod107">WithElement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod106">WithElement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
 <TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod50">Variable</A> &lt;AS&gt; <A HREF="#prod44">Expression</A></TD>
 </TR>

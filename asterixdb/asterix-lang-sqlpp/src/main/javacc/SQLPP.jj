@@ -130,7 +130,6 @@ import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
 import org.apache.asterix.lang.sqlpp.clause.HavingClause;
 import org.apache.asterix.lang.sqlpp.clause.JoinClause;
-import org.apache.asterix.lang.sqlpp.clause.NestClause;
 import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
@@ -2415,10 +2414,7 @@ FromTerm FromTerm() throws ParseException :
        AbstractBinaryCorrelateClause correlateClause = null;
      }
      (correlateClause = JoinClause(joinType)
-      |
-      correlateClause = NestClause(joinType)
-      |
-      correlateClause = UnnestClause(joinType)
+      | correlateClause = UnnestClause(joinType)
      )
      {
         correlateClauses.add(correlateClause);
@@ -2446,23 +2442,6 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
         rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
     }
     return new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
-  }
-}
-
-NestClause NestClause(JoinType joinType) throws ParseException :
-{
-    Expression rightExpr = null;
-    VariableExpr rightVar = null;
-    VariableExpr posVar = null;
-    Expression conditionExpr = null;
-}
-{
-  <NEST> rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?  <ON> conditionExpr = Expression()
-  {
-    if(rightVar==null){
-        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
-    }
-    return new NestClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
   }
 }
 
@@ -2845,7 +2824,6 @@ TOKEN [IGNORE_CASE]:
   | <LIKE : "like">
   | <LIMIT : "limit">
   | <LOAD : "load">
-  | <NEST : "nest">
   | <NODEGROUP : "nodegroup">
   | <NGRAM : "ngram">
   | <NOT : "not">
