@@ -49,6 +49,7 @@ public class LongArrayList {
         size++;
     }
 
+
     public void add(long i) {
         if (size == data.length) {
             long[] newData = new long[data.length + growth];
