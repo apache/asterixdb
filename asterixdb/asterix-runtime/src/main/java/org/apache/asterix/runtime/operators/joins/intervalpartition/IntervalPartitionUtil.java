@@ -33,24 +33,17 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class IntervalPartitionUtil {
     public static final double C_CPU = 0.5;
-    public static final double C_IO = 100;
+    public static final double C_IO = 100000;
+    public static final int ITERATION_LIMIT = 20;
 
     private IntervalPartitionUtil() {
     }
 
     public static void main(String[] args) {
-
-//
-//        PhysicalOptimizationConfig poc = new PhysicalOptimizationConfig();
-//
-//        long[] countList = { poc.getMaxFramesForJoinLeftInput() };
-//        long[] maxDurationList = { poc.getMaxIntervalDuration() };
-//        int[] tuplesList = { poc.getMaxRecordsPerFrame() };
-
-        long[] countList = { 2441, 9766, 39063, 156250, 625000, 2500000, 10000000 };
-        long[] maxDurationList = { 1, 3, 30, 300, 3000, 30000, 300000 };
-        int[] tuplesList = { 5, 50, 300, 900 };
-
+        PhysicalOptimizationConfig poc = new PhysicalOptimizationConfig();
+        long[] countList = { poc.getMaxFramesForJoinLeftInput(), 2441, 9766, 39063, 156250, 625000, 2500000, 10000000 };
+        long[] maxDurationList = { poc.getMaxIntervalDuration(), 1, 3, 30, 300, 3000, 30000, 300000 };
+        int[] tuplesList = { poc.getMaxRecordsPerFrame(), 5, 50, 300, 900 };
 
         int k;
         for (long count : countList) {
@@ -62,7 +55,6 @@ public class IntervalPartitionUtil {
                 }
             }
         }
-
     }
 
     public static int determineK(long countR, long maxDurationR, long countS, long maxDurationS, int avgTuplePerFrame) {
@@ -76,12 +68,19 @@ public class IntervalPartitionUtil {
         long prn = determinePn(kn, countR, deltaR);
         double tn = determineTn(kn, determinePn(kn, countS, deltaS));
 
-        while ((kn != knMinusOne) && (kn != knMinusTwo)) {
+        int count = 0;
+        while ((kn != knMinusOne) && (kn != knMinusTwo) && count < ITERATION_LIMIT) {
             knMinusTwo = knMinusOne;
             knMinusOne = kn;
             kn = determineKn(countR, countS, avgTuplePerFrame, prn, tn);
             prn = determinePn(kn, countR, deltaR);
             tn = determineTn(kn, determinePn(kn, countS, deltaS));
+            count++;
+        }
+        if (count == ITERATION_LIMIT) {
+            kn = (kn + knMinusOne + knMinusTwo) / 3;
+        } else if (kn == knMinusTwo) {
+            kn = (kn + knMinusTwo) / 2;
         }
         if (kn > Integer.MAX_VALUE) {
             return Integer.MAX_VALUE;
@@ -97,7 +96,7 @@ public class IntervalPartitionUtil {
     }
 
     public static long determinePn(long kn, long count, double delta) {
-        long knDelta = (long) Math.ceil(kn * delta);
+        double knDelta = Math.ceil(kn * delta);
         return Math.min((long) ((kn * knDelta) + kn - ((knDelta * knDelta) / 2.0) - (knDelta / 2.0)), count);
     }
 
