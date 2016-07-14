@@ -23,7 +23,7 @@ declare function tmp(){
     from $ps in dataset('Partsupp')
     from $p in dataset('Part')
     where $p.p_partkey = $ps.ps_partkey and $p.p_brand != 'Brand#45'
-      and not(like($p.p_type, 'MEDIUM POLISHED%'))
+      and "not"(like($p.p_type, 'MEDIUM POLISHED%'))
     select {
       "p_brand": $p.p_brand,
       "p_type": $p.p_type,
@@ -32,7 +32,7 @@ declare function tmp(){
     }
   )
   from $s in dataset('Supplier')
-  where $psp.ps_suppkey = $s.s_suppkey and not(like($s.s_comment, '%Customer%Complaints%'))
+  where $psp.ps_suppkey = $s.s_suppkey and "not"(like($s.s_comment, '%Customer%Complaints%'))
   select {
    "p_brand": $psp.p_brand,
    "p_type": $psp.p_type,

@@ -22,6 +22,6 @@
 use dataverse test;
 
 for $e in dataset log
-where not(is-null($e.RemoteHost))
+where "not"(is-null($e.RemoteHost))
 limit 1
 return substring-after($e.RemoteHost, "@");

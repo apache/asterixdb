@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class RecordConstructor implements Expression {
     private List<FieldBinding> fbList;
@@ -52,5 +53,22 @@ public class RecordConstructor implements Expression {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCode(fbList);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof RecordConstructor)) {
+            return false;
+        }
+        RecordConstructor target = (RecordConstructor) object;
+        return ObjectUtils.equals(fbList, target.fbList);
     }
 }

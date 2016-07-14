@@ -250,9 +250,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
         // visit order by
         if (selectExpression.hasOrderby()) {
-            for (Expression orderExpr : selectExpression.getOrderbyClause().getOrderbyList()) {
-                orderExpr.accept(this, selectExpression);
-            }
+            selectExpression.getOrderbyClause().accept(this, selectExpression);
         }
 
         // visit limit

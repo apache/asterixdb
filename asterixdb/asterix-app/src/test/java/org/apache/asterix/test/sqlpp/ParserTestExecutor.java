@@ -45,6 +45,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.test.aql.TestExecutor;
@@ -52,6 +53,7 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
+import org.junit.Assert;
 
 import junit.extensions.PA;
 
@@ -80,8 +82,8 @@ public class ParserTestExecutor extends TestExecutor {
 
                     // Runs the test query.
                     File expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-                    File actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile,
-                            new File(actualPath));
+                    File actualResultFile =
+                            testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                     testSQLPPParser(testFile, actualResultFile, expectedResultFile);
 
                     LOGGER.info(
@@ -132,6 +134,11 @@ public class ParserTestExecutor extends TestExecutor {
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
                     rewrite(rewriter, functions, query, aqlMetadataProvider,
                             new LangRewritingContext(query.getVarCounter()));
+
+                    // Tests deep copy and deep equality.
+                    Query copiedQuery = (Query) SqlppRewriteUtil.deepCopy(query);
+                    Assert.assertEquals(query.hashCode(), copiedQuery.hashCode());
+                    Assert.assertEquals(query, copiedQuery);
                 }
                 SqlppAstPrintUtil.print(st, writer);
             }

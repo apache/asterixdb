@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.struct;
 
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class SetOperationRight {
 
@@ -44,4 +45,30 @@ public class SetOperationRight {
         return setOperationRightInput;
     }
 
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(opType, setOperationRightInput, setSemantics);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SetOperationRight)) {
+            return false;
+        }
+        SetOperationRight target = (SetOperationRight) object;
+        return ObjectUtils.equals(opType, target.opType)
+                && ObjectUtils.equals(setOperationRightInput, target.setOperationRightInput)
+                && setSemantics == target.setSemantics;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(opType + " " + (setSemantics ? "" : " all "));
+        sb.append(setOperationRightInput);
+        return sb.toString();
+    }
 }

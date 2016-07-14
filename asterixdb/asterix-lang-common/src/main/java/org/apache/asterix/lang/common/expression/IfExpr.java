@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.expression;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class IfExpr implements Expression {
     private Expression condExpr;
@@ -28,6 +29,7 @@ public class IfExpr implements Expression {
     private Expression elseExpr;
 
     public IfExpr() {
+        // default constructor
     }
 
     public IfExpr(Expression condExpr, Expression thenExpr, Expression elseExpr) {
@@ -68,5 +70,28 @@ public class IfExpr implements Expression {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(condExpr, elseExpr, thenExpr);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof IfExpr)) {
+            return false;
+        }
+        IfExpr target = (IfExpr) object;
+        return ObjectUtils.equals(condExpr, target.condExpr) && ObjectUtils.equals(elseExpr, target.elseExpr)
+                && ObjectUtils.equals(thenExpr, target.thenExpr);
+    }
+
+    @Override
+    public String toString() {
+        return "if(" + condExpr + ") then " + thenExpr + " else " + elseExpr;
     }
 }

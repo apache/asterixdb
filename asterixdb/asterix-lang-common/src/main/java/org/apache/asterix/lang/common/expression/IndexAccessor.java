@@ -21,26 +21,26 @@ package org.apache.asterix.lang.common.expression;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class IndexAccessor extends AbstractAccessor {
-    private boolean any;
+    private boolean isAny;
     private Expression indexExpr;
-
-    public final static int ANY = -1;
 
     public IndexAccessor(Expression expr, Expression indexExpr) {
         super(expr);
-        if (indexExpr == null)
-            this.any = true;
+        if (indexExpr == null) {
+            this.isAny = true;
+        }
         this.indexExpr = indexExpr;
     }
 
     public boolean isAny() {
-        return any;
+        return isAny;
     }
 
     public void setAny(boolean any) {
-        this.any = any;
+        this.isAny = any;
     }
 
     public Expression getIndexExpr() {
@@ -59,5 +59,27 @@ public class IndexAccessor extends AbstractAccessor {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + ObjectUtils.hashCodeMulti(indexExpr, isAny);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof IndexAccessor)) {
+            return false;
+        }
+        IndexAccessor target = (IndexAccessor) object;
+        return super.equals(target) && isAny == target.isAny && ObjectUtils.equals(indexExpr, target.indexExpr);
+    }
+
+    @Override
+    public String toString() {
+        return expr + "[" + (isAny ? "?" : indexExpr) + "]";
     }
 }

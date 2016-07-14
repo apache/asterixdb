@@ -27,6 +27,7 @@ import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class OperatorExpr extends AbstractExpression {
     private List<Expression> exprList;
@@ -116,5 +117,23 @@ public class OperatorExpr extends AbstractExpression {
             }
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(currentop, exprBroadcastIdx, exprList, opList);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof OperatorExpr)) {
+            return false;
+        }
+        OperatorExpr target = (OperatorExpr) object;
+        return currentop == target.isCurrentop() && ObjectUtils.equals(exprBroadcastIdx, target.exprBroadcastIdx)
+                && ObjectUtils.equals(exprList, target.exprList) && ObjectUtils.equals(opList, target.opList);
     }
 }

@@ -25,26 +25,24 @@ import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
-public class RecordTypeDefinition extends TypeExpression {
+public class RecordTypeDefinition implements TypeExpression {
 
     public enum RecordKind {
         OPEN,
         CLOSED
     }
 
-    private ArrayList<String> fieldNames;
-    private ArrayList<TypeExpression> fieldTypes;
-    private ArrayList<IRecordFieldDataGen> fieldDataGen;
-    private ArrayList<Boolean> optionalFields;
+    private final List<String> fieldNames = new ArrayList<>();
+    private final List<TypeExpression> fieldTypes = new ArrayList<>();
+    private final List<IRecordFieldDataGen> fieldDataGen = new ArrayList<>();
+    private final List<Boolean> optionalFields = new ArrayList<>();
     private RecordKind recordKind;
     private UndeclaredFieldsDataGen undeclaredFieldsDataGen;
 
     public RecordTypeDefinition() {
-        fieldNames = new ArrayList<>();
-        fieldTypes = new ArrayList<>();
-        optionalFields = new ArrayList<>();
-        fieldDataGen = new ArrayList<>();
+        // Default constructor.
     }
 
     @Override
@@ -100,6 +98,28 @@ public class RecordTypeDefinition extends TypeExpression {
 
     public UndeclaredFieldsDataGen getUndeclaredFieldsDataGen() {
         return undeclaredFieldsDataGen;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(fieldDataGen, fieldNames, fieldTypes, optionalFields, recordKind,
+                undeclaredFieldsDataGen);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof RecordTypeDefinition)) {
+            return false;
+        }
+        RecordTypeDefinition target = (RecordTypeDefinition) object;
+        boolean equals = fieldDataGen.equals(target.getFieldDataGen()) && fieldNames.equals(target.getFieldNames())
+                && fieldTypes.equals(target.getFieldNames()) && optionalFields.equals(target.getOptionableFields());
+        equals = equals && ObjectUtils.equals(recordKind, target.getRecordKind())
+                && ObjectUtils.equals(undeclaredFieldsDataGen, target.getUndeclaredFieldsDataGen());
+        return equals;
     }
 
 }

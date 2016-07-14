@@ -41,5 +41,5 @@ for $i in dataset("test")
 group by $aid := $i.key1 with $i
 return {
   "gid": $aid,
-  "avg": avg(for $j in $i where not(is-null($j.value)) return $j.value)
+  "avg": avg(for $j in $i where "not"(is-null($j.value)) return $j.value)
 }

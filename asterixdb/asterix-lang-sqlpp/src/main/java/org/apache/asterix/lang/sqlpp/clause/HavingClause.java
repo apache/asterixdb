@@ -50,4 +50,21 @@ public class HavingClause implements Clause {
         this.filterExpression = filterExpression;
     }
 
+    @Override
+    public int hashCode() {
+        return filterExpression.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof HavingClause)) {
+            return false;
+        }
+        HavingClause target = (HavingClause) object;
+        return filterExpression.equals(target.getFilterExpression());
+    }
+
 }

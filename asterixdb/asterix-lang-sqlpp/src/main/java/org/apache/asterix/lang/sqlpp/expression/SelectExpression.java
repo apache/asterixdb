@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.lang.sqlpp.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -28,10 +29,11 @@ import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectExpression implements Expression {
 
-    private List<LetClause> letList;
+    private List<LetClause> letList = new ArrayList<>();
     private SelectSetOperation selectSetOperation;
     private OrderbyClause orderbyClause;
     private LimitClause limitClause;
@@ -39,7 +41,9 @@ public class SelectExpression implements Expression {
 
     public SelectExpression(List<LetClause> letList, SelectSetOperation selectSetOperation, OrderbyClause orderbyClause,
             LimitClause limitClause, boolean subquery) {
-        this.letList = letList;
+        if (letList != null) {
+            this.letList.addAll(letList);
+        }
         this.selectSetOperation = selectSetOperation;
         this.orderbyClause = orderbyClause;
         this.limitClause = limitClause;
@@ -92,4 +96,42 @@ public class SelectExpression implements Expression {
         subquery = setSubquery;
     }
 
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(letList, limitClause, orderbyClause, selectSetOperation, subquery);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SelectExpression)) {
+            return false;
+        }
+        SelectExpression target = (SelectExpression) object;
+        boolean equals =
+                ObjectUtils.equals(letList, target.letList) && ObjectUtils.equals(limitClause, target.limitClause)
+                        && ObjectUtils.equals(orderbyClause, target.orderbyClause)
+                        && ObjectUtils.equals(selectSetOperation, target.selectSetOperation);
+        return equals && subquery == target.subquery;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(subquery ? "(" : "");
+        if (this.hasLetClauses()) {
+            sb.append(letList.toString());
+        }
+        sb.append(selectSetOperation);
+        if (hasOrderby()) {
+            sb.append(orderbyClause);
+        }
+        if (hasLimit()) {
+            sb.append(limitClause);
+        }
+        sb.append(subquery ? ")" : "");
+        return sb.toString();
+    }
 }

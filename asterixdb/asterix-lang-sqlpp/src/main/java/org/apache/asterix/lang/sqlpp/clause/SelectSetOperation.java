@@ -28,15 +28,18 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectSetOperation implements Clause {
 
     private SetOperationInput leftInput;
-    private List<SetOperationRight> rightInputs;
+    private List<SetOperationRight> rightInputs = new ArrayList<>();
 
     public SelectSetOperation(SetOperationInput leftInput, List<SetOperationRight> rightInputs) {
         this.leftInput = leftInput;
-        this.rightInputs = rightInputs == null ? new ArrayList<SetOperationRight>() : rightInputs;
+        if (rightInputs != null) {
+            this.rightInputs.addAll(rightInputs);
+        }
     }
 
     @Override
@@ -58,7 +61,34 @@ public class SelectSetOperation implements Clause {
     }
 
     public boolean hasRightInputs() {
-        return rightInputs != null && rightInputs.size() > 0;
+        return rightInputs != null && !rightInputs.isEmpty();
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(leftInput, rightInputs);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SelectSetOperation)) {
+            return false;
+        }
+        SelectSetOperation target = (SelectSetOperation) object;
+        return ObjectUtils.equals(leftInput, target.leftInput) && ObjectUtils.equals(rightInputs, target.rightInputs);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(leftInput);
+        for (SetOperationRight right : rightInputs) {
+            sb.append(" " + right);
+        }
+        return sb.toString();
     }
 
 }

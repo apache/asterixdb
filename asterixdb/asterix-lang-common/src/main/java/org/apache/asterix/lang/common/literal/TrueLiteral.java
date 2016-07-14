@@ -22,11 +22,10 @@ import org.apache.asterix.lang.common.base.Literal;
 
 public class TrueLiteral extends Literal {
     private static final long serialVersionUID = -8513245514578847512L;
+    public static final TrueLiteral INSTANCE = new TrueLiteral();
 
     private TrueLiteral() {
     }
-
-    public final static TrueLiteral INSTANCE = new TrueLiteral();
 
     @Override
     public Type getLiteralType() {

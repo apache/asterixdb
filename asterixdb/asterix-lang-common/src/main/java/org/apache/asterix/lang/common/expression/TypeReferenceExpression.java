@@ -21,8 +21,9 @@ package org.apache.asterix.lang.common.expression;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang.ObjectUtils;
 
-public class TypeReferenceExpression extends TypeExpression {
+public class TypeReferenceExpression implements TypeExpression {
 
     private final Identifier ident;
 
@@ -42,5 +43,22 @@ public class TypeReferenceExpression extends TypeExpression {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCode(ident);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof TypeReferenceExpression)) {
+            return false;
+        }
+        TypeReferenceExpression target = (TypeReferenceExpression) object;
+        return ObjectUtils.equals(ident, target.ident);
     }
 }

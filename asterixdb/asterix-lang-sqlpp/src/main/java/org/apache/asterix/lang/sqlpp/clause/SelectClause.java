@@ -23,6 +23,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectClause implements Clause {
 
@@ -69,6 +70,24 @@ public class SelectClause implements Clause {
     @Override
     public String toString() {
         return "select " + (distinct ? "distinct " : "")
-                + (selectElement() ? "element " + String.valueOf(selectElement) : String.valueOf(selectRegular));
+                + (selectElement() ? "element " + selectElement : String.valueOf(selectRegular));
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(distinct, selectElement, selectRegular);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SelectClause)) {
+            return false;
+        }
+        SelectClause target = (SelectClause) object;
+        return distinct == target.distinct && ObjectUtils.equals(selectElement, target.selectElement)
+                && ObjectUtils.equals(selectRegular, target.selectRegular);
     }
 }

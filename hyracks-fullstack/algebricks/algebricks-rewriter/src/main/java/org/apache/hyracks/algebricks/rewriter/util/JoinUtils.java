@@ -80,11 +80,11 @@ public class JoinUtils {
                 }
             }
         } else {
-            setNLJoinOp(op, context);
+            setNestedLoopJoinOp(op, context);
         }
     }
 
-    private static void setNLJoinOp(AbstractBinaryJoinOperator op, IOptimizationContext context) {
+    private static void setNestedLoopJoinOp(AbstractBinaryJoinOperator op, IOptimizationContext context) {
         op.setPhysicalOperator(new NestedLoopJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin()));
     }

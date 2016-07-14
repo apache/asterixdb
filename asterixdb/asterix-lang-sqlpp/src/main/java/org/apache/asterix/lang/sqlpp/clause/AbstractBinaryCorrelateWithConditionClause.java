@@ -41,4 +41,21 @@ public abstract class AbstractBinaryCorrelateWithConditionClause extends Abstrac
         this.conditionExpr = conditionExpr;
     }
 
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + conditionExpr.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof AbstractBinaryCorrelateWithConditionClause)) {
+            return false;
+        }
+        AbstractBinaryCorrelateWithConditionClause target = (AbstractBinaryCorrelateWithConditionClause) object;
+        return super.equals(target) && conditionExpr.equals(target.getConditionExpression());
+    }
+
 }

@@ -22,6 +22,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class InsertStatement implements Statement {
 
@@ -61,6 +62,24 @@ public class InsertStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(datasetName, dataverseName, query);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof InsertStatement)) {
+            return false;
+        }
+        InsertStatement target = (InsertStatement) object;
+        return ObjectUtils.equals(datasetName, target.datasetName)
+                && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query);
     }
 
 }

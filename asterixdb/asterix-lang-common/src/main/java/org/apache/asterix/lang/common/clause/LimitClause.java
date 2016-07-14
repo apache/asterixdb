@@ -22,25 +22,27 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class LimitClause implements Clause {
-    private Expression limitexpr;
+    private Expression limitExpr;
     private Expression offset;
 
     public LimitClause() {
+        // Default constructor.
     }
 
     public LimitClause(Expression limitexpr, Expression offset) {
-        this.limitexpr = limitexpr;
+        this.limitExpr = limitexpr;
         this.offset = offset;
     }
 
     public Expression getLimitExpr() {
-        return limitexpr;
+        return limitExpr;
     }
 
     public void setLimitExpr(Expression limitexpr) {
-        this.limitexpr = limitexpr;
+        this.limitExpr = limitexpr;
     }
 
     public Expression getOffset() {
@@ -63,5 +65,22 @@ public class LimitClause implements Clause {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(limitExpr, offset);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof LimitClause)) {
+            return false;
+        }
+        LimitClause target = (LimitClause) object;
+        return limitExpr.equals(target.getLimitExpr()) && ObjectUtils.equals(offset, target.getOffset());
     }
 }

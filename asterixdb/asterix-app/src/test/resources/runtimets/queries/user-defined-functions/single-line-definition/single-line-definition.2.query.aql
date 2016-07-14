@@ -16,22 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- *
+/*
+ * Description  : Create a function definition in a single line
+ * See: https://issues.apache.org/jira/browse/ASTERIXDB-1269
+ * Expected Res : Success
+ * Date         : Jul 10th 2016
  */
-package org.apache.asterix.lang.common.struct;
 
-public class AdmSplitInfo {
-    public Identifier nodeName;
-    public String fileName;
-
-    public AdmSplitInfo(Identifier nodeName, String fileName) {
-        this.nodeName = nodeName;
-        this.fileName = fileName;
-    }
-
-    @Override
-    public String toString() {
-        return nodeName.value + ":" + fileName;
-    }
-}
+for $x in dataset Metadata.Function
+where $x.DataverseName = "test"
+return $x;

@@ -1,0 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE gby;
+
+SELECT ELEMENT {
+        'Vehicle prices including 4 tires':
+        (
+            FROM Car c JOIN Tire t ON c.tire_size = t.size
+            GROUP BY c.tire_size GROUP AS g
+            SELECT c.tire_size,
+                   AVG(c.price + 4 * t.price) AS avg_total_price,
+                   ( FROM g AS g
+                     SELECT g.c.make AS make,
+                            g.c.model AS model,
+                            g.t.mfr AS mfr,
+                            g.t.brand AS brand,
+                            g.c.price + 4 * g.t.price AS price
+                     ORDER BY g.c.make, g.c.model, g.t.mfr, g.t.brand
+                   ) AS combinations
+        )
+    };

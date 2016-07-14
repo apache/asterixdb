@@ -24,6 +24,7 @@ import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class Projection implements Clause {
 
@@ -80,5 +81,23 @@ public class Projection implements Clause {
     @Override
     public String toString() {
         return star ? "*" : (String.valueOf(expr) + (exprStar ? ".*" : (hasName() ? " as " + getName() : "")));
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(expr, exprStar, name, star);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof Projection)) {
+            return false;
+        }
+        Projection target = (Projection) object;
+        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(exprStar, target.exprStar)
+                && ObjectUtils.equals(name, target.name) && ObjectUtils.equals(star, target.star);
     }
 }

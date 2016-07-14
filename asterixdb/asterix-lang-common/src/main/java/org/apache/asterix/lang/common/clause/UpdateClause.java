@@ -25,6 +25,7 @@ import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class UpdateClause implements Clause {
 
@@ -113,6 +114,27 @@ public class UpdateClause implements Clause {
 
     public boolean hasElse() {
         return elsebranch != null;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(condition, ds, elsebranch, ifbranch, is, target, us, value);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return false;
+        }
+        if (!(object instanceof UpdateClause)) {
+            return false;
+        }
+        UpdateClause other = (UpdateClause) object;
+        boolean equals = ObjectUtils.equals(condition, other.condition) && ObjectUtils.equals(ds, other.ds)
+                && ObjectUtils.equals(elsebranch, other.elsebranch) && ObjectUtils.equals(ifbranch, other.ifbranch);
+        equals = equals && ObjectUtils.equals(is, other.is) && ObjectUtils.equals(target, other.target)
+                && ObjectUtils.equals(us, other.us);
+        return equals && ObjectUtils.equals(value, other.value);
     }
 
 }

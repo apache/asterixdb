@@ -23,12 +23,14 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class ListConstructor implements Expression {
     private List<Expression> exprList;
     private Type type;
 
     public ListConstructor() {
+        // default constructor.
     }
 
     public ListConstructor(Type type, List<Expression> exprList) {
@@ -65,5 +67,22 @@ public class ListConstructor implements Expression {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(exprList, type);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof ListConstructor)) {
+            return false;
+        }
+        ListConstructor target = (ListConstructor) object;
+        return ObjectUtils.equals(exprList, target.exprList) && ObjectUtils.equals(type, target.type);
     }
 }

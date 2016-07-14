@@ -68,7 +68,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(FromClause fromClause,
             VariableSubstitutionEnvironment env) throws AsterixException {
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
-        List<FromTerm> newFromTerms = new ArrayList<FromTerm>();
+        List<FromTerm> newFromTerms = new ArrayList<>();
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             Pair<ILangExpression, VariableSubstitutionEnvironment> p = fromTerm.accept(this, currentEnv);
             newFromTerms.add((FromTerm) p.first);
@@ -76,7 +76,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             // therefore we propagate the substitution environment.
             currentEnv = p.second;
         }
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(new FromClause(newFromTerms), currentEnv);
+        return new Pair<>(new FromClause(newFromTerms), currentEnv);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         VariableExpr newLeftPosVar = fromTerm.hasPositionalVariable()
                 ? generateNewVariable(context, fromTerm.getPositionalVariable()) : null;
         Expression newLeftExpr = (Expression) visitUnnesBindingExpression(fromTerm.getLeftExpression(), env).first;
-        List<AbstractBinaryCorrelateClause> newCorrelateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
+        List<AbstractBinaryCorrelateClause> newCorrelateClauses = new ArrayList<>();
 
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
         currentEnv.removeSubstitution(newLeftVar);
@@ -108,8 +108,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 newCorrelateClauses.add((AbstractBinaryCorrelateClause) correlateClause.accept(this, env).first);
             }
         }
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(
-                new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses), currentEnv);
+        return new Pair<>(new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses), currentEnv);
     }
 
     @Override
@@ -132,9 +131,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) joinClause.getConditionExpression().accept(this, currentEnv).first;
 
-        JoinClause newJoinClause = new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar,
-                conditionExpr);
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newJoinClause, currentEnv);
+        JoinClause newJoinClause =
+                new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar, conditionExpr);
+        return new Pair<>(newJoinClause, currentEnv);
     }
 
     @Override
@@ -157,9 +156,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) nestClause.getConditionExpression().accept(this, currentEnv).first;
 
-        NestClause newJoinClause = new NestClause(nestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar,
-                conditionExpr);
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newJoinClause, currentEnv);
+        NestClause newJoinClause =
+                new NestClause(nestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar, conditionExpr);
+        return new Pair<>(newJoinClause, currentEnv);
     }
 
     @Override
@@ -180,9 +179,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             currentEnv.removeSubstitution(newRightPosVar);
         }
         // The condition can refer to the newRightVar and newRightPosVar.
-        UnnestClause newJoinClause = new UnnestClause(unnestClause.getJoinType(), rightExpr, newRightVar,
-                newRightPosVar);
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newJoinClause, currentEnv);
+        UnnestClause newJoinClause =
+                new UnnestClause(unnestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar);
+        return new Pair<>(newJoinClause, currentEnv);
     }
 
     @Override
@@ -190,20 +189,20 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws AsterixException {
         Projection newProjection = new Projection((Expression) projection.getExpression().accept(this, env).first,
                 projection.getName(), projection.star(), projection.exprStar());
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newProjection, env);
+        return new Pair<>(newProjection, env);
     }
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectBlock selectBlock,
             VariableSubstitutionEnvironment env) throws AsterixException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> newFrom = null;
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newLet = null;
+        Pair<ILangExpression, VariableSubstitutionEnvironment> newLet;
         Pair<ILangExpression, VariableSubstitutionEnvironment> newWhere = null;
         Pair<ILangExpression, VariableSubstitutionEnvironment> newGroupby = null;
         Pair<ILangExpression, VariableSubstitutionEnvironment> newHaving = null;
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newSelect = null;
-        List<LetClause> newLetClauses = new ArrayList<LetClause>();
-        List<LetClause> newLetClausesAfterGby = new ArrayList<LetClause>();
+        Pair<ILangExpression, VariableSubstitutionEnvironment> newSelect;
+        List<LetClause> newLetClauses = new ArrayList<>();
+        List<LetClause> newLetClausesAfterGby = new ArrayList<>();
         VariableSubstitutionEnvironment currentEnv = new VariableSubstitutionEnvironment(env);
 
         if (selectBlock.hasFromClause()) {
@@ -243,12 +242,12 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
 
         newSelect = selectBlock.getSelectClause().accept(this, currentEnv);
         currentEnv = newSelect.second;
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(
-                new SelectBlock((SelectClause) newSelect.first, newFrom == null ? null : (FromClause) newFrom.first,
-                        newLetClauses, newWhere == null ? null : (WhereClause) newWhere.first,
-                        newGroupby == null ? null : (GroupbyClause) newGroupby.first, newLetClausesAfterGby,
-                        newHaving == null ? null : (HavingClause) newHaving.first),
-                currentEnv);
+        FromClause fromClause = newFrom == null ? null : (FromClause) newFrom.first;
+        WhereClause whereClause = newWhere == null ? null : (WhereClause) newWhere.first;
+        GroupbyClause groupbyClause = newGroupby == null ? null : (GroupbyClause) newGroupby.first;
+        HavingClause havingClause = newHaving == null ? null : (HavingClause) newHaving.first;
+        return new Pair<>(new SelectBlock((SelectClause) newSelect.first, fromClause, newLetClauses, whereClause,
+                groupbyClause, newLetClausesAfterGby, havingClause), currentEnv);
     }
 
     @Override
@@ -256,42 +255,41 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws AsterixException {
         boolean distinct = selectClause.distinct();
         if (selectClause.selectElement()) {
-            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectElement = selectClause.getSelectElement()
-                    .accept(this, env);
-            return new Pair<ILangExpression, VariableSubstitutionEnvironment>(
-                    new SelectClause((SelectElement) newSelectElement.first, null, distinct), newSelectElement.second);
+            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectElement =
+                    selectClause.getSelectElement().accept(this, env);
+            return new Pair<>(new SelectClause((SelectElement) newSelectElement.first, null, distinct),
+                    newSelectElement.second);
         } else {
-            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectRegular = selectClause.getSelectRegular()
-                    .accept(this, env);
-            return new Pair<ILangExpression, VariableSubstitutionEnvironment>(
-                    new SelectClause(null, (SelectRegular) newSelectRegular.first, distinct), newSelectRegular.second);
+            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectRegular =
+                    selectClause.getSelectRegular().accept(this, env);
+            return new Pair<>(new SelectClause(null, (SelectRegular) newSelectRegular.first, distinct),
+                    newSelectRegular.second);
         }
     }
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectElement selectElement,
             VariableSubstitutionEnvironment env) throws AsterixException {
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newExpr = selectElement.getExpression().accept(this,
-                env);
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(new SelectElement((Expression) newExpr.first),
-                newExpr.second);
+        Pair<ILangExpression, VariableSubstitutionEnvironment> newExpr =
+                selectElement.getExpression().accept(this, env);
+        return new Pair<>(new SelectElement((Expression) newExpr.first), newExpr.second);
     }
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectRegular selectRegular,
             VariableSubstitutionEnvironment env) throws AsterixException {
-        List<Projection> newProjections = new ArrayList<Projection>();
+        List<Projection> newProjections = new ArrayList<>();
         for (Projection projection : selectRegular.getProjections()) {
             newProjections.add((Projection) projection.accept(this, env).first);
         }
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(new SelectRegular(newProjections), env);
+        return new Pair<>(new SelectRegular(newProjections), env);
     }
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectSetOperation selectSetOperation,
             VariableSubstitutionEnvironment env) throws AsterixException {
         SetOperationInput leftInput = selectSetOperation.getLeftInput();
-        SetOperationInput newLeftInput = null;
+        SetOperationInput newLeftInput;
 
         // Sets the left input.
         if (leftInput.selectBlock()) {
@@ -303,13 +301,13 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         }
 
         // Sets the right input
-        List<SetOperationRight> newRightInputs = new ArrayList<SetOperationRight>();
+        List<SetOperationRight> newRightInputs = new ArrayList<>();
         for (SetOperationRight right : selectSetOperation.getRightInputs()) {
-            SetOperationInput newRightInput = null;
+            SetOperationInput newRightInput;
             SetOperationInput rightInput = right.getSetOperationRightInput();
             if (rightInput.selectBlock()) {
-                Pair<ILangExpression, VariableSubstitutionEnvironment> p = rightInput.getSelectBlock().accept(this,
-                        env);
+                Pair<ILangExpression, VariableSubstitutionEnvironment> p =
+                        rightInput.getSelectBlock().accept(this, env);
                 newRightInput = new SetOperationInput((SelectBlock) p.first, null);
             } else {
                 Pair<ILangExpression, VariableSubstitutionEnvironment> p = rightInput.getSubquery().accept(this, env);
@@ -318,20 +316,20 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             newRightInputs.add(new SetOperationRight(right.getSetOpType(), right.isSetSemantics(), newRightInput));
         }
         SelectSetOperation newSelectSetOperation = new SelectSetOperation(newLeftInput, newRightInputs);
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newSelectSetOperation, env);
+        return new Pair<>(newSelectSetOperation, env);
     }
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectExpression selectExpression,
             VariableSubstitutionEnvironment env) throws AsterixException {
         boolean subquery = selectExpression.isSubquery();
-        List<LetClause> newLetList = new ArrayList<LetClause>();
-        SelectSetOperation newSelectSetOperation = null;
+        List<LetClause> newLetList = new ArrayList<>();
+        SelectSetOperation newSelectSetOperation;
         OrderbyClause newOrderbyClause = null;
         LimitClause newLimitClause = null;
 
         VariableSubstitutionEnvironment currentEnv = env;
-        Pair<ILangExpression, VariableSubstitutionEnvironment> p = null;
+        Pair<ILangExpression, VariableSubstitutionEnvironment> p;
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
                 p = letClause.accept(this, currentEnv);
@@ -355,7 +353,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             newLimitClause = (LimitClause) p.first;
             currentEnv = p.second;
         }
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(
+        return new Pair<>(
                 new SelectExpression(newLetList, newSelectSetOperation, newOrderbyClause, newLimitClause, subquery),
                 currentEnv);
     }
@@ -365,7 +363,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws AsterixException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = havingClause.getFilterExpression().accept(this, env);
         HavingClause newHavingClause = new HavingClause((Expression) p.first);
-        return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newHavingClause, p.second);
+        return new Pair<>(newHavingClause, p.second);
     }
 
     @Override

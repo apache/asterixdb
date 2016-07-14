@@ -19,11 +19,9 @@
 package org.apache.asterix.lang.common.literal;
 
 import org.apache.asterix.lang.common.base.Literal;
+import org.apache.commons.lang.ObjectUtils;
 
 public class IntegerLiteral extends Literal {
-    /**
-     *
-     */
     private static final long serialVersionUID = -8633520244871361967L;
     private Integer value;
 
@@ -32,6 +30,7 @@ public class IntegerLiteral extends Literal {
         this.value = value;
     }
 
+    @Override
     public Integer getValue() {
         return value;
     }
@@ -43,5 +42,27 @@ public class IntegerLiteral extends Literal {
     @Override
     public Type getLiteralType() {
         return Type.INTEGER;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCode(value);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof IntegerLiteral)) {
+            return false;
+        }
+        IntegerLiteral target = (IntegerLiteral) object;
+        return value.equals(target.getValue());
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
     }
 }

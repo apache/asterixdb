@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.lang.common.struct;
 
+import org.apache.commons.lang.ObjectUtils;
+
 public class Identifier {
     protected String value;
 
     public Identifier() {
+        // default constructor.
     }
 
     public Identifier(String value) {
@@ -36,22 +39,25 @@ public class Identifier {
         this.value = value;
     }
 
+    @Override
     public String toString() {
         return value;
     }
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
         if (!(o instanceof Identifier)) {
             return false;
-        } else {
-            Identifier i = (Identifier) o;
-            return this.value.equals(i.value);
         }
+        Identifier target = (Identifier) o;
+        return ObjectUtils.equals(value, target.value);
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return ObjectUtils.hashCode(value);
     }
 }

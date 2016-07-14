@@ -28,6 +28,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class GroupbyClause implements Clause {
@@ -36,11 +37,12 @@ public class GroupbyClause implements Clause {
     private List<GbyVariableExpressionPair> decorPairList;
     private List<VariableExpr> withVarList;
     private VariableExpr groupVar;
-    private List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<Pair<Expression, Identifier>>();
+    private List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
     private boolean hashGroupByHint;
     private boolean groupAll;
 
     public GroupbyClause() {
+        // Default constructor.
     }
 
     public GroupbyClause(List<GbyVariableExpressionPair> gbyPairList, List<GbyVariableExpressionPair> decorPairList,
@@ -122,11 +124,11 @@ public class GroupbyClause implements Clause {
     }
 
     public boolean hasDecorList() {
-        return decorPairList != null && decorPairList.size() > 0;
+        return decorPairList != null && !decorPairList.isEmpty();
     }
 
     public boolean hasWithList() {
-        return withVarList != null && withVarList.size() > 0;
+        return withVarList != null && !withVarList.isEmpty();
     }
 
     public boolean hasGroupVar() {
@@ -134,10 +136,32 @@ public class GroupbyClause implements Clause {
     }
 
     public boolean hasGroupFieldList() {
-        return groupFieldList != null && groupFieldList.size() > 0;
+        return groupFieldList != null && !groupFieldList.isEmpty();
     }
 
     public boolean isGroupAll() {
         return groupAll;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(decorPairList, gbyPairList, groupAll, groupFieldList, groupVar,
+                hashGroupByHint, withVarList);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof GroupbyClause)) {
+            return false;
+        }
+        GroupbyClause target = (GroupbyClause) object;
+        boolean equals = ObjectUtils.equals(decorPairList, target.decorPairList)
+                && ObjectUtils.equals(gbyPairList, target.gbyPairList) && groupAll == target.groupAll
+                && ObjectUtils.equals(groupFieldList, target.groupFieldList);
+        return equals && ObjectUtils.equals(groupVar, target.groupVar) && hashGroupByHint == target.hashGroupByHint
+                && ObjectUtils.equals(withVarList, target.withVarList);
     }
 }

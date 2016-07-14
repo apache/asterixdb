@@ -23,6 +23,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class SetOperationInput {
 
@@ -56,5 +57,27 @@ public class SetOperationInput {
         } else {
             return ((ISqlppVisitor<R, T>) visitor).visit(subquery, arg);
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(selectBlock, subquery);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SetOperationInput)) {
+            return false;
+        }
+        SetOperationInput target = (SetOperationInput) object;
+        return ObjectUtils.equals(selectBlock, target.selectBlock) && ObjectUtils.equals(subquery, target.subquery);
+    }
+
+    @Override
+    public String toString() {
+        return selectBlock.toString();
     }
 }

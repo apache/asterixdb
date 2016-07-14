@@ -23,6 +23,7 @@ import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class LetClause implements Clause {
     private VariableExpr varExpr;
@@ -62,6 +63,23 @@ public class LetClause implements Clause {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(bindExpr, varExpr);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof LetClause)) {
+            return false;
+        }
+        LetClause target = (LetClause) object;
+        return bindExpr.equals(target.getBindingExpr()) && varExpr.equals(target.getVarExpr());
     }
 
 }

@@ -26,7 +26,7 @@ for $gco in (
       "c_custkey": $c.c_custkey, 
       "o_orderkey_count": count(
         for $o in dataset('Orders')
-        where  $c.c_custkey = $o.o_custkey and not(like($o.o_comment,'%special%requests%'))
+        where  $c.c_custkey = $o.o_custkey and "not"(like($o.o_comment,'%special%requests%'))
         return $o.o_orderkey
       )
     }

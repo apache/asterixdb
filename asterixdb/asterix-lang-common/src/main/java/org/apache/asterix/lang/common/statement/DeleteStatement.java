@@ -26,6 +26,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class DeleteStatement implements Statement {
 
@@ -95,4 +96,25 @@ public class DeleteStatement implements Statement {
         return datasets;
     }
 
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(condition, datasetName, datasets, dataverseName, dataverses, rewrittenQuery,
+                vars);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof DeleteStatement)) {
+            return false;
+        }
+        DeleteStatement target = (DeleteStatement) object;
+        boolean equals = ObjectUtils.equals(condition, target.condition)
+                && ObjectUtils.equals(datasetName, target.datasetName) && ObjectUtils.equals(datasets, target.datasets)
+                && ObjectUtils.equals(dataverseName, target.dataverseName);
+        return equals && ObjectUtils.equals(dataverses, target.dataverses)
+                && ObjectUtils.equals(rewrittenQuery, target.rewrittenQuery) && ObjectUtils.equals(vars, target.vars);
+    }
 }

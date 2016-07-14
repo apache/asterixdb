@@ -30,6 +30,10 @@ import org.apache.asterix.lang.sqlpp.visitor.SqlppFormatPrintVisitor;
 
 public class SqlppFormatPrintUtil {
 
+    private SqlppFormatPrintUtil() {
+
+    }
+
     /**
      * Prints the formatted output of an ILangExpression.
      *
@@ -67,7 +71,7 @@ public class SqlppFormatPrintUtil {
      * @throws AsterixException
      */
     public static String toString(ILangExpression expr) throws AsterixException {
-        List<ILangExpression> exprs = new ArrayList<ILangExpression>();
+        List<ILangExpression> exprs = new ArrayList<>();
         exprs.add(expr);
         return toString(exprs);
     }
