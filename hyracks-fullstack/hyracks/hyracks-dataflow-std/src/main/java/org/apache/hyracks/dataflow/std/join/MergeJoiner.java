@@ -18,9 +18,11 @@
  */
 package org.apache.hyracks.dataflow.std.join;
 
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -32,6 +34,7 @@ import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
+import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
@@ -47,10 +50,10 @@ public class MergeJoiner extends AbstractMergeJoiner {
 
     private MergeStatus status;
 
-    private final TuplePointer tp;
     private final IDeallocatableFramePool framePool;
     private IDeletableTupleBufferManager bufferManager;
-    private ITupleAccessor memoryAccessor;
+    private ITuplePointerAccessor memoryAccessor;
+    private LinkedList<TuplePointer> memoryBuffer = new LinkedList<>();
 
     private int leftStreamIndex;
     private RunFileStream runFileStream;
@@ -71,9 +74,8 @@ public class MergeJoiner extends AbstractMergeJoiner {
                     "MergeJoiner does not have enough memory (needs > 0, got " + memorySize + ").");
         }
         framePool = new DeallocatableFramePool(ctx, (memorySize) * ctx.getInitialFrameSize());
-        tp = new TuplePointer();
         bufferManager = new VariableDeletableTupleMemoryManager(framePool, rightRd);
-        memoryAccessor = bufferManager.createTupleAccessor();
+        memoryAccessor = bufferManager.createTuplePointerAccessor();
 
         // Run File and frame cache (left buffer)
         leftStreamIndex = TupleAccessor.UNSET;
@@ -88,21 +90,23 @@ public class MergeJoiner extends AbstractMergeJoiner {
     }
 
     private boolean addToMemory(ITupleAccessor accessor) throws HyracksDataException {
+        TuplePointer tp = new TuplePointer();
         if (bufferManager.insertTuple(accessor, accessor.getTupleId(), tp)) {
+            memoryBuffer.add(tp);
             return true;
         }
         return false;
     }
 
-    private void removeFromMemory() throws HyracksDataException {
-        memoryAccessor.getTuplePointer(tp);
+    private void removeFromMemory(TuplePointer tp) throws HyracksDataException {
+        memoryBuffer.remove(tp);
         bufferManager.deleteTuple(tp);
     }
 
-    private void addToResult(ITupleAccessor accessor1, ITupleAccessor accessor2, IFrameWriter writer)
-            throws HyracksDataException {
-        FrameUtils.appendConcatToWriter(writer, resultAppender, accessor1, accessor1.getTupleId(), accessor2,
-                accessor2.getTupleId());
+    private void addToResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex, IFrameTupleAccessor accessorRight,
+            int rightTupleIndex, IFrameWriter writer) throws HyracksDataException {
+        FrameUtils.appendConcatToWriter(writer, resultAppender, accessorLeft, leftTupleIndex, accessorRight,
+                rightTupleIndex);
     }
 
     @Override
@@ -197,21 +201,22 @@ public class MergeJoiner extends AbstractMergeJoiner {
     private void processLeftTuple(IFrameWriter writer) throws HyracksDataException {
         // Check against memory (right)
         if (memoryHasTuples()) {
-            memoryAccessor.reset();
-            memoryAccessor.next();
-            while (memoryAccessor.exists()) {
+            for (int i = memoryBuffer.size() - 1; i > -1; --i) {
+                memoryAccessor.reset(memoryBuffer.get(i));
                 //                TuplePrinterUtil.printTuple("     --- A outer", inputAccessor[LEFT_PARTITION]);
                 //                TuplePrinterUtil.printTuple("     --- A inner", memoryAccessor);
-                if (mjc.checkToSaveInResult(inputAccessor[LEFT_PARTITION], memoryAccessor)) {
+                if (mjc.checkToSaveInResult(inputAccessor[LEFT_PARTITION], inputAccessor[LEFT_PARTITION].getTupleId(),
+                        memoryAccessor, memoryBuffer.get(i).getTupleIndex(), false)) {
                     // add to result
                     //                    System.err.println("  -- Matched --");
-                    addToResult(inputAccessor[LEFT_PARTITION], memoryAccessor, writer);
+                    addToResult(inputAccessor[LEFT_PARTITION], inputAccessor[LEFT_PARTITION].getTupleId(),
+                            memoryAccessor, memoryBuffer.get(i).getTupleIndex(), writer);
                 }
-                if (mjc.checkToRemoveInMemory(inputAccessor[LEFT_PARTITION], memoryAccessor)) {
+                if (mjc.checkToRemoveInMemory(inputAccessor[LEFT_PARTITION], inputAccessor[LEFT_PARTITION].getTupleId(),
+                        memoryAccessor, memoryBuffer.get(i).getTupleIndex())) {
                     // remove from memory
-                    removeFromMemory();
+                    removeFromMemory(memoryBuffer.get(i));
                 }
-                memoryAccessor.next();
             }
         }
         inputAccessor[LEFT_PARTITION].next();

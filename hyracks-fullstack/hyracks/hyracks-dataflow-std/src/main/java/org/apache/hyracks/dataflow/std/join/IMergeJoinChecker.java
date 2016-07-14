@@ -51,6 +51,9 @@ public interface IMergeJoinChecker extends Serializable {
     boolean checkToRemoveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException;
 
+    boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
+            IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException;
+
     /**
      * Check to see if the next right tuple should be loaded during the merge join.
      * The check is true if the left tuple could match with the next right tuple.

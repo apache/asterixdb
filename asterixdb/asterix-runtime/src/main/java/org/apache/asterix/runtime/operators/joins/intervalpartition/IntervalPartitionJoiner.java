@@ -320,7 +320,7 @@ public class IntervalPartitionJoiner {
 
     private int selectPartitionsToReload(int freeSpace, int pid) {
         for (int id = ipjd.buildNextSpilled(0); id >= 0; id = ipjd.buildNextSpilled(id + 1)) {
-            assert buildRFWriters[id].getFileSize() > 0 : "How comes a spilled partition have size 0?";
+            assert buildRFWriters[id].getFileSize() > 0 : "How come a spilled partition have size 0?";
             if (freeSpace >= buildRFWriters[id].getFileSize()) {
                 return id;
             }
