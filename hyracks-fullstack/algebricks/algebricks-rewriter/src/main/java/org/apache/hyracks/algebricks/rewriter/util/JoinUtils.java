@@ -44,7 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Log
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.JoinPartitioningType;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HybridHashJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryHashJoinPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.NLJoinPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 
@@ -80,12 +80,12 @@ public class JoinUtils {
                 }
             }
         } else {
-            setNLJoinOp(op, context);
+            setNestedLoopJoinOp(op, context);
         }
     }
 
-    private static void setNLJoinOp(AbstractBinaryJoinOperator op, IOptimizationContext context) {
-        op.setPhysicalOperator(new NLJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
+    private static void setNestedLoopJoinOp(AbstractBinaryJoinOperator op, IOptimizationContext context) {
+        op.setPhysicalOperator(new NestedLoopJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin()));
     }
 

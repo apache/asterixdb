@@ -59,11 +59,11 @@ import org.apache.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 /**
  * The right input is broadcast and the left input can be partitioned in any way.
  */
-public class NLJoinPOperator extends AbstractJoinPOperator {
+public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
 
     private final int memSize;
 
-    public NLJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType, int memSize) {
+    public NestedLoopJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType, int memSize) {
         super(kind, partitioningType);
         this.memSize = memSize;
     }
