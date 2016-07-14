@@ -24,6 +24,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class OrderbyClause implements Clause {
@@ -34,6 +35,7 @@ public class OrderbyClause implements Clause {
     private int numTuples = -1;
 
     public OrderbyClause() {
+        // Default constructor.
     }
 
     public OrderbyClause(List<Expression> orderbyList, List<OrderModifier> modifierList) {
@@ -94,5 +96,23 @@ public class OrderbyClause implements Clause {
 
     public void setRangeMap(IRangeMap rangeMap) {
         this.rangeMap = rangeMap;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(modifierList, numFrames, numTuples, orderbyList);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof OrderbyClause)) {
+            return false;
+        }
+        OrderbyClause target = (OrderbyClause) object;
+        return ObjectUtils.equals(modifierList, target.modifierList) && numFrames == target.numFrames
+                && numTuples == target.numTuples && orderbyList.equals(target.orderbyList);
     }
 }

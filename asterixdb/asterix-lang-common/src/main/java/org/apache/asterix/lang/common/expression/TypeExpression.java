@@ -20,7 +20,7 @@ package org.apache.asterix.lang.common.expression;
 
 import org.apache.asterix.lang.common.base.ILangExpression;
 
-public abstract class TypeExpression implements ILangExpression {
+public interface TypeExpression extends ILangExpression {
 
     public enum TypeExprKind {
         RECORD,
@@ -29,6 +29,6 @@ public abstract class TypeExpression implements ILangExpression {
         UNORDEREDLIST
     }
 
-    public abstract TypeExprKind getTypeKind();
+    public TypeExprKind getTypeKind();
 
 }

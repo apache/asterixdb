@@ -31,4 +31,20 @@ public class UpsertStatement extends InsertStatement {
         return Kind.UPSERT;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode() + Kind.UPSERT.ordinal();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof UpsertStatement)) {
+            return false;
+        }
+        return super.equals(object);
+    }
+
 }

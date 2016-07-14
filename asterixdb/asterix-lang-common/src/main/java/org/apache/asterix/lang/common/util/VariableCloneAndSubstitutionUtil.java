@@ -34,19 +34,22 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class VariableCloneAndSubstitutionUtil {
 
+    private VariableCloneAndSubstitutionUtil() {
+    }
+
     public static List<GbyVariableExpressionPair> substInVarExprPair(LangRewritingContext context,
-            List<GbyVariableExpressionPair> gbyVeList, VariableSubstitutionEnvironment arg,
-            VariableSubstitutionEnvironment newSubs, CloneAndSubstituteVariablesVisitor visitor)
-                    throws AsterixException {
-        List<GbyVariableExpressionPair> veList = new LinkedList<GbyVariableExpressionPair>();
+            List<GbyVariableExpressionPair> gbyVeList, VariableSubstitutionEnvironment newSubs,
+            CloneAndSubstituteVariablesVisitor visitor) throws AsterixException {
+        VariableSubstitutionEnvironment subs = newSubs;
+        List<GbyVariableExpressionPair> veList = new LinkedList<>();
         for (GbyVariableExpressionPair vep : gbyVeList) {
             VariableExpr oldGbyVar = vep.getVar();
             VariableExpr newGbyVar = null;
             if (oldGbyVar != null) {
                 newGbyVar = visitor.generateNewVariable(context, oldGbyVar);
-                newSubs = eliminateSubstFromList(newGbyVar, newSubs);
+                subs = eliminateSubstFromList(newGbyVar, subs);
             }
-            Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = vep.getExpr().accept(visitor, newSubs);
+            Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = vep.getExpr().accept(visitor, subs);
             GbyVariableExpressionPair ve2 = new GbyVariableExpressionPair(newGbyVar, (Expression) p1.first);
             veList.add(ve2);
         }
@@ -62,7 +65,7 @@ public class VariableCloneAndSubstitutionUtil {
 
     public static List<Expression> visitAndCloneExprList(List<Expression> oldExprList,
             VariableSubstitutionEnvironment arg, CloneAndSubstituteVariablesVisitor visitor) throws AsterixException {
-        List<Expression> exprs = new ArrayList<Expression>(oldExprList.size());
+        List<Expression> exprs = new ArrayList<>(oldExprList.size());
         for (Expression e : oldExprList) {
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = e.accept(visitor, arg);
             exprs.add((Expression) p1.first);

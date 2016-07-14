@@ -28,19 +28,22 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class FromTerm implements Clause {
     private Expression leftExpr;
     private VariableExpr leftVar;
     private VariableExpr posVar;
-    private List<AbstractBinaryCorrelateClause> correlateClauses;
+    private List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<>();
 
     public FromTerm(Expression leftExpr, VariableExpr leftVar, VariableExpr posVar,
             List<AbstractBinaryCorrelateClause> correlateClauses) {
         this.leftExpr = leftExpr;
         this.leftVar = leftVar;
         this.posVar = posVar;
-        this.correlateClauses = correlateClauses == null ? new ArrayList<>() : correlateClauses;
+        if (correlateClauses != null) {
+            this.correlateClauses.addAll(correlateClauses);
+        }
     }
 
     @Override
@@ -84,5 +87,24 @@ public class FromTerm implements Clause {
     @Override
     public String toString() {
         return String.valueOf(leftExpr) + " AS " + leftVar;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(correlateClauses, leftExpr, leftVar, posVar);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof FromTerm)) {
+            return false;
+        }
+        FromTerm target = (FromTerm) object;
+        return ObjectUtils.equals(correlateClauses, target.correlateClauses)
+                && ObjectUtils.equals(leftExpr, target.leftExpr) && ObjectUtils.equals(leftVar, target.leftVar)
+                && ObjectUtils.equals(posVar, target.posVar);
     }
 }

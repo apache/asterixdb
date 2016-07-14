@@ -22,11 +22,13 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class LiteralExpr implements Expression {
     private Literal value;
 
     public LiteralExpr() {
+        // default constructor.
     }
 
     public LiteralExpr(Literal value) {
@@ -49,6 +51,23 @@ public class LiteralExpr implements Expression {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCode(value);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof LiteralExpr)) {
+            return false;
+        }
+        LiteralExpr target = (LiteralExpr) object;
+        return ObjectUtils.equals(value, target.value);
     }
 
 }

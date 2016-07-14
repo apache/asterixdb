@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- *
- */
-package org.apache.asterix.lang.common.struct;
 
-public class AdmSplitInfo {
-    public Identifier nodeName;
-    public String fileName;
+USE gby;
 
-    public AdmSplitInfo(Identifier nodeName, String fileName) {
-        this.nodeName = nodeName;
-        this.fileName = fileName;
-    }
+INSERT INTO Employee (
+   {
+    'id': '123',
+    'job_category': 'Cook',
+    'salary': 2000,
+    'department_id': 'K55'
+   }
+);
 
-    @Override
-    public String toString() {
-        return nodeName.value + ":" + fileName;
-    }
-}
+INSERT INTO Incentive (
+  { 'job_category': 'Cook',
+    'bonus': 1000
+  }
+)
+
+INSERT INTO SuperStars (
+  {
+    'id': '123'
+  }
+)
+

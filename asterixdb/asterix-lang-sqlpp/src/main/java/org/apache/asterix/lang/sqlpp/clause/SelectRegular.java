@@ -53,4 +53,21 @@ public class SelectRegular implements Clause {
     public String toString() {
         return projections.stream().map(String::valueOf).collect(Collectors.joining(", "));
     }
+
+    @Override
+    public int hashCode() {
+        return projections.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SelectRegular)) {
+            return false;
+        }
+        SelectRegular target = (SelectRegular) object;
+        return projections.equals(target.getProjections());
+    }
 }

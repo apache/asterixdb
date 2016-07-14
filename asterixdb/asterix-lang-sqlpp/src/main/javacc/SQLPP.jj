@@ -2376,7 +2376,10 @@ Projection Projection() throws ParseException: {
   )
   {
     if(!star && name == null){
-       name = SqlppVariableUtil.toUserDefinedName(ExpressionToVariableUtil.getGeneratedIdentifier(expr));
+       String generatedColumnIdentifier = ExpressionToVariableUtil.getGeneratedIdentifier(expr, false);
+       if(generatedColumnIdentifier != null){
+            name = SqlppVariableUtil.toUserDefinedName(generatedColumnIdentifier);
+       }
     }
     return new Projection(expr, name, star, exprStar);
   }
@@ -2422,7 +2425,7 @@ FromTerm FromTerm() throws ParseException :
   )*
   {
     if(leftVar==null){
-        leftVar = ExpressionToVariableUtil.getGeneratedVariable(leftExpr);
+        leftVar = ExpressionToVariableUtil.getGeneratedVariable(leftExpr, true);
     }
     return new FromTerm(leftExpr, leftVar, posVar, correlateClauses);
   }
@@ -2439,7 +2442,7 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
   <JOIN> rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
   {
     if(rightVar==null){
-        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
+        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
     return new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
   }
@@ -2455,7 +2458,7 @@ UnnestClause UnnestClause(JoinType joinType) throws ParseException :
   (<UNNEST>|<CORRELATE>|<FLATTEN>) rightExpr = Expression() ((<AS>)? rightVar = Variable()) (<AT> posVar = Variable())?
   {
     if(rightVar==null){
-        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr);
+        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
     return new UnnestClause(joinType, rightExpr, rightVar, posVar);
   }
@@ -2586,7 +2589,7 @@ GroupbyClause GroupbyClause()throws ParseException :
         )?
         {
             if(var==null){
-                var = ExpressionToVariableUtil.getGeneratedVariable(expr);
+                var = ExpressionToVariableUtil.getGeneratedVariable(expr, false);
             }
             GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);
             vePairList.add(pair1);
@@ -2601,7 +2604,7 @@ GroupbyClause GroupbyClause()throws ParseException :
          )?
          {
              if(var==null){
-                var = ExpressionToVariableUtil.getGeneratedVariable(expr);
+                var = ExpressionToVariableUtil.getGeneratedVariable(expr, false);
              }
              GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);
              vePairList.add(pair2);

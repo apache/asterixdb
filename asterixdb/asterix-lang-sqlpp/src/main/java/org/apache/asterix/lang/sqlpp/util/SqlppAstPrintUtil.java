@@ -32,7 +32,11 @@ import org.apache.asterix.lang.sqlpp.visitor.SqlppAstPrintVisitorFactory;
 
 public class SqlppAstPrintUtil {
 
-    private static final IAstPrintVisitorFactory astPrintVisitor = new SqlppAstPrintVisitorFactory();
+    private static final IAstPrintVisitorFactory astPrintVisitorFactory = new SqlppAstPrintVisitorFactory();
+
+    private SqlppAstPrintUtil() {
+
+    }
 
     /**
      * Prints the AST (abstract syntax tree) of an ILangExpression.
@@ -44,7 +48,7 @@ public class SqlppAstPrintUtil {
      * @throws AsterixException
      */
     public static void print(ILangExpression expr, PrintWriter output) throws AsterixException {
-        QueryPrintVisitor visitor = astPrintVisitor.createLangVisitor(output);
+        QueryPrintVisitor visitor = astPrintVisitorFactory.createLangVisitor(output);
         expr.accept(visitor, 0);
         output.flush();
     }
@@ -59,7 +63,7 @@ public class SqlppAstPrintUtil {
      * @throws AsterixException
      */
     public static void print(List<Statement> statements, PrintWriter output) throws AsterixException {
-        QueryPrintVisitor visitor = astPrintVisitor.createLangVisitor(output);
+        QueryPrintVisitor visitor = astPrintVisitorFactory.createLangVisitor(output);
         for (Statement statement : statements) {
             statement.accept(visitor, 0);
         }
@@ -73,7 +77,7 @@ public class SqlppAstPrintUtil {
      * @throws AsterixException
      */
     public static String toString(ILangExpression expr) throws AsterixException {
-        List<ILangExpression> exprs = new ArrayList<ILangExpression>();
+        List<ILangExpression> exprs = new ArrayList<>();
         exprs.add(expr);
         return toString(exprs);
     }
@@ -87,7 +91,7 @@ public class SqlppAstPrintUtil {
     public static String toString(List<ILangExpression> exprs) throws AsterixException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrintWriter output = new PrintWriter(bos);
-        QueryPrintVisitor visitor = astPrintVisitor.createLangVisitor(output);
+        QueryPrintVisitor visitor = astPrintVisitorFactory.createLangVisitor(output);
         for (ILangExpression expr : exprs) {
             expr.accept(visitor, 0);
         }

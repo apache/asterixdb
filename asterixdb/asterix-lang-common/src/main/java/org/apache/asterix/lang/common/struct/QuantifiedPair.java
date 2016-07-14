@@ -20,12 +20,14 @@ package org.apache.asterix.lang.common.struct;
 
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class QuantifiedPair {
     private VariableExpr varExpr;
     private Expression expr;
 
     public QuantifiedPair() {
+        // default constructor
     }
 
     public QuantifiedPair(VariableExpr varExpr, Expression expr) {
@@ -49,4 +51,17 @@ public class QuantifiedPair {
         this.expr = expr;
     }
 
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(expr, varExpr);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof QuantifiedPair)) {
+            return false;
+        }
+        QuantifiedPair target = (QuantifiedPair) object;
+        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(varExpr, target.varExpr);
+    }
 }

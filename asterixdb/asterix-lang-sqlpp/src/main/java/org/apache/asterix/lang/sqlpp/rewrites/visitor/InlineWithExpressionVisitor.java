@@ -28,17 +28,12 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 
-public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
-
-    public InlineWithExpressionVisitor(LangRewritingContext context) {
-        super(context);
-    }
+public class InlineWithExpressionVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
     public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws AsterixException {
@@ -66,7 +61,9 @@ public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingV
 
             // Continues to visit the rewritten select expression.
             return super.visit(newSelectExpression, arg);
+        } else {
+            // Continues to visit inside the select expression.
+            return super.visit(selectExpression, arg);
         }
-        return selectExpression;
     }
 }

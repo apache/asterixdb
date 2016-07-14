@@ -23,11 +23,10 @@ import org.apache.asterix.lang.common.base.Literal;
 public class FalseLiteral extends Literal {
 
     private static final long serialVersionUID = -750814844423165149L;
+    public static final FalseLiteral INSTANCE = new FalseLiteral();
 
     private FalseLiteral() {
     }
-
-    public final static FalseLiteral INSTANCE = new FalseLiteral();
 
     @Override
     public Type getLiteralType() {
@@ -45,8 +44,8 @@ public class FalseLiteral extends Literal {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj == INSTANCE;
+    public Boolean getValue() {
+        return Boolean.FALSE;
     }
 
     @Override
@@ -55,7 +54,8 @@ public class FalseLiteral extends Literal {
     }
 
     @Override
-    public Boolean getValue() {
-        return Boolean.FALSE;
+    public boolean equals(Object obj) {
+        return obj == INSTANCE;
     }
+
 }

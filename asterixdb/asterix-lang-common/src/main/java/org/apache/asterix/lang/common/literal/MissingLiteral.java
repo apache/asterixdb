@@ -22,11 +22,10 @@ import org.apache.asterix.lang.common.base.Literal;
 
 public class MissingLiteral extends Literal {
     private static final long serialVersionUID = 1L;
+    public static final MissingLiteral INSTANCE = new MissingLiteral();
 
     private MissingLiteral() {
     }
-
-    public final static MissingLiteral INSTANCE = new MissingLiteral();
 
     @Override
     public Type getLiteralType() {
@@ -51,5 +50,10 @@ public class MissingLiteral extends Literal {
     @Override
     public Object getValue() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return getStringValue();
     }
 }

@@ -24,6 +24,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class QuantifiedExpression implements Expression {
     private List<QuantifiedPair> quantifiedList;
@@ -78,5 +79,24 @@ public class QuantifiedExpression implements Expression {
     public enum Quantifier {
         EVERY,
         SOME
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(quantifiedList, quantifier, satisfiesExpr);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof QuantifiedExpression)) {
+            return false;
+        }
+        QuantifiedExpression target = (QuantifiedExpression) object;
+        return ObjectUtils.equals(quantifiedList, target.quantifiedList)
+                && ObjectUtils.equals(quantifier, target.quantifier)
+                && ObjectUtils.equals(satisfiesExpr, target.satisfiesExpr);
     }
 }

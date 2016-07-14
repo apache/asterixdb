@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.expression;
 
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.commons.lang.ObjectUtils;
 
 public abstract class AbstractAccessor implements Expression {
     protected Expression expr;
@@ -34,6 +35,23 @@ public abstract class AbstractAccessor implements Expression {
 
     public void setExpr(Expression expr) {
         this.expr = expr;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCode(expr);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof AbstractAccessor)) {
+            return false;
+        }
+        AbstractAccessor target = (AbstractAccessor) object;
+        return expr.equals(target.expr);
     }
 
 }

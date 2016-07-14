@@ -37,6 +37,12 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Inlines column aliases.
         inlineColumnAlias();
 
+        // Generates column names.
+        generateColumnNames();
+
+        // Substitutes group-by key expressions.
+        substituteGroupbyKeyExpression();
+
         // Inlines WITH expressions.
         inlineWithExpressions();
 

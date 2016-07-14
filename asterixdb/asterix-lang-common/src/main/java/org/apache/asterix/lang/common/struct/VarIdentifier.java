@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.struct;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 public final class VarIdentifier extends Identifier {
     private int id = 0;
 
@@ -53,7 +55,7 @@ public final class VarIdentifier extends Identifier {
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return ObjectUtils.hashCodeMulti(value);
     }
 
     @Override
@@ -62,6 +64,6 @@ public final class VarIdentifier extends Identifier {
             return false;
         }
         VarIdentifier vid = (VarIdentifier) obj;
-        return value.equals(vid.value);
+        return ObjectUtils.equals(value, vid.value);
     }
 }

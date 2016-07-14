@@ -127,7 +127,10 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     @Override
     public Void visit(Projection projection, Integer step) throws AsterixException {
         projection.getExpression().accept(this, step);
-        out.print(" as " + projection.getName());
+        String name = projection.getName();
+        if (name != null) {
+            out.print(" as " + name);
+        }
         return null;
     }
 

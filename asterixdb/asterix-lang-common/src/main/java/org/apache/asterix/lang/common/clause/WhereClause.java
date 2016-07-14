@@ -26,12 +26,8 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class WhereClause implements Clause {
     private Expression whereExpr;
 
-    public Expression getWhereExpr() {
-        return whereExpr;
-    }
-
-    public void setWhereExpr(Expression whereExpr) {
-        this.whereExpr = whereExpr;
+    public WhereClause() {
+        // Default constructor.
     }
 
     public WhereClause(Expression whereExpr) {
@@ -39,7 +35,12 @@ public class WhereClause implements Clause {
         this.whereExpr = whereExpr;
     }
 
-    public WhereClause() {
+    public Expression getWhereExpr() {
+        return whereExpr;
+    }
+
+    public void setWhereExpr(Expression whereExpr) {
+        this.whereExpr = whereExpr;
     }
 
     @Override
@@ -52,4 +53,20 @@ public class WhereClause implements Clause {
         return visitor.visit(this, arg);
     }
 
+    @Override
+    public int hashCode() {
+        return whereExpr.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof WhereClause)) {
+            return false;
+        }
+        WhereClause whereClause = (WhereClause) object;
+        return whereExpr.equals(whereClause.getWhereExpr());
+    }
 }

@@ -30,7 +30,7 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class FromClause implements Clause {
 
-    private List<FromTerm> fromTerms = new ArrayList<FromTerm>();
+    private List<FromTerm> fromTerms = new ArrayList<>();
 
     public FromClause(List<FromTerm> fromTerms) {
         this.fromTerms = fromTerms;
@@ -53,5 +53,22 @@ public class FromClause implements Clause {
     @Override
     public String toString() {
         return fromTerms.stream().map(String::valueOf).collect(Collectors.joining(", "));
+    }
+
+    @Override
+    public int hashCode() {
+        return fromTerms.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof FromClause)) {
+            return false;
+        }
+        FromClause target = (FromClause) object;
+        return fromTerms.equals(target.getFromTerms());
     }
 }

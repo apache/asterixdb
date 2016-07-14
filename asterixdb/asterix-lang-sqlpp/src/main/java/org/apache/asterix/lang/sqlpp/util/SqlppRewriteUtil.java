@@ -40,8 +40,8 @@ public class SqlppRewriteUtil {
     public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
             Collection<VariableExpr> targetVarList, Collection<VariableExpr> allVisableVars, ILangExpression expr,
             LangRewritingContext context) throws AsterixException {
-        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, targetVarList,
-                allVisableVars);
+        SqlppGroupBySugarVisitor visitor =
+                new SqlppGroupBySugarVisitor(context, groupVar, targetVarList, allVisableVars);
         return expr.accept(visitor, null);
     }
 

@@ -21,16 +21,11 @@ package org.apache.asterix.lang.common.literal;
 import org.apache.asterix.lang.common.base.Literal;
 
 public class NullLiteral extends Literal {
-
-    /**
-     *
-     */
     private static final long serialVersionUID = -7782153599294838739L;
+    public static final NullLiteral INSTANCE = new NullLiteral();
 
     private NullLiteral() {
     }
-
-    public final static NullLiteral INSTANCE = new NullLiteral();
 
     @Override
     public Type getLiteralType() {
@@ -55,5 +50,10 @@ public class NullLiteral extends Literal {
     @Override
     public Object getValue() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return getStringValue();
     }
 }

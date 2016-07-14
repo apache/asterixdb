@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.literal;
 
 import org.apache.asterix.lang.common.base.Literal;
+import org.apache.commons.lang.ObjectUtils;
 
 public class StringLiteral extends Literal {
 
@@ -30,6 +31,7 @@ public class StringLiteral extends Literal {
         this.value = value;
     }
 
+    @Override
     public String getValue() {
         return value;
     }
@@ -45,6 +47,28 @@ public class StringLiteral extends Literal {
 
     @Override
     public String getStringValue() {
+        return value;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCode(value);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof StringLiteral)) {
+            return false;
+        }
+        StringLiteral target = (StringLiteral) object;
+        return ObjectUtils.equals(value, target.value);
+    }
+
+    @Override
+    public String toString() {
         return value;
     }
 }

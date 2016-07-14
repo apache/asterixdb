@@ -23,6 +23,7 @@ import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
+import org.apache.commons.lang3.ObjectUtils;
 
 public abstract class AbstractBinaryCorrelateClause implements Clause {
 
@@ -61,6 +62,24 @@ public abstract class AbstractBinaryCorrelateClause implements Clause {
 
     public boolean hasPositionalVariable() {
         return rightPosVar != null;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(joinType, rightExpr, rightPosVar, rightVar);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof AbstractBinaryCorrelateClause)) {
+            return false;
+        }
+        AbstractBinaryCorrelateClause target = (AbstractBinaryCorrelateClause) object;
+        return ObjectUtils.equals(joinType, target.joinType) && ObjectUtils.equals(rightExpr, target.rightExpr)
+                && ObjectUtils.equals(rightPosVar, target.rightPosVar) && ObjectUtils.equals(rightVar, target.rightVar);
     }
 
 }

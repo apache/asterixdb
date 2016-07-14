@@ -26,6 +26,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class UpdateStatement implements Statement {
 
@@ -65,6 +66,24 @@ public class UpdateStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(condition, target, ucs, vars);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof UpdateStatement)) {
+            return false;
+        }
+        UpdateStatement update = (UpdateStatement) object;
+        return ObjectUtils.equals(condition, update.condition) && ObjectUtils.equals(target, update.target)
+                && ObjectUtils.equals(ucs, update.ucs) && ObjectUtils.equals(vars, update.vars);
     }
 
 }

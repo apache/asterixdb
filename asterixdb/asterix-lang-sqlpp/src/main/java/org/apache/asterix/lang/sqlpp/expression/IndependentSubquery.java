@@ -54,4 +54,21 @@ public class IndependentSubquery implements Expression {
     public String toString() {
         return String.valueOf(expr);
     }
+
+    @Override
+    public int hashCode() {
+        return expr.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof IndependentSubquery)) {
+            return false;
+        }
+        IndependentSubquery target = (IndependentSubquery) object;
+        return this.expr.equals(target.getExpr());
+    }
 }

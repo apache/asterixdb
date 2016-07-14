@@ -25,16 +25,17 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class Query implements Statement {
     private boolean topLevel = true;
     private Expression body;
     private int varCounter;
-    private List<String> dataverses = new ArrayList<String>();
-    private List<String> datasets = new ArrayList<String>();
+    private List<String> dataverses = new ArrayList<>();
+    private List<String> datasets = new ArrayList<>();
 
     public Query() {
-
+        // Default constructor.
     }
 
     public Query(boolean topLevel, Expression body, int varCounter, List<String> dataverses, List<String> datasets) {
@@ -93,5 +94,23 @@ public class Query implements Statement {
 
     public List<String> getDatasets() {
         return datasets;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(body, datasets, dataverses, topLevel);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof Query)) {
+            return false;
+        }
+        Query target = (Query) object;
+        return ObjectUtils.equals(body, target.body) && ObjectUtils.equals(datasets, target.datasets)
+                && ObjectUtils.equals(dataverses, target.dataverses) && topLevel == target.topLevel;
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -28,15 +29,16 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectBlock implements Clause {
 
     private SelectClause selectClause;
     private FromClause fromClause;
-    private List<LetClause> letClauses;
+    private List<LetClause> letClauses = new ArrayList<>();
     private WhereClause whereClause;
     private GroupbyClause groupbyClause;
-    private List<LetClause> letClausesAfterGby;
+    private List<LetClause> letClausesAfterGby = new ArrayList<>();
     private HavingClause havingClause;
 
     public SelectBlock(SelectClause selectClause, FromClause fromClause, List<LetClause> letClauses,
@@ -44,11 +46,15 @@ public class SelectBlock implements Clause {
             HavingClause havingClause) {
         this.selectClause = selectClause;
         this.fromClause = fromClause;
-        this.letClauses = letClauses;
+        if (letClauses != null) {
+            this.letClauses.addAll(letClauses);
+        }
         this.whereClause = whereClause;
         this.groupbyClause = groupbyClause;
         this.havingClause = havingClause;
-        this.letClausesAfterGby = letClausesAfterGby;
+        if (letClausesAfterGby != null) {
+            this.letClausesAfterGby.addAll(letClausesAfterGby);
+        }
     }
 
     @Override
@@ -90,7 +96,7 @@ public class SelectBlock implements Clause {
     }
 
     public boolean hasLetClauses() {
-        return letClauses != null && letClauses.size() > 0;
+        return letClauses != null && !letClauses.isEmpty();
     }
 
     public boolean hasWhereClause() {
@@ -102,7 +108,7 @@ public class SelectBlock implements Clause {
     }
 
     public boolean hasLetClausesAfterGroupby() {
-        return letClausesAfterGby != null && letClausesAfterGby.size() > 0;
+        return letClausesAfterGby != null && !letClausesAfterGby.isEmpty();
     }
 
     public List<LetClause> getLetListAfterGroupby() {
@@ -115,5 +121,54 @@ public class SelectBlock implements Clause {
 
     public void setGroupbyClause(GroupbyClause groupbyClause) {
         this.groupbyClause = groupbyClause;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(fromClause, groupbyClause, havingClause, letClauses, letClausesAfterGby,
+                selectClause, whereClause);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SelectBlock)) {
+            return false;
+        }
+        SelectBlock target = (SelectBlock) object;
+        boolean equals = ObjectUtils.equals(fromClause, target.fromClause)
+                && ObjectUtils.equals(groupbyClause, target.groupbyClause)
+                && ObjectUtils.equals(havingClause, target.havingClause)
+                && ObjectUtils.equals(letClauses, target.letClauses);
+        return equals && ObjectUtils.equals(letClausesAfterGby, target.letClausesAfterGby)
+                && ObjectUtils.equals(selectClause, target.selectClause)
+                && ObjectUtils.equals(whereClause, target.whereClause);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(selectClause);
+        if (hasFromClause()) {
+            sb.append(fromClause);
+        }
+        if (hasLetClauses()) {
+            sb.append(letClauses);
+        }
+        if (hasWhereClause()) {
+            sb.append(whereClause);
+        }
+        if (hasGroupbyClause()) {
+            sb.append(groupbyClause);
+        }
+        if (hasLetClausesAfterGroupby()) {
+            sb.append(letClausesAfterGby);
+        }
+        if (hasHavingClause()) {
+            sb.append(havingClause);
+        }
+        return sb.toString();
     }
 }

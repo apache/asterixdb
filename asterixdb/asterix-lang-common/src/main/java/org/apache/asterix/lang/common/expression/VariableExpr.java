@@ -22,6 +22,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class VariableExpr implements Expression {
     private VarIdentifier var;
@@ -75,16 +76,19 @@ public class VariableExpr implements Expression {
 
     @Override
     public int hashCode() {
-        return var.hashCode();
+        return ObjectUtils.hashCode(var);
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (!(obj instanceof VariableExpr)) {
             return false;
         }
         VariableExpr expr = (VariableExpr) obj;
-        return var.equals(expr.getVar());
+        return ObjectUtils.equals(var, expr.var);
     }
 
     @Override
