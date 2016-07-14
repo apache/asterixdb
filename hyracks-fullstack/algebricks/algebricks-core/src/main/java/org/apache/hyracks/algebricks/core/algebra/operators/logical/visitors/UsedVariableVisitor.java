@@ -68,8 +68,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergeExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -155,14 +155,14 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
                     break;
                 }
                 case RANGE_PARTITION_EXCHANGE: {
-                    RangePartitionPOperator concreteOp = (RangePartitionPOperator) physOp;
+                    RangePartitionExchangePOperator concreteOp = (RangePartitionExchangePOperator) physOp;
                     for (OrderColumn partCol : concreteOp.getPartitioningFields()) {
                         usedVariables.add(partCol.getColumn());
                     }
                     break;
                 }
                 case RANGE_PARTITION_MERGE_EXCHANGE: {
-                    RangePartitionMergePOperator concreteOp = (RangePartitionMergePOperator) physOp;
+                    RangePartitionMergeExchangePOperator concreteOp = (RangePartitionMergeExchangePOperator) physOp;
                     for (OrderColumn partCol : concreteOp.getPartitioningFields()) {
                         usedVariables.add(partCol.getColumn());
                     }
