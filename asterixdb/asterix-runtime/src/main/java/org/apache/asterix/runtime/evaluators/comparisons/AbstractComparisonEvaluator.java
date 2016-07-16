@@ -133,7 +133,7 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
         return ATypeHierarchy.isCompatible(typeTag1, typeTag2);
     }
 
-    protected int compareResults() throws AlgebricksException {
+    protected int compareResults() throws HyracksDataException {
         int result = ch.compare(EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag()),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag()), outLeft, outRight);
         return result;

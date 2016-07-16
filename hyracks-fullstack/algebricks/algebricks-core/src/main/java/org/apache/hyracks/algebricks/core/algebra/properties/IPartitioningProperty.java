@@ -26,11 +26,30 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface IPartitioningProperty extends IStructuralProperty {
-    enum PartitioningType {
+    /**
+     * The Partitioning Types define the method data is transfered between partitions and/or properties of the data.
+     */
+    public enum PartitioningType {
+        /**
+         * Data is not partitioned.
+         */
         UNPARTITIONED,
+        /**
+         * Data is partitioned without a repeatable method.
+         */
         RANDOM,
+        /**
+         * Data is replicated to all partitions.
+         */
         BROADCAST,
+        /**
+         * Data is hash partitioned.
+         */
         UNORDERED_PARTITIONED,
+        /**
+         * Data is range partitioned (only used on data that has a total order).
+         * The partitions are order based on the data range.
+         */
         ORDERED_PARTITIONED
     }
 

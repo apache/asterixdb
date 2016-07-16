@@ -49,19 +49,19 @@ public class JobBuilder implements IHyracksJobBuilder {
     private final AlgebricksAbsolutePartitionConstraint clusterLocations;
     private final AlgebricksAbsolutePartitionConstraint countOneLocation;
 
-    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> outEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
-    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> inEdges = new HashMap<ILogicalOperator, ArrayList<ILogicalOperator>>();
-    private final Map<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>> connectors = new HashMap<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>>();
+    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> outEdges = new HashMap<>();
+    private final Map<ILogicalOperator, ArrayList<ILogicalOperator>> inEdges = new HashMap<>();
+    private final Map<ILogicalOperator, Pair<IConnectorDescriptor, TargetConstraint>> connectors = new HashMap<>();
 
-    private final Map<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>> microOps = new HashMap<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>>();
-    private final Map<IPushRuntimeFactory, ILogicalOperator> revMicroOpMap = new HashMap<IPushRuntimeFactory, ILogicalOperator>();
-    private final Map<ILogicalOperator, IOperatorDescriptor> hyracksOps = new HashMap<ILogicalOperator, IOperatorDescriptor>();
-    private final Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<ILogicalOperator, AlgebricksPartitionConstraint>();
+    private final Map<ILogicalOperator, Pair<IPushRuntimeFactory, RecordDescriptor>> microOps = new HashMap<>();
+    private final Map<IPushRuntimeFactory, ILogicalOperator> revMicroOpMap = new HashMap<>();
+    private final Map<ILogicalOperator, IOperatorDescriptor> hyracksOps = new HashMap<>();
+    private final Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<>();
 
-    private final Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<ILogicalOperator, Integer>();
-    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>>();
-    private final Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<Integer, AlgebricksMetaOperatorDescriptor>();
-    private final Map<IOperatorDescriptor, AlgebricksPartitionConstraint> partitionConstraintMap = new HashMap<IOperatorDescriptor, AlgebricksPartitionConstraint>();
+    private final Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<>();
+    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<>();
+    private final Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<>();
+    private final Map<IOperatorDescriptor, AlgebricksPartitionConstraint> partitionConstraintMap = new HashMap<>();
 
     private int aodCounter = 0;
 
@@ -123,14 +123,14 @@ public class JobBuilder implements IHyracksJobBuilder {
             int destInputIndex) {
         ArrayList<ILogicalOperator> outputs = outEdges.get(src);
         if (outputs == null) {
-            outputs = new ArrayList<ILogicalOperator>();
+            outputs = new ArrayList<>();
             outEdges.put(src, outputs);
         }
         addAtPos(outputs, dest, srcOutputIndex);
 
         ArrayList<ILogicalOperator> inp = inEdges.get(dest);
         if (inp == null) {
-            inp = new ArrayList<ILogicalOperator>();
+            inp = new ArrayList<>();
             inEdges.put(dest, inp);
         }
         addAtPos(inp, src, destInputIndex);
@@ -142,7 +142,9 @@ public class JobBuilder implements IHyracksJobBuilder {
     }
 
     @Override
-    public void contributeAlgebricksPartitionConstraint(IOperatorDescriptor opDesc, AlgebricksPartitionConstraint apc) {
+    public void contributeAlgebricksPartitionConstraint(IOperatorDescriptor opDesc,
+            AlgebricksPartitionConstraint apcArg) {
+        AlgebricksPartitionConstraint apc = apcArg;
         if (apc.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             AlgebricksCountPartitionConstraint constraint = (AlgebricksCountPartitionConstraint) apc;
             if (constraint.getCount() == 1) {
@@ -198,7 +200,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     private void setPartitionConstraintsTopdown(OperatorDescriptorId opId,
             Map<IConnectorDescriptor, TargetConstraint> tgtConstraints, IOperatorDescriptor parentOp) {
         List<IConnectorDescriptor> opInputs = jobSpec.getOperatorInputMap().get(opId);
-        AlgebricksPartitionConstraint opConstraint = null;
+        AlgebricksPartitionConstraint opConstraint;
         IOperatorDescriptor opDesc = jobSpec.getOperatorMap().get(opId);
         if (opInputs != null) {
             for (IConnectorDescriptor conn : opInputs) {
@@ -242,20 +244,18 @@ public class JobBuilder implements IHyracksJobBuilder {
                 TargetConstraint constraint = tgtConstraints.get(conn);
                 if (constraint != null) {
                     switch (constraint) {
-                        case ONE: {
+                        case ONE:
                             opConstraint = countOneLocation;
                             break;
-                        }
-                        case SAME_COUNT: {
+                        case SAME_COUNT:
                             opConstraint = partitionConstraintMap.get(src);
                             break;
-                        }
                     }
                 }
             }
         }
         if (partitionConstraintMap.get(opDesc) == null) {
-            if (finalPass && opConstraint == null && (opInputs == null || opInputs.size() == 0)) {
+            if (finalPass && opConstraint == null && (opInputs == null || opInputs.isEmpty())) {
                 opConstraint = countOneLocation;
             }
             if (finalPass && opConstraint == null) {
@@ -270,7 +270,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     }
 
     private Map<IConnectorDescriptor, TargetConstraint> setupConnectors() throws AlgebricksException {
-        Map<IConnectorDescriptor, TargetConstraint> tgtConstraints = new HashMap<IConnectorDescriptor, TargetConstraint>();
+        Map<IConnectorDescriptor, TargetConstraint> tgtConstraints = new HashMap<>();
         for (ILogicalOperator exchg : connectors.keySet()) {
             ILogicalOperator inOp = inEdges.get(exchg).get(0);
             ILogicalOperator outOp = outEdges.get(exchg).get(0);
@@ -313,7 +313,6 @@ public class JobBuilder implements IHyracksJobBuilder {
 
     private AlgebricksMetaOperatorDescriptor buildMetaAsterixOpDesc(
             List<Pair<IPushRuntimeFactory, RecordDescriptor>> opContents) {
-        // RecordDescriptor outputRecordDesc = null;
         int n = opContents.size();
         IPushRuntimeFactory[] runtimeFactories = new IPushRuntimeFactory[n];
         RecordDescriptor[] internalRecordDescriptors = new RecordDescriptor[n];
@@ -321,9 +320,6 @@ public class JobBuilder implements IHyracksJobBuilder {
         for (Pair<IPushRuntimeFactory, RecordDescriptor> p : opContents) {
             runtimeFactories[i] = p.first;
             internalRecordDescriptors[i] = p.second;
-            // if (i == n - 1) {
-            // outputRecordDesc = p.second;
-            // }
             i++;
         }
         ILogicalOperator lastLogicalOp = revMicroOpMap.get(runtimeFactories[n - 1]);
@@ -332,7 +328,6 @@ public class JobBuilder implements IHyracksJobBuilder {
         ILogicalOperator firstLogicalOp = revMicroOpMap.get(runtimeFactories[0]);
         ArrayList<ILogicalOperator> inOps = inEdges.get(firstLogicalOp);
         int inArity = (inOps == null) ? 0 : inOps.size();
-        // boolean isLeafOp = inEdges.get(firstLogicalOp) == null;
         return new AlgebricksMetaOperatorDescriptor(jobSpec, inArity, outArity, runtimeFactories,
                 internalRecordDescriptors);
     }
@@ -372,7 +367,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     private int createNewMetaOpInfo(ILogicalOperator aop) {
         int n = aodCounter;
         aodCounter++;
-        List<Pair<IPushRuntimeFactory, RecordDescriptor>> metaOpContents = new ArrayList<Pair<IPushRuntimeFactory, RecordDescriptor>>();
+        List<Pair<IPushRuntimeFactory, RecordDescriptor>> metaOpContents = new ArrayList<>();
         metaOpContents.add(microOps.get(aop));
         metaAsterixOpSkeletons.put(n, metaOpContents);
         algebraicOpBelongingToMetaAsterixOp.put(aop, n);

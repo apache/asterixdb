@@ -33,8 +33,8 @@ import org.apache.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
 import org.apache.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
 import org.apache.hyracks.dataflow.std.collectors.PartitionCollector;
 
-public class MToNReplicatingConnectorDescriptor extends AbstractMToNConnectorDescriptor {
-    public MToNReplicatingConnectorDescriptor(IConnectorDescriptorRegistry spec) {
+public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescriptor {
+    public MToNBroadcastConnectorDescriptor(IConnectorDescriptorRegistry spec) {
         super(spec);
     }
 

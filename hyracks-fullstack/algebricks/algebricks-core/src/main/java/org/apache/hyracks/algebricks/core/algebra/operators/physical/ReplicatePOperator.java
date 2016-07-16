@@ -89,7 +89,7 @@ public class ReplicatePOperator extends AbstractPhysicalOperator {
                 outputDependencyLabels[i] = 1;
             }
         }
-        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+        return new Pair<>(inputDependencyLabels, outputDependencyLabels);
     }
 
     @Override

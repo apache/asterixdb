@@ -108,7 +108,7 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                                             + interval0.getTypeTag() + " and interval of " + interval1.getTypeTag());
                                 }
 
-                                if (il.overlap(interval0, interval1) || il.overlappedBy(interval0, interval1)
+                                if (il.overlaps(interval0, interval1) || il.overlappedBy(interval0, interval1)
                                         || il.covers(interval0, interval1) || il.coveredBy(interval0, interval1)) {
                                     long start = Math.max(interval0.getStartValue(), interval1.getStartValue());
                                     long end = Math.min(interval0.getEndValue(), interval1.getEndValue());

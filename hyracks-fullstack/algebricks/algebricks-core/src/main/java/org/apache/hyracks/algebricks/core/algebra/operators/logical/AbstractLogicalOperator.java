@@ -43,32 +43,34 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 
 public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
-    /*********************************************************************
-     * UNPARTITIONED, the input data is not partitioned
-     * PARTITIONED, the input data is partitioned, the operator is executed on
-     * each partition and may receive input from other partitions (e.g. if it is
-     * a join or an aggregate)
-     * LOCAL, the input data is partitioned, the operator is executed on each
-     * partition and only processes data from that partition
-     */
-
-    public static enum ExecutionMode {
+    public enum ExecutionMode {
+        /**
+         * UNPARTITIONED, the input data is not partitioned
+         */
         UNPARTITIONED,
+        /**
+         * PARTITIONED, the input data is partitioned, the operator is executed on
+         * each partition and may receive input from other partitions (e.g. if it is
+         * a join or an aggregate)
+         */
         PARTITIONED,
+        /**
+         * LOCAL, the input data is partitioned, the operator is executed on each
+         * partition and only processes data from that partition
+         */
         LOCAL
     }
 
     private AbstractLogicalOperator.ExecutionMode mode = AbstractLogicalOperator.ExecutionMode.UNPARTITIONED;
     protected IPhysicalOperator physicalOperator;
-    private final Map<String, Object> annotations = new HashMap<String, Object>();
+    private final Map<String, Object> annotations = new HashMap<>();
     private boolean bJobGenEnabled = true;
 
-    final protected List<Mutable<ILogicalOperator>> inputs;
-    // protected List<LogicalOperatorReference> outputs;
+    protected final List<Mutable<ILogicalOperator>> inputs;
     protected List<LogicalVariable> schema;
 
     public AbstractLogicalOperator() {
-        inputs = new ArrayList<Mutable<ILogicalOperator>>();
+        inputs = new ArrayList<>();
     }
 
     @Override
@@ -134,11 +136,6 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         return inputs;
     }
 
-    // @Override
-    // public final List<LogicalOperatorReference> getOutputs() {
-    // return outputs;
-    // }
-
     @Override
     public final boolean hasInputs() {
         return !inputs.isEmpty();
@@ -161,7 +158,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public final void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         if (bJobGenEnabled) {
             if (physicalOperator == null) {
                 throw new AlgebricksException("Physical operator not set for operator: " + this);

@@ -159,6 +159,10 @@ public class HadoopMapperOperatorDescriptor<K1, V1, K2, V2> extends AbstractHado
             }
         }
 
+        @Override
+        public void flush() throws HyracksDataException {
+        }
+
     }
 
     private class ReaderMapperOperator extends MapperBaseOperator {

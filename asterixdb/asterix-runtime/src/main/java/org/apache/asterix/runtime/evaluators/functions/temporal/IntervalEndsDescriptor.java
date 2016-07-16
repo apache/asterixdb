@@ -22,8 +22,8 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IntervalEndsDescriptor extends AbstractIntervalLogicFuncDescriptor {
     private static final long serialVersionUID = 1L;
@@ -43,7 +43,7 @@ public class IntervalEndsDescriptor extends AbstractIntervalLogicFuncDescriptor 
 
     @Override
     protected boolean compareIntervals(IntervalLogic il, AIntervalPointable ip1, AIntervalPointable ip2)
-            throws AlgebricksException {
+            throws HyracksDataException {
         return il.ends(ip1, ip2);
     }
 

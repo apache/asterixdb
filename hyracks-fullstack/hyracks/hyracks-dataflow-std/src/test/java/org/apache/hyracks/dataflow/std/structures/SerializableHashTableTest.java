@@ -70,7 +70,7 @@ public class SerializableHashTableTest {
         int loop = 0;
         for (int i = 0; i < num; i++) {
             assertTrue(nsTable.getTuplePointer(i % NUM_PART, loop, pointer));
-            assertTrue(pointer.frameIndex == i);
+            assertTrue(pointer.getFrameIndex() == i);
             if (i % NUM_PART == NUM_PART - 1) {
                 loop++;
             }

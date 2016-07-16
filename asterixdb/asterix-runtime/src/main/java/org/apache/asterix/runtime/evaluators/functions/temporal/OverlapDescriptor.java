@@ -22,15 +22,14 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class OverlapDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new OverlapDescriptor();
@@ -44,8 +43,8 @@ public class OverlapDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
     @Override
     protected boolean compareIntervals(IntervalLogic il, AIntervalPointable ip1, AIntervalPointable ip2)
-            throws AlgebricksException {
-        return il.overlap(ip1, ip2);
+            throws HyracksDataException {
+        return il.overlapping(ip1, ip2);
     }
 
 }

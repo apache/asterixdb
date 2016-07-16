@@ -39,7 +39,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
@@ -109,6 +109,6 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
     }
 
     protected abstract boolean compareIntervals(IntervalLogic il, AIntervalPointable ip1, AIntervalPointable ip2)
-            throws AlgebricksException;
+            throws HyracksDataException;
 
 }

@@ -35,9 +35,6 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 
 public class OneToOneExchangePOperator extends AbstractExchangePOperator {
 
-    public OneToOneExchangePOperator() {
-    }
-
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.ONE_TO_ONE_EXCHANGE;
@@ -59,7 +56,7 @@ public class OneToOneExchangePOperator extends AbstractExchangePOperator {
     public Pair<IConnectorDescriptor, TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) {
         IConnectorDescriptor conn = new OneToOneConnectorDescriptor(spec);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, TargetConstraint.SAME_COUNT);
+        return new Pair<>(conn, TargetConstraint.SAME_COUNT);
     }
 
 }

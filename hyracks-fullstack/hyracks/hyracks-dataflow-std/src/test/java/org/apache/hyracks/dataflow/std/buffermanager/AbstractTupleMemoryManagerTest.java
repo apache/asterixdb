@@ -47,10 +47,10 @@ public abstract class AbstractTupleMemoryManagerTest {
     FrameTupleAccessor inFTA = new FrameTupleAccessor(recordDescriptor);
     Random random = new Random(System.currentTimeMillis());
 
-    abstract ITuplePointerAccessor getTupleAccessor();
+    abstract ITuplePointerAccessor getTuplePointerAccessor();
 
     protected void assertEachTupleInFTAIsInBuffer(Map<Integer, Integer> map, Map<TuplePointer, Integer> mapInserted) {
-        ITuplePointerAccessor accessor = getTupleAccessor();
+        ITuplePointerAccessor accessor = getTuplePointerAccessor();
         for (Map.Entry<TuplePointer, Integer> entry : mapInserted.entrySet()) {
             accessor.reset(entry.getKey());
             int dataLength = map.get(entry.getValue());

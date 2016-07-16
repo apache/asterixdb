@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.dataflow.std.structures;
 
-public class TuplePointer implements IResetable<TuplePointer> {
+public final class TuplePointer implements IResetable<TuplePointer> {
     public static final int INVALID_ID = -1;
-    public int frameIndex;
-    public int tupleIndex;
+    private int frameIndex;
+    private int tupleIndex;
 
     public TuplePointer() {
         this(INVALID_ID, INVALID_ID);
@@ -31,23 +31,29 @@ public class TuplePointer implements IResetable<TuplePointer> {
         reset(frameId, tupleId);
     }
 
+    public int getFrameIndex() {
+        return frameIndex;
+    }
+
+    public int getTupleIndex() {
+        return tupleIndex;
+    }
+
+    @Override
     public void reset(TuplePointer other) {
         reset(other.frameIndex, other.tupleIndex);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        } else if (o == null || getClass() != o.getClass()) {
             return false;
-
-        TuplePointer that = (TuplePointer) o;
-
-        if (frameIndex != that.frameIndex)
-            return false;
-        return tupleIndex == that.tupleIndex;
-
+        } else {
+            final TuplePointer that = (TuplePointer) o;
+            return frameIndex == that.frameIndex && tupleIndex == that.tupleIndex;
+        }
     }
 
     @Override
@@ -60,6 +66,11 @@ public class TuplePointer implements IResetable<TuplePointer> {
     public void reset(int frameId, int tupleId) {
         this.frameIndex = frameId;
         this.tupleIndex = tupleId;
+    }
+
+    @Override
+    public String toString() {
+        return "TuplePointer(" + frameIndex + ", " + tupleIndex + ")";
     }
 
 }

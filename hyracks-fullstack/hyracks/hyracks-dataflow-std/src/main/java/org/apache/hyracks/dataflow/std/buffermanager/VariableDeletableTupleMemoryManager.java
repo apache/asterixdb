@@ -150,8 +150,8 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
 
     @Override
     public void deleteTuple(TuplePointer tuplePointer) throws HyracksDataException {
-        accessor.reset(frames.get(tuplePointer.frameIndex));
-        accessor.delete(tuplePointer.tupleIndex);
+        accessor.reset(frames.get(tuplePointer.getFrameIndex()));
+        accessor.delete(tuplePointer.getTupleIndex());
         numTuples--;
     }
 
@@ -168,7 +168,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
     }
 
     @Override
-    public ITuplePointerAccessor createTupleAccessor() {
+    public ITuplePointerAccessor createTuplePointerAccessor() {
         return new AbstractTuplePointerAccessor() {
             private IAppendDeletableFrameTupleAccessor bufferAccessor = new DeletableFrameTupleAppender(
                     recordDescriptor);
@@ -180,7 +180,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
 
             @Override
             void resetInnerAccessor(TuplePointer tuplePointer) {
-                bufferAccessor.reset(frames.get(tuplePointer.frameIndex));
+                bufferAccessor.reset(frames.get(tuplePointer.getFrameIndex()));
             }
         };
     }

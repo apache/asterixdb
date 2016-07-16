@@ -125,8 +125,8 @@ public class TupleSorterHeapSort implements ITupleSorter {
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories)
             throws HyracksDataException {
         this.bufferManager = bufferManager;
-        this.bufferAccessor1 = bufferManager.createTupleAccessor();
-        this.bufferAccessor2 = bufferManager.createTupleAccessor();
+        this.bufferAccessor1 = bufferManager.createTuplePointerAccessor();
+        this.bufferAccessor2 = bufferManager.createTuplePointerAccessor();
         this.topK = topK;
         this.outputFrame = new VSizeFrame(ctx);
         this.outputAppender = new FrameTupleAppender();

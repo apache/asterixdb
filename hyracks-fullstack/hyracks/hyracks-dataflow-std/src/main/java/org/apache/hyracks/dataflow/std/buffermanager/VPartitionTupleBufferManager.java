@@ -242,7 +242,7 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     }
 
     @Override
-    public ITuplePointerAccessor getTupleAccessor(final RecordDescriptor recordDescriptor) {
+    public ITuplePointerAccessor getTuplePointerAccessor(final RecordDescriptor recordDescriptor) {
         return new AbstractTuplePointerAccessor() {
             FrameTupleAccessor innerAccessor = new FrameTupleAccessor(recordDescriptor);
 
@@ -253,8 +253,8 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
 
             @Override
             void resetInnerAccessor(TuplePointer tuplePointer) {
-                partitionArray[parsePartitionId(tuplePointer.frameIndex)]
-                        .getFrame(parseFrameIdInPartition(tuplePointer.frameIndex), tempInfo);
+                partitionArray[parsePartitionId(tuplePointer.getFrameIndex())]
+                        .getFrame(parseFrameIdInPartition(tuplePointer.getFrameIndex()), tempInfo);
                 innerAccessor.reset(tempInfo.getBuffer(), tempInfo.getStartOffset(), tempInfo.getLength());
             }
         };

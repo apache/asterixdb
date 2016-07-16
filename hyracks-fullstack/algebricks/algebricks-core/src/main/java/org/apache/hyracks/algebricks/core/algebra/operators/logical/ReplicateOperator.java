@@ -34,20 +34,20 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class ReplicateOperator extends AbstractLogicalOperator {
 
-    private int outputArity = 2;
-    private boolean[] outputMaterializationFlags = new boolean[outputArity];
+    private int outputArity;
+    private boolean[] outputMaterializationFlags;
     private List<Mutable<ILogicalOperator>> outputs;
 
     public ReplicateOperator(int outputArity) {
         this.outputArity = outputArity;
         this.outputMaterializationFlags = new boolean[outputArity];
-        this.outputs = new ArrayList<Mutable<ILogicalOperator>>();
+        this.outputs = new ArrayList<>();
     }
 
     public ReplicateOperator(int outputArity, boolean[] outputMaterializationFlags) {
         this.outputArity = outputArity;
         this.outputMaterializationFlags = outputMaterializationFlags;
-        this.outputs = new ArrayList<Mutable<ILogicalOperator>>();
+        this.outputs = new ArrayList<>();
     }
 
     @Override
@@ -87,10 +87,6 @@ public class ReplicateOperator extends AbstractLogicalOperator {
 
     public int getOutputArity() {
         return outputArity;
-    }
-
-    public int setOutputArity(int outputArity) {
-        return this.outputArity = outputArity;
     }
 
     public void setOutputMaterializationFlags(boolean[] outputMaterializationFlags) {

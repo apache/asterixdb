@@ -65,8 +65,7 @@ public class InMemoryHashJoin {
             FrameTuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
             ISerializableTable table, IPredicateEvaluator predEval) throws HyracksDataException {
         this(ctx, tableSize, accessorProbe, tpcProbe, accessorBuild, tpcBuild, comparator, isLeftOuter,
-                missingWritersBuild, table, predEval,
-                false);
+                missingWritersBuild, table, predEval, false);
     }
 
     public InMemoryHashJoin(IHyracksTaskContext ctx, int tableSize, FrameTupleAccessor accessorProbe,
@@ -77,7 +76,7 @@ public class InMemoryHashJoin {
         this.tableSize = tableSize;
         this.table = table;
         storedTuplePointer = new TuplePointer();
-        buffers = new ArrayList<ByteBuffer>();
+        buffers = new ArrayList<>();
         this.accessorBuild = accessorBuild;
         this.tpcBuild = tpcBuild;
         this.accessorProbe = accessorProbe;
@@ -109,8 +108,7 @@ public class InMemoryHashJoin {
         int tCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tCount; ++i) {
             int entry = tpcBuild.partition(accessorBuild, i, tableSize);
-            storedTuplePointer.frameIndex = bIndex;
-            storedTuplePointer.tupleIndex = i;
+            storedTuplePointer.reset(bIndex, i);
             table.insert(entry, storedTuplePointer);
         }
     }
@@ -123,10 +121,11 @@ public class InMemoryHashJoin {
             int offset = 0;
             do {
                 table.getTuplePointer(entry, offset++, storedTuplePointer);
-                if (storedTuplePointer.frameIndex < 0)
+                if (storedTuplePointer.getFrameIndex() < 0) {
                     break;
-                int bIndex = storedTuplePointer.frameIndex;
-                int tIndex = storedTuplePointer.tupleIndex;
+                }
+                int bIndex = storedTuplePointer.getFrameIndex();
+                int tIndex = storedTuplePointer.getTupleIndex();
                 accessorBuild.reset(buffers.get(bIndex));
                 int c = tpComparator.compare(accessorProbe, tid, accessorBuild, tIndex);
                 if (c == 0) {
@@ -164,9 +163,9 @@ public class InMemoryHashJoin {
 
     private boolean evaluatePredicate(int tIx1, int tIx2) {
         if (reverseOutputOrder) { //Role Reversal Optimization is triggered
-            return ((predEvaluator == null) || predEvaluator.evaluate(accessorBuild, tIx2, accessorProbe, tIx1));
+            return (predEvaluator == null) || predEvaluator.evaluate(accessorBuild, tIx2, accessorProbe, tIx1);
         } else {
-            return ((predEvaluator == null) || predEvaluator.evaluate(accessorProbe, tIx1, accessorBuild, tIx2));
+            return (predEvaluator == null) || predEvaluator.evaluate(accessorProbe, tIx1, accessorBuild, tIx2);
         }
     }
 

@@ -25,7 +25,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class AIntervalTypeComputer extends AbstractResultTypeComputer {
-
+    private static final long serialVersionUID = 1L;
     public static final AIntervalTypeComputer INSTANCE = new AIntervalTypeComputer();
 
     private AIntervalTypeComputer() {

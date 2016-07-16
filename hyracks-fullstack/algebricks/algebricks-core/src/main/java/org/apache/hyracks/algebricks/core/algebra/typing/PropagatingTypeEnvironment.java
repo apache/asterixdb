@@ -36,9 +36,9 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
     private final ITypeEnvPointer[] envPointers;
 
-    private final List<LogicalVariable> nonNullVariables = new ArrayList<LogicalVariable>();
+    private final List<LogicalVariable> nonNullVariables = new ArrayList<>();
 
-    private final List<List<LogicalVariable>> correlatedNullableVariableLists = new ArrayList<List<LogicalVariable>>();
+    private final List<List<LogicalVariable>> correlatedNullableVariableLists = new ArrayList<>();
 
     public PropagatingTypeEnvironment(IExpressionTypeComputer expressionTypeComputer,
             IMissableTypeComputer nullableTypeComputer, IMetadataProvider<?, ?> metadataProvider,

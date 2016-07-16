@@ -37,7 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.connectors.MToNReplicatingConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
 
 public class BroadcastExchangePOperator extends AbstractExchangePOperator {
 
@@ -68,8 +68,8 @@ public class BroadcastExchangePOperator extends AbstractExchangePOperator {
     @Override
     public Pair<IConnectorDescriptor, TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
-        IConnectorDescriptor conn = new MToNReplicatingConnectorDescriptor(spec);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        IConnectorDescriptor conn = new MToNBroadcastConnectorDescriptor(spec);
+        return new Pair<>(conn, null);
     }
 
 }

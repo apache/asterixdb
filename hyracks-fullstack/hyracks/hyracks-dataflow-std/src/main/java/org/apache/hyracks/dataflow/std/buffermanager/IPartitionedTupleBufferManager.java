@@ -86,7 +86,7 @@ public interface IPartitionedTupleBufferManager {
      */
     void close();
 
-    ITuplePointerAccessor getTupleAccessor(RecordDescriptor recordDescriptor);
+    ITuplePointerAccessor getTuplePointerAccessor(RecordDescriptor recordDescriptor);
 
     /**
      * Flush the particular partition {@code pid} to {@code writer}.

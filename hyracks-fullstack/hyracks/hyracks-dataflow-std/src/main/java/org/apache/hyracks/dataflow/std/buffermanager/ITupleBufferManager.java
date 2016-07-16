@@ -43,5 +43,5 @@ public interface ITupleBufferManager {
 
     void close() throws HyracksDataException;
 
-    ITuplePointerAccessor createTupleAccessor();
+    ITuplePointerAccessor createTuplePointerAccessor();
 }
