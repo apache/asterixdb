@@ -81,7 +81,7 @@ Groupby
     ]
     FunctionCall test.create-point@2[
       LiteralExpr [DOUBLE] [24.5]
-      NEGATIVE LiteralExpr [DOUBLE] [125.5]
+      - LiteralExpr [DOUBLE] [125.5]
     ]
     LiteralExpr [DOUBLE] [3.0]
     LiteralExpr [DOUBLE] [3.0]

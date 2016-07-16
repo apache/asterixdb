@@ -29,7 +29,7 @@ Where
         LiteralExpr [DOUBLE] [9.0]
       ]
       FunctionCall test.create-point@2[
-        NEGATIVE LiteralExpr [DOUBLE] [1.0]
+        - LiteralExpr [DOUBLE] [1.0]
         LiteralExpr [DOUBLE] [5.0]
       ]
     ]

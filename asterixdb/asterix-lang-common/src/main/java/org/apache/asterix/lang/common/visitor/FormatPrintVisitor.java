@@ -58,7 +58,6 @@ import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
-import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.CompactStatement;
@@ -95,6 +94,7 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -363,7 +363,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
 
     @Override
     public Void visit(UnaryExpr u, Integer step) throws AsterixException {
-        out.print(u.getSign() == Sign.NEGATIVE ? "-" : "");
+        out.print(u.getExprType() == UnaryExprType.NEGATIVE ? "-" : "");
         u.getExpr().accept(this, 0);
         return null;
     }

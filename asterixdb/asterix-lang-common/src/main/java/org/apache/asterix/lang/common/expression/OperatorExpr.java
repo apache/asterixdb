@@ -91,12 +91,12 @@ public class OperatorExpr extends AbstractExpression {
         return cmp;
     }
 
-    public void addOperator(String strOp) {
+    public void addOperator(String strOp) throws AsterixException {
         Optional<OperatorType> op = OperatorType.fromSymbol(strOp);
         if (op.isPresent()) {
             opList.add(op.get());
         } else {
-            throw new UnsupportedOperationException("Unsupported operator: " + strOp);
+            throw new AsterixException("Unsupported operator: " + strOp);
         }
     }
 

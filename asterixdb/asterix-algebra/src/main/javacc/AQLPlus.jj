@@ -79,7 +79,6 @@ import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
-import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
@@ -542,7 +541,11 @@ Expression OperatorExpr()throws ParseException:
         op.setCurrentop(true);
         }
         Token t = getToken(0);
-      op.addOperator(t.toString());
+        try{
+          op.addOperator(t.toString());
+        } catch (Exception e){
+          throw new ParseException(e.getMessage());
+        }
     }
 
     operand = AndExpr()
@@ -574,7 +577,11 @@ Expression AndExpr()throws ParseException:
         op.setCurrentop(true);
         }
         Token t = getToken(0);
-      op.addOperator(t.toString());
+        try{
+          op.addOperator(t.toString());
+        } catch (Exception e){
+          throw new ParseException(e.getMessage());
+        }
     }
 
     operand = RelExpr()
@@ -618,7 +625,11 @@ Expression RelExpr()throws ParseException:
           broadcast = false;
           }
           Token t = getToken(0);
-        op.addOperator(t.toString());
+          try{
+            op.addOperator(t.toString());
+          } catch (Exception e){
+            throw new ParseException(e.getMessage());
+          }
       }
 
        operand = AddExpr()
@@ -655,7 +666,11 @@ Expression AddExpr()throws ParseException:
         op.setCurrentop(true);
         }
         Token t = getToken(0);
-      ((OperatorExpr)op).addOperator(t.toString());
+      try{
+          ((OperatorExpr)op).addOperator(t.toString());
+      } catch (Exception e){
+          throw new ParseException(e.getMessage());
+      }
     }
 
     operand = MultExpr()
@@ -685,7 +700,11 @@ Expression MultExpr()throws ParseException:
         op.setCurrentop(true);
         }
         Token t = getToken(0);
-      op.addOperator(t.toString());
+        try{
+          op.addOperator(t.toString());
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
     }
     operand = UnionExpr()
     {
@@ -721,20 +740,18 @@ Expression UnionExpr() throws ParseException:
 
 Expression UnaryExpr() throws ParseException:
 {
-    Expression uexpr = null;
+    UnaryExpr uexpr = null;
     Expression expr = null;
 }
 {
-    (( "+"|"-")
+    ( ("+"|"-")
     {
           uexpr = new UnaryExpr();
-        Token t = getToken(0);
-        if("+".equals(t.toString()))
-            ((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
-        else if("-".equals(t.toString()))
-            ((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
-        else
-            throw new ParseException();
+          try{
+            uexpr.setExprType(token.image);
+          } catch (AsterixException e){
+            throw new ParseException(e.getMessage());
+          }
     }
     )?
 

@@ -77,7 +77,6 @@ import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
-import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
@@ -1618,7 +1617,11 @@ Expression OperatorExpr()throws ParseException:
           op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image.toLowerCase());
+        try{
+            op.addOperator(token.image.toLowerCase());
+        } catch (Exception e){
+            throw new ParseException(e.getMessage());
+        }
     }
 
     operand = AndExpr()
@@ -1639,7 +1642,7 @@ Expression AndExpr()throws ParseException:
   Expression operand = null;
 }
 {
-    operand = RelExpr()
+    operand = NotExpr()
     (
 
       <AND>
@@ -1647,12 +1650,16 @@ Expression AndExpr()throws ParseException:
         if (op == null) {
           op = new OperatorExpr();
           op.addOperand(operand);
-        op.setCurrentop(true);
+          op.setCurrentop(true);
         }
-      op.addOperator(token.image.toLowerCase());
+        try{
+           op.addOperator(token.image.toLowerCase());
+        } catch (AsterixException e){
+           throw new ParseException(e.getMessage());
+        }
     }
 
-    operand = RelExpr()
+    operand = NotExpr()
     {
       op.addOperand(operand);
     }
@@ -1664,7 +1671,22 @@ Expression AndExpr()throws ParseException:
     }
 }
 
-
+Expression NotExpr()throws ParseException:
+{
+   Expression inputExpr;
+   boolean not = false;
+}
+{
+  (<NOT> { not = true; } )? inputExpr = RelExpr()
+  {
+    if(not){
+        FunctionSignature signature = new FunctionSignature(null, "not", 1);
+        return new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(inputExpr)));
+    } else {
+        return inputExpr;
+    }
+  }
+}
 
 Expression RelExpr()throws ParseException:
 {
@@ -1706,7 +1728,11 @@ Expression RelExpr()throws ParseException:
             op.setCurrentop(true);
             broadcast = false;
           }
-          op.addOperator(operator);
+          try{
+            op.addOperator(operator);
+          } catch (AsterixException e){
+            throw new ParseException(e.getMessage());
+          }
         }
 
        operand = IsExpr()
@@ -1771,7 +1797,11 @@ Expression AddExpr()throws ParseException:
         op.addOperand(operand);
         op.setCurrentop(true);
         }
-      ((OperatorExpr)op).addOperator(token.image);
+        try{
+            ((OperatorExpr)op).addOperator(token.image);
+        } catch (Exception e){
+            throw new ParseException(e.getMessage());
+        }
     }
 
     operand = MultExpr()
@@ -1800,7 +1830,11 @@ Expression MultExpr()throws ParseException:
         op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image);
+        try{
+            op.addOperator(token.image);
+        } catch (Exception e){
+            throw new ParseException(e.getMessage());
+        }
     }
     operand = UnaryExpr()
     {
@@ -1815,39 +1849,33 @@ Expression MultExpr()throws ParseException:
 
 Expression UnaryExpr() throws ParseException:
 {
-    Expression uexpr = null;
+    boolean not = false;
+    UnaryExpr uexpr = null;
     Expression expr = null;
-    FunctionSignature signature = null;
 }
 {
-    ( (<PLUS> | <MINUS> | <NOT>)
+    ( (<PLUS> | <MINUS> | (<NOT> { not = true; } )? <EXISTS> )
     {
-        switch(token.image){
-            case "+":
-                uexpr = new UnaryExpr();
-                ((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
-                break;
-            case "-":
-                uexpr = new UnaryExpr();
-                ((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
-                break;
-            default:
-                signature = new FunctionSignature(null, "not", 1);
-                break;
+        String exprType = token.image.toLowerCase();
+        if(not){
+           exprType = "not_" + exprType;
+        }
+        uexpr = new UnaryExpr();
+        try{
+            uexpr.setExprType(exprType);
+        } catch (AsterixException e){
+            throw new ParseException(e.getMessage());
         }
     }
     )?
 
     expr = ValueExpr()
     {
-        if(uexpr!=null){
-            ((UnaryExpr)uexpr).setExpr(expr);
-            return uexpr;
-        } else if (signature!=null){
-            return new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(expr)));
-        } else{
+       if(uexpr==null){
             return expr;
-        }
+       }
+       uexpr.setExpr(expr);
+       return uexpr;
     }
 }
 

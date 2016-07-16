@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -33,7 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVis
 public final class ConstantExpression extends AbstractLogicalExpression {
     private IAlgebricksConstantValue value;
 
-    public final static ConstantExpression TRUE = new ConstantExpression(new IAlgebricksConstantValue() {
+    public static final ConstantExpression TRUE = new ConstantExpression(new IAlgebricksConstantValue() {
 
         @Override
         public boolean isTrue() {
@@ -60,7 +61,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
             return "TRUE";
         }
     });
-    public final static ConstantExpression FALSE = new ConstantExpression(new IAlgebricksConstantValue() {
+    public static final ConstantExpression FALSE = new ConstantExpression(new IAlgebricksConstantValue() {
 
         @Override
         public boolean isTrue() {
@@ -87,7 +88,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
             return "FALSE";
         }
     });
-    public final static ConstantExpression MISSING = new ConstantExpression(new IAlgebricksConstantValue() {
+    public static final ConstantExpression MISSING = new ConstantExpression(new IAlgebricksConstantValue() {
 
         @Override
         public boolean isTrue() {
@@ -115,7 +116,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         }
     });
 
-    private Map<Object, IExpressionAnnotation> annotationMap = new HashMap<Object, IExpressionAnnotation>();
+    private Map<Object, IExpressionAnnotation> annotationMap = new HashMap<>();
 
     public ConstantExpression(IAlgebricksConstantValue value) {
         this.value = value;
@@ -170,10 +171,10 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
     @Override
     public AbstractLogicalExpression cloneExpression() {
-        Map<Object, IExpressionAnnotation> m = new HashMap<Object, IExpressionAnnotation>();
-        for (Object k : annotationMap.keySet()) {
-            IExpressionAnnotation annot2 = annotationMap.get(k).copy();
-            m.put(k, annot2);
+        Map<Object, IExpressionAnnotation> m = new HashMap<>();
+        for (Entry<Object, IExpressionAnnotation> entry : annotationMap.entrySet()) {
+            IExpressionAnnotation annot2 = entry.getValue().copy();
+            m.put(entry.getKey(), annot2);
         }
         ConstantExpression c = new ConstantExpression(value);
         c.annotationMap = m;

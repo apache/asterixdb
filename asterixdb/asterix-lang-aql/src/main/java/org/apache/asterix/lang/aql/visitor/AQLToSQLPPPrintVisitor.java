@@ -119,8 +119,8 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
 
         String generated = generateVariableSymbol();
         if (unnestClauseList.size() > 0) {
-            Map<VariableExpr, Expression> varExprMap = extractDefinedCollectionVariables(clauseList, cuttingGbyClause,
-                    generated);
+            Map<VariableExpr, Expression> varExprMap =
+                    extractDefinedCollectionVariables(clauseList, cuttingGbyClause, generated);
 
             returnExpr = (Expression) AQLVariableSubstitutionUtil.substituteVariable(returnExpr, varExprMap);
             List<Clause> newUnnestClauses = new ArrayList<Clause>();
@@ -560,7 +560,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     // Merge consecutive "where" clauses.
-    private void mergeConsecutiveWhereClauses(List<Clause> clauses) {
+    private void mergeConsecutiveWhereClauses(List<Clause> clauses) throws AsterixException {
         List<Clause> results = new ArrayList<Clause>();
         int size = clauses.size();
         for (int index = 0; index < size;) {

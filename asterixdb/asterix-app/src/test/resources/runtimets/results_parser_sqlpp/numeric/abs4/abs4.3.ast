@@ -14,7 +14,7 @@ RecordConstructor [
     LiteralExpr [STRING] [f1]
     :
     FunctionCall test.abs@1[
-      NEGATIVE LiteralExpr [DOUBLE] [1.11]
+      - LiteralExpr [DOUBLE] [1.11]
     ]
   )
   (

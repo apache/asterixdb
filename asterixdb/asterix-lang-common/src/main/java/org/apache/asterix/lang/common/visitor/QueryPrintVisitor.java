@@ -284,8 +284,8 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
 
     @Override
     public Void visit(UnaryExpr u, Integer step) throws AsterixException {
-        if (u.getSign() != null) {
-            out.print(skip(step) + u.getSign() + " ");
+        if (u.getExprType() != null) {
+            out.print(skip(step) + u.getExprType() + " ");
             u.getExpr().accept(this, 0);
         } else {
             u.getExpr().accept(this, step);

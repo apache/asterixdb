@@ -5,7 +5,7 @@ Variable [ Name=$x ]
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [10]
-    NEGATIVE LiteralExpr [LONG] [30]
+    - LiteralExpr [LONG] [30]
   ]
   AS Variable [ Name=$x ]
 ]
@@ -14,8 +14,8 @@ Where
     [Variable [ Name=$y ]
     In
       OrderedListConstructor [
-        NEGATIVE LiteralExpr [LONG] [20]
-        NEGATIVE LiteralExpr [LONG] [10]
+        - LiteralExpr [LONG] [20]
+        - LiteralExpr [LONG] [10]
       ]
     ]
     Satifies [

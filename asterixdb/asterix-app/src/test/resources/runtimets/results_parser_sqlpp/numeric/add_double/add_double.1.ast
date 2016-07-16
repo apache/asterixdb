@@ -101,7 +101,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [DOUBLE] [1.0]
         ]
-        Index:         NEGATIVE LiteralExpr [LONG] [1]
+        Index:         - LiteralExpr [LONG] [1]
       ]
     ]
   )

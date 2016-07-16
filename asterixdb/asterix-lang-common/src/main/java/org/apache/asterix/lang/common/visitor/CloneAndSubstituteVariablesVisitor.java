@@ -260,7 +260,7 @@ public class CloneAndSubstituteVariablesVisitor extends
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(UnaryExpr u,
             VariableSubstitutionEnvironment env) throws AsterixException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = u.getExpr().accept(this, env);
-        UnaryExpr newU = new UnaryExpr(u.getSign(), (Expression) p1.first);
+        UnaryExpr newU = new UnaryExpr(u.getExprType(), (Expression) p1.first);
         return new Pair<>(newU, env);
     }
 

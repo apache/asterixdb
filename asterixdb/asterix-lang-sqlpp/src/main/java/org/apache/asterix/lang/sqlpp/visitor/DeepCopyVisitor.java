@@ -402,7 +402,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public UnaryExpr visit(UnaryExpr u, Void arg) throws AsterixException {
-        return new UnaryExpr(u.getSign(), (Expression) u.getExpr().accept(this, arg));
+        return new UnaryExpr(u.getExprType(), (Expression) u.getExpr().accept(this, arg));
     }
 
     @Override
