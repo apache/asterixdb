@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.storage.IGrowableIntArray;
+import org.apache.hyracks.util.MathUtil;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.util.MathUtil;
 
 public class TreeIndexBufferCacheWarmup {
     private final IBufferCache bufferCache;
@@ -75,7 +74,7 @@ public class TreeIndexBufferCacheWarmup {
         for (int i = 0; i < warmupTreeLevels.length; i++) {
             if (warmupTreeLevels[i] < pagesByLevel.size()) {
                 int repeats = warmupRepeats[i];
-                IGrowableIntArray pageIds = pagesByLevel.get(warmupTreeLevels[i]);
+                IntArrayList pageIds = pagesByLevel.get(warmupTreeLevels[i]);
                 int[] remainingPageIds = new int[pageIds.size()];
                 for (int r = 0; r < repeats; r++) {
                     for (int j = 0; j < pageIds.size(); j++) {

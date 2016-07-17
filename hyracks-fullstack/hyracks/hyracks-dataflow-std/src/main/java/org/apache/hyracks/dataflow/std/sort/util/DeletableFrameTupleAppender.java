@@ -107,7 +107,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
      *
      * @param tupleAccessor
      * @param tIndex
-     * @return int
+     * @return
      * @throws HyracksDataException
      */
     @Override

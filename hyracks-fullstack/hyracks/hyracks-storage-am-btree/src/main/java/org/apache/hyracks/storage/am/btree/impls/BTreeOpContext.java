@@ -24,7 +24,6 @@ import java.util.Deque;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.storage.IGrowableIntArray;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -64,8 +63,8 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public RangePredicate pred;
     public BTreeSplitKey splitKey;
     public LongArrayList pageLsns;
-    public IGrowableIntArray smPages;
-    public IGrowableIntArray freePages;
+    public IntArrayList smPages;
+    public IntArrayList freePages;
     public int opRestarts = 0;
     public boolean exceptionHandled;
     public IModificationOperationCallback modificationCallback;

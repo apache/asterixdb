@@ -36,9 +36,9 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
  * Matches the following operator pattern:
- * (select) &lt;-- ((assign)* &lt;-- (select)*)+
+ * (select) <-- ((assign)* <-- (select)*)+
  * Consolidates the selects to:
- * (select) &lt;-- (assign)*
+ * (select) <-- (assign)*
  */
 public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
 

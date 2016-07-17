@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
