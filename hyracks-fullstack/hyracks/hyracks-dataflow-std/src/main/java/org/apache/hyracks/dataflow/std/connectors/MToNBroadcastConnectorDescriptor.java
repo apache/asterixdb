@@ -45,16 +45,20 @@ public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescr
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
                     throws HyracksDataException {
         final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
+        final boolean[] isOpen = new boolean[nConsumerPartitions];
         for (int i = 0; i < nConsumerPartitions; ++i) {
             epWriters[i] = edwFactory.createFrameWriter(i);
         }
         return new IFrameWriter() {
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                buffer.mark();
+                // Record the current position, instead of using buffer.mark().
+                // The latter will be problematic because epWriters[i].nextFrame(buffer)
+                // can flip or clear the buffer.
+                int pos = buffer.position();
                 for (int i = 0; i < epWriters.length; ++i) {
                     if (i != 0) {
-                        buffer.reset();
+                        buffer.position(pos);
                     }
                     epWriters[i].nextFrame(buffer);
                 }
@@ -62,22 +66,58 @@ public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescr
 
             @Override
             public void fail() throws HyracksDataException {
+                HyracksDataException failException = null;
                 for (int i = 0; i < epWriters.length; ++i) {
-                    epWriters[i].fail();
+                    if (isOpen[i]) {
+                        try {
+                            epWriters[i].fail();
+                        } catch (Throwable th) {
+                            if (failException == null) {
+                                failException = new HyracksDataException(th);
+                            } else {
+                                failException.addSuppressed(th);
+                            }
+                        }
+                    }
+                }
+                if (failException != null) {
+                    throw failException;
                 }
             }
 
             @Override
             public void close() throws HyracksDataException {
+                HyracksDataException closeException = null;
                 for (int i = 0; i < epWriters.length; ++i) {
-                    epWriters[i].close();
+                    if (isOpen[i]) {
+                        try {
+                            epWriters[i].close();
+                        } catch (Throwable th) {
+                            if (closeException == null) {
+                                closeException = new HyracksDataException(th);
+                            } else {
+                                closeException.addSuppressed(th);
+                            }
+                        }
+                    }
+                }
+                if (closeException != null) {
+                    throw closeException;
                 }
             }
 
             @Override
             public void open() throws HyracksDataException {
                 for (int i = 0; i < epWriters.length; ++i) {
+                    isOpen[i] = true;
                     epWriters[i].open();
+                }
+            }
+
+            @Override
+            public void flush() throws HyracksDataException {
+                for (IFrameWriter writer : epWriters) {
+                    writer.flush();
                 }
             }
         };

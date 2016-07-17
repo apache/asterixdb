@@ -18,7 +18,7 @@ UnorderedListConstructor [
     LiteralExpr [LONG] [44]
     LiteralExpr [LONG] [22]
     LiteralExpr [LONG] [66]
-    NEGATIVE LiteralExpr [LONG] [1]
+    - LiteralExpr [LONG] [1]
     LiteralExpr [LONG] [0]
     LiteralExpr [DOUBLE] [99.9]
   ]

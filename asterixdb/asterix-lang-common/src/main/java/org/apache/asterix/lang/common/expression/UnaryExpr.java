@@ -18,30 +18,38 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Optional;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
 public class UnaryExpr implements Expression {
-    private Sign sign;
+    private UnaryExprType unaryExprType;
     private Expression expr;
 
     public UnaryExpr() {
         // default constructor
     }
 
-    public UnaryExpr(Sign sign, Expression expr) {
-        this.sign = sign;
+    public UnaryExpr(UnaryExprType type, Expression expr) {
+        this.unaryExprType = type;
         this.expr = expr;
     }
 
-    public Sign getSign() {
-        return sign;
+    public UnaryExprType getExprType() {
+        return unaryExprType;
     }
 
-    public void setSign(Sign sign) {
-        this.sign = sign;
+    public void setExprType(String strType) throws AsterixException {
+        Optional<UnaryExprType> exprType = UnaryExprType.fromSymbol(strType);
+        if (exprType.isPresent()) {
+            this.unaryExprType = exprType.get();
+        } else {
+            throw new AsterixException("Unsupported operator: " + strType);
+        }
     }
 
     public Expression getExpr() {
@@ -57,11 +65,6 @@ public class UnaryExpr implements Expression {
         return Kind.UNARY_EXPRESSION;
     }
 
-    public enum Sign {
-        POSITIVE,
-        NEGATIVE
-    }
-
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
@@ -69,7 +72,7 @@ public class UnaryExpr implements Expression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(expr, sign);
+        return ObjectUtils.hashCodeMulti(expr, unaryExprType);
     }
 
     @Override
@@ -81,6 +84,6 @@ public class UnaryExpr implements Expression {
             return false;
         }
         UnaryExpr target = (UnaryExpr) object;
-        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(sign, target.sign);
+        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(unaryExprType, target.unaryExprType);
     }
 }

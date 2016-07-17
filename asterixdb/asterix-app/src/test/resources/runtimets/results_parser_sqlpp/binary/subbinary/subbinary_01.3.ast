@@ -30,7 +30,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] []
       ]
-      NEGATIVE LiteralExpr [LONG] [1]
+      - LiteralExpr [LONG] [1]
     ]
     =
     FunctionCall test.hex@1[
@@ -135,7 +135,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      NEGATIVE LiteralExpr [LONG] [1]
+      - LiteralExpr [LONG] [1]
     ]
     =
     FunctionCall test.hex@1[
@@ -174,7 +174,7 @@ OrderedListConstructor [
         LiteralExpr [STRING] [aabbccdd]
       ]
       LiteralExpr [LONG] [2]
-      NEGATIVE LiteralExpr [LONG] [1]
+      - LiteralExpr [LONG] [1]
     ]
     =
     FunctionCall test.hex@1[

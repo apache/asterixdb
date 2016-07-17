@@ -1,0 +1,41 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+/** Finds customers whose orders have all possible priorities.*/
+
+WITH priorities AS
+COLL_COUNT((
+  SELECT DISTINCT o.o_orderpriority FROM Orders o
+))
+,
+cust_priorities AS (
+ SELECT co.c_custkey, COUNT(1) AS priority_count
+ FROM (
+    SELECT DISTINCT c.c_custkey, o.o_orderpriority
+    FROM  Customer c LEFT JOIN Orders o ON c.c_custkey=o.o_custkey
+ ) co
+ GROUP BY co.c_custkey
+)
+
+SELECT c_custkey
+FROM cust_priorities
+WHERE priority_count = priorities
+ORDER BY c_custkey;

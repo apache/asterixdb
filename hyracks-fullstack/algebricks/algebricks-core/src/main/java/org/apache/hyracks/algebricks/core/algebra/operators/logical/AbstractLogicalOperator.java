@@ -43,18 +43,21 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 
 public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
-    /*********************************************************************
-     * UNPARTITIONED, the input data is not partitioned
-     * PARTITIONED, the input data is partitioned, the operator is executed on
-     * each partition and may receive input from other partitions (e.g. if it is
-     * a join or an aggregate)
-     * LOCAL, the input data is partitioned, the operator is executed on each
-     * partition and only processes data from that partition
-     */
-
     public enum ExecutionMode {
+        /**
+         * UNPARTITIONED, the input data is not partitioned
+         */
         UNPARTITIONED,
+        /**
+         * PARTITIONED, the input data is partitioned, the operator is executed on
+         * each partition and may receive input from other partitions (e.g. if it is
+         * a join or an aggregate)
+         */
         PARTITIONED,
+        /**
+         * LOCAL, the input data is partitioned, the operator is executed on each
+         * partition and only processes data from that partition
+         */
         LOCAL
     }
 

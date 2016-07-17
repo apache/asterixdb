@@ -20,9 +20,9 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 
@@ -35,7 +35,7 @@ public class IntervalLogic implements Serializable {
     private final IPointable s2 = VoidPointable.FACTORY.createPointable();
     private final IPointable e2 = VoidPointable.FACTORY.createPointable();
 
-    public boolean validateInterval(AIntervalPointable ip1) throws AsterixException {
+    public boolean validateInterval(AIntervalPointable ip1) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         return ch.compare(ip1.getTypeTag(), ip1.getTypeTag(), s1, e1) <= 0;
@@ -47,16 +47,16 @@ public class IntervalLogic implements Serializable {
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @see #after(AIntervalPointable, AIntervalPointable)
      */
-    public boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean before(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getEnd(e1);
         ip2.getStart(s2);
         return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) < 0;
     }
 
-    public boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean after(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return before(ip2, ip1);
     }
 
@@ -66,16 +66,16 @@ public class IntervalLogic implements Serializable {
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @see #metBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean meets(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getEnd(e1);
         ip2.getStart(s2);
         return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) == 0;
     }
 
-    public boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean metBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return meets(ip2, ip1);
     }
 
@@ -85,10 +85,10 @@ public class IntervalLogic implements Serializable {
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @see #overlappedBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean overlaps(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -98,7 +98,7 @@ public class IntervalLogic implements Serializable {
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) < 0;
     }
 
-    public boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean overlappedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return overlaps(ip2, ip1);
     }
 
@@ -107,16 +107,18 @@ public class IntervalLogic implements Serializable {
      *
      * @param ip1
      * @param ip2
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @return boolean
      */
-    public boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean overlapping(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
         ip2.getEnd(e2);
-        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) < 0
-                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0;
+        return (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, s2) <= 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0)
+                || (ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) >= 0
+                        && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) < 0);
     }
 
     /**
@@ -125,10 +127,10 @@ public class IntervalLogic implements Serializable {
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @see #startedBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean starts(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -137,7 +139,7 @@ public class IntervalLogic implements Serializable {
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) <= 0;
     }
 
-    public boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean startedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return starts(ip2, ip1);
     }
 
@@ -147,10 +149,10 @@ public class IntervalLogic implements Serializable {
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @see #coveredBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean covers(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -159,7 +161,7 @@ public class IntervalLogic implements Serializable {
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) >= 0;
     }
 
-    public boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean coveredBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return covers(ip2, ip1);
     }
 
@@ -169,10 +171,10 @@ public class IntervalLogic implements Serializable {
      * @param ip1
      * @param ip2
      * @return boolean
-     * @throws AsterixException
+     * @throws HyracksDataException
      * @see #endedBy(AIntervalPointable, AIntervalPointable)
      */
-    public boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean ends(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);
@@ -181,11 +183,19 @@ public class IntervalLogic implements Serializable {
                 && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, e2) == 0;
     }
 
-    public boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    public boolean endedBy(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         return ends(ip2, ip1);
     }
 
-    public boolean equals(AIntervalPointable ip1, AIntervalPointable ip2) throws AsterixException {
+    /**
+     * Intervals with the same start and end time.
+     *
+     * @param ip1
+     * @param ip2
+     * @return boolean
+     * @throws HyracksDataException
+     */
+    public boolean same(AIntervalPointable ip1, AIntervalPointable ip2) throws HyracksDataException {
         ip1.getStart(s1);
         ip1.getEnd(e1);
         ip2.getStart(s2);

@@ -92,7 +92,7 @@ Let Variable [ Name=$rec ]
     (
       LiteralExpr [STRING] [-age]
       :
-      NEGATIVE FieldAccessor [
+      - FieldAccessor [
   Variable [ Name=$c ]
   Field=age
 ]

@@ -69,8 +69,8 @@ public class ErrorReportingTest extends AbstractIntegrationTest {
         try {
             runTest(spec);
         } catch (Exception e) {
-            Throwable t = getRootCause(e);
-            Assert.assertTrue(t.getMessage().equals(EXPECTED_ERROR_MESSAGE));
+            String actualMessage = getRootCause(e).getMessage();
+            Assert.assertTrue(actualMessage.equals(EXPECTED_ERROR_MESSAGE));
         }
     }
 

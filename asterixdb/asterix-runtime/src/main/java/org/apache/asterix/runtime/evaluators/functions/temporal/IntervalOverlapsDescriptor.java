@@ -22,8 +22,8 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IntervalOverlapsDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
@@ -44,7 +44,7 @@ public class IntervalOverlapsDescriptor extends AbstractIntervalLogicFuncDescrip
 
     @Override
     protected boolean compareIntervals(IntervalLogic il, AIntervalPointable ip1, AIntervalPointable ip2)
-            throws AlgebricksException {
+            throws HyracksDataException {
         return il.overlaps(ip1, ip2);
     }
 

@@ -2758,6 +2758,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="exists">
+        <output-dir compare="Text">exists</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="get-item_01">
         <output-dir compare="Text">get-item_01</output-dir>
       </compilation-unit>
@@ -5302,6 +5307,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
+      <compilation-unit name="exists">
+        <output-dir compare="Text">exists</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="in">
         <output-dir compare="Text">in</output-dir>
       </compilation-unit>
@@ -5309,6 +5319,11 @@
     <test-case FilePath="subquery">
       <compilation-unit name="in_correlated">
         <output-dir compare="Text">in</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="not_exists">
+        <output-dir compare="Text">not_exists</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
@@ -5320,6 +5335,21 @@
       <compilation-unit name="alias_negative">
         <output-dir compare="Text">alias_negative</output-dir>
         <expected-error>Need an alias for the enclosed expression</expected-error>
+        </compilation-unit>
+    </test-case>
+     <test-case FilePath="subquery">
+      <compilation-unit name="relational_division">
+        <output-dir compare="Text">relational_division</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="relational_division2">
+        <output-dir compare="Text">relational_division</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="relational_division3">
+        <output-dir compare="Text">relational_division</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

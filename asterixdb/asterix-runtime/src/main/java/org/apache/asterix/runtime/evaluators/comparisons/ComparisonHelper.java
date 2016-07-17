@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AIntervalAscPartialBinaryComparatorFactory;
@@ -73,7 +72,7 @@ public class ComparisonHelper implements Serializable {
             ByteArrayPointable.FACTORY).createBinaryComparator();
 
     public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
-            throws AsterixException {
+            throws HyracksDataException {
         switch (typeTag1) {
             case INT8:
                 return compareInt8WithArg(typeTag2, arg1, arg2);
@@ -97,9 +96,9 @@ public class ComparisonHelper implements Serializable {
     }
 
     private int compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag, IPointable arg1,
-            IPointable arg2) throws AsterixException {
+            IPointable arg2) throws HyracksDataException {
         if (expectedTypeTag != actualTypeTag) {
-            throw new AsterixException(
+            throw new HyracksDataException(
                     "Comparison is undefined between " + expectedTypeTag + " and " + actualTypeTag + ".");
         }
         int result = 0;
@@ -164,38 +163,38 @@ public class ComparisonHelper implements Serializable {
                             rightLen);
                     break;
                 default:
-                    throw new AsterixException("Comparison for " + actualTypeTag + " is not supported.");
+                    throw new HyracksDataException("Comparison for " + actualTypeTag + " is not supported.");
             }
         } catch (HyracksDataException e) {
-            throw new AsterixException(e);
+            throw new HyracksDataException(e);
         }
         return result;
     }
 
-    private int compareBooleanWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareBooleanWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         if (typeTag2 == ATypeTag.BOOLEAN) {
             byte b0 = arg1.getByteArray()[arg1.getStartOffset()];
             byte b1 = arg2.getByteArray()[arg2.getStartOffset()];
             return compareByte(b0, b1);
         }
-        throw new AsterixException("Comparison is undefined between types ABoolean and " + typeTag2 + " .");
+        throw new HyracksDataException("Comparison is undefined between types ABoolean and " + typeTag2 + " .");
     }
 
-    private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         if (typeTag2 == ATypeTag.STRING) {
             int result;
             try {
                 result = strBinaryComp.compare(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength() - 1,
                         arg2.getByteArray(), arg2.getStartOffset(), arg2.getLength() - 1);
             } catch (HyracksDataException e) {
-                throw new AsterixException(e);
+                throw new HyracksDataException(e);
             }
             return result;
         }
-        throw new AsterixException("Comparison is undefined between types AString and " + typeTag2 + " .");
+        throw new HyracksDataException("Comparison is undefined between types AString and " + typeTag2 + " .");
     }
 
-    private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -228,12 +227,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AsterixException("Comparison is undefined between types ADouble and " + typeTag2 + " .");
+                throw new HyracksDataException("Comparison is undefined between types ADouble and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareFloatWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareFloatWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -266,12 +265,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AsterixException("Comparison is undefined between types AFloat and " + typeTag2 + " .");
+                throw new HyracksDataException("Comparison is undefined between types AFloat and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt64WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareInt64WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -304,12 +303,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AsterixException("Comparison is undefined between types AInt64 and " + typeTag2 + " .");
+                throw new HyracksDataException("Comparison is undefined between types AInt64 and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt32WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareInt32WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -342,12 +341,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AsterixException("Comparison is undefined between types AInt32 and " + typeTag2 + " .");
+                throw new HyracksDataException("Comparison is undefined between types AInt32 and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt16WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareInt16WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -380,12 +379,12 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AsterixException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
+                throw new HyracksDataException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
             }
         }
     }
 
-    private int compareInt8WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws AsterixException {
+    private int compareInt8WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftStart = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
@@ -418,7 +417,7 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new AsterixException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
+                throw new HyracksDataException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
             }
         }
     }

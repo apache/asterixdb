@@ -100,7 +100,7 @@ Let Variable [ Name=$rec ]
     (
       LiteralExpr [STRING] [-cashBack]
       :
-      NEGATIVE FieldAccessor [
+      - FieldAccessor [
   Variable [ Name=$c ]
   Field=cashBack
 ]

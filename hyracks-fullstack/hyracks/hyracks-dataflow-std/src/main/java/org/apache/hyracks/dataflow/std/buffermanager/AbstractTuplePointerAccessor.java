@@ -35,7 +35,7 @@ public abstract class AbstractTuplePointerAccessor implements ITuplePointerAcces
     @Override
     public void reset(TuplePointer tuplePointer) {
         resetInnerAccessor(tuplePointer);
-        tid = tuplePointer.tupleIndex;
+        tid = tuplePointer.getTupleIndex();
     }
 
     @Override

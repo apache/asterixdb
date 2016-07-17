@@ -147,7 +147,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     bufferAccessor.reset(pointer);
                     int c = ftpcInputCompareToAggregate.compare(accessor, tIndex, bufferAccessor);
                     if (c == 0) {
-                        aggregateExistingTuple(accessor, tIndex, bufferAccessor, pointer.tupleIndex);
+                        aggregateExistingTuple(accessor, tIndex, bufferAccessor, pointer.getTupleIndex());
                         return true;
                     }
                 }
@@ -201,11 +201,11 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                         switch (type) {
                             case PARTIAL:
                                 hasOutput = aggregator.outputPartialResult(outputTupleBuilder, bufferAccessor,
-                                        pointer.tupleIndex, aggregateState);
+                                        pointer.getTupleIndex(), aggregateState);
                                 break;
                             case FINAL:
                                 hasOutput = aggregator.outputFinalResult(outputTupleBuilder, bufferAccessor,
-                                        pointer.tupleIndex, aggregateState);
+                                        pointer.getTupleIndex(), aggregateState);
                                 break;
                         }
 

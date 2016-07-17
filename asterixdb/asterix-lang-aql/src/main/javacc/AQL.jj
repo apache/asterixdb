@@ -84,7 +84,6 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
 import org.apache.asterix.lang.common.literal.FalseLiteral;
 import org.apache.asterix.lang.common.literal.FloatLiteral;
@@ -1583,7 +1582,11 @@ Expression OperatorExpr()throws ParseException:
           op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image);
+        try{
+          op.addOperator(token.image);
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
     }
 
     operand = AndExpr()
@@ -1614,7 +1617,11 @@ Expression AndExpr()throws ParseException:
           op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image);
+        try{
+          op.addOperator(token.image);
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
     }
 
     operand = RelExpr()
@@ -1666,7 +1673,11 @@ Expression RelExpr()throws ParseException:
           op.setCurrentop(true);
           broadcast = false;
           }
-        op.addOperator(token.image);
+         try{
+           op.addOperator(token.image);
+         } catch (AsterixException e){
+           throw new ParseException(e.getMessage());
+         }
       }
 
        operand = AddExpr()
@@ -1705,7 +1716,11 @@ Expression AddExpr()throws ParseException:
         op.addOperand(operand);
         op.setCurrentop(true);
         }
-      ((OperatorExpr)op).addOperator(token.image);
+        try{
+          ((OperatorExpr)op).addOperator(token.image);
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
     }
 
     operand = MultExpr()
@@ -1734,7 +1749,11 @@ Expression MultExpr()throws ParseException:
         op.addOperand(operand);
         op.setCurrentop(true);
         }
-      op.addOperator(token.image);
+        try{
+          op.addOperator(token.image);
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
     }
     operand = UnionExpr()
     {
@@ -1770,19 +1789,18 @@ Expression UnionExpr() throws ParseException:
 
 Expression UnaryExpr() throws ParseException:
 {
-    Expression uexpr = null;
+    UnaryExpr uexpr = null;
     Expression expr = null;
 }
 {
     ( (<PLUS> | <MINUS>)
     {
           uexpr = new UnaryExpr();
-        if("+".equals(token.image))
-            ((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
-        else if("-".equals(token.image))
-            ((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
-        else
-            throw new ParseException();
+          try{
+            uexpr.setExprType(token.image);
+          } catch (AsterixException e){
+            throw new ParseException(e.getMessage());
+          }
     }
     )?
 

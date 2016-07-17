@@ -187,6 +187,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(Projection projection,
             VariableSubstitutionEnvironment env) throws AsterixException {
+        if (projection.star()) {
+            return new Pair<>(projection, env);
+        }
         Projection newProjection = new Projection((Expression) projection.getExpression().accept(this, env).first,
                 projection.getName(), projection.star(), projection.exprStar());
         return new Pair<>(newProjection, env);

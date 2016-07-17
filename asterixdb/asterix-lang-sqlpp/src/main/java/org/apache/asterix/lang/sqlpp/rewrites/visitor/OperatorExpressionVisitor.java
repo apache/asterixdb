@@ -76,7 +76,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
                 new ArrayList<Expression>(Collections.singletonList(likeExpr)));
     }
 
-    private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) {
+    private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) throws AsterixException {
         VariableExpr bindingVar = new VariableExpr(context.newVariable());
         Expression itemExpr = operatorExpr.getExprList().get(0);
         Expression collectionExpr = operatorExpr.getExprList().get(1);

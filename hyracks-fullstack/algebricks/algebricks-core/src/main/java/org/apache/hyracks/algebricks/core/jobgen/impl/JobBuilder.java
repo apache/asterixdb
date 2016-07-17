@@ -142,7 +142,9 @@ public class JobBuilder implements IHyracksJobBuilder {
     }
 
     @Override
-    public void contributeAlgebricksPartitionConstraint(IOperatorDescriptor opDesc, AlgebricksPartitionConstraint apc) {
+    public void contributeAlgebricksPartitionConstraint(IOperatorDescriptor opDesc,
+            AlgebricksPartitionConstraint apcArg) {
+        AlgebricksPartitionConstraint apc = apcArg;
         if (apc.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             AlgebricksCountPartitionConstraint constraint = (AlgebricksCountPartitionConstraint) apc;
             if (constraint.getCount() == 1) {
@@ -198,7 +200,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     private void setPartitionConstraintsTopdown(OperatorDescriptorId opId,
             Map<IConnectorDescriptor, TargetConstraint> tgtConstraints, IOperatorDescriptor parentOp) {
         List<IConnectorDescriptor> opInputs = jobSpec.getOperatorInputMap().get(opId);
-        AlgebricksPartitionConstraint opConstraint = null;
+        AlgebricksPartitionConstraint opConstraint;
         IOperatorDescriptor opDesc = jobSpec.getOperatorMap().get(opId);
         if (opInputs != null) {
             for (IConnectorDescriptor conn : opInputs) {
@@ -242,20 +244,18 @@ public class JobBuilder implements IHyracksJobBuilder {
                 TargetConstraint constraint = tgtConstraints.get(conn);
                 if (constraint != null) {
                     switch (constraint) {
-                        case ONE: {
+                        case ONE:
                             opConstraint = countOneLocation;
                             break;
-                        }
-                        case SAME_COUNT: {
+                        case SAME_COUNT:
                             opConstraint = partitionConstraintMap.get(src);
                             break;
-                        }
                     }
                 }
             }
         }
         if (partitionConstraintMap.get(opDesc) == null) {
-            if (finalPass && opConstraint == null && (opInputs == null || opInputs.size() == 0)) {
+            if (finalPass && opConstraint == null && (opInputs == null || opInputs.isEmpty())) {
                 opConstraint = countOneLocation;
             }
             if (finalPass && opConstraint == null) {
@@ -313,7 +313,6 @@ public class JobBuilder implements IHyracksJobBuilder {
 
     private AlgebricksMetaOperatorDescriptor buildMetaAsterixOpDesc(
             List<Pair<IPushRuntimeFactory, RecordDescriptor>> opContents) {
-        // RecordDescriptor outputRecordDesc = null;
         int n = opContents.size();
         IPushRuntimeFactory[] runtimeFactories = new IPushRuntimeFactory[n];
         RecordDescriptor[] internalRecordDescriptors = new RecordDescriptor[n];
@@ -321,9 +320,6 @@ public class JobBuilder implements IHyracksJobBuilder {
         for (Pair<IPushRuntimeFactory, RecordDescriptor> p : opContents) {
             runtimeFactories[i] = p.first;
             internalRecordDescriptors[i] = p.second;
-            // if (i == n - 1) {
-            // outputRecordDesc = p.second;
-            // }
             i++;
         }
         ILogicalOperator lastLogicalOp = revMicroOpMap.get(runtimeFactories[n - 1]);
@@ -332,7 +328,6 @@ public class JobBuilder implements IHyracksJobBuilder {
         ILogicalOperator firstLogicalOp = revMicroOpMap.get(runtimeFactories[0]);
         ArrayList<ILogicalOperator> inOps = inEdges.get(firstLogicalOp);
         int inArity = (inOps == null) ? 0 : inOps.size();
-        // boolean isLeafOp = inEdges.get(firstLogicalOp) == null;
         return new AlgebricksMetaOperatorDescriptor(jobSpec, inArity, outArity, runtimeFactories,
                 internalRecordDescriptors);
     }
@@ -372,7 +367,7 @@ public class JobBuilder implements IHyracksJobBuilder {
     private int createNewMetaOpInfo(ILogicalOperator aop) {
         int n = aodCounter;
         aodCounter++;
-        List<Pair<IPushRuntimeFactory, RecordDescriptor>> metaOpContents = new ArrayList<Pair<IPushRuntimeFactory, RecordDescriptor>>();
+        List<Pair<IPushRuntimeFactory, RecordDescriptor>> metaOpContents = new ArrayList<>();
         metaOpContents.add(microOps.get(aop));
         metaAsterixOpSkeletons.put(n, metaOpContents);
         algebraicOpBelongingToMetaAsterixOp.put(aop, n);

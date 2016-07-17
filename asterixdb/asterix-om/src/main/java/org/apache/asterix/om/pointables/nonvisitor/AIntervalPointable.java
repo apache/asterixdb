@@ -19,11 +19,11 @@
 
 package org.apache.asterix.om.pointables.nonvisitor;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
@@ -95,7 +95,7 @@ public class AIntervalPointable extends AbstractPointable {
         return TAG_SIZE;
     }
 
-    public void getStart(IPointable start) throws AsterixException {
+    public void getStart(IPointable start) throws HyracksDataException {
         start.set(bytes, getStartOffset(), getStartSize());
     }
 
@@ -103,7 +103,7 @@ public class AIntervalPointable extends AbstractPointable {
         return getTypeOffset() + getTypeSize();
     }
 
-    public int getStartSize() throws AsterixException {
+    public int getStartSize() throws HyracksDataException {
         switch (getTypeTag()) {
             case DATE:
             case TIME:
@@ -111,11 +111,11 @@ public class AIntervalPointable extends AbstractPointable {
             case DATETIME:
                 return Long.BYTES;
             default:
-                throw new AsterixException("Unsupported interval type: " + getTypeTag() + ".");
+                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
         }
     }
 
-    public long getStartValue() throws AsterixException {
+    public long getStartValue() throws HyracksDataException {
         switch (getTypeTag()) {
             case DATE:
             case TIME:
@@ -123,19 +123,19 @@ public class AIntervalPointable extends AbstractPointable {
             case DATETIME:
                 return LongPointable.getLong(bytes, getStartOffset());
             default:
-                throw new AsterixException("Unsupported interval type: " + getTypeTag() + ".");
+                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
         }
     }
 
-    public void getEnd(IPointable start) throws AsterixException {
+    public void getEnd(IPointable start) throws HyracksDataException {
         start.set(bytes, getEndOffset(), getEndSize());
     }
 
-    public int getEndOffset() throws AsterixException {
+    public int getEndOffset() throws HyracksDataException {
         return getStartOffset() + getStartSize();
     }
 
-    public int getEndSize() throws AsterixException {
+    public int getEndSize() throws HyracksDataException {
         switch (getTypeTag()) {
             case DATE:
             case TIME:
@@ -143,11 +143,11 @@ public class AIntervalPointable extends AbstractPointable {
             case DATETIME:
                 return Long.BYTES;
             default:
-                throw new AsterixException("Unsupported interval type: " + getTypeTag() + ".");
+                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
         }
     }
 
-    public long getEndValue() throws AsterixException {
+    public long getEndValue() throws HyracksDataException {
         switch (getTypeTag()) {
             case DATE:
             case TIME:
@@ -155,7 +155,7 @@ public class AIntervalPointable extends AbstractPointable {
             case DATETIME:
                 return LongPointable.getLong(bytes, getEndOffset());
             default:
-                throw new AsterixException("Unsupported interval type: " + getTypeTag() + ".");
+                throw new HyracksDataException("Unsupported interval type: " + getTypeTag() + ".");
         }
     }
 

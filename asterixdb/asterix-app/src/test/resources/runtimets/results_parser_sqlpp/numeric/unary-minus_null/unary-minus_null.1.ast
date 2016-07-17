@@ -3,11 +3,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [nullField]
     :
-    NEGATIVE LiteralExpr [NULL]
+    - LiteralExpr [NULL]
   )
   (
     LiteralExpr [STRING] [missingField]
     :
-    NEGATIVE LiteralExpr [MISSING]
+    - LiteralExpr [MISSING]
   )
 ]

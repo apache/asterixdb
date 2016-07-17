@@ -60,8 +60,9 @@ public class DoubleArrayList {
     }
 
     public void removeLast() {
-        if (size > 0)
+        if (size > 0) {
             size--;
+        }
     }
 
     // WARNING: caller is responsible for checking size > 0

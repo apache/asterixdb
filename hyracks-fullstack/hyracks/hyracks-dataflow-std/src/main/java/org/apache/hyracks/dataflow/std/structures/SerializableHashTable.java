@@ -34,8 +34,8 @@ public class SerializableHashTable implements ISerializableTable {
     private static final int INIT_ENTRY_SIZE = 4;
 
     private IntSerDeBuffer[] headers;
-    private List<IntSerDeBuffer> contents = new ArrayList<IntSerDeBuffer>();
-    private List<Integer> frameCurrentIndex = new ArrayList<Integer>();
+    private List<IntSerDeBuffer> contents = new ArrayList<>();
+    private List<Integer> frameCurrentIndex = new ArrayList<>();
     private final IHyracksFrameMgrContext ctx;
     private final int frameCapacity;
     private int currentLargestFrameIndex = 0;
@@ -103,22 +103,19 @@ public class SerializableHashTable implements ISerializableTable {
         int headerOffset = getHeaderFrameOffset(entry);
         IntSerDeBuffer header = headers[hFrameIndex];
         if (header == null) {
-            dataPointer.frameIndex = -1;
-            dataPointer.tupleIndex = -1;
+            dataPointer.reset(-1, -1);
             return false;
         }
         int frameIndex = header.getInt(headerOffset);
         int offsetIndex = header.getInt(headerOffset + 1);
         if (frameIndex < 0) {
-            dataPointer.frameIndex = -1;
-            dataPointer.tupleIndex = -1;
+            dataPointer.reset(-1, -1);
             return false;
         }
         IntSerDeBuffer frame = contents.get(frameIndex);
         int entryUsedItems = frame.getInt(offsetIndex + 1);
         if (offset > entryUsedItems - 1) {
-            dataPointer.frameIndex = -1;
-            dataPointer.tupleIndex = -1;
+            dataPointer.reset(-1, -1);
             return false;
         }
         int startIndex = offsetIndex + 2 + offset * 2;
@@ -127,8 +124,7 @@ public class SerializableHashTable implements ISerializableTable {
             startIndex -= frameCapacity;
         }
         frame = contents.get(frameIndex);
-        dataPointer.frameIndex = frame.getInt(startIndex);
-        dataPointer.tupleIndex = frame.getInt(startIndex + 1);
+        dataPointer.reset(frame.getInt(startIndex), frame.getInt(startIndex + 1));
         return true;
     }
 
@@ -152,6 +148,7 @@ public class SerializableHashTable implements ISerializableTable {
         return headerFrameCount + contents.size();
     }
 
+    @Override
     public int getTupleCount() {
         return tupleCount;
     }
@@ -218,8 +215,8 @@ public class SerializableHashTable implements ISerializableTable {
         // set the entry
         lastFrame.writeInt(lastIndex, entryCapacity - 1);
         lastFrame.writeInt(lastIndex + 1, 1);
-        lastFrame.writeInt(lastIndex + 2, pointer.frameIndex);
-        lastFrame.writeInt(lastIndex + 3, pointer.tupleIndex);
+        lastFrame.writeInt(lastIndex + 2, pointer.getFrameIndex());
+        lastFrame.writeInt(lastIndex + 3, pointer.getTupleIndex());
         int newLastIndex = lastIndex + entryCapacity * 2;
         newLastIndex = newLastIndex < frameCapacity ? newLastIndex : frameCapacity - 1;
         frameCurrentIndex.set(startFrameIndex, newLastIndex);
@@ -233,8 +230,9 @@ public class SerializableHashTable implements ISerializableTable {
         }
     }
 
-    private void insertNonFirstTuple(IntSerDeBuffer header, int headerOffset, int frameIndex, int offsetIndex,
+    private void insertNonFirstTuple(IntSerDeBuffer header, int headerOffset, int frameIndexArg, int offsetIndex,
             TuplePointer pointer) throws HyracksDataException {
+        int frameIndex = frameIndexArg;
         IntSerDeBuffer frame = contents.get(frameIndex);
         int entryItems = frame.getInt(offsetIndex);
         int entryUsedItems = frame.getInt(offsetIndex + 1);
@@ -247,16 +245,15 @@ public class SerializableHashTable implements ISerializableTable {
                 startIndex -= frameCapacity;
             }
             frame = contents.get(frameIndex);
-            frame.writeInt(startIndex, pointer.frameIndex);
-            frame.writeInt(startIndex + 1, pointer.tupleIndex);
+            frame.writeInt(startIndex, pointer.getFrameIndex());
+            frame.writeInt(startIndex + 1, pointer.getTupleIndex());
         } else {
             int capacity = (entryItems + 1) * 2;
             header.writeInt(headerOffset, -1);
             header.writeInt(headerOffset + 1, -1);
             int fIndex = frame.getInt(offsetIndex + 2);
             int tIndex = frame.getInt(offsetIndex + 3);
-            tempTuplePointer.frameIndex = fIndex;
-            tempTuplePointer.tupleIndex = tIndex;
+            tempTuplePointer.reset(fIndex, tIndex);
             this.insertNewEntry(header, headerOffset, capacity, tempTuplePointer);
             int newFrameIndex = header.getInt(headerOffset);
             int newTupleIndex = header.getInt(headerOffset + 1);
@@ -271,8 +268,7 @@ public class SerializableHashTable implements ISerializableTable {
                 frame = contents.get(startFrameIndex);
                 fIndex = frame.getInt(startIndex);
                 tIndex = frame.getInt(startIndex + 1);
-                tempTuplePointer.frameIndex = fIndex;
-                tempTuplePointer.tupleIndex = tIndex;
+                tempTuplePointer.reset(fIndex, tIndex);
                 insertNonFirstTuple(header, headerOffset, newFrameIndex, newTupleIndex, tempTuplePointer);
             }
             insertNonFirstTuple(header, headerOffset, newFrameIndex, newTupleIndex, pointer);

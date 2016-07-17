@@ -259,8 +259,8 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
 
             @Override
             void resetInnerAccessor(TuplePointer tuplePointer) {
-                partitionArray[parsePartitionId(tuplePointer.frameIndex)]
-                        .getFrame(parseFrameIdInPartition(tuplePointer.frameIndex), tempInfo);
+                partitionArray[parsePartitionId(tuplePointer.getFrameIndex())]
+                        .getFrame(parseFrameIdInPartition(tuplePointer.getFrameIndex()), tempInfo);
                 innerAccessor.reset(tempInfo.getBuffer(), tempInfo.getStartOffset(), tempInfo.getLength());
             }
         };

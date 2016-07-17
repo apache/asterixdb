@@ -63,7 +63,6 @@ public class TreeIndexBufferCacheWarmup {
                     pagesByLevel.add(new IntArrayList(100, 100));
                 }
                 if (level >= 0) {
-                    // System.out.println("ADDING: " + level + " " + pageId);
                     pagesByLevel.get(level).add(pageId);
                 }
             } finally {
