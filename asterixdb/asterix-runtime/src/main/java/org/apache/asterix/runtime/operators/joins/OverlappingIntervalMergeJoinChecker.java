@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -59,7 +58,7 @@ public class OverlappingIntervalMergeJoinChecker extends AbstractIntervalMergeJo
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
         return il.overlapping(ipLeft, ipRight);
     }
 

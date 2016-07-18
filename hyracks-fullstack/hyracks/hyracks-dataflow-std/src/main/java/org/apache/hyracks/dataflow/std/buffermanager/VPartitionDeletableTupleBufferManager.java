@@ -137,10 +137,10 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
 
     @Override
     public void deleteTuple(int partition, TuplePointer tuplePointer) throws HyracksDataException {
-        partitionArray[parsePartitionId(tuplePointer.frameIndex)]
-                .getFrame(parseFrameIdInPartition(tuplePointer.frameIndex), tempInfo);
+        partitionArray[parsePartitionId(tuplePointer.getFrameIndex())]
+                .getFrame(parseFrameIdInPartition(tuplePointer.getFrameIndex()), tempInfo);
         accessor[partition].reset(tempInfo.getBuffer());
-        accessor[partition].delete(tuplePointer.tupleIndex);
+        accessor[partition].delete(tuplePointer.getTupleIndex());
         numTuples[partition]--;
     }
 
@@ -157,8 +157,8 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
 
             @Override
             void resetInnerAccessor(TuplePointer tuplePointer) {
-                partitionArray[parsePartitionId(tuplePointer.frameIndex)]
-                        .getFrame(parseFrameIdInPartition(tuplePointer.frameIndex), tempInfo);
+                partitionArray[parsePartitionId(tuplePointer.getFrameIndex())]
+                        .getFrame(parseFrameIdInPartition(tuplePointer.getFrameIndex()), tempInfo);
                 innerAccessor.reset(tempInfo.getBuffer());
             }
         };

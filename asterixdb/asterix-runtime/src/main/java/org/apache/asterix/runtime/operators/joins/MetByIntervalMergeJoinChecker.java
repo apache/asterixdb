@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -34,19 +33,15 @@ public class MetByIntervalMergeJoinChecker extends AbstractIntervalInverseMergeJ
     @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
-            ipLeft.getEnd(endLeft);
-            ipRight.getStart(startRight);
-            return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, startRight) >= 0;
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+        IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+        ipLeft.getEnd(endLeft);
+        ipRight.getStart(startRight);
+        return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, startRight) >= 0;
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
         return il.metBy(ipLeft, ipRight);
     }
 

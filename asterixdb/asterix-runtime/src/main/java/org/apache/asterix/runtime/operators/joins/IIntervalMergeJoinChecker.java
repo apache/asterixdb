@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.join.IMergeJoinChecker;
 
 public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
@@ -28,7 +28,7 @@ public interface IIntervalMergeJoinChecker extends IMergeJoinChecker {
 
     public boolean checkToRemoveRightActive();
 
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException;
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException;
 
     public boolean compareIntervalPartition(int s1, int e1, int s2, int e2);
 

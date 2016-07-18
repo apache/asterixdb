@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 
@@ -33,15 +32,11 @@ public abstract class AbstractIntervalInverseMergeJoinChecker extends AbstractIn
     @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
-            ipLeft.getStart(startLeft);
-            ipRight.getEnd(endRight);
-            return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0;
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+        IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+        ipLeft.getStart(startLeft);
+        ipRight.getEnd(endRight);
+        return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0;
     }
 
     @Override

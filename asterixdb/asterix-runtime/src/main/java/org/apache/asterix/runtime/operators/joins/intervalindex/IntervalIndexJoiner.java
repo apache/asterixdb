@@ -378,9 +378,9 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             outerAccessor.reset(outerTp);
             for (TuplePointer innerTp : inner) {
                 innerAccessor.reset(innerTp);
-                if (imjc.checkToSaveInResult(outerAccessor, outerTp.tupleIndex, innerAccessor, innerTp.tupleIndex,
+                if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(),
                         reversed)) {
-                    addToResult(outerAccessor, outerTp.tupleIndex, innerAccessor, innerTp.tupleIndex, reversed, writer);
+                    addToResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(), reversed, writer);
                 }
             }
         }
@@ -394,9 +394,9 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             ITupleAccessor tupleAccessor, boolean reversed, IFrameWriter writer) throws HyracksDataException {
         for (TuplePointer outerTp : outer) {
             outerAccessor.reset(outerTp);
-            if (imjc.checkToSaveInResult(outerAccessor, outerTp.tupleIndex, tupleAccessor, tupleAccessor.getTupleId(),
+            if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), tupleAccessor, tupleAccessor.getTupleId(),
                     reversed)) {
-                addToResult(outerAccessor, outerTp.tupleIndex, tupleAccessor, tupleAccessor.getTupleId(), reversed,
+                addToResult(outerAccessor, outerTp.getTupleIndex(), tupleAccessor, tupleAccessor.getTupleId(), reversed,
                         writer);
             }
         }

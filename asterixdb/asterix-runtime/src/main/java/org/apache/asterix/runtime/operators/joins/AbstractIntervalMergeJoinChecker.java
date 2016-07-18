@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalLogic;
@@ -66,29 +65,21 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
     @Override
     public boolean checkToSaveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
-            ipLeft.getEnd(endLeft);
-            ipRight.getStart(startRight);
-            return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, startRight) >= 0;
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+        IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+        ipLeft.getEnd(endLeft);
+        ipRight.getStart(startRight);
+        return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, startRight) >= 0;
     }
 
     @Override
     public boolean checkToRemoveInMemory(ITupleAccessor accessorLeft, ITupleAccessor accessorRight)
             throws HyracksDataException {
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
-            ipLeft.getStart(startLeft);
-            ipRight.getEnd(endRight);
-            return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0);
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        IntervalJoinUtil.getIntervalPointable(accessorLeft, idLeft, tvp, ipLeft);
+        IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
+        ipLeft.getStart(startLeft);
+        ipRight.getEnd(endRight);
+        return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0);
     }
 
     @Override
@@ -107,37 +98,29 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
     @Override
     public boolean checkToRemoveInMemory(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex) throws HyracksDataException {
-        try {
-            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipLeft);
-            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
-            ipLeft.getStart(startLeft);
-            ipRight.getEnd(endRight);
-            return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0);
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
-        }
+        IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipLeft);
+        IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
+        ipLeft.getStart(startLeft);
+        ipRight.getEnd(endRight);
+        return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0);
     }
 
     @Override
     public boolean checkToSaveInResult(IFrameTupleAccessor accessorLeft, int leftTupleIndex,
             IFrameTupleAccessor accessorRight, int rightTupleIndex, boolean reversed) throws HyracksDataException {
-        try {
-            if (reversed) {
-                IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipRight);
-                IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipLeft);
-            } else {
-                IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipLeft);
-                IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
-            }
-            return compareInterval(ipLeft, ipRight);
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
+        if (reversed) {
+            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipRight);
+            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipLeft);
+        } else {
+            IntervalJoinUtil.getIntervalPointable(accessorLeft, leftTupleIndex, idLeft, tvp, ipLeft);
+            IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
         }
+        return compareInterval(ipLeft, ipRight);
     }
 
     @Override
     public abstract boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight)
-            throws AsterixException;
+            throws HyracksDataException;
 
     @Override
     public abstract boolean compareIntervalPartition(int s1, int e1, int s2, int e2);

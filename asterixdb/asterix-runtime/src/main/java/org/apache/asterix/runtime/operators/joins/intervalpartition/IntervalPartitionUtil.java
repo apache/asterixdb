@@ -199,11 +199,12 @@ public class IntervalPartitionUtil {
         int probeEnd = map.second;
         // Build partitions with data
         for (int buildStart = 0; buildStart < k; ++buildStart) {
-            for (int buildEnd = buildStart; buildEnd < k; ++buildEnd) {
+            for (int buildEnd = k - 1; buildStart <= buildEnd; --buildEnd) {
                 int buildId = intervalPartitionMap(buildStart, buildEnd, k);
                 if (buildPSizeInTups[buildId] > 0) {
                     // Join partitions for probe's pid
-                    if (imjc.compareIntervalPartition(buildStart, buildEnd, probeStart, probeEnd)) {
+                    if (!(buildStart == 0 && probeStart == 0)
+                            && imjc.compareIntervalPartition(buildStart, buildEnd, probeStart, probeEnd)) {
                         joinMap.add(buildId);
                     }
                 }

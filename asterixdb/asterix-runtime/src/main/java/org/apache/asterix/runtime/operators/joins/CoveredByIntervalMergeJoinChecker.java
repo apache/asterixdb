@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionLogic;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CoveredByIntervalMergeJoinChecker extends AbstractIntervalInverseMergeJoinChecker {
     private static final long serialVersionUID = 1L;
@@ -30,7 +30,7 @@ public class CoveredByIntervalMergeJoinChecker extends AbstractIntervalInverseMe
     }
 
     @Override
-    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws AsterixException {
+    public boolean compareInterval(AIntervalPointable ipLeft, AIntervalPointable ipRight) throws HyracksDataException {
         return il.coveredBy(ipLeft, ipRight);
     }
 
