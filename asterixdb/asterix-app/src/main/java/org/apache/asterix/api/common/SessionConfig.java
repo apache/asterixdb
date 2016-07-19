@@ -22,6 +22,9 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
+
 /**
  * SessionConfig captures several different parameters for controlling
  * the execution of an APIFramework call.
@@ -103,7 +106,7 @@ public class SessionConfig {
     public static final String FORMAT_QUOTE_RECORD = "quote-record";
 
     public interface ResultDecorator {
-        PrintWriter print(PrintWriter pw);
+        AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException;
     }
 
     // Standard execution flags.
@@ -193,12 +196,12 @@ public class SessionConfig {
         return this.fmt;
     }
 
-    public PrintWriter resultPrefix(PrintWriter pw) {
-        return this.preResultDecorator != null ? this.preResultDecorator.print(pw) : pw;
+    public AlgebricksAppendable resultPrefix(AlgebricksAppendable app) throws AlgebricksException {
+        return this.preResultDecorator != null ? this.preResultDecorator.append(app) : app;
     };
 
-    public PrintWriter resultPostfix(PrintWriter pw) {
-        return this.postResultDecorator != null ? this.postResultDecorator.print(pw) : pw;
+    public AlgebricksAppendable resultPostfix(AlgebricksAppendable app) throws AlgebricksException {
+        return this.postResultDecorator != null ? this.postResultDecorator.append(app) : app;
     };
 
     /**

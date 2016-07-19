@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeCom
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
@@ -214,15 +215,13 @@ public class APIFramework {
             plan = t.translateLoad(statement);
         }
 
-        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
             conf.out().println();
 
             printPlanPrefix(conf, "Logical plan");
             if (rwQ != null || (statement != null && statement.getKind() == Kind.LOAD)) {
-                StringBuilder buffer = new StringBuilder();
-                PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-                conf.out().print(buffer);
+                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
+                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
             }
             printPlanPostfix(conf);
         }
@@ -268,15 +267,13 @@ public class APIFramework {
             if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                 if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                     // For Optimizer tests.
-                    StringBuilder buffer = new StringBuilder();
+                    AlgebricksAppendable buffer = new AlgebricksAppendable(conf.out());
                     PlanPrettyPrinter.printPhysicalOps(plan, buffer, 0);
-                    conf.out().print(buffer);
                 } else {
                     printPlanPrefix(conf, "Optimized logical plan");
                     if (rwQ != null || (statement != null && statement.getKind() == Kind.LOAD)) {
-                        StringBuilder buffer = new StringBuilder();
-                        PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-                        conf.out().print(buffer);
+                        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
+                        PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
                     }
                     printPlanPostfix(conf);
                 }

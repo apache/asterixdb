@@ -28,6 +28,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
@@ -66,10 +67,10 @@ public abstract class AbstractRuleController {
 
     private String getPlanString(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE)) {
-            StringBuilder sb = new StringBuilder();
             LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
-            PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), sb, pvisitor, 0);
-            return sb.toString();
+            pvisitor.reset(new AlgebricksAppendable());
+            PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), pvisitor, 0);
+            return pvisitor.get().toString();
         }
         return null;
     }

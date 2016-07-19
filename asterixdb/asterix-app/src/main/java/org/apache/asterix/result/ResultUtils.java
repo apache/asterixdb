@@ -38,6 +38,7 @@ import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -104,7 +105,11 @@ public class ResultUtils {
             conf.out().println("<pre>");
         }
 
-        conf.resultPrefix(conf.out());
+        try {
+            conf.resultPrefix(new AlgebricksAppendable(conf.out()));
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
 
         if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
             conf.out().print("[ ");
@@ -178,7 +183,11 @@ public class ResultUtils {
             conf.out().println(" ]");
         }
 
-        conf.resultPostfix(conf.out());
+        try {
+            conf.resultPostfix(new AlgebricksAppendable(conf.out()));
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
 
         if (conf.is(SessionConfig.FORMAT_HTML)) {
             conf.out().println("</pre>");

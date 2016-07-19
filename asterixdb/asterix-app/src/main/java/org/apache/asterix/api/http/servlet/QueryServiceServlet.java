@@ -47,6 +47,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.result.ResultReader;
 import org.apache.asterix.result.ResultUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
@@ -66,7 +67,7 @@ public class QueryServiceServlet extends HttpServlet {
         STATEMENT("statement"),
         FORMAT("format"),
         // Asterix
-        INDENT("indent");
+        PRETTY("pretty");
 
         private final String str;
 
@@ -244,23 +245,23 @@ public class QueryServiceServlet extends HttpServlet {
      * output-format based on the Accept: header and other servlet parameters.
      */
     private static SessionConfig createSessionConfig(HttpServletRequest request, PrintWriter resultWriter) {
-        SessionConfig.ResultDecorator resultPrefix = (PrintWriter pw) -> {
-            pw.print("\t\"");
-            pw.print(ResultFields.RESULTS.str());
-            pw.print("\": ");
-            return pw;
+        SessionConfig.ResultDecorator resultPrefix = (AlgebricksAppendable app) -> {
+            app.append("\t\"");
+            app.append(ResultFields.RESULTS.str());
+            app.append("\": ");
+            return app;
         };
 
-        SessionConfig.ResultDecorator resultPostfix = (PrintWriter pw) -> {
-            pw.print("\t,\n");
-            return pw;
+        SessionConfig.ResultDecorator resultPostfix = (AlgebricksAppendable app) -> {
+            app.append("\t,\n");
+            return app;
         };
 
         String formatstr = request.getParameter(Parameter.FORMAT.str()).toLowerCase();
         SessionConfig.OutputFormat format = getFormat(formatstr);
         SessionConfig sessionConfig = new SessionConfig(resultWriter, format, resultPrefix, resultPostfix);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
-        boolean indentJson = Boolean.parseBoolean(request.getParameter(Parameter.INDENT.str()));
+        boolean indentJson = Boolean.parseBoolean(request.getParameter(Parameter.PRETTY.str()));
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, indentJson);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
                 format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);

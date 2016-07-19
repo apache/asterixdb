@@ -19,9 +19,9 @@
 package org.apache.hyracks.algebricks.core.rewriter.base;
 
 import java.util.List;
+import java.util.logging.Level;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -30,6 +30,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 
@@ -53,10 +55,10 @@ public class HeuristicOptimizer {
         return false;
     }
 
-    private IOptimizationContext context;
-    private List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites;
-    private List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites;
-    private ILogicalPlan plan;
+    private final IOptimizationContext context;
+    private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites;
+    private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites;
+    private final ILogicalPlan plan;
 
     public HeuristicOptimizer(ILogicalPlan plan,
             List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites,
@@ -76,15 +78,20 @@ public class HeuristicOptimizer {
             AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting logical optimizations.\n");
         }
 
-        StringBuilder sb = new StringBuilder();
-        PlanPrettyPrinter.printPlan(plan, sb, context.getPrettyPrintVisitor(), 0);
-        AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Logical Plan:\n" + sb.toString());
+        logPlanAt("Logical Plan", Level.FINE);
         runOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizations(plan, physicalRewrites);
-        StringBuilder sb2 = new StringBuilder();
-        PlanPrettyPrinter.printPlan(plan, sb2, context.getPrettyPrintVisitor(), 0);
-        AlgebricksConfig.ALGEBRICKS_LOGGER.info("Optimized Plan:\n" + sb2.toString());
+        logPlanAt("Optimized Plan", Level.INFO);
+    }
+
+    private void logPlanAt(String name, Level lvl) throws AlgebricksException {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(lvl)) {
+            final LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
+            pvisitor.reset(new AlgebricksAppendable());
+            PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+            AlgebricksConfig.ALGEBRICKS_LOGGER.info(name + ":\n" + pvisitor.get().toString());
+        }
     }
 
     private void runOptimizationSets(ILogicalPlan plan,
