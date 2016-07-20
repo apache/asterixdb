@@ -1349,7 +1349,18 @@
     <test-case FilePath="custord">
       <compilation-unit name="join_q_07">
         <output-dir compare="Text">join_q_06</output-dir>
-        <expected-error>Undefined alias (variable) reference for identifier c</expected-error>
+        <expected-error>Cannot find dataset c in dataverse test nor an alias with name c</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_08">
+        <output-dir compare="Text">join_q_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_09">
+        <output-dir compare="Text">join_q_01</output-dir>
+        <expected-error>Cannot resolve ambiguous alias (variable) reference for identifier age</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
@@ -2855,7 +2866,7 @@
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>java.lang.NullPointerException</expected-error>
         <expected-error>Cannot find dataset</expected-error>
-        <expected-error>Undefined alias (variable) reference for identifier testds</expected-error>
+        <expected-error>Cannot find dataset testds in dataverse test nor an alias with name testds</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -6666,7 +6677,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Undefined alias (variable) reference for identifier y</expected-error>
+        <expected-error>Cannot find dataset y because there is no dataverse declared, nor an alias with name y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

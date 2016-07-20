@@ -17,8 +17,13 @@
  * under the License.
  */
 
-SELECT SQRT(t.a*t.b) AS root FROM tbl_name root
-GROUP BY root.id
-WITH u AS root.time
-HAVING root.orders > 0
-ORDER BY u;
+/** This query is to test fully qualified path for datasets. */
+
+SELECT c.name AS cust_name,
+       c.age AS cust_age,
+       o.total AS order_total,
+       [o.oid,o.cid] AS orderList
+FROM test.Customers c, test.Orders o
+WHERE c.cid = o.cid
+ORDER BY c.name,o.total
+;
