@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public abstract class CreateFeedStatement implements Statement {
+public abstract class CreateFeedStatement extends Statement {
 
     private final Pair<Identifier, Identifier> qName;
     private final FunctionSignature appliedFunction;
@@ -53,9 +53,6 @@ public abstract class CreateFeedStatement implements Statement {
     public boolean getIfNotExists() {
         return this.ifNotExists;
     }
-
-    @Override
-    public abstract Kind getKind();
 
     @Override
     public abstract <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException;

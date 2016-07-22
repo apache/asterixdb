@@ -18,16 +18,20 @@
  */
 package org.apache.asterix.external.feed.management;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * A request for connecting a feed to a dataset.
  */
-public class FeedConnectionRequest {
+public class FeedConnectionRequest implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public enum ConnectionStatus {
         /** initial state upon creating a connection request **/
@@ -64,11 +68,11 @@ public class FeedConnectionRequest {
     /** Target dataset associated with the connection request **/
     private final String targetDataset;
 
-    private final FeedId receivingFeedId;
+    private final EntityId receivingFeedId;
 
     public FeedConnectionRequest(FeedJointKey feedPointKey, FeedRuntimeType connectionLocation,
             List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
-            FeedId receivingFeedId) {
+            EntityId receivingFeedId) {
         this.feedJointKey = feedPointKey;
         this.connectionLocation = connectionLocation;
         this.functionsToApply = functionsToApply;
@@ -103,7 +107,7 @@ public class FeedConnectionRequest {
         return connectionLocation;
     }
 
-    public FeedId getReceivingFeedId() {
+    public EntityId getReceivingFeedId() {
         return receivingFeedId;
     }
 

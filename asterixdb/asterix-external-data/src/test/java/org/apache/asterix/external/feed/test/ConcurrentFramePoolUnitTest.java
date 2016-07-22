@@ -24,9 +24,9 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.asterix.active.ConcurrentFramePool;
+import org.apache.asterix.active.FrameAction;
 import org.apache.asterix.common.config.AsterixFeedProperties;
-import org.apache.asterix.external.feed.dataflow.FrameAction;
-import org.apache.asterix.external.feed.management.ConcurrentFramePool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Assert;
 import org.mockito.Mockito;

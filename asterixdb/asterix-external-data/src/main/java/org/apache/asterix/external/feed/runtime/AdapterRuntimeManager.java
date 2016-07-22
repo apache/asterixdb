@@ -22,9 +22,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.log4j.Logger;
 
 /**
@@ -34,7 +34,7 @@ public class AdapterRuntimeManager {
 
     private static final Logger LOGGER = Logger.getLogger(AdapterRuntimeManager.class.getName());
 
-    private final FeedId feedId;                    // (dataverse-feed)
+    private final EntityId feedId;                    // (dataverse-feed)
 
     private final FeedAdapter feedAdapter;         // The adapter
 
@@ -49,7 +49,7 @@ public class AdapterRuntimeManager {
     private volatile boolean done = false;
     private volatile boolean failed = false;
 
-    public AdapterRuntimeManager(FeedId feedId, FeedAdapter feedAdapter, DistributeFeedFrameWriter writer,
+    public AdapterRuntimeManager(EntityId feedId, FeedAdapter feedAdapter, DistributeFeedFrameWriter writer,
             int partition) {
         this.feedId = feedId;
         this.feedAdapter = feedAdapter;
@@ -86,7 +86,7 @@ public class AdapterRuntimeManager {
         }
     }
 
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return feedId;
     }
 

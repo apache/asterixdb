@@ -20,6 +20,8 @@ package org.apache.asterix.external.feed.management;
 
 import java.io.Serializable;
 
+import org.apache.asterix.active.EntityId;
+
 /**
  * A unique identifier for a feed connection. A feed connection is an instance of a data feed that is flowing into a
  * dataset.
@@ -27,22 +29,23 @@ import java.io.Serializable;
 public class FeedConnectionId implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    public static final String FEED_EXTENSION_NAME = "Feed";
 
-    private final FeedId feedId;            // Dataverse - Feed
-    private final String datasetName;       // Dataset <Dataset is empty in case of no target dataset>
+    private final EntityId feedId; // Dataverse - Feed
+    private final String datasetName; // Dataset <Dataset is empty in case of no target dataset>
     private final int hash;
 
-    public FeedConnectionId(FeedId feedId, String datasetName) {
+    public FeedConnectionId(EntityId feedId, String datasetName) {
         this.feedId = feedId;
         this.datasetName = datasetName;
         this.hash = toString().hashCode();
     }
 
     public FeedConnectionId(String dataverse, String feedName, String datasetName) {
-        this(new FeedId(dataverse, feedName), datasetName);
+        this(new EntityId(FEED_EXTENSION_NAME, dataverse, feedName), datasetName);
     }
 
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return feedId;
     }
 

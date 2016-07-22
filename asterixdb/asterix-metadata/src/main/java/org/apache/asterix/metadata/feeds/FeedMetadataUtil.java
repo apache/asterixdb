@@ -21,7 +21,6 @@ package org.apache.asterix.metadata.feeds;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,15 +40,14 @@ import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedMetaOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -118,7 +116,7 @@ public class FeedMetadataUtil {
     }
 
     public static Feed validateIfFeedExists(String dataverse, String feedName, MetadataTransactionContext ctx)
-            throws MetadataException, AsterixException {
+            throws AsterixException {
         Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverse, feedName);
         if (feed == null) {
             throw new AsterixException("Unknown source feed: " + feedName);
@@ -149,11 +147,10 @@ public class FeedMetadataUtil {
         Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
         boolean preProcessingRequired = preProcessingRequired(feedConnectionId);
         // copy operators
-        String operandId = null;
         Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<>();
-        FeedMetaOperatorDescriptor metaOp = null;
+        FeedMetaOperatorDescriptor metaOp;
         for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
-            operandId = FeedRuntimeId.DEFAULT_TARGET_ID;
+            String operandId = null;
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof FeedCollectOperatorDescriptor) {
                 FeedCollectOperatorDescriptor orig = (FeedCollectOperatorDescriptor) opDesc;
@@ -169,8 +166,8 @@ public class FeedMetadataUtil {
                         FeedRuntimeType.STORE, false, operandId);
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             } else {
-                FeedRuntimeType runtimeType = null;
-                boolean enableSubscriptionMode = false;
+                FeedRuntimeType runtimeType;
+                boolean enableSubscriptionMode;
                 OperatorDescriptorId opId = null;
                 if (opDesc instanceof AlgebricksMetaOperatorDescriptor) {
                     IPushRuntimeFactory[] runtimeFactories =
@@ -212,8 +209,8 @@ public class FeedMetadataUtil {
         }
 
         // make connections between operators
-        for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> entry : spec
-                .getConnectorOperatorMap().entrySet()) {
+        for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>
+        entry : spec.getConnectorOperatorMap().entrySet()) {
             IConnectorDescriptor connDesc = altered.getConnectorMap().get(connectorMapping.get(entry.getKey()));
             Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
             Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
@@ -262,12 +259,8 @@ public class FeedMetadataUtil {
         // set absolute location constraints
         for (Entry<OperatorDescriptorId, List<LocationConstraint>> entry : operatorLocations.entrySet()) {
             IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
-            Collections.sort(entry.getValue(), new Comparator<LocationConstraint>() {
-
-                @Override
-                public int compare(LocationConstraint o1, LocationConstraint o2) {
-                    return o1.partition - o2.partition;
-                }
+            Collections.sort(entry.getValue(), (LocationConstraint o1, LocationConstraint o2) -> {
+                return o1.partition - o2.partition;
             });
             String[] locations = new String[entry.getValue().size()];
             for (int i = 0; i < locations.length; ++i) {
@@ -321,23 +314,23 @@ public class FeedMetadataUtil {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, changingOpDesc, chosenLocations);
     }
 
-    private static IOperatorDescriptor alterJobSpecForComputeCardinality(JobSpecification spec, int requiredCardinality)
-            throws AsterixException {
+    private static IOperatorDescriptor alterJobSpecForComputeCardinality(
+            JobSpecification spec, int requiredCardinality) throws AsterixException {
         Map<ConnectorDescriptorId, IConnectorDescriptor> connectors = spec.getConnectorMap();
-        Map<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> connectorOpMap =
-                spec.getConnectorOperatorMap();
-
+        Map<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> 
+        connectorOpMap = spec.getConnectorOperatorMap();
         IOperatorDescriptor sourceOp = null;
         IOperatorDescriptor targetOp = null;
         IConnectorDescriptor connDesc = null;
-        for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> entry : connectorOpMap
-                .entrySet()) {
+        for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>
+        entry : connectorOpMap.entrySet()) {
             ConnectorDescriptorId cid = entry.getKey();
             sourceOp = entry.getValue().getKey().getKey();
             if (sourceOp instanceof FeedCollectOperatorDescriptor) {
                 targetOp = entry.getValue().getValue().getKey();
                 if ((targetOp instanceof FeedMetaOperatorDescriptor)
-                        && (((FeedMetaOperatorDescriptor) targetOp).getRuntimeType().equals(FeedRuntimeType.COMPUTE))) {
+                        && (((FeedMetaOperatorDescriptor) targetOp).getRuntimeType()
+                                .equals(FeedRuntimeType.COMPUTE))) {
                     connDesc = connectors.get(cid);
                     break;
                 } else {
@@ -433,7 +426,7 @@ public class FeedMetadataUtil {
             MetadataManager.INSTANCE.acquireReadLatch();
             ctx = MetadataManager.INSTANCE.beginTransaction();
             feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getFeedId().getDataverse(),
-                    connectionId.getFeedId().getFeedName());
+                    connectionId.getFeedId().getEntityName());
             preProcessingRequired = feed.getAppliedFunction() != null;
             MetadataManager.INSTANCE.commitTransaction(ctx);
         } catch (Exception e) {
@@ -688,7 +681,8 @@ public class FeedMetadataUtil {
             if (function != null) {
                 if (function.getLanguage().equals(Function.LANGUAGE_AQL)) {
                     throw new NotImplementedException(
-                            "Secondary feeds derived from a source feed that has an applied AQL function are not supported yet.");
+                            "Secondary feeds derived from a source feed that has an applied AQL function"
+                                    + " are not supported yet.");
                 } else {
                     outputType = function.getReturnType();
                 }

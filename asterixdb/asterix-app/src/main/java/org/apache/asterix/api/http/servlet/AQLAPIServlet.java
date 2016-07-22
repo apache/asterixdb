@@ -18,30 +18,21 @@
  */
 package org.apache.asterix.api.http.servlet;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.lang.common.base.Statement;
 
 public class AQLAPIServlet extends RESTAPIServlet {
 
     private static final long serialVersionUID = 1L;
-
     private static final String AQL_STMT_PARAM_NAME = "aql";
-
-    private static final List<Kind> allowedStatements = new ArrayList<>();
+    private static final List<Byte> allowedStatements = Statement.VALUES;
 
     public AQLAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
-    }
-
-    static {
-        for (Kind k : Kind.values()) {
-            allowedStatements.add(k);
-        }
     }
 
     @Override
@@ -50,7 +41,7 @@ public class AQLAPIServlet extends RESTAPIServlet {
     }
 
     @Override
-    protected List<Kind> getAllowedStatements() {
+    protected List<Byte> getAllowedStatements() {
         return allowedStatements;
     }
 

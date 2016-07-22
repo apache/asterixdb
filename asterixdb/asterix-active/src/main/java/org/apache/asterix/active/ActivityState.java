@@ -16,26 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.api;
+package org.apache.asterix.active;
 
-import java.io.Serializable;
-
-import org.apache.hyracks.api.dataflow.value.JSONSerializable;
-
-/**
- * A control message exchanged between {@Link IFeedManager} and {@Link CentralFeedManager} that requests for an action or reporting of an event
- */
-public interface IFeedMessage extends Serializable, JSONSerializable {
-
-    public enum MessageType {
-        END
-    }
-
-    /**
-     * Gets the type associated with this message
-     *
-     * @return MessageType type associated with this message
-     */
-    public MessageType getMessageType();
-
+// TODO: Document the state machine and its transition.
+public enum ActivityState {
+    CREATED,
+    INACTIVE,
+    ACTIVE,
+    UNDER_RECOVERY,
+    ENDED
 }

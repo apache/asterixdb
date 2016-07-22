@@ -18,14 +18,14 @@
  */
 package org.apache.asterix.external.feed.message;
 
-import org.apache.asterix.external.feed.api.IFeedMessage;
+import org.apache.asterix.active.IActiveMessage;
 import org.apache.hyracks.api.dataflow.value.JSONSerializable;
 
 /**
  * A control message that can be sent to the runtime instance of a
  * feed's adapter.
  */
-public abstract class FeedMessage implements IFeedMessage, JSONSerializable {
+public abstract class FeedMessage implements IActiveMessage, JSONSerializable {
 
     private static final long serialVersionUID = 1L;
 

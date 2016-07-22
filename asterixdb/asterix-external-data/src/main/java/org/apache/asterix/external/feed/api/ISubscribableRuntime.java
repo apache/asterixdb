@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.external.feed.api;
 
+import org.apache.asterix.active.IActiveRuntime;
 import org.apache.asterix.external.feed.runtime.CollectionRuntime;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Represent a feed runtime whose output can be routed along other parallel path(s).
  */
-public interface ISubscribableRuntime extends IFeedRuntime {
+public interface ISubscribableRuntime extends IActiveRuntime {
 
     /**
      * @param collectionRuntime

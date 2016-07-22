@@ -24,7 +24,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class CreateFeedPolicyStatement implements Statement {
+public class CreateFeedPolicyStatement extends Statement {
 
     private final String policyName;
     private final String sourcePolicyName;
@@ -58,8 +58,8 @@ public class CreateFeedPolicyStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Statement.Kind.CREATE_FEED_POLICY;
+    public byte getKind() {
+        return Statement.CREATE_FEED_POLICY;
     }
 
     @Override

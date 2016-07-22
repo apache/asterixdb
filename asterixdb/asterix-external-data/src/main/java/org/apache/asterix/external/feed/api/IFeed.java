@@ -21,8 +21,8 @@ package org.apache.asterix.external.feed.api;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.external.feed.management.FeedId;
 
 public interface IFeed extends Serializable {
 
@@ -46,7 +46,7 @@ public interface IFeed extends Serializable {
 
     public String getDataverseName();
 
-    public FeedId getFeedId();
+    public EntityId getFeedId();
 
     public Map<String, String> getAdapterConfiguration();
 

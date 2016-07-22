@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class CreateDataverseStatement implements Statement {
+public class CreateDataverseStatement extends Statement {
 
     private Identifier dataverseName;
     private String format;
@@ -31,10 +31,11 @@ public class CreateDataverseStatement implements Statement {
 
     public CreateDataverseStatement(Identifier dataverseName, String format, boolean ifNotExists) {
         this.dataverseName = dataverseName;
-        if (format == null)
+        if (format == null) {
             this.format = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
-        else
+        } else {
             this.format = format;
+        }
         this.ifNotExists = ifNotExists;
     }
 
@@ -51,8 +52,8 @@ public class CreateDataverseStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_DATAVERSE;
+    public byte getKind() {
+        return Statement.CREATE_DATAVERSE;
     }
 
     @Override

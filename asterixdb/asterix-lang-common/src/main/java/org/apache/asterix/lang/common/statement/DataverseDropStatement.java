@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class DataverseDropStatement implements Statement {
+public class DataverseDropStatement extends Statement {
 
     private Identifier dataverseName;
     private boolean ifExists;
@@ -34,8 +34,8 @@ public class DataverseDropStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DATAVERSE_DROP;
+    public byte getKind() {
+        return Statement.DATAVERSE_DROP;
     }
 
     public Identifier getDataverseName() {

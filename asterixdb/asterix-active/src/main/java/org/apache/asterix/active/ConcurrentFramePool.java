@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.management;
+package org.apache.asterix.active;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.asterix.external.feed.dataflow.FrameAction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Logger;
 

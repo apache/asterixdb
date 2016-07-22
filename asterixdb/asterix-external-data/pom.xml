@@ -211,6 +211,21 @@
       <artifactId>algebricks-compiler</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-hdfs-core</artifactId>
+      <version>${hyracks.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-common</artifactId>
+      <version>0.8.9-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-active</artifactId>
+      <version>0.8.9-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>com.kenai.nbpwr</groupId>
       <artifactId>org-apache-commons-io</artifactId>
       <version>1.3.1-201002241208</version>
@@ -255,19 +270,9 @@
       <version>1.0.1-modified-01</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-hdfs-core</artifactId>
-      <version>${hyracks.version}</version>
-    </dependency>
-    <dependency>
       <groupId>jdom</groupId>
       <artifactId>jdom</artifactId>
       <version>1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-common</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.microsoft.windowsazure</groupId>

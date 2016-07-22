@@ -16,33 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.message;
+package org.apache.asterix.active;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedPartitionStartMessage extends AbstractApplicationMessage {
+public interface IActiveEntityEventsListener {
 
-    private static final long serialVersionUID = 1L;
-    private final FeedId feedId;
-    private final JobId jobId;
+    public void notify(ActiveEvent message);
 
-    public FeedPartitionStartMessage(FeedId feedId, JobId jobId) {
-        this.feedId = feedId;
-        this.jobId = jobId;
-    }
+    public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification);
 
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.FEED_PROVIDER_READY;
-    }
+    public boolean isEntityActive();
 
-    public FeedId getFeedId() {
-        return feedId;
-    }
+    public EntityId getEntityId();
 
-    public JobId getJobId() {
-        return jobId;
-    }
 }

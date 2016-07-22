@@ -20,6 +20,8 @@ package org.apache.asterix.external.feed.runtime;
 
 import java.util.Map;
 
+import org.apache.asterix.active.ActiveRuntime;
+import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.api.ISubscriberRuntime;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
@@ -32,16 +34,17 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
  * intake job. For a secondary feed, tuples are collected from the intake/compute
  * runtime associated with the source feed.
  */
-public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime {
+public class CollectionRuntime extends ActiveRuntime implements ISubscriberRuntime {
 
-    private final FeedConnectionId connectionId;            // [Dataverse - Feed - Dataset]
-    private final ISubscribableRuntime sourceRuntime;       // Runtime that provides the data
-    private final Map<String, String> feedPolicy;           // Policy associated with the feed
-    private final FeedFrameCollector frameCollector;        // Collector that can be plugged into a frame distributor
+    private final FeedConnectionId connectionId; // [Dataverse - Feed - Dataset]
+    private final ISubscribableRuntime sourceRuntime; // Runtime that provides the data
+    private final Map<String, String> feedPolicy; // Policy associated with the feed
+    private final FeedFrameCollector frameCollector; // Collector that can be plugged into a frame distributor
     private final IHyracksTaskContext ctx;
 
-    public CollectionRuntime(FeedConnectionId connectionId, FeedRuntimeId runtimeId, ISubscribableRuntime sourceRuntime,
-            Map<String, String> feedPolicy, IHyracksTaskContext ctx, FeedFrameCollector frameCollector) {
+    public CollectionRuntime(FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
+            ISubscribableRuntime sourceRuntime, Map<String, String> feedPolicy, IHyracksTaskContext ctx,
+            FeedFrameCollector frameCollector) {
         super(runtimeId);
         this.connectionId = connectionId;
         this.sourceRuntime = sourceRuntime;

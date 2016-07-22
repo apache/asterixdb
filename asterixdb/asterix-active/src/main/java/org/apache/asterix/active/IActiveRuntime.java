@@ -16,26 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.runtime;
+package org.apache.asterix.active;
 
-import org.apache.asterix.external.feed.api.IFeedRuntime;
+@FunctionalInterface
+public interface IActiveRuntime {
 
-public class FeedRuntime implements IFeedRuntime {
-
-    /** A unique identifier for the runtime **/
-    protected final FeedRuntimeId runtimeId;
-
-    public FeedRuntime(FeedRuntimeId runtimeId) {
-        this.runtimeId = runtimeId;;
-    }
-
-    @Override
-    public FeedRuntimeId getRuntimeId() {
-        return runtimeId;
-    }
-
-    @Override
-    public String toString() {
-        return runtimeId.toString();
-    }
+    /**
+     * @return the unique runtime id associated with the feedRuntime
+     */
+    public ActiveRuntimeId getRuntimeId();
 }

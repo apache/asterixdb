@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class CreateFunctionStatement implements Statement {
+public class CreateFunctionStatement extends Statement {
 
     private final FunctionSignature signature;
     private final String functionBody;
@@ -58,8 +58,8 @@ public class CreateFunctionStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_FUNCTION;
+    public byte getKind() {
+        return Statement.CREATE_FUNCTION;
     }
 
     public List<String> getParamList() {

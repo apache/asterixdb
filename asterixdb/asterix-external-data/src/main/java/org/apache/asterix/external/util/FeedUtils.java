@@ -42,6 +42,29 @@ import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 public class FeedUtils {
+
+    public enum JobType {
+        INTAKE,
+        FEED_CONNECT
+    }
+
+    public enum FeedRuntimeType {
+        INTAKE,
+        COLLECT,
+        COMPUTE_COLLECT,
+        COMPUTE,
+        STORE,
+        OTHER,
+        ETS,
+        JOIN
+    }
+
+    public enum Mode {
+        PROCESS,            // There is memory
+        SPILL,              // Memory budget has been consumed. Now we're writing to disk
+        DISCARD             // Memory and Disk space budgets have been consumed. Now we're discarding
+    }
+
     private static String prepareDataverseFeedName(String dataverseName, String feedName) {
         return dataverseName + File.separator + feedName;
     }

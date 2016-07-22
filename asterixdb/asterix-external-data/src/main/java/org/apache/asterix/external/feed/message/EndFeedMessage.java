@@ -18,22 +18,24 @@
  */
 package org.apache.asterix.external.feed.message;
 
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.util.FeedConstants;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.util.FeedConstants;
 
 /**
- * A feed control message indicating the need to end the feed. This message is dispatched
- * to all locations that host an operator involved in the feed pipeline.
+ * @deprecated A feed control message indicating the need to end the feed. This message is dispatched
+ *             to all locations that host an operator involved in the feed pipeline.
+ *             Instead, use IMessageBroker messages
  */
+@Deprecated
 public class EndFeedMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedId sourceFeedId;
+    private final EntityId sourceFeedId;
 
     private final FeedConnectionId connectionId;
 
@@ -48,7 +50,7 @@ public class EndFeedMessage extends FeedMessage {
         DISCONTINUE_SOURCE
     }
 
-    public EndFeedMessage(FeedConnectionId connectionId, FeedRuntimeType sourceRuntimeType, FeedId sourceFeedId,
+    public EndFeedMessage(FeedConnectionId connectionId, FeedRuntimeType sourceRuntimeType, EntityId sourceFeedId,
             boolean completeDisconnection, EndMessageType endMessageType) {
         super(MessageType.END);
         this.connectionId = connectionId;
@@ -67,7 +69,7 @@ public class EndFeedMessage extends FeedMessage {
         return sourceRuntimeType;
     }
 
-    public FeedId getSourceFeedId() {
+    public EntityId getSourceFeedId() {
         return sourceFeedId;
     }
 
@@ -84,7 +86,7 @@ public class EndFeedMessage extends FeedMessage {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
         obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getFeedId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getFeedName());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getEntityName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         return obj;
     }

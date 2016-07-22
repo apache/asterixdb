@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class DDLAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
@@ -34,19 +33,23 @@ public class DDLAPIServlet extends RESTAPIServlet {
         super(compilationProvider);
     }
 
+    @Override
     protected String getQueryParameter(HttpServletRequest request) {
         return request.getParameter("ddl");
     }
 
-    protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DATAVERSE_DROP, Kind.DATASET_DECL, Kind.NODEGROUP_DECL,
-                Kind.NODEGROUP_DROP, Kind.TYPE_DECL, Kind.TYPE_DROP, Kind.CREATE_INDEX, Kind.INDEX_DECL,
-                Kind.CREATE_DATAVERSE, Kind.DATASET_DROP, Kind.INDEX_DROP, Kind.CREATE_FUNCTION, Kind.FUNCTION_DROP,
-                Kind.CREATE_PRIMARY_FEED, Kind.CREATE_SECONDARY_FEED, Kind.DROP_FEED, Kind.CREATE_FEED_POLICY,
-                Kind.DROP_FEED_POLICY };
+    @Override
+    protected List<Byte> getAllowedStatements() {
+        Byte[] statementsArray = { Statement.DATAVERSE_DECL, Statement.DATAVERSE_DROP, Statement.DATASET_DECL,
+                Statement.NODEGROUP_DECL, Statement.NODEGROUP_DROP, Statement.TYPE_DECL, Statement.TYPE_DROP,
+                Statement.CREATE_INDEX, Statement.INDEX_DECL, Statement.CREATE_DATAVERSE, Statement.DATASET_DROP,
+                Statement.INDEX_DROP, Statement.CREATE_FUNCTION, Statement.FUNCTION_DROP, Statement.CREATE_PRIMARY_FEED,
+                Statement.CREATE_SECONDARY_FEED, Statement.DROP_FEED, Statement.CREATE_FEED_POLICY,
+                Statement.DROP_FEED_POLICY };
         return Arrays.asList(statementsArray);
     }
 
+    @Override
     protected String getErrorMessage() {
         return "Invalid statement: Non-DDL statement %s to the DDL API.";
     }

@@ -16,39 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.watch;
+package org.apache.asterix.active;
 
+import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedJobInfo {
-
-    private static final Logger LOGGER = Logger.getLogger(FeedJobInfo.class.getName());
-
-    public enum JobType {
-        INTAKE,
-        FEED_CONNECT
-    }
-
-    public enum FeedJobState {
-        CREATED,
-        ACTIVE,
-        UNDER_RECOVERY,
-        ENDED
-    }
-
-    protected final JobId jobId;
-    protected final JobType jobType;
-    protected FeedJobState state;
+public class ActiveJob implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(ActiveJob.class.getName());
+    protected final EntityId entityId;
+    protected JobId jobId;
+    protected final Serializable jobObject;
+    protected ActivityState state;
     protected JobSpecification spec;
 
-    public FeedJobInfo(JobId jobId, FeedJobState state, JobType jobType, JobSpecification spec) {
-        this.jobId = jobId;
+    public ActiveJob(EntityId entityId, JobId jobId, ActivityState state, Serializable jobInfo, JobSpecification spec) {
+        this.entityId = entityId;
         this.state = state;
-        this.jobType = jobType;
+        this.jobId = jobId;
+        this.jobObject = jobInfo;
+        this.spec = spec;
+    }
+
+    public ActiveJob(EntityId entityId, ActivityState state, Serializable jobInfo, JobSpecification spec) {
+        this.entityId = entityId;
+        this.state = state;
+        this.jobObject = jobInfo;
         this.spec = spec;
     }
 
@@ -56,19 +53,23 @@ public class FeedJobInfo {
         return jobId;
     }
 
-    public FeedJobState getState() {
+    public void setJobId(JobId jobId) {
+        this.jobId = jobId;
+    }
+
+    public ActivityState getState() {
         return state;
     }
 
-    public void setState(FeedJobState state) {
+    public void setState(ActivityState state) {
         this.state = state;
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(this + " is in " + state + " state.");
         }
     }
 
-    public JobType getJobType() {
-        return jobType;
+    public Object getJobObject() {
+        return jobObject;
     }
 
     public JobSpecification getSpec() {
@@ -79,8 +80,13 @@ public class FeedJobInfo {
         this.spec = spec;
     }
 
+    @Override
     public String toString() {
-        return jobId + " [" + jobType + "]";
+        return jobId + " [" + jobObject + "]";
+    }
+
+    public EntityId getEntityId() {
+        return entityId;
     }
 
 }

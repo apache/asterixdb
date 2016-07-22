@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.external.feed.management;
 
+import java.io.Serializable;
 import java.util.List;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -28,13 +30,14 @@ import org.apache.commons.lang3.StringUtils;
  * constitute the feed. The feed joint acts as a network tap and allows the flowing data to be
  * routed to multiple paths.
  */
-public class FeedJointKey {
+public class FeedJointKey implements Serializable {
 
-    private final FeedId primaryFeedId;
+    private static final long serialVersionUID = 1L;
+    private final EntityId primaryFeedId;
     private final List<String> appliedFunctions;
     private final String stringRep;
 
-    public FeedJointKey(FeedId feedId, List<String> appliedFunctions) {
+    public FeedJointKey(EntityId feedId, List<String> appliedFunctions) {
         this.primaryFeedId = feedId;
         this.appliedFunctions = appliedFunctions;
         StringBuilder builder = new StringBuilder();
@@ -44,7 +47,7 @@ public class FeedJointKey {
         stringRep = builder.toString();
     }
 
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return primaryFeedId;
     }
 
@@ -68,8 +71,9 @@ public class FeedJointKey {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
+        }
         if (o == null || !(o instanceof FeedJointKey)) {
             return false;
         }

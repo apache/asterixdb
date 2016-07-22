@@ -16,36 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.runtime;
+package org.apache.asterix.active;
 
 import java.io.Serializable;
 
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.external.feed.management.FeedId;
-
-public class FeedRuntimeId implements Serializable {
+public class ActiveRuntimeId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String DEFAULT_TARGET_ID = "N/A";
-
-    private final FeedId feedId;
-    private final FeedRuntimeType runtimeType;
+    private final EntityId entityId;
+    private final String runtimeId;
     private final int partition;
-    private final String targetId;
     private final int hashCode;
 
-    public FeedRuntimeId(FeedId feedId, FeedRuntimeType runtimeType, int partition, String targetId) {
-        this.feedId = feedId;
-        this.runtimeType = runtimeType;
+    public ActiveRuntimeId(EntityId entityId, String runtimeId, int partition) {
+        this.entityId = entityId;
+        this.runtimeId = runtimeId;
         this.partition = partition;
-        this.targetId = targetId;
         this.hashCode = toString().hashCode();
     }
 
     @Override
     public String toString() {
-        return runtimeType + "(" + feedId + ")" + "[" + partition + "]" + "==>" + "{" + targetId + "}";
+        return "(" + entityId + ")" + "[" + partition + "]:" + runtimeId;
     }
 
     @Override
@@ -53,12 +46,12 @@ public class FeedRuntimeId implements Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof FeedRuntimeId)) {
+        if (!(o instanceof ActiveRuntimeId)) {
             return false;
         }
-        FeedRuntimeId other = (FeedRuntimeId) o;
-        return (other.feedId.equals(feedId) && other.getFeedRuntimeType().equals(runtimeType)
-                && other.getTargetId().equals(targetId) && other.getPartition() == partition);
+        ActiveRuntimeId other = (ActiveRuntimeId) o;
+        return other.entityId.equals(entityId) && other.getFeedRuntimeType().equals(runtimeId)
+                && other.getPartition() == partition;
     }
 
     @Override
@@ -66,23 +59,19 @@ public class FeedRuntimeId implements Serializable {
         return hashCode;
     }
 
-    public FeedRuntimeType getFeedRuntimeType() {
-        return runtimeType;
+    public String getFeedRuntimeType() {
+        return runtimeId;
     }
 
     public int getPartition() {
         return partition;
     }
 
-    public FeedRuntimeType getRuntimeType() {
-        return runtimeType;
+    public String getRuntimeType() {
+        return runtimeId;
     }
 
-    public String getTargetId() {
-        return targetId;
-    }
-
-    public FeedId getFeedId() {
-        return feedId;
+    public EntityId getFeedId() {
+        return entityId;
     }
 }

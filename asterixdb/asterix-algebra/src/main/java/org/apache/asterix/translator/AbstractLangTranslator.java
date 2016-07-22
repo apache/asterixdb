@@ -47,7 +47,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  */
 public abstract class AbstractLangTranslator {
 
-    protected static final Logger LOGGER = Logger.getLogger(AbstractLangTranslator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AbstractLangTranslator.class.getName());
 
     protected static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
@@ -107,7 +107,7 @@ public abstract class AbstractLangTranslator {
         String message = null;
         String dataverse = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
         switch (stmt.getKind()) {
-            case INSERT:
+            case Statement.INSERT:
                 InsertStatement insertStmt = (InsertStatement) stmt;
                 if (insertStmt.getDataverseName() != null) {
                     dataverse = insertStmt.getDataverseName().getValue();
@@ -119,7 +119,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case DELETE:
+            case Statement.DELETE:
                 DeleteStatement deleteStmt = (DeleteStatement) stmt;
                 if (deleteStmt.getDataverseName() != null) {
                     dataverse = deleteStmt.getDataverseName().getValue();
@@ -131,7 +131,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case NODEGROUP_DROP:
+            case Statement.NODEGROUP_DROP:
                 String nodegroupName = ((NodeGroupDropStatement) stmt).getNodeGroupName().getValue();
                 invalidOperation = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME.equals(nodegroupName);
                 if (invalidOperation) {
@@ -139,16 +139,16 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case DATAVERSE_DROP:
+            case Statement.DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME
-                        .equals(dvDropStmt.getDataverseName().getValue());
+                invalidOperation =
+                        MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvDropStmt.getDataverseName().getValue());
                 if (invalidOperation) {
                     message = "Cannot drop dataverse:" + dvDropStmt.getDataverseName().getValue();
                 }
                 break;
 
-            case DATASET_DROP:
+            case Statement.DATASET_DROP:
                 DropStatement dropStmt = (DropStatement) stmt;
                 if (dropStmt.getDataverseName() != null) {
                     dataverse = dropStmt.getDataverseName().getValue();
@@ -159,7 +159,7 @@ public abstract class AbstractLangTranslator {
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
                 }
                 break;
-            case DATASET_DECL:
+            case Statement.DATASET_DECL:
                 DatasetDecl datasetStmt = (DatasetDecl) stmt;
                 Map<String, String> hints = datasetStmt.getHints();
                 if (hints != null && !hints.isEmpty()) {

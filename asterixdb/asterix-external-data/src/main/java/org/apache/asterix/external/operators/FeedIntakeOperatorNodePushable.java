@@ -18,22 +18,21 @@
  */
 package org.apache.asterix.external.operators;
 
+import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.active.ActivePartitionMessage;
+import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.feed.management.FeedManager;
-import org.apache.asterix.external.feed.message.FeedPartitionStartMessage;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.runtime.AdapterRuntimeManager;
-import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.asterix.external.feed.runtime.IngestionRuntime;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
@@ -43,13 +42,13 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNod
  */
 public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 
-    private final FeedId feedId;
+    private final EntityId feedId;
     private final int partition;
     private final IHyracksTaskContext ctx;
     private final IAdapterFactory adapterFactory;
     private final FeedIntakeOperatorDescriptor opDesc;
 
-    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IAdapterFactory adapterFactory,
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, EntityId feedId, IAdapterFactory adapterFactory,
             int partition, FeedPolicyAccessor policyAccessor, IRecordDescriptorProvider recordDescProvider,
             FeedIntakeOperatorDescriptor feedIntakeOperatorDescriptor) {
         this.opDesc = feedIntakeOperatorDescriptor;
@@ -62,7 +61,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
 
     @Override
     public void initialize() throws HyracksDataException {
-        FeedManager feedManager = (FeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext()
+        ActiveManager feedManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject()).getFeedManager();
         AdapterRuntimeManager adapterRuntimeManager = null;
         DistributeFeedFrameWriter frameDistributor = null;
@@ -73,17 +72,15 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
             // create the adapter
             FeedAdapter adapter = (FeedAdapter) adapterFactory.createAdapter(ctx, partition);
             // create the distributor
-            frameDistributor = new DistributeFeedFrameWriter(ctx, feedId, writer, FeedRuntimeType.INTAKE, partition,
-                    new FrameTupleAccessor(recordDesc));
+            frameDistributor = new DistributeFeedFrameWriter(feedId, writer, FeedRuntimeType.INTAKE, partition);
             // create adapter runtime manager
             adapterRuntimeManager = new AdapterRuntimeManager(feedId, adapter, frameDistributor, partition);
             // create and register the runtime
-            FeedRuntimeId runtimeId =
-                    new FeedRuntimeId(feedId, FeedRuntimeType.INTAKE, partition, FeedRuntimeId.DEFAULT_TARGET_ID);
+            ActiveRuntimeId runtimeId = new ActiveRuntimeId(feedId, FeedRuntimeType.INTAKE.toString(), partition);
             ingestionRuntime = new IngestionRuntime(feedId, runtimeId, frameDistributor, adapterRuntimeManager, ctx);
-            feedManager.registerFeedSubscribableRuntime(ingestionRuntime);
+            feedManager.registerRuntime(ingestionRuntime);
             // Notify FeedJobNotificationHandler that this provider is ready to receive subscription requests.
-            ctx.sendApplicationMessageToCC(new FeedPartitionStartMessage(feedId, ctx.getJobletContext().getJobId()),
+            ctx.sendApplicationMessageToCC(new ActivePartitionMessage(feedId, ctx.getJobletContext().getJobId(), null),
                     null);
             // open the distributor
             open = true;
@@ -95,7 +92,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 }
             }
             // The ingestion is over. we need to remove the runtime from the manager
-            feedManager.deregisterFeedSubscribableRuntime(ingestionRuntime.getRuntimeId());
+            feedManager.deregisterRuntime(ingestionRuntime.getRuntimeId());
             // If there was a failure, we need to throw an exception
             if (adapterRuntimeManager.isFailed()) {
                 throw new HyracksDataException("Unable to ingest data");
@@ -108,7 +105,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
              */
             if (ingestionRuntime != null) {
                 ingestionRuntime.terminate();
-                feedManager.deregisterFeedSubscribableRuntime(ingestionRuntime.getRuntimeId());
+                feedManager.deregisterRuntime(ingestionRuntime.getRuntimeId());
             }
             throw new HyracksDataException(ie);
         } finally {

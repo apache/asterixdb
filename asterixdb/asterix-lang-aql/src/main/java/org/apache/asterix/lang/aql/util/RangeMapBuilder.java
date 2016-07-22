@@ -70,7 +70,7 @@ public abstract class RangeMapBuilder {
         }
 
         // Translate the query into a Range Map
-        if (hintStatements.get(0).getKind() != Statement.Kind.QUERY) {
+        if (hintStatements.get(0).getKind() != Statement.QUERY) {
             throw new AsterixException("Not a proper query for the range hint.");
         }
         Query q = (Query) hintStatements.get(0);
@@ -151,8 +151,8 @@ public abstract class RangeMapBuilder {
         int fieldIndex = 0;
         int fieldType = rangeMap.getTag(0, 0);
         AqlBinaryComparatorFactoryProvider comparatorFactory = AqlBinaryComparatorFactoryProvider.INSTANCE;
-        IBinaryComparatorFactory bcf = comparatorFactory
-                .getBinaryComparatorFactory(ATypeTag.VALUE_TYPE_MAPPING[fieldType], ascending);
+        IBinaryComparatorFactory bcf =
+                comparatorFactory.getBinaryComparatorFactory(ATypeTag.VALUE_TYPE_MAPPING[fieldType], ascending);
         IBinaryComparator comparator = bcf.createBinaryComparator();
         int c = 0;
         for (int split = 1; split < rangeMap.getSplitCount(); ++split) {

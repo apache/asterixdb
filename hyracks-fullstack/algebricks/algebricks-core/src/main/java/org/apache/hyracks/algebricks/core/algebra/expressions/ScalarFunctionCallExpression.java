@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -37,6 +36,7 @@ public class ScalarFunctionCallExpression extends AbstractFunctionCallExpression
         super(FunctionKind.SCALAR, finfo, arguments);
     }
 
+    @SafeVarargs
     public ScalarFunctionCallExpression(IFunctionInfo finfo, Mutable<ILogicalExpression>... expressions) {
         super(FunctionKind.SCALAR, finfo, expressions);
     }

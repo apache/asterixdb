@@ -20,27 +20,31 @@ package org.apache.asterix.external.feed.watch;
 
 import java.util.List;
 
+import org.apache.asterix.active.ActiveJob;
+import org.apache.asterix.active.ActivityState;
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.api.IFeedJoint;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.util.FeedUtils.JobType;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedIntakeInfo extends FeedJobInfo {
+public class FeedIntakeInfo extends ActiveJob {
 
-    private final FeedId feedId;
+    private static final long serialVersionUID = 1L;
+    private final EntityId feedId;
     private final IFeedJoint intakeFeedJoint;
     private final JobSpecification spec;
     private List<String> intakeLocation;
 
-    public FeedIntakeInfo(JobId jobId, FeedJobState state, JobType jobType, FeedId feedId, IFeedJoint intakeFeedJoint,
+    public FeedIntakeInfo(JobId jobId, ActivityState state, EntityId feedId, IFeedJoint intakeFeedJoint,
             JobSpecification spec) {
-        super(jobId, state, FeedJobInfo.JobType.INTAKE, spec);
+        super(feedId, jobId, state, JobType.INTAKE, spec);
         this.feedId = feedId;
         this.intakeFeedJoint = intakeFeedJoint;
         this.spec = spec;
     }
 
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return feedId;
     }
 
@@ -48,6 +52,7 @@ public class FeedIntakeInfo extends FeedJobInfo {
         return intakeFeedJoint;
     }
 
+    @Override
     public JobSpecification getSpec() {
         return spec;
     }

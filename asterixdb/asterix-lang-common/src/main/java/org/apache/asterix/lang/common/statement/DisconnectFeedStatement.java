@@ -24,7 +24,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class DisconnectFeedStatement implements Statement {
+public class DisconnectFeedStatement extends Statement {
 
     private final Identifier dataverseName;
     private final Identifier feedName;
@@ -61,8 +61,8 @@ public class DisconnectFeedStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DISCONNECT_FEED;
+    public byte getKind() {
+        return Statement.DISCONNECT_FEED;
     }
 
     @Override

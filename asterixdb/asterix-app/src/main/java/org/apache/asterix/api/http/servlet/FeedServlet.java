@@ -32,13 +32,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.watch.FeedActivity;
 import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final String FEED_EXTENSION_NAME = "Feed";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -100,7 +101,8 @@ public class FeedServlet extends HttpServlet {
         String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
         FeedConnectionId connectionId = new FeedConnectionId(
-                new FeedId(activity.getDataverseName(), activity.getFeedName()), activity.getDatasetName());
+                new EntityId(FEED_EXTENSION_NAME, activity.getDataverseName(), activity.getFeedName()),
+                activity.getDatasetName());
         int intakeRate = 0;
         int storeRate = 0;
 

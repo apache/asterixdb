@@ -23,7 +23,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class FunctionDropStatement implements Statement {
+public class FunctionDropStatement extends Statement {
 
     private final FunctionSignature signature;
     private boolean ifExists;
@@ -34,8 +34,8 @@ public class FunctionDropStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.FUNCTION_DROP;
+    public byte getKind() {
+        return Statement.FUNCTION_DROP;
     }
 
     public FunctionSignature getFunctionSignature() {

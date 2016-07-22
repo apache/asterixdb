@@ -16,32 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.api;
+package org.apache.asterix.active;
 
-import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
+public class ActiveRuntime implements IActiveRuntime {
 
-public interface IFeedRuntime {
+    /** A unique identifier for the runtime **/
+    protected final ActiveRuntimeId runtimeId;
 
-    public enum FeedRuntimeType {
-        INTAKE,
-        COLLECT,
-        COMPUTE_COLLECT,
-        COMPUTE,
-        STORE,
-        OTHER,
-        ETS,
-        JOIN
+    public ActiveRuntime(ActiveRuntimeId runtimeId) {
+        this.runtimeId = runtimeId;;
     }
 
-    public enum Mode {
-        PROCESS,            // There is memory
-        SPILL,              // Memory budget has been consumed. Now we're writing to disk
-        DISCARD             // Memory budget has been consumed. Disk space budget has been consumed. Now we're
-                            // discarding
+    @Override
+    public ActiveRuntimeId getRuntimeId() {
+        return runtimeId;
     }
 
-    /**
-     * @return the unique runtime id associated with the feedRuntime
-     */
-    public FeedRuntimeId getRuntimeId();
+    @Override
+    public String toString() {
+        return runtimeId.toString();
+    }
 }

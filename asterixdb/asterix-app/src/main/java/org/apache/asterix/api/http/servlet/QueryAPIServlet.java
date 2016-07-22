@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class QueryAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
@@ -34,16 +33,19 @@ public class QueryAPIServlet extends RESTAPIServlet {
         super(compilationProvider);
     }
 
+    @Override
     protected String getQueryParameter(HttpServletRequest request) {
         return request.getParameter("query");
     }
 
-    protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.FUNCTION_DECL, Kind.QUERY, Kind.SET, Kind.WRITE,
-                Kind.RUN };
+    @Override
+    protected List<Byte> getAllowedStatements() {
+        Byte[] statementsArray = { Statement.DATAVERSE_DECL, Statement.FUNCTION_DECL, Statement.QUERY, Statement.SET,
+                Statement.WRITE, Statement.RUN };
         return Arrays.asList(statementsArray);
     }
 
+    @Override
     protected String getErrorMessage() {
         return "Invalid statement: Non-query statement %s to the query API.";
     }

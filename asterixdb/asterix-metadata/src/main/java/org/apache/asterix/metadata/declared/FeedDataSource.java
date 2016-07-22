@@ -20,9 +20,9 @@ package org.apache.asterix.metadata.declared;
 
 import java.util.List;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixClusterProperties;
@@ -34,7 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 public class FeedDataSource extends AqlDataSource {
 
     private final Feed feed;
-    private final FeedId sourceFeedId;
+    private final EntityId sourceFeedId;
     private final IFeed.FeedType sourceFeedType;
     private final FeedRuntimeType location;
     private final String targetDataset;
@@ -45,8 +45,9 @@ public class FeedDataSource extends AqlDataSource {
 
     public FeedDataSource(Feed feed, AqlSourceId id, String targetDataset, IAType itemType, IAType metaType,
             List<IAType> pkTypes, List<List<String>> partitioningKeys,
-            List<ScalarFunctionCallExpression> keyAccessExpression, FeedId sourceFeedId, IFeed.FeedType sourceFeedType,
-            FeedRuntimeType location, String[] locations, INodeDomain domain) throws AlgebricksException {
+            List<ScalarFunctionCallExpression> keyAccessExpression, EntityId sourceFeedId,
+            IFeed.FeedType sourceFeedType, FeedRuntimeType location, String[] locations, INodeDomain domain)
+            throws AlgebricksException {
         super(id, itemType, metaType, AqlDataSourceType.FEED, domain);
         this.feed = feed;
         this.targetDataset = targetDataset;
@@ -73,7 +74,7 @@ public class FeedDataSource extends AqlDataSource {
         return targetDataset;
     }
 
-    public FeedId getSourceFeedId() {
+    public EntityId getSourceFeedId() {
         return sourceFeedId;
     }
 

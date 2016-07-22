@@ -29,7 +29,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class CreateIndexStatement implements Statement {
+public class CreateIndexStatement extends Statement {
 
     private Identifier indexName;
     private Identifier dataverseName;
@@ -119,8 +119,8 @@ public class CreateIndexStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_INDEX;
+    public byte getKind() {
+        return Statement.CREATE_INDEX;
     }
 
     public boolean hasMetaField() {

@@ -575,6 +575,7 @@
     <module>asterix-replication</module>
     <module>asterix-experiments</module>
     <module>asterix-coverage</module>
+    <module>asterix-active</module>
   </modules>
 
   <repositories>

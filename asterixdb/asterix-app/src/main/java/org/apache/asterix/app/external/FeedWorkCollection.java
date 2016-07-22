@@ -82,8 +82,8 @@ public class FeedWorkCollection {
                     //TODO(amoudi): route PrintWriter to log file
                     PrintWriter writer = new PrintWriter(System.err, true);
                     SessionConfig pc = new SessionConfig(writer, OutputFormat.ADM);
-                    DataverseDecl dataverseDecl = new DataverseDecl(
-                            new Identifier(request.getReceivingFeedId().getDataverse()));
+                    DataverseDecl dataverseDecl =
+                            new DataverseDecl(new Identifier(request.getReceivingFeedId().getDataverse()));
                     SubscribeFeedStatement subscribeStmt = new SubscribeFeedStatement(locations, request);
                     List<Statement> statements = new ArrayList<Statement>();
                     statements.add(dataverseDecl);
@@ -119,7 +119,6 @@ public class FeedWorkCollection {
                     LOGGER.info(" Feed subscription request " + ((SubscribeFeedWork) work).request + " completed ");
                 }
             }
-
         }
 
         public FeedConnectionRequest getRequest() {

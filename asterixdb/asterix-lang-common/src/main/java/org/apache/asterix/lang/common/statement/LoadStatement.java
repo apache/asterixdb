@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class LoadStatement implements Statement {
+public class LoadStatement extends Statement {
 
     private Identifier datasetName;
     private Identifier dataverseName;
@@ -67,8 +67,8 @@ public class LoadStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.LOAD;
+    public byte getKind() {
+        return Statement.LOAD;
     }
 
     public Identifier getDatasetName() {

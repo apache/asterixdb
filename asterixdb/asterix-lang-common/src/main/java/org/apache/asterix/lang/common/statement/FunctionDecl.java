@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class FunctionDecl implements Statement {
+public class FunctionDecl extends Statement {
     private FunctionSignature signature;
     private List<VarIdentifier> paramList;
     private Expression funcBody;
@@ -73,8 +73,8 @@ public class FunctionDecl implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.FUNCTION_DECL;
+    public byte getKind() {
+        return Statement.FUNCTION_DECL;
     }
 
     @Override

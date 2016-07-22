@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class UpdateAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
@@ -40,10 +39,11 @@ public class UpdateAPIServlet extends RESTAPIServlet {
     }
 
     @Override
-    protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPSERT, Kind.UPDATE,
-                Kind.DML_CMD_LIST, Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT,
-                Kind.EXTERNAL_DATASET_REFRESH, Kind.RUN };
+    protected List<Byte> getAllowedStatements() {
+        Byte[] statementsArray =
+                { Statement.DATAVERSE_DECL, Statement.DELETE, Statement.INSERT, Statement.UPSERT, Statement.UPDATE,
+                        Statement.DML_CMD_LIST, Statement.LOAD, Statement.CONNECT_FEED, Statement.DISCONNECT_FEED,
+                        Statement.SET, Statement.COMPACT, Statement.EXTERNAL_DATASET_REFRESH, Statement.RUN };
         return Arrays.asList(statementsArray);
     }
 

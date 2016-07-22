@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class IndexDropStatement implements Statement {
+public class IndexDropStatement extends Statement {
 
     private Identifier dataverseName;
     private Identifier datasetName;
@@ -39,8 +39,8 @@ public class IndexDropStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.INDEX_DROP;
+    public byte getKind() {
+        return Statement.INDEX_DROP;
     }
 
     public Identifier getDataverseName() {

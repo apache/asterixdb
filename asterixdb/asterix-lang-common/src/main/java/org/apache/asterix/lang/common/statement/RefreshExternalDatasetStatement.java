@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class RefreshExternalDatasetStatement implements Statement {
+public class RefreshExternalDatasetStatement extends Statement {
 
     private Identifier dataverseName;
     private Identifier datasetName;
@@ -50,8 +50,8 @@ public class RefreshExternalDatasetStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.EXTERNAL_DATASET_REFRESH;
+    public byte getKind() {
+        return Statement.EXTERNAL_DATASET_REFRESH;
     }
 
 }

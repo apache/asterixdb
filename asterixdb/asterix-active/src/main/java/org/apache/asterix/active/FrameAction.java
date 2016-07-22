@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.dataflow;
+package org.apache.asterix.active;
 
 import java.nio.ByteBuffer;
 

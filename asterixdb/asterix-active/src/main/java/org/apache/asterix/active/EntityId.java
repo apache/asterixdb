@@ -16,39 +16,45 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.management;
+package org.apache.asterix.active;
 
 import java.io.Serializable;
 
 /**
  * A unique identifier for a data feed.
  */
-public class FeedId implements Serializable {
+public class EntityId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private final String extensionName;
     private final String dataverse;
-    private final String feedName;
+    private final String entityName;
+    private final int hashCode;
 
-    public FeedId(String dataverse, String feedName) {
+    public EntityId(String extentionName, String dataverse, String entityName) {
+        this.extensionName = extentionName;
         this.dataverse = dataverse;
-        this.feedName = feedName;
+        this.entityName = entityName;
+        this.hashCode = toString().hashCode();
     }
 
     public String getDataverse() {
         return dataverse;
     }
 
-    public String getFeedName() {
-        return feedName;
+    public String getEntityName() {
+        return entityName;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FeedId)) {
+        if (o == null || !(o instanceof EntityId)) {
             return false;
         }
-        if (this == o || ((FeedId) o).getFeedName().equals(feedName) && ((FeedId) o).getDataverse().equals(dataverse)) {
+        if (this == o || ((EntityId) o).getExtensionName().equals(extensionName)
+                && ((EntityId) o).getEntityName().equals(entityName)
+                && ((EntityId) o).getDataverse().equals(dataverse)) {
             return true;
         }
         return false;
@@ -56,11 +62,15 @@ public class FeedId implements Serializable {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return hashCode;
     }
 
     @Override
     public String toString() {
-        return dataverse + "." + feedName;
+        return dataverse + "." + entityName + "(" + extensionName + ")";
+    }
+
+    public String getExtensionName() {
+        return extensionName;
     }
 }
