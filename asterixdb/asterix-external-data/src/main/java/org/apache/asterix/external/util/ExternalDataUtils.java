@@ -332,4 +332,8 @@ public class ExternalDataUtils {
         }
         return intIndicators;
     }
+
+    public static boolean isSendMarker(Map<String, String> configuration) {
+        return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_SEND_MARKER));
+    }
 }

@@ -89,9 +89,7 @@ public class AbstractFrameAppender implements IFrameAppender {
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         getBuffer().clear();
-        if (getTupleCount() > 0) {
-            outWriter.nextFrame(getBuffer());
-        }
+        outWriter.nextFrame(getBuffer());
         if (clearFrame) {
             frame.reset();
             reset(getBuffer(), true);

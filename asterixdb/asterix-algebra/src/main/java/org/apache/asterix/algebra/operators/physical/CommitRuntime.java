@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogManager;
+import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.JobId;
@@ -32,12 +33,16 @@ import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
 public class CommitRuntime implements IPushRuntime {
@@ -52,17 +57,18 @@ public class CommitRuntime implements IPushRuntime {
     protected final boolean isTemporaryDatasetWriteJob;
     protected final boolean isWriteTransaction;
     protected final long[] longHashes;
-    protected final LogRecord logRecord;
     protected final FrameTupleReference frameTupleReference;
-
-    protected ITransactionContext transactionContext;
-    protected FrameTupleAccessor frameTupleAccessor;
+    protected final IHyracksTaskContext ctx;
     protected final int resourcePartition;
+    protected ITransactionContext transactionContext;
+    protected LogRecord logRecord;
+    protected FrameTupleAccessor frameTupleAccessor;
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
             boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition) {
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject();
+        this.ctx = ctx;
+        IAsterixAppRuntimeContext runtimeCtx =
+                (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
         this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
         this.logMgr = runtimeCtx.getTransactionSubsystem().getLogManager();
         this.jobId = jobId;
@@ -73,7 +79,6 @@ public class CommitRuntime implements IPushRuntime {
         this.isWriteTransaction = isWriteTransaction;
         this.resourcePartition = resourcePartition;
         longHashes = new long[2];
-        logRecord = new LogRecord();
     }
 
     @Override
@@ -81,6 +86,9 @@ public class CommitRuntime implements IPushRuntime {
         try {
             transactionContext = transactionManager.getTransactionContext(jobId, false);
             transactionContext.setWriteTxn(isWriteTransaction);
+            ILogMarkerCallback callback =
+                    TaskUtils.<ILogMarkerCallback> get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
+            logRecord = new LogRecord(callback);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -113,6 +121,23 @@ public class CommitRuntime implements IPushRuntime {
                 }
             }
         }
+        VSizeFrame message = TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
+        if (message != null
+                && MessagingFrameTupleAppender.getMessageType(message) == MessagingFrameTupleAppender.MARKER_MESSAGE) {
+            try {
+                formMarkerLogRecords(message.getBuffer());
+                logMgr.log(logRecord);
+            } catch (ACIDException e) {
+                throw new HyracksDataException(e);
+            }
+            message.reset();
+            message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
+            message.getBuffer().flip();
+        }
+    }
+
+    private void formMarkerLogRecords(ByteBuffer marker) {
+        TransactionUtil.formMarkerLogRecord(logRecord, transactionContext, datasetId, resourcePartition, marker);
     }
 
     protected void formLogRecord(ByteBuffer buffer, int t) {

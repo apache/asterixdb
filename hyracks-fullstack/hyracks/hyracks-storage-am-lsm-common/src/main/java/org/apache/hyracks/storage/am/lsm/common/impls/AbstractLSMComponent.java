@@ -26,10 +26,16 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     protected ComponentState state;
     protected int readerCount;
     protected final ILSMComponentFilter filter;
+    protected long mostRecentMarkerLSN;
+
+    public AbstractLSMComponent(ILSMComponentFilter filter, long mostRecentMarkerLSN) {
+        this.filter = filter;
+        this.mostRecentMarkerLSN = mostRecentMarkerLSN;
+        readerCount = 0;
+    }
 
     public AbstractLSMComponent(ILSMComponentFilter filter) {
-        this.filter = filter;
-        readerCount = 0;
+        this(filter, -1L);
     }
 
     public AbstractLSMComponent() {
@@ -44,5 +50,15 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     @Override
     public ILSMComponentFilter getLSMComponentFilter() {
         return filter;
+    }
+
+    @Override
+    public long getMostRecentMarkerLSN() {
+        return mostRecentMarkerLSN;
+    }
+
+    @Override
+    public void setMostRecentMarkerLSN(long lsn) {
+        this.mostRecentMarkerLSN = lsn;
     }
 }

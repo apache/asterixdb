@@ -30,6 +30,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class DataflowUtils {
     public static void addTupleToFrame(FrameTupleAppender appender, ArrayTupleBuilder tb, IFrameWriter writer)
@@ -65,6 +66,16 @@ public class DataflowUtils {
                 return RateControlledTupleForwarder.create(configuration);
             default:
                 throw new HyracksDataException("Unknown tuple forward policy");
+        }
+    }
+
+    public static void addTupleToFrame(FrameTupleAppender appender, ITupleReference tuple, IFrameWriter writer)
+            throws HyracksDataException {
+        if (!appender.append(tuple)) {
+            appender.write(writer, true);
+            if (!appender.append(tuple)) {
+                throw new HyracksDataException("Tuple is too large for a frame");
+            }
         }
     }
 }

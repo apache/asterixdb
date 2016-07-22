@@ -39,16 +39,18 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBT
     private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
+    private final long prevMarkerLSN;
 
     public LSMBTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
             FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback,
-            String indexIdentifier) {
+            String indexIdentifier, long prevMarkerLSN) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.btreeFlushTarget = btreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
         this.indexIdentifier = indexIdentifier;
+        this.prevMarkerLSN = prevMarkerLSN;
     }
 
     @Override
@@ -106,5 +108,9 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBT
     @Override
     public int compareTo(LSMBTreeFlushOperation o) {
         return btreeFlushTarget.getFile().getName().compareTo(o.getBTreeFlushTarget().getFile().getName());
+    }
+
+    public long getPrevMarkerLSN() {
+        return prevMarkerLSN;
     }
 }

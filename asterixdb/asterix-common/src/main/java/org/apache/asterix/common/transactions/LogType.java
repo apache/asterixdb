@@ -27,6 +27,7 @@ public class LogType {
     public static final byte FLUSH = 4;
     public static final byte UPSERT_ENTITY_COMMIT = 5;
     public static final byte WAIT = 6;
+    public static final byte MARKER = 7;
 
     private static final String STRING_UPDATE = "UPDATE";
     private static final String STRING_JOB_COMMIT = "JOB_COMMIT";
@@ -35,8 +36,8 @@ public class LogType {
     private static final String STRING_FLUSH = "FLUSH";
     private static final String STRING_UPSERT_ENTITY_COMMIT = "UPSERT_ENTITY_COMMIT";
     private static final String STRING_WAIT = "WAIT";
-
-    private static final String STRING_INVALID_LOG_TYPE = "INVALID_LOG_TYPE";
+    private static final String STRING_MARKER = "MARKER";
+    private static final String STRING_UNKNOWN_LOG_TYPE = "UNKNOWN_LOG_TYPE";
 
     public static String toString(byte logType) {
         switch (logType) {
@@ -54,8 +55,10 @@ public class LogType {
                 return STRING_UPSERT_ENTITY_COMMIT;
             case LogType.WAIT:
                 return STRING_WAIT;
+            case LogType.MARKER:
+                return STRING_MARKER;
             default:
-                return STRING_INVALID_LOG_TYPE;
+                return STRING_UNKNOWN_LOG_TYPE;
         }
     }
 

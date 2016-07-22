@@ -172,7 +172,11 @@ public class LSMHarness implements ILSMHarness {
                 lsmIndex.getIOOperationCallback().beforeOperation(LSMOperationType.FLUSH);
                 // Changing the flush status should *always* precede changing the mutable component.
                 lsmIndex.changeFlushStatusForCurrentMutableCompoent(false);
+                // Flushing! => carry over the marker lsn to the next component
+                long mostRecentMarkerLSN =
+                        ((AbstractLSMIndex) lsmIndex).getCurrentMemoryComponent().getMostRecentMarkerLSN();
                 lsmIndex.changeMutableComponent();
+                ((AbstractLSMIndex) lsmIndex).getCurrentMemoryComponent().setMostRecentMarkerLSN(mostRecentMarkerLSN);
                 // Notify all waiting threads whenever a flush has been scheduled since they will check
                 // again if they can grab and enter the mutable component.
                 opTracker.notifyAll();

@@ -62,4 +62,9 @@ public interface ITreeIndexMetaDataFrame {
     public long getLSN();
 
     public void setLSN(long lsn);
+
+    // Special placeholder for LSN information of a marker log. used for rollback information
+    public long getLastMarkerLSN();
+
+    public void setLastMarkerLSN(long lsn);
 }

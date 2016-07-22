@@ -28,10 +28,10 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayDeque;
 
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 /**
@@ -49,28 +49,30 @@ public class FrameSpiller {
     private final String fileNamePrefix;
     private final ArrayDeque<File> files = new ArrayDeque<>();
     private final VSizeFrame frame;
-    private final int budget;           // Max current frames in disk allowed
-    private BufferedOutputStream bos;   // Current output stream
-    private BufferedInputStream bis;    // Current input stream
-    private File currentWriteFile;      // Current write file
-    private File currentReadFile;       // Current read file
-    private int currentWriteCount = 0;  // Current file write count
-    private int currentReadCount = 0;   // Current file read count
-    private int totalWriteCount = 0;    // Total frames spilled
-    private int totalReadCount = 0;     // Total frames read
-    private int fileCount = 0;          // How many spill files?
+    private final int budget; // Max current frames in disk allowed
+    private BufferedOutputStream bos; // Current output stream
+    private BufferedInputStream bis; // Current input stream
+    private File currentWriteFile; // Current write file
+    private File currentReadFile; // Current read file
+    private int currentWriteCount = 0; // Current file write count
+    private int currentReadCount = 0; // Current file read count
+    private int totalWriteCount = 0; // Total frames spilled
+    private int totalReadCount = 0; // Total frames read
+    private int fileCount = 0; // How many spill files?
 
     public FrameSpiller(IHyracksTaskContext ctx, String fileNamePrefix, long budgetInBytes)
             throws HyracksDataException {
         this.frame = new VSizeFrame(ctx);
         this.fileNamePrefix = fileNamePrefix;
-        this.budget = (int) (budgetInBytes / ctx.getInitialFrameSize());
-
+        this.budget = (int) Math.min(budgetInBytes / ctx.getInitialFrameSize(), Integer.MAX_VALUE);
+        if (budget <= 0) {
+            throw new HyracksDataException("Invalid budget " + budgetInBytes + ". Budget must be larger than 0");
+        }
     }
 
     public void open() throws HyracksDataException {
         try {
-            this.currentWriteFile = createFile();
+            this.currentWriteFile = StoragePathUtil.createFile(fileNamePrefix, fileCount++);
             this.currentReadFile = currentWriteFile;
             this.bos = new BufferedOutputStream(new FileOutputStream(currentWriteFile));
             this.bis = new BufferedInputStream(new FileInputStream(currentReadFile));
@@ -135,7 +137,7 @@ public class FrameSpiller {
     }
 
     public double usedBudget() {
-        return ((double) (totalWriteCount - totalReadCount) / (double) budget);
+        return (double) (totalWriteCount - totalReadCount) / (double) budget;
     }
 
     public synchronized boolean spill(ByteBuffer frame) throws HyracksDataException {
@@ -150,7 +152,7 @@ public class FrameSpiller {
             if (currentWriteCount >= FRAMES_PER_FILE) {
                 bos.close();
                 currentWriteCount = 0;
-                currentWriteFile = createFile();
+                currentWriteFile = StoragePathUtil.createFile(fileNamePrefix, fileCount++);
                 files.add(currentWriteFile);
                 bos = new BufferedOutputStream(new FileOutputStream(currentWriteFile));
             }
@@ -158,26 +160,6 @@ public class FrameSpiller {
         } catch (IOException e) {
             close();
             throw new HyracksDataException(e);
-        }
-    }
-
-    private File createFile() throws HyracksDataException {
-        try {
-            String fileName = fileNamePrefix + "_" + fileCount++;
-            File file = new File(fileName);
-            if (!file.exists()) {
-                boolean success = file.createNewFile();
-                if (!success) {
-                    throw new HyracksDataException("Unable to create spill file " + fileName);
-                } else {
-                    if (LOGGER.isEnabledFor(Level.INFO)) {
-                        LOGGER.info("Created spill file " + file.getAbsolutePath());
-                    }
-                }
-            }
-            return file;
-        } catch (Throwable th) {
-            throw new HyracksDataException(th);
         }
     }
 

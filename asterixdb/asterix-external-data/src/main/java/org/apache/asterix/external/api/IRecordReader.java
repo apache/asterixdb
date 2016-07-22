@@ -73,4 +73,8 @@ public interface IRecordReader<T> extends Closeable {
      * gives the record reader a chance to recover from IO errors during feed intake
      */
     public boolean handleException(Throwable th);
+
+    public default IFeedMarker getProgressReporter() {
+        return null;
+    }
 }

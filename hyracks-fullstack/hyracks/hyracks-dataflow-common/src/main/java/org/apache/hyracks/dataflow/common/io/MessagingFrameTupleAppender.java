@@ -26,7 +26,9 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 /**
@@ -39,7 +41,9 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
     private static final int NULL_MESSAGE_SIZE = 1;
     public static final byte NULL_FEED_MESSAGE = 0x01;
     public static final byte ACK_REQ_FEED_MESSAGE = 0x02;
-    public static final byte SNAPSHOT_MESSAGE = 0x03;
+    public static final byte MARKER_MESSAGE = 0x03;
+    private boolean initialized = false;
+    private VSizeFrame message;
 
     public MessagingFrameTupleAppender(IHyracksTaskContext ctx) {
         this.ctx = ctx;
@@ -59,8 +63,8 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
             case ACK_REQ_FEED_MESSAGE:
                 aString.append("Ack Request, ");
                 break;
-            case SNAPSHOT_MESSAGE:
-                aString.append("Snapshot, ");
+            case MARKER_MESSAGE:
+                aString.append("Marker, ");
                 break;
             default:
                 aString.append("Unknown, ");
@@ -78,8 +82,8 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
                 return NULL_FEED_MESSAGE;
             case ACK_REQ_FEED_MESSAGE:
                 return ACK_REQ_FEED_MESSAGE;
-            case SNAPSHOT_MESSAGE:
-                return SNAPSHOT_MESSAGE;
+            case MARKER_MESSAGE:
+                return MARKER_MESSAGE;
             default:
                 throw new HyracksDataException("Unknown message type");
         }
@@ -101,24 +105,35 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
 
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
+        if (!initialized) {
+            message = TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
+            initialized = true;
+        }
         // If message fits, we append it, otherwise, we append a null message, then send a message only
         // frame with the message
-        ByteBuffer message = ((VSizeFrame) ctx.getSharedObject()).getBuffer();
-        int messageSize = message.limit() - message.position();
-        if (hasEnoughSpace(1, messageSize)) {
-            appendMessage(message);
-            forward(outWriter);
-        } else {
+        if (message == null) {
             if (tupleCount > 0) {
                 appendNullMessage();
                 forward(outWriter);
             }
-            if (!hasEnoughSpace(1, messageSize)) {
-                frame.ensureFrameSize(FrameHelper.calcAlignedFrameSizeToStore(1, messageSize, frame.getMinSize()));
-                reset(frame.getBuffer(), true);
+        } else {
+            ByteBuffer buffer = message.getBuffer();
+            int messageSize = buffer.limit() - buffer.position();
+            if (hasEnoughSpace(1, messageSize)) {
+                appendMessage(buffer);
+                forward(outWriter);
+            } else {
+                if (tupleCount > 0) {
+                    appendNullMessage();
+                    forward(outWriter);
+                }
+                if (!hasEnoughSpace(1, messageSize)) {
+                    frame.ensureFrameSize(FrameHelper.calcAlignedFrameSizeToStore(1, messageSize, frame.getMinSize()));
+                    reset(frame.getBuffer(), true);
+                }
+                appendMessage(buffer);
+                forward(outWriter);
             }
-            appendMessage(message);
-            forward(outWriter);
         }
     }
 
@@ -130,8 +145,9 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
     }
 
     private void appendMessage(ByteBuffer message) {
-        System.arraycopy(message.array(), message.position(), array, tupleDataEndOffset, message.limit());
-        tupleDataEndOffset += message.limit();
+        int messageLength = message.limit() - message.position();
+        System.arraycopy(message.array(), message.position(), array, tupleDataEndOffset, messageLength);
+        tupleDataEndOffset += messageLength;
         IntSerDeUtils.putInt(getBuffer().array(),
                 FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
         ++tupleCount;

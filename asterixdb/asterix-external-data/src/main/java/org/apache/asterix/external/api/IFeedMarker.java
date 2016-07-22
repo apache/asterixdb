@@ -16,13 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.dataflow;
+package org.apache.asterix.external.api;
 
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.comm.VSizeFrame;
 
-public class TestRecordDescriptorFactory {
-    public RecordDescriptor createRecordDescriptor(ISerializerDeserializer<?>... serdes) {
-        return null;
-    }
+public interface IFeedMarker {
+
+    /**
+     * Mark the frame with a mark denoting the progress of the feed
+     * The mark will be eventually written to the transaction log
+     *
+     * @param mark
+     *            a frame to write the progress mark in
+     * @return
+     */
+    public boolean mark(VSizeFrame mark);
+
 }

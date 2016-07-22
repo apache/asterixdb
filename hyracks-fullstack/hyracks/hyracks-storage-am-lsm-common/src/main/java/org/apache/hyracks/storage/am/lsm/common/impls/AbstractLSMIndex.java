@@ -275,8 +275,8 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         }
 
         //create replication job and submit it
-        LSMIndexReplicationJob job = new LSMIndexReplicationJob(this, ctx, componentFiles, operation, executionType,
-                opType);
+        LSMIndexReplicationJob job =
+                new LSMIndexReplicationJob(this, ctx, componentFiles, operation, executionType, opType);
         try {
             diskBufferCache.getIOReplicationManager().submitJob(job);
         } catch (IOException e) {
@@ -295,5 +295,9 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public boolean isDurable() {
         return durable;
+    }
+
+    public ILSMComponent getCurrentMemoryComponent() {
+        return memoryComponents.get(currentMutableComponentId.get());
     }
 }

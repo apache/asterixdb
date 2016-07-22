@@ -16,10 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.event.util;
+package org.apache.asterix.common.transactions;
 
-public class AsterixConstants {
+import java.nio.ByteBuffer;
 
-    public static String ASTERIX_ROOT_METADATA_DIR = "asterix_root_metadata";
+/**
+ * This interface provide callback mechanism for adding marker logs to the transaction log file
+ */
+public interface ILogMarkerCallback {
+
+    String KEY_MARKER_CALLBACK = "MARKER_CALLBACK";
+
+    /**
+     * Called before writing the marker log allowing addition of specific information to the log record
+     *
+     * @param buffer:
+     *            the log buffer to write to
+     */
+    void before(ByteBuffer buffer);
+
+    /**
+     * Called after the log's been appended to the log tail passing the position of the log used for random access
+     *
+     * @param lsn
+     */
+    void after(long lsn);
 
 }

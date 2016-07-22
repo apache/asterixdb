@@ -79,7 +79,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public synchronized void completeOperation(ILSMIndex index, LSMOperationType opType,
             ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             if (numActiveOperations.get() == 0) {
@@ -148,12 +148,12 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         for (ILSMIndex lsmIndex : dsInfo.getDatasetIndexes()) {
 
             //get resource
-            ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
+            ILSMIndexAccessor accessor =
+                    lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
             //update resource lsn
-            AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) lsmIndex
-                    .getIOOperationCallback();
+            AbstractLSMIOOperationCallback ioOpCallback =
+                    (AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback();
             ioOpCallback.updateLastLSN(logRecord.getLSN());
 
             //schedule flush after update

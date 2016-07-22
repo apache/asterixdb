@@ -22,6 +22,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.exceptions.FrameDataException;
+import org.apache.asterix.common.transactions.ILogMarkerCallback;
+import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -31,6 +33,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -41,7 +44,9 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
+    public static final String KEY_INDEX = "Index";
     private final boolean isPrimary;
+    // This class has both lsmIndex and index (in super class) pointing to the same object
     private AbstractLSMIndex lsmIndex;
     private int i = 0;
 
@@ -59,10 +64,6 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
     private int currentTupleIdx;
     private int lastFlushedTupleIdx;
 
-    public boolean isPrimary() {
-        return isPrimary;
-    }
-
     public AsterixLSMInsertDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op,
             boolean isPrimary) {
@@ -79,6 +80,10 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
         indexHelper.open();
         lsmIndex = (AbstractLSMIndex) indexHelper.getIndexInstance();
         try {
+            if (isPrimary && ctx.getSharedObject() != null) {
+                PrimaryIndexLogMarkerCallback callback = new PrimaryIndexLogMarkerCallback(lsmIndex);
+                TaskUtils.putInSharedMap(ILogMarkerCallback.KEY_MARKER_CALLBACK, callback, ctx);
+            }
             writer.open();
             modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
                     indexHelper.getResourcePath(), indexHelper.getResourceID(), indexHelper.getResourcePartition(),
@@ -184,5 +189,9 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
         if (lsmIndex != null) {
             writer.fail();
         }
+    }
+
+    public boolean isPrimary() {
+        return isPrimary;
     }
 }

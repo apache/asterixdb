@@ -67,10 +67,12 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
         return NullMetadataFrameFactory.INSTANCE;
     }
 
+    @Override
     public int getCapacity() {
         return capacity - 2;
     }
 
+    @Override
     public void reset() {
         currentPageId.set(1);
     }
@@ -157,10 +159,12 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
         // Method doesn't make sense for this free page manager.
     }
 
+    @Override
     public void setFilterPage(ICachedPage page) {
         // Method doesn't make sense for this free page manager.
     }
 
+    @Override
     public ICachedPage getFilterPage() {
         return null;
     }
@@ -173,5 +177,11 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
     @Override
     public long getLSNOffset() throws HyracksDataException {
         return IMetaDataPageManager.INVALID_LSN_OFFSET;
+    }
+
+    @Override
+    public long getLastMarkerLSN() throws HyracksDataException {
+        // Method doesn't make sense for this free page manager.
+        return -1L;
     }
 }

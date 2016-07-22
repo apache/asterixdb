@@ -64,6 +64,9 @@ public class FeedUtils {
         SPILL,              // Memory budget has been consumed. Now we're writing to disk
         DISCARD             // Memory and Disk space budgets have been consumed. Now we're discarding
     }
+    
+    private FeedUtils() {
+    }
 
     private static String prepareDataverseFeedName(String dataverseName, String feedName) {
         return dataverseName + File.separator + feedName;
@@ -87,7 +90,7 @@ public class FeedUtils {
             throw new AsterixException("Can't create file splits for adapter with count partitioning constraints");
         }
         String[] locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
-        List<FileSplit> splits = new ArrayList<FileSplit>();
+        List<FileSplit> splits = new ArrayList<>();
         for (String nd : locations) {
             splits.add(splitsForAdapter(dataverseName, feedName, nd,
                     AsterixClusterProperties.INSTANCE.getNodePartitions(nd)[0]));
@@ -120,6 +123,7 @@ public class FeedUtils {
         int offset = fta.getTupleStartOffset(tc);
         int len = fta.getTupleLength(tc);
         int newSize = FrameHelper.calcAlignedFrameSizeToStore(1, len, message.getMinSize());
+        message.reset();
         message.ensureFrameSize(newSize);
         message.getBuffer().clear();
         message.getBuffer().put(input.array(), offset, len);

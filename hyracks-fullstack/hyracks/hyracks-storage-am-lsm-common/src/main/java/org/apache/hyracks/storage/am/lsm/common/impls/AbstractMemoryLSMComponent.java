@@ -32,8 +32,9 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
     private int writerCount;
     private boolean requestedToBeActive;
 
-    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
-        super(filter);
+    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter,
+            long mostRecentMarkerLSN) {
+        super(filter, mostRecentMarkerLSN);
         this.vbc = vbc;
         writerCount = 0;
         if (isActive) {
@@ -42,6 +43,10 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             state = ComponentState.INACTIVE;
         }
         isModified = new AtomicBoolean();
+    }
+
+    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
+        this(vbc, isActive, filter, -1L);
     }
 
     public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive) {

@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.common.utils;
 
+import java.nio.ByteBuffer;
+
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -62,6 +65,19 @@ public class TransactionUtil {
         logRecord.setPKFields(PKFields);
         logRecord.setResourcePartition(resourcePartition);
         logRecord.computeAndSetPKValueSize();
+        logRecord.computeAndSetLogSize();
+    }
+
+    public static void formMarkerLogRecord(LogRecord logRecord, ITransactionContext txnCtx, int datasetId,
+            int resourcePartition, ByteBuffer marker) {
+        logRecord.setTxnCtx(txnCtx);
+        logRecord.setLogSource(LogSource.LOCAL);
+        logRecord.setLogType(LogType.MARKER);
+        logRecord.setJobId(txnCtx.getJobId().getId());
+        logRecord.setDatasetId(datasetId);
+        logRecord.setResourcePartition(resourcePartition);
+        marker.get(); // read the first byte since it is not part of the marker object
+        logRecord.setMarker(marker);
         logRecord.computeAndSetLogSize();
     }
 }

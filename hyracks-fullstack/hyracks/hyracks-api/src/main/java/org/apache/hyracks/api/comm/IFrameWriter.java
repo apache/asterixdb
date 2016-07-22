@@ -64,6 +64,7 @@ public interface IFrameWriter {
 
     /**
      * Provide data to the stream of this {@link IFrameWriter}.
+     *
      * @param buffer
      *            - Buffer containing data.
      * @throws HyracksDataException
@@ -72,21 +73,24 @@ public interface IFrameWriter {
 
     /**
      * request the frame to push its content forward and flush its consumers
+     *
      * @throws HyracksDataException
      */
     public default void flush() throws HyracksDataException {
-        throw new HyracksDataException("flush() is not supported in this IFrameWriter");
+        // No Op
     }
 
     /**
      * Indicate that a failure was encountered and the current stream is to be
      * aborted.
+     *
      * @throws HyracksDataException
      */
     public void fail() throws HyracksDataException;
 
     /**
      * Close this {@link IFrameWriter} and give up all resources.
+     *
      * @throws HyracksDataException
      */
     public void close() throws HyracksDataException;

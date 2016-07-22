@@ -361,8 +361,9 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
      */
     @Override
     public int getFirstMetadataPage() throws HyracksDataException {
-        if (headPage != IBufferCache.INVALID_PAGEID)
+        if (headPage != IBufferCache.INVALID_PAGEID) {
             return headPage;
+        }
 
         ITreeIndexMetaDataFrame metaFrame = metaDataFrameFactory.createFrame();
 
@@ -472,8 +473,29 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     public long getLSNOffset() throws HyracksDataException {
         int metadataPageNum = getFirstMetadataPage();
         if (metadataPageNum != IBufferCache.INVALID_PAGEID) {
-            return (metadataPageNum * bufferCache.getPageSize()) + LIFOMetaDataFrame.lsnOff;
+            return (metadataPageNum * (long) bufferCache.getPageSize()) + LIFOMetaDataFrame.LSN_OFFSET;
         }
         return IMetaDataPageManager.INVALID_LSN_OFFSET;
+    }
+
+    @Override
+    public long getLastMarkerLSN() throws HyracksDataException {
+        ICachedPage metaNode;
+        if (!appendOnly || (appendOnly && confiscatedMetaNode == null)) {
+            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getFirstMetadataPage()), false);
+        } else {
+            metaNode = confiscatedMetaNode;
+        }
+        ITreeIndexMetaDataFrame metaFrame = metaDataFrameFactory.createFrame();
+        metaNode.acquireReadLatch();
+        try {
+            metaFrame.setPage(metaNode);
+            return metaFrame.getLastMarkerLSN();
+        } finally {
+            metaNode.releaseReadLatch();
+            if (!appendOnly || (appendOnly && confiscatedMetaNode == null)) {
+                bufferCache.unpin(metaNode);
+            }
+        }
     }
 }

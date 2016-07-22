@@ -42,7 +42,6 @@ public class TestTaskContext implements IHyracksTaskContext {
     private final TestJobletContext jobletContext;
     private final TaskAttemptId taskId;
     private WorkspaceFileFactory fileFactory;
-
     private Map<Object, IStateObject> stateObjectMap = new HashMap<>();
     private Object sharedObject;
 
@@ -149,12 +148,12 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public Object getSharedObject() {
-        return sharedObject;
+    public void setSharedObject(Object object) {
+        sharedObject = object;
     }
 
     @Override
-    public void setSharedObject(Object sharedObject) {
-        this.sharedObject = sharedObject;
+    public Object getSharedObject() {
+        return sharedObject;
     }
 }
