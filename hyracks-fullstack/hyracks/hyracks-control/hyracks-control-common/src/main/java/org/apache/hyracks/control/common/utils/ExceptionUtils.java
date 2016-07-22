@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -29,8 +30,17 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class ExceptionUtils {
 
+    private ExceptionUtils() {
+    }
+
+    /**
+     * get a list of possible root causes from a list of all exceptions
+     *
+     * @param allExceptions
+     * @return List of possible root causes
+     */
     public static List<Exception> getActualExceptions(List<Exception> allExceptions) {
-        List<Exception> exceptions = new ArrayList<Exception>();
+        List<Exception> exceptions = new ArrayList<>();
         for (Exception exception : allExceptions) {
             if (possibleRootCause(exception)) {
                 exceptions.add(exception);
@@ -39,12 +49,17 @@ public class ExceptionUtils {
         return exceptions;
     }
 
+    /**
+     * Associate a node with a list of exceptions
+     *
+     * @param exceptions
+     * @param nodeId
+     */
     public static void setNodeIds(Collection<Exception> exceptions, String nodeId) {
-        List<Exception> newExceptions = new ArrayList<Exception>();
+        List<Exception> newExceptions = new ArrayList<>();
         for (Exception e : exceptions) {
-            HyracksDataException newException = new HyracksDataException(e);
-            newException.setNodeId(nodeId);
-            newExceptions.add(newException);
+            newExceptions.add(
+                    new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.FAILURE_ON_NODE, e.getMessage(), e, nodeId));
         }
         exceptions.clear();
         exceptions.addAll(newExceptions);

@@ -16,17 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.exceptions;
-
-/**
- * A registry of runtime error codes
+/*
+ * Description  : Create a feed which uses an external parser to parse data from files
+ *                The files have duplicates and long records. Some records have incorrect types
+ *                for the open indexed field.
+ * Expected Res : Success
+ * Date         : Jul, 13, 2016
  */
-public class ErrorCode {
-    public static final String HYRACKS = "HYR";
-    public static final int ERROR_PROCESSING_TUPLE = 0;
-    public static final int INVALID_OPERATOR_OPERATION = 1;
-    public static final int FAILURE_ON_NODE = 2;
-
-    private ErrorCode() {
-    }
-}
+drop dataverse externallibtest if exists;

@@ -47,6 +47,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.result.ResultReader;
 import org.apache.asterix.result.ResultUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -316,14 +317,18 @@ public class QueryServiceServlet extends HttpServlet {
     }
 
     private static void printError(PrintWriter pw, Throwable e) {
+        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        if (rootCause == null) {
+            rootCause = e;
+        }
         final boolean addStack = false;
         pw.print("\t\"");
         pw.print(ResultFields.ERRORS.str());
         pw.print("\": [{ \n");
         printField(pw, ErrorField.CODE.str(), "1");
-        final String msg = e.getMessage();
-        printField(pw, ErrorField.MSG.str(), JSONUtil.escape(msg != null ? msg : e.getClass().getSimpleName()),
-                addStack);
+        final String msg = rootCause.getMessage();
+        printField(pw, ErrorField.MSG.str(),
+                JSONUtil.escape(rootCause.getClass().getName() + ": " + msg != null ? msg : ""), addStack);
         if (addStack) {
             StringWriter sw = new StringWriter();
             PrintWriter stackWriter = new PrintWriter(sw);

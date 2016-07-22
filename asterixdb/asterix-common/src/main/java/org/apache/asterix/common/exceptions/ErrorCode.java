@@ -16,16 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.exceptions;
+package org.apache.asterix.common.exceptions;
 
-/**
- * A registry of runtime error codes
- */
 public class ErrorCode {
-    public static final String HYRACKS = "HYR";
-    public static final int ERROR_PROCESSING_TUPLE = 0;
-    public static final int INVALID_OPERATOR_OPERATION = 1;
-    public static final int FAILURE_ON_NODE = 2;
+    public static final String ASTERIX = "ASX";
+    public static final int ERROR_CASTING_FIELD = 0;
 
     private ErrorCode() {
     }

@@ -16,23 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.exceptions;
+/*
+ * Description  : Create a feed which uses an external parser to parse data from files
+ *                The files have duplicates and long records. Some records have incorrect types
+ *                for the open indexed field.
+ * Expected Res : Success
+ * Date         : Jul, 13, 2016
+ */
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+drop dataverse externallibtest if exists;
+create dataverse externallibtest;
+use dataverse externallibtest;
 
-public class FrameDataException extends HyracksDataException {
-
-    private static final long serialVersionUID = 1L;
-
-    private final int tupleIndex;
-
-    public FrameDataException(int tupleIndex, Throwable cause) {
-        super(cause);
-        this.tupleIndex = tupleIndex;
-    }
-
-    public int getTupleIndex() {
-        return tupleIndex;
-    }
-
-}
+create type Classad as open {
+GlobalJobId: string
+};

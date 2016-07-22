@@ -150,6 +150,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser-with-open-index">
+        <output-dir compare="Text">feed-with-external-parser-with-open-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser-with-two-open-indexes">
+        <output-dir compare="Text">feed-with-external-parser-with-two-open-indexes</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="feed-with-external-function">
         <output-dir compare="Text">feed-with-external-function</output-dir>
       </compilation-unit>
@@ -4543,7 +4553,7 @@
     <test-case FilePath="open-closed"><!-- Throws two exceptions. need to be checked. proposal: (fixed expected results) -->
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
-        <expected-error>java.lang.IllegalStateException: type mismatch: missing a required closed field name:string</expected-error>
+        <expected-error>HyracksDataException: ASX0000: Field type DOUBLE can't be promoted to type STRING</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">

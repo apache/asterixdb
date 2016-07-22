@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.std;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -28,6 +29,7 @@ import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneO
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -97,6 +99,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
             private boolean isOpen = false;
+            private int tupleIndex = 0;
 
             @Override
             public void open() throws HyracksDataException {
@@ -128,7 +131,6 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 // what if nTuple is 0?
                 tAccess.reset(buffer);
                 int nTuple = tAccess.getTupleCount();
-                int t = 0;
                 if (nTuple < 1) {
                     if (nTuple < 0) {
                         throw new HyracksDataException("Negative number of tuples in the frame: " + nTuple);
@@ -136,40 +138,49 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     appender.flush(writer);
                 } else {
                     if (nTuple > 1) {
-                        for (; t < nTuple - 1; t++) {
-                            tRef.reset(tAccess, t);
-                            produceTuple(tupleBuilder, tAccess, t, tRef);
+                        for (; tupleIndex < nTuple - 1; tupleIndex++) {
+                            tRef.reset(tAccess, tupleIndex);
+                            produceTuple(tupleBuilder, tAccess, tupleIndex, tRef);
                             appendToFrameFromTupleBuilder(tupleBuilder);
                         }
                     }
 
-                    tRef.reset(tAccess, t);
-                    produceTuple(tupleBuilder, tAccess, t, tRef);
-                    if (flushFramesRapidly) {
-                        // Whenever all the tuples in the incoming frame have been consumed, the assign operator
-                        // will push its frame to the next operator; i.e., it won't wait until the frame gets full.
-                        appendToFrameFromTupleBuilder(tupleBuilder, true);
+                    if (tupleIndex < nTuple) {
+                        tRef.reset(tAccess, tupleIndex);
+                        produceTuple(tupleBuilder, tAccess, tupleIndex, tRef);
+                        if (flushFramesRapidly) {
+                            // Whenever all the tuples in the incoming frame have been consumed, the assign operator
+                            // will push its frame to the next operator; i.e., it won't wait until the frame gets full.
+                            appendToFrameFromTupleBuilder(tupleBuilder, true);
+                        } else {
+                            appendToFrameFromTupleBuilder(tupleBuilder);
+                        }
                     } else {
-                        appendToFrameFromTupleBuilder(tupleBuilder);
+                        if (flushFramesRapidly) {
+                            flushAndReset();
+                        }
                     }
                 }
+                tupleIndex = 0;
             }
 
             private void produceTuple(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,
                     FrameTupleReference tupleRef) throws HyracksDataException {
-                tb.reset();
-                for (int f = 0; f < projectionList.length; f++) {
-                    int k = projectionToOutColumns[f];
-                    if (k >= 0) {
-                        try {
+                try {
+                    tb.reset();
+                    for (int f = 0; f < projectionList.length; f++) {
+                        int k = projectionToOutColumns[f];
+                        if (k >= 0) {
                             eval[k].evaluate(tupleRef, result);
-                        } catch (AlgebricksException e) {
-                            throw new HyracksDataException(e);
+                            tb.addField(result.getByteArray(), result.getStartOffset(), result.getLength());
+                        } else {
+                            tb.addField(accessor, tIndex, projectionList[f]);
                         }
-                        tb.addField(result.getByteArray(), result.getStartOffset(), result.getLength());
-                    } else {
-                        tb.addField(accessor, tIndex, projectionList[f]);
                     }
+                } catch (HyracksDataException | AlgebricksException e) {
+                    throw new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.ERROR_PROCESSING_TUPLE,
+                            "Error evaluating tuple %1$s in AssignRuntime", (Throwable) e,
+                            new Serializable[] { tupleIndex });
                 }
             }
 
