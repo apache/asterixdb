@@ -234,7 +234,7 @@ public class QueryTranslator extends AbstractLangTranslator {
     private List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
         List<FunctionDecl> functionDecls = new ArrayList<>();
         for (Statement st : statements) {
-            if (st.getKind() == Statement.FUNCTION_DECL) {
+            if (st.getKind() == Statement.Kind.FUNCTION_DECL) {
                 functionDecls.add((FunctionDecl) st);
             }
         }
@@ -284,98 +284,98 @@ public class QueryTranslator extends AbstractLangTranslator {
                 metadataProvider.setOutputFile(outputFile);
                 metadataProvider.setConfig(config);
                 switch (stmt.getKind()) {
-                    case Statement.SET:
+                    case Statement.Kind.SET:
                         handleSetStatement(stmt, config);
                         break;
-                    case Statement.DATAVERSE_DECL:
+                    case Statement.Kind.DATAVERSE_DECL:
                         activeDefaultDataverse = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
-                    case Statement.CREATE_DATAVERSE:
+                    case Statement.Kind.CREATE_DATAVERSE:
                         handleCreateDataverseStatement(metadataProvider, stmt);
                         break;
-                    case Statement.DATASET_DECL:
+                    case Statement.Kind.DATASET_DECL:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.CREATE_INDEX:
+                    case Statement.Kind.CREATE_INDEX:
                         handleCreateIndexStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.TYPE_DECL:
+                    case Statement.Kind.TYPE_DECL:
                         handleCreateTypeStatement(metadataProvider, stmt);
                         break;
-                    case Statement.NODEGROUP_DECL:
+                    case Statement.Kind.NODEGROUP_DECL:
                         handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
-                    case Statement.DATAVERSE_DROP:
+                    case Statement.Kind.DATAVERSE_DROP:
                         handleDataverseDropStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.DATASET_DROP:
+                    case Statement.Kind.DATASET_DROP:
                         handleDatasetDropStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.INDEX_DROP:
+                    case Statement.Kind.INDEX_DROP:
                         handleIndexDropStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.TYPE_DROP:
+                    case Statement.Kind.TYPE_DROP:
                         handleTypeDropStatement(metadataProvider, stmt);
                         break;
-                    case Statement.NODEGROUP_DROP:
+                    case Statement.Kind.NODEGROUP_DROP:
                         handleNodegroupDropStatement(metadataProvider, stmt);
                         break;
-                    case Statement.CREATE_FUNCTION:
+                    case Statement.Kind.CREATE_FUNCTION:
                         handleCreateFunctionStatement(metadataProvider, stmt);
                         break;
-                    case Statement.FUNCTION_DROP:
+                    case Statement.Kind.FUNCTION_DROP:
                         handleFunctionDropStatement(metadataProvider, stmt);
                         break;
-                    case Statement.LOAD:
+                    case Statement.Kind.LOAD:
                         handleLoadStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.INSERT:
-                    case Statement.UPSERT:
+                    case Statement.Kind.INSERT:
+                    case Statement.Kind.UPSERT:
                         handleInsertUpsertStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.DELETE:
+                    case Statement.Kind.DELETE:
                         handleDeleteStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.CREATE_PRIMARY_FEED:
-                    case Statement.CREATE_SECONDARY_FEED:
+                    case Statement.Kind.CREATE_PRIMARY_FEED:
+                    case Statement.Kind.CREATE_SECONDARY_FEED:
                         handleCreateFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.DROP_FEED:
+                    case Statement.Kind.DROP_FEED:
                         handleDropFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.DROP_FEED_POLICY:
+                    case Statement.Kind.DROP_FEED_POLICY:
                         handleDropFeedPolicyStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.CONNECT_FEED:
+                    case Statement.Kind.CONNECT_FEED:
                         handleConnectFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.DISCONNECT_FEED:
+                    case Statement.Kind.DISCONNECT_FEED:
                         handleDisconnectFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.SUBSCRIBE_FEED:
+                    case Statement.Kind.SUBSCRIBE_FEED:
                         handleSubscribeFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.CREATE_FEED_POLICY:
+                    case Statement.Kind.CREATE_FEED_POLICY:
                         handleCreateFeedPolicyStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.QUERY:
+                    case Statement.Kind.QUERY:
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                         metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                 || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
                         handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, stats);
                         break;
-                    case Statement.COMPACT:
+                    case Statement.Kind.COMPACT:
                         handleCompactStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.EXTERNAL_DATASET_REFRESH:
+                    case Statement.Kind.EXTERNAL_DATASET_REFRESH:
                         handleExternalDatasetRefreshStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.WRITE:
+                    case Statement.Kind.WRITE:
                         Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(stmt);
                         writerFactory = (result.first != null) ? result.first : writerFactory;
                         outputFile = result.second;
                         break;
-                    case Statement.RUN:
+                    case Statement.Kind.RUN:
                         handleRunStatement(metadataProvider, stmt, hcc);
                         break;
                     default:
@@ -1856,11 +1856,11 @@ public class QueryTranslator extends AbstractLangTranslator {
             metadataProvider.setWriteTransaction(true);
             CompiledInsertStatement clfrqs = null;
             switch (stmtInsertUpsert.getKind()) {
-                case Statement.INSERT:
+                case Statement.Kind.INSERT:
                     clfrqs = new CompiledInsertStatement(dataverseName, stmtInsertUpsert.getDatasetName().getValue(),
                             query, stmtInsertUpsert.getVarCounter());
                     break;
-                case Statement.UPSERT:
+                case Statement.Kind.UPSERT:
                     clfrqs = new CompiledUpsertStatement(dataverseName, stmtInsertUpsert.getDatasetName().getValue(),
                             query, stmtInsertUpsert.getVarCounter());
                     break;
@@ -1963,13 +1963,13 @@ public class QueryTranslator extends AbstractLangTranslator {
             }
 
             switch (stmt.getKind()) {
-                case Statement.CREATE_PRIMARY_FEED:
+                case Statement.Kind.CREATE_PRIMARY_FEED:
                     CreatePrimaryFeedStatement cpfs = (CreatePrimaryFeedStatement) stmt;
                     String adaptorName = cpfs.getAdaptorName();
                     feed = new Feed(dataverseName, feedName, cfs.getAppliedFunction(), FeedType.PRIMARY, feedName,
                             adaptorName, cpfs.getAdaptorConfiguration());
                     break;
-                case Statement.CREATE_SECONDARY_FEED:
+                case Statement.Kind.CREATE_SECONDARY_FEED:
                     CreateSecondaryFeedStatement csfs = (CreateSecondaryFeedStatement) stmt;
                     feed = new Feed(dataverseName, feedName, csfs.getAppliedFunction(), FeedType.SECONDARY,
                             csfs.getSourceFeedName(), null, null);

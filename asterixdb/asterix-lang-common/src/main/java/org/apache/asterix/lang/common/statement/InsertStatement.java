@@ -24,7 +24,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class InsertStatement extends Statement {
+public class InsertStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
@@ -40,7 +40,7 @@ public class InsertStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.INSERT;
+        return Statement.Kind.INSERT;
     }
 
     public Identifier getDataverseName() {

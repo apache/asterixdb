@@ -29,7 +29,7 @@ public class AQLAPIServlet extends RESTAPIServlet {
 
     private static final long serialVersionUID = 1L;
     private static final String AQL_STMT_PARAM_NAME = "aql";
-    private static final List<Byte> allowedStatements = Statement.VALUES;
+    private static final List<Byte> ALLOWED_STATEMENTS = Statement.KINDS;
 
     public AQLAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
@@ -42,7 +42,7 @@ public class AQLAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Byte> getAllowedStatements() {
-        return allowedStatements;
+        return ALLOWED_STATEMENTS;
     }
 
     @Override

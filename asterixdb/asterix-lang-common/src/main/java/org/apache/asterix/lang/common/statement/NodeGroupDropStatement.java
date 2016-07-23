@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class NodeGroupDropStatement extends Statement {
+public class NodeGroupDropStatement implements Statement {
 
     private Identifier nodeGroupName;
     private boolean ifExists;
@@ -35,7 +35,7 @@ public class NodeGroupDropStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.NODEGROUP_DROP;
+        return Statement.Kind.NODEGROUP_DROP;
     }
 
     public Identifier getNodeGroupName() {

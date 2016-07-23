@@ -107,7 +107,7 @@ public abstract class AbstractLangTranslator {
         String message = null;
         String dataverse = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
         switch (stmt.getKind()) {
-            case Statement.INSERT:
+            case Statement.Kind.INSERT:
                 InsertStatement insertStmt = (InsertStatement) stmt;
                 if (insertStmt.getDataverseName() != null) {
                     dataverse = insertStmt.getDataverseName().getValue();
@@ -119,7 +119,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case Statement.DELETE:
+            case Statement.Kind.DELETE:
                 DeleteStatement deleteStmt = (DeleteStatement) stmt;
                 if (deleteStmt.getDataverseName() != null) {
                     dataverse = deleteStmt.getDataverseName().getValue();
@@ -131,7 +131,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case Statement.NODEGROUP_DROP:
+            case Statement.Kind.NODEGROUP_DROP:
                 String nodegroupName = ((NodeGroupDropStatement) stmt).getNodeGroupName().getValue();
                 invalidOperation = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME.equals(nodegroupName);
                 if (invalidOperation) {
@@ -139,7 +139,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case Statement.DATAVERSE_DROP:
+            case Statement.Kind.DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
                 invalidOperation =
                         MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvDropStmt.getDataverseName().getValue());
@@ -148,7 +148,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case Statement.DATASET_DROP:
+            case Statement.Kind.DATASET_DROP:
                 DropStatement dropStmt = (DropStatement) stmt;
                 if (dropStmt.getDataverseName() != null) {
                     dataverse = dropStmt.getDataverseName().getValue();
@@ -159,7 +159,7 @@ public abstract class AbstractLangTranslator {
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
                 }
                 break;
-            case Statement.DATASET_DECL:
+            case Statement.Kind.DATASET_DECL:
                 DatasetDecl datasetStmt = (DatasetDecl) stmt;
                 Map<String, String> hints = datasetStmt.getHints();
                 if (hints != null && !hints.isEmpty()) {

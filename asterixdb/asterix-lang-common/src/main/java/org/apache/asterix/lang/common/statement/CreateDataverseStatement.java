@@ -24,7 +24,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
-public class CreateDataverseStatement extends Statement {
+public class CreateDataverseStatement implements Statement {
 
     private Identifier dataverseName;
     private String format;
@@ -50,7 +50,7 @@ public class CreateDataverseStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.CREATE_DATAVERSE;
+        return Statement.Kind.CREATE_DATAVERSE;
     }
 
     @Override

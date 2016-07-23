@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class DatasetDecl extends Statement {
+public class DatasetDecl implements Statement {
     protected final Identifier name;
     protected final Identifier dataverse;
     protected final Identifier itemTypeDataverse;
@@ -142,7 +142,7 @@ public class DatasetDecl extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.DATASET_DECL;
+        return Statement.Kind.DATASET_DECL;
     }
 
     public IDatasetDetailsDecl getDatasetDetailsDecl() {

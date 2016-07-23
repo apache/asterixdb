@@ -70,7 +70,7 @@ public abstract class RangeMapBuilder {
         }
 
         // Translate the query into a Range Map
-        if (hintStatements.get(0).getKind() != Statement.QUERY) {
+        if (hintStatements.get(0).getKind() != Statement.Kind.QUERY) {
             throw new AsterixException("Not a proper query for the range hint.");
         }
         Query q = (Query) hintStatements.get(0);

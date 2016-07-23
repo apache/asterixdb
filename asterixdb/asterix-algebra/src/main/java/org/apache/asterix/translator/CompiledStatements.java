@@ -60,7 +60,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.DATASET_DROP;
+            return Statement.Kind.DATASET_DROP;
         }
     }
 
@@ -84,7 +84,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.CREATE_DATAVERSE;
+            return Statement.Kind.CREATE_DATAVERSE;
         }
     }
 
@@ -101,7 +101,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.NODEGROUP_DROP;
+            return Statement.Kind.NODEGROUP_DROP;
         }
     }
 
@@ -130,7 +130,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.INDEX_DROP;
+            return Statement.Kind.INDEX_DROP;
         }
     }
 
@@ -153,7 +153,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.DATAVERSE_DROP;
+            return Statement.Kind.DATAVERSE_DROP;
         }
     }
 
@@ -170,7 +170,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.TYPE_DROP;
+            return Statement.Kind.TYPE_DROP;
         }
     }
 
@@ -242,7 +242,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.CREATE_INDEX;
+            return Statement.Kind.CREATE_INDEX;
         }
     }
 
@@ -286,7 +286,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.LOAD;
+            return Statement.Kind.LOAD;
         }
     }
 
@@ -323,7 +323,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.INSERT;
+            return Statement.Kind.INSERT;
         }
     }
 
@@ -335,7 +335,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.UPSERT;
+            return Statement.Kind.UPSERT;
         }
     }
 
@@ -381,7 +381,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.CONNECT_FEED;
+            return Statement.Kind.CONNECT_FEED;
         }
 
         public String getPolicyName() {
@@ -419,7 +419,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.SUBSCRIBE_FEED;
+            return Statement.Kind.SUBSCRIBE_FEED;
         }
     }
 
@@ -450,7 +450,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.DISCONNECT_FEED;
+            return Statement.Kind.DISCONNECT_FEED;
         }
 
     }
@@ -495,7 +495,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.DELETE;
+            return Statement.Kind.DELETE;
         }
 
     }
@@ -519,7 +519,7 @@ public class CompiledStatements {
 
         @Override
         public byte getKind() {
-            return Statement.COMPACT;
+            return Statement.Kind.COMPACT;
         }
     }
 

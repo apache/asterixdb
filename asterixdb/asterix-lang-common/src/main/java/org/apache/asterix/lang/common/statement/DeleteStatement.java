@@ -28,7 +28,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class DeleteStatement extends Statement {
+public class DeleteStatement implements Statement {
 
     private VariableExpr vars;
     private Identifier dataverseName;
@@ -52,7 +52,7 @@ public class DeleteStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.DELETE;
+        return Statement.Kind.DELETE;
     }
 
     public VariableExpr getVariableExpr() {

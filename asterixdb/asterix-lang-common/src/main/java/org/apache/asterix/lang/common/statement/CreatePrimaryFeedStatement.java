@@ -49,7 +49,7 @@ public class CreatePrimaryFeedStatement extends CreateFeedStatement {
 
     @Override
     public byte getKind() {
-        return Statement.CREATE_PRIMARY_FEED;
+        return Statement.Kind.CREATE_PRIMARY_FEED;
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class NodegroupDecl extends Statement {
+public class NodegroupDecl implements Statement {
 
     private Identifier nodegroupName;
     private List<Identifier> nodeControllerNames;
@@ -55,7 +55,7 @@ public class NodegroupDecl extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.NODEGROUP_DECL;
+        return Statement.Kind.NODEGROUP_DECL;
     }
 
     @Override

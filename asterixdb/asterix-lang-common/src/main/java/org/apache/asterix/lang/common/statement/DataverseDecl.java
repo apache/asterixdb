@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class DataverseDecl extends Statement {
+public class DataverseDecl implements Statement {
 
     private Identifier dataverseName;
 
@@ -37,7 +37,7 @@ public class DataverseDecl extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.DATAVERSE_DECL;
+        return Statement.Kind.DATAVERSE_DECL;
     }
 
     @Override

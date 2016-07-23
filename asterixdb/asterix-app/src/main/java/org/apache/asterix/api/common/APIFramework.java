@@ -209,7 +209,7 @@ public class APIFramework {
 
         ILogicalPlan plan;
         // statement = null when it's a query
-        if (statement == null || statement.getKind() != Statement.LOAD) {
+        if (statement == null || statement.getKind() != Statement.Kind.LOAD) {
             plan = t.translate(rwQ, outputDatasetName, statement);
         } else {
             plan = t.translateLoad(statement);
@@ -219,7 +219,7 @@ public class APIFramework {
             conf.out().println();
 
             printPlanPrefix(conf, "Logical plan");
-            if (rwQ != null || (statement != null && statement.getKind() == Statement.LOAD)) {
+            if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
                 LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
             }
@@ -271,7 +271,7 @@ public class APIFramework {
                     PlanPrettyPrinter.printPhysicalOps(plan, buffer, 0);
                 } else {
                     printPlanPrefix(conf, "Optimized logical plan");
-                    if (rwQ != null || (statement != null && statement.getKind() == Statement.LOAD)) {
+                    if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
                         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
                         PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
                     }

@@ -64,7 +64,7 @@ public class FeedUtils {
         SPILL,              // Memory budget has been consumed. Now we're writing to disk
         DISCARD             // Memory and Disk space budgets have been consumed. Now we're discarding
     }
-    
+
     private FeedUtils() {
     }
 

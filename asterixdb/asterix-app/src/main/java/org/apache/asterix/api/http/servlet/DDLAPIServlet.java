@@ -28,6 +28,13 @@ import org.apache.asterix.lang.common.base.Statement;
 
 public class DDLAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final List<Byte> STATEMENTS = Arrays.asList(new Byte[] { Statement.Kind.DATAVERSE_DECL,
+            Statement.Kind.DATAVERSE_DROP, Statement.Kind.DATASET_DECL, Statement.Kind.NODEGROUP_DECL,
+            Statement.Kind.NODEGROUP_DROP, Statement.Kind.TYPE_DECL, Statement.Kind.TYPE_DROP,
+            Statement.Kind.CREATE_INDEX, Statement.Kind.INDEX_DECL, Statement.Kind.CREATE_DATAVERSE,
+            Statement.Kind.DATASET_DROP, Statement.Kind.INDEX_DROP, Statement.Kind.CREATE_FUNCTION,
+            Statement.Kind.FUNCTION_DROP, Statement.Kind.CREATE_PRIMARY_FEED, Statement.Kind.CREATE_SECONDARY_FEED,
+            Statement.Kind.DROP_FEED, Statement.Kind.CREATE_FEED_POLICY, Statement.Kind.DROP_FEED_POLICY });
 
     public DDLAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
@@ -40,13 +47,7 @@ public class DDLAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Byte> getAllowedStatements() {
-        Byte[] statementsArray = { Statement.DATAVERSE_DECL, Statement.DATAVERSE_DROP, Statement.DATASET_DECL,
-                Statement.NODEGROUP_DECL, Statement.NODEGROUP_DROP, Statement.TYPE_DECL, Statement.TYPE_DROP,
-                Statement.CREATE_INDEX, Statement.INDEX_DECL, Statement.CREATE_DATAVERSE, Statement.DATASET_DROP,
-                Statement.INDEX_DROP, Statement.CREATE_FUNCTION, Statement.FUNCTION_DROP, Statement.CREATE_PRIMARY_FEED,
-                Statement.CREATE_SECONDARY_FEED, Statement.DROP_FEED, Statement.CREATE_FEED_POLICY,
-                Statement.DROP_FEED_POLICY };
-        return Arrays.asList(statementsArray);
+        return STATEMENTS;
     }
 
     @Override

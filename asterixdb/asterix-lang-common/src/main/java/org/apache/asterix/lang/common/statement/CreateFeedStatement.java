@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public abstract class CreateFeedStatement extends Statement {
+public abstract class CreateFeedStatement implements Statement {
 
     private final Pair<Identifier, Identifier> qName;
     private final FunctionSignature appliedFunction;

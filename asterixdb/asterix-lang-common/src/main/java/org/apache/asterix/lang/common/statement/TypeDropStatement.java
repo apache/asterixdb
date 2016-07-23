@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class TypeDropStatement extends Statement {
+public class TypeDropStatement implements Statement {
 
     private final Identifier dataverseName;
     private Identifier typeName;
@@ -37,7 +37,7 @@ public class TypeDropStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.TYPE_DROP;
+        return Statement.Kind.TYPE_DROP;
     }
 
     public Identifier getDataverseName() {

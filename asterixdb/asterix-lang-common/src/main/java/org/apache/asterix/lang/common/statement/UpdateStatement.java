@@ -28,7 +28,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class UpdateStatement extends Statement {
+public class UpdateStatement implements Statement {
 
     private VariableExpr vars;
     private Expression target;
@@ -44,7 +44,7 @@ public class UpdateStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.UPDATE;
+        return Statement.Kind.UPDATE;
     }
 
     public VariableExpr getVariableExpr() {

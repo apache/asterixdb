@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class Query extends Statement {
+public class Query implements Statement {
     private boolean topLevel = true;
     private Expression body;
     private int varCounter;
@@ -72,7 +72,7 @@ public class Query extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.QUERY;
+        return Statement.Kind.QUERY;
     }
 
     @Override

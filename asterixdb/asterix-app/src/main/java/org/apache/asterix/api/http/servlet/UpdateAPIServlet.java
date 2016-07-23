@@ -28,6 +28,11 @@ import org.apache.asterix.lang.common.base.Statement;
 
 public class UpdateAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final List<Byte> STATEMENTS =
+            Arrays.asList(new Byte[] { Statement.Kind.DATAVERSE_DECL, Statement.Kind.DELETE, Statement.Kind.INSERT,
+                    Statement.Kind.UPSERT, Statement.Kind.UPDATE, Statement.Kind.DML_CMD_LIST, Statement.Kind.LOAD,
+                    Statement.Kind.CONNECT_FEED, Statement.Kind.DISCONNECT_FEED, Statement.Kind.SET,
+                    Statement.Kind.COMPACT, Statement.Kind.EXTERNAL_DATASET_REFRESH, Statement.Kind.RUN });
 
     public UpdateAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
@@ -40,11 +45,7 @@ public class UpdateAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Byte> getAllowedStatements() {
-        Byte[] statementsArray =
-                { Statement.DATAVERSE_DECL, Statement.DELETE, Statement.INSERT, Statement.UPSERT, Statement.UPDATE,
-                        Statement.DML_CMD_LIST, Statement.LOAD, Statement.CONNECT_FEED, Statement.DISCONNECT_FEED,
-                        Statement.SET, Statement.COMPACT, Statement.EXTERNAL_DATASET_REFRESH, Statement.RUN };
-        return Arrays.asList(statementsArray);
+        return STATEMENTS;
     }
 
     @Override

@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class WriteStatement extends Statement {
+public class WriteStatement implements Statement {
 
     private final Identifier ncName;
     private final String fileName;
@@ -49,7 +49,7 @@ public class WriteStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.WRITE;
+        return Statement.Kind.WRITE;
     }
 
     @Override

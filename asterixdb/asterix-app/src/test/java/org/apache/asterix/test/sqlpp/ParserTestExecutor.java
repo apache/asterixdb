@@ -128,7 +128,7 @@ public class ParserTestExecutor extends TestExecutor {
             when(aqlMetadataProvider.findDataset(anyString(), anyString())).thenReturn(mock(Dataset.class));
 
             for (Statement st : statements) {
-                if (st.getKind() == Statement.QUERY) {
+                if (st.getKind() == Statement.Kind.QUERY) {
                     Query query = (Query) st;
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
                     rewrite(rewriter, functions, query, aqlMetadataProvider,
@@ -156,7 +156,7 @@ public class ParserTestExecutor extends TestExecutor {
     private List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
         List<FunctionDecl> functionDecls = new ArrayList<FunctionDecl>();
         for (Statement st : statements) {
-            if (st.getKind() == Statement.FUNCTION_DECL) {
+            if (st.getKind() == Statement.Kind.FUNCTION_DECL) {
                 functionDecls.add((FunctionDecl) st);
             }
         }
@@ -166,7 +166,7 @@ public class ParserTestExecutor extends TestExecutor {
     // Gets the default dataverse for the input statements.
     private String getDefaultDataverse(List<Statement> statements) {
         for (Statement st : statements) {
-            if (st.getKind() == Statement.DATAVERSE_DECL) {
+            if (st.getKind() == Statement.Kind.DATAVERSE_DECL) {
                 DataverseDecl dv = (DataverseDecl) st;
                 return dv.getDataverseName().getValue();
             }

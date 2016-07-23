@@ -28,6 +28,9 @@ import org.apache.asterix.lang.common.base.Statement;
 
 public class QueryAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final List<Byte> STATEMENTS =
+            Arrays.asList(new Byte[] { Statement.Kind.DATAVERSE_DECL, Statement.Kind.FUNCTION_DECL,
+                    Statement.Kind.QUERY, Statement.Kind.SET, Statement.Kind.WRITE, Statement.Kind.RUN });
 
     public QueryAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
@@ -40,9 +43,7 @@ public class QueryAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Byte> getAllowedStatements() {
-        Byte[] statementsArray = { Statement.DATAVERSE_DECL, Statement.FUNCTION_DECL, Statement.QUERY, Statement.SET,
-                Statement.WRITE, Statement.RUN };
-        return Arrays.asList(statementsArray);
+        return STATEMENTS;
     }
 
     @Override

@@ -52,7 +52,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  * Represents the AQL statement for subscribing to a feed.
  * This AQL statement is private and may not be used by the end-user.
  */
-public class SubscribeFeedStatement extends Statement {
+public class SubscribeFeedStatement implements Statement {
 
     private static final Logger LOGGER = Logger.getLogger(SubscribeFeedStatement.class.getName());
     private final FeedConnectionRequest connectionRequest;
@@ -158,7 +158,7 @@ public class SubscribeFeedStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.SUBSCRIBE_FEED;
+        return Statement.Kind.SUBSCRIBE_FEED;
     }
 
     public String getPolicy() {

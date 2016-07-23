@@ -53,7 +53,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         typeDataGenMap = new HashMap<TypeSignature, TypeDataGen>();
 
         for (Statement stmt : aqlStatements) {
-            if (stmt.getKind() == Statement.TYPE_DECL) {
+            if (stmt.getKind() == Statement.Kind.TYPE_DECL) {
                 TypeDecl td = (TypeDecl) stmt;
                 String typeDataverse =
                         td.getDataverseName() == null ? defaultDataverse : td.getDataverseName().getValue();
@@ -73,7 +73,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
 
     private String getDefaultDataverse() {
         for (Statement stmt : aqlStatements) {
-            if (stmt.getKind() == Statement.DATAVERSE_DECL) {
+            if (stmt.getKind() == Statement.Kind.DATAVERSE_DECL) {
                 return ((DataverseDecl) stmt).getDataverseName().getValue();
             }
         }

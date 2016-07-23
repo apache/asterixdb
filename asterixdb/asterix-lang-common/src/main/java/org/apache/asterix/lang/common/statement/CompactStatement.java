@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class CompactStatement extends Statement {
+public class CompactStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
@@ -35,7 +35,7 @@ public class CompactStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.COMPACT;
+        return Statement.Kind.COMPACT;
     }
 
     public Identifier getDataverseName() {

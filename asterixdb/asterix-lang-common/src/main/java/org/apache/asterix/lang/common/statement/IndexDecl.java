@@ -23,6 +23,6 @@ import org.apache.asterix.lang.common.base.Statement;
 public class IndexDecl extends CreateIndexStatement {
     @Override
     public byte getKind() {
-        return Statement.INDEX_DECL;
+        return Statement.Kind.INDEX_DECL;
     }
 }

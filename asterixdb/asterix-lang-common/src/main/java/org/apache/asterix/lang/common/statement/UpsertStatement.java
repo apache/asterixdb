@@ -29,12 +29,12 @@ public class UpsertStatement extends InsertStatement {
 
     @Override
     public byte getKind() {
-        return Statement.UPSERT;
+        return Statement.Kind.UPSERT;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode() + Statement.UPSERT;
+        return super.hashCode() + Statement.Kind.UPSERT;
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class ConnectFeedStatement extends Statement {
+public class ConnectFeedStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
@@ -78,7 +78,7 @@ public class ConnectFeedStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.CONNECT_FEED;
+        return Statement.Kind.CONNECT_FEED;
     }
 
     public String getPolicy() {

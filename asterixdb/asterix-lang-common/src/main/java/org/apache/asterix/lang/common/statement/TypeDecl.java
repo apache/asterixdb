@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class TypeDecl extends Statement {
+public class TypeDecl implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier ident;
@@ -64,7 +64,7 @@ public class TypeDecl extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.TYPE_DECL;
+        return Statement.Kind.TYPE_DECL;
     }
 
     @Override

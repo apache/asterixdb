@@ -51,7 +51,7 @@ public class CreateSecondaryFeedStatement extends CreateFeedStatement {
 
     @Override
     public byte getKind() {
-        return Statement.CREATE_SECONDARY_FEED;
+        return Statement.Kind.CREATE_SECONDARY_FEED;
     }
 
     @Override

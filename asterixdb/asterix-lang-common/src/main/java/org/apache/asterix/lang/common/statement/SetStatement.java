@@ -22,7 +22,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class SetStatement extends Statement {
+public class SetStatement implements Statement {
 
     private String propName;
     private String propValue;
@@ -42,7 +42,7 @@ public class SetStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.SET;
+        return Statement.Kind.SET;
     }
 
     @Override

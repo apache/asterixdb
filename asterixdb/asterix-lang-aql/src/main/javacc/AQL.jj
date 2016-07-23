@@ -504,12 +504,14 @@ RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseEx
   String datasetName = null;
 }
 {
+  (
     <REFRESH> <EXTERNAL> <DATASET> nameComponents = QualifiedName()
     {
     redss.setDataverseName(nameComponents.first);
     redss.setDatasetName(nameComponents.second);
     return redss;
     }
+  )
 }
 
 RunStatement RunStatement() throws ParseException:
@@ -1537,7 +1539,6 @@ Query Query() throws ParseException:
       setDatasets(null);
       return query;
     }
-
 }
 
 
@@ -2201,7 +2202,7 @@ Expression IfThenElse() throws ParseException:
     }
 }
 
-Expression  FLWOGR() throws ParseException:
+Expression FLWOGR() throws ParseException:
 {
     FLWOGRExpression flworg = new FLWOGRExpression();
     List<Clause> clauseList = new ArrayList<Clause>();
@@ -2353,9 +2354,9 @@ Clause OrderbyClause()throws ParseException :
 }
 Clause GroupClause()throws ParseException :
 {
-      GroupbyClause gbc = new GroupbyClause();
-      // GbyVariableExpressionPair pair = new GbyVariableExpressionPair();
-     List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
+    GroupbyClause gbc = new GroupbyClause();
+    // GbyVariableExpressionPair pair = new GbyVariableExpressionPair();
+    List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
     List<GbyVariableExpressionPair> decorPairList = new ArrayList<GbyVariableExpressionPair>();
     List<VariableExpr> withVarList= new ArrayList<VariableExpr>();
     VariableExpr var = null;

@@ -23,7 +23,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class FeedPolicyDropStatement extends Statement {
+public class FeedPolicyDropStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier policyName;
@@ -37,7 +37,7 @@ public class FeedPolicyDropStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.DROP_FEED_POLICY;
+        return Statement.Kind.DROP_FEED_POLICY;
     }
 
     public Identifier getDataverseName() {

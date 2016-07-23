@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class RunStatement extends Statement {
+public class RunStatement implements Statement {
 
     private String system;
     private List<String> parameters;
@@ -75,7 +75,7 @@ public class RunStatement extends Statement {
 
     @Override
     public byte getKind() {
-        return Statement.RUN;
+        return Statement.Kind.RUN;
     }
 
 }
