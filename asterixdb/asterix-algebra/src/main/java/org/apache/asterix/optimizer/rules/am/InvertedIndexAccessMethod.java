@@ -42,6 +42,7 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -798,10 +799,18 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 type = optFuncExpr.getFieldType(0);
             }
             typeTag = type.getTypeTag();
+            if (type.getTypeTag() == ATypeTag.UNION) {
+                // If this is a nullable field, then we need to get the actual type tag.
+                typeTag = ((AUnionType) type).getActualType().getTypeTag();
+            }
         } else {
             // We are optimizing a selection query. Add the type of the search key constant.
             type = optFuncExpr.getConstantType(0);
             typeTag = type.getTypeTag();
+            if (typeTag == ATypeTag.UNION) {
+                // If this is a nullable field, then we need to get the actual type tag.
+                typeTag = ((AUnionType) type).getActualType().getTypeTag();
+            }
             if (typeTag != ATypeTag.ORDEREDLIST && typeTag != ATypeTag.STRING && typeTag != ATypeTag.UNORDEREDLIST) {
                 throw new AlgebricksException("Only ordered lists, string, and unordered lists types supported.");
             }
