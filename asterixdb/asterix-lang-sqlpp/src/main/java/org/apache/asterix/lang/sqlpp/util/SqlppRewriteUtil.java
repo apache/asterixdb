@@ -28,6 +28,7 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupBySugarVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.CheckSubqueryVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.DeepCopyVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 
@@ -57,6 +58,15 @@ public class SqlppRewriteUtil {
             return expr;
         }
         DeepCopyVisitor visitor = new DeepCopyVisitor();
+        return expr.accept(visitor, null);
+    }
+
+    // Checks if an ILangExpression contains a subquery.
+    public static boolean constainsSubquery(ILangExpression expr) throws AsterixException {
+        if (expr == null) {
+            return false;
+        }
+        CheckSubqueryVisitor visitor = new CheckSubqueryVisitor();
         return expr.accept(visitor, null);
     }
 

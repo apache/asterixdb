@@ -58,6 +58,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -267,11 +268,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(ListConstructor lc, ILangExpression arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : lc.getExprList()) {
-            newExprList.add(expr.accept(this, lc));
-        }
-        lc.setExprList(newExprList);
+        lc.setExprList(visit(lc.getExprList(), arg));
         return lc;
     }
 
@@ -286,11 +283,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(OperatorExpr operatorExpr, ILangExpression arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : operatorExpr.getExprList()) {
-            newExprList.add(expr.accept(this, operatorExpr));
-        }
-        operatorExpr.setExprList(newExprList);
+        operatorExpr.setExprList(visit(operatorExpr.getExprList(), arg));
         return operatorExpr;
     }
 
@@ -351,6 +344,23 @@ public class AbstractSqlppSimpleExpressionVisitor
     public Expression visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
         independentSubquery.setExpr(independentSubquery.getExpr().accept(this, arg));
         return independentSubquery;
+    }
+
+    @Override
+    public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws AsterixException {
+        caseExpr.setConditionExpr(caseExpr.getConditionExpr().accept(this, arg));
+        caseExpr.setWhenExprs(visit(caseExpr.getWhenExprs(), arg));
+        caseExpr.setThenExprs(visit(caseExpr.getThenExprs(), arg));
+        caseExpr.setElseExpr(caseExpr.getElseExpr().accept(this, arg));
+        return caseExpr;
+    }
+
+    private List<Expression> visit(List<Expression> exprs, ILangExpression arg) throws AsterixException {
+        List<Expression> newExprList = new ArrayList<>();
+        for (Expression expr : exprs) {
+            newExprList.add(expr.accept(this, arg));
+        }
+        return newExprList;
     }
 
 }

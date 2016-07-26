@@ -1,0 +1,316 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.asterix.lang.sqlpp.visitor;
+
+import java.util.List;
+
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
+import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.clause.LimitClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.FieldBinding;
+import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.IfExpr;
+import org.apache.asterix.lang.common.expression.IndexAccessor;
+import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.OperatorExpr;
+import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.UnaryExpr;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.FromClause;
+import org.apache.asterix.lang.sqlpp.clause.FromTerm;
+import org.apache.asterix.lang.sqlpp.clause.HavingClause;
+import org.apache.asterix.lang.sqlpp.clause.JoinClause;
+import org.apache.asterix.lang.sqlpp.clause.NestClause;
+import org.apache.asterix.lang.sqlpp.clause.Projection;
+import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
+import org.apache.asterix.lang.sqlpp.clause.SelectClause;
+import org.apache.asterix.lang.sqlpp.clause.SelectElement;
+import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
+import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
+import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
+import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+
+/**
+ * This visitor recursively checks if there is a subquery in the argument language construct.
+ */
+public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Boolean, ILangExpression> {
+
+    @Override
+    public Boolean visit(FromClause fromClause, ILangExpression arg) throws AsterixException {
+        for (FromTerm fromTerm : fromClause.getFromTerms()) {
+            if (fromTerm.accept(this, arg)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public Boolean visit(FromTerm fromTerm, ILangExpression arg) throws AsterixException {
+        if (visit(fromTerm.getLeftExpression(), arg)) {
+            return true;
+        }
+        for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
+            if (correlateClause.accept(this, arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean visit(JoinClause joinClause, ILangExpression arg) throws AsterixException {
+        return visit(joinClause.getRightExpression(), arg) || visit(joinClause.getConditionExpression(), arg);
+    }
+
+    @Override
+    public Boolean visit(NestClause nestClause, ILangExpression arg) throws AsterixException {
+        return nestClause.accept(this, arg);
+    }
+
+    @Override
+    public Boolean visit(Projection projection, ILangExpression arg) throws AsterixException {
+        if (projection.star()) {
+            return false;
+        }
+        return visit(projection.getExpression(), arg);
+    }
+
+    @Override
+    public Boolean visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+        boolean hasSubquery = visit(selectBlock.getFromClause(), arg) || visit(selectBlock.getGroupbyClause(), arg)
+                || visit(selectBlock.getHavingClause(), arg) || visit(selectBlock.getWhereClause(), arg);
+        return hasSubquery || visit(selectBlock.getSelectClause(), arg) || visit(selectBlock.getLetList(), arg)
+                || visit(selectBlock.getLetListAfterGroupby(), arg);
+    }
+
+    @Override
+    public Boolean visit(SelectClause selectClause, ILangExpression arg) throws AsterixException {
+        return visit(selectClause.getSelectElement(), arg) || visit(selectClause.getSelectRegular(), arg);
+    }
+
+    @Override
+    public Boolean visit(SelectElement selectElement, ILangExpression arg) throws AsterixException {
+        return visit(selectElement.getExpression(), arg);
+    }
+
+    @Override
+    public Boolean visit(SelectRegular selectRegular, ILangExpression arg) throws AsterixException {
+        return visit(selectRegular.getProjections(), arg);
+    }
+
+    @Override
+    public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws AsterixException {
+        if (selectSetOperation.getLeftInput().accept(this, arg)) {
+            return true;
+        }
+        for (SetOperationRight right : selectSetOperation.getRightInputs()) {
+            if (right.getSetOperationRightInput().accept(this, arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean visit(SelectExpression selectStatement, ILangExpression arg) throws AsterixException {
+        if (selectStatement.isSubquery()) {
+            return true;
+        }
+        return visit(selectStatement.getLetList(), arg) || visit(selectStatement.getSelectSetOperation(), arg)
+                || visit(selectStatement.getOrderbyClause(), arg) || visit(selectStatement.getLimitClause(), arg);
+
+    }
+
+    @Override
+    public Boolean visit(UnnestClause unnestClause, ILangExpression arg) throws AsterixException {
+        return visit(unnestClause.getRightExpression(), arg);
+    }
+
+    @Override
+    public Boolean visit(HavingClause havingClause, ILangExpression arg) throws AsterixException {
+        return visit(havingClause.getFilterExpression(), arg);
+    }
+
+    @Override
+    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
+        return visit(independentSubquery.getExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(CaseExpression caseExpression, ILangExpression arg) throws AsterixException {
+        return visit(caseExpression.getConditionExpr(), arg) || visit(caseExpression.getWhenExprs(), arg)
+                || visit(caseExpression.getThenExprs(), arg) || visit(caseExpression.getElseExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(Query q, ILangExpression arg) throws AsterixException {
+        return visit(q.getBody(), arg);
+    }
+
+    @Override
+    public Boolean visit(FunctionDecl fd, ILangExpression arg) throws AsterixException {
+        return fd.getFuncBody().accept(this, arg);
+    }
+
+    @Override
+    public Boolean visit(LiteralExpr l, ILangExpression arg) throws AsterixException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(VariableExpr v, ILangExpression arg) throws AsterixException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(ListConstructor lc, ILangExpression arg) throws AsterixException {
+        return visit(lc.getExprList(), arg);
+    }
+
+    @Override
+    public Boolean visit(RecordConstructor rc, ILangExpression arg) throws AsterixException {
+        for (FieldBinding fb : rc.getFbList()) {
+            if (visit(fb.getLeftExpr(), arg)) {
+                return true;
+            }
+            if (visit(fb.getRightExpr(), arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean visit(OperatorExpr operatorExpr, ILangExpression arg) throws AsterixException {
+        return visit(operatorExpr.getExprList(), arg);
+    }
+
+    @Override
+    public Boolean visit(FieldAccessor fa, ILangExpression arg) throws AsterixException {
+        return visit(fa.getExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(IndexAccessor ia, ILangExpression arg) throws AsterixException {
+        return visit(ia.getExpr(), arg) || visit(ia.getIndexExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(IfExpr ifexpr, ILangExpression arg) throws AsterixException {
+        return visit(ifexpr.getCondExpr(), arg) || visit(ifexpr.getThenExpr(), arg) || visit(ifexpr.getElseExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(QuantifiedExpression qe, ILangExpression arg) throws AsterixException {
+        for (QuantifiedPair qf : qe.getQuantifiedList()) {
+            if (visit(qf.getExpr(), arg)) {
+                return true;
+            }
+        }
+        return visit(qe.getSatisfiesExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(LetClause lc, ILangExpression arg) throws AsterixException {
+        return visit(lc.getBindingExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(WhereClause wc, ILangExpression arg) throws AsterixException {
+        return visit(wc.getWhereExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(OrderbyClause oc, ILangExpression arg) throws AsterixException {
+        return visit(oc.getOrderbyList(), arg);
+    }
+
+    @Override
+    public Boolean visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
+        for (GbyVariableExpressionPair key : gc.getGbyPairList()) {
+            if (visit(key.getExpr(), arg)) {
+                return true;
+            }
+        }
+        for (GbyVariableExpressionPair key : gc.getDecorPairList()) {
+            if (visit(key.getExpr(), arg)) {
+                return true;
+            }
+        }
+        for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
+            if (visit(field.first, arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean visit(LimitClause lc, ILangExpression arg) throws AsterixException {
+        return visit(lc.getLimitExpr(), arg) || visit(lc.getOffset(), arg);
+    }
+
+    @Override
+    public Boolean visit(UnaryExpr u, ILangExpression arg) throws AsterixException {
+        return visit(u.getExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+        return visit(callExpr.getExprList(), arg);
+    }
+
+    private boolean visit(List<?> langExprs, ILangExpression arg) throws AsterixException {
+        for (Object o : langExprs) {
+            ILangExpression langExpr = (ILangExpression) o;
+            if (langExpr.accept(this, arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean visit(ILangExpression langExpr, ILangExpression arg) throws AsterixException {
+        if (langExpr == null) {
+            return false;
+        }
+        return langExpr.accept(this, arg);
+    }
+}

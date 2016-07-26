@@ -17,12 +17,12 @@
  * under the License.
  */
 
-use tpch;
+USE tpch;
 
 
 SELECT l_shipmode,
-       sum(`switch-case`(o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH',true,1,false,0)) high_line_count,
-       sum(`switch-case`(o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH',true,0,false,1)) low_line_count
+       sum(CASE WHEN o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH' THEN 1 ELSE 0 END) high_line_count,
+       sum(CASE o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH' WHEN true THEN 0 ELSE 1 END) low_line_count
 FROM  LineItem,
       Orders
 WHERE o_orderkey = l_orderkey AND l_commitdate < l_receiptdate AND

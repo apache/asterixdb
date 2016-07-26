@@ -51,8 +51,8 @@ public class IsMissingDescriptor extends AbstractScalarFunctionDynamicDescriptor
                 return new AbstractTypeCheckEvaluator(eval) {
 
                     @Override
-                    protected boolean isMatch(byte typeTag) {
-                        return typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
+                    protected Value isMatch(byte typeTag) {
+                        return typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG ? Value.TRUE : Value.FALSE;
                     }
                 };
             }

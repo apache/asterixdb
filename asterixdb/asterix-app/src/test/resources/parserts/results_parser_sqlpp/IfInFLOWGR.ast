@@ -1,17 +1,17 @@
 Query:
 SELECT ELEMENT [
-IfExpr [
-  Condition:
-    OperatorExpr [
+CASE    LiteralExpr [TRUE]
+
+WHEN     OperatorExpr [
       Variable [ Name=$i ]
       >
       Variable [ Name=$j ]
     ]
-  Then:
-    Variable [ Name=$i ]
-  Else:
-    Variable [ Name=$j ]
-]
+THEN     Variable [ Name=$i ]
+
+ELSE     Variable [ Name=$j ]
+
+END
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [1]

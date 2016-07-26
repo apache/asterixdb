@@ -870,9 +870,9 @@ class LangExpressionToPlanTranslator
                 new MutableObject<>(new VariableReferenceExpression(varCond)), ifexpr.getThenExpr());
 
         // Creates a subplan for the "else" branch.
-        AbstractFunctionCallExpression notVarCond =
-                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT),
-                        Collections.singletonList(new MutableObject<>(new VariableReferenceExpression(varCond))));
+        AbstractFunctionCallExpression notVarCond = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT),
+                Collections.singletonList(generateAndNotIsUnknownWrap(new VariableReferenceExpression(varCond))));
         Pair<ILogicalOperator, LogicalVariable> opAndVarForElse = constructSubplanOperatorForBranch(
                 opAndVarForThen.first, new MutableObject<>(notVarCond), ifexpr.getElseExpr());
 
@@ -882,7 +882,6 @@ class LangExpressionToPlanTranslator
         arguments.add(new MutableObject<>(new VariableReferenceExpression(varCond)));
         arguments.add(new MutableObject<>(ConstantExpression.TRUE));
         arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForThen.second)));
-        arguments.add(new MutableObject<>(ConstantExpression.FALSE));
         arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForElse.second)));
         AbstractFunctionCallExpression swithCaseExpr = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SWITCH_CASE), arguments);
@@ -1364,10 +1363,14 @@ class LangExpressionToPlanTranslator
 
     protected boolean expressionNeedsNoNesting(Expression expr) {
         Kind k = expr.getKind();
-        return k == Kind.LITERAL_EXPRESSION || k == Kind.LIST_CONSTRUCTOR_EXPRESSION
-                || k == Kind.RECORD_CONSTRUCTOR_EXPRESSION || k == Kind.VARIABLE_EXPRESSION || k == Kind.CALL_EXPRESSION
-                || k == Kind.OP_EXPRESSION || k == Kind.FIELD_ACCESSOR_EXPRESSION || k == Kind.INDEX_ACCESSOR_EXPRESSION
-                || k == Kind.UNARY_EXPRESSION || k == Kind.IF_EXPRESSION || k == Kind.INDEPENDENT_SUBQUERY;
+        boolean noNesting = k == Kind.LITERAL_EXPRESSION || k == Kind.LIST_CONSTRUCTOR_EXPRESSION
+                || k == Kind.RECORD_CONSTRUCTOR_EXPRESSION || k == Kind.VARIABLE_EXPRESSION;
+        noNesting = noNesting || k == Kind.CALL_EXPRESSION || k == Kind.OP_EXPRESSION
+                || k == Kind.FIELD_ACCESSOR_EXPRESSION;
+        noNesting = noNesting || k == Kind.INDEX_ACCESSOR_EXPRESSION || k == Kind.UNARY_EXPRESSION
+                || k == Kind.IF_EXPRESSION;
+        return noNesting || k == Kind.INDEPENDENT_SUBQUERY || k == Kind.CASE_EXPRESSION;
+
     }
 
     protected <T> List<T> mkSingletonArrayList(T item) {
@@ -1519,7 +1522,7 @@ class LangExpressionToPlanTranslator
      * @return a pair of the constructed subplan operator and the output variable for the branch.
      * @throws AsterixException
      */
-    private Pair<ILogicalOperator, LogicalVariable> constructSubplanOperatorForBranch(ILogicalOperator inputOp,
+    protected Pair<ILogicalOperator, LogicalVariable> constructSubplanOperatorForBranch(ILogicalOperator inputOp,
             Mutable<ILogicalExpression> selectExpr, Expression branchExpression) throws AsterixException {
         context.enterSubplan();
         SubplanOperator subplanOp = new SubplanOperator();
@@ -1554,5 +1557,35 @@ class LangExpressionToPlanTranslator
         comparison.getArguments()
                 .add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(0L)))));
         return new AssignOperator(v1, new MutableObject<>(comparison));
+    }
+
+    // Generates the filter condition for whether a conditional branch should be executed.
+    protected Mutable<ILogicalExpression> generateNoMatchedPrecedingWhenBranchesFilter(
+            List<ILogicalExpression> inputBooleanExprs) {
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        for (ILogicalExpression inputBooleanExpr : inputBooleanExprs) {
+            // A NULL/MISSING valued WHEN expression does not lead to the corresponding THEN execution.
+            // Therefore, we should check a previous WHEN boolean condition is not unknown.
+            arguments.add(generateAndNotIsUnknownWrap(inputBooleanExpr));
+        }
+        Mutable<ILogicalExpression> hasBeenExecutedExprRef = new MutableObject<>(
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OR), arguments));
+        return new MutableObject<>(
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT),
+                        new ArrayList<>(Collections.singletonList(hasBeenExecutedExprRef))));
+    }
+
+    // For an input expression `expr`, return `expr AND expr IS NOT UNKOWN`.
+    protected Mutable<ILogicalExpression> generateAndNotIsUnknownWrap(ILogicalExpression logicalExpr) {
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        arguments.add(new MutableObject<>(logicalExpr));
+        Mutable<ILogicalExpression> expr = new MutableObject<>(
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_UNKOWN),
+                        new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr)))));
+        arguments.add(new MutableObject<>(
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT),
+                        new ArrayList<>(Collections.singletonList(expr)))));
+        return new MutableObject<>(
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), arguments));
     }
 }

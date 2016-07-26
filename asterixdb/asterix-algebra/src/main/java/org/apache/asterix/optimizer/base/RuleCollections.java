@@ -36,7 +36,7 @@ import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
-import org.apache.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
+import org.apache.asterix.optimizer.rules.InjectToAnyTypeCastRule;
 import org.apache.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import org.apache.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
 import org.apache.asterix.optimizer.rules.IntroduceDynamicTypeCastForExternalFunctionRule;
@@ -173,7 +173,6 @@ public final class RuleCollections {
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new MetaFunctionToMetaVariableRule());
-        normalization.add(new IfElseToSwitchCaseFunctionRule());
         normalization.add(new FuzzyEqRule());
         normalization.add(new SimilarityCheckRule());
         return normalization;
@@ -282,6 +281,7 @@ public final class RuleCollections {
         planCleanupRules.add(new IntroduceDynamicTypeCastForExternalFunctionRule());
         planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
         planCleanupRules.add(new RemoveCartesianProductWithEmptyBranchRule());
+        planCleanupRules.add(new InjectToAnyTypeCastRule());
         return planCleanupRules;
     }
 

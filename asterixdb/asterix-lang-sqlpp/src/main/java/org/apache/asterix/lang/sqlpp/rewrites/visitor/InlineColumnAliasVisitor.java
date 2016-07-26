@@ -64,6 +64,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -459,6 +460,19 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
     public Void visit(IndependentSubquery independentSubquery, Boolean overwriteWithGbyKeyVarRefs)
             throws AsterixException {
         independentSubquery.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
+        return null;
+    }
+
+    @Override
+    public Void visit(CaseExpression caseExpression, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
+        caseExpression.getConditionExpr().accept(this, overwriteWithGbyKeyVarRefs);
+        for (Expression expr : caseExpression.getWhenExprs()) {
+            expr.accept(this, overwriteWithGbyKeyVarRefs);
+        }
+        for (Expression expr : caseExpression.getThenExprs()) {
+            expr.accept(this, overwriteWithGbyKeyVarRefs);
+        }
+        caseExpression.getElseExpr().accept(this, overwriteWithGbyKeyVarRefs);
         return null;
     }
 

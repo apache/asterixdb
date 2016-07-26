@@ -41,6 +41,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -267,6 +268,20 @@ public class SqlppSubstituteExpressionsVisitor extends SubstituteExpressionVisit
             throws AsterixException {
         independentSubquery.setExpr(independentSubquery.getExpr().accept(this, env));
         return null;
+    }
+
+    @Override
+    public Expression visit(CaseExpression caseExpr, ExpressionSubstitutionEnvironment env) throws AsterixException {
+        Expression newCaseExpr = env.findSubstitution(caseExpr, deepCopier);
+        if (newCaseExpr == caseExpr) {
+            caseExpr.setConditionExpr(caseExpr.getConditionExpr().accept(this, env));
+            caseExpr.setWhenExprs(rewriteExpressionList(caseExpr.getWhenExprs(), env));
+            caseExpr.setThenExprs(rewriteExpressionList(caseExpr.getThenExprs(), env));
+            caseExpr.setElseExpr(caseExpr.getElseExpr().accept(this, env));
+            return caseExpr;
+        } else {
+            return newCaseExpr.accept(this, env);
+        }
     }
 
 }

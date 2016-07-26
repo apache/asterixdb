@@ -49,7 +49,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 /**
@@ -455,24 +454,25 @@ public class StaticTypeCastUtil {
         if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
                 || argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             IAType reqFieldType = inputFieldType;
-            FunctionIdentifier fi = null;
             // do not enforce nested type in the case of no-used variables
             switch (inputFieldType.getTypeTag()) {
                 case RECORD:
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
-                    fi = AsterixBuiltinFunctions.CAST_RECORD;
                     break;
                 case ORDEREDLIST:
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
-                    fi = AsterixBuiltinFunctions.CAST_LIST;
                     break;
                 case UNORDEREDLIST:
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
-                    fi = AsterixBuiltinFunctions.CAST_LIST;
+                    break;
+                default:
+                    break;
             }
-            if (fi != null && !inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
+            // do not enforce nested type in the case of no-used variables
+            if (!inputFieldType.equals(reqFieldType) && !parameterVars.isEmpty()) {
                 //inject dynamic type casting
-                injectCastFunction(FunctionUtil.getFunctionInfo(fi), reqFieldType, inputFieldType, expRef, argExpr);
+                injectCastFunction(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE), reqFieldType,
+                        inputFieldType, expRef, argExpr);
                 castInjected = true;
             }
             //recursively rewrite function arguments

@@ -60,6 +60,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
@@ -334,11 +335,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public ListConstructor visit(ListConstructor lc, Void arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : lc.getExprList()) {
-            newExprList.add((Expression) expr.accept(this, arg));
-        }
-        return new ListConstructor(lc.getType(), newExprList);
+        return new ListConstructor(lc.getType(), copyExprList(lc.getExprList(), arg));
     }
 
     @Override
@@ -354,12 +351,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public OperatorExpr visit(OperatorExpr operatorExpr, Void arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : operatorExpr.getExprList()) {
-            newExprList.add((Expression) expr.accept(this, arg));
-        }
-        return new OperatorExpr(newExprList, operatorExpr.getExprBroadcastIdx(), operatorExpr.getOpList(),
-                operatorExpr.isCurrentop());
+        return new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg), operatorExpr.getExprBroadcastIdx(),
+                operatorExpr.getOpList(), operatorExpr.isCurrentop());
     }
 
     @Override
@@ -415,7 +408,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         Expression expr = (Expression) ia.getExpr().accept(this, arg);
         Expression indexExpr = null;
         if (ia.getIndexExpr() != null) {
-            indexExpr = ia.getIndexExpr();
+            indexExpr = (Expression) ia.getIndexExpr().accept(this, arg);
         }
         return new IndexAccessor(expr, indexExpr);
     }
@@ -423,6 +416,23 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     @Override
     public ILangExpression visit(IndependentSubquery independentSubquery, Void arg) throws AsterixException {
         return new IndependentSubquery((Expression) independentSubquery.getExpr().accept(this, arg));
+    }
+
+    @Override
+    public ILangExpression visit(CaseExpression caseExpr, Void arg) throws AsterixException {
+        Expression conditionExpr = (Expression) caseExpr.getConditionExpr().accept(this, arg);
+        List<Expression> whenExprList = copyExprList(caseExpr.getWhenExprs(), arg);
+        List<Expression> thenExprList = copyExprList(caseExpr.getThenExprs(), arg);
+        Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, arg);
+        return new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
+    }
+
+    private List<Expression> copyExprList(List<Expression> exprs, Void arg) throws AsterixException {
+        List<Expression> newExprList = new ArrayList<>();
+        for (Expression expr : exprs) {
+            newExprList.add((Expression) expr.accept(this, arg));
+        }
+        return newExprList;
     }
 
 }

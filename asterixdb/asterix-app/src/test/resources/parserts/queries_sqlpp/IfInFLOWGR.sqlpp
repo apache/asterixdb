@@ -17,9 +17,10 @@
  * under the License.
  */
 
-select element if ((i > j))
-    then i
+select element
+    case when i > j then i
     else j
+    end
 from  [1,2,30,40] as i,
       {{4,5,6}} as j
 ;

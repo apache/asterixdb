@@ -39,7 +39,8 @@ public interface Expression extends ILangExpression {
         SELECT_EXPRESSION,
         PRIMARY_EXPRESSION,
         VALUE_EXPRESSION,
-        INDEPENDENT_SUBQUERY
+        INDEPENDENT_SUBQUERY,
+        CASE_EXPRESSION
     }
 
 }

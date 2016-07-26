@@ -136,6 +136,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
@@ -1591,7 +1592,7 @@ Expression Expression():
 (
     LOOKAHEAD(2)
     expr = OperatorExpr()
-    | expr = IfThenElse()
+    | expr = CaseExpr()
     | expr = QuantifiedExpression()
 )
     {
@@ -2212,22 +2213,34 @@ Expression ParenthesizedExpression() throws ParseException:
     }
 }
 
-Expression IfThenElse() throws ParseException:
+
+Expression CaseExpr() throws ParseException:
 {
-  Expression condExpr;
-  Expression thenExpr;
-  Expression elseExpr;
-  IfExpr ifExpr = new IfExpr();
+   Expression conditionExpr = new LiteralExpr(TrueLiteral.INSTANCE);
+   List<Expression> whenExprs = new ArrayList<Expression>();
+   List<Expression> thenExprs = new ArrayList<Expression>();
+   Expression elseExpr = null;
+   
+   Expression whenExpr = null;
+   Expression thenExpr = null;
 }
 {
-    <IF> <LEFTPAREN> condExpr = Expression() <RIGHTPAREN> <THEN> thenExpr = Expression() <ELSE> elseExpr = Expression()
-
-    {
-      ifExpr.setCondExpr(condExpr);
-      ifExpr.setThenExpr(thenExpr);
-      ifExpr.setElseExpr(elseExpr);
-      return ifExpr;
-    }
+   <CASE> (  conditionExpr = Expression() )?
+   (
+     <WHEN> whenExpr = Expression()
+     {
+        whenExprs.add(whenExpr);
+     }
+     <THEN> thenExpr = Expression()
+     {
+        thenExprs.add(thenExpr);
+     }
+   )*
+   (<ELSE> elseExpr = Expression() )?
+   <END>
+   {
+     return new CaseExpression(conditionExpr, whenExprs, thenExprs, elseExpr);
+   }
 }
 
 SelectExpression SelectExpression(boolean subquery) throws ParseException: {
@@ -2821,6 +2834,7 @@ TOKEN [IGNORE_CASE]:
   | <ELEMENT : "element">
   | <ELSE : "else">
   | <ENFORCED : "enforced">
+  | <END : "end">
   | <EVERY : "every">
   | <EXCEPT : "except">
   | <EXISTS : "exists">

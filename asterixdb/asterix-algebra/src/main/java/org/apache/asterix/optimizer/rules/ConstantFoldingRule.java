@@ -83,13 +83,13 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     // Function Identifier sets that the ConstantFolding rule should skip to apply.
     // Most of them are record-related functions.
-    private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED = ImmutableSet.of(
-            AsterixBuiltinFunctions.RECORD_MERGE, AsterixBuiltinFunctions.ADD_FIELDS,
-            AsterixBuiltinFunctions.REMOVE_FIELDS, AsterixBuiltinFunctions.GET_RECORD_FIELDS,
-            AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
-            AsterixBuiltinFunctions.GET_ITEM, AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
-            AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, AsterixBuiltinFunctions.CAST_RECORD,
-            AsterixBuiltinFunctions.CAST_LIST, AsterixBuiltinFunctions.META, AsterixBuiltinFunctions.META_KEY);
+    private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED =
+            ImmutableSet.of(AsterixBuiltinFunctions.RECORD_MERGE, AsterixBuiltinFunctions.ADD_FIELDS,
+                    AsterixBuiltinFunctions.REMOVE_FIELDS, AsterixBuiltinFunctions.GET_RECORD_FIELDS,
+                    AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
+                    AsterixBuiltinFunctions.GET_ITEM, AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
+                    AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, AsterixBuiltinFunctions.CAST_TYPE,
+                    AsterixBuiltinFunctions.META, AsterixBuiltinFunctions.META_KEY);
 
     /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
@@ -204,8 +204,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             }
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
-                String str = ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1)
-                        .getValue()).getValue()).getObject()).getStringValue();
+                String str =
+                        ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1).getValue())
+                                .getValue()).getObject()).getStringValue();
                 int k = rt.getFieldIndex(str);
                 if (k >= 0) {
                     // wait for the ByNameToByIndex rule to apply

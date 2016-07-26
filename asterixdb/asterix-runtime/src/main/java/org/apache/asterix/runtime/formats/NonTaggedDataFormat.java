@@ -60,15 +60,12 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
-import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.asterix.runtime.evaluators.common.FunctionManagerImpl;
 import org.apache.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.OpenRecordConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastListDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastRecordDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.OrderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByIndexEvalFactory;
@@ -210,8 +207,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
                     }
-                    IScalarEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(
-                            Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
+                    IScalarEvaluatorFactory fldIndexEvalFactory =
+                            new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
 
                     evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory, fldIndexEvalFactory, recType);
                     return evalFactory;
@@ -256,8 +253,8 @@ public class NonTaggedDataFormat implements IDataFormat {
             int dimension, List<String> filterFieldName) throws AlgebricksException {
         IScalarEvaluatorFactory evalFactory = getFieldAccessEvaluatorFactory(recType, fldName, recordColumn);
         int numOfFields = dimension * 2;
-        IScalarEvaluatorFactory[] evalFactories = new IScalarEvaluatorFactory[numOfFields
-                + (filterFieldName == null ? 0 : 1)];
+        IScalarEvaluatorFactory[] evalFactories =
+                new IScalarEvaluatorFactory[numOfFields + (filterFieldName == null ? 0 : 1)];
 
         ArrayBackedValueStorage abvs1 = new ArrayBackedValueStorage();
         DataOutput dos1 = abvs1.getDataOutput();
@@ -267,8 +264,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
-        IScalarEvaluatorFactory dimensionEvalFactory = new ConstantEvalFactory(
-                Arrays.copyOf(abvs1.getByteArray(), abvs1.getLength()));
+        IScalarEvaluatorFactory dimensionEvalFactory =
+                new ConstantEvalFactory(Arrays.copyOf(abvs1.getByteArray(), abvs1.getLength()));
 
         for (int i = 0; i < numOfFields; i++) {
             ArrayBackedValueStorage abvs2 = new ArrayBackedValueStorage();
@@ -279,8 +276,8 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            IScalarEvaluatorFactory coordinateEvalFactory = new ConstantEvalFactory(
-                    Arrays.copyOf(abvs2.getByteArray(), abvs2.getLength()));
+            IScalarEvaluatorFactory coordinateEvalFactory =
+                    new ConstantEvalFactory(Arrays.copyOf(abvs2.getByteArray(), abvs2.getLength()));
 
             evalFactories[i] = new CreateMBREvalFactory(evalFactory, dimensionEvalFactory, coordinateEvalFactory);
         }
@@ -299,8 +296,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         if (fldName.size() > 1) {
             for (int i = 0; i < n; i++) {
                 if (names[i].equals(fldName.get(0))) {
-                    IScalarEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
-                            GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
+                    IScalarEvaluatorFactory recordEvalFactory =
+                            new ColumnAccessEvalFactory(GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
                     ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
                     DataOutput dos = abvs.getDataOutput();
                     try {
@@ -310,10 +307,10 @@ public class NonTaggedDataFormat implements IDataFormat {
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
                     }
-                    IScalarEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(
-                            Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
-                    IScalarEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
-                            fldIndexEvalFactory, recType);
+                    IScalarEvaluatorFactory fldIndexEvalFactory =
+                            new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
+                    IScalarEvaluatorFactory evalFactory =
+                            new FieldAccessByIndexEvalFactory(recordEvalFactory, fldIndexEvalFactory, recType);
                     IFunctionInfo finfoAccess = AsterixBuiltinFunctions
                             .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
 
@@ -326,8 +323,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
             }
         } else {
-            IScalarEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
-                    GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
+            IScalarEvaluatorFactory recordEvalFactory =
+                    new ColumnAccessEvalFactory(GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
             ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
             DataOutput dos = abvs.getDataOutput();
             AOrderedList as = new AOrderedList(fldName);
@@ -337,8 +334,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 throw new AlgebricksException(e);
             }
             IScalarEvaluatorFactory evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, recType, fldName);
-            IFunctionInfo finfoAccess = AsterixBuiltinFunctions
-                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED);
+            IFunctionInfo finfoAccess =
+                    AsterixBuiltinFunctions.getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED);
 
             ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -445,31 +442,15 @@ public class NonTaggedDataFormat implements IDataFormat {
                         + " org.apache.asterix.om.types.IAType)", outType, type0, type1);
             }
         });
-
-        functionTypeInferers.put(AsterixBuiltinFunctions.CAST_RECORD, new FunctionTypeInferer() {
+        functionTypeInferers.put(AsterixBuiltinFunctions.CAST_TYPE, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
                 AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                ARecordType rt = (ARecordType) TypeCastUtils.getRequiredType(funcExpr);
+                IAType rt = TypeCastUtils.getRequiredType(funcExpr);
                 IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
-                if (it.getTypeTag().equals(ATypeTag.ANY)) {
-                    it = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
-                }
-                ((CastRecordDescriptor) fd).reset(rt, (ARecordType) it);
-            }
-        });
-        functionTypeInferers.put(AsterixBuiltinFunctions.CAST_LIST, new FunctionTypeInferer() {
-            @Override
-            public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                    throws AlgebricksException {
-                AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                AbstractCollectionType rt = (AbstractCollectionType) TypeCastUtils.getRequiredType(funcExpr);
-                IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
-                if (it.getTypeTag().equals(ATypeTag.ANY)) {
-                    it = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
-                }
-                ((CastListDescriptor) fd).reset(rt, (AbstractCollectionType) it);
+                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.IAType, org.apache.asterix.om.types.IAType)", rt,
+                        it);
             }
         });
         functionTypeInferers.put(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
@@ -488,8 +469,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                     Mutable<ILogicalExpression> argRef = expr.getArguments().get(2 * i);
                     ILogicalExpression arg = argRef.getValue();
                     if (arg.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                        String fn = ((AString) ((AsterixConstantValue) ((ConstantExpression) arg).getValue())
-                                .getObject()).getStringValue();
+                        String fn =
+                                ((AString) ((AsterixConstantValue) ((ConstantExpression) arg).getValue()).getObject())
+                                        .getStringValue();
                         open[i] = true;
                         for (String s : recType.getFieldNames()) {
                             if (s.equals(fn)) {

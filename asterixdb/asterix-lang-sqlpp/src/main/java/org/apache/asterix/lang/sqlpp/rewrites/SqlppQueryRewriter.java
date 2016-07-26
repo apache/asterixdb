@@ -45,6 +45,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
@@ -438,6 +439,19 @@ class SqlppQueryRewriter implements IQueryRewriter {
         @Override
         public Void visit(IndependentSubquery independentSubquery, Void arg) throws AsterixException {
             independentSubquery.getExpr().accept(this, arg);
+            return null;
+        }
+
+        @Override
+        public Void visit(CaseExpression caseExpression, Void arg) throws AsterixException {
+            caseExpression.getConditionExpr().accept(this, arg);
+            for (Expression expr : caseExpression.getWhenExprs()) {
+                expr.accept(this, arg);
+            }
+            for (Expression expr : caseExpression.getThenExprs()) {
+                expr.accept(this, arg);
+            }
+            caseExpression.getElseExpr().accept(this, arg);
             return null;
         }
 

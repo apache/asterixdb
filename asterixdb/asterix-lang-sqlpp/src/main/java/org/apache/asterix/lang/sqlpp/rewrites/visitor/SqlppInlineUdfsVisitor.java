@@ -43,6 +43,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -75,9 +76,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     protected Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
             throws AsterixException {
         Map<VariableExpr, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
-        Expression inlinedReturnExpr = (Expression) SqlppVariableSubstitutionUtil
-                .substituteVariableWithoutContext(returnExpr, varExprMap);
-        return inlinedReturnExpr;
+        return (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(returnExpr, varExprMap);
     }
 
     @Override
@@ -231,9 +230,28 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         return p.first;
     }
 
+    @Override
+    public Boolean visit(CaseExpression caseExpr, List<FunctionDecl> funcs) throws AsterixException {
+        Pair<Boolean, Expression> result = inlineUdfsInExpr(caseExpr.getConditionExpr(), funcs);
+        caseExpr.setConditionExpr(result.second);
+        boolean inlined = result.first;
+
+        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(caseExpr.getWhenExprs(), funcs);
+        inlined = inlined || inlinedList.first;
+        caseExpr.setWhenExprs(inlinedList.second);
+
+        inlinedList = inlineUdfsInExprList(caseExpr.getThenExprs(), funcs);
+        inlined = inlined || inlinedList.first;
+        caseExpr.setThenExprs(inlinedList.second);
+
+        result = inlineUdfsInExpr(caseExpr.getElseExpr(), funcs);
+        caseExpr.setElseExpr(result.second);
+        return inlined || result.first;
+    }
+
     private Map<VariableExpr, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
             throws AsterixException {
-        Map<VariableExpr, Expression> varExprMap = new HashMap<VariableExpr, Expression>();
+        Map<VariableExpr, Expression> varExprMap = new HashMap<>();
         for (LetClause lc : letClauses) {
             // inline let variables one by one iteratively.
             lc.setBindingExpr((Expression) SqlppVariableSubstitutionUtil

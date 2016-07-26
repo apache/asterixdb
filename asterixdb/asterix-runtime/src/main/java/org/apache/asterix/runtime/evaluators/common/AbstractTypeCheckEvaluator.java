@@ -23,6 +23,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -33,6 +34,13 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
 
+    protected enum Value {
+        TRUE,
+        FALSE,
+        MISSING
+    }
+
+    private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput out = resultStorage.getDataOutput();
     private final IPointable argPtr = new VoidPointable();
@@ -46,8 +54,12 @@ public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
         eval.evaluate(tuple, argPtr);
-        boolean match = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]);
-        ABoolean res = match ? ABoolean.TRUE : ABoolean.FALSE;
+        Value match = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]);
+        if (match == Value.MISSING) {
+            result.set(MISSING_BYTES, 0, MISSING_BYTES.length);
+            return;
+        }
+        ABoolean res = match == Value.TRUE ? ABoolean.TRUE : ABoolean.FALSE;
         try {
             resultStorage.reset();
             aObjSerDer.serialize(res, out);
@@ -57,6 +69,6 @@ public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
         }
     }
 
-    protected abstract boolean isMatch(byte typeTag);
+    protected abstract Value isMatch(byte typeTag);
 
 }

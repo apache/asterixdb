@@ -19,9 +19,10 @@
 
 select element (
     select element k
-    from  if ((i > j))
-        then i
-        else j as k
+    from  case i > j
+            when true then i
+            else j
+          end as k
     where (k < 10)
 )
 from  [1,2,30,40] as i,

@@ -16,7 +16,8 @@
                                     -- ASSIGN  |LOCAL|
                                       -- ASSIGN  |LOCAL|
                                         -- STREAM_SELECT  |LOCAL|
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          -- ASSIGN  |LOCAL|
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                   -- SUBPLAN  |PARTITIONED|
                           {

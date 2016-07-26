@@ -17,9 +17,13 @@
  * under the License.
  */
 
-use test;
+USE test;
 
 
-select element if ((2 > 1))
-    then 20
-    else 10;
+SELECT ELEMENT
+    CASE 2>1
+     WHEN TRUE THEN 20
+     ELSE 10
+    END
+;
+

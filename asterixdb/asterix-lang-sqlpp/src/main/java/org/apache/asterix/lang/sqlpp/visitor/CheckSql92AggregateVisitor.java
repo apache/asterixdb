@@ -55,13 +55,14 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 
 /**
- * This visitor checks if a language construct contains SQL-92 aggregates.
+ * This visitor checks if a non-subquery language construct contains SQL-92 aggregates.
  */
 public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisitor<Boolean, ILangExpression> {
 
@@ -269,6 +270,12 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     @Override
     public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
         return false;
+    }
+
+    @Override
+    public Boolean visit(CaseExpression caseExpr, ILangExpression arg) throws AsterixException {
+        return caseExpr.getConditionExpr().accept(this, arg) || visitExprList(caseExpr.getWhenExprs(), arg)
+                || visitExprList(caseExpr.getThenExprs(), arg) || caseExpr.getElseExpr().accept(this, arg);
     }
 
 }

@@ -42,6 +42,7 @@
 | &lt;ELEMENT: "element"&gt;
 | &lt;ELSE: "else"&gt;
 | &lt;ENFORCED: "enforced"&gt;
+| &lt;END: "end"&gt;
 | &lt;EVERY: "every"&gt;
 | &lt;EXCEPT: "except"&gt;
 | &lt;EXISTS: "exists"&gt;
@@ -674,7 +675,7 @@
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod44">Expression</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod63">OperatorExpr</A> | <A HREF="#prod64">IfThenElse</A> | <A HREF="#prod65">QuantifiedExpression</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod63">OperatorExpr</A> | <A HREF="#prod64">CaseExpr</A> | <A HREF="#prod65">QuantifiedExpression</A> )</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod63">OperatorExpr</A></TD>
@@ -797,9 +798,9 @@
 <TD ALIGN=LEFT VALIGN=BASELINE>( &lt;LEFTPAREN&gt; <A HREF="#prod44">Expression</A> &lt;RIGHTPAREN&gt; | <A HREF="#prod88">Subquery</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod64">IfThenElse</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod64">CaseExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IF&gt; &lt;LEFTPAREN&gt; <A HREF="#prod44">Expression</A> &lt;RIGHTPAREN&gt; &lt;THEN&gt; <A HREF="#prod44">Expression</A> &lt;ELSE&gt; <A HREF="#prod44">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;CASE&gt; ( <A HREF="#prod44">Expression</A> )? ( &lt;WHEN&gt; <A HREF="#prod44">Expression</A> &lt;THEN&gt; <A HREF="#prod44">Expression</A> )* ( &lt;ELSE&gt; <A HREF="#prod44">Expression</A> )? &lt;END&gt;</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod62">SelectExpression</A></TD>

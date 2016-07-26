@@ -48,7 +48,7 @@ import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisito
 
 public abstract class SubstituteExpressionVisitor
         extends AbstractQueryExpressionVisitor<Expression, ExpressionSubstitutionEnvironment> {
-    private final DeepCopier deepCopier;
+    protected final DeepCopier deepCopier;
 
     public SubstituteExpressionVisitor(DeepCopier deepCopier) {
         this.deepCopier = deepCopier;

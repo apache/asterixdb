@@ -131,8 +131,7 @@ import org.apache.asterix.runtime.evaluators.constructors.ClosedRecordConstructo
 import org.apache.asterix.runtime.evaluators.constructors.OpenRecordConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastListDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastRecordDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CheckUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
@@ -374,10 +373,8 @@ public class FunctionCollection {
         temp.add(OrderedListConstructorDescriptor.FACTORY);
         temp.add(UnorderedListConstructorDescriptor.FACTORY);
 
-        // Cast functions
+        // Inject failure function
         temp.add(InjectFailureDescriptor.FACTORY);
-        temp.add(CastListDescriptor.FACTORY);
-        temp.add(CastRecordDescriptor.FACTORY);
 
         // Switch case
         temp.add(SwitchCaseDescriptor.FACTORY);
@@ -611,6 +608,9 @@ public class FunctionCollection {
         functionsToInjectUnkownHandling.add(PrintDateTimeDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(GetOverlappingIntervalDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(DurationFromIntervalDescriptor.FACTORY);
+
+        // Cast function
+        functionsToInjectUnkownHandling.add(CastTypeDescriptor.FACTORY);
 
         List<IFunctionDescriptorFactory> generatedFactories = new ArrayList<>();
         for (IFunctionDescriptorFactory factory : functionsToInjectUnkownHandling) {

@@ -41,6 +41,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -304,6 +305,27 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     @Override
     public Void visit(IndependentSubquery independentSubquery, Integer step) throws AsterixException {
         independentSubquery.getExpr().accept(this, step);
+        return null;
+    }
+
+    @Override
+    public Void visit(CaseExpression caseExpr, Integer step) throws AsterixException {
+        out.print(skip(step) + "case ");
+        caseExpr.getConditionExpr().accept(this, step + 2);
+        out.println();
+        List<Expression> whenExprs = caseExpr.getWhenExprs();
+        List<Expression> thenExprs = caseExpr.getThenExprs();
+        for (int index = 0; index < whenExprs.size(); ++index) {
+            out.print(skip(step) + "when ");
+            whenExprs.get(index).accept(this, step + 2);
+            out.print(" then ");
+            thenExprs.get(index).accept(this, step + 2);
+            out.println();
+        }
+        out.print(skip(step) + "else ");
+        caseExpr.getElseExpr().accept(this, step + 2);
+        out.println();
+        out.println(skip(step) + "end");
         return null;
     }
 

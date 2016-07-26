@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 
@@ -51,12 +52,14 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -72,9 +75,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
@@ -142,8 +147,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
                 currentOpRef = new MutableObject<>(letClause.accept(this, currentOpRef).first);
             }
         }
-        Pair<ILogicalOperator, LogicalVariable> select = selectExpression.getSelectSetOperation().accept(this,
-                currentOpRef);
+        Pair<ILogicalOperator, LogicalVariable> select =
+                selectExpression.getSelectSetOperation().accept(this, currentOpRef);
         currentOpRef = new MutableObject<>(select.first);
         if (selectExpression.hasOrderby()) {
             currentOpRef = new MutableObject<>(selectExpression.getOrderbyClause().accept(this, currentOpRef).first);
@@ -151,8 +156,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         if (selectExpression.hasLimit()) {
             currentOpRef = new MutableObject<>(selectExpression.getLimitClause().accept(this, currentOpRef).first);
         }
-        Pair<ILogicalOperator, LogicalVariable> result = produceSelectPlan(selectExpression.isSubquery(), currentOpRef,
-                select.second);
+        Pair<ILogicalOperator, LogicalVariable> result =
+                produceSelectPlan(selectExpression.isSubquery(), currentOpRef, select.second);
         if (selectExpression.isSubquery()) {
             context.exitSubplan();
         }
@@ -162,8 +167,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(IndependentSubquery independentSubquery,
             Mutable<ILogicalOperator> tupleSource) throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(independentSubquery.getExpr(),
-                tupleSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo =
+                langExprToAlgExpression(independentSubquery.getExpr(), tupleSource);
         // Replaces nested tuple source with empty tuple source so that the subquery can be independent
         // from its input operators.
         replaceNtsWithEts(eo.second.getValue());
@@ -177,8 +182,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectSetOperation selectSetOperation,
             Mutable<ILogicalOperator> tupSource) throws AsterixException {
         Mutable<ILogicalOperator> currentOpRef = tupSource;
-        Pair<ILogicalOperator, LogicalVariable> currentResult = selectSetOperation.getLeftInput().accept(this,
-                currentOpRef);
+        Pair<ILogicalOperator, LogicalVariable> currentResult =
+                selectSetOperation.getLeftInput().accept(this, currentOpRef);
         if (selectSetOperation.hasRightInputs()) {
             throw new NotImplementedException();
         }
@@ -236,12 +241,12 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         if (fromTerm.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVar(fromTerm.getPositionalVariable());
             // We set the positional variable type as INT64 type.
-            unnestOp = new UnnestOperator(fromVar,
-                    new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)), pVar, BuiltinType.AINT64,
-                    new AqlPositionWriter());
+            unnestOp =
+                    new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
+                            pVar, BuiltinType.AINT64, new AqlPositionWriter());
         } else {
-            unnestOp = new UnnestOperator(fromVar,
-                    new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
+            unnestOp =
+                    new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
         }
         unnestOp.getInputs().add(eo.second);
 
@@ -267,41 +272,41 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             throws AsterixException {
         Mutable<ILogicalOperator> leftInputRef = uncorrelatedLeftBranchStack.pop();
         if (joinClause.getJoinType() == JoinType.INNER) {
-            Pair<ILogicalOperator, LogicalVariable> rightBranch = generateUnnestForBinaryCorrelateRightBranch(
-                    joinClause, inputRef, true);
+            Pair<ILogicalOperator, LogicalVariable> rightBranch =
+                    generateUnnestForBinaryCorrelateRightBranch(joinClause, inputRef, true);
             // A join operator with condition TRUE.
-            AbstractBinaryJoinOperator joinOperator = new InnerJoinOperator(
-                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE), leftInputRef,
-                    new MutableObject<ILogicalOperator>(rightBranch.first));
+            AbstractBinaryJoinOperator joinOperator =
+                    new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE), leftInputRef,
+                            new MutableObject<ILogicalOperator>(rightBranch.first));
             Mutable<ILogicalOperator> joinOpRef = new MutableObject<>(joinOperator);
 
             // Add an additional filter operator.
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = langExprToAlgExpression(
-                    joinClause.getConditionExpression(), joinOpRef);
-            SelectOperator filter = new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first),
-                    false, null);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair =
+                    langExprToAlgExpression(joinClause.getConditionExpression(), joinOpRef);
+            SelectOperator filter =
+                    new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first), false, null);
             filter.getInputs().add(conditionExprOpPair.second);
             return new Pair<>(filter, rightBranch.second);
         } else {
             // Creates a subplan operator.
             SubplanOperator subplanOp = new SubplanOperator();
-            Mutable<ILogicalOperator> ntsRef = new MutableObject<>(
-                    new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(subplanOp)));
+            Mutable<ILogicalOperator> ntsRef =
+                    new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(subplanOp)));
             subplanOp.getInputs().add(leftInputRef);
 
             // Enters the translation for a subplan.
             context.enterSubplan();
 
             // Adds an unnest operator to unnest to right expression.
-            Pair<ILogicalOperator, LogicalVariable> rightBranch = generateUnnestForBinaryCorrelateRightBranch(
-                    joinClause, ntsRef, true);
+            Pair<ILogicalOperator, LogicalVariable> rightBranch =
+                    generateUnnestForBinaryCorrelateRightBranch(joinClause, ntsRef, true);
             AbstractUnnestNonMapOperator rightUnnestOp = (AbstractUnnestNonMapOperator) rightBranch.first;
 
             // Adds an additional filter operator for the join condition.
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = langExprToAlgExpression(
                     joinClause.getConditionExpression(), new MutableObject<ILogicalOperator>(rightUnnestOp));
-            SelectOperator filter = new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first),
-                    false, null);
+            SelectOperator filter =
+                    new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first), false, null);
             filter.getInputs().add(conditionExprOpPair.second);
 
             ILogicalOperator currentTopOp = filter;
@@ -327,8 +332,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
                 // Assigns the record constructor function to a record variable.
                 LogicalVariable recordVar = context.newVar();
-                AssignOperator assignOp = new AssignOperator(recordVar,
-                        new MutableObject<ILogicalExpression>(recordCreationFunc));
+                AssignOperator assignOp =
+                        new AssignOperator(recordVar, new MutableObject<ILogicalExpression>(recordCreationFunc));
                 assignOp.getInputs().add(new MutableObject<ILogicalOperator>(currentTopOp));
 
                 // Sets currentTopOp and varToListify for later usages.
@@ -357,8 +362,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
             // Outer unnest the aggregated var from the subplan.
             LogicalVariable outerUnnestVar = context.newVar();
-            LeftOuterUnnestOperator outerUnnestOp = new LeftOuterUnnestOperator(outerUnnestVar,
-                    new MutableObject<ILogicalExpression>(
+            LeftOuterUnnestOperator outerUnnestOp =
+                    new LeftOuterUnnestOperator(outerUnnestVar, new MutableObject<ILogicalExpression>(
                             makeUnnestExpression(new VariableReferenceExpression(aggVar))));
             outerUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(subplanOp));
             currentTopOp = outerUnnestOp;
@@ -423,8 +428,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(HavingClause havingClause, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(
-                havingClause.getFilterExpression(), tupSource);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p =
+                langExprToAlgExpression(havingClause.getFilterExpression(), tupSource);
         SelectOperator s = new SelectOperator(new MutableObject<ILogicalExpression>(p.first), false, null);
         s.getInputs().add(p.second);
         return new Pair<>(s, null);
@@ -475,6 +480,86 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     public Pair<ILogicalOperator, LogicalVariable> visit(Projection projection, Mutable<ILogicalOperator> arg)
             throws AsterixException {
         throw new UnsupportedOperationException(ERR_MSG);
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(CaseExpression caseExpression,
+            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+        //Creates a series of subplan operators, one for each branch.
+        Mutable<ILogicalOperator> currentOpRef = tupSource;
+        ILogicalOperator currentOperator = null;
+        List<Expression> whenExprList = caseExpression.getWhenExprs();
+        List<Expression> thenExprList = caseExpression.getThenExprs();
+        List<ILogicalExpression> branchCondVarReferences = new ArrayList<>();
+        List<ILogicalExpression> allVarReferences = new ArrayList<>();
+        for (int index = 0; index < whenExprList.size(); ++index) {
+            Pair<ILogicalOperator, LogicalVariable> whenExprResult = whenExprList.get(index).accept(this, currentOpRef);
+            currentOperator = whenExprResult.first;
+            // Variable whenConditionVar is corresponds to the current "WHEN" condition.
+            LogicalVariable whenConditionVar = whenExprResult.second;
+            Mutable<ILogicalExpression> branchEntraceConditionExprRef =
+                    new MutableObject<>(new VariableReferenceExpression(whenConditionVar));
+
+            // Constructs an expression that filters data based on preceding "WHEN" conditions
+            // and the current "WHEN" condition. Note that only one "THEN" expression can be run
+            // even though multiple "WHEN" conditions can be satisfied.
+            if (!branchCondVarReferences.isEmpty()) {
+                // The additional filter generated here makes sure the the tuple has not
+                // entered other matched "WHEN...THEN" case.
+                List<Mutable<ILogicalExpression>> andArgs = new ArrayList<>();
+                andArgs.add(generateNoMatchedPrecedingWhenBranchesFilter(branchCondVarReferences));
+                andArgs.add(branchEntraceConditionExprRef);
+
+                // A "THEN" branch can be entered only when the tuple has not enter any other preceding
+                // branches and the current "WHEN" condition is TRUE.
+                branchEntraceConditionExprRef = new MutableObject<>(new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), andArgs));
+            }
+
+            // Translates the corresponding "THEN" expression.
+            Pair<ILogicalOperator, LogicalVariable> opAndVarForThen = constructSubplanOperatorForBranch(currentOperator,
+                    branchEntraceConditionExprRef, thenExprList.get(index));
+
+            branchCondVarReferences.add(new VariableReferenceExpression(whenConditionVar));
+            allVarReferences.add(new VariableReferenceExpression(whenConditionVar));
+            allVarReferences.add(new VariableReferenceExpression(opAndVarForThen.second));
+            currentOperator = opAndVarForThen.first;
+            currentOpRef = new MutableObject<>(currentOperator);
+        }
+
+        // Creates a subplan for the "ELSE" branch.
+        Mutable<ILogicalExpression> elseCondExprRef =
+                generateNoMatchedPrecedingWhenBranchesFilter(branchCondVarReferences);
+        Pair<ILogicalOperator, LogicalVariable> opAndVarForElse =
+                constructSubplanOperatorForBranch(currentOperator, elseCondExprRef, caseExpression.getElseExpr());
+
+        // Uses switch-case function to select the results of two branches.
+        LogicalVariable selectVar = context.newVar();
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        arguments.add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.TRUE))));
+        for (ILogicalExpression argVar : allVarReferences) {
+            arguments.add(new MutableObject<>(argVar));
+        }
+        arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForElse.second)));
+        AbstractFunctionCallExpression swithCaseExpr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SWITCH_CASE), arguments);
+        AssignOperator assignOp = new AssignOperator(selectVar, new MutableObject<>(swithCaseExpr));
+        assignOp.getInputs().add(new MutableObject<>(opAndVarForElse.first));
+
+        // Unnests the selected (a "THEN" or "ELSE" branch) result.
+        LogicalVariable unnestVar = context.newVar();
+        UnnestOperator unnestOp = new UnnestOperator(unnestVar,
+                new MutableObject<>(new UnnestingFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), Collections
+                                .singletonList(new MutableObject<>(new VariableReferenceExpression(selectVar))))));
+        unnestOp.getInputs().add(new MutableObject<>(assignOp));
+
+        // Produces the final assign operator.
+        LogicalVariable resultVar = context.newVar();
+        AssignOperator finalAssignOp =
+                new AssignOperator(resultVar, new MutableObject<>(new VariableReferenceExpression(unnestVar)));
+        finalAssignOp.getInputs().add(new MutableObject<>(unnestOp));
+        return new Pair<>(finalAssignOp, resultVar);
     }
 
     private Pair<ILogicalOperator, LogicalVariable> produceSelectPlan(boolean isSubquery,

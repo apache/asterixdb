@@ -255,7 +255,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     context.addNotToBeInlinedVar(castedRecVar);
                     //introduce casting to enforced type
                     AbstractFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE));
                     // The first argument is the record
                     castFunc.getArguments()
                             .add(new MutableObject<ILogicalExpression>(insertOp.getPayloadExpression().getValue()));

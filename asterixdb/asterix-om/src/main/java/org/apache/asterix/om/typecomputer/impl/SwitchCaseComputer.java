@@ -48,19 +48,28 @@ public class SwitchCaseComputer implements IResultTypeComputer {
 
         IAType currentType = null;
         boolean any = false;
-        boolean missable = false;
-        for (int i = 2; i < fce.getArguments().size(); i += 2) {
-            IAType type = (IAType) env.getType(fce.getArguments().get(i).getValue());
-            if (type.getTypeTag() == ATypeTag.UNION) {
-                type = ((AUnionType) type).getActualType();
-                missable = true;
+        boolean unknownable = false;
+        int argSize = fce.getArguments().size();
+        // Checks return types of different branches' return types.
+        // The last return expression is from the ELSE branch and it is optional.
+        for (int argIndex = 2; argIndex < argSize; argIndex += (argIndex + 2 == argSize) ? 1 : 2) {
+            IAType type = (IAType) env.getType(fce.getArguments().get(argIndex).getValue());
+            ATypeTag typeTag = type.getTypeTag();
+            if (typeTag == ATypeTag.NULL || typeTag == ATypeTag.MISSING) {
+                unknownable = true;
+            } else {
+                if (typeTag == ATypeTag.UNION) {
+                    type = ((AUnionType) type).getActualType();
+                    unknownable = true;
+                }
+                if (currentType != null && !type.equals(currentType)) {
+                    any = true;
+                    break;
+                }
+                currentType = type;
             }
-            if (currentType != null && !type.equals(currentType)) {
-                any = true;
-                break;
-            }
-            currentType = type;
         }
-        return any ? BuiltinType.ANY : missable ? AUnionType.createMissableType(currentType) : currentType;
+        currentType = currentType == null ? BuiltinType.ANULL : currentType;
+        return any ? BuiltinType.ANY : unknownable ? AUnionType.createUnknownableType(currentType) : currentType;
     }
 }

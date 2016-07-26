@@ -53,7 +53,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastRecordDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
@@ -173,8 +173,8 @@ public abstract class SecondaryIndexOperationsHelper {
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
-                indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(physOptConf,
-                        asterixPropertiesProvider);
+                indexOperationsHelper =
+                        new SecondaryInvertedIndexOperationsHelper(physOptConf, asterixPropertiesProvider);
                 break;
             }
             default: {
@@ -240,8 +240,8 @@ public abstract class SecondaryIndexOperationsHelper {
         setSecondaryRecDescAndComparators(indexType, secondaryKeyFields, secondaryKeyTypes, gramLength,
                 metadataProvider);
         numElementsHint = metadataProvider.getCardinalityPerPartitionHint(dataset);
-        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
-                metadataProvider.getMetadataTxnContext());
+        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
+                DatasetUtils.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         mergePolicyFactory = compactionInfo.first;
         mergePolicyFactoryProperties = compactionInfo.second;
 
@@ -276,8 +276,8 @@ public abstract class SecondaryIndexOperationsHelper {
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
         List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numPrimaryKeys = partitioningKeys.size();
-        ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1
-                + (dataset.hasMetaPart() ? 1 : 0)];
+        ISerializerDeserializer[] primaryRecFields =
+                new ISerializerDeserializer[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)];
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)];
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
         primaryBloomFilterKeyFields = new int[numPrimaryKeys];
@@ -287,12 +287,12 @@ public abstract class SecondaryIndexOperationsHelper {
             indicators = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = (indicators == null || indicators.get(i) == 0)
-                    ? itemType.getSubFieldType(partitioningKeys.get(i))
-                    : metaType.getSubFieldType(partitioningKeys.get(i));
+            IAType keyType =
+                    (indicators == null || indicators.get(i) == 0) ? itemType.getSubFieldType(partitioningKeys.get(i))
+                            : metaType.getSubFieldType(partitioningKeys.get(i));
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
-            primaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
-                    .getBinaryComparatorFactory(keyType, true);
+            primaryComparatorFactories[i] =
+                    AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType, true);
             primaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
             primaryBloomFilterKeyFields[i] = i;
         }
@@ -398,8 +398,7 @@ public abstract class SecondaryIndexOperationsHelper {
     }
 
     protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType) {
-        CastRecordDescriptor castFuncDesc = (CastRecordDescriptor) CastRecordDescriptor.FACTORY
-                .createFunctionDescriptor();
+        CastTypeDescriptor castFuncDesc = (CastTypeDescriptor) CastTypeDescriptor.FACTORY.createFunctionDescriptor();
         castFuncDesc.reset(enforcedItemType, itemType);
 
         int[] outColumns = new int[1];
@@ -419,8 +418,8 @@ public abstract class SecondaryIndexOperationsHelper {
         if (dataset.hasMetaPart()) {
             projectionList[numPrimaryKeys + 1] = numPrimaryKeys + 1;
         }
-        IScalarEvaluatorFactory[] castEvalFact = new IScalarEvaluatorFactory[] {
-                new ColumnAccessEvalFactory(recordIdx) };
+        IScalarEvaluatorFactory[] castEvalFact =
+                new IScalarEvaluatorFactory[] { new ColumnAccessEvalFactory(recordIdx) };
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[1];
         sefs[0] = castFuncDesc.createEvaluatorFactory(castEvalFact);
         AssignRuntimeFactory castAssign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
@@ -463,10 +462,10 @@ public abstract class SecondaryIndexOperationsHelper {
         for (int i = 0; i < numSecondaryKeyFields; i++) {
             // Access column i, and apply 'is not null'.
             ColumnAccessEvalFactory columnAccessEvalFactory = new ColumnAccessEvalFactory(i);
-            IScalarEvaluatorFactory isUnknownEvalFactory = isUnknownDesc
-                    .createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
-            IScalarEvaluatorFactory notEvalFactory = notDesc
-                    .createEvaluatorFactory(new IScalarEvaluatorFactory[] { isUnknownEvalFactory });
+            IScalarEvaluatorFactory isUnknownEvalFactory =
+                    isUnknownDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
+            IScalarEvaluatorFactory notEvalFactory =
+                    notDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { isUnknownEvalFactory });
             andArgsEvalFactories[i] = notEvalFactory;
         }
         IScalarEvaluatorFactory selectCond = null;

@@ -4,18 +4,18 @@ SELECT ELEMENT [
   SELECT ELEMENT [
   Variable [ Name=$k ]
   ]
-  FROM [    IfExpr [
-      Condition:
-        OperatorExpr [
+  FROM [    CASE        LiteralExpr [TRUE]
+
+    WHEN         OperatorExpr [
           Variable [ Name=$i ]
           >
           Variable [ Name=$j ]
         ]
-      Then:
-        Variable [ Name=$i ]
-      Else:
-        Variable [ Name=$j ]
-    ]
+    THEN         Variable [ Name=$i ]
+
+    ELSE         Variable [ Name=$j ]
+
+    END
     AS Variable [ Name=$k ]
   ]
   Where

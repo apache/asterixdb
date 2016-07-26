@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -27,9 +28,14 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class CastRecordResultTypeComputer implements IResultTypeComputer {
+/**
+ * The type computer for the cast-list function
+ *
+ * @author yingyib
+ */
+public class CastTypeComputer implements IResultTypeComputer {
 
-    public static final CastRecordResultTypeComputer INSTANCE = new CastRecordResultTypeComputer();
+    public static final CastTypeComputer INSTANCE = new CastTypeComputer();
 
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,

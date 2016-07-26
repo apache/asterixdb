@@ -55,8 +55,7 @@ import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.CastListResultTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.CastRecordResultTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.CastTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
@@ -584,12 +583,10 @@ public class AsterixBuiltinFunctions {
 
     public static final FunctionIdentifier INJECT_FAILURE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "inject-failure", 2);
-    public static final FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "cast-record", 1);
     public static final FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "flow-record", 1);
-    public static final FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-list",
-            1);
+    public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "cast", 1);
 
     public static final FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-uuid", 0);
@@ -942,8 +939,7 @@ public class AsterixBuiltinFunctions {
         addFunction(SWITCH_CASE, SwitchCaseComputer.INSTANCE, true);
         addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);
-        addPrivateFunction(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE, true);
-        addPrivateFunction(CAST_LIST, CastListResultTypeComputer.INSTANCE, true);
+        addPrivateFunction(CAST_TYPE, CastTypeComputer.INSTANCE, true);
 
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE, true);

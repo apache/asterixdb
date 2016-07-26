@@ -31,7 +31,7 @@ public class AsterixInlineVariablesRule extends InlineVariablesRule {
         doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CAST_RECORD);
+        doNotInlineFuncs.add(AsterixBuiltinFunctions.CAST_TYPE);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_CIRCLE);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_LINE);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_MBR);

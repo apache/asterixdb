@@ -3166,6 +3166,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="ifthenelse_02">
+        <output-dir compare="Text">ifthenelse_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="is-null_01">
         <output-dir compare="Text">is-null_01</output-dir>
       </compilation-unit>
@@ -3222,6 +3227,16 @@
     <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-1203">
         <output-dir compare="Text">query-ASTERIXDB-1203</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-819">
+        <output-dir compare="Text">query-ASTERIXDB-819</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-819-2">
+        <output-dir compare="Text">query-ASTERIXDB-819-2</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

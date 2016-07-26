@@ -68,14 +68,14 @@ public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
 
     @Override
     public Boolean visit(UnionExpr u, List<FunctionDecl> fds) throws AsterixException {
-        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(u.getExprs(), fds);
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(u.getExprs(), fds);
         u.setExprs(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(DistinctClause dc, List<FunctionDecl> arg) throws AsterixException {
-        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(dc.getDistinctByExpr(), arg);
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(dc.getDistinctByExpr(), arg);
         dc.setDistinctByExpr(p.second);
         return p.first;
     }

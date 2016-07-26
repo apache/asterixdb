@@ -33,6 +33,7 @@ import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
+import org.apache.asterix.lang.common.util.VariableCloneAndSubstitutionUtil;
 import org.apache.asterix.lang.common.visitor.CloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -47,6 +48,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
@@ -375,6 +377,19 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = independentSubquery.getExpr().accept(this, env);
         IndependentSubquery newSubquery = new IndependentSubquery((Expression) p.first);
         return new Pair<>(newSubquery, p.second);
+    }
+
+    @Override
+    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(CaseExpression caseExpr,
+            VariableSubstitutionEnvironment env) throws AsterixException {
+        Expression conditionExpr = (Expression) caseExpr.getConditionExpr().accept(this, env).first;
+        List<Expression> whenExprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getWhenExprs(), env, this);
+        List<Expression> thenExprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getThenExprs(), env, this);
+        Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, env).first;
+        CaseExpression newCaseExpr = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
+        return new Pair<>(newCaseExpr, env);
     }
 
 }
