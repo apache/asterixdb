@@ -39,13 +39,14 @@ public class ServletUtil {
 
         private final String path;
 
-        private Servlets(String path) {
+        Servlets(String path) {
             this.path = path;
         }
 
         public String getPath() {
             return path;
         }
+
     }
 
     private ServletUtil() {

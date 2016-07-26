@@ -36,12 +36,11 @@ import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+
 public class QueryStatusAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
-    private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
-
-    private static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

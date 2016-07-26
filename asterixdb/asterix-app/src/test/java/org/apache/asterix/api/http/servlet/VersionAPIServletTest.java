@@ -19,10 +19,6 @@
 
 package org.apache.asterix.api.http.servlet;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
@@ -43,6 +39,12 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 public class VersionAPIServletTest {
 
@@ -70,8 +72,8 @@ public class VersionAPIServletTest {
         // Sets up mock returns.
         when(servlet.getServletContext()).thenReturn(mockContext);
         when(mockResponse.getWriter()).thenReturn(outputWriter);
-        when(mockContext.getAttribute(RESTAPIServlet.HYRACKS_CONNECTION_ATTR)).thenReturn(mockHcc);
-        when(mockContext.getAttribute(VersionAPIServlet.ASTERIX_BUILD_PROP_ATTR)).thenReturn(mockCtx);
+        when(mockContext.getAttribute(HYRACKS_CONNECTION_ATTR)).thenReturn(mockHcc);
+        when(mockContext.getAttribute(ASTERIX_BUILD_PROP_ATTR)).thenReturn(mockCtx);
         when(mockCtx.getBuildProperties()).thenReturn(mockProperties);
         when(mockProperties.getAllProps()).thenReturn(propMap);
 

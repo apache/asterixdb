@@ -49,12 +49,11 @@ import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.json.JSONObject;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+
 abstract class RESTAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
-    public static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
-
-    public static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
 
     private final ILangCompilationProvider compilationProvider;
     private final IParserFactory parserFactory;

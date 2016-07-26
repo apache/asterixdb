@@ -35,10 +35,10 @@ import org.apache.asterix.result.ResultUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 public class ShutdownAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
-    private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

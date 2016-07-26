@@ -43,6 +43,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 /***
  * The REST API that takes a dataverse name and a dataset name as the input
  * and returns an array of file splits (IP, file-path) of the dataset in LOSSLESS_JSON.
@@ -53,8 +55,6 @@ import org.json.JSONObject;
  */
 public class ConnectorAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
-    private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

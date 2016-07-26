@@ -30,9 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.json.JSONObject;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+
 public class VersionAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    public static final String ASTERIX_BUILD_PROP_ATTR = "org.apache.asterix.PROPS";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

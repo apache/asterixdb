@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.servlet;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,9 +29,10 @@ import org.apache.asterix.lang.common.base.Statement;
 
 public class QueryAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
-    private static final List<Byte> STATEMENTS =
-            Arrays.asList(new Byte[] { Statement.Kind.DATAVERSE_DECL, Statement.Kind.FUNCTION_DECL,
-                    Statement.Kind.QUERY, Statement.Kind.SET, Statement.Kind.WRITE, Statement.Kind.RUN });
+
+    private static final List<Byte> allowedStatements = Collections.unmodifiableList(Arrays.asList(
+            Statement.Kind.DATAVERSE_DECL, Statement.Kind.FUNCTION_DECL, Statement.Kind.QUERY, Statement.Kind.SET,
+            Statement.Kind.WRITE, Statement.Kind.RUN));
 
     public QueryAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
@@ -43,7 +45,7 @@ public class QueryAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Byte> getAllowedStatements() {
-        return STATEMENTS;
+        return allowedStatements;
     }
 
     @Override

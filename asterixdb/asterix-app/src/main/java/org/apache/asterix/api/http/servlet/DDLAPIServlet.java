@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.servlet;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,13 +29,15 @@ import org.apache.asterix.lang.common.base.Statement;
 
 public class DDLAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
-    private static final List<Byte> STATEMENTS = Arrays.asList(new Byte[] { Statement.Kind.DATAVERSE_DECL,
-            Statement.Kind.DATAVERSE_DROP, Statement.Kind.DATASET_DECL, Statement.Kind.NODEGROUP_DECL,
-            Statement.Kind.NODEGROUP_DROP, Statement.Kind.TYPE_DECL, Statement.Kind.TYPE_DROP,
-            Statement.Kind.CREATE_INDEX, Statement.Kind.INDEX_DECL, Statement.Kind.CREATE_DATAVERSE,
-            Statement.Kind.DATASET_DROP, Statement.Kind.INDEX_DROP, Statement.Kind.CREATE_FUNCTION,
-            Statement.Kind.FUNCTION_DROP, Statement.Kind.CREATE_PRIMARY_FEED, Statement.Kind.CREATE_SECONDARY_FEED,
-            Statement.Kind.DROP_FEED, Statement.Kind.CREATE_FEED_POLICY, Statement.Kind.DROP_FEED_POLICY });
+
+    private static final List<Byte> allowedStatements = Collections.unmodifiableList(Arrays.asList(
+            Statement.Kind.DATAVERSE_DECL, Statement.Kind.DATAVERSE_DROP, Statement.Kind.DATASET_DECL,
+            Statement.Kind.NODEGROUP_DECL, Statement.Kind.NODEGROUP_DROP, Statement.Kind.TYPE_DECL,
+            Statement.Kind.TYPE_DROP, Statement.Kind.CREATE_INDEX, Statement.Kind.INDEX_DECL,
+            Statement.Kind.CREATE_DATAVERSE, Statement.Kind.DATASET_DROP, Statement.Kind.INDEX_DROP,
+            Statement.Kind.CREATE_FUNCTION, Statement.Kind.FUNCTION_DROP, Statement.Kind.CREATE_PRIMARY_FEED,
+            Statement.Kind.CREATE_SECONDARY_FEED, Statement.Kind.DROP_FEED, Statement.Kind.CREATE_FEED_POLICY,
+            Statement.Kind.DROP_FEED_POLICY));
 
     public DDLAPIServlet(ILangCompilationProvider compilationProvider) {
         super(compilationProvider);
@@ -47,7 +50,7 @@ public class DDLAPIServlet extends RESTAPIServlet {
 
     @Override
     protected List<Byte> getAllowedStatements() {
-        return STATEMENTS;
+        return allowedStatements;
     }
 
     @Override
