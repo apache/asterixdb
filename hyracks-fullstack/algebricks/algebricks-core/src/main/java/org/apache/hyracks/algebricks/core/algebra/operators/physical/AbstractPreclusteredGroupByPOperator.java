@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -82,55 +81,20 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
     // are func. dep. on the group-by variables.
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        List<ILocalStructuralProperty> propsLocal = new LinkedList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         GroupByOperator gby = (GroupByOperator) op;
         ILogicalOperator op2 = gby.getInputs().get(0).getValue();
         IPhysicalPropertiesVector childProp = op2.getDeliveredPhysicalProperties();
         IPartitioningProperty pp = childProp.getPartitioningProperty();
         List<ILocalStructuralProperty> childLocals = childProp.getLocalProperties();
-        if (childLocals != null) {
-            for (ILocalStructuralProperty lsp : childLocals) {
-                boolean failed = false;
-                switch (lsp.getPropertyType()) {
-                    case LOCAL_GROUPING_PROPERTY: {
-                        LocalGroupingProperty lgp = (LocalGroupingProperty) lsp;
-                        Set<LogicalVariable> colSet = new ListSet<LogicalVariable>();
-                        for (LogicalVariable v : lgp.getColumnSet()) {
-                            LogicalVariable v2 = getLhsGbyVar(gby, v);
-                            if (v2 != null) {
-                                colSet.add(v2);
-                            } else {
-                                failed = true;
-                            }
-                        }
-                        if (!failed) {
-                            propsLocal.add(new LocalGroupingProperty(colSet));
-                        }
-                        break;
-                    }
-                    case LOCAL_ORDER_PROPERTY: {
-                        LocalOrderProperty lop = (LocalOrderProperty) lsp;
-                        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
-                        for (OrderColumn oc : lop.getOrderColumns()) {
-                            LogicalVariable v2 = getLhsGbyVar(gby, oc.getColumn());
-                            if (v2 != null) {
-                                orderColumns.add(new OrderColumn(v2, oc.getOrder()));
-                            } else {
-                                failed = true;
-                            }
-                        }
-                        if (!failed) {
-                            propsLocal.add(new LocalOrderProperty(orderColumns));
-                        }
-                        break;
-                    }
-                    default: {
-                        throw new IllegalStateException();
-                    }
-                }
-                if (failed) {
-                    break;
-                }
+        if (childLocals == null) {
+            deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
+            return;
+        }
+        for (ILocalStructuralProperty lsp : childLocals) {
+            ILocalStructuralProperty propagatedLsp = getPropagatedProperty(lsp, gby);
+            if (propagatedLsp != null) {
+                propsLocal.add(propagatedLsp);
             }
         }
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
@@ -140,10 +104,8 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-        List<ILocalStructuralProperty> localProps = null;
-
-        localProps = new ArrayList<ILocalStructuralProperty>(1);
-        Set<LogicalVariable> gbvars = new ListSet<LogicalVariable>(columnList);
+        List<ILocalStructuralProperty> localProps = new ArrayList<>();
+        Set<LogicalVariable> gbvars = new ListSet<>(columnList);
         LocalGroupingProperty groupProp = new LocalGroupingProperty(gbvars, new ArrayList<LogicalVariable>(columnList));
 
         GroupByOperator gby = (GroupByOperator) op;
@@ -157,8 +119,8 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
                     IPhysicalOperator pop2 = op2.getPhysicalOperator();
                     if (pop2 instanceof AbstractPreclusteredGroupByPOperator) {
-                        List<LogicalVariable> gbyColumns = ((AbstractPreclusteredGroupByPOperator) pop2)
-                                .getGbyColumns();
+                        List<LogicalVariable> gbyColumns =
+                                ((AbstractPreclusteredGroupByPOperator) pop2).getGbyColumns();
                         List<LogicalVariable> sndOrder = new ArrayList<>();
                         sndOrder.addAll(gbyColumns);
                         Set<LogicalVariable> freeVars = new HashSet<>();
@@ -188,14 +150,14 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
             List<ILocalStructuralProperty> lpPar = reqdByParent.getLocalProperties();
             if (lpPar != null) {
                 boolean allOk = true;
-                List<ILocalStructuralProperty> props = new ArrayList<ILocalStructuralProperty>(lpPar.size());
+                List<ILocalStructuralProperty> props = new ArrayList<>(lpPar.size());
                 for (ILocalStructuralProperty prop : lpPar) {
                     if (prop.getPropertyType() != PropertyType.LOCAL_ORDER_PROPERTY) {
                         allOk = false;
                         break;
                     }
                     LocalOrderProperty lop = (LocalOrderProperty) prop;
-                    List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
+                    List<OrderColumn> orderColumns = new ArrayList<>();
                     List<OrderColumn> ords = lop.getOrderColumns();
                     for (OrderColumn ord : ords) {
                         Pair<LogicalVariable, Mutable<ILogicalExpression>> p = getGbyPairByRhsVar(gby, ord.getColumn());
@@ -216,10 +178,10 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     }
                     props.add(new LocalOrderProperty(orderColumns));
                 }
-                List<FunctionalDependency> fdList = new ArrayList<FunctionalDependency>();
+                List<FunctionalDependency> fdList = new ArrayList<>();
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorPair : gby.getDecorList()) {
                     List<LogicalVariable> hd = gby.getGbyVarList();
-                    List<LogicalVariable> tl = new ArrayList<LogicalVariable>(1);
+                    List<LogicalVariable> tl = new ArrayList<>();
                     tl.add(((VariableReferenceExpression) decorPair.second.getValue()).getVariableReference());
                     fdList.add(new FunctionalDependency(hd, tl));
                 }
@@ -268,7 +230,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                         "Right hand side of group by assignment should have been normalized to a variable reference.");
             }
             LogicalVariable v = ((VariableReferenceExpression) e).getVariableReference();
-            if (v == var) {
+            if (v.equals(var)) {
                 return ve.first;
             }
         }
@@ -278,5 +240,29 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
     @Override
     public boolean expensiveThanMaterialization() {
         return true;
+    }
+
+    // Returns the local structure property that is propagated from an input local structure property
+    // through a pre-clustered GROUP BY physical operator.
+    private ILocalStructuralProperty getPropagatedProperty(ILocalStructuralProperty lsp, GroupByOperator gby) {
+        PropertyType propertyType = lsp.getPropertyType();
+        if (propertyType == PropertyType.LOCAL_GROUPING_PROPERTY) {
+            // A new grouping property is generated.
+            return new LocalGroupingProperty(new ListSet<>(gby.getGbyVarList()));
+        } else {
+            LocalOrderProperty lop = (LocalOrderProperty) lsp;
+            List<OrderColumn> orderColumns = new ArrayList<>();
+            for (OrderColumn oc : lop.getOrderColumns()) {
+                LogicalVariable v2 = getLhsGbyVar(gby, oc.getColumn());
+                if (v2 != null) {
+                    orderColumns.add(new OrderColumn(v2, oc.getOrder()));
+                } else {
+                    break;
+                }
+            }
+            // Only the prefix (regarding to the pre-clustered GROUP BY keys) of the ordering property can be
+            // maintained.
+            return orderColumns.isEmpty() ? null : new LocalOrderProperty(orderColumns);
+        }
     }
 }

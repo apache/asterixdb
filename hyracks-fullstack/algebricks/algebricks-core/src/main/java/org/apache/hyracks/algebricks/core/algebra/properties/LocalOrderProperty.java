@@ -20,12 +20,12 @@ package org.apache.hyracks.algebricks.core.algebra.properties;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
@@ -47,7 +47,7 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
     }
 
     public List<LogicalVariable> getColumns() {
-        List<LogicalVariable> orderVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> orderVars = new ArrayList<>();
         for (OrderColumn oc : orderColumns) {
             orderVars.add(oc.getColumn());
         }
@@ -55,7 +55,7 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
     }
 
     public List<OrderKind> getOrders() {
-        List<OrderKind> orderKinds = new ArrayList<OrderKind>();
+        List<OrderKind> orderKinds = new ArrayList<>();
         for (OrderColumn oc : orderColumns) {
             orderKinds.add(oc.getOrder());
         }
@@ -83,6 +83,11 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
     }
 
     @Override
+    public int hashCode() {
+        return orderColumns.hashCode();
+    }
+
+    @Override
     public boolean equals(Object object) {
         if (object instanceof LocalOrderProperty) {
             LocalOrderProperty lop = (LocalOrderProperty) object;
@@ -92,6 +97,14 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
         }
     }
 
+    @Override
+    public ILocalStructuralProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
+        List<OrderColumn> normalizedOrderColumns = normalizeOrderingColumns(orderColumns, equivalenceClasses);
+        reduceOrderingColumns(normalizedOrderColumns, fds);
+        return new LocalOrderProperty(normalizedOrderColumns);
+    }
+
     /**
      * Whether current property implies the required property
      *
@@ -99,7 +112,7 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
      *            , a required property
      * @return true if the current property satisfies the required property; otherwise false.
      */
-    public final boolean implies(ILocalStructuralProperty required) {
+    public boolean implies(ILocalStructuralProperty required) {
         if (required.getPropertyType() != PropertyType.LOCAL_ORDER_PROPERTY) {
             return false;
         }
@@ -124,69 +137,59 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
         return true;
     }
 
-    public final void normalizeOrderingColumns(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
-            List<FunctionalDependency> fds) {
-        replaceOrderingColumnsByEqClasses(equivalenceClasses);
-        applyFDsToOrderingColumns(fds);
-    }
-
-    private void replaceOrderingColumnsByEqClasses(Map<LogicalVariable, EquivalenceClass> equivalenceClasses) {
+    // Gets normalized  ordering columns, where each column variable is a representative variable of its equivalence
+    // class, therefore, the matching of properties will can consider equivalence classes.
+    private List<OrderColumn> normalizeOrderingColumns(List<OrderColumn> inputOrderColumns,
+            Map<LogicalVariable, EquivalenceClass> equivalenceClasses) {
+        List<OrderColumn> newOrderColumns = new ArrayList<>();
         if (equivalenceClasses == null || equivalenceClasses.isEmpty()) {
-            return;
+            newOrderColumns.addAll(inputOrderColumns);
+            return newOrderColumns;
         }
-        List<OrderColumn> norm = new ArrayList<OrderColumn>();
-        for (OrderColumn oc : orderColumns) {
+        for (OrderColumn oc : inputOrderColumns) {
             LogicalVariable v = oc.getColumn();
             EquivalenceClass ec = equivalenceClasses.get(v);
             if (ec == null) {
-                norm.add(new OrderColumn(v, oc.getOrder()));
+                newOrderColumns.add(new OrderColumn(v, oc.getOrder()));
             } else {
                 if (ec.representativeIsConst()) {
                     // trivially satisfied, so the var. can be removed
                 } else {
-                    norm.add(new OrderColumn(ec.getVariableRepresentative(), oc.getOrder()));
+                    newOrderColumns.add(new OrderColumn(ec.getVariableRepresentative(), oc.getOrder()));
                 }
             }
         }
-        orderColumns = norm;
+        return newOrderColumns;
     }
 
-    private void applyFDsToOrderingColumns(List<FunctionalDependency> fds) {
+    // Using functional dependencies to eliminate unnecessary ordering columns.
+    private void reduceOrderingColumns(List<OrderColumn> inputOrderColumns, List<FunctionalDependency> fds) {
         if (fds == null || fds.isEmpty()) {
             return;
         }
-        Set<LogicalVariable> norm = new ListSet<LogicalVariable>();
-        List<LogicalVariable> columns = getColumns();
-        for (LogicalVariable v : columns) {
-            boolean isImpliedByAnFD = false;
+        Set<OrderColumn> impliedColumns = new HashSet<>();
+        Set<LogicalVariable> currentPrefix = new HashSet<>();
+        for (OrderColumn orderColumn : inputOrderColumns) {
+            LogicalVariable orderVariable = orderColumn.getColumn();
             for (FunctionalDependency fdep : fds) {
-                if (columns.containsAll(fdep.getHead()) && fdep.getTail().contains(v)) {
-                    isImpliedByAnFD = true;
-                    norm.addAll(fdep.getHead());
+                // Checks if the current ordering variable is implied by the prefix order columns.
+                if (currentPrefix.containsAll(fdep.getHead()) && fdep.getTail().contains(orderVariable)) {
+                    impliedColumns.add(orderColumn);
                     break;
                 }
-
             }
-            if (!isImpliedByAnFD) {
-                norm.add(v);
-            }
+            currentPrefix.add(orderVariable);
         }
-        Set<OrderColumn> impliedColumns = new ListSet<OrderColumn>();
-        for (OrderColumn oc : orderColumns) {
-            if (!norm.contains(oc.getColumn())) {
-                impliedColumns.add(oc);
-            }
-        }
-        orderColumns.removeAll(impliedColumns);
+        inputOrderColumns.removeAll(impliedColumns);
     }
 
     @Override
     public ILocalStructuralProperty retainVariables(Collection<LogicalVariable> vars) {
         List<LogicalVariable> columns = getColumns();
-        List<LogicalVariable> newVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> newVars = new ArrayList<>();
         newVars.addAll(vars);
         newVars.retainAll(columns);
-        List<OrderColumn> newColumns = new ArrayList<OrderColumn>();
+        List<OrderColumn> newColumns = new ArrayList<>();
         for (OrderColumn oc : orderColumns) {
             if (newVars.contains(oc.getColumn())) {
                 newColumns.add(oc);
@@ -194,7 +197,7 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
                 break;
             }
         }
-        if (newColumns.size() > 0) {
+        if (!newColumns.isEmpty()) {
             return new LocalOrderProperty(newColumns);
         } else {
             return null;
@@ -203,13 +206,13 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
 
     @Override
     public ILocalStructuralProperty regardToGroup(Collection<LogicalVariable> groupKeys) {
-        List<OrderColumn> newColumns = new ArrayList<OrderColumn>();
+        List<OrderColumn> newColumns = new ArrayList<>();
         for (OrderColumn oc : orderColumns) {
             if (!groupKeys.contains(oc.getColumn())) {
                 newColumns.add(oc);
             }
         }
-        if (newColumns.size() > 0) {
+        if (!newColumns.isEmpty()) {
             return new LocalOrderProperty(newColumns);
         } else {
             return null;

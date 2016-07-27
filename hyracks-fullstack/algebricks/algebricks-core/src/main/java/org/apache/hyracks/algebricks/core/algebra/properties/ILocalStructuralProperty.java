@@ -19,7 +19,10 @@
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface ILocalStructuralProperty extends IStructuralProperty {
@@ -28,8 +31,19 @@ public interface ILocalStructuralProperty extends IStructuralProperty {
         LOCAL_ORDER_PROPERTY
     }
 
+    /**
+     * Gets the variables that are used in the local property
+     *
+     * @param variables,
+     *            variables that are used in the local property will be added into the argument collection.
+     */
     public void getVariables(Collection<LogicalVariable> variables);
 
+    /**
+     * Get the type of the local property.
+     *
+     * @return either LOCAL_GROUPING_PROPERTY or LOCAL_ORDER_PROPERTY.
+     */
     public PropertyType getPropertyType();
 
     /**
@@ -51,4 +65,16 @@ public interface ILocalStructuralProperty extends IStructuralProperty {
      * @return the additional data property within each group.
      */
     public ILocalStructuralProperty regardToGroup(Collection<LogicalVariable> groupKeys);
+
+    /**
+     * Returns a new, normalized local structural property representation.
+     *
+     * @param equivalenceClasses,
+     *            maps that mapping variables to equivalence classes.
+     * @param fds,
+     *            a list of functional dependencies.
+     * @return a new normalized local structural property.
+     */
+    public ILocalStructuralProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds);
 }

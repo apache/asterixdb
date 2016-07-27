@@ -3239,6 +3239,11 @@
         <output-dir compare="Text">query-ASTERIXDB-819-2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-1531">
+        <output-dir compare="Text">query-ASTERIXDB-1531</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-index-enforced">
     <test-group name="open-index-enforced/error-checking">

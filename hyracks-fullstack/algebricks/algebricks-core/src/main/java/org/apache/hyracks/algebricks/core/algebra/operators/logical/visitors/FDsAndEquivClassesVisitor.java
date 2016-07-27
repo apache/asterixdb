@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -81,6 +82,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
@@ -177,8 +179,9 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         Map<LogicalVariable, EquivalenceClass> equivalenceClasses = getOrComputeEqClasses(op0, ctx);
         ctx.putEquivalenceClassMap(op, equivalenceClasses);
 
-        lgp.normalizeGroupingColumns(equivalenceClasses, functionalDependencies);
-        Set<LogicalVariable> normSet = lgp.getColumnSet();
+        ILocalStructuralProperty normalizedLgp = lgp.normalize(equivalenceClasses, functionalDependencies);
+        Set<LogicalVariable> normSet = new ListSet<>();
+        normalizedLgp.getColumns(normSet);
         List<Mutable<ILogicalExpression>> newDistinctByList = new ArrayList<Mutable<ILogicalExpression>>();
         for (Mutable<ILogicalExpression> p2Ref : expressions) {
             ILogicalExpression p2 = p2Ref.getValue();
@@ -285,9 +288,10 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             }
         }
         LocalGroupingProperty lgp = new LocalGroupingProperty(gbySet);
-        lgp.normalizeGroupingColumns(inheritedEcs, inheritedFDs);
-        Set<LogicalVariable> normSet = lgp.getColumnSet();
-        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newGbyList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
+        ILocalStructuralProperty normalizedLgp = lgp.normalize(inheritedEcs, inheritedFDs);
+        Set<LogicalVariable> normSet = new ListSet<>();
+        normalizedLgp.getColumns(normSet);
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newGbyList = new ArrayList<>();
         boolean changed = false;
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
             ILogicalExpression expr = p.second.getValue();

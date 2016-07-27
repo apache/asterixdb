@@ -37,39 +37,48 @@ public abstract class AbstractGroupingProperty {
         return columnSet;
     }
 
-    public final void normalizeGroupingColumns(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
-            List<FunctionalDependency> fds) {
-        replaceGroupingColumnsByEqClasses(equivalenceClasses);
-        applyFDsToGroupingColumns(fds);
+    // Returns normalized and concise columns from an input column set, by considering
+    // equivalence classes and functional dependencies.
+    protected Set<LogicalVariable> normalizeAndReduceGroupingColumns(Set<LogicalVariable> columns,
+            Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
+        Set<LogicalVariable> normalizedColumnSet =
+                getNormalizedColumnsAccordingToEqClasses(columns, equivalenceClasses);
+        reduceGroupingColumns(normalizedColumnSet, fds);
+        return normalizedColumnSet;
     }
 
-    private void replaceGroupingColumnsByEqClasses(Map<LogicalVariable, EquivalenceClass> equivalenceClasses) {
+    // Gets normalized columns, where each column variable is a representative variable of its equivalence class,
+    // therefore, the matching of properties will can consider equivalence classes.
+    private Set<LogicalVariable> getNormalizedColumnsAccordingToEqClasses(Set<LogicalVariable> columns,
+            Map<LogicalVariable, EquivalenceClass> equivalenceClasses) {
+        Set<LogicalVariable> normalizedColumns = new ListSet<>();
         if (equivalenceClasses == null || equivalenceClasses.isEmpty()) {
-            return;
+            normalizedColumns.addAll(columns);
+            return normalizedColumns;
         }
-        Set<LogicalVariable> norm = new ListSet<LogicalVariable>();
-        for (LogicalVariable v : columnSet) {
+        for (LogicalVariable v : columns) {
             EquivalenceClass ec = equivalenceClasses.get(v);
             if (ec == null) {
-                norm.add(v);
+                normalizedColumns.add(v);
             } else {
                 if (ec.representativeIsConst()) {
                     // trivially satisfied, so the var. can be removed
                 } else {
-                    norm.add(ec.getVariableRepresentative());
+                    normalizedColumns.add(ec.getVariableRepresentative());
                 }
             }
         }
-        columnSet = norm;
+        return normalizedColumns;
     }
 
-    private void applyFDsToGroupingColumns(List<FunctionalDependency> fds) {
+    // Using functional dependencies to eliminate unnecessary columns.
+    private void reduceGroupingColumns(Set<LogicalVariable> columnSet, List<FunctionalDependency> fds) {
         // the set of vars. is unordered
         // so we try all FDs on all variables (incomplete algo?)
         if (fds == null || fds.isEmpty()) {
             return;
         }
-        Set<LogicalVariable> norm = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> norm = new ListSet<>();
         for (LogicalVariable v : columnSet) {
             boolean isImpliedByAnFD = false;
             for (FunctionalDependency fdep : fds) {
@@ -84,7 +93,7 @@ public abstract class AbstractGroupingProperty {
                 norm.add(v);
             }
         }
-        columnSet = norm;
+        columnSet.retainAll(norm);
     }
 
 }

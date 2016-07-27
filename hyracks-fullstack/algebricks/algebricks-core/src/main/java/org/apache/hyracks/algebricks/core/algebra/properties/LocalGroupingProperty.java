@@ -20,9 +20,11 @@ package org.apache.hyracks.algebricks.core.algebra.properties;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.algebricks.common.utils.ListSet;
+import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class LocalGroupingProperty extends AbstractGroupingProperty implements ILocalStructuralProperty {
@@ -66,14 +68,14 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
 
     @Override
     public ILocalStructuralProperty retainVariables(Collection<LogicalVariable> vars) {
-        Set<LogicalVariable> newVars = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> newVars = new ListSet<>();
         newVars.addAll(vars);
         newVars.retainAll(columnSet);
         if (columnSet.equals(newVars)) {
             return new LocalGroupingProperty(columnSet, preferredOrderEnforcer);
         }
         // Column set for the retained grouping property
-        Set<LogicalVariable> newColumns = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> newColumns = new ListSet<>();
         // Matches the prefix of the original column set.
         for (LogicalVariable v : columnSet) {
             if (newVars.contains(v)) {
@@ -82,7 +84,7 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
                 break;
             }
         }
-        if (newColumns.size() > 0) {
+        if (!newColumns.isEmpty()) {
             return new LocalGroupingProperty(newColumns, preferredOrderEnforcer.subList(0, newColumns.size()));
         } else {
             return null;
@@ -91,17 +93,25 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
 
     @Override
     public ILocalStructuralProperty regardToGroup(Collection<LogicalVariable> groupKeys) {
-        Set<LogicalVariable> newColumns = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> newColumns = new ListSet<>();
         for (LogicalVariable v : columnSet) {
             if (!groupKeys.contains(v)) {
                 newColumns.add(v);
             }
         }
-        if (newColumns.size() > 0) {
-            return new LocalGroupingProperty(newColumns, preferredOrderEnforcer.subList(groupKeys.size(),
-                    newColumns.size()));
+        if (!newColumns.isEmpty()) {
+            return new LocalGroupingProperty(newColumns,
+                    preferredOrderEnforcer.subList(groupKeys.size(), newColumns.size()));
         } else {
             return null;
         }
+    }
+
+    @Override
+    public ILocalStructuralProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
+        Set<LogicalVariable> normalizedColumnSet =
+                normalizeAndReduceGroupingColumns(columnSet, equivalenceClasses, fds);
+        return new LocalGroupingProperty(normalizedColumnSet, preferredOrderEnforcer);
     }
 }
