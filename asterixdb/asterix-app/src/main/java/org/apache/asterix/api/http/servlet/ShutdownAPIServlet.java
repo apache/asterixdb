@@ -19,9 +19,6 @@
 package org.apache.asterix.api.http.servlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
@@ -31,8 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.result.ResultUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
@@ -47,23 +42,17 @@ public class ShutdownAPIServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
-        PrintWriter out = response.getWriter();
-        StringWriter sw = new StringWriter();
-        IOUtils.copy(request.getInputStream(), sw, StandardCharsets.UTF_8.name());
-
         ServletContext context = getServletContext();
-        IHyracksClientConnection hcc;
-        try {
-            synchronized (context) {
-                hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-                response.setStatus(HttpServletResponse.SC_ACCEPTED);
+        IHyracksClientConnection hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
+        Thread t = new Thread(() -> {
+            try {
                 hcc.stopCluster();
+            } catch (Exception e) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
-        } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            ResultUtils.apiErrorHandler(out, e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+        });
+        t.start();
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
     }
 
     @Override
