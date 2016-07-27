@@ -1740,14 +1740,46 @@ Expression MultExpr()throws ParseException:
   Expression operand = null;
 }
 {
-    operand = UnionExpr()
+    operand = ExponentExpr()
 
-    (( <MUL> | <DIV> | <MOD> | <CARET> | <IDIV>)
+    (( <MUL> | <DIV> | <MOD> | <IDIV>)
       {
         if (op == null) {
           op = new OperatorExpr();
-        op.addOperand(operand);
-        op.setCurrentop(true);
+          op.addOperand(operand);
+          op.setCurrentop(true);
+        }
+        try{
+          op.addOperator(token.image);
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
+    }
+    operand = ExponentExpr()
+    {
+       op.addOperand(operand);
+    }
+    )*
+
+     {
+       return op==null?operand:op;
+     }
+}
+
+Expression ExponentExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = UnionExpr()
+
+    ( <CARET>
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+          op.addOperand(operand);
+          op.setCurrentop(true);
         }
         try{
           op.addOperator(token.image);
@@ -1759,11 +1791,11 @@ Expression MultExpr()throws ParseException:
     {
        op.addOperand(operand);
     }
-    )*
+    )?
 
-     {
+    {
        return op==null?operand:op;
-     }
+    }
 }
 
 Expression UnionExpr() throws ParseException:

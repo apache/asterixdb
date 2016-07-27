@@ -3830,6 +3830,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="caret1">
+        <output-dir compare="Text">caret1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="abs0">
         <output-dir compare="Text">abs0</output-dir>
       </compilation-unit>
