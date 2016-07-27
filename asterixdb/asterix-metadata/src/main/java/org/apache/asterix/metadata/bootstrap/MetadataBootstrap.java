@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -137,11 +136,6 @@ public class MetadataBootstrap {
         runtimeContext = (IAsterixAppRuntimeContext) ncApplicationContext.getApplicationObject();
         propertiesProvider = asterixPropertiesProvider;
 
-        // Initialize static metadata objects, such as record types and metadata
-        // index descriptors.
-        // The order of these calls is important because the index descriptors
-        // rely on the type type descriptors.
-        MetadataRecordTypes.init();
         MetadataPrimaryIndexes.init();
         initLocalIndexArrays();
 

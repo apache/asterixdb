@@ -245,12 +245,12 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         String metaTypeDataverseName = null;
         String metaTypeName = null;
         int metaTypeDataverseNameIndex = datasetRecord.getType()
-                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_METATYPEDATAVERSENAME_FIELD_NAME);
+                .getFieldIndex(MetadataRecordTypes.FIELD_NAME_METADATA_DATAVERSE);
         if (metaTypeDataverseNameIndex >= 0) {
             metaTypeDataverseName = ((AString) datasetRecord.getValueByPos(metaTypeDataverseNameIndex))
                     .getStringValue();
             int metaTypeNameIndex = datasetRecord.getType()
-                    .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_METATYPENAME_FIELD_NAME);
+                    .getFieldIndex(MetadataRecordTypes.FIELD_NAME_METATYPE_NAME);
             metaTypeName = ((AString) datasetRecord.getValueByPos(metaTypeNameIndex)).getStringValue();
         }
 
@@ -377,7 +377,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         if (dataset.hasMetaPart()) {
             // write open field 1, the meta item type Dataverse name.
             fieldName.reset();
-            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_METATYPEDATAVERSENAME_FIELD_NAME);
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_METADATA_DATAVERSE);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
             aString.setValue(dataset.getMetaItemTypeDataverseName());
@@ -386,7 +386,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
             // write open field 2, the meta item type name.
             fieldName.reset();
-            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_METATYPENAME_FIELD_NAME);
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_METATYPE_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
             aString.setValue(dataset.getMetaItemTypeName());
