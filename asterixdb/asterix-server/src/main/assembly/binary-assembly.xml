@@ -44,6 +44,7 @@
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>LICENSE*</include>
+        <include>samples/**</include>
       </includes>
     </fileSet>
     <fileSet>
