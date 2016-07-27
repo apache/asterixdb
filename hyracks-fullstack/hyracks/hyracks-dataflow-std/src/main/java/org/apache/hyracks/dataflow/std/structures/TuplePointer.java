@@ -18,10 +18,36 @@
  */
 package org.apache.hyracks.dataflow.std.structures;
 
+import java.util.Comparator;
+
 public final class TuplePointer implements IResetable<TuplePointer> {
     public static final int INVALID_ID = -1;
     private int frameIndex;
     private int tupleIndex;
+
+    public static final Comparator<TuplePointer> ASC = new Comparator<TuplePointer>() {
+        @Override
+        public int compare(TuplePointer tp1, TuplePointer tp2) {
+            int c = tp1.getFrameIndex() - tp2.getFrameIndex();
+            if (c == 0) {
+                c = tp1.getTupleIndex() - tp2.getTupleIndex();
+            }
+            return c;
+        }
+
+    };
+
+    public static final Comparator<TuplePointer> DESC = new Comparator<TuplePointer>() {
+        @Override
+        public int compare(TuplePointer tp1, TuplePointer tp2) {
+            int c = tp2.getFrameIndex() - tp1.getFrameIndex();
+            if (c == 0) {
+                c = tp2.getTupleIndex() - tp1.getTupleIndex();
+            }
+            return c;
+        }
+
+    };
 
     public TuplePointer() {
         this(INVALID_ID, INVALID_ID);

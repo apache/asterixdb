@@ -99,16 +99,6 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
         public SortTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
         }
-
-        @Override
-        public void toBytes(DataOutput out) throws IOException {
-
-        }
-
-        @Override
-        public void fromBytes(DataInput in) throws IOException {
-
-        }
     }
 
     protected abstract class SortActivity extends AbstractActivityNode {
