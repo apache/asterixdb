@@ -40,6 +40,7 @@ public enum LogicalOperatorTag {
     ORDER,
     PARTITIONINGSPLIT,
     PROJECT,
+    RANGE_FORWARD,
     REPLICATE,
     RUNNINGAGGREGATE,
     SCRIPT,

@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -55,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.RangeForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
@@ -294,9 +296,9 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(newKeyExpressions, op.getPrimaryKeyExpressions());
         List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newKeyExpressions, op.getAdditionalFilteringExpressions());
-        InsertDeleteUpsertOperator insertDeleteOp =
-                new InsertDeleteUpsertOperator(op.getDataSource(), deepCopyExpressionRef(op.getPayloadExpression()),
-                        newKeyExpressions, op.getOperation(), op.isBulkload());
+        InsertDeleteUpsertOperator insertDeleteOp = new InsertDeleteUpsertOperator(op.getDataSource(),
+                deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions, op.getOperation(),
+                op.isBulkload());
         insertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
         return insertDeleteOp;
     }
@@ -308,8 +310,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(newPrimaryKeyExpressions, op.getPrimaryKeyExpressions());
         List<Mutable<ILogicalExpression>> newSecondaryKeyExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newSecondaryKeyExpressions, op.getSecondaryKeyExpressions());
-        Mutable<ILogicalExpression> newFilterExpression =
-                new MutableObject<>(((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
+        Mutable<ILogicalExpression> newFilterExpression = new MutableObject<>(
+                ((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
         List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newLSMComponentFilterExpressions, op.getAdditionalFilteringExpressions());
         IndexInsertDeleteUpsertOperator indexInsertDeleteOp = new IndexInsertDeleteUpsertOperator(
@@ -327,8 +329,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(newSecondaryKeyExpressions, op.getSecondaryKeyExpressions());
         List<LogicalVariable> newTokenizeVars = new ArrayList<>();
         deepCopyVars(newTokenizeVars, op.getTokenizeVars());
-        Mutable<ILogicalExpression> newFilterExpression =
-                new MutableObject<>(((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
+        Mutable<ILogicalExpression> newFilterExpression = new MutableObject<>(
+                ((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
         List<Object> newTokenizeVarTypes = new ArrayList<>();
         deepCopyObjects(newTokenizeVarTypes, op.getTokenizeVarTypes());
 
@@ -372,8 +374,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         return newObjs;
     }
 
-    private List<Pair<IOrder, Mutable<ILogicalExpression>>>
-            deepCopyOrderAndExpression(List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
+    private List<Pair<IOrder, Mutable<ILogicalExpression>>> deepCopyOrderAndExpression(
+            List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs = new ArrayList<>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs) {
             newOrdersAndExprs.add(new Pair<>(pair.first, deepCopyExpressionRef(pair.second)));
@@ -384,6 +386,11 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
         return new ExtensionOperator(op.getNewInstanceOfDelegateOperator());
+    }
+
+    @Override
+    public ILogicalOperator visitRangeForwardOperator(RangeForwardOperator op, Void arg) throws AlgebricksException {
+        return new RangeForwardOperator(op.getRangeMap());
     }
 
     @Override
