@@ -16,13 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed dataset that uses the feed simulator adapter.
 
 use feeds_12;
 
-
 select element x
 from  Tweets as x
-order by x.id
-;
+order by x.id;

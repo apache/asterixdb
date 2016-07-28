@@ -17,12 +17,11 @@
  * under the License.
  */
 /*
- * Description  : Create a feed dataset and a feed using the generic socket feed adapter.
+ * Description  : Create a feed policy from file on CC
+ * Expected Res : Success
+ * Date         : 25th Jul 2016
+ */
 
-use feeds;
-
-
-select element x
-from  MyTweets as x
-order by x.tweetid
-;
+use experiments;
+drop ingestion policy testPolicy;
+drop database experiments;

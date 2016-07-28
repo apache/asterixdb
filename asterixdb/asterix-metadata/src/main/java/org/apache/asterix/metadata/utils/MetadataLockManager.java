@@ -471,8 +471,8 @@ public class MetadataLockManager {
     }
 
     public void dropFeedPolicyBegin(String dataverseName, String policyName) {
-        releaseFeedWriteLock(policyName);
-        releaseDataverseReadLock(dataverseName);
+        acquireFeedWriteLock(policyName);
+        acquireDataverseReadLock(dataverseName);
     }
 
     public void dropFeedPolicyEnd(String dataverseName, String policyName) {

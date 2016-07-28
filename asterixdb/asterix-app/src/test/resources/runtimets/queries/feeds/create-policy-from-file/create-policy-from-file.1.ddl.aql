@@ -17,11 +17,13 @@
  * under the License.
  */
 /*
- * Description  : Create a feed dataset and a feed using the generic socket feed adapter.
+ * Description  : Create a feed policy from file on CC
+ * Expected Res : Success
+ * Date         : 25th Jul 2016
+ */
+drop dataverse experiments if exists;
+create dataverse experiments;
+use dataverse experiments;
 
-use feeds;
-
-
-set `wait-for-completion-feed` `true`;
-
-connect  feed client_test_feed to  table DummyTweets using policy `BasicFT`;
+create ingestion policy testPolicy from path "data/feed-policy/policy.properties"
+definition "someString";

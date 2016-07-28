@@ -16,11 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a dataset with a secondary btree index.
 
 use feeds_10;
-
 
 select element feeds_10.coll_count((
     select element x

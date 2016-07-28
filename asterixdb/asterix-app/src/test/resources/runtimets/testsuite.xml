@@ -92,6 +92,11 @@
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">
+      <compilation-unit name="create-policy-from-file">
+        <output-dir compare="Text">create-policy-from-file</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-with-mixed-index">
         <output-dir compare="Text">change-feed-with-meta-with-mixed-index</output-dir>
       </compilation-unit>
@@ -189,12 +194,6 @@
         <output-dir compare="Text">feeds_07</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Fails constantly and not clear what is intended
-    <test-case FilePath="feeds">
-      <compilation-unit name="feeds_06">
-        <output-dir compare="Text">feeds_06</output-dir>
-      </compilation-unit>
-    </test-case> -->
     <test-case FilePath="feeds">
       <compilation-unit name="drop-dataverse-with-disconnected-feed">
         <output-dir compare="Text">drop-dataverse-with-disconnected-feed</output-dir>
@@ -220,13 +219,6 @@
         <output-dir compare="Text">feeds_03</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Fails constantly
-    <test-case FilePath="feeds">
-        <compilation-unit name="feeds_04">
-            <output-dir compare="Text">feeds_04</output-dir>
-        </compilation-unit>
-    </test-case>
-    -->
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_08">
         <output-dir compare="Text">feeds_08</output-dir>
@@ -257,11 +249,6 @@
         <output-dir compare="Text">issue_230_feeds</output-dir>
       </compilation-unit>
     </test-case>
-    <!--<test-case FilePath="feeds">
-      <compilation-unit name="issue_711_feeds">
-        <output-dir compare="Text">issue_711_feeds</output-dir>
-      </compilation-unit>
-    </test-case>-->
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">

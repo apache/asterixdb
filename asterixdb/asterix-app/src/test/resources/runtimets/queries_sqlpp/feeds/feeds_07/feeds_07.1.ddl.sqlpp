@@ -16,23 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed using the synthetic feed simulator adapter.
 
-drop  database feeds if exists;
-create  database feeds;
+drop database feeds if exists;
+create database feeds;
 
 use feeds;
 
-
 create type feeds.TwitterUserType as
  closed {
-  `screen-name` : string,
-  lang : string,
-  friends_count : int32,
-  statuses_count : int32,
-  name : string,
-  followers_count : int32
+  `screen_name`: string,
+  language: string,
+  friends_count: int32,
+  status_count: int32,
+  name: string,
+  followers_count: int32
 }
 
 create type feeds.TweetMessageType as
@@ -41,7 +38,6 @@ create type feeds.TweetMessageType as
   user : TwitterUserType,
   latitude : double,
   longitude : double,
-  `send-time` : datetime,
   message_text : string,
   created_at : string,
   country : string
@@ -49,6 +45,12 @@ create type feeds.TweetMessageType as
 
 create  table SyntheticTweets(TweetMessageType) primary key id;
 
-create  index locationIdx  on SyntheticTweets (`sender-location`) type rtree;
-
-create  primary feed SyntheticTweetFeed using twitter_firehose ((`duration`=`5`),(`tps`=`50`),(`type-name`=`TweetMessageType`),(`tput-duration`=`5`),(`dataverse-dataset`=`feeds:SyntheticTweets`),(`mode`=`controlled`));
+create  primary feed SyntheticTweetFeed using twitter_firehose(
+(`duration`=`5`),
+(`tps`=`50`),
+(`type-name`=`TweetMessageType`),
+(`format`=`adm`),
+(`reader-stream`=`twitter_firehose`),
+(`tput-duration`=`5`),
+(`dataverse-dataset`=`feeds:SyntheticTweets`),
+(`mode`=`controlled`));

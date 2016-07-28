@@ -17,25 +17,11 @@
  * under the License.
  */
 /*
- * Description  : Create a dataset with a secondary btree index.
+ * Description  : Create a feed policy from file on CC
+ * Expected Res : Success
+ * Date         : 25th Jul 2016
+ */
 
-drop  database feeds if exists;
-create  database feeds;
-
-use feeds;
-
-
-create type feeds.TweetType as
- closed {
-  id : string,
-  username : string,
-  location : string,
-  text : string,
-  timestamp : string
-}
-
-create  table Tweets(TweetType) primary key id;
-
-create  index usernameIdx  on Tweets (username) type btree;
-
-create  primary feed TweetFeed using file_feed ((`fs`=`hdfs`),(`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/obamatweets.adm`),(`format`=`adm`),(`input-format`=`text-input-format`),(`type-name`=`TweetType`),(`tuple-interval`=`10`));
+use dataverse experiments;
+drop ingestion policy testPolicy;
+drop dataverse experiments;

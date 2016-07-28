@@ -20,11 +20,7 @@
   <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
 
 ]>
-<test-suite
-             xmlns="urn:xml.testframework.asterix.apache.org"
-             ResultOffsetPath="results"
-             QueryOffsetPath="queries_sqlpp"
-             QueryFileExtension=".sqlpp">
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="flwor">
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
@@ -5391,9 +5387,9 @@
       <compilation-unit name="alias_negative">
         <output-dir compare="Text">alias_negative</output-dir>
         <expected-error>Need an alias for the enclosed expression</expected-error>
-        </compilation-unit>
+      </compilation-unit>
     </test-case>
-     <test-case FilePath="subquery">
+    <test-case FilePath="subquery">
       <compilation-unit name="relational_division">
         <output-dir compare="Text">relational_division</output-dir>
       </compilation-unit>
@@ -6876,81 +6872,61 @@
     </test-case>
   </test-group>
   <test-group name="feeds">
-
-    <!--Disable it because of sporadic failures. Raman will re-enable it.
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_01">
-                <output-dir compare="Text">feeds_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_02">
-                <output-dir compare="Text">feeds_02</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_03">
-                <output-dir compare="Text">feeds_03</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_04">
-                <output-dir compare="Text">feeds_04</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-          <compilation-unit name="feeds_06">
-            <output-dir compare="Text">feeds_06</output-dir>
-          </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_07">
-                <output-dir compare="Text">feeds_07</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_08">
-                <output-dir compare="Text">feeds_08</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_09">
-                <output-dir compare="Text">feeds_09</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_10">
-                <output-dir compare="Text">feeds_10</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_11">
-                <output-dir compare="Text">feeds_11</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_12">
-                <output-dir compare="Text">feeds_12</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="issue_230_feeds">
-                <output-dir compare="Text">issue_230_feeds</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="issue_711_feeds">
-                <output-dir compare="Text">issue_711_feeds</output-dir>
-            </compilation-unit>
-        </test-case>
-        -->
-
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_07">
+        <output-dir compare="Text">feeds_07</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_08">
+        <output-dir compare="Text">feeds_08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_09">
+        <output-dir compare="Text">feeds_09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="create-policy-from-file">
+        <output-dir compare="Text">create-policy-from-file</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_01">
+        <output-dir compare="Text">feeds_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_02">
+        <output-dir compare="Text">feeds_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_03">
+        <output-dir compare="Text">feeds_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_10">
+        <output-dir compare="Text">feeds_10</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_11">
+        <output-dir compare="Text">feeds_11</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_12">
+        <output-dir compare="Text">feeds_12</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="issue_230_feeds">
+        <output-dir compare="Text">issue_230_feeds</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hdfs">
     <test-case FilePath="hdfs">
@@ -7528,31 +7504,26 @@
         <output-dir compare="Text">parse</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="print">
         <output-dir compare="Text">print</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="concat">
         <output-dir compare="Text">concat</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="subbinary">
         <output-dir compare="Text">subbinary</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="find">
         <output-dir compare="Text">find</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="insert">
         <output-dir compare="Text">insert</output-dir>

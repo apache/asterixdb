@@ -16,4 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-3000
+
+drop database feeds_09;

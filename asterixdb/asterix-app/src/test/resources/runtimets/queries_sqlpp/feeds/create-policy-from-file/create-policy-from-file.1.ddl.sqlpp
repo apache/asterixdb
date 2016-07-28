@@ -17,15 +17,13 @@
  * under the License.
  */
 /*
- * Description  : Create a feed dataset that uses the feed simulator adapter. 
-                  The feed simulator simulates feed from a file in the HDFS. 
-                  Begin ingestion and verify contents of the dataset post completion.  
+ * Description  : Create a feed policy from file on CC
  * Expected Res : Success
- * Date         : 24th Dec 2012
+ * Date         : 25th Jul 2016
  */
-  
-use dataverse feeds;
+drop database experiments if exists;
+create database experiments;
+use experiments;
 
-set wait-for-completion-feed "true";
-
-connect feed TweetFeed to dataset Tweets;
+create ingestion policy testPolicy from path 'data/feed-policy/policy.properties'
+definition 'someString';

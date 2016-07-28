@@ -109,6 +109,7 @@ import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
+import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
@@ -725,7 +726,7 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
       {
         cfps = new CreateFeedPolicyStatement(policyName, basePolicyName, properties, definition, ifNotExists);
       }
-     |<PATH> sourcePolicyFile = Identifier() (<DEFINITION> definition = StringLiteral())?
+     |<PATH> sourcePolicyFile = StringLiteral() (<DEFINITION> definition = StringLiteral())?
       {
         cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
       }
@@ -884,6 +885,10 @@ Statement DropStatement() throws ParseException:
     | <FEED> pairId = QualifiedName() ifExists = IfExists()
       {
         stmt = new FeedDropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | <INGESTION> <POLICY> pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new FeedPolicyDropStatement(pairId.first, pairId.second, ifExists);
       }
   )
   {
