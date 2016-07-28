@@ -43,7 +43,7 @@
         <version>${project.version}</version>
         <configuration>
           <grammarFile>src/main/resources/adm.grammar</grammarFile>
-          <outputDir>${project.build.directory}/generated-sources/org/apache/asterix/runtime/operators/file/adm</outputDir>
+          <outputDir>${project.build.directory}/generated-sources/lexer/org/apache/asterix/runtime/operators/file/adm</outputDir>
         </configuration>
         <executions>
           <execution>
@@ -68,7 +68,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.build.directory}/generated-sources/</source>
+                <source>${project.build.directory}/generated-sources/lexer/</source>
               </sources>
             </configuration>
           </execution>
