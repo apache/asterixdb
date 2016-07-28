@@ -70,7 +70,7 @@ public class SubscribeFeedStatement implements Statement {
     }
 
     public void initialize(MetadataTransactionContext mdTxnCtx) throws MetadataException {
-        this.query = new Query();
+        this.query = new Query(false);
         EntityId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
         Feed subscriberFeed =
                 MetadataManager.INSTANCE.getFeed(mdTxnCtx, connectionRequest.getReceivingFeedId().getDataverse(),

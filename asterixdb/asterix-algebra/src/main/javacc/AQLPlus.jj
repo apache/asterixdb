@@ -487,7 +487,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 
 Query Query()throws ParseException:
 {
-  Query query = new Query();
+  Query query = new Query(false);
   Expression expr;
 }
 {

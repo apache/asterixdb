@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.common;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.optimizer.base.RuleCollections;
+import org.apache.asterix.result.ResultUtils;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
@@ -277,6 +279,16 @@ public class APIFramework {
                     }
                     printPlanPostfix(conf);
                 }
+            }
+        }
+        if (rwQ != null && rwQ.isExplain()) {
+            try {
+                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
+                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+                ResultUtils.displayResults(pvisitor.get().toString(), conf, new ResultUtils.Stats(), null);
+                return null;
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
             }
         }
 

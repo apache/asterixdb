@@ -1528,7 +1528,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 
 Query Query() throws ParseException:
 {
-  Query query = new Query();
+  Query query = new Query(false);
   // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
   setDataverses(query.getDataverses());
   setDatasets(query.getDatasets());

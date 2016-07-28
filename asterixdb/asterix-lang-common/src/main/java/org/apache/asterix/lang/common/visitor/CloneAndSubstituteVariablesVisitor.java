@@ -235,7 +235,7 @@ public class CloneAndSubstituteVariablesVisitor extends
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(Query q, VariableSubstitutionEnvironment env)
             throws AsterixException {
-        Query newQ = new Query();
+        Query newQ = new Query(q.isExplain());
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = q.getBody().accept(this, env);
         newQ.setBody((Expression) p1.first);
         return new Pair<>(newQ, p1.second);

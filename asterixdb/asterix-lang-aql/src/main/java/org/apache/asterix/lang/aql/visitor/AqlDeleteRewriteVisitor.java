@@ -64,7 +64,7 @@ public class AqlDeleteRewriteVisitor extends AbstractAqlAstVisitor<Void, Void> {
         VariableExpr returnExpr = new VariableExpr(var.getVar());
         returnExpr.setIsNewVar(false);
         FLWOGRExpression flowgr = new FLWOGRExpression(clauseList, returnExpr);
-        Query query = new Query();
+        Query query = new Query(false);
         query.setBody(flowgr);
         deleteStmt.setQuery(query);
         return null;

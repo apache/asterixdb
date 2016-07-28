@@ -63,6 +63,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="explain">
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_simple">
+        <output-dir compare="Text">explain_simple</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <!--
     <test-group name="union">
         <test-case FilePath="union">

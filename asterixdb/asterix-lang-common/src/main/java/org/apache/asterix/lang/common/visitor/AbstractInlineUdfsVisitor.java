@@ -307,7 +307,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     protected Expression rewriteFunctionBody(Expression expr) throws AsterixException {
-        Query wrappedQuery = new Query();
+        Query wrappedQuery = new Query(false);
         wrappedQuery.setBody(expr);
         wrappedQuery.setTopLevel(false);
         IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();

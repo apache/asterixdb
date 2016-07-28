@@ -2529,14 +2529,16 @@ public class QueryTranslator extends AbstractLangTranslator {
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockManager.INSTANCE.queryBegin(activeDefaultDataverse, query.getDataverses(), query.getDatasets());
-        JobSpecification compiled = null;
         try {
-            compiled = rewriteCompileQuery(metadataProvider, query, null);
+            JobSpecification compiled = rewriteCompileQuery(metadataProvider, query, null);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (sessionConfig.isExecuteQuery() && compiled != null) {
+            if (query.isExplain()) {
+                sessionConfig.out().flush();
+                return;
+            } else if (sessionConfig.isExecuteQuery() && compiled != null) {
                 GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
                 JobId jobId = JobUtils.runJob(hcc, compiled, false);
 

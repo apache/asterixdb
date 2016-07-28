@@ -142,7 +142,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("distinct " + "(");
+        addIndent(indent).append("distinct (");
         pprintExprList(op.getExpressions(), indent);
         buffer.append(")");
         return null;
@@ -177,7 +177,6 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
             }
             String fst = getOrderString(p.first);
             buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ") ");
-
         }
         return null;
     }
@@ -346,7 +345,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
 
     @Override
     public Void visitExchangeOperator(ExchangeOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("exchange ");
+        addIndent(indent).append("exchange");
         return null;
     }
 
@@ -358,13 +357,13 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
 
     @Override
     public Void visitReplicateOperator(ReplicateOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("replicate ");
+        addIndent(indent).append("replicate");
         return null;
     }
 
     @Override
     public Void visitMaterializeOperator(MaterializeOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("materialize ");
+        addIndent(indent).append("materialize");
         return null;
     }
 

@@ -316,7 +316,8 @@ Statement SingleStatement() throws ParseException:
     | stmt = UpdateStatement()
     | stmt = FeedStatement()
     | stmt = CompactStatement()
-    | stmt = Query() <SEMICOLON>
+    | stmt = ExplainStatement()
+    | stmt = Query(false) <SEMICOLON>
     | stmt = RefreshExternalDatasetStatement()
     | stmt = RunStatement()
   )
@@ -925,7 +926,7 @@ InsertStatement InsertStatement() throws ParseException:
   Query query;
 }
 {
-  <INSERT> <INTO> nameComponents = QualifiedName() query = Query()
+  <INSERT> <INTO> nameComponents = QualifiedName() query = Query(false)
     {
       query.setTopLevel(true);
       return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
@@ -1562,10 +1563,20 @@ FunctionDecl FunctionDeclaration() throws ParseException:
     }
 }
 
-
-Query Query() throws ParseException:
+Query ExplainStatement() throws ParseException:
 {
-  Query query = new Query();
+  Query query;
+}
+{
+  "explain" query = Query(true)
+  {
+    return query;
+  }
+}
+
+Query Query(boolean explain) throws ParseException:
+{
+  Query query = new Query(explain);
   // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
   setDataverses(query.getDataverses());
   setDatasets(query.getDatasets());
