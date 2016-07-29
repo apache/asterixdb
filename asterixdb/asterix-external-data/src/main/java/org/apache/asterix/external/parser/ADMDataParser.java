@@ -124,11 +124,11 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    public ADMDataParser(ARecordType recordType, boolean isStream) throws IOException {
+    public ADMDataParser(ARecordType recordType, boolean isStream) {
         this(null, recordType, isStream);
     }
 
-    public ADMDataParser(String filename, ARecordType recordType, boolean isStream) throws IOException {
+    public ADMDataParser(String filename, ARecordType recordType, boolean isStream) {
         this.filename = filename;
         this.recordType = recordType;
         this.isStreamParser = isStream;
