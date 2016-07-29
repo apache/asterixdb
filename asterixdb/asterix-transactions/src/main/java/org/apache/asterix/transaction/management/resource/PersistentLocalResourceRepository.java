@@ -40,6 +40,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.replication.AsterixReplicationJob;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -49,6 +50,7 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
@@ -63,6 +65,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final String STORAGE_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata";
     private static final long STORAGE_LOCAL_RESOURCE_ID = -4321;
     public static final String METADATA_FILE_NAME = ".metadata";
+    public static final int STORAGE_VERSION = LIFOMetaDataFrame.VERSION;
     private final Cache<String, LocalResource> resourceCache;
     private final String nodeId;
     private static final int MAX_CACHED_RESOURCES = 1000;
@@ -136,15 +139,15 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
             String storageRootDirPath;
             if (storageRootDirName.startsWith(System.getProperty("file.separator"))) {
-                storageRootDirPath = mountPoints[i] +
-                        storageRootDirName.substring(System.getProperty("file.separator").length());
+                storageRootDirPath = mountPoints[i]
+                        + storageRootDirName.substring(System.getProperty("file.separator").length());
             } else {
                 storageRootDirPath = mountPoints[i] + storageRootDirName;
             }
 
             LocalResource rootLocalResource = new LocalResource(STORAGE_LOCAL_RESOURCE_ID,
                     storageMetadataFile.getAbsolutePath(), 0, storageMetadataFile.getAbsolutePath(), 0,
-                    storageRootDirPath);
+                    LIFOMetaDataFrame.VERSION, storageRootDirPath);
             insert(rootLocalResource);
             LOGGER.log(Level.INFO, "created the root-metadata-file: " + storageMetadataFile.getAbsolutePath());
         }
@@ -309,7 +312,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         try (FileInputStream fis = new FileInputStream(file);
                 ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
             LocalResource resource = (LocalResource) oisFromFis.readObject();
-            return resource;
+            if (resource.getVersion() == PersistentLocalResourceRepository.STORAGE_VERSION) {
+                return resource;
+            } else {
+                throw new AsterixException("Storage version mismatch.");
+            }
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

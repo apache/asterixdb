@@ -21,13 +21,14 @@ package org.apache.hyracks.storage.common.file;
 import java.io.Serializable;
 
 public class LocalResource implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final long resourceId;
     private final String resourceName;
     private final int partition;
     private final int resourceType;
     private final Object object;
     private String resourcePath;
+    private int storageVersion;
 
     public static final int TransientResource = 0;
     public static final int LSMBTreeResource = 1;
@@ -38,13 +39,14 @@ public class LocalResource implements Serializable {
     public static final int ExternalBTreeWithBuddyResource = 6;
 
     public LocalResource(long resourceId, String resourceName, int partition, String resourcePath, int resourceType,
-            Object object) {
+            int storageVersion, Object object) {
         this.resourceId = resourceId;
         this.resourceName = resourceName;
         this.partition = partition;
         this.resourcePath = resourcePath;
         this.resourceType = resourceType;
         this.object = object;
+        this.storageVersion = storageVersion;
     }
 
     public long getResourceId() {
@@ -69,6 +71,10 @@ public class LocalResource implements Serializable {
 
     public String getResourcePath() {
         return resourcePath;
+    }
+
+    public int getVersion() {
+        return storageVersion;
     }
 
     public void setResourcePath(String resourcePath) {

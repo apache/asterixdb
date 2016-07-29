@@ -32,7 +32,8 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
     // Arbitrarily chosen magic integer.
-    protected static final int MAGIC_VALID_INT = 0x5bd1e995;
+    protected static final int OBSOLETE_MAGIC_VALID_INT = 0x5bd1e995;
+    protected static final int MAGIC_VALID_INT = 0x1B16DA7A;
 
     protected static final int TUPLE_COUNT_OFFSET = 0; //0
     protected static final int FREE_SPACE_OFFSET = TUPLE_COUNT_OFFSET + 4; //4
@@ -41,13 +42,14 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     protected static final int NEXT_PAGE_OFFSET = LEVEL_OFFSET + 1; // 21
     protected static final int VALID_OFFSET = NEXT_PAGE_OFFSET + 4; // 25
 
-    // The additionalFilteringPageOff is used only for LSM indexes.
+    // The ADDITIONAL_FILTERING_PAGE_OFF is used only for LSM indexes.
     // We store the page id that will be used to store the information of the the filter that is associated with a disk component.
     // It is only set in the first meta page other meta pages (i.e., with level -2) have junk in the max page field.
     private static final int ADDITIONAL_FILTERING_PAGE_OFFSET = VALID_OFFSET + 4; // 29
     public static final int LSN_OFFSET = ADDITIONAL_FILTERING_PAGE_OFFSET + 4; // 33
     private static final int LAST_MARKER_LSN_OFFSET = LSN_OFFSET + 8; // 41
-    private static final int HEADER_END_OFFSET = LAST_MARKER_LSN_OFFSET + 8;
+    public static final int STORAGE_VERSION_OFFSET = LAST_MARKER_LSN_OFFSET + 4; //45
+    private static final int HEADER_END_OFFSET = LAST_MARKER_LSN_OFFSET + 4; //49
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -124,6 +126,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
         buf.putInt(NEXT_PAGE_OFFSET, -1);
         buf.putInt(ADDITIONAL_FILTERING_PAGE_OFFSET, -1);
         buf.putLong(LAST_MARKER_LSN_OFFSET, -1L);
+        buf.putInt(STORAGE_VERSION_OFFSET, VERSION);
         setValid(false);
     }
 
@@ -139,7 +142,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
     @Override
     public boolean isValid() {
-        return buf.getInt(VALID_OFFSET) == MAGIC_VALID_INT;
+        return buf.getInt(VALID_OFFSET) == MAGIC_VALID_INT || buf.getInt(VALID_OFFSET) == OBSOLETE_MAGIC_VALID_INT;
     }
 
     @Override
@@ -159,6 +162,15 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     @Override
     public void setLSN(long lsn) {
         buf.putLong(LSN_OFFSET, lsn);
+    }
+
+    @Override
+    public int getVersion() {
+        if (buf.getInt(VALID_OFFSET) == OBSOLETE_MAGIC_VALID_INT) {
+            return VERSION * -1;
+        } else {
+            return buf.getInt(STORAGE_VERSION_OFFSET);
+        }
     }
 
     @Override
