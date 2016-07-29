@@ -6380,6 +6380,12 @@
   </test-group>
   <test-group name="load">
     <test-case FilePath="load">
+      <compilation-unit name="load_non-empty_index">
+        <output-dir compare="Text">load_non-empty_index</output-dir>
+        <expected-error>Cannot load an index that is not empty</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
       <compilation-unit name="dataset-with-meta">
         <output-dir compare="Text">dataset-with-meta</output-dir>
         <expected-error>load dataset is not supported on Datasets with Meta records</expected-error>
