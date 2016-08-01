@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -33,5 +33,5 @@ create type test.Schema as
   ymduration : `year-month-duration`
 }
 
-create  table tsdata(Schema) primary key id;
+create  dataset tsdata(Schema) primary key id;
 

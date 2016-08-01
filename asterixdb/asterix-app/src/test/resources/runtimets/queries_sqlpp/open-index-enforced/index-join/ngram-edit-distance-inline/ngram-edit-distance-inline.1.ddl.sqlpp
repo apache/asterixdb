@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -63,9 +63,9 @@ create type test.CustomerOpenType as
 ]
 }
 
-create  table Customers(CustomerOpenType) primary key cid;
+create  dataset Customers(CustomerOpenType) primary key cid;
 
-create  table Customerstmp(CustomerType) primary key cid;
+create  dataset Customerstmp(CustomerType) primary key cid;
 
-create  table Customers2(CustomerType) primary key cid;
+create  dataset Customers2(CustomerType) primary key cid;
 

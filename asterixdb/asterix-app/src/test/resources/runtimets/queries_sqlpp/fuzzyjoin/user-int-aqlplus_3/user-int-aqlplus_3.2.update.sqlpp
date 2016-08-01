@@ -17,11 +17,11 @@
  * under the License.
  */
 
-drop  database fuzzyjoin if exists;
-create  database fuzzyjoin;
+drop  dataverse fuzzyjoin if exists;
+create  dataverse fuzzyjoin;
 
 use fuzzyjoin;
 
 
-load  table Users using localfs ((`path`=`asterix_asterix_nc1://data/users-visitors-small/users.json`),(`format`=`adm`));
+load  dataset Users using localfs ((`path`=`asterix_asterix_nc1://data/users-visitors-small/users.json`),(`format`=`adm`));
 

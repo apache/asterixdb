@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -52,9 +52,9 @@ create type test.MyRecordOpen as
   rec : rectangle
 }
 
-create  table MyData1(MyRecord) primary key id;
+create  dataset MyData1(MyRecord) primary key id;
 
-create  table MyData2(MyRecordOpen) primary key id;
+create  dataset MyData2(MyRecordOpen) primary key id;
 
 create  index rtree_index  on MyData2 (point:point) type rtree enforced;
 

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -42,7 +42,7 @@ create type test.MyMiniRecord as
   point : point
 }
 
-create  table MyData(MyRecord) primary key id;
+create  dataset MyData(MyRecord) primary key id;
 
-create  table MyMiniData(MyMiniRecord) primary key id;
+create  dataset MyMiniData(MyMiniRecord) primary key id;
 

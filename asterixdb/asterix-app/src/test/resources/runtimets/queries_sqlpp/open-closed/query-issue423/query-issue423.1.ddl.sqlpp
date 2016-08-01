@@ -24,8 +24,8 @@
  * Date         : 29th May 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -37,7 +37,7 @@ create type test.TestType as
   lname : string
 }
 
-create  table t2(TestType) primary key fname,lname;
+create  dataset t2(TestType) primary key fname,lname;
 
-create  table t1(TestType) primary key fname,lname;
+create  dataset t1(TestType) primary key fname,lname;
 

@@ -23,8 +23,8 @@
  * Date         : 6th March 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -57,7 +57,7 @@ create type test.AllType as
   circle : circle
 }
 
-create external  table `All`(AllType) using localfs((`path`=`asterix_nc1://data/nontagged/allData.json`),(`format`=`adm`));
+create external  dataset `All`(AllType) using localfs((`path`=`asterix_nc1://data/nontagged/allData.json`),(`format`=`adm`));
 
 write output to asterix_nc1:`rttest/scan_alltypes_02.adm`
 select element a

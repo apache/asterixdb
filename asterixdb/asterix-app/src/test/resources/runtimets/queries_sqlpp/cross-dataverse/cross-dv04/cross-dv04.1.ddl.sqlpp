@@ -27,11 +27,11 @@
  * Date         : 28th Aug 2012
  */
 
-drop  database student if exists;
-drop  database teacher if exists;
-create  database student;
+drop  dataverse student if exists;
+drop  dataverse teacher if exists;
+create  dataverse student;
 
-create  database teacher;
+create  dataverse teacher;
 
 
 create type student.stdType as
@@ -52,23 +52,23 @@ create type teacher.tchrType as
   dept : string
 }
 
-create  table student.ugdstd(stdType) primary key id;
+create  dataset student.ugdstd(stdType) primary key id;
 
-create  table student.gdstd(stdType) primary key id;
+create  dataset student.gdstd(stdType) primary key id;
 
-create  table teacher.prof(tchrType) primary key id;
+create  dataset teacher.prof(tchrType) primary key id;
 
-create  table teacher.pstdoc(tchrType) primary key id;
+create  dataset teacher.pstdoc(tchrType) primary key id;
 
-drop  table student.ugdstd;
-drop  table student.gdstd;
-drop  table teacher.prof;
-drop  table teacher.pstdoc;
-create  table student.ugdstd(stdType) primary key id;
+drop  dataset student.ugdstd;
+drop  dataset student.gdstd;
+drop  dataset teacher.prof;
+drop  dataset teacher.pstdoc;
+create  dataset student.ugdstd(stdType) primary key id;
 
-create  table student.gdstd(stdType) primary key id;
+create  dataset student.gdstd(stdType) primary key id;
 
-create  table teacher.prof(tchrType) primary key id;
+create  dataset teacher.prof(tchrType) primary key id;
 
-create  table teacher.pstdoc(tchrType) primary key id;
+create  dataset teacher.pstdoc(tchrType) primary key id;
 

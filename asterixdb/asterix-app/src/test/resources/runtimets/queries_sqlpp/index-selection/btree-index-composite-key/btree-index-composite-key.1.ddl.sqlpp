@@ -25,8 +25,8 @@
  * Date            : 7th August 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -40,5 +40,5 @@ create type test.Emp as
   dept : string
 }
 
-create  table employee(Emp) primary key id;
+create  dataset employee(Emp) primary key id;
 

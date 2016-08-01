@@ -23,8 +23,8 @@
  * Date         : 8th May 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -48,7 +48,7 @@ create type test.TweetMessageType as
   `message-text` : string
 }
 
-create external  table TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
+create external  dataset TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
 create  index IdIx  on TweetMessages (tweetid:int64) type btree enforced;
 

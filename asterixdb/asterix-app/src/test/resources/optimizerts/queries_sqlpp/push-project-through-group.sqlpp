@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database fuzzyjoin_080 if exists;
-create  database fuzzyjoin_080;
+drop  dataverse fuzzyjoin_080 if exists;
+create  dataverse fuzzyjoin_080;
 
 use fuzzyjoin_080;
 
@@ -36,7 +36,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table DBLP(DBLPType) primary key id on group1;
+create  dataset DBLP(DBLPType) primary key id on group1;
 
 write output to asterix_nc1:"rttest/fuzzyjoin_080.adm"
 select element {'id':paperDBLP.id,'matches':matches}

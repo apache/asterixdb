@@ -23,8 +23,8 @@
  * Date            : May 2 2012
  */
 
-drop  database TinySocial if exists;
-create  database TinySocial;
+drop  dataverse TinySocial if exists;
+create  dataverse TinySocial;
 
 use TinySocial;
 
@@ -49,7 +49,7 @@ create type TinySocial.TweetMessageType as
   `message-text` : string
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create  index idx_LineID_partkey  on TweetMessages (user.name) type btree;
 

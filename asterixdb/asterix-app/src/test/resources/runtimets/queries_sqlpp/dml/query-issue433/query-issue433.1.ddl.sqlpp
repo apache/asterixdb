@@ -23,7 +23,7 @@
  * Date         : 3th April 2013
  */
 
-create  database insertIssue;
+create  dataverse insertIssue;
 
 use insertIssue;
 
@@ -41,5 +41,5 @@ create type insertIssue.elem as
   sub : [subElem]
 }
 
-create  table myDataset(elem) primary key id;
+create  dataset myDataset(elem) primary key id;
 

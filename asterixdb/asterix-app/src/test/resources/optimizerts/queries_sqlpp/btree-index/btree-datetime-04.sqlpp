@@ -23,8 +23,8 @@
  *    Author            : Steven Jacobs
  */
 
-drop  database emergencyTest if exists;
-create  database emergencyTest;
+drop  dataverse emergencyTest if exists;
+create  dataverse emergencyTest;
 
 use emergencyTest;
 
@@ -37,7 +37,7 @@ create type emergencyTest.CHPReport as
   message : string
 }
 
-create  table CHPReports(CHPReport) primary key id;
+create  dataset CHPReports(CHPReport) primary key id;
 
 select element emergency
 from  CHPReports as emergency

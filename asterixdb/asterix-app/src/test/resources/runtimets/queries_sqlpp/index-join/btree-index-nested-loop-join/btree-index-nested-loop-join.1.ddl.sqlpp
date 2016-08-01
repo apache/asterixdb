@@ -21,8 +21,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -55,9 +55,9 @@ create type test.ResultType as
   rank : double
 }
 
-create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
+create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
-create  table results(ResultType) primary key vertexid;
+create  dataset results(ResultType) primary key vertexid;
 

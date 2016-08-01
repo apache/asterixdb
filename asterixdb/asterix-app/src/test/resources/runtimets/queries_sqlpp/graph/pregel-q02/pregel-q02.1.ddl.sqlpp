@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database Pregelix if exists;
-create  database Pregelix;
+drop  dataverse Pregelix if exists;
+create  dataverse Pregelix;
 
 use Pregelix;
 
@@ -36,7 +36,7 @@ create type Pregelix.NodeType as
   edges : {{EdgeType}}
 }
 
-create  table InputGraph(NodeType) primary key id;
+create  dataset InputGraph(NodeType) primary key id;
 
-create  table ResultGraph(NodeType) primary key id;
+create  dataset ResultGraph(NodeType) primary key id;
 

@@ -24,8 +24,8 @@
  * Date           :  25th April 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -37,5 +37,5 @@ create type test.TestType1 as
   id : int64
 }
 
-create  table testds1(TestType1) primary key id;
+create  dataset testds1(TestType1) primary key id;
 

@@ -17,11 +17,11 @@
  * under the License.
  */
 
-drop database test if exists;
-create database test;
+drop dataverse test if exists;
+create dataverse test;
 use test;
 
 create type TType as closed
 { id: int64, content: string }
 
-create table TData (TType) primary key id;
+create dataset TData (TType) primary key id;

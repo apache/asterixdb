@@ -23,8 +23,8 @@
  *
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -49,7 +49,7 @@ create type test.TestType as
   person : Person
 }
 
-create temporary table t1(TestType) primary key id;
+create temporary dataset t1(TestType) primary key id;
 
 create  index rtree_index_point  on t1 (locn) type rtree;
 

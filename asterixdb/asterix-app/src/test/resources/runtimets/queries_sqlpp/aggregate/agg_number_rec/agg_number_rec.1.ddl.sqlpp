@@ -22,8 +22,8 @@
 * Date         : Jun 2nd 2013
 */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -34,5 +34,5 @@ create type test.TestType as
   val : double
 }
 
-create  table Test(TestType) primary key id;
+create  dataset Test(TestType) primary key id;
 

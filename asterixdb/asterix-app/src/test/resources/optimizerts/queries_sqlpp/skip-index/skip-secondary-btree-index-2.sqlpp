@@ -22,8 +22,8 @@
  * Date         : 21th December 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -36,7 +36,7 @@ create type test.TestType as
   lname : string
 }
 
-create  table testdst(TestType) primary key id;
+create  dataset testdst(TestType) primary key id;
 
 create  index sec_Idx  on testdst (fname) type btree;
 

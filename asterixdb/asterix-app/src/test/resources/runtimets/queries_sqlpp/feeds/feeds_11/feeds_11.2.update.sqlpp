@@ -19,4 +19,4 @@
 
 use feeds;
 set `wait-for-completion-feed` `true`;
-connect  feed feeds.TweetFeed to  table feeds.Tweets using policy `BasicFT`;
+connect  feed feeds.TweetFeed to  dataset feeds.Tweets using policy `BasicFT`;

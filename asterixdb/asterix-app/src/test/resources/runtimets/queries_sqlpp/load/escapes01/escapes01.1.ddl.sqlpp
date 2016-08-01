@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database TestDataverse if exists;
-create  database TestDataverse;
+drop  dataverse TestDataverse if exists;
+create  dataverse TestDataverse;
 
 use TestDataverse;
 
@@ -28,5 +28,5 @@ create type TestDataverse.TestType as
   id : string
 }
 
-create  table TestSet(TestType) primary key id;
+create  dataset TestSet(TestType) primary key id;
 

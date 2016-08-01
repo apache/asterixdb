@@ -22,8 +22,8 @@
  * Date         : 21th December 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -41,7 +41,7 @@ create type test.MyRecord as
   circle : circle
 }
 
-create  table MyData(MyRecord) primary key id;
+create  dataset MyData(MyRecord) primary key id;
 
 create  index rtree_index_point  on MyData (point) type rtree;
 

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -30,5 +30,5 @@ create type test.LineIDType as
   l_suppkey : int64
 }
 
-create  table LineID(LineIDType) primary key l_orderkey,l_linenumber;
+create  dataset LineID(LineIDType) primary key l_orderkey,l_linenumber;
 

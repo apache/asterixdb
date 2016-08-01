@@ -23,8 +23,8 @@
  * Date         : 26th November 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -42,5 +42,5 @@ create type test.EmployeeType as
   deptCode : int64
 }
 
-create  table Employees(EmployeeType) primary key id;
+create  dataset Employees(EmployeeType) primary key id;
 

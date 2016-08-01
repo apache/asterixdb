@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 
@@ -30,5 +30,5 @@ create type tpch.RegionType as
   r_comment : string
 }
 
-create  table Regions_group_no_agg(RegionType) primary key r_regionkey;
+create  dataset Regions_group_no_agg(RegionType) primary key r_regionkey;
 

@@ -23,8 +23,8 @@
  *
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -54,7 +54,7 @@ create type test.Schema as
   nested : Schematmp
 }
 
-create  table t1tmp(Schematmp) primary key unique2;
+create  dataset t1tmp(Schematmp) primary key unique2;
 
-create  table t1(Schema) primary key nested.unique2;
+create  dataset t1(Schema) primary key nested.unique2;
 

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database fuzzyjoin if exists;
-create  database fuzzyjoin;
+drop  dataverse fuzzyjoin if exists;
+create  dataverse fuzzyjoin;
 
 use fuzzyjoin;
 
@@ -32,5 +32,5 @@ create type fuzzyjoin.DBLPType as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 

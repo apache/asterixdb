@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -62,9 +62,9 @@ create type test.LineItemTypeOpen as
   l_comment : string
 }
 
-create  table LineItemOpen(LineItemTypeOpen) primary key l_orderkey,l_linenumber;
+create  dataset LineItemOpen(LineItemTypeOpen) primary key l_orderkey,l_linenumber;
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
 create  index idx_partkey_open  on LineItemOpen (l_partkey:int64) type btree enforced;
 

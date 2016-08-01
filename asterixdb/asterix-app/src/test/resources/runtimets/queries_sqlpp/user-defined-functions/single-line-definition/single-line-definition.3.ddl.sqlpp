@@ -24,4 +24,4 @@
  */
 
 
-drop database test;
+drop dataverse test;

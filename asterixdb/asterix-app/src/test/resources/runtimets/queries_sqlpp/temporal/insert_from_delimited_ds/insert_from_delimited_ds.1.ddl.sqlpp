@@ -22,6 +22,6 @@
  * Expected result: success
  */
 
-drop  database testdvt if exists;
-create  database testdvt;
+drop  dataverse testdvt if exists;
+create  dataverse testdvt;
 

@@ -23,8 +23,8 @@
  * Date         : 5th June 2013
  */
 
-drop database test if exists;
-create database test;
+drop dataverse test if exists;
+create dataverse test;
 
 create function test.computeBonus(pbcRating,salary)
 {

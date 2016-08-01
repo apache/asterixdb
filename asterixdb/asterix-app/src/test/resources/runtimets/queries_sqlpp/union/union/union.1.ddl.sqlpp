@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database TinySocial if exists;
-create  database TinySocial;
+drop  dataverse TinySocial if exists;
+create  dataverse TinySocial;
 
 use TinySocial;
 
@@ -33,7 +33,7 @@ create type TinySocial.FacebookMessageType as
   `message-id` : int64
 }
 
-create  table FacebookUsers(FacebookUserType) primary key id;
+create  dataset FacebookUsers(FacebookUserType) primary key id;
 
-create  table FacebookMessages(FacebookMessageType) primary key `message-id`;
+create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;
 

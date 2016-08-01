@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -46,9 +46,9 @@ create type test.MyRecordNested as
   nested : MyRecord
 }
 
-create  table MyData1(MyRecordNested) primary key nested.id;
+create  dataset MyData1(MyRecordNested) primary key nested.id;
 
-create  table MyData2(MyRecord) primary key id;
+create  dataset MyData2(MyRecord) primary key id;
 
 create  index rtree_index  on MyData2 (point) type rtree;
 

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database feeds_10 if exists;
-create  database feeds_10;
+drop  dataverse feeds_10 if exists;
+create  dataverse feeds_10;
 
 use feeds_10;
 
@@ -32,7 +32,7 @@ create type feeds_10.TweetType as
   timestamp : string
 }
 
-create  table Tweets(TweetType) primary key id;
+create  dataset Tweets(TweetType) primary key id;
 
 create  index usernameIdx  on Tweets (username) type btree;
 

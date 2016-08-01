@@ -21,8 +21,8 @@
  * Expected Res : Success
  * Date         : 25th Jul 2016
  */
-drop database experiments if exists;
-create database experiments;
+drop dataverse experiments if exists;
+create dataverse experiments;
 use experiments;
 
 create ingestion policy testPolicy from path 'data/feed-policy/policy.properties'

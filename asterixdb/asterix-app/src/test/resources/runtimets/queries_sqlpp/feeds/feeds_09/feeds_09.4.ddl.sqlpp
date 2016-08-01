@@ -17,4 +17,4 @@
  * under the License.
  */
 
-drop database feeds_09;
+drop dataverse feeds_09;

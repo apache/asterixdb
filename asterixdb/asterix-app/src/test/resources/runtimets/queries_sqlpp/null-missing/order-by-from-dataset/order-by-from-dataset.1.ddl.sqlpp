@@ -19,8 +19,8 @@
 
 
 
-drop database test if exists;
-create database test;
+drop dataverse test if exists;
+create dataverse test;
 
 use test;
 
@@ -28,5 +28,5 @@ create type TestType as {
    b: int64
 }
 
-create table data(TestType) primary key b;
+create dataset data(TestType) primary key b;
 

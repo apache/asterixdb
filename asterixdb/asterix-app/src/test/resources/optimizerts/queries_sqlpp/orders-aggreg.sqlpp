@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database `orders-aggreg` if exists;
-create  database `orders-aggreg`;
+drop  dataverse `orders-aggreg` if exists;
+create  dataverse `orders-aggreg`;
 
 use `orders-aggreg`;
 
@@ -37,7 +37,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table Orders(OrderType) primary key oid on group1;
+create  dataset Orders(OrderType) primary key oid on group1;
 
 write output to asterix_nc1:"/tmp/orders-aggreg.adm"
 select element {'cid':cid,'ordpercust':`orders-aggreg`.coll_count(o),'totalcust':`orders-aggreg`.coll_sum((

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database colocated if exists;
-create  database colocated;
+drop  dataverse colocated if exists;
+create  dataverse colocated;
 
 use colocated;
 
@@ -37,9 +37,9 @@ create type colocated.VisitorType as
   lottery_numbers : {{int32}}
 }
 
-create  table Users(UserType) primary key uid;
+create  dataset Users(UserType) primary key uid;
 
-create  table Visitors(VisitorType) primary key vid;
+create  dataset Visitors(VisitorType) primary key vid;
 
 write output to asterix_nc1:"/tmp/fuzzy1.adm"
 select element {'user_name':user.name,'visitor_name':visitor.name}

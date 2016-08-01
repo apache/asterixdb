@@ -20,8 +20,8 @@
  * Test case Name  : insert-and-scan-joined-datasets.aql
  * Description     : This test is intended to test inserting into a dataset where the incoming stream
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -31,9 +31,9 @@ create type test.myDataType as
   id : int32
 }
 
-create  table myData(myDataType) primary key id;
+create  dataset myData(myDataType) primary key id;
 
-create  table myData2(myDataType) primary key id;
+create  dataset myData2(myDataType) primary key id;
 
 insert into myData
 select element {'id':(x.id + 1)}

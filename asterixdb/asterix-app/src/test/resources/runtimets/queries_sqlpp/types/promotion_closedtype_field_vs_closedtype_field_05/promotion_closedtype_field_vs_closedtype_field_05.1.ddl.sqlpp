@@ -22,8 +22,8 @@
 * - Expected Result: Success
 */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -42,7 +42,7 @@ create type test.deptInfoType as
   dname : string
 }
 
-create  table empDataset(empInfoType) primary key id;
+create  dataset empDataset(empInfoType) primary key id;
 
-create  table deptDataset(deptInfoType) primary key did;
+create  dataset deptDataset(deptInfoType) primary key did;
 

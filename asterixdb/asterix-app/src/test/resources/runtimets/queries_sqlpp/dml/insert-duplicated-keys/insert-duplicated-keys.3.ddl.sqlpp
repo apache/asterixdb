@@ -18,4 +18,4 @@
  */
 /* this should successfully drop STBench dataverse */
 
-drop  database STBench;
+drop  dataverse STBench;

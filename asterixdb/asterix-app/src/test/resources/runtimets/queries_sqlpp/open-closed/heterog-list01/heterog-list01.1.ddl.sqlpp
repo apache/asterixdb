@@ -24,8 +24,8 @@
  * Date           : 14th April 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -44,5 +44,5 @@ create type test.TestType as
   batters : {{BatterType}}
 }
 
-create  table T1(TestType) primary key id;
+create  dataset T1(TestType) primary key id;
 

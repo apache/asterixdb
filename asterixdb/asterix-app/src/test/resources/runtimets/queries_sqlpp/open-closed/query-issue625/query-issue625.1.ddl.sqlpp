@@ -23,8 +23,8 @@
  * Notes           : This test was written to verify the fix for issue625.
  */
 
-drop  database fooverse if exists;
-create  database fooverse;
+drop  dataverse fooverse if exists;
+create  dataverse fooverse;
 
 use fooverse;
 
@@ -35,5 +35,5 @@ create type fooverse.FooType as
   numbers : [int64]
 }
 
-create  table Foo(FooType) primary key id;
+create  dataset Foo(FooType) primary key id;
 

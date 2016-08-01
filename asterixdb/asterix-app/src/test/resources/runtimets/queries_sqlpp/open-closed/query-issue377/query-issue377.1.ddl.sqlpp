@@ -23,8 +23,8 @@
  * Date         : 11th May 2013
  */
 
-drop  database TinySocial if exists;
-create  database TinySocial;
+drop  dataverse TinySocial if exists;
+create  dataverse TinySocial;
 
 use TinySocial;
 
@@ -49,11 +49,11 @@ create type TinySocial.FacebookMessageType as
   `message-id` : int64
 }
 
-create  table FacebookUsers(FacebookUserType) primary key id;
+create  dataset FacebookUsers(FacebookUserType) primary key id;
 
-create  table FacebookMessages(FacebookMessageType) primary key `message-id`;
+create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;
 
-create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
+create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
-create  table TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
+create  dataset TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
 

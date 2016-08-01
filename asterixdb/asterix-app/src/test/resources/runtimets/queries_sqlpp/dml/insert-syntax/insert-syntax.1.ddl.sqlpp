@@ -23,8 +23,8 @@
  * Date         : 6th March 2013
  */
 
-drop  database testdv2 if exists;
-create  database testdv2;
+drop  dataverse testdv2 if exists;
+create  dataverse testdv2;
 
 use testdv2;
 
@@ -35,5 +35,5 @@ create type testdv2.testtype as
   name : string
 }
 
-create  table testds(testtype) primary key id;
+create  dataset testds(testtype) primary key id;
 

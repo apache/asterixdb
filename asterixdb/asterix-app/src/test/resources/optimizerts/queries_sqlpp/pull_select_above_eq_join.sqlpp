@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database `pull-select-above-eq-join` if exists;
-create  database `pull-select-above-eq-join`;
+drop  dataverse `pull-select-above-eq-join` if exists;
+create  dataverse `pull-select-above-eq-join`;
 
 use `pull-select-above-eq-join`;
 
@@ -43,9 +43,9 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table Users(UserType) primary key uid on group1;
+create  dataset Users(UserType) primary key uid on group1;
 
-create  table Visitors(VisitorType) primary key vid on group1;
+create  dataset Visitors(VisitorType) primary key vid on group1;
 
 write output to asterix_nc1:"/tmp/pull-select-above-eq-join.adm"
 select element {'uid':user.uid,'vid':visitor.vid}

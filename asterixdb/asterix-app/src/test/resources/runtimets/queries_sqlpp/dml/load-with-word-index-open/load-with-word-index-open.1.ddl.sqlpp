@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -40,9 +40,9 @@ create type test.DBLPTypeOpen as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 
-create  table DBLPOpen(DBLPTypeOpen) primary key id;
+create  dataset DBLPOpen(DBLPTypeOpen) primary key id;
 
 create  index keyword_index  on DBLPOpen (title:string) type keyword enforced;
 

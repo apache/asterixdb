@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -32,5 +32,5 @@ create type test.TempType as
   duration : duration
 }
 
-create external  table Temp(TempType) using localfs((`path`=`asterix_nc1://data/nontagged/tempData.json`),(`format`=`adm`));
+create external  dataset Temp(TempType) using localfs((`path`=`asterix_nc1://data/nontagged/tempData.json`),(`format`=`adm`));
 

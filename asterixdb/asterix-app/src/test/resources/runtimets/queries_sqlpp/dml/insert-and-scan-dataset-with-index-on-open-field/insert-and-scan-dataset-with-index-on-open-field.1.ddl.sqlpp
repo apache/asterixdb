@@ -24,8 +24,8 @@
  * Date            : November 15 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 create type test.Emp as
 {
@@ -44,9 +44,9 @@ create type test.EmpClosed as
   dept : string
 }
 
-create  table test.employee(Emp) primary key id;
+create  dataset test.employee(Emp) primary key id;
 
-create  table test.employeeClosed(EmpClosed) primary key id;
+create  dataset test.employeeClosed(EmpClosed) primary key id;
 
 create  index idx_employee_first_name  on test.employee (fname:string) type btree enforced;
 

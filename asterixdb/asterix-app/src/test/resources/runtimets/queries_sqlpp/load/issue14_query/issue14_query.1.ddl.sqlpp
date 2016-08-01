@@ -22,8 +22,8 @@
  * Date         : 16 Jan 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -35,5 +35,5 @@ create type test.Schema as
   name : string
 }
 
-create  table onektup(Schema) primary key id;
+create  dataset onektup(Schema) primary key id;
 

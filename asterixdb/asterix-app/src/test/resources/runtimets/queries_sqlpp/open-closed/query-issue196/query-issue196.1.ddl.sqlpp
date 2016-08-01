@@ -23,8 +23,8 @@
  * Date         : 5th May 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -39,7 +39,7 @@ create type test.testtype2 as
   id : int64
 }
 
-create  table t1(testtype1) primary key id;
+create  dataset t1(testtype1) primary key id;
 
-create  table t2(testtype2) primary key id;
+create  dataset t2(testtype2) primary key id;
 

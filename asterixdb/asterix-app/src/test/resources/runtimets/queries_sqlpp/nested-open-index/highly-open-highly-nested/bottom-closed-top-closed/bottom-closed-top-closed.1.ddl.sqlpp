@@ -25,8 +25,8 @@
 * Date         : 20 Oct 2014
 */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -89,23 +89,23 @@ create type test.Animal as
   class : Classification
 }
 
-create  table Animals(Animal) primary key id;
+create  dataset Animals(Animal) primary key id;
 
-create  table Classifications(Classification) primary key id;
+create  dataset Classifications(Classification) primary key id;
 
-create  table KPCOFGSs(KPCOFGS) primary key id;
+create  dataset KPCOFGSs(KPCOFGS) primary key id;
 
-create  table Ss(S) primary key id;
+create  dataset Ss(S) primary key id;
 
-create  table GSs(GS) primary key id;
+create  dataset GSs(GS) primary key id;
 
-create  table FGSs(FGS) primary key id;
+create  dataset FGSs(FGS) primary key id;
 
-create  table OFGSs(OFGS) primary key id;
+create  dataset OFGSs(OFGS) primary key id;
 
-create  table COFGSs(COFGS) primary key id;
+create  dataset COFGSs(COFGS) primary key id;
 
-create  table PCOFGSs(PCOFGS) primary key id;
+create  dataset PCOFGSs(PCOFGS) primary key id;
 
 create  index species  on Ss (Species) type btree;
 

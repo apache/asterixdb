@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -29,7 +29,7 @@ create type test.testType as
   `value` : string
 }
 
-create  table testDS(testType) primary key id;
+create  dataset testDS(testType) primary key id;
 
 create  index testIdx  on testDS (`value`:int32) type btree enforced;
 

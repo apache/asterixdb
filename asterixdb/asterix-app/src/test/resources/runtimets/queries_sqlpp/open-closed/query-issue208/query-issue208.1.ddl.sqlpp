@@ -23,8 +23,8 @@
  * Date         : 26th November 2012
  */
 
-drop  database OpenSocialNetworkData if exists;
-create  database OpenSocialNetworkData;
+drop  dataverse OpenSocialNetworkData if exists;
+create  dataverse OpenSocialNetworkData;
 
 use OpenSocialNetworkData;
 
@@ -46,5 +46,5 @@ create type OpenSocialNetworkData.TweetMessageType as
   `send-time-copy` : datetime
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 

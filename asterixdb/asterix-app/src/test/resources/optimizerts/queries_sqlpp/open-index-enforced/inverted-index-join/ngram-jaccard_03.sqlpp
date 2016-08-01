@@ -22,8 +22,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -38,7 +38,7 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (title:string) type ngram (3) enforced;
 

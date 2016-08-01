@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -35,7 +35,7 @@ create type test.TestType as
   nested : TestTypetmp
 }
 
-create  table testdst(TestType) primary key nested.fname with filter on nested.lname;
+create  dataset testdst(TestType) primary key nested.fname with filter on nested.lname;
 
 select element emp.nested
 from  testdst as emp

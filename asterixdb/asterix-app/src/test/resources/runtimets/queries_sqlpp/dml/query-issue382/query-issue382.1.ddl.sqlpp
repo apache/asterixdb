@@ -17,7 +17,7 @@
  * under the License.
  */
 
-create  database SocialNetworkData;
+create  dataverse SocialNetworkData;
 
 use SocialNetworkData;
 
@@ -41,7 +41,7 @@ create type SocialNetworkData.FacebookUserType as
   employment : [EmploymentType]
 }
 
-create  table FacebookUsers(FacebookUserType) primary key id;
+create  dataset FacebookUsers(FacebookUserType) primary key id;
 
-create  table HandbookUsers(FacebookUserType) primary key id;
+create  dataset HandbookUsers(FacebookUserType) primary key id;
 

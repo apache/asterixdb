@@ -16,6 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-drop database tpch if exists;
+drop dataverse tpch if exists;
 
 drop nodegroup group_test if exists;

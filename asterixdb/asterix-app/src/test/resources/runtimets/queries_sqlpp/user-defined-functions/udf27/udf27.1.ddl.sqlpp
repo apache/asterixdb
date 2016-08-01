@@ -25,8 +25,8 @@
 // this test is not giving expected results.
 // issue 194 reported to track this
 
-drop database test if exists;
-create database test;
+drop dataverse test if exists;
+create dataverse test;
 
 use test;
 

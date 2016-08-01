@@ -22,8 +22,8 @@
  * Date         : 30 Oct 2013
  */
 
-drop  database foo if exists;
-create  database foo;
+drop  dataverse foo if exists;
+create  dataverse foo;
 
 use foo;
 
@@ -37,5 +37,5 @@ create type foo.bartype as
 
 }
 
-create  table baz(bartype) primary key id;
+create  dataset baz(bartype) primary key id;
 

@@ -23,8 +23,8 @@
  * Date         : 8th May 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -50,9 +50,9 @@ create type test.TweetMessageType as
   countA : int64
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
-create  table TweetMessagesTmp(TweetMessageType) primary key tweetid;
+create  dataset TweetMessagesTmp(TweetMessageType) primary key tweetid;
 
 create  index msgCountBIx  on TweetMessages (countB:int64) type btree enforced;
 

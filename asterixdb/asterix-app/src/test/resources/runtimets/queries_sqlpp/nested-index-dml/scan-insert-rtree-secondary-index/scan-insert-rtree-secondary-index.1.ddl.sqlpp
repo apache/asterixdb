@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -52,11 +52,11 @@ create type test.MyMiniRecord as
   nested : MyMiniRecordtmp
 }
 
-create  table MyDatatmp(MyRecordtmp) primary key id;
+create  dataset MyDatatmp(MyRecordtmp) primary key id;
 
-create  table MyMiniDatatmp(MyMiniRecordtmp) primary key id;
+create  dataset MyMiniDatatmp(MyMiniRecordtmp) primary key id;
 
-create  table MyData(MyRecord) primary key nested.id;
+create  dataset MyData(MyRecord) primary key nested.id;
 
-create  table MyMiniData(MyMiniRecord) primary key nested.id;
+create  dataset MyMiniData(MyMiniRecord) primary key nested.id;
 

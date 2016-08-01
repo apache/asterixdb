@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -56,9 +56,9 @@ create type test.CSXType as
   nested : CSXTypetmp
 }
 
-create  table DBLP(DBLPType) primary key nested.id;
+create  dataset DBLP(DBLPType) primary key nested.id;
 
-create  table CSX(CSXType) primary key nested.id;
+create  dataset CSX(CSXType) primary key nested.id;
 
 create  index title_index  on CSX (nested.title:string) type btree enforced;
 

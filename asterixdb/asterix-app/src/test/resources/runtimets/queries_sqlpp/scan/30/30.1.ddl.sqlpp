@@ -18,8 +18,8 @@
  */
 /* scan and print 2 ADM file splits as an external dataset of closed records */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -33,5 +33,5 @@ create type test.DBLPType as
   misc : string
 }
 
-create external  table DBLPsplits(DBLPType) using localfs((`path`=`asterix_nc1://data/dblp-small/dblp-small.adm`),(`format`=`adm`));
+create external  dataset DBLPsplits(DBLPType) using localfs((`path`=`asterix_nc1://data/dblp-small/dblp-small.adm`),(`format`=`adm`));
 

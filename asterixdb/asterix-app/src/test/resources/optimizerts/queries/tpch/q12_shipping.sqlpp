@@ -18,8 +18,8 @@
  */
 
 
-DROP database tpch IF EXISTS;
-CREATE  database tpch;
+DROP dataverse tpch IF EXISTS;
+CREATE  dataverse tpch;
 
 USE tpch;
 
@@ -32,9 +32,9 @@ CREATE TYPE OrderType AS {
   o_orderkey : int32
 }
 
-CREATE TABLE LineItem(LineItemType) PRIMARY KEY l_linenumber;
+CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_linenumber;
 
-CREATE TABLE Orders(OrderType) PRIMARY KEY o_orderkey;
+CREATE DATASET Orders(OrderType) PRIMARY KEY o_orderkey;
 
 /** The plan tests that the expression for different switch-case branches are not extracted.*/
 SELECT l.l_shipmode,

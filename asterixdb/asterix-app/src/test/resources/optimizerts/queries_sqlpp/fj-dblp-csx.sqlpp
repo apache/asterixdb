@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database `fj-dblp-csx` if exists;
-create  database `fj-dblp-csx`;
+drop  dataverse `fj-dblp-csx` if exists;
+create  dataverse `fj-dblp-csx`;
 
 use `fj-dblp-csx`;
 
@@ -45,9 +45,9 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table DBLP(DBLPType) primary key id on group1;
+create  dataset DBLP(DBLPType) primary key id on group1;
 
-create  table CSX(CSXType) primary key id on group1;
+create  dataset CSX(CSXType) primary key id on group1;
 
 write output to asterix_nc1:"rttest/fj-dblp-csx.adm"
 select element {'idDBLP':idDBLP,'idCSX':idCSX}

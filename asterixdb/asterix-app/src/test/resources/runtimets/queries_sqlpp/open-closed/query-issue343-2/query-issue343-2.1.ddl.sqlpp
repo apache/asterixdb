@@ -23,8 +23,8 @@
  * Date         : 30th April 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -63,7 +63,7 @@ create type test.MyListType as
   mylist : [string]
 }
 
-create  table `All`(AllType) primary key id;
+create  dataset `All`(AllType) primary key id;
 
-create  table MyList(MyListType) primary key id;
+create  dataset MyList(MyListType) primary key id;
 

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -41,9 +41,9 @@ create type test.CSXType as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 
-create  table CSX(CSXType) primary key id;
+create  dataset CSX(CSXType) primary key id;
 
 SELECT a.id AS aid, b.id AS bid
 FROM DBLP AS a

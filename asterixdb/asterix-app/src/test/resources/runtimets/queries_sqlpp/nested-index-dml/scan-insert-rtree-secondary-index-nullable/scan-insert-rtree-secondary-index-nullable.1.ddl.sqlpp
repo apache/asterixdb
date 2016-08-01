@@ -23,8 +23,8 @@
  * Date            : May 12 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -52,5 +52,5 @@ create type test.MyMiniRecord as
   nested : MyMiniRecordtmp
 }
 
-create  table MyDatatmp(MyRecordtmp) primary key id;
+create  dataset MyDatatmp(MyRecordtmp) primary key id;
 

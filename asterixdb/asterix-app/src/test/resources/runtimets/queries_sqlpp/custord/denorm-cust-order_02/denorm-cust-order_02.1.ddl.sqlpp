@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -60,9 +60,9 @@ create type test.CustomerOrdersType as
   orders : [OrderType]
 }
 
-create  table Customers2(CustomerType) primary key cid;
+create  dataset Customers2(CustomerType) primary key cid;
 
-create  table Orders2(OrderType) primary key oid;
+create  dataset Orders2(OrderType) primary key oid;
 
-create  table CustomerOrders2(CustomerOrdersType) primary key cid;
+create  dataset CustomerOrders2(CustomerOrdersType) primary key cid;
 

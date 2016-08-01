@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database TinySocial if exists;
-create  database TinySocial;
+drop  dataverse TinySocial if exists;
+create  dataverse TinySocial;
 
 use TinySocial;
 
@@ -40,5 +40,5 @@ create type TinySocial.FacebookUserType as
   employment : [EmploymentType]
 }
 
-create  table FacebookUsers(FacebookUserType) primary key id;
+create  dataset FacebookUsers(FacebookUserType) primary key id;
 

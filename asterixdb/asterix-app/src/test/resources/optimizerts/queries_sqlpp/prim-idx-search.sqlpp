@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database prim_index_search if exists;
-create  database prim_index_search;
+drop  dataverse prim_index_search if exists;
+create  dataverse prim_index_search;
 
 use prim_index_search;
 
@@ -40,7 +40,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table Orders(OrderType) primary key o_orderkey on group1;
+create  dataset Orders(OrderType) primary key o_orderkey on group1;
 
 write output to asterix_nc1:"/tmp/prim_index_search.adm"
 select element {'o_orderkey':o.o_orderkey,'o_custkey':o.o_custkey}

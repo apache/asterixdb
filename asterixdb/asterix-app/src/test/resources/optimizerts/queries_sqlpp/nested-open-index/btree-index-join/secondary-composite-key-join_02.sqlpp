@@ -23,8 +23,8 @@
  * Date         : 11th November 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -39,7 +39,7 @@ create type test.NameType as
   nested : Nametmp
 }
 
-create  table Names(NameType) primary key nested.id;
+create  dataset Names(NameType) primary key nested.id;
 
 create  index Name_idx  on Names (nested.fname:string,lnested.name:string) type btree enforced;
 

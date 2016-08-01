@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database feeds if exists;
-create  database feeds;
+drop  dataverse feeds if exists;
+create  dataverse feeds;
 
 use feeds;
 
@@ -43,7 +43,7 @@ create type feeds.TweetMessageType as
   country : string
 }
 
-create  table SyntheticTweets(TweetMessageType) primary key id;
+create  dataset SyntheticTweets(TweetMessageType) primary key id;
 create  index ngram_index  on SyntheticTweets (message_text) type ngram (3);
 create  primary feed SyntheticTweetFeed using twitter_firehose (
 (`duration`=`5`),

@@ -26,6 +26,6 @@
 use deliber;
 
 
-load  table Restaurants using
+load  dataset Restaurants using
 localfs
 ((`path`=`asterix_nc1://data/restaurants/restaurants.adm`),(`format`=`adm`));

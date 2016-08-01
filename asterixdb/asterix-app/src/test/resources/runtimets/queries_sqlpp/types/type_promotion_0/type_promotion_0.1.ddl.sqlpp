@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database TestVerse if exists;
-create  database TestVerse;
+drop  dataverse TestVerse if exists;
+create  dataverse TestVerse;
 
 use TestVerse;
 
@@ -37,5 +37,5 @@ create type TestVerse.Int64TestType as
   myoptfloat : float?
 }
 
-create  table Int64Test(Int64TestType) primary key myint64;
+create  dataset Int64Test(Int64TestType) primary key myint64;
 

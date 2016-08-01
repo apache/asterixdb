@@ -23,8 +23,8 @@
  * Date            : May 12 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -55,9 +55,9 @@ create type test.CustomerType as
   nested : CustomerTypetmp
 }
 
-create  table Customerstmp(CustomerTypetmp) primary key cid;
+create  dataset Customerstmp(CustomerTypetmp) primary key cid;
 
-create  table CustomersMinitmp(CustomerTypetmp) primary key cid;
+create  dataset CustomersMinitmp(CustomerTypetmp) primary key cid;
 
-create  table CustomersMini(CustomerType) primary key nested.cid;
+create  dataset CustomersMini(CustomerType) primary key nested.cid;
 

@@ -33,5 +33,5 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table DBLP(DBLPType) primary key id on group1;
+create  dataset DBLP(DBLPType) primary key id on group1;
 

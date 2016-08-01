@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database twitter if exists;
-create  database twitter;
+drop  dataverse twitter if exists;
+create  dataverse twitter;
 
 use twitter;
 
@@ -32,7 +32,7 @@ create type twitter.Tweet as
   text : string
 }
 
-create external  table TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/smalltweets.txt`),("format"="adm"));
+create external  dataset TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/smalltweets.txt`),("format"="adm"));
 
 write output to asterix_nc1:"/tmp/count-tweets.adm"
 select element {'word':tok,'count':count(token)}

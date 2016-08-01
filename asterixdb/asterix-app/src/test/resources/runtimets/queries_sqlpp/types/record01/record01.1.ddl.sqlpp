@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database local if exists;
-create  database local;
+drop  dataverse local if exists;
+create  dataverse local;
 
 use local;
 
@@ -28,5 +28,5 @@ create type local.ttype as
   id : int32
 }
 
-create  table dset(ttype) primary key id;
+create  dataset dset(ttype) primary key id;
 

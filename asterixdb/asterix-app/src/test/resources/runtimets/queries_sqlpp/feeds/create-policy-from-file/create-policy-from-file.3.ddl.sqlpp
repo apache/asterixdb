@@ -24,4 +24,4 @@
 
 use experiments;
 drop ingestion policy testPolicy;
-drop database experiments;
+drop dataverse experiments;

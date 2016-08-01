@@ -23,8 +23,8 @@
  * Date         : 29th November 2012
  */
 
-drop  database test1 if exists;
-create  database test1;
+drop  dataverse test1 if exists;
+create  dataverse test1;
 
 create type test1.TestTypetmp as
 {
@@ -39,9 +39,9 @@ create type test1.TestType as
   nested : TestTypetmp
 }
 
-create  table test1.DsOne(TestType) primary key nested.key1;
+create  dataset test1.DsOne(TestType) primary key nested.key1;
 
-create  table test1.DsTwo(TestType) primary key nested.key1;
+create  dataset test1.DsTwo(TestType) primary key nested.key1;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-le-join_01.adm"
 select element x

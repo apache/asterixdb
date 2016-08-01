@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 
@@ -43,9 +43,9 @@ create type tpch.LineItemType as
   l_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
-load  table LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
+load  dataset LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
 
 write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.coll_sum((

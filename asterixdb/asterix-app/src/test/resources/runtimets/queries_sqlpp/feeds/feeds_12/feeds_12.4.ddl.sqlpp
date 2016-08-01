@@ -17,4 +17,4 @@
  * under the License.
  */
 
-drop database feeds_12 if exists;
+drop dataverse feeds_12 if exists;

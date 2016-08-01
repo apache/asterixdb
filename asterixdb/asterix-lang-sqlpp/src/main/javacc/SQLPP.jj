@@ -2867,9 +2867,9 @@ TOKEN [IGNORE_CASE]:
   | <COMPACT : "compact">
   | <CONNECT : "connect">
   | <CORRELATE : "correlate">
-  | <DATASET : "table">
+  | <DATASET : "dataset">
   | <COLLECTION : "collection">
-  | <DATAVERSE : "database">
+  | <DATAVERSE : "dataverse">
   | <DECLARE : "declare">
   | <DEFINITION : "definition">
   | <DELETE : "delete">
