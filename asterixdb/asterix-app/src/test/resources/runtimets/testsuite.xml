@@ -5767,6 +5767,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
+      <compilation-unit name="q01-ASTERIXDB-830">
+        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="q20_potential_part_promotion">
         <output-dir compare="Text">q20_potential_part_promotion</output-dir>
       </compilation-unit>
