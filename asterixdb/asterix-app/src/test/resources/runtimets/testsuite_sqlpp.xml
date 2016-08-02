@@ -69,6 +69,11 @@
         <output-dir compare="Text">explain_simple</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_caps">
+        <output-dir compare="Text">explain_simple</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <!--
     <test-group name="union">

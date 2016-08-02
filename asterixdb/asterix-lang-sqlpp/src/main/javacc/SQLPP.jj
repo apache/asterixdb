@@ -1568,7 +1568,7 @@ Query ExplainStatement() throws ParseException:
   Query query;
 }
 {
-  "explain" query = Query(true)
+  <EXPLAIN> query = Query(true)
   {
     return query;
   }
@@ -2878,6 +2878,7 @@ TOKEN [IGNORE_CASE]:
   | <DISTINCT : "distinct">
   | <DROP : "drop">
   | <ELEMENT : "element">
+  | <EXPLAIN : "explain">
   | <ELSE : "else">
   | <ENFORCED : "enforced">
   | <END : "end">
