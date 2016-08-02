@@ -28,7 +28,7 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>16</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -42,7 +42,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jvm.extraargs/>
+    <jvm.extraargs />
     <jdk.version>1.8</jdk.version>
     <runSlowAQLTests>false</runSlowAQLTests>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
@@ -234,7 +234,7 @@
             <module name="Checker">
               <!-- Checks for whitespace                               -->
               <!-- See http://checkstyle.sf.net/config_whitespace.html -->
-              <module name="FileTabCharacter"/>
+              <module name="FileTabCharacter" />
             </module>
           </checkstyleRules>
           <includes>**/*.java,**/*.jj</includes>
@@ -283,7 +283,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -296,7 +296,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -309,7 +309,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -322,7 +322,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -335,7 +335,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -348,7 +348,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -387,25 +387,25 @@
     <profile>
       <id>optimizer-tests</id>
       <properties>
-        <optimizer.tests/>
+        <optimizer.tests />
       </properties>
     </profile>
     <profile>
       <id>metadata-tests</id>
       <properties>
-        <metadata.tests/>
+        <metadata.tests />
       </properties>
     </profile>
     <profile>
       <id>execution-tests</id>
       <properties>
-        <execution.tests/>
+        <execution.tests />
       </properties>
     </profile>
     <profile>
       <id>invalid-tests</id>
       <properties>
-        <invalid.tests/>
+        <invalid.tests />
       </properties>
     </profile>
     <profile>
@@ -516,7 +516,7 @@
         </plugins>
       </build>
       <properties>
-        <coverage/>
+        <coverage />
       </properties>
     </profile>
     <profile>
@@ -527,7 +527,7 @@
         </property>
       </activation>
       <properties>
-        <coverageArgLine/>
+        <coverageArgLine />
       </properties>
     </profile>
     <profile>

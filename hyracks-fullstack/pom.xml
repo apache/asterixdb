@@ -29,7 +29,7 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>16</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -44,7 +44,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jdk.version>1.8</jdk.version>
-    <jvm.extraargs/>
+    <jvm.extraargs />
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
 
     <!-- Definition of tests in various categories which may be excluded -->
@@ -299,7 +299,7 @@
             <module name="Checker">
               <!-- Checks for whitespace                               -->
               <!-- See http://checkstyle.sf.net/config_whitespace.html -->
-              <module name="FileTabCharacter"/>
+              <module name="FileTabCharacter" />
             </module>
           </checkstyleRules>
           <includes>**/*.java,**/*.jj</includes>
@@ -348,7 +348,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -361,7 +361,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -376,7 +376,7 @@
     <profile>
       <id>hanging-pregelix-tests</id>
       <properties>
-        <hanging.pregelix.tests/>
+        <hanging.pregelix.tests />
       </properties>
     </profile>
     <profile>
@@ -453,7 +453,7 @@
         </plugins>
       </build>
       <properties>
-        <coverage/>
+        <coverage />
       </properties>
     </profile>
     <profile>
@@ -464,7 +464,7 @@
         </property>
       </activation>
       <properties>
-        <coverageArgLine/>
+        <coverageArgLine />
       </properties>
     </profile>
     <profile>

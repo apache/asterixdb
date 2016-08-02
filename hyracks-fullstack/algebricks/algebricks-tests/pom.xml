@@ -51,13 +51,13 @@
             <configuration>
               <tasks>
                 <ant antfile="build-script.xml" target="build">
-                  <property name="main.class" value="org.apache.hyracks.algebricks.tests.script.IdentityStreamingScript"/>
-                  <property name="script.classpath" refid="maven.compile.classpath"/>
-                  <property name="jvm.params" value=""/>
-                  <property name="program.params" value=""/>
-                  <property name="source" value="${basedir}/src/main/scripts/run"/>
-                  <property name="target.dir" value="${basedir}/target/testscripts"/>
-                  <property name="target" value="idscript"/>
+                  <property name="main.class" value="org.apache.hyracks.algebricks.tests.script.IdentityStreamingScript" />
+                  <property name="script.classpath" refid="maven.compile.classpath" />
+                  <property name="jvm.params" value="" />
+                  <property name="program.params" value="" />
+                  <property name="source" value="${basedir}/src/main/scripts/run" />
+                  <property name="target.dir" value="${basedir}/target/testscripts" />
+                  <property name="target" value="idscript" />
                 </ant>
               </tasks>
             </configuration>
@@ -92,7 +92,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore/>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
