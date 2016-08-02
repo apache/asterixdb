@@ -233,7 +233,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             case QUERY_RESULT:
                 return new QueryResultAPIServlet();
             case QUERY_SERVICE:
-                return new QueryServiceServlet();
+                return new QueryServiceServlet(new SqlppCompilationProvider());
             case CONNECTOR:
                 return new ConnectorAPIServlet();
             case SHUTDOWN:

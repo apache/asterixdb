@@ -61,7 +61,7 @@ public class QueryServiceServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(QueryServiceServlet.class.getName());
 
-    private transient final ILangCompilationProvider compilationProvider = new SqlppCompilationProvider();
+    private transient final ILangCompilationProvider compilationProvider;
 
     public enum Parameter {
         // Standard
@@ -208,6 +208,10 @@ public class QueryServiceServlet extends HttpServlet {
             }
             return "illegal string value: " + strTime;
         }
+    }
+
+    public QueryServiceServlet(final ILangCompilationProvider compilationProvider) {
+        this.compilationProvider = compilationProvider;
     }
 
     private static String getParameterValue(String content, String attribute) {
