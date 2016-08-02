@@ -124,7 +124,7 @@
       <plugin>
         <groupId>org.apache.asterix</groupId>
         <artifactId>asterix-test-datagenerator-maven-plugin</artifactId>
-        <version>0.8.9-SNAPSHOT</version>
+        <version>${project.version}</version>
         <executions>
           <execution>
             <id>replace-template-data</id>
@@ -319,13 +319,11 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-test-support</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-api</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

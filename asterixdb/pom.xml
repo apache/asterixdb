@@ -733,6 +733,22 @@
         <version>${hyracks.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-hdfs-core</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-test-support</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-api</artifactId>
+        <version>${hyracks.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>${json.version}</version>
