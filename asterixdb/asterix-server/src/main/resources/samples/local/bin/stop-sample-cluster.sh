@@ -32,7 +32,7 @@ fi
   exit 2
 }
 
-curl -X POST http://localhost:19002/admin/shutdown
+curl -X POST http://localhost:${LISTEN_PORT}/${SHUTDOWN_SERVLET_PATH}
 $JAVA_HOME/bin/jps | awk '/NCService/ { print $1 }' | xargs kill
 echo
 echo -n "Waiting for CCDriver to terminate."

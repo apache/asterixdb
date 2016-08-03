@@ -43,9 +43,21 @@
       <directory>src/main/resources</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>LICENSE*</include>
         <include>samples/**</include>
       </includes>
+      <excludes>
+        <exclude>**/*.sh</exclude>
+      </excludes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/resources</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>samples/**/*.sh</include>
+      </includes>
+      <filtered>true</filtered>
+      <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
       <directory>target/appassembler/repo</directory>

@@ -148,8 +148,11 @@
         <executions>
           <execution>
             <configuration>
+              <filters>
+                <filter>${project.basedir}/src/main/assembly/filter.properties</filter>
+              </filters>
               <descriptors>
-                <descriptor>src/main/assembly/binary-assembly.xml</descriptor>
+                <descriptor>${project.basedir}/src/main/assembly/binary-assembly.xml</descriptor>
               </descriptors>
             </configuration>
             <phase>package</phase>
