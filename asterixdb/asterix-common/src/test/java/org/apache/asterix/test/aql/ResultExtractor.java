@@ -38,7 +38,7 @@ public class ResultExtractor {
 
     private static final Logger LOGGER = Logger.getLogger(ResultExtractor.class.getName());
 
-    static InputStream extract(InputStream resultStream) throws Exception {
+    public static InputStream extract(InputStream resultStream) throws Exception {
         String result = IOUtils.toString(resultStream, Charset.forName("UTF-8"));
 
         LOGGER.fine("+++++++\n" + result + "\n+++++++\n");
