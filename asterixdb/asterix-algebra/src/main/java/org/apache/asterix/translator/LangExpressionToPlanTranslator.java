@@ -39,6 +39,8 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -103,6 +105,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -141,6 +144,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -1587,5 +1591,54 @@ class LangExpressionToPlanTranslator
                         new ArrayList<>(Collections.singletonList(expr)))));
         return new MutableObject<>(
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), arguments));
+    }
+
+    // Generates the plan for "UNION ALL" or union expression from its input expressions.
+    protected Pair<ILogicalOperator, LogicalVariable> translateUnionAllFromInputExprs(List<ILangExpression> inputExprs,
+            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+        List<Mutable<ILogicalOperator>> inputOpRefsToUnion = new ArrayList<>();
+        List<LogicalVariable> vars = new ArrayList<>();
+        for (ILangExpression expr : inputExprs) {
+            // Visits the expression of one branch.
+            Pair<ILogicalOperator, LogicalVariable> opAndVar = expr.accept(this, tupSource);
+
+            // Creates an unnest operator.
+            LogicalVariable unnestVar = context.newVar();
+            List<Mutable<ILogicalExpression>> args = new ArrayList<>();
+            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(opAndVar.second)));
+            UnnestOperator unnestOp = new UnnestOperator(unnestVar,
+                    new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), args)));
+            unnestOp.getInputs().add(new MutableObject<ILogicalOperator>(opAndVar.first));
+            inputOpRefsToUnion.add(new MutableObject<ILogicalOperator>(unnestOp));
+            vars.add(unnestVar);
+        }
+
+        // Creates a tree of binary union-all operators.
+        UnionAllOperator topUnionAllOp = null;
+        LogicalVariable topUnionVar = null;
+        Iterator<Mutable<ILogicalOperator>> inputOpRefIterator = inputOpRefsToUnion.iterator();
+        Mutable<ILogicalOperator> leftInputBranch = inputOpRefIterator.next();
+        Iterator<LogicalVariable> inputVarIterator = vars.iterator();
+        LogicalVariable leftInputVar = inputVarIterator.next();
+
+        while (inputOpRefIterator.hasNext()) {
+            // Generates the variable triple <leftVar, rightVar, outputVar> .
+            topUnionVar = context.newVar();
+            Triple<LogicalVariable, LogicalVariable, LogicalVariable> varTriple =
+                    new Triple<>(leftInputVar, inputVarIterator.next(), topUnionVar);
+            List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varTriples = new ArrayList<>();
+            varTriples.add(varTriple);
+
+            // Creates a binary union-all operator.
+            topUnionAllOp = new UnionAllOperator(varTriples);
+            topUnionAllOp.getInputs().add(leftInputBranch);
+            topUnionAllOp.getInputs().add(inputOpRefIterator.next());
+
+            // Re-assigns leftInputBranch and leftInputVar.
+            leftInputBranch = new MutableObject<>(topUnionAllOp);
+            leftInputVar = topUnionVar;
+        }
+        return new Pair<>(topUnionAllOp, topUnionVar);
     }
 }

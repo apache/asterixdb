@@ -19,9 +19,11 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -374,14 +376,17 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
             return;
         }
         int size = variablesLeft.size();
+        // Keeps track of already matched right side variables.
+        Set<LogicalVariable> matchedRightVars = new HashSet<>();
         for (int i = 0; i < size; i++) {
             ILogicalExpression exprLeft = exprsLeft.get(i).getValue();
             LogicalVariable left = variablesLeft.get(i);
             for (int j = 0; j < size; j++) {
                 ILogicalExpression exprRight = copyExpressionAndSubtituteVars(exprsRight.get(j)).getValue();
-                if (exprLeft.equals(exprRight)) {
-                    LogicalVariable right = variablesRight.get(j);
+                LogicalVariable right = variablesRight.get(j);
+                if (exprLeft.equals(exprRight) && !matchedRightVars.contains(right)) {
                     variableMapping.put(right, left);
+                    matchedRightVars.add(right); // The added variable will not be considered in next rounds.
                     break;
                 }
             }

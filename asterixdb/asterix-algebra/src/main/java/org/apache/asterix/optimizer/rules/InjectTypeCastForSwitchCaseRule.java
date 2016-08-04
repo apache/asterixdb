@@ -23,12 +23,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -46,7 +44,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * This rule injects cast functions for "THEN" and "ELSE" branches of a switch-case function if
  * different "THEN" and "ELSE" branches have heterogeneous return types.
  */
-public class InjectToAnyTypeCastRule implements IAlgebraicRewriteRule {
+public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -57,7 +55,7 @@ public class InjectToAnyTypeCastRule implements IAlgebraicRewriteRule {
         }
         // Populates the latest type information.
         context.computeAndSetTypeEnvironmentForOperator(op);
-        if (op.acceptExpressionTransform(exprRef -> injectToAnyTypeCast(op, exprRef, context))) {
+        if (op.acceptExpressionTransform(exprRef -> injectTypeCast(op, exprRef, context))) {
             // Generates the up-to-date type information.
             context.computeAndSetTypeEnvironmentForOperator(op);
             return true;
@@ -65,8 +63,9 @@ public class InjectToAnyTypeCastRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    // Injects type casts to cast return expressions' return types to ANY.
-    private boolean injectToAnyTypeCast(ILogicalOperator op, Mutable<ILogicalExpression> exprRef,
+    // Injects type casts to cast return expressions' return types to a generalized type that conforms to every
+    // return type.
+    private boolean injectTypeCast(ILogicalOperator op, Mutable<ILogicalExpression> exprRef,
             IOptimizationContext context) throws AlgebricksException {
         ILogicalExpression expr = exprRef.getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -76,7 +75,7 @@ public class InjectToAnyTypeCastRule implements IAlgebraicRewriteRule {
         AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) expr;
         for (Mutable<ILogicalExpression> argRef : func.getArguments()) {
             // Recursively rewrites arguments.
-            if (injectToAnyTypeCast(op, argRef, context)) {
+            if (injectTypeCast(op, argRef, context)) {
                 context.computeAndSetTypeEnvironmentForOperator(op);
                 rewritten = true;
             }
@@ -87,59 +86,29 @@ public class InjectToAnyTypeCastRule implements IAlgebraicRewriteRule {
         return rewriteSwitchCase(op, func, context);
     }
 
-    // Injects casts that cast types to ANY for different "THEN" and "ELSE" branches.
+    // Injects casts that cast types for different "THEN" and "ELSE" branches.
     private boolean rewriteSwitchCase(ILogicalOperator op, AbstractFunctionCallExpression func,
             IOptimizationContext context) throws AlgebricksException {
         IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
-        if (!this.isHeterogenous(func, env)) {
-            return false;
-        }
+        IAType producedType = (IAType) env.getType(func);
         List<Mutable<ILogicalExpression>> argRefs = func.getArguments();
         int argSize = argRefs.size();
         boolean rewritten = false;
         for (int argIndex = 2; argIndex < argSize; argIndex += (argIndex + 2 == argSize) ? 1 : 2) {
             Mutable<ILogicalExpression> argRef = argRefs.get(argIndex);
             IAType type = (IAType) env.getType(argRefs.get(argIndex).getValue());
-            ATypeTag tag = type.getTypeTag();
-            // Casts are only needed when the original return type is a complex type.
-            // (In the runtime, there is already a type tag for scalar types.)
-            if (tag == ATypeTag.RECORD || tag == ATypeTag.UNORDEREDLIST || tag == ATypeTag.ORDEREDLIST) {
+            if (TypeResolverUtil.needsCast(producedType, type)) {
                 ILogicalExpression argExpr = argRef.getValue();
-                // Injects a cast call to cast the data type to ANY.
+                // Injects a cast call to cast the data type to the produced type of the switch-case function call.
                 ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE),
                         new ArrayList<>(Collections.singletonList(new MutableObject<>(argExpr))));
-                TypeCastUtils.setRequiredAndInputTypes(castFunc, BuiltinType.ANY, type);
+                TypeCastUtils.setRequiredAndInputTypes(castFunc, producedType, type);
                 argRef.setValue(castFunc);
                 rewritten = true;
             }
         }
         return rewritten;
-    }
-
-    // Checks whether "THEN" and "ELSE" branches return the heterogeneous types.
-    private boolean isHeterogenous(AbstractFunctionCallExpression func, IVariableTypeEnvironment env)
-            throws AlgebricksException {
-        List<Mutable<ILogicalExpression>> argRefs = func.getArguments();
-        int argSize = argRefs.size();
-        IAType currentType = null;
-        boolean heterogenous = false;
-        for (int argIndex = 2; argIndex < argSize; argIndex += (argIndex + 2 == argSize) ? 1 : 2) {
-            IAType type = (IAType) env.getType(argRefs.get(argIndex).getValue());
-            ATypeTag typeTag = type.getTypeTag();
-            // Null and missing are not considered as heterogeneous with other types.
-            if (typeTag != ATypeTag.NULL && typeTag != ATypeTag.MISSING) {
-                if (typeTag == ATypeTag.UNION) {
-                    type = ((AUnionType) type).getActualType();
-                }
-                if (currentType != null && !type.equals(currentType)) {
-                    heterogenous = true;
-                    break;
-                }
-                currentType = type;
-            }
-        }
-        return heterogenous;
     }
 
 }

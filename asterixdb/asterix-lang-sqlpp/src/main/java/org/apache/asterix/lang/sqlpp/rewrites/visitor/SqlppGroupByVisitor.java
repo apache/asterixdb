@@ -106,7 +106,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             withVarSet.remove(selectBlock.getGroupbyClause().getGroupVar());
 
             Set<VariableExpr> allVisableVars = SqlppVariableUtil
-                    .getLiveUserDefinedVariables(scopeChecker.getCurrentScope());
+                    .getLiveVariables(scopeChecker.getCurrentScope());
             if (selectBlock.hasLetClausesAfterGroupby()) {
                 List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
                 for (LetClause letClauseAfterGby : letListAfterGby) {

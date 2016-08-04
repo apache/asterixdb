@@ -274,17 +274,20 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
             }
         }
 
-        // Visits selectSetOperation.
-        selectExpression.getSelectSetOperation().accept(this, overwriteWithGbyKeyVarRefs);
+        // Visits selectSetOperation
+        SelectSetOperation selectSetOperation = selectExpression.getSelectSetOperation();
+        selectSetOperation.accept(this, overwriteWithGbyKeyVarRefs);
 
-        // Visits order by.
-        if (selectExpression.hasOrderby()) {
-            selectExpression.getOrderbyClause().accept(this, overwriteWithGbyKeyVarRefs);
-        }
-
-        // Visits limit.
-        if (selectExpression.hasLimit()) {
-            selectExpression.getLimitClause().accept(this, overwriteWithGbyKeyVarRefs);
+        // If there is a UNION in the selectSetOperation, we cannot overwrite order by or limit.
+        if (!selectSetOperation.hasRightInputs()) {
+            // Visits order by.
+            if (selectExpression.hasOrderby()) {
+                selectExpression.getOrderbyClause().accept(this, overwriteWithGbyKeyVarRefs);
+            }
+            // Visits limit.
+            if (selectExpression.hasLimit()) {
+                selectExpression.getLimitClause().accept(this, overwriteWithGbyKeyVarRefs);
+            }
         }
 
         // Exits the scope that were entered within this select expression

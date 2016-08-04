@@ -380,6 +380,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1047</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="query-ASTERIXDB-1354">
+        <output-dir compare="Text">query-ASTERIXDB-1354</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">

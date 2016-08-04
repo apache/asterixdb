@@ -54,6 +54,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGlobalAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
@@ -114,6 +115,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
         // Group-by core/sugar rewrites.
         rewriteGroupBys();
+
+        // Rewrites set operations.
+        rewriteSetOperations();
 
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
@@ -187,6 +191,15 @@ class SqlppQueryRewriter implements IQueryRewriter {
         SubstituteGroupbyExpressionWithVariableVisitor substituteGbyExprVisitor =
                 new SubstituteGroupbyExpressionWithVariableVisitor();
         substituteGbyExprVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteSetOperations() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        // Rewrites set operation queries that contain order-by and limit clauses.
+        SetOperationVisitor setOperationVisitor = new SetOperationVisitor(context);
+        setOperationVisitor.visit(topExpr, null);
     }
 
     protected void rewriteOperatorExpression() throws AsterixException {

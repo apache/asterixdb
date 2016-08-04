@@ -102,7 +102,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         if (!rewriteNeeded(varExpr)) {
             return varExpr;
         }
-        Set<VariableExpr> liveVars = SqlppVariableUtil.getLiveUserDefinedVariables(scopeChecker.getCurrentScope());
+        Set<VariableExpr> liveVars = SqlppVariableUtil.getLiveVariables(scopeChecker.getCurrentScope());
         boolean resolveAsDataset = resolveDatasetFirst(arg) && datasetExists(dataverseName, datasetName);
         if (resolveAsDataset) {
             return wrapWithDatasetFunction(dataverseName, datasetName);

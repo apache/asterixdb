@@ -44,8 +44,8 @@ import org.json.JSONObject;
  */
 public class ARecordType extends AbstractComplexType {
 
-    public static final ARecordType FULLY_OPEN_RECORD_TYPE = new ARecordType("OpenRecord", new String[0], new IAType[0],
-            true);
+    public static final ARecordType FULLY_OPEN_RECORD_TYPE =
+            new ARecordType("OpenRecord", new String[0], new IAType[0], true);
 
     private static final long serialVersionUID = 1L;
     private final String[] fieldNames;
@@ -114,6 +114,14 @@ public class ARecordType extends AbstractComplexType {
         } else {
             return fieldNameToIndexMap.containsKey(fieldName);
         }
+    }
+
+    public boolean knowsAllPossibleAdditonalFieldNames() {
+        return allPossibleAdditionalFieldNames != null;
+    }
+
+    public Set<String> getAllPossibleAdditonalFieldNames() {
+        return allPossibleAdditionalFieldNames;
     }
 
     public String[] getFieldNames() {

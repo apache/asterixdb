@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.FieldBinding;
@@ -56,6 +57,9 @@ import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
+import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
+import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -181,13 +185,26 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectSetOperation selectSetOperation,
             Mutable<ILogicalOperator> tupSource) throws AsterixException {
-        Mutable<ILogicalOperator> currentOpRef = tupSource;
-        Pair<ILogicalOperator, LogicalVariable> currentResult =
-                selectSetOperation.getLeftInput().accept(this, currentOpRef);
-        if (selectSetOperation.hasRightInputs()) {
-            throw new NotImplementedException();
+        SetOperationInput leftInput = selectSetOperation.getLeftInput();
+        if (!selectSetOperation.hasRightInputs()) {
+            return leftInput.accept(this, tupSource);
         }
-        return currentResult;
+        List<ILangExpression> inputExprs = new ArrayList<>();
+        inputExprs.add(leftInput.selectBlock()
+                ? new SelectExpression(null, new SelectSetOperation(leftInput, null), null, null, true)
+                : leftInput.getSubquery());
+        for (SetOperationRight setOperationRight : selectSetOperation.getRightInputs()) {
+            SetOpType setOpType = setOperationRight.getSetOpType();
+            if (setOpType != SetOpType.UNION || setOperationRight.isSetSemantics()) {
+                throw new AsterixException("Operation " + setOpType
+                        + (setOperationRight.isSetSemantics() ? "with set semantics" : "ALL") + " is not supported.");
+            }
+            SetOperationInput rightInput = setOperationRight.getSetOperationRightInput();
+            inputExprs.add(rightInput.selectBlock()
+                    ? new SelectExpression(null, new SelectSetOperation(rightInput, null), null, null, true)
+                    : rightInput.getSubquery());
+        }
+        return translateUnionAllFromInputExprs(inputExprs, tupSource);
     }
 
     @Override
@@ -314,7 +331,6 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             boolean hasRightPosVar = rightUnnestOp.getPositionalVariable() != null;
             if (hasRightPosVar) {
                 // Creates record to get correlation between the two aggregate variables.
-                @SuppressWarnings("unchecked")
                 ScalarFunctionCallExpression recordCreationFunc = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR),
                         // Field name for the listified right unnest var.
@@ -369,14 +385,11 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             currentTopOp = outerUnnestOp;
 
             if (hasRightPosVar) {
-                @SuppressWarnings("unchecked")
                 ScalarFunctionCallExpression fieldAccessForRightUnnestVar = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(outerUnnestVar)),
                         new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
-
-                @SuppressWarnings("unchecked")
                 ScalarFunctionCallExpression fieldAccessForRightPosVar = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(outerUnnestVar)),

@@ -37,6 +37,7 @@ import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
 import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
+import org.apache.asterix.dataflow.data.common.ConflictingTypeResolver;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
@@ -63,6 +64,7 @@ import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.Sequentia
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
@@ -151,10 +153,11 @@ public class APIFramework {
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
-                PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
+                IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
+                AlgebricksPartitionConstraint clusterLocations) {
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
-                    physicalOptimizationConfig, clusterLocations);
+                    conflictingTypeResolver, physicalOptimizationConfig, clusterLocations);
         }
     }
 
@@ -257,6 +260,7 @@ public class APIFramework {
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
         builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
+        builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
         builder.setClusterLocations(queryMetadataProvider.getClusterLocations());
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());

@@ -52,6 +52,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Group-by core/sugar rewrites.
         rewriteGroupBys();
 
+        // Rewrites set operations.
+        rewriteSetOperations();
+
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
 

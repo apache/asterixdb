@@ -75,15 +75,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <!--
-    <test-group name="union">
-        <test-case FilePath="union">
-            <compilation-unit name="union">
-                <output-dir compare="Text">union</output-dir>
-            </compilation-unit>
-        </test-case>
-    </test-group>
-    -->
   <test-case FilePath="flwor">
     <compilation-unit name="let33">
       <output-dir compare="Text">let33</output-dir>
@@ -7626,6 +7617,55 @@
     <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest-with-pos">
         <output-dir compare="Text">left-outer-unnest-with-pos</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="union">
+    <test-case FilePath="union">
+      <compilation-unit name="union">
+        <output-dir compare="Text">union</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_heterogeneous_scalar">
+        <output-dir compare="Text">union_heterogeneous_scalar</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_negative">
+        <output-dir compare="Text">union</output-dir>
+        <expected-error>Cannot find dataset t in dataverse TinySocial nor an alias with name t</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_negative_2">
+        <output-dir compare="Text">union</output-dir>
+        <expected-error>Undefined alias (variable) reference for identifier t</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby">
+        <output-dir compare="Text">union_orderby</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_2">
+        <output-dir compare="Text">union_orderby_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_3">
+        <output-dir compare="Text">union_orderby_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_4">
+        <output-dir compare="Text">union_orderby_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="query-ASTERIXDB-1354-2">
+        <output-dir compare="Text">query-ASTERIXDB-1354-2</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

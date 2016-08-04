@@ -177,10 +177,22 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     @Override
     public Expression visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws AsterixException {
+        Scope scopeBeforeCurrentBranch = scopeChecker.getCurrentScope();
+        scopeChecker.createNewScope();
         selectSetOperation.getLeftInput().accept(this, arg);
-        for (SetOperationRight right : selectSetOperation.getRightInputs()) {
-            scopeChecker.createNewScope();
-            right.getSetOperationRightInput().accept(this, arg);
+        if (selectSetOperation.hasRightInputs()) {
+            for (SetOperationRight right : selectSetOperation.getRightInputs()) {
+                // Exit scopes that were entered within a previous select expression
+                while (scopeChecker.getCurrentScope() != scopeBeforeCurrentBranch) {
+                    scopeChecker.removeCurrentScope();
+                }
+                scopeChecker.createNewScope();
+                right.getSetOperationRightInput().accept(this, arg);
+            }
+            // Exit scopes that were entered within the last branch of the set operation.
+            while (scopeChecker.getCurrentScope() != scopeBeforeCurrentBranch) {
+                scopeChecker.removeCurrentScope();
+            }
         }
         return null;
     }
@@ -274,7 +286,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // variables defined in the parent scope.
         Scope scope = new Scope(scopeChecker, scopeChecker.getCurrentScope(), true);
         scopeChecker.pushExistingScope(scope);
-        independentSubquery.setExpr(independentSubquery.getExpr().accept(this, arg));
+        independentSubquery.setExpr(independentSubquery.getExpr().accept(this, independentSubquery));
         scopeChecker.removeCurrentScope();
         return independentSubquery;
     }
@@ -283,8 +295,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(QuantifiedExpression qe, ILangExpression arg) throws AsterixException {
         scopeChecker.createNewScope();
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
-            scopeChecker.getCurrentScope().addNewVarSymbolToScope(pair.getVarExpr().getVar());
             pair.setExpr(pair.getExpr().accept(this, qe));
+            scopeChecker.getCurrentScope().addNewVarSymbolToScope(pair.getVarExpr().getVar());
         }
         qe.setSatisfiesExpr(qe.getSatisfiesExpr().accept(this, qe));
         scopeChecker.removeCurrentScope();

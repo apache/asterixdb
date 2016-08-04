@@ -26,6 +26,7 @@ import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -67,8 +68,9 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
             throw new IllegalStateException(
                     "Invalid types for casting, required type " + reqType + ", input type " + inputType);
         }
-        this.reqType = reqType;
-        this.inputType = inputType;
+        // NULLs and MISSINGs are handled by the generated code, therefore we only need to handle actual types here.
+        this.reqType = TypeComputeUtils.getActualType(reqType);
+        this.inputType = TypeComputeUtils.getActualType(inputType);
     }
 
     @Override
@@ -107,8 +109,8 @@ class CastTypeEvaluator implements IScalarEvaluator {
             throws AlgebricksException {
         try {
             this.argEvaluator = argEvaluator;
-            this.inputPointable = allocateResultPointable(inputType, reqType);
-            this.resultPointable = allocateResultPointable(reqType, inputType);
+            this.inputPointable = allocatePointable(inputType, reqType);
+            this.resultPointable = allocatePointable(reqType, inputType);
             this.arg = new Triple<>(resultPointable, reqType, Boolean.FALSE);
         } catch (AsterixException e) {
             throw new AlgebricksException(e);
@@ -128,7 +130,7 @@ class CastTypeEvaluator implements IScalarEvaluator {
     }
 
     // Allocates the result pointable.
-    private final IVisitablePointable allocateResultPointable(IAType typeForPointable, IAType typeForOtherSide)
+    private final IVisitablePointable allocatePointable(IAType typeForPointable, IAType typeForOtherSide)
             throws AsterixException {
         if (!typeForPointable.equals(BuiltinType.ANY)) {
             return allocator.allocateFieldValue(typeForPointable);

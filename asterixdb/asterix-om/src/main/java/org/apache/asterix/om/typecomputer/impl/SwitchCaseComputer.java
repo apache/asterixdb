@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -45,31 +46,14 @@ public class SwitchCaseComputer implements IResultTypeComputer {
         if (fce.getArguments().size() < 3) {
             throw new AlgebricksException(ERR_MSG);
         }
-
-        IAType currentType = null;
-        boolean any = false;
-        boolean unknownable = false;
         int argSize = fce.getArguments().size();
-        // Checks return types of different branches' return types.
+        List<IAType> types = new ArrayList<>();
+        // Collects different branches' return types.
         // The last return expression is from the ELSE branch and it is optional.
         for (int argIndex = 2; argIndex < argSize; argIndex += (argIndex + 2 == argSize) ? 1 : 2) {
             IAType type = (IAType) env.getType(fce.getArguments().get(argIndex).getValue());
-            ATypeTag typeTag = type.getTypeTag();
-            if (typeTag == ATypeTag.NULL || typeTag == ATypeTag.MISSING) {
-                unknownable = true;
-            } else {
-                if (typeTag == ATypeTag.UNION) {
-                    type = ((AUnionType) type).getActualType();
-                    unknownable = true;
-                }
-                if (currentType != null && !type.equals(currentType)) {
-                    any = true;
-                    break;
-                }
-                currentType = type;
-            }
+            types.add(type);
         }
-        currentType = currentType == null ? BuiltinType.ANULL : currentType;
-        return any ? BuiltinType.ANY : unknownable ? AUnionType.createUnknownableType(currentType) : currentType;
+        return TypeResolverUtil.resolve(types);
     }
 }

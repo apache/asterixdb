@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.lang.sqlpp.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -75,21 +77,14 @@ public class SqlppVariableUtil {
         return varName;
     }
 
-    public static Set<VariableExpr> getLiveUserDefinedVariables(Scope scope) {
+    public static Set<VariableExpr> getLiveVariables(Scope scope) {
         Set<VariableExpr> results = new HashSet<>();
         Set<VariableExpr> liveVars = scope.getLiveVariables();
         Iterator<VariableExpr> liveVarIter = liveVars.iterator();
         while (liveVarIter.hasNext()) {
-            VariableExpr var = liveVarIter.next();
-            if (SqlppVariableUtil.isUserDefinedVariable(var)) {
-                results.add(var);
-            }
+            results.add(liveVarIter.next());
         }
         return results;
-    }
-
-    private static boolean isUserDefinedVariable(VariableExpr varExpr) {
-        return varExpr.getVar().getValue().startsWith(USER_VAR_PREFIX);
     }
 
     public static String toInternalVariableName(String varName) {
@@ -108,10 +103,10 @@ public class SqlppVariableUtil {
     }
 
     public static Collection<VariableExpr> getBindingVariables(FromClause fromClause) {
-        Set<VariableExpr> bindingVars = new HashSet<>();
         if (fromClause == null) {
-            return bindingVars;
+            return Collections.emptyList();
         }
+        List<VariableExpr> bindingVars = new ArrayList<>();
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             bindingVars.addAll(getBindingVariables(fromTerm));
         }
@@ -119,7 +114,7 @@ public class SqlppVariableUtil {
     }
 
     public static Collection<VariableExpr> getBindingVariables(FromTerm fromTerm) {
-        Set<VariableExpr> bindingVars = new HashSet<>();
+        List<VariableExpr> bindingVars = new ArrayList<>();
         if (fromTerm == null) {
             return bindingVars;
         }
@@ -137,7 +132,7 @@ public class SqlppVariableUtil {
     }
 
     public static Collection<VariableExpr> getBindingVariables(GroupbyClause gbyClause) {
-        Set<VariableExpr> bindingVars = new HashSet<>();
+        List<VariableExpr> bindingVars = new ArrayList<>();
         if (gbyClause == null) {
             return bindingVars;
         }
@@ -159,7 +154,7 @@ public class SqlppVariableUtil {
     }
 
     public static Collection<VariableExpr> getBindingVariables(List<LetClause> letClauses) {
-        Set<VariableExpr> bindingVars = new HashSet<>();
+        List<VariableExpr> bindingVars = new ArrayList<>();
         if (letClauses == null || letClauses.isEmpty()) {
             return bindingVars;
         }

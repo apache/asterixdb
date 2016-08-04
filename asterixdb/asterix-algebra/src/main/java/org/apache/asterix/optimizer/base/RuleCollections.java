@@ -36,7 +36,8 @@ import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
-import org.apache.asterix.optimizer.rules.InjectToAnyTypeCastRule;
+import org.apache.asterix.optimizer.rules.InjectTypeCastForSwitchCaseRule;
+import org.apache.asterix.optimizer.rules.InjectTypeCastForUnionRule;
 import org.apache.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import org.apache.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
 import org.apache.asterix.optimizer.rules.IntroduceDynamicTypeCastForExternalFunctionRule;
@@ -281,7 +282,13 @@ public final class RuleCollections {
         planCleanupRules.add(new IntroduceDynamicTypeCastForExternalFunctionRule());
         planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
         planCleanupRules.add(new RemoveCartesianProductWithEmptyBranchRule());
-        planCleanupRules.add(new InjectToAnyTypeCastRule());
+        planCleanupRules.add(new InjectTypeCastForSwitchCaseRule());
+        planCleanupRules.add(new InjectTypeCastForUnionRule());
+
+        // Needs to invoke ByNameToByIndexFieldAccessRule as the last logical optimization rule because
+        // some rules can push a FieldAccessByName to a place where the name it tries to access is in the closed part.
+        // For example, a possible scenario is that a field-access-by-name can be pushed down through UnionAllOperator.
+        planCleanupRules.add(new ByNameToByIndexFieldAccessRule());
         return planCleanupRules;
     }
 
