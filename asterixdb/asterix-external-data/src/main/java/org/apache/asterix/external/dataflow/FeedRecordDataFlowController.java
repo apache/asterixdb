@@ -53,6 +53,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     protected final Object mutex = new Object();
     protected final boolean sendMarker;
     protected boolean failed = false;
+    private FeedRecordDataFlowController<T>.DataflowMarker dataflowMarker;
+    private Future<?> result;
 
     public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
             @Nonnull FeedLogManager feedLogManager, int numOfOutputFields, @Nonnull IRecordDataParser<T> dataParser,
@@ -68,9 +70,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         ExecutorService executorService = sendMarker ? Executors.newSingleThreadExecutor() : null;
-        Future<?> result = null;
-        if (sendMarker) {
-            DataflowMarker dataflowMarker = new DataflowMarker(recordReader.getProgressReporter(),
+        if (sendMarker && dataflowMarker == null) {
+            dataflowMarker = new DataflowMarker(recordReader.getProgressReporter(),
                     TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx));
             result = executorService.submit(dataflowMarker);
         }
@@ -84,7 +85,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                     IRawRecord<? extends T> record = recordReader.next();
                     if (record == null) {
                         flush();
-                        wait(INTERVAL);
+                        mutex.wait(INTERVAL);
                         continue;
                     }
                     tb.reset();
@@ -100,6 +101,9 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
             tupleForwarder.flush();
             LOGGER.warn("Failure while operating a feed source", e);
             throw new HyracksDataException(e);
+        }
+        if(dataflowMarker != null){
+            dataflowMarker.stop();
         }
         try {
             tupleForwarder.close();
@@ -162,6 +166,9 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     @Override
     public boolean stop() throws HyracksDataException {
+        if (dataflowMarker != null) {
+            dataflowMarker.stop();
+        }
         HyracksDataException hde = null;
         if (recordReader.stop()) {
             if (failed) {
