@@ -31,12 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.http.HttpMethods;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class ApplicationInstallationHandler extends AbstractHandler {
     private ClusterControllerService ccs;
@@ -64,57 +63,64 @@ public class ApplicationInstallationHandler extends AbstractHandler {
             String rootDir = ccs.getServerContext().getBaseDir().toString();
             final String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + "applications/" + deployIdString
                     : rootDir + File.separator + "/applications/" + File.separator + deployIdString;
-            if (HttpMethods.PUT.equals(request.getMethod())) {
-                class OutputStreamGetter extends SynchronizableWork {
-                    private OutputStream os;
+            switch (HttpMethod.valueOf(request.getMethod())) {
+                case PUT: {
+                    class OutputStreamGetter extends SynchronizableWork {
+                        private OutputStream os;
 
-                    @Override
-                    protected void doRun() throws Exception {
-                        FileUtils.forceMkdir(new File(deploymentDir));
-                        String fileName = params[1];
-                        File jarFile = new File(deploymentDir, fileName);
-                        os = new FileOutputStream(jarFile);
+                        @Override
+                        protected void doRun() throws Exception {
+                            FileUtils.forceMkdir(new File(deploymentDir));
+                            String fileName = params[1];
+                            File jarFile = new File(deploymentDir, fileName);
+                            os = new FileOutputStream(jarFile);
+                        }
                     }
-                }
-                OutputStreamGetter r = new OutputStreamGetter();
-                try {
-                    ccs.getWorkQueue().scheduleAndSync(r);
-                } catch (Exception e) {
-                    throw new IOException(e);
-                }
-                try {
-                    IOUtils.copyLarge(request.getInputStream(), r.os);
-                } finally {
-                    r.os.close();
-                }
-            } else if (HttpMethods.GET.equals(request.getMethod())) {
-                class InputStreamGetter extends SynchronizableWork {
-                    private InputStream is;
-
-                    @Override
-                    protected void doRun() throws Exception {
-                        String fileName = params[1];
-                        File jarFile = new File(deploymentDir, fileName);
-                        is = new FileInputStream(jarFile);
-                    }
-                }
-                InputStreamGetter r = new InputStreamGetter();
-                try {
-                    ccs.getWorkQueue().scheduleAndSync(r);
-                } catch (Exception e) {
-                    throw new IOException(e);
-                }
-                if (r.is == null) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                } else {
-                    response.setContentType("application/octet-stream");
-                    response.setStatus(HttpServletResponse.SC_OK);
+                    OutputStreamGetter r = new OutputStreamGetter();
                     try {
-                        IOUtils.copyLarge(r.is, response.getOutputStream());
-                    } finally {
-                        r.is.close();
+                        ccs.getWorkQueue().scheduleAndSync(r);
+                    } catch (Exception e) {
+                        throw new IOException(e);
                     }
+                    try {
+                        IOUtils.copyLarge(request.getInputStream(), r.os);
+                    } finally {
+                        r.os.close();
+                    }
+                    break;
                 }
+                case GET: {
+                    class InputStreamGetter extends SynchronizableWork {
+                        private InputStream is;
+
+                        @Override
+                        protected void doRun() throws Exception {
+                            String fileName = params[1];
+                            File jarFile = new File(deploymentDir, fileName);
+                            is = new FileInputStream(jarFile);
+                        }
+                    }
+                    InputStreamGetter r = new InputStreamGetter();
+                    try {
+                        ccs.getWorkQueue().scheduleAndSync(r);
+                    } catch (Exception e) {
+                        throw new IOException(e);
+                    }
+                    if (r.is == null) {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    } else {
+                        response.setContentType("application/octet-stream");
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        try {
+                            IOUtils.copyLarge(r.is, response.getOutputStream());
+                        } finally {
+                            r.is.close();
+                        }
+                    }
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException(request.getMethod());
             }
             baseRequest.setHandled(true);
         } catch (IOException e) {

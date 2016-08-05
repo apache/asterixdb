@@ -178,20 +178,20 @@
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <artifactId>javax.servlet-api</artifactId>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>8.0.0.RC0</version>
+      <version>9.3.11.v20160721</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>8.0.0.RC0</version>
+      <version>9.3.11.v20160721</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
