@@ -5411,6 +5411,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-equal-public">
+        <output-dir compare="Text">string-equal-public</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="string-join1">
         <output-dir compare="Text">string-join1</output-dir>
       </compilation-unit>
