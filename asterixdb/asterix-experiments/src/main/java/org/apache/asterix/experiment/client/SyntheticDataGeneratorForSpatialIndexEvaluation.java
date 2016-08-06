@@ -23,13 +23,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-
 import org.apache.asterix.tools.external.data.DataGeneratorForSpatialIndexEvaluation;
 import org.apache.asterix.tools.external.data.DataGeneratorForSpatialIndexEvaluation.InitializationInfo;
 import org.apache.asterix.tools.external.data.DataGeneratorForSpatialIndexEvaluation.TweetMessageIterator;
 import org.apache.asterix.tools.external.data.GULongIDGenerator;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 public class SyntheticDataGeneratorForSpatialIndexEvaluation {
     public static void main(String[] args) throws Exception {

@@ -147,9 +147,9 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.0.1</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

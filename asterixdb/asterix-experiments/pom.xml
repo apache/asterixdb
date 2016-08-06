@@ -122,13 +122,13 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.2.2</version>
+      <version>4.5.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>4.2.2</version>
+      <version>4.4.4</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -149,11 +149,11 @@
       <artifactId>asterix-app</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!--         <dependency>
-          <groupId>net.schmizz</groupId>
-          <artifactId>sshj</artifactId>
-          <version>0.9.0</version>
-        </dependency> -->
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.hierynomus</groupId>
       <artifactId>sshj</artifactId>

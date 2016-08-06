@@ -61,12 +61,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
     </dependency>
@@ -77,10 +71,6 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-lsm-rtree</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-hdfs-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
