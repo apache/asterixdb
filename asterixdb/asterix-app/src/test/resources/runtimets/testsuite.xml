@@ -1934,6 +1934,11 @@
         <output-dir compare="Text">delete-multi-statement</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="query-ASTERIXDB-867">
+        <output-dir compare="Text">query-ASTERIXDB-867</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="employee">
     <test-case FilePath="employee">
