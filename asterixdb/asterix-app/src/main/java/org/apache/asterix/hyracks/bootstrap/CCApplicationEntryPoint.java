@@ -210,7 +210,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, createServlet(key), key.getPath());
     }
 
-    private Servlet createServlet(Servlets key) {
+    protected Servlet createServlet(Servlets key) {
         switch (key) {
             case AQL:
                 return new AQLAPIServlet(new AqlCompilationProvider());

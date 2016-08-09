@@ -76,18 +76,17 @@ public class TestExecutor {
     /*
      * Instance members
      */
-    private String host;
-    private int port;
-    private ITestLibrarian librarian;
-
-    public TestExecutor() {
-        host = "127.0.0.1";
-        port = 19002;
-    }
+    protected final String host;
+    protected final int port;
+    protected ITestLibrarian librarian;
 
     public TestExecutor(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    public TestExecutor() {
+        this("127.0.0.1", 19002);
     }
 
     public void setLibrarian(ITestLibrarian librarian) {
@@ -382,7 +381,7 @@ public class TestExecutor {
     }
 
     private InputStream getHandleResult(String handle, OutputFormat fmt) throws Exception {
-        final String url = "http://" + host + ":" + port + Servlets.QUERY_RESULT.getPath();
+        final String url = "http://" + host + ":" + port + getPath(Servlets.QUERY_RESULT);
 
         // Create a method instance.
         HttpUriRequest request = RequestBuilder.get(url)
@@ -506,9 +505,9 @@ public class TestExecutor {
         switch (ctx.getType()) {
             case "ddl":
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
+                    executeDDL(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_DDL));
                 } else {
-                    executeDDL(statement, "http://" + host + ":" + port + Servlets.SQLPP_DDL.getPath());
+                    executeDDL(statement, "http://" + host + ":" + port + getPath(Servlets.SQLPP_DDL));
                 }
                 break;
             case "update":
@@ -517,9 +516,9 @@ public class TestExecutor {
                     statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                 }
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
+                    executeUpdate(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_UPDATE));
                 } else {
-                    executeUpdate(statement, "http://" + host + ":" + port + Servlets.SQLPP_UPDATE.getPath());
+                    executeUpdate(statement, "http://" + host + ":" + port + getPath(Servlets.SQLPP_UPDATE));
                 }
                 break;
             case "query":
@@ -537,25 +536,25 @@ public class TestExecutor {
                 if (ctx.getFile().getName().endsWith("aql")) {
                     if (ctx.getType().equalsIgnoreCase("query")) {
                         resultStream = executeQuery(statement, fmt,
-                                "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
+                                "http://" + host + ":" + port + getPath(Servlets.AQL_QUERY), cUnit.getParameter());
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
                         resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                "http://" + host + ":" + port + Servlets.AQL.getPath());
+                                "http://" + host + ":" + port + getPath(Servlets.AQL));
                     } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
                         resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                "http://" + host + ":" + port + Servlets.AQL.getPath());
+                                "http://" + host + ":" + port + getPath(Servlets.AQL));
                     }
                 } else {
                     if (ctx.getType().equalsIgnoreCase("query")) {
                         resultStream = executeQueryService(statement, fmt,
-                                "http://" + host + ":" + port + Servlets.QUERY_SERVICE.getPath(), cUnit.getParameter());
+                                "http://" + host + ":" + port + getPath(Servlets.QUERY_SERVICE), cUnit.getParameter());
                         resultStream = ResultExtractor.extract(resultStream);
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
                         resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                "http://" + host + ":" + port + Servlets.SQLPP.getPath());
+                                "http://" + host + ":" + port + getPath(Servlets.SQLPP));
                     } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
                         resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                "http://" + host + ":" + port + Servlets.SQLPP.getPath());
+                                "http://" + host + ":" + port + getPath(Servlets.SQLPP));
                     }
                 }
                 if (queryCount.intValue() >= expectedResultFileCtxs.size()) {
@@ -581,14 +580,14 @@ public class TestExecutor {
                 break;
             case "txnqbc": // qbc represents query before crash
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
+                        "http://" + host + ":" + port + getPath(Servlets.AQL_QUERY), cUnit.getParameter());
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 qbcFile.getParentFile().mkdirs();
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        "http://" + host + ":" + port + Servlets.AQL_QUERY.getPath(), cUnit.getParameter());
+                        "http://" + host + ":" + port + getPath(Servlets.AQL_QUERY), cUnit.getParameter());
                 File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
@@ -599,7 +598,7 @@ public class TestExecutor {
                 break;
             case "txneu": // eu represents erroneous update
                 try {
-                    executeUpdate(statement, "http://" + host + ":" + port + Servlets.AQL_UPDATE.getPath());
+                    executeUpdate(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_UPDATE));
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
@@ -627,7 +626,7 @@ public class TestExecutor {
                 break;
             case "errddl": // a ddlquery that expects error
                 try {
-                    executeDDL(statement, "http://" + host + ":" + port + Servlets.AQL_DDL.getPath());
+                    executeDDL(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_DDL));
                 } catch (Exception e) {
                     // expected error happens
                     failed = true;
@@ -668,7 +667,7 @@ public class TestExecutor {
                 try {
                     fmt = OutputFormat.forCompilationUnit(cUnit);
                     resultStream = executeClusterStateQuery(fmt,
-                            "http://" + host + ":" + port + Servlets.CLUSTER_STATE.getPath());
+                            "http://" + host + ":" + port + getPath(Servlets.CLUSTER_STATE));
                     expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                     actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                     actualResultFile.getParentFile().mkdirs();
@@ -830,5 +829,9 @@ public class TestExecutor {
         return new File(
                 actualPath + File.separator + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                         + cUnit.getName() + "_qbc.adm");
+    }
+
+    protected String getPath(Servlets servlet) {
+        return servlet.getPath();
     }
 }
