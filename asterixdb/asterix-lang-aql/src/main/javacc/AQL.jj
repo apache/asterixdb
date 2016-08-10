@@ -769,7 +769,19 @@ boolean IfNotExists() throws ParseException:
 {
 }
 {
-  ( <IF> <NOT> <EXISTS>
+  (
+    LOOKAHEAD(1)
+    <IF>
+    <IDENTIFIER>
+    (
+      {
+        if(!token.image.equals("not")){
+           throw new ParseException("Expect word \"not\" at line " + token.beginLine + ", column "
+                         + token.beginColumn +"!");
+        }
+      }
+    )
+    <EXISTS>
     {
       return true;
     }
@@ -900,7 +912,9 @@ boolean IfExists() throws ParseException :
 {
 }
 {
-  ( <IF> <EXISTS>
+  (
+    LOOKAHEAD(1)
+    <IF> <EXISTS>
     {
       return true;
     }
@@ -2621,7 +2635,6 @@ TOKEN :
   | <LOAD : "load">
   | <NGRAM : "ngram">
   | <NODEGROUP : "nodegroup">
-  | <NOT : "not">
   | <OFFSET : "offset">
   | <ON : "on">
   | <OPEN : "open">
