@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+WITH beth AS(
+  FROM tmp AS i, i.groups AS item
+  SELECT DISTINCT VALUE
+  {
+    "user": item.user,
+    "action": item.action
+  }
+)
+,
+rev AS(
+  FROM tmp i, i.groups AS item
+  SELECT DISTINCT VALUE
+  {
+     "user": item.user,
+     "estimated_revenue":  item.estimated_revenue
+  }
+)
+,
+ts AS (
+  FROM tmp i, i.groups AS item
+  SELECT DISTINCT VALUE
+  {
+     "user": item.user,
+     "timespent": item.timespent
+  }
+)
+
+FROM beth AS a,
+     ts AS b,
+     rev AS c
+WHERE a.user=b.user AND a.user=c.user AND b.user=c.user
+SELECT VALUE
+{
+   "user": a.user,
+   "beth": coll_count(beth),
+   "ts": coll_avg( ( FROM ts AS l SELECT VALUE l.timespent ) ),
+   "rev": coll_sum( ( FROM rev AS k SELECT VALUE k.estimated_revenue ) )
+}
+ORDER BY a.user;
+

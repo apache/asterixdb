@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use dataverse test;
+
+let $beth :=
+  for $i in dataset tmp
+  let $groups := $i.groups
+  for $item in $groups
+  distinct by $item.user, $item.action
+  return
+  {
+    "user": $item.user,
+    "action": $item.action
+  }
+
+let $rev :=
+  for $i in dataset tmp
+  let $groups := $i.groups
+  for $item in $groups
+  distinct by $item.user, $item.estimated_revenue
+  return
+  {
+     "user": $item.user,
+     "estimated_revenue": $item.estimated_revenue
+  }
+
+let $ts :=
+  for $i in dataset tmp
+  let $groups := $i.groups
+  for $item in $groups
+  distinct by $item.user, $item.timespent
+  return
+  {
+     "user": $item.user,
+     "timespent": $item.timespent
+  }
+
+for $a in $beth
+for $c in $rev
+for $b in $ts
+where $a.user=$b.user and $a.user=$c.user and $b.user=$c.user
+order by $a.user
+return
+{
+  "user": $a.user,
+  "beth": count($beth),
+  "ts":  avg(for $l in $ts return $l.timespent),
+  "rev": sum (for $k in $rev return $k.estimated_revenue)
+}
