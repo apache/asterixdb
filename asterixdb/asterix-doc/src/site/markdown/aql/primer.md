@@ -668,13 +668,13 @@ The expected result for this query against our sample data is:
 The expressive power of AQL includes support for queries involving "some" (existentially quantified)
 and "all" (universally quantified) query semantics.
 As an example of an existential AQL query, here we show a query to list the Facebook users who are currently employed.
-Such employees will have an employment history containing a record with a null end-date value, which leads us to the
+Such employees will have an employment history containing a record with the end-date value missing, which leads us to the
 following AQL query:
 
         use dataverse TinySocial;
 
         for $fbu in dataset FacebookUsers
-        where (some $e in $fbu.employment satisfies is-null($e.end-date))
+        where (some $e in $fbu.employment satisfies is-missing($e.end-date))
         return $fbu;
 
 The expected result in this case is:
@@ -690,13 +690,13 @@ The expected result in this case is:
 
 ### Query 7 - Universal Quantification ###
 As an example of a universal AQL query, here we show a query to list the Facebook users who are currently unemployed.
-Such employees will have an employment history containing no records with null end-date values, leading us to the
+Such employees will have an employment history containing no records that miss end-date values, leading us to the
 following AQL query:
 
         use dataverse TinySocial;
 
         for $fbu in dataset FacebookUsers
-        where (every $e in $fbu.employment satisfies not(is-null($e.end-date)))
+        where (every $e in $fbu.employment satisfies not(is-missing($e.end-date)))
         return $fbu;
 
 Here is the expected result for our sample data:
