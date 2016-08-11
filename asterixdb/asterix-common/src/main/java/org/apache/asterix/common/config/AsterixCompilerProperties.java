@@ -40,22 +40,22 @@ public class AsterixCompilerProperties extends AbstractAsterixProperties {
 
     public long getSortMemorySize() {
         return accessor.getProperty(COMPILER_SORTMEMORY_KEY, COMPILER_SORTMEMORY_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public long getJoinMemorySize() {
         return accessor.getProperty(COMPILER_JOINMEMORY_KEY, COMPILER_JOINMEMORY_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public long getGroupMemorySize() {
         return accessor.getProperty(COMPILER_GROUPMEMORY_KEY, COMPILER_GROUPMEMORY_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public int getFrameSize() {
         return accessor.getProperty(COMPILER_FRAMESIZE_KEY, COMPILER_FRAMESIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+                PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
     public String getPregelixHome() {

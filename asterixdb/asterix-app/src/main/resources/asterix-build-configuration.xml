@@ -52,19 +52,19 @@
   </property>
   <property>
     <name>compiler.framesize</name>
-    <value>32768</value>
+    <value>32KB</value>
   </property>
   <property>
     <name>compiler.sortmemory</name>
-    <value>327680</value>
+    <value>320KB</value>
   </property>
   <property>
     <name>compiler.groupmemory</name>
-    <value>163840</value>
+    <value>160KB</value>
   </property>
   <property>
     <name>compiler.joinmemory</name>
-    <value>163840</value>
+    <value>160KB</value>
   </property>
   <property>
     <name>compiler.pregelix.home</name>
@@ -72,14 +72,14 @@
   </property>
   <property>
     <name>storage.buffercache.pagesize</name>
-    <value>32768</value>
+    <value>32KB</value>
     <description>The page size in bytes for pages in the buffer cache.
       (Default = "32768" // 32KB)
     </description>
   </property>
   <property>
     <name>storage.buffercache.size</name>
-    <value>33554432</value>
+    <value>32MB</value>
     <description>The size of memory allocated to the disk buffer cache.
       The value should be a multiple of the buffer cache page size(Default
       = "33554432" // 32MB)

@@ -55,12 +55,12 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
 
     public int getBufferCachePageSize() {
         return accessor.getProperty(STORAGE_BUFFERCACHE_PAGESIZE_KEY, STORAGE_BUFFERCACHE_PAGESIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+                PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
     public long getBufferCacheSize() {
         return accessor.getProperty(STORAGE_BUFFERCACHE_SIZE_KEY, STORAGE_BUFFERCACHE_SIZE_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public int getBufferCacheNumPages() {
@@ -74,7 +74,7 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
 
     public int getMemoryComponentPageSize() {
         return accessor.getProperty(STORAGE_MEMORYCOMPONENT_PAGESIZE_KEY, STORAGE_MEMORYCOMPONENT_PAGESIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+                PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
     public int getMemoryComponentNumPages() {
@@ -96,7 +96,7 @@ public class AsterixStorageProperties extends AbstractAsterixProperties {
 
     public long getMemoryComponentGlobalBudget() {
         return accessor.getProperty(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY,
-                STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT, PropertyInterpreters.getLongPropertyInterpreter());
+                STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT, PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public double getBloomFilterFalsePositiveRate() {

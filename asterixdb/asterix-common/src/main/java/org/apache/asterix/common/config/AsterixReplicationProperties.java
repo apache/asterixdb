@@ -260,7 +260,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
 
     public int getLogBufferPageSize() {
         return accessor.getProperty(REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY, REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+                PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
     public int getLogBufferNumOfPages() {
@@ -270,6 +270,6 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
 
     public int getLogBatchSize() {
         return accessor.getProperty(REPLICATION_LOG_BATCH_SIZE_KEY, REPLICATION_LOG_BATCH_SIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+                PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 }

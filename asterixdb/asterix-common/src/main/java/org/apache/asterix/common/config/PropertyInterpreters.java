@@ -20,6 +20,8 @@ package org.apache.asterix.common.config;
 
 import java.util.logging.Level;
 
+import org.apache.hyracks.util.StorageUtil;
+
 public class PropertyInterpreters {
 
     public static IPropertyInterpreter<Integer> getIntegerPropertyInterpreter() {
@@ -81,6 +83,32 @@ public class PropertyInterpreters {
             public Double interpret(String s) throws IllegalArgumentException {
                 try {
                     return Double.parseDouble(s);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        };
+    }
+
+    public static IPropertyInterpreter<Long> getLongBytePropertyInterpreter() {
+        return new IPropertyInterpreter<Long>() {
+            @Override
+            public Long interpret(String s) throws IllegalArgumentException {
+                try {
+                    return StorageUtil.getByteValue(s);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        };
+    }
+
+    public static IPropertyInterpreter<Integer> getIntegerBytePropertyInterpreter() {
+        return new IPropertyInterpreter<Integer>() {
+            @Override
+            public Integer interpret(String s) throws IllegalArgumentException {
+                try {
+                    return (int) StorageUtil.getByteValue(s);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException(e);
                 }
