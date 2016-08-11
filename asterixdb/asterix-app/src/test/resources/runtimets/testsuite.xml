@@ -348,6 +348,11 @@
         <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1485">
+        <output-dir compare="Text">query-ASTERIXDB-1485</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="union">
     <test-case FilePath="union">
