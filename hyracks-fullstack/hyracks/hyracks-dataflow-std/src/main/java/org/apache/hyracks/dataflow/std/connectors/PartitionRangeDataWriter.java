@@ -23,22 +23,35 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputer;
+import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.storage.IGrowableIntArray;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.std.base.RangeId;
+import org.apache.hyracks.dataflow.std.misc.RangeForwardOperatorDescriptor.RangeForwardTaskState;
 import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 
 public class PartitionRangeDataWriter extends AbstractPartitionDataWriter {
-    private final ITupleRangePartitionComputer tpc;
+    private final ITupleRangePartitionComputerFactory trpcf;
+    private final RangeId rangeId;
     private final IGrowableIntArray map;
+    private ITupleRangePartitionComputer tpc;
 
     public PartitionRangeDataWriter(IHyracksTaskContext ctx, int consumerPartitionCount,
-            IPartitionWriterFactory pwFactory, RecordDescriptor recordDescriptor, ITupleRangePartitionComputer tpc)
-            throws HyracksDataException {
+            IPartitionWriterFactory pwFactory, RecordDescriptor recordDescriptor,
+            ITupleRangePartitionComputerFactory trpcf, RangeId rangeId) throws HyracksDataException {
         super(ctx, consumerPartitionCount, pwFactory, recordDescriptor);
-        this.tpc = tpc;
+        this.trpcf = trpcf;
+        this.rangeId = rangeId;
         this.map = new IntArrayList(8, 8);
+    }
+
+    @Override
+    public void open() throws HyracksDataException {
+        super.open();
+        RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(rangeId);
+        tpc = trpcf.createPartitioner(rangeState.getRangeMap());
     }
 
     @Override

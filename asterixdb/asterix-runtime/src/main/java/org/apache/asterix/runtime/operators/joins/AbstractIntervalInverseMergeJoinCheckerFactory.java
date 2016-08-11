@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 
 public abstract class AbstractIntervalInverseMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
 

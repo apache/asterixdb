@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.dataflow.std.sort;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.logging.Level;

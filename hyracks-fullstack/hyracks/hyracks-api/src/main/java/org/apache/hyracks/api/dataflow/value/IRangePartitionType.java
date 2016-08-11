@@ -16,22 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.hyracks.api.dataflow.value;
 
-import org.apache.hyracks.api.dataflow.value.IRangeMap;
-import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
-
-public class MeetsIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap) {
-        return new MeetsIntervalMergeJoinChecker(keys0, keys1);
+public interface IRangePartitionType {
+    public enum RangePartitioningType {
+        /**
+         * Partitioning is determined by finding the range partition where the first data point lies.
+         */
+        PROJECT,
+        /**
+         * Partitioning is determined by finding the range partition where the last data point lies.
+         */
+        PROJECT_END,
+        /**
+         * Partitioning is determined by finding all the range partitions where the data has a point.
+         */
+        SPLIT,
+        /**
+         * Partitioning is determined by finding all the range partitions where the data has a point
+         * or comes after the data point.
+         */
+        REPLICATE
     }
-
-    @Override
-    public RangePartitioningType getLeftPartitioningType() {
-        return RangePartitioningType.PROJECT_END;
-    }
-
 }

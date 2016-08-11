@@ -16,26 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.common.data.partition.range;
+package org.apache.hyracks.algebricks.core.algebra.base;
 
-public interface IRangePartitionType {
-    public enum RangePartitioningType {
-        /**
-         * Partitioning is determined by finding the range partition where the first data point lies.
-         */
-        PROJECT,
-        /**
-         * Partitioning is determined by finding the range partition where the last data point lies.
-         */
-        PROJECT_END,
-        /**
-         * Partitioning is determined by finding all the range partitions where the data has a point.
-         */
-        SPLIT,
-        /**
-         * Partitioning is determined by finding all the range partitions where the data has a point
-         * or comes after the data point.
-         */
-        REPLICATE
-    }
+import org.apache.hyracks.dataflow.std.base.RangeId;
+
+public interface IRangeContext {
+
+    public RangeId newRangeId();
+
 }

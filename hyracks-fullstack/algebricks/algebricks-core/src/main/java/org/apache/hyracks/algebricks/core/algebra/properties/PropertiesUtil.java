@@ -161,11 +161,11 @@ public class PropertiesUtil {
                         if (mayExpandProperties) {
                             return (isPrefixOf(od.getOrderColumns().iterator(), or.getOrderColumns().iterator())
                                     && or.getRangePartitioningType().equals(od.getRangePartitioningType())
-                                    && or.getRangeMap().equals(od.getRangeMap()));
+                                    && or.getRangeId().equals(od.getRangeId()));
                         } else {
                             return (or.getOrderColumns().equals(od.getOrderColumns())
                                     && or.getRangePartitioningType().equals(od.getRangePartitioningType())
-                                    && or.getRangeMap().equals(od.getRangeMap()));
+                                    && or.getRangeId().equals(od.getRangeId()));
                         }
                     }
                     default: {

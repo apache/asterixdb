@@ -20,13 +20,14 @@ package org.apache.asterix.runtime.operators.joins;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.join.IMergeJoinCheckerFactory;
 
 public interface IIntervalMergeJoinCheckerFactory extends IMergeJoinCheckerFactory, Serializable {
 
     @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition)
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap)
             throws HyracksDataException;
 
 }

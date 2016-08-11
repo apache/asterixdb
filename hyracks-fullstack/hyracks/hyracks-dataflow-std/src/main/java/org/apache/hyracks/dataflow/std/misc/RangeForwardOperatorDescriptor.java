@@ -19,30 +19,23 @@
 package org.apache.hyracks.dataflow.std.misc;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import org.apache.hyracks.dataflow.std.sort.ISorter;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class RangeForwardOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -50,11 +43,15 @@ public class RangeForwardOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final int RANGE_FORWARD_ACTIVITY_ID = 0;
     private static final int RANGE_WRITER_ACTIVITY_ID = 1;
 
+    private final RangeId rangeId;
     private final IRangeMap rangeMap;
 
-    public RangeForwardOperatorDescriptor(IOperatorDescriptorRegistry spec, IRangeMap rangeMap) {
+    public RangeForwardOperatorDescriptor(IOperatorDescriptorRegistry spec, RangeId rangeId, IRangeMap rangeMap,
+            RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
+        this.rangeId = rangeId;
         this.rangeMap = rangeMap;
+        recordDescriptors[0] = recordDescriptor;
     }
 
     @Override
@@ -68,8 +65,8 @@ public class RangeForwardOperatorDescriptor extends AbstractOperatorDescriptor {
     public static class RangeForwardTaskState extends AbstractStateObject {
         private IRangeMap rangeMap;
 
-        public RangeForwardTaskState(JobId jobId, TaskId taskId, IRangeMap rangeMap) {
-            super(jobId, taskId);
+        public RangeForwardTaskState(JobId jobId, RangeId rangeId, IRangeMap rangeMap) {
+            super(jobId, rangeId);
             this.rangeMap = rangeMap;
         }
 
@@ -93,8 +90,7 @@ public class RangeForwardOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new RangeForwardTaskState(ctx.getJobletContext().getJobId(),
-                            new TaskId(getActivityId(), partition), rangeMap);
+                    state = new RangeForwardTaskState(ctx.getJobletContext().getJobId(), rangeId, rangeMap);
                     ctx.setStateObject(state);
                     writer.open();
                 }

@@ -21,5 +21,5 @@ package org.apache.hyracks.api.dataflow.value;
 import java.io.Serializable;
 
 public interface ITupleRangePartitionComputerFactory extends Serializable {
-    public ITupleRangePartitionComputer createPartitioner();
+    public ITupleRangePartitionComputer createPartitioner(IRangeMap rangeMap);
 }

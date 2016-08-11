@@ -28,8 +28,8 @@ import java.util.Map.Entry;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.data.std.primitive.LongPointable;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class IntervalPartitionUtil {
     public static final double C_CPU = 0.5;

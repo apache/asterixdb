@@ -21,28 +21,27 @@ package org.apache.hyracks.dataflow.common.data.partition.range;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.storage.IGrowableIntArray;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class FieldRangePartitionComputerFactory implements ITupleRangePartitionComputerFactory {
     private static final long serialVersionUID = 1L;
     private final int[] rangeFields;
-    private IRangeMap rangeMap;
     private IBinaryRangeComparatorFactory[] comparatorFactories;
     private RangePartitioningType rangeType;
 
     public FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryRangeComparatorFactory[] comparatorFactories,
-            IRangeMap rangeMap, RangePartitioningType rangeType) {
+            RangePartitioningType rangeType) {
         this.rangeFields = rangeFields;
         this.comparatorFactories = comparatorFactories;
-        this.rangeMap = rangeMap;
         this.rangeType = rangeType;
     }
 
-    public ITupleRangePartitionComputer createPartitioner() {
+    public ITupleRangePartitionComputer createPartitioner(IRangeMap rangeMap) {
         final IBinaryComparator[] minComparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             minComparators[i] = comparatorFactories[i].createMinBinaryComparator();
@@ -78,7 +77,8 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
                     throws HyracksDataException {
                 switch (rangeType) {
                     case PROJECT: {
-                        int minPartition = getPartitionMap(binarySearchRangePartition(accessor, tIndex, minComparators));
+                        int minPartition = getPartitionMap(
+                                binarySearchRangePartition(accessor, tIndex, minComparators));
                         addPartition(minPartition, map);
                         break;
                     }
@@ -89,7 +89,8 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
                         break;
                     }
                     case REPLICATE: {
-                        int minPartition = getPartitionMap(binarySearchRangePartition(accessor, tIndex, minComparators));
+                        int minPartition = getPartitionMap(
+                                binarySearchRangePartition(accessor, tIndex, minComparators));
                         int maxPartition = getPartitionMap(rangeMap.getSplitCount() + 1);
                         for (int pid = minPartition; pid < maxPartition; ++pid) {
                             addPartition(pid, map);
@@ -97,7 +98,8 @@ public class FieldRangePartitionComputerFactory implements ITupleRangePartitionC
                         break;
                     }
                     case SPLIT: {
-                        int minPartition = getPartitionMap(binarySearchRangePartition(accessor, tIndex, minComparators));
+                        int minPartition = getPartitionMap(
+                                binarySearchRangePartition(accessor, tIndex, minComparators));
                         int maxPartition = getPartitionMap(
                                 binarySearchRangePartition(accessor, tIndex, maxComparators));
                         for (int pid = minPartition; pid <= maxPartition; ++pid) {

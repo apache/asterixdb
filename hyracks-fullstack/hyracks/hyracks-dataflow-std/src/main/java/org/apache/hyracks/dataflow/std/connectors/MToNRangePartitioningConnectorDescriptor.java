@@ -34,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 import org.apache.hyracks.dataflow.std.collectors.IPartitionBatchManager;
 import org.apache.hyracks.dataflow.std.collectors.NonDeterministicPartitionBatchManager;
 import org.apache.hyracks.dataflow.std.collectors.PartitionCollector;
@@ -43,15 +44,17 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractMToNConnec
     private static final long serialVersionUID = 1L;
 
     private final ITupleRangePartitionComputerFactory trpcf;
+    private final RangeId rangeId;
     private final int[] sortFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final INormalizedKeyComputerFactory nkcFactory;
 
     public MToNRangePartitioningConnectorDescriptor(IConnectorDescriptorRegistry spec,
-            ITupleRangePartitionComputerFactory trpcf, int[] sortFields, IBinaryComparatorFactory[] comparatorFactories,
-            INormalizedKeyComputerFactory nkcFactory) {
+            ITupleRangePartitionComputerFactory trpcf, RangeId rangeId, int[] sortFields,
+            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory nkcFactory) {
         super(spec);
         this.trpcf = trpcf;
+        this.rangeId = rangeId;
         this.sortFields = sortFields;
         this.comparatorFactories = comparatorFactories;
         this.nkcFactory = nkcFactory;
@@ -61,9 +64,7 @@ public class MToNRangePartitioningConnectorDescriptor extends AbstractMToNConnec
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
-        final PartitionRangeDataWriter rangeWriter = new PartitionRangeDataWriter(ctx, nConsumerPartitions, edwFactory,
-                recordDesc, trpcf.createPartitioner());
-        return rangeWriter;
+        return new PartitionRangeDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc, trpcf, rangeId);
     }
 
     @Override

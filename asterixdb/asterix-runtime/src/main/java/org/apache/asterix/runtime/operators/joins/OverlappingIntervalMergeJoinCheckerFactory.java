@@ -19,21 +19,16 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class OverlappingIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
-    private IRangeMap rangeMap;
-
-    public OverlappingIntervalMergeJoinCheckerFactory(IRangeMap rangeMap) {
-        this.rangeMap = rangeMap;
-    }
 
     @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition)
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap)
             throws HyracksDataException {
         int fieldIndex = 0;
         if (ATypeTag.INT64.serialize() != rangeMap.getTag(0, 0)) {

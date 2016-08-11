@@ -33,18 +33,18 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.storage.IGrowableIntArray;
 import org.apache.hyracks.dataflow.common.comm.io.FrameFixedFieldTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.partition.range.FieldRangePartitionComputerFactory;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 import org.apache.hyracks.test.support.TestUtils;
@@ -145,8 +145,8 @@ public class IntervalRangePartitionComputerFactoryTest extends TestCase {
         IHyracksTaskContext ctx = TestUtils.create(FRAME_SIZE);
         int[] rangeFields = new int[] { 0 };
         ITupleRangePartitionComputerFactory frpcf = new FieldRangePartitionComputerFactory(rangeFields,
-                comparatorFactories, rangeMap, rangeType);
-        ITupleRangePartitionComputer partitioner = frpcf.createPartitioner();
+                comparatorFactories, rangeType);
+        ITupleRangePartitionComputer partitioner = frpcf.createPartitioner(rangeMap);
 
         IFrameTupleAccessor accessor = new FrameTupleAccessor(RecordDesc);
         ByteBuffer buffer = prepareData(ctx, intervals);

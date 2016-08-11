@@ -48,25 +48,25 @@ import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputerFactory;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.range.FieldRangePartitionComputerFactory;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 import org.apache.hyracks.dataflow.std.connectors.MToNRangePartitioningConnectorDescriptor;
 
 public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
 
     private List<OrderColumn> partitioningFields;
     private INodeDomain domain;
-    private IRangeMap rangeMap;
+    private RangeId rangeId;
     private RangePartitioningType rangeType;
 
-    public RangePartitionExchangePOperator(List<OrderColumn> partitioningFields, INodeDomain domain, IRangeMap rangeMap,
+    public RangePartitionExchangePOperator(List<OrderColumn> partitioningFields, INodeDomain domain, RangeId rangeId,
             RangePartitioningType rangeType) {
         this.partitioningFields = partitioningFields;
         this.domain = domain;
-        this.rangeMap = rangeMap;
+        this.rangeId = rangeId;
         this.rangeType = rangeType;
     }
 
@@ -83,8 +83,8 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
         return rangeType;
     }
 
-    public IRangeMap getRangeMap() {
-        return rangeMap;
+    public RangeId getRangeId() {
+        return rangeId;
     }
 
     public INodeDomain getDomain() {
@@ -94,7 +94,7 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         IPartitioningProperty p = new OrderedPartitionedProperty(new ArrayList<OrderColumn>(partitioningFields), domain,
-                rangeMap, rangeType);
+                rangeId, rangeType, null);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
         List<ILocalStructuralProperty> locals = new ArrayList<>();
@@ -141,15 +141,15 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
             i++;
         }
         ITupleRangePartitionComputerFactory tpcf = new FieldRangePartitionComputerFactory(sortFields, rangeComps,
-                rangeMap, rangeType);
-        IConnectorDescriptor conn = new MToNRangePartitioningConnectorDescriptor(spec, tpcf, sortFields, binaryComps,
+                rangeType);
+        IConnectorDescriptor conn = new MToNRangePartitioningConnectorDescriptor(spec, tpcf, rangeId, sortFields, binaryComps,
                 nkcf);
         return new Pair<>(conn, null);
     }
 
     @Override
     public String toString() {
-        return getOperatorTag().toString() + " " + partitioningFields + " " + rangeType;
+        return getOperatorTag().toString() + " " + partitioningFields + " " + rangeType + " " + rangeId;
     }
 
 }

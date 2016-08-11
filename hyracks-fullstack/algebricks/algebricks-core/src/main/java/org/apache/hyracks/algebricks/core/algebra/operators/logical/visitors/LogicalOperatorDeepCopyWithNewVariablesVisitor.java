@@ -410,7 +410,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     public ILogicalOperator visitRangeForwardOperator(RangeForwardOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         // TODO fix deep copy of range map
-        RangeForwardOperator opCopy = new RangeForwardOperator(op.getRangeMap());
+        RangeForwardOperator opCopy = new RangeForwardOperator(op.getRangeId(), op.getRangeMap());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

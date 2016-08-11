@@ -51,25 +51,25 @@ import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryRangeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.dataflow.value.ITupleRangePartitionComputerFactory;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.range.FieldRangePartitionComputerFactory;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 import org.apache.hyracks.dataflow.std.connectors.MToNRangePartitionMergingConnectorDescriptor;
 
 public class RangePartitionMergeExchangePOperator extends AbstractExchangePOperator {
 
     private List<OrderColumn> partitioningFields;
     private INodeDomain domain;
-    private IRangeMap rangeMap;
+    private RangeId rangeId;
     private RangePartitioningType rangeType;
 
     public RangePartitionMergeExchangePOperator(List<OrderColumn> partitioningFields, INodeDomain domain,
-            IRangeMap rangeMap, RangePartitioningType rangeType) {
+            RangeId rangeId, RangePartitioningType rangeType) {
         this.partitioningFields = partitioningFields;
         this.domain = domain;
-        this.rangeMap = rangeMap;
+        this.rangeId = rangeId;
         this.rangeType = rangeType;
     }
 
@@ -86,8 +86,8 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
         return rangeType;
     }
 
-    public IRangeMap getRangeMap() {
-        return rangeMap;
+    public RangeId getRangeId() {
+        return rangeId;
     }
 
     public INodeDomain getDomain() {
@@ -96,7 +96,7 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p = new OrderedPartitionedProperty(partitioningFields, domain, rangeMap, rangeType);
+        IPartitioningProperty p = new OrderedPartitionedProperty(partitioningFields, domain, rangeId, rangeType, null);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
         List<ILocalStructuralProperty> locals = new ArrayList<>();
@@ -152,15 +152,15 @@ public class RangePartitionMergeExchangePOperator extends AbstractExchangePOpera
             i++;
         }
         ITupleRangePartitionComputerFactory tpcf = new FieldRangePartitionComputerFactory(sortFields, rangeComps,
-                rangeMap, rangeType);
-        IConnectorDescriptor conn = new MToNRangePartitionMergingConnectorDescriptor(spec, tpcf, sortFields,
+                rangeType);
+        IConnectorDescriptor conn = new MToNRangePartitionMergingConnectorDescriptor(spec, tpcf, rangeId, sortFields,
                 binaryComps, nkcf);
         return new Pair<>(conn, null);
     }
 
     @Override
     public String toString() {
-        return getOperatorTag().toString() + " " + partitioningFields + " " + rangeType;
+        return getOperatorTag().toString() + " " + partitioningFields + " " + rangeType + " " + rangeId;
     }
 
 }

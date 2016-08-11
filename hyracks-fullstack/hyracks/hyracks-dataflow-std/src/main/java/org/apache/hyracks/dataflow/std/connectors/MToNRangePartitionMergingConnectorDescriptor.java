@@ -34,24 +34,28 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 import org.apache.hyracks.dataflow.std.collectors.IPartitionBatchManager;
 import org.apache.hyracks.dataflow.std.collectors.NonDeterministicPartitionBatchManager;
 import org.apache.hyracks.dataflow.std.collectors.PartitionCollector;
 import org.apache.hyracks.dataflow.std.collectors.SortMergeFrameReader;
+import org.apache.hyracks.dataflow.std.misc.RangeForwardOperatorDescriptor.RangeForwardTaskState;
 
 public class MToNRangePartitionMergingConnectorDescriptor extends AbstractMToNConnectorDescriptor {
     private static final long serialVersionUID = 1L;
 
     private final ITupleRangePartitionComputerFactory tprcf;
+    private final RangeId rangeId;
     private final int[] sortFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final INormalizedKeyComputerFactory nkcFactory;
 
     public MToNRangePartitionMergingConnectorDescriptor(IConnectorDescriptorRegistry spec,
-            ITupleRangePartitionComputerFactory tprcf, int[] sortFields, IBinaryComparatorFactory[] comparatorFactories,
-            INormalizedKeyComputerFactory nkcFactory) {
+            ITupleRangePartitionComputerFactory tprcf, RangeId rangeId, int[] sortFields,
+            IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory nkcFactory) {
         super(spec);
         this.tprcf = tprcf;
+        this.rangeId = rangeId;
         this.sortFields = sortFields;
         this.comparatorFactories = comparatorFactories;
         this.nkcFactory = nkcFactory;
@@ -61,9 +65,7 @@ public class MToNRangePartitionMergingConnectorDescriptor extends AbstractMToNCo
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
-        final PartitionRangeDataWriter rangeWriter = new PartitionRangeDataWriter(ctx, nConsumerPartitions, edwFactory,
-                recordDesc, tprcf.createPartitioner());
-        return rangeWriter;
+        return new PartitionRangeDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc, tprcf, rangeId);
     }
 
     @Override

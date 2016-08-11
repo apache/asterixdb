@@ -28,14 +28,21 @@ import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagation
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class RangeForwardOperator extends AbstractLogicalOperator {
 
+    private RangeId rangeId;
     private IRangeMap rangeMap;
 
-    public RangeForwardOperator(IRangeMap rangeMap) {
+    public RangeForwardOperator(RangeId rangeId, IRangeMap rangeMap) {
+        this.rangeId = rangeId;
         this.rangeMap = rangeMap;
+    }
+
+    public RangeId getRangeId() {
+        return rangeId;
     }
 
     public IRangeMap getRangeMap() {

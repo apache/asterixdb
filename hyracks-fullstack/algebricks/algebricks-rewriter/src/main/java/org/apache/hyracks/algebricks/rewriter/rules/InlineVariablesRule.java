@@ -69,13 +69,13 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
     // Map of variables that could be replaced by their producing expression.
     // Populated during the top-down sweep of the plan.
-    protected Map<LogicalVariable, ILogicalExpression> varAssignRhs = new HashMap<LogicalVariable, ILogicalExpression>();
+    protected Map<LogicalVariable, ILogicalExpression> varAssignRhs = new HashMap<>();
 
     // Visitor for replacing variable reference expressions with their originating expression.
     protected InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
 
     // Set of FunctionIdentifiers that we should not inline.
-    protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<FunctionIdentifier>();
+    protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<>();
 
     protected boolean hasRun = false;
 
@@ -127,9 +127,9 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     public static boolean functionIsConstantAtRuntime(AbstractLogicalOperator op,
             AbstractFunctionCallExpression funcExpr, IOptimizationContext context) throws AlgebricksException {
         //make sure that there are no variables in the expression
-        Set<LogicalVariable> usedVariables = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> usedVariables = new HashSet<>();
         funcExpr.getUsedVariables(usedVariables);
-        if (usedVariables.size() > 0) {
+        if (!usedVariables.isEmpty()) {
             return false;
         }
         return true;
@@ -176,7 +176,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                     }
                     // Variables produced by a nested subplan cannot be inlined
                     // in operators above the subplan.
-                    Set<LogicalVariable> producedVars = new HashSet<LogicalVariable>();
+                    Set<LogicalVariable> producedVars = new HashSet<>();
                     VariableUtilities.getProducedVariables(root.getValue(), producedVars);
                     varAssignRhs.keySet().removeAll(producedVars);
                 }
@@ -186,7 +186,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         // References to variables generated in the right branch of a left-outer-join cannot be inlined
         // in operators above the left-outer-join.
         if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
-            Set<LogicalVariable> rightLiveVars = new HashSet<LogicalVariable>();
+            Set<LogicalVariable> rightLiveVars = new HashSet<>();
             VariableUtilities.getLiveVariables(op.getInputs().get(1).getValue(), rightLiveVars);
             varAssignRhs.keySet().removeAll(rightLiveVars);
         }
@@ -208,8 +208,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     protected class InlineVariablesVisitor implements ILogicalExpressionReferenceTransform {
 
         private final Map<LogicalVariable, ILogicalExpression> varAssignRhs;
-        private final Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
-        private final List<LogicalVariable> rhsUsedVars = new ArrayList<LogicalVariable>();
+        private final Set<LogicalVariable> liveVars = new HashSet<>();
+        private final List<LogicalVariable> rhsUsedVars = new ArrayList<>();
         private ILogicalOperator op;
         private IOptimizationContext context;
         // If set, only replace this variable reference.
@@ -236,54 +236,60 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             ILogicalExpression e = exprRef.getValue();
             switch (((AbstractLogicalExpression) e).getExpressionTag()) {
-                case VARIABLE: {
-                    LogicalVariable var = ((VariableReferenceExpression) e).getVariableReference();
-                    // Restrict replacement to targetVar if it has been set.
-                    if (targetVar != null && var != targetVar) {
-                        return false;
-                    }
+                case VARIABLE:
+                    return transformVariable(exprRef);
+                case FUNCTION_CALL:
+                    return transformFunction(e);
+                default:
+                    return false;
 
-                    // Make sure has not been excluded from inlining.
-                    if (context.shouldNotBeInlined(var)) {
-                        return false;
-                    }
+            }
+        }
 
-                    ILogicalExpression rhs = varAssignRhs.get(var);
-                    if (rhs == null) {
-                        // Variable was not produced by an assign.
-                        return false;
-                    }
-
-                    // Make sure used variables from rhs are live.
-                    if (liveVars.isEmpty()) {
-                        VariableUtilities.getLiveVariables(op, liveVars);
-                    }
-                    rhsUsedVars.clear();
-                    rhs.getUsedVariables(rhsUsedVars);
-                    for (LogicalVariable rhsUsedVar : rhsUsedVars) {
-                        if (!liveVars.contains(rhsUsedVar)) {
-                            return false;
-                        }
-                    }
-
-                    // Replace variable reference with a clone of the rhs expr.
-                    exprRef.setValue(rhs.cloneExpression());
-                    return true;
+        private boolean transformFunction(ILogicalExpression e) throws AlgebricksException {
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
+            boolean modified = false;
+            for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
+                if (transform(arg)) {
+                    modified = true;
                 }
-                case FUNCTION_CALL: {
-                    AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
-                    boolean modified = false;
-                    for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
-                        if (transform(arg)) {
-                            modified = true;
-                        }
-                    }
-                    return modified;
-                }
-                default: {
+            }
+            return modified;
+        }
+
+        private boolean transformVariable(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
+            LogicalVariable var = ((VariableReferenceExpression) exprRef.getValue()).getVariableReference();
+            // Restrict replacement to targetVar if it has been set.
+            if (targetVar != null && var != targetVar) {
+                return false;
+            }
+
+            // Make sure has not been excluded from inlining.
+            if (context.shouldNotBeInlined(var)) {
+                return false;
+            }
+
+            ILogicalExpression rhs = varAssignRhs.get(var);
+            if (rhs == null) {
+                // Variable was not produced by an assign.
+                return false;
+            }
+
+            // Make sure used variables from rhs are live.
+            if (liveVars.isEmpty()) {
+                VariableUtilities.getLiveVariables(op, liveVars);
+            }
+            rhsUsedVars.clear();
+            rhs.getUsedVariables(rhsUsedVars);
+            for (LogicalVariable rhsUsedVar : rhsUsedVars) {
+                if (!liveVars.contains(rhsUsedVar)) {
                     return false;
                 }
             }
+
+            // Replace variable reference with a clone of the rhs expr.
+            exprRef.setValue(rhs.cloneExpression());
+            return true;
         }
     }
 }

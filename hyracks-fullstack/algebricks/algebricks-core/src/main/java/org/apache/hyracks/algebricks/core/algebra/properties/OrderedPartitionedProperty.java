@@ -25,29 +25,27 @@ import java.util.Map;
 
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class OrderedPartitionedProperty implements IPartitioningProperty {
 
     private List<OrderColumn> orderColumns;
     private INodeDomain domain;
-    private IRangeMap rangeMap;
+    private RangeId rangeId;
     private RangePartitioningType rangeType;
 
-    public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain, IRangeMap rangeMap,
-            RangePartitioningType rangeType) {
+    public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain, RangeId rangeId,
+            RangePartitioningType rangeType, IRangeMap rangeMapHint) {
         this.domain = domain;
         this.orderColumns = orderColumns;
-        this.rangeMap = rangeMap;
+        this.rangeId = rangeId;
         this.rangeType = rangeType;
     }
 
-    public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain, IRangeMap rangeMap) {
-        this.domain = domain;
-        this.orderColumns = orderColumns;
-        this.rangeMap = rangeMap;
-        this.rangeType = RangePartitioningType.PROJECT;
+    public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain, RangeId rangeId) {
+        this(orderColumns, domain, rangeId, RangePartitioningType.PROJECT, null);
     }
 
     public List<OrderColumn> getOrderColumns() {
@@ -81,7 +79,7 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
             List<FunctionalDependency> fds) {
         List<OrderColumn> columns = PropertiesUtil.replaceOrderColumnsByEqClasses(orderColumns, equivalenceClasses);
         columns = PropertiesUtil.applyFDsToOrderColumns(columns, fds);
-        return new OrderedPartitionedProperty(columns, domain, rangeMap);
+        return new OrderedPartitionedProperty(columns, domain, rangeId);
     }
 
     @Override
@@ -91,8 +89,8 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
         }
     }
 
-    public IRangeMap getRangeMap() {
-        return rangeMap;
+    public RangeId getRangeId() {
+        return rangeId;
     }
 
     @Override

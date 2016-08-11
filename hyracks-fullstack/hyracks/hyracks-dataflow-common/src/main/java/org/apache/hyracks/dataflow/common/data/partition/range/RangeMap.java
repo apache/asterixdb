@@ -20,6 +20,8 @@ package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
+
 /**
  * The range map stores the field split values in an byte array.
  * The first and last split values for each column represent the min and max values (not actually split values).

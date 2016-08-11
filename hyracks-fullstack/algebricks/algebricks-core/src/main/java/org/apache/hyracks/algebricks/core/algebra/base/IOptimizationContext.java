@@ -33,7 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 
-public interface IOptimizationContext extends ITypingContext, IVariableContext {
+public interface IOptimizationContext extends ITypingContext, IVariableContext, IRangeContext {
 
     @Override
     public IMetadataProvider<?, ?> getMetadataProvider();

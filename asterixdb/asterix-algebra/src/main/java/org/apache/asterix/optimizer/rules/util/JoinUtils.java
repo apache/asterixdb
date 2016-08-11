@@ -55,8 +55,9 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.JoinPartitioningType;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MergeJoinPOperator;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 import org.apache.hyracks.dataflow.std.join.IMergeJoinCheckerFactory;
 
 public class JoinUtils {
@@ -111,18 +112,18 @@ public class JoinUtils {
             if (ijea.isMergeJoin()) {
                 // Sort Merge.
                 LOGGER.fine("Interval Join - Merge");
-                setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), context);
+                setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, ijea, context);
             } else if (ijea.isPartitionJoin()) {
                 // Overlapping Interval Partition.
                 LOGGER.fine("Interval Join - Cluster Parititioning");
-                setIntervalPartitionJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), ijea, context);
+                setIntervalPartitionJoinOp(op, fi, sideLeft, sideRight, ijea, context);
             } else if (ijea.isSpatialJoin()) {
                 // Spatial Partition.
                 LOGGER.fine("Interval Join - Spatial Partitioning");
             } else if (ijea.isIndexJoin()) {
                 // Endpoint Index.
                 LOGGER.fine("Interval Join - Endpoint Index");
-                setIntervalIndexJoinOp(op, fi, sideLeft, sideRight, ijea.getRangeMap(), context);
+                setIntervalIndexJoinOp(op, fi, sideLeft, sideRight, ijea, context);
             }
         }
     }
@@ -139,16 +140,17 @@ public class JoinUtils {
     }
 
     private static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
-            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
+            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IntervalJoinExpressionAnnotation ijea,
             IOptimizationContext context) {
-        IMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
+        IMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi);
         op.setPhysicalOperator(new MergeJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST, sideLeft,
-                sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
+                sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, context.newRangeId(),
+                context.newRangeId(), ijea.getRangeMap()));
     }
 
     private static void setIntervalPartitionJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
-            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
-            IntervalJoinExpressionAnnotation ijea, IOptimizationContext context) {
+            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IntervalJoinExpressionAnnotation ijea,
+            IOptimizationContext context) {
         long leftCount = ijea.getLeftRecordCount() > 0 ? ijea.getLeftRecordCount() : getCardinality(sideLeft, context);
         long rightCount = ijea.getRightRecordCount() > 0 ? ijea.getRightRecordCount()
                 : getCardinality(sideRight, context);
@@ -159,18 +161,20 @@ public class JoinUtils {
         int tuplesPerFrame = ijea.getTuplesPerFrame() > 0 ? ijea.getTuplesPerFrame()
                 : context.getPhysicalOptimizationConfig().getMaxRecordsPerFrame();
 
-        IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
+        IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi);
         op.setPhysicalOperator(new IntervalPartitionJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
                 sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), leftCount,
-                rightCount, leftMaxDuration, rightMaxDuration, tuplesPerFrame, mjcf, rangeMap));
+                rightCount, leftMaxDuration, rightMaxDuration, tuplesPerFrame, mjcf, context.newRangeId(),
+                context.newRangeId(), ijea.getRangeMap()));
     }
 
     private static void setIntervalIndexJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
-            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IRangeMap rangeMap,
+            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IntervalJoinExpressionAnnotation ijea,
             IOptimizationContext context) {
-        IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi, rangeMap);
+        IIntervalMergeJoinCheckerFactory mjcf = getIntervalMergeJoinCheckerFactory(fi);
         op.setPhysicalOperator(new IntervalIndexJoinPOperator(op.getJoinKind(), JoinPartitioningType.BROADCAST,
-                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, rangeMap));
+                sideLeft, sideRight, context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf,
+                context.newRangeId(), context.newRangeId(), ijea.getRangeMap()));
     }
 
     private static int getMaxDuration(List<LogicalVariable> lv, IOptimizationContext context) {
@@ -226,9 +230,8 @@ public class JoinUtils {
         }
     }
 
-    private static IIntervalMergeJoinCheckerFactory getIntervalMergeJoinCheckerFactory(FunctionIdentifier fi,
-            IRangeMap rangeMap) {
-        IIntervalMergeJoinCheckerFactory mjcf = new OverlappingIntervalMergeJoinCheckerFactory(rangeMap);
+    private static IIntervalMergeJoinCheckerFactory getIntervalMergeJoinCheckerFactory(FunctionIdentifier fi) {
+        IIntervalMergeJoinCheckerFactory mjcf = new OverlappingIntervalMergeJoinCheckerFactory();
         if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
             mjcf = new OverlappedByIntervalMergeJoinCheckerFactory();
         } else if (fi.equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPS)) {

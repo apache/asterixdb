@@ -26,9 +26,10 @@ import org.apache.asterix.runtime.operators.joins.intervalpartition.IntervalPart
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperator {
 
@@ -44,8 +45,10 @@ public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperato
     public IntervalPartitionJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
             int memSizeInFrames, long buildTupleCount, long probeTupleCount, long buildMaxDuration,
-            long probeMaxDuration, int avgTuplesInFrame, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
-        super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, rangeMap);
+            long probeMaxDuration, int avgTuplesInFrame, IIntervalMergeJoinCheckerFactory mjcf, RangeId leftRangeId,
+            RangeId rightRangeId, IRangeMap rangeMapHint) {
+        super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, leftRangeId, rightRangeId,
+                rangeMapHint);
         this.memSizeInFrames = memSizeInFrames;
         this.buildTupleCount = buildTupleCount;
         this.probeTupleCount = probeTupleCount;
@@ -58,8 +61,8 @@ public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperato
                 + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int buildTupleCount="
                 + buildTupleCount + ", int probeTupleCount=" + probeTupleCount + ", int buildMaxDuration="
                 + buildMaxDuration + ", int probeMaxDuration=" + probeMaxDuration + ", int avgTuplesInFrame="
-                + avgTuplesInFrame + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap
-                + ".");
+                + avgTuplesInFrame + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", RangeId leftRangeId=" + leftRangeId
+                + ", RangeId rightRangeId=" + rightRangeId + ".");
     }
 
     public long getProbeTupleCount() {
@@ -89,10 +92,10 @@ public class IntervalPartitionJoinPOperator extends AbstractIntervalJoinPOperato
 
     @Override
     IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight, IOperatorDescriptorRegistry spec,
-            RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
+            RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf, RangeId rangeId) {
         return new IntervalPartitionJoinOperatorDescriptor(spec, memSizeInFrames, buildTupleCount, probeTupleCount,
                 buildMaxDuration, probeMaxDuration, avgTuplesInFrame, keysLeft, keysRight, recordDescriptor, mjcf,
-                rangeMap);
+                rangeId);
     }
 
 }

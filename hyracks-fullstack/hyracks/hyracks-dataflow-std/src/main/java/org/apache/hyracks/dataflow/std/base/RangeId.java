@@ -16,22 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins;
+package org.apache.hyracks.dataflow.std.base;
 
-import org.apache.hyracks.api.dataflow.value.IRangeMap;
-import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
+import java.io.Serializable;
 
-public class MeetsIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
+/**
+ * Represents a range id in a logical plan.
+ */
+public final class RangeId implements Serializable {
     private static final long serialVersionUID = 1L;
+    private final int id;
 
-    @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap) {
-        return new MeetsIntervalMergeJoinChecker(keys0, keys1);
+    public RangeId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
     }
 
     @Override
-    public RangePartitioningType getLeftPartitioningType() {
-        return RangePartitioningType.PROJECT_END;
+    public String toString() {
+        return "RangeId(#" + id + ")";
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RangeId)) {
+            return false;
+        } else {
+            return id == ((RangeId) obj).getId();
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
 }

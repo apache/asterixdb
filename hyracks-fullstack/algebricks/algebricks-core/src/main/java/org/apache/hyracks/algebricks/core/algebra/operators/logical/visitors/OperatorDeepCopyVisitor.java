@@ -390,7 +390,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitRangeForwardOperator(RangeForwardOperator op, Void arg) throws AlgebricksException {
-        return new RangeForwardOperator(op.getRangeMap());
+        return new RangeForwardOperator(op.getRangeId(), op.getRangeMap());
     }
 
     @Override

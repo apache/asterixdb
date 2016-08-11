@@ -45,26 +45,31 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperator {
 
     private final List<LogicalVariable> keysLeftBranch;
     private final List<LogicalVariable> keysRightBranch;
     private final IIntervalMergeJoinCheckerFactory mjcf;
-    private final IRangeMap rangeMap;
+    private final RangeId leftRangeId;
+    private final RangeId rightRangeId;
+    private final IRangeMap rangeMapHint;
 
     public AbstractIntervalJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
+            IIntervalMergeJoinCheckerFactory mjcf, RangeId leftRangeId, RangeId rightRangeId, IRangeMap rangeMapHint) {
         super(kind, partitioningType);
         this.keysLeftBranch = sideLeftOfEqualities;
         this.keysRightBranch = sideRightOfEqualities;
         this.mjcf = mjcf;
-        this.rangeMap = rangeMap;
+        this.leftRangeId = leftRangeId;
+        this.rightRangeId = rightRangeId;
+        this.rangeMapHint = rangeMapHint;
     }
 
     public List<LogicalVariable> getKeysLeftBranch() {
@@ -79,8 +84,8 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         return mjcf;
     }
 
-    public IRangeMap getRangeMap() {
-        return rangeMap;
+    public RangeId getRangeId() {
+        return leftRangeId;
     }
 
     @Override
@@ -106,7 +111,7 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         for (LogicalVariable v : keysLeftBranch) {
             order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
-        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, rangeMap, RangePartitioningType.PROJECT);
+        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, leftRangeId, RangePartitioningType.PROJECT, rangeMapHint);
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         propsLocal.add(new LocalOrderProperty(order));
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
@@ -136,8 +141,8 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         ispRight.add(new LocalOrderProperty(orderRight));
 
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            ppLeft = new OrderedPartitionedProperty(orderLeft, null, rangeMap, mjcf.getLeftPartitioningType());
-            ppRight = new OrderedPartitionedProperty(orderRight, null, rangeMap, mjcf.getRightPartitioningType());
+            ppLeft = new OrderedPartitionedProperty(orderLeft, null, leftRangeId, mjcf.getLeftPartitioningType(), rangeMapHint);
+            ppRight = new OrderedPartitionedProperty(orderRight, null, rightRangeId, mjcf.getRightPartitioningType(), rangeMapHint);
         }
 
         pv[0] = new StructuralPropertiesVector(ppLeft, ispLeft);
@@ -158,7 +163,7 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
                 context);
 
         IOperatorDescriptor opDesc = getIntervalOperatorDescriptor(keysLeft, keysRight, spec, recordDescriptor, mjcf,
-                rangeMap);
+                leftRangeId);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();
@@ -169,6 +174,6 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
 
     abstract IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight,
             IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf,
-            IRangeMap rangeMap);
+            RangeId rangeId);
 
 }

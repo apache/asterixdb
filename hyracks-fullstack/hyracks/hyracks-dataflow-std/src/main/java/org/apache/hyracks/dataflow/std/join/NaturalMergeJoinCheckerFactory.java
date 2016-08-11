@@ -20,8 +20,9 @@ package org.apache.hyracks.dataflow.std.join;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
 
 public class NaturalMergeJoinCheckerFactory implements IMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
@@ -32,7 +33,7 @@ public class NaturalMergeJoinCheckerFactory implements IMergeJoinCheckerFactory 
     }
 
     @Override
-    public IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition) {
+    public IMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap) {
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();

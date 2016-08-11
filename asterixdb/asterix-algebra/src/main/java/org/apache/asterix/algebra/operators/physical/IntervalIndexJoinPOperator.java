@@ -26,9 +26,10 @@ import org.apache.asterix.runtime.operators.joins.intervalindex.IntervalIndexJoi
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
 
@@ -38,14 +39,17 @@ public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
 
     public IntervalIndexJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
-            int memSizeInFrames, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
-        super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, rangeMap);
+            int memSizeInFrames, IIntervalMergeJoinCheckerFactory mjcf, RangeId leftRangeId, RangeId rightRangeId,
+            IRangeMap rangeMapHint) {
+        super(kind, partitioningType, sideLeftOfEqualities, sideRightOfEqualities, mjcf, leftRangeId, rightRangeId,
+                rangeMapHint);
         this.memSizeInFrames = memSizeInFrames;
 
         LOGGER.fine("IntervalIndexJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                 + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
                 + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames
-                + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", IRangeMap rangeMap=" + rangeMap + ".");
+                + ", IMergeJoinCheckerFactory mjcf=" + mjcf + ", RangeId leftRangeId=" + leftRangeId
+                + ", RangeId rightRangeId=" + rightRangeId + ".");
     }
 
     @Override
@@ -55,7 +59,7 @@ public class IntervalIndexJoinPOperator extends AbstractIntervalJoinPOperator {
 
     @Override
     IOperatorDescriptor getIntervalOperatorDescriptor(int[] keysLeft, int[] keysRight, IOperatorDescriptorRegistry spec,
-            RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf, IRangeMap rangeMap) {
+            RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory mjcf, RangeId rangeId) {
         return new IntervalIndexJoinOperatorDescriptor(spec, memSizeInFrames, keysLeft, keysRight, recordDescriptor,
                 mjcf);
     }

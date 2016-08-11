@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,10 +37,11 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.base.RangeId;
+import org.apache.hyracks.dataflow.std.misc.RangeForwardOperatorDescriptor.RangeForwardTaskState;
 
 public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -52,16 +54,16 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
     private static final int INPUT_ENDS = 1;
 
     private final int key;
-    private final IRangeMap rangeMap;
+    private final RangeId rangeId;
 
     public IntervalLocalRangeOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys,
-            RecordDescriptor recordDescriptor, IRangeMap rangeMap) {
+            RecordDescriptor recordDescriptor, RangeId rangeId) {
         super(spec, 1, OUTPUT_ARITY);
         for (int i = 0; i < outputArity; i++) {
             recordDescriptors[i] = recordDescriptor;
         }
         key = keys[0];
-        this.rangeMap = rangeMap;
+        this.rangeId = rangeId;
     }
 
     @Override
@@ -92,8 +94,8 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
                 private final FrameTupleAppender[] resultAppender = new FrameTupleAppender[getOutputArity()];
                 private final RecordDescriptor rd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
                 private final FrameTupleAccessor accessor = new FrameTupleAccessor(rd);
-                private final long nodeRangeStart = getPartitionBoundryStart();
-                private final long nodeRangeEnd = getPartitionBoundryEnd();
+                private long nodeRangeStart;
+                private long nodeRangeEnd;
 
                 @Override
                 public void close() throws HyracksDataException {
@@ -152,6 +154,11 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
                         writers[i].open();
                         resultAppender[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
                     }
+                    RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(rangeId);
+                    IRangeMap rangeMap = rangeState.getRangeMap();
+                    nodeRangeStart = getPartitionBoundryStart(rangeMap);
+                    nodeRangeEnd = getPartitionBoundryEnd(rangeMap);
+
                 }
 
                 @Override
@@ -159,7 +166,7 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
                     writers[index] = writer;
                 }
 
-                long getPartitionBoundryStart() {
+                long getPartitionBoundryStart(IRangeMap rangeMap) {
                     int fieldIndex = 0;
                     int slot = partition - 1;
                     long boundary = Long.MIN_VALUE;
@@ -177,7 +184,7 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
                     return boundary;
                 }
 
-                long getPartitionBoundryEnd() {
+                long getPartitionBoundryEnd(IRangeMap rangeMap) {
                     int fieldIndex = 0;
                     int slot = partition;
                     long boundary = Long.MAX_VALUE;

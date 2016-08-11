@@ -63,8 +63,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartit
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnionAllPOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 /**
  * Before:
@@ -153,9 +153,9 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
 
         Mutable<ILogicalOperator> leftRangeInput = leftSorter.getValue().getInputs().get(0);
         Mutable<ILogicalOperator> rightRangeInput = rightSorter.getValue().getInputs().get(0);
-        IRangeMap leftRangeMap = getRangeMapForBranch(leftRangeInput.getValue());
-        IRangeMap rightRangeMap = getRangeMapForBranch(rightRangeInput.getValue());
-        if (leftRangeMap == null || rightRangeMap == null) {
+        RangeId leftRangeId = getRangeMapForBranch(leftRangeInput.getValue());
+        RangeId rightRangeId = getRangeMapForBranch(rightRangeInput.getValue());
+        if (leftRangeId == null || rightRangeId == null) {
             return false;
         }
         // TODO check physical join
@@ -166,9 +166,9 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         if (leftJoinKey == null || rightJoinKey == null) {
             return false;
         }
-        ReplicateOperator leftIntervalSplit = getIntervalSplitOperator(leftSortKey, leftRangeMap, mode);
+        ReplicateOperator leftIntervalSplit = getIntervalSplitOperator(leftSortKey, leftRangeId, mode);
         Mutable<ILogicalOperator> leftIntervalSplitRef = new MutableObject<>(leftIntervalSplit);
-        ReplicateOperator rightIntervalSplit = getIntervalSplitOperator(rightSortKey, rightRangeMap, mode);
+        ReplicateOperator rightIntervalSplit = getIntervalSplitOperator(rightSortKey, rightRangeId, mode);
         Mutable<ILogicalOperator> rightIntervalSplitRef = new MutableObject<>(rightIntervalSplit);
 
         // Replicate operators
@@ -358,7 +358,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         return eo;
     }
 
-    private ReplicateOperator getIntervalSplitOperator(LogicalVariable key, IRangeMap rangeMap, ExecutionMode mode) {
+    private ReplicateOperator getIntervalSplitOperator(LogicalVariable key, RangeId rangeId, ExecutionMode mode) {
         List<LogicalVariable> joinKeyLogicalVars = new ArrayList<>();
         joinKeyLogicalVars.add(key);
         //create the logical and physical operator
@@ -368,7 +368,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         }
         ReplicateOperator splitOperator = new ReplicateOperator(flags.length, flags);
         IntervalLocalRangeSplitterPOperator splitPOperator = new IntervalLocalRangeSplitterPOperator(joinKeyLogicalVars,
-                rangeMap);
+                rangeId);
         splitOperator.setPhysicalOperator(splitPOperator);
         splitOperator.setExecutionMode(mode);
         return splitOperator;
@@ -418,14 +418,14 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
             MergeJoinPOperator mjpo = (MergeJoinPOperator) joinPo;
             MergeJoinPOperator mjpoClone = new MergeJoinPOperator(mjpo.getKind(), mjpo.getPartitioningType(),
                     mjpo.getKeysLeftBranch(), mjpo.getKeysRightBranch(), memoryJoinSize,
-                    mjpo.getMergeJoinCheckerFactory(), mjpo.getRangeMap());
+                    mjpo.getMergeJoinCheckerFactory(), mjpo.getRangeId(), null);
             ijoClone.setPhysicalOperator(mjpoClone);
         } else if (joinPo.getOperatorTag() == PhysicalOperatorTag.EXTENSION_OPERATOR) {
             if (joinPo instanceof IntervalIndexJoinPOperator) {
                 IntervalIndexJoinPOperator iijpo = (IntervalIndexJoinPOperator) joinPo;
                 IntervalIndexJoinPOperator iijpoClone = new IntervalIndexJoinPOperator(iijpo.getKind(),
                         iijpo.getPartitioningType(), iijpo.getKeysLeftBranch(), iijpo.getKeysRightBranch(),
-                        memoryJoinSize, iijpo.getIntervalMergeJoinCheckerFactory(), iijpo.getRangeMap());
+                        memoryJoinSize, iijpo.getIntervalMergeJoinCheckerFactory(), iijpo.getRangeId(), null);
                 ijoClone.setPhysicalOperator(iijpoClone);
             } else if (joinPo instanceof IntervalPartitionJoinPOperator) {
                 IntervalPartitionJoinPOperator ipjpo = (IntervalPartitionJoinPOperator) joinPo;
@@ -433,7 +433,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
                         ipjpo.getPartitioningType(), ipjpo.getKeysLeftBranch(), ipjpo.getKeysRightBranch(),
                         memoryJoinSize, ipjpo.getBuildTupleCount(), ipjpo.getProbeTupleCount(),
                         ipjpo.getBuildMaxDuration(), ipjpo.getProbeMaxDuration(), ipjpo.getAvgTuplesInFrame(),
-                        ipjpo.getIntervalMergeJoinCheckerFactory(), ipjpo.getRangeMap());
+                        ipjpo.getIntervalMergeJoinCheckerFactory(), ipjpo.getRangeId(), null);
                 ijoClone.setPhysicalOperator(iijpoClone);
             } else {
                 return null;
@@ -471,7 +471,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private IRangeMap getRangeMapForBranch(ILogicalOperator op) {
+    private RangeId getRangeMapForBranch(ILogicalOperator op) {
         if (op.getOperatorTag() != LogicalOperatorTag.EXCHANGE) {
             return null;
         }
@@ -484,7 +484,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         if (exchangeLeftPO.getRangeType() != RangePartitioningType.SPLIT) {
             return null;
         }
-        return exchangeLeftPO.getRangeMap();
+        return exchangeLeftPO.getRangeId();
     }
 
 }

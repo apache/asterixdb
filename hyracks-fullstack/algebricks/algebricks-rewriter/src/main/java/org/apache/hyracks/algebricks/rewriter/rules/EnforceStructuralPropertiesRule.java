@@ -49,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.RangeForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.FDsAndEquivClassesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
@@ -60,6 +61,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDi
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangeForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
@@ -89,8 +91,9 @@ import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
@@ -155,8 +158,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     }
 
     // Gets the index of a child to start top-down data property enforcement.
-    // If there is a partitioning-compatible child with the operator in opRef, start from this child;
-    // otherwise, start from child zero.
+    // If there is a partitioning-compatible child with the operator in opRef,
+    // start from this child; otherwise, start from child zero.
     private int getStartChildIndex(AbstractLogicalOperator op, PhysicalRequirements pr, boolean nestedPlan,
             IOptimizationContext context) throws AlgebricksException {
         IPhysicalPropertiesVector[] reqdProperties = null;
@@ -273,8 +276,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 changed = true;
                 addEnforcers(op, childIndex, diff, rqd, delivered, childrenDomain, nestedPlan, context);
 
-                AbstractLogicalOperator newChild = (AbstractLogicalOperator) op.getInputs().get(childIndex)
-                        .getValue();
+                AbstractLogicalOperator newChild = (AbstractLogicalOperator) op.getInputs().get(childIndex).getValue();
 
                 if (newChild != child) {
                     delivered = newChild.getDeliveredPhysicalProperties();
@@ -333,7 +335,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private IPhysicalPropertiesVector newPropertiesDiff(AbstractLogicalOperator newChild,
             IPhysicalPropertiesVector required, boolean mayExpandPartitioningProperties, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         IPhysicalPropertiesVector newDelivered = newChild.getDeliveredPhysicalProperties();
 
         Map<LogicalVariable, EquivalenceClass> newChildEqClasses = context.getEquivalenceClassMap(newChild);
@@ -373,14 +375,15 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 preSortedDistinct.setDistinctByColumns(d.getDistinctByVarList());
                 break;
             }
+            default:
         }
     }
 
     private List<OrderColumn> getOrderColumnsFromGroupingProperties(List<ILocalStructuralProperty> reqd,
             List<ILocalStructuralProperty> dlvd) {
-        List<OrderColumn> returnedProperties = new ArrayList<OrderColumn>();
-        List<LogicalVariable> rqdCols = new ArrayList<LogicalVariable>();
-        List<LogicalVariable> dlvdCols = new ArrayList<LogicalVariable>();
+        List<OrderColumn> returnedProperties = new ArrayList<>();
+        List<LogicalVariable> rqdCols = new ArrayList<>();
+        List<LogicalVariable> dlvdCols = new ArrayList<>();
         for (ILocalStructuralProperty r : reqd) {
             r.getVariables(rqdCols);
         }
@@ -389,7 +392,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
 
         int prefix = dlvdCols.size() - 1;
-        for (; prefix >= 0;) {
+        while (prefix >= 0) {
             if (!rqdCols.contains(dlvdCols.get(prefix))) {
                 prefix--;
             } else {
@@ -403,7 +406,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             returnedProperties.add(new OrderColumn(orderColumns.get(j).getColumn(), orderColumns.get(j).getOrder()));
         }
         // maintain other order columns after the required order columns
-        if (returnedProperties.size() != 0) {
+        if (!returnedProperties.isEmpty()) {
             for (int j = prefix + 1; j < dlvdCols.size(); j++) {
                 OrderColumn oc = orderColumns.get(j);
                 returnedProperties.add(new OrderColumn(oc.getColumn(), oc.getOrder()));
@@ -464,9 +467,9 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             return;
         }
 
-        Mutable<ILogicalOperator> topOp = new MutableObject<ILogicalOperator>();
+        Mutable<ILogicalOperator> topOp = new MutableObject<>();
         topOp.setValue(op.getInputs().get(i).getValue());
-        LinkedList<LocalOrderProperty> oList = new LinkedList<LocalOrderProperty>();
+        LinkedList<LocalOrderProperty> oList = new LinkedList<>();
 
         for (ILocalStructuralProperty prop : localProperties) {
             switch (prop.getPropertyType()) {
@@ -478,7 +481,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     LocalGroupingProperty g = (LocalGroupingProperty) prop;
                     Collection<LogicalVariable> vars = (g.getPreferredOrderEnforcer() != null)
                             ? g.getPreferredOrderEnforcer() : g.getColumnSet();
-                    List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
+                    List<OrderColumn> orderColumns = new ArrayList<>();
                     for (LogicalVariable v : vars) {
                         OrderColumn oc = new OrderColumn(v, OrderKind.ASC);
                         orderColumns.add(oc);
@@ -504,12 +507,12 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private Mutable<ILogicalOperator> enforceOrderProperties(List<LocalOrderProperty> oList,
             Mutable<ILogicalOperator> topOp, boolean isMicroOp, IOptimizationContext context)
-                    throws AlgebricksException {
-        List<Pair<IOrder, Mutable<ILogicalExpression>>> oe = new LinkedList<Pair<IOrder, Mutable<ILogicalExpression>>>();
+            throws AlgebricksException {
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> oe = new LinkedList<>();
         for (LocalOrderProperty orderProperty : oList) {
             for (OrderColumn oc : orderProperty.getOrderColumns()) {
                 IOrder ordType = (oc.getOrder() == OrderKind.ASC) ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
-                Pair<IOrder, Mutable<ILogicalExpression>> pair = new Pair<IOrder, Mutable<ILogicalExpression>>(ordType,
+                Pair<IOrder, Mutable<ILogicalExpression>> pair = new Pair<>(ordType,
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(oc.getColumn())));
                 oe.add(pair);
             }
@@ -537,13 +540,15 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             switch (pp.getPartitioningType()) {
                 case UNPARTITIONED: {
                     List<OrderColumn> ordCols = computeOrderColumns(deliveredByChild);
-                    if (ordCols == null || ordCols.size() == 0) {
+                    if (ordCols.isEmpty()) {
                         pop = new RandomMergeExchangePOperator();
                     } else {
                         if (op.getAnnotations().containsKey(OperatorAnnotations.USE_RANGE_CONNECTOR)) {
+                            RangeId rangeId = context.newRangeId();
                             IRangeMap rangeMap = (IRangeMap) op.getAnnotations()
                                     .get(OperatorAnnotations.USE_RANGE_CONNECTOR);
-                            pop = new RangePartitionMergeExchangePOperator(ordCols, domain, rangeMap,
+                            addRangeForwardOperator(op.getInputs().get(i), rangeId, rangeMap, context);
+                            pop = new RangePartitionMergeExchangePOperator(ordCols, domain, rangeId,
                                     RangePartitioningType.PROJECT);
                         } else {
                             OrderColumn[] sortColumns = new OrderColumn[ordCols.size()];
@@ -554,8 +559,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     break;
                 }
                 case UNORDERED_PARTITIONED: {
-                    List<LogicalVariable> varList = new ArrayList<LogicalVariable>(
-                            ((UnorderedPartitionedProperty) pp).getColumnSet());
+                    List<LogicalVariable> varList = new ArrayList<>(((UnorderedPartitionedProperty) pp).getColumnSet());
                     List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
                     List<ILocalStructuralProperty> reqdLocals = required.getLocalProperties();
                     boolean propWasSet = false;
@@ -580,6 +584,12 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     OrderedPartitionedProperty opp = (OrderedPartitionedProperty) pp;
                     List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
                     List<ILocalStructuralProperty> reqdLocals = required.getLocalProperties();
+
+                    // Add RangeForwardOperator.
+                    IRangeMap rangeMap = (IRangeMap) op.getAnnotations()
+                            .get(OperatorAnnotations.USE_RANGE_CONNECTOR);
+                    addRangeForwardOperator(op.getInputs().get(i), opp.getRangeId(), rangeMap, context);
+
                     boolean propWasSet = false;
                     pop = null;
                     if (reqdLocals != null && cldLocals != null && allAreOrderProps(cldLocals)) {
@@ -589,13 +599,13 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                         if (PropertiesUtil.matchLocalProperties(reqdLocals, cldLocals, ecs, fds)) {
                             List<OrderColumn> orderColumns = getOrderColumnsFromGroupingProperties(reqdLocals,
                                     cldLocals);
-                            pop = new RangePartitionMergeExchangePOperator(orderColumns, domain, opp.getRangeMap(),
+                            pop = new RangePartitionMergeExchangePOperator(orderColumns, domain, opp.getRangeId(),
                                     opp.getRangePartitioningType());
                             propWasSet = true;
                         }
                     }
                     if (!propWasSet) {
-                        pop = new RangePartitionExchangePOperator(opp.getOrderColumns(), domain, opp.getRangeMap(),
+                        pop = new RangePartitionExchangePOperator(opp.getOrderColumns(), domain, opp.getRangeId(),
                                 opp.getRangePartitioningType());
                     }
                     break;
@@ -630,6 +640,21 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
     }
 
+    private void addRangeForwardOperator(Mutable<ILogicalOperator> op, RangeId rangeId, IRangeMap rangeMap,
+            IOptimizationContext context) throws AlgebricksException {
+        RangeForwardOperator rfo = new RangeForwardOperator(rangeId, rangeMap);
+        RangeForwardPOperator rfpo = new RangeForwardPOperator(rangeId, rangeMap);
+        rfo.setPhysicalOperator(rfpo);
+        setNewOp(op, rfo, context);
+        rfo.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+        OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull(rfo, context);
+        context.computeAndSetTypeEnvironmentForOperator(rfo);
+        if (AlgebricksConfig.DEBUG) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Added range forward " + rfo.getPhysicalOperator() + ".\n");
+            printOp((AbstractLogicalOperator) op.getValue());
+        }
+    }
+
     private boolean allAreOrderProps(List<ILocalStructuralProperty> cldLocals) {
         for (ILocalStructuralProperty lsp : cldLocals) {
             if (lsp.getPropertyType() != PropertyType.LOCAL_ORDER_PROPERTY) {
@@ -647,17 +672,17 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     }
 
     private List<OrderColumn> computeOrderColumns(IPhysicalPropertiesVector pv) {
-        List<OrderColumn> ordCols = new ArrayList<OrderColumn>();
+        List<OrderColumn> ordCols = new ArrayList<>();
         List<ILocalStructuralProperty> localProps = pv.getLocalProperties();
-        if (localProps == null || localProps.size() == 0) {
-            return null;
+        if (localProps == null || localProps.isEmpty()) {
+            return new ArrayList<>();
         } else {
             for (ILocalStructuralProperty p : localProps) {
                 if (p.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                     LocalOrderProperty lop = (LocalOrderProperty) p;
                     ordCols.addAll(lop.getOrderColumns());
                 } else {
-                    return null;
+                    return new ArrayList<>();
                 }
             }
             return ordCols;

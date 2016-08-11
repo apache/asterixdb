@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.RangeForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
@@ -164,6 +165,11 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
 
     @Override
     public Boolean visitMaterializeOperator(MaterializeOperator op, Void arg) throws AlgebricksException {
+        return visitInputs(op);
+    }
+
+    @Override
+    public Boolean visitRangeForwardOperator(RangeForwardOperator op, Void arg) throws AlgebricksException {
         return visitInputs(op);
     }
 

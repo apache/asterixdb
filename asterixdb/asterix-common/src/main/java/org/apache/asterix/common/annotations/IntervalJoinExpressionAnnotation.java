@@ -20,7 +20,7 @@ package org.apache.asterix.common.annotations;
 
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.api.dataflow.value.IRangeMap;
 
 public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotation {
 
@@ -39,7 +39,6 @@ public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotati
     private long rightRecordCount = -1;
     private int tuplesPerFrame = -1;
 
-
     @Override
     public IExpressionAnnotation copy() {
         IntervalJoinExpressionAnnotation clone = new IntervalJoinExpressionAnnotation();
@@ -57,15 +56,16 @@ public class IntervalJoinExpressionAnnotation extends AbstractExpressionAnnotati
         String hint = (String) object;
         setJoinType(hint);
 
-        hint = hint.substring(hint.indexOf(']', 0) + 2);
-        String[] args = hint.split(" ");
-
-        if (joinType.equals(PARTITION_HINT_STRING) && args.length == 5) {
-            leftRecordCount = Long.valueOf(args[0]);
-            rightRecordCount = Long.valueOf(args[1]);
-            leftMaxDuration = Long.valueOf(args[2]);
-            rightMaxDuration = Long.valueOf(args[3]);
-            tuplesPerFrame = Integer.valueOf(args[4]);
+        if (joinType.equals(PARTITION_HINT_STRING)) {
+            hint = hint.substring(hint.indexOf(']', 0) + 1).trim();
+            String[] args = hint.split(" ");
+            if (args.length == 5) {
+                leftRecordCount = Long.valueOf(args[0]);
+                rightRecordCount = Long.valueOf(args[1]);
+                leftMaxDuration = Long.valueOf(args[2]);
+                rightMaxDuration = Long.valueOf(args[3]);
+                tuplesPerFrame = Integer.valueOf(args[4]);
+            }
         }
     }
 

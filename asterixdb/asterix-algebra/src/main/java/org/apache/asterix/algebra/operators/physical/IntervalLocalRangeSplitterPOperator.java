@@ -39,16 +39,16 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.std.base.RangeId;
 
 public class IntervalLocalRangeSplitterPOperator extends AbstractPhysicalOperator {
 
     private List<LogicalVariable> intervalFields;
-    private IRangeMap rangeMap;
+    private RangeId rangeId;
 
-    public IntervalLocalRangeSplitterPOperator(List<LogicalVariable> intervalFields, IRangeMap rangeMap) {
+    public IntervalLocalRangeSplitterPOperator(List<LogicalVariable> intervalFields, RangeId rangeId) {
         this.intervalFields = intervalFields;
-        this.rangeMap = rangeMap;
+        this.rangeId = rangeId;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class IntervalLocalRangeSplitterPOperator extends AbstractPhysicalOperato
 
         int[] keys = JobGenHelper.variablesToFieldIndexes(intervalFields, inputSchemas[0]);
 
-        IOperatorDescriptor opDesc = new IntervalLocalRangeOperatorDescriptor(spec, keys, recDescriptor, rangeMap);
+        IOperatorDescriptor opDesc = new IntervalLocalRangeOperatorDescriptor(spec, keys, recDescriptor, rangeId);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
