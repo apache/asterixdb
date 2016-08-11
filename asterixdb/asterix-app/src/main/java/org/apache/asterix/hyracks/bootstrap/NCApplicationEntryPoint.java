@@ -95,6 +95,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
 
+        if (System.getProperty("java.rmi.server.hostname") == null) {
+            System.setProperty("java.rmi.server.hostname",
+                    ((NodeControllerService) ncAppCtx.getControllerService())
+                            .getConfiguration().clusterNetPublicIPAddress);
+        }
+
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext, metadataRmiPort);
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();

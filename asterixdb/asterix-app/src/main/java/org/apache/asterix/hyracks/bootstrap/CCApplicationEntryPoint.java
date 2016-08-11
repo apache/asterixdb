@@ -96,6 +96,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), GlobalRecoveryManager.INSTANCE,
                 libraryManager);
 
+        if (System.getProperty("java.rmi.server.hostname") == null) {
+            System.setProperty("java.rmi.server.hostname",
+                    ((ClusterControllerService) ccAppCtx.getControllerService()).getCCConfig().clusterNetIpAddress);
+        }
+
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);
 
