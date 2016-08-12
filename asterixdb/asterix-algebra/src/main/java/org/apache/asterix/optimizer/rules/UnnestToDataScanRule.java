@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import static org.apache.asterix.algebra.util.ConstantExpressionUtil.getStringArgument;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -296,24 +298,5 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             datasetName = datasetNameComponents[1];
         }
         return new Pair<String, String>(dataverseName, datasetName);
-    }
-
-    private String getStringArgument(AbstractFunctionCallExpression f, int index) {
-
-        ILogicalExpression expr = f.getArguments().get(index).getValue();
-        if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
-        }
-        ConstantExpression ce = (ConstantExpression) expr;
-        IAlgebricksConstantValue acv = ce.getValue();
-        if (!(acv instanceof AsterixConstantValue)) {
-            return null;
-        }
-        AsterixConstantValue acv2 = (AsterixConstantValue) acv;
-        if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
-            return null;
-        }
-        String argument = ((AString) acv2.getObject()).getStringValue();
-        return argument;
     }
 }
