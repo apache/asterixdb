@@ -21,18 +21,15 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import java.util.Iterator;
 
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -61,19 +58,12 @@ public class RecordConstructorResultType implements IResultTypeComputer {
         Iterator<Mutable<ILogicalExpression>> argIter = f.getArguments().iterator();
         while (argIter.hasNext()) {
             ILogicalExpression e1 = argIter.next().getValue();
-            if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                ConstantExpression nameExpr = (ConstantExpression) e1;
-                if (!(nameExpr.getValue() instanceof AsterixConstantValue)) {
-                    throw new AlgebricksException("Expecting a string and found " + nameExpr.getValue() + " instead.");
-                }
-                fieldNames[i] = ((AString) ((AsterixConstantValue) nameExpr.getValue()).getObject()).getStringValue();
+            fieldNames[i] = ConstantExpressionUtil.getStringConstant(e1);
+            if (fieldNames[i] == null) {
+                throw new AlgebricksException("Expecting a string and found " + e1 + " instead.");
             }
             ILogicalExpression e2 = argIter.next().getValue();
-            try {
-                fieldTypes[i] = (IAType) env.getType(e2);
-            } catch (AlgebricksException e) {
-                throw new AlgebricksException(e);
-            }
+            fieldTypes[i] = (IAType) env.getType(e2);
             i++;
         }
         return new ARecordType(null, fieldNames, fieldTypes, isOpen);

@@ -24,13 +24,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
-import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -699,21 +699,18 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         List<String> nestedAccessFieldName = null;
         int fieldIndex = -1;
         if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-            ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
-            if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+            fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
+            if (fieldName == null) {
                 return null;
             }
-            ConstantExpression constExpr = (ConstantExpression) nameArg;
-            fieldName = ((AString) ((AsterixConstantValue) constExpr.getValue()).getObject()).getStringValue();
             isFieldAccess = true;
             isByName = true;
         } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
-            ILogicalExpression idxArg = funcExpr.getArguments().get(1).getValue();
-            if (idxArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+            Integer idx = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
+            if (idx == null) {
                 return null;
             }
-            ConstantExpression constExpr = (ConstantExpression) idxArg;
-            fieldIndex = ((AInt32) ((AsterixConstantValue) constExpr.getValue()).getObject()).getIntegerValue();
+            fieldIndex = idx;
             isFieldAccess = true;
         } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_NESTED) {
             ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();

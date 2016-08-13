@@ -23,10 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
@@ -141,7 +140,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     @SuppressWarnings("unchecked")
     private static ILogicalExpression createFieldAccessByIndex(ARecordType recType,
             AbstractFunctionCallExpression fce) {
-        String s = getStringSecondArgument(fce);
+        String s = ConstantExpressionUtil.getStringArgument(fce, 1);
         if (s == null) {
             return null;
         }
@@ -151,22 +150,6 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         }
         return new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
-                new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
-    }
-
-    private static String getStringSecondArgument(AbstractFunctionCallExpression expr) {
-        ILogicalExpression e2 = expr.getArguments().get(1).getValue();
-        if (e2.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
-        }
-        ConstantExpression c = (ConstantExpression) e2;
-        if (!(c.getValue() instanceof AsterixConstantValue)) {
-            return null;
-        }
-        IAObject v = ((AsterixConstantValue) c.getValue()).getObject();
-        if (v.getType().getTypeTag() != ATypeTag.STRING) {
-            return null;
-        }
-        return ((AString) v).getStringValue();
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
     }
 }

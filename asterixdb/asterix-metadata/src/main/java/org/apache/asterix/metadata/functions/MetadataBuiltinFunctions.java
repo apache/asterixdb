@@ -20,19 +20,16 @@ package org.apache.asterix.metadata.functions;
 
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -67,11 +64,10 @@ public class MetadataBuiltinFunctions {
                 if (t1.getTypeTag() != ATypeTag.STRING) {
                     throw new AlgebricksException("Illegal type " + t1 + " for dataset() argument.");
                 }
-                if (a1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                String datasetArg = ConstantExpressionUtil.getStringConstant(a1);
+                if (datasetArg == null) {
                     return BuiltinType.ANY;
                 }
-                AsterixConstantValue acv = (AsterixConstantValue) ((ConstantExpression) a1).getValue();
-                String datasetArg = ((AString) acv.getObject()).getStringValue();
                 AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
                 Pair<String, String> datasetInfo = getDatasetInfo(metadata, datasetArg);
                 String dataverseName = datasetInfo.first;
@@ -111,11 +107,10 @@ public class MetadataBuiltinFunctions {
                 if (t1.getTypeTag() != ATypeTag.STRING) {
                     throw new AlgebricksException("Illegal type " + t1 + " for feed-ingest argument.");
                 }
-                if (a1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                String typeArg = ConstantExpressionUtil.getStringConstant(a1);
+                if (typeArg == null) {
                     return BuiltinType.ANY;
                 }
-                AsterixConstantValue acv = (AsterixConstantValue) ((ConstantExpression) a1).getValue();
-                String typeArg = ((AString) acv.getObject()).getStringValue();
                 AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
                 Pair<String, String> argInfo = getDatasetInfo(metadata, typeArg);
                 String dataverseName = argInfo.first;
@@ -148,11 +143,10 @@ public class MetadataBuiltinFunctions {
                 if (t1.getTypeTag() != ATypeTag.STRING) {
                     throw new AlgebricksException("Illegal type " + t1 + " for dataset() argument.");
                 }
-                if (a1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                String datasetArg = ConstantExpressionUtil.getStringConstant(a1);
+                if (datasetArg == null) {
                     return BuiltinType.ANY;
                 }
-                AsterixConstantValue acv = (AsterixConstantValue) ((ConstantExpression) a1).getValue();
-                String datasetArg = ((AString) acv.getObject()).getStringValue();
                 AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
                 Pair<String, String> datasetInfo = getDatasetInfo(metadata, datasetArg);
                 String dataverseName = datasetInfo.first;

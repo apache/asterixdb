@@ -40,7 +40,7 @@ public final class ABoolean implements IAObject {
         return bVal;
     }
 
-    public ABoolean valueOf(boolean b) {
+    public static ABoolean valueOf(boolean b) {
         return b ? TRUE : FALSE;
     }
 

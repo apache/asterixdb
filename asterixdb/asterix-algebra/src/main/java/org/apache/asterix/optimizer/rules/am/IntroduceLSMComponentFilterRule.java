@@ -19,7 +19,6 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -30,13 +29,11 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
-import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,7 +46,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -441,27 +437,23 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             }
 
             if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-                ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
-                if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                String fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
+                if (fieldName == null) {
                     return null;
                 }
-                ConstantExpression constExpr = (ConstantExpression) nameArg;
-                returnList.addAll(Arrays.asList(
-                        ((AString) ((AsterixConstantValue) constExpr.getValue()).getObject()).getStringValue()));
-                return new Pair<ARecordType, List<String>>(recType, returnList);
+                returnList.add(fieldName);
+                return new Pair<>(recType, returnList);
             } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
-                ILogicalExpression idxArg = funcExpr.getArguments().get(1).getValue();
-                if (idxArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                Integer fieldIndex = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
+                if (fieldIndex == null) {
                     return null;
                 }
-                ConstantExpression constExpr = (ConstantExpression) idxArg;
-                int fieldIndex = ((AInt32) ((AsterixConstantValue) constExpr.getValue()).getObject()).getIntegerValue();
-                returnList.addAll(Arrays.asList(recType.getFieldNames()[fieldIndex]));
+                returnList.add(recType.getFieldNames()[fieldIndex]);
                 IAType subType = recType.getFieldTypes()[fieldIndex];
                 if (subType.getTypeTag() == ATypeTag.RECORD) {
                     recType = (ARecordType) subType;
                 }
-                return new Pair<ARecordType, List<String>>(recType, returnList);
+                return new Pair<>(recType, returnList);
             }
 
         }

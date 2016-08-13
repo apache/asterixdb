@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import static org.apache.asterix.algebra.util.ConstantExpressionUtil.getStringArgument;
+import static org.apache.asterix.om.util.ConstantExpressionUtil.getStringArgument;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
@@ -131,14 +132,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
         }
-        ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
-        if (e1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return false;
-        }
-        ConstantExpression ce = (ConstantExpression) e1;
-        IAObject obj = ((AsterixConstantValue) ce.getValue()).getObject();
-        if (obj.getType().getTypeTag() != ATypeTag.STRING) {
-            int pos = ((AInt32) obj).getIntegerValue();
+        final Integer pos = ConstantExpressionUtil.getIntConstant(accessFun.getArguments().get(1).getValue());
+        if (pos != null) {
             String tName = dataset.getItemTypeName();
             IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
             if (t.getTypeTag() != ATypeTag.RECORD) {

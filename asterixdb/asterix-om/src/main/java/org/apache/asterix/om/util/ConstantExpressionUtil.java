@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.algebra.util;
+package org.apache.asterix.om.util;
 
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -31,8 +33,10 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstan
 
 public class ConstantExpressionUtil {
 
-    private static IAObject getAsterixConstantValue(AbstractFunctionCallExpression f, int index, ATypeTag typeTag) {
-        final ILogicalExpression expr = f.getArguments().get(index).getValue();
+    private ConstantExpressionUtil() {
+    }
+
+    private static IAObject getConstantIaObject(ILogicalExpression expr, ATypeTag typeTag) {
         if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return null;
         }
@@ -44,14 +48,32 @@ public class ConstantExpressionUtil {
         return iaObject.getType().getTypeTag() == typeTag ? iaObject : null;
     }
 
-    public static Integer getIntArgument(AbstractFunctionCallExpression f, int index) {
-        final IAObject iaObject = getAsterixConstantValue(f, index, ATypeTag.INT32);
+    public static Long getLongConstant(ILogicalExpression expr) {
+        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.INT64);
+        return iaObject != null ? ((AInt64) iaObject).getLongValue() : null;
+    }
+
+    public static Integer getIntConstant(ILogicalExpression expr) {
+        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.INT32);
         return iaObject != null ? ((AInt32) iaObject).getIntegerValue() : null;
     }
 
-    public static String getStringArgument(AbstractFunctionCallExpression f, int index) {
-        final IAObject iaObject = getAsterixConstantValue(f, index, ATypeTag.STRING);
+    public static String getStringConstant(ILogicalExpression expr) {
+        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.STRING);
         return iaObject != null ? ((AString) iaObject).getStringValue() : null;
+    }
+
+    public static Boolean getBooleanConstant(ILogicalExpression expr) {
+        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.BOOLEAN);
+        return iaObject != null ? ((ABoolean) iaObject).getBoolean() : null;
+    }
+
+    public static Integer getIntArgument(AbstractFunctionCallExpression f, int index) {
+        return getIntConstant(f.getArguments().get(index).getValue());
+    }
+
+    public static String getStringArgument(AbstractFunctionCallExpression f, int index) {
+        return getStringConstant(f.getArguments().get(index).getValue());
     }
 
     public static Integer getIntArgument(ILogicalExpression expr, int index) {

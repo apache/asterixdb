@@ -23,6 +23,7 @@ import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
@@ -35,7 +36,6 @@ import org.apache.asterix.formats.nontagged.AqlBinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
-import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -204,9 +204,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             }
             if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
-                String str =
-                        ((AString) ((AsterixConstantValue) ((ConstantExpression) expr.getArguments().get(1).getValue())
-                                .getValue()).getObject()).getStringValue();
+                String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
                 int k = rt.getFieldIndex(str);
                 if (k >= 0) {
                     // wait for the ByNameToByIndex rule to apply

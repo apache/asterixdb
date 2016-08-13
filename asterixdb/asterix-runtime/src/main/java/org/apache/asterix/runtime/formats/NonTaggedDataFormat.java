@@ -61,6 +61,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.asterix.runtime.evaluators.common.FunctionManagerImpl;
@@ -77,7 +78,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -468,19 +468,15 @@ public class NonTaggedDataFormat implements IDataFormat {
                 for (int i = 0; i < n; i++) {
                     Mutable<ILogicalExpression> argRef = expr.getArguments().get(2 * i);
                     ILogicalExpression arg = argRef.getValue();
-                    if (arg.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                        String fn =
-                                ((AString) ((AsterixConstantValue) ((ConstantExpression) arg).getValue()).getObject())
-                                        .getStringValue();
-                        open[i] = true;
+                    open[i] = true;
+                    final String fn = ConstantExpressionUtil.getStringConstant(arg);
+                    if (fn != null) {
                         for (String s : recType.getFieldNames()) {
                             if (s.equals(fn)) {
                                 open[i] = false;
                                 break;
                             }
                         }
-                    } else {
-                        open[i] = true;
                     }
                 }
                 return open;

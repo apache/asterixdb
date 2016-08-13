@@ -29,6 +29,7 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -344,12 +345,8 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
         Iterator<Mutable<ILogicalExpression>> fldIter = fce.getArguments().iterator();
         while (fldIter.hasNext()) {
             ILogicalExpression fldExpr = fldIter.next().getValue();
-            if (fldExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                ConstantExpression ce = (ConstantExpression) fldExpr;
-                String f2 = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
-                if (fldName.equals(f2)) {
-                    return fldIter.next().getValue();
-                }
+            if (fldName.equals(ConstantExpressionUtil.getStringConstant(fldExpr))) {
+                return fldIter.next().getValue();
             }
             fldIter.next();
         }

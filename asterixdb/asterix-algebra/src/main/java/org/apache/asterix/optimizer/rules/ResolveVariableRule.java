@@ -34,6 +34,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -45,7 +46,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -326,19 +326,10 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
 
     // Extracts the name of an undefined variable.
     private String extractConstantString(ILogicalExpression arg) throws AlgebricksException {
-        if (arg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            throw new AlgebricksException("The argument is expected to be a constant value.");
-        }
-        ConstantExpression ce = (ConstantExpression) arg;
-        IAlgebricksConstantValue acv = ce.getValue();
-        if (!(acv instanceof AsterixConstantValue)) {
-            throw new AlgebricksException("The argument is expected to be an Asterix constant value.");
-        }
-        AsterixConstantValue acv2 = (AsterixConstantValue) acv;
-        if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
+        final String str = ConstantExpressionUtil.getStringConstant(arg);
+        if (str == null) {
             throw new AlgebricksException("The argument is expected to be a string constant value.");
         }
-        return ((AString) acv2.getObject()).getStringValue();
+        return str;
     }
-
 }
