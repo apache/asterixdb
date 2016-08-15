@@ -125,6 +125,10 @@
       <artifactId>asterix-lang-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
