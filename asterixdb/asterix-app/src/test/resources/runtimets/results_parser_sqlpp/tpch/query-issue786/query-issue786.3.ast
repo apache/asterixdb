@@ -81,10 +81,8 @@ RecordConstructor [
         ]
         GROUP AS Variable [ Name=#1 ]
         (
-          customer:=Variable [ Name=$customer ]
           orders:=Variable [ Name=$orders ]
-          sn:=Variable [ Name=$sn ]
-          nation:=Variable [ Name=$nation ]
+          customer:=Variable [ Name=$customer ]
         )
 
       Let Variable [ Name=$sum ]

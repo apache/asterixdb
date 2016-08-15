@@ -173,9 +173,6 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             Mutable<ILogicalOperator> tupleSource) throws AsterixException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo =
                 langExprToAlgExpression(independentSubquery.getExpr(), tupleSource);
-        // Replaces nested tuple source with empty tuple source so that the subquery can be independent
-        // from its input operators.
-        replaceNtsWithEts(eo.second.getValue());
         LogicalVariable var = context.newVar();
         AssignOperator assignOp = new AssignOperator(var, new MutableObject<ILogicalExpression>(eo.first));
         assignOp.getInputs().add(eo.second);
@@ -586,20 +583,6 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         }
     }
 
-    // Replaces nested tuple source with empty tuple source in nested subplans of
-    // a subplan operator.
-    private void replaceNtsWithEts(ILogicalOperator op) {
-        if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
-            return;
-        }
-        SubplanOperator subplanOp = (SubplanOperator) op;
-        for (ILogicalPlan plan : subplanOp.getNestedPlans()) {
-            for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
-                replaceNtsWithEtsTopDown(rootRef);
-            }
-        }
-    }
-
     // Recursively replaces nested tuple source with empty tuple source
     // in the operator tree under opRef.
     private void replaceNtsWithEtsTopDown(Mutable<ILogicalOperator> opRef) {
@@ -691,7 +674,10 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         for (GbyVariableExpressionPair pair : groupbyClause.getGbyPairList()) {
             fieldBindings.add(getFieldBinding(pair.getVar()));
         }
-        fieldBindings.add(getFieldBinding(groupbyClause.getGroupVar()));
+        if (groupbyClause.hasWithMap() && groupbyClause.hasGroupVar()) {
+            // Makes sure that we add the re-mapped group variable which refers to a collection.
+            fieldBindings.add(getFieldBinding(groupbyClause.getWithVarMap().get(groupbyClause.getGroupVar())));
+        }
         return fieldBindings;
     }
 

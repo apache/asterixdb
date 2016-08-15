@@ -3257,6 +3257,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-971">
+        <output-dir compare="Text">query-ASTERIXDB-971-aql</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-1531">
         <output-dir compare="Text">query-ASTERIXDB-1531</output-dir>
       </compilation-unit>

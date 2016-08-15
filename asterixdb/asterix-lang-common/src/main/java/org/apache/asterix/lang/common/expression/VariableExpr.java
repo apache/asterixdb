@@ -27,7 +27,6 @@ import org.apache.commons.lang3.ObjectUtils;
 public class VariableExpr implements Expression {
     private VarIdentifier var;
     private boolean isNewVar;
-    private boolean namedValueAccess = false;
 
     public VariableExpr() {
         super();
@@ -64,14 +63,6 @@ public class VariableExpr implements Expression {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
-    }
-
-    public void setNamedValueAccess(boolean namedValueAccess) {
-        this.namedValueAccess = namedValueAccess;
-    }
-
-    public boolean namedValueAccess() {
-        return namedValueAccess;
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -547,22 +548,22 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
         }
         gOp.getInputs().add(topOp);
 
-        for (VariableExpr var : gc.getWithVarList()) {
+        for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
             LogicalVariable aggVar = context.newVar();
-            LogicalVariable oldVar = context.getVar(var);
-            List<Mutable<ILogicalExpression>> flArgs = new ArrayList<Mutable<ILogicalExpression>>(1);
-            flArgs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(oldVar)));
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = aqlExprToAlgExpression(entry.getKey(),
+                    new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(gOp))));
+            List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>(1);
+            flArgs.add(new MutableObject<>(listifyInput.first));
             AggregateFunctionCallExpression fListify =
                     AsterixBuiltinFunctions.makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, flArgs);
             AggregateOperator agg = new AggregateOperator(mkSingletonArrayList(aggVar),
-                    (List) mkSingletonArrayList(new MutableObject<ILogicalExpression>(fListify)));
-            agg.getInputs().add(new MutableObject<ILogicalOperator>(
-                    new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(gOp))));
-            ILogicalPlan plan = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(agg));
+                    mkSingletonArrayList(new MutableObject<>(fListify)));
+            agg.getInputs().add(listifyInput.second);
+            ILogicalPlan plan = new ALogicalPlanImpl(new MutableObject<>(agg));
             gOp.getNestedPlans().add(plan);
             // Hide the variable that was part of the "with", replacing it with
             // the one bound by the aggregation op.
-            context.setVar(var, aggVar);
+            context.setVar(entry.getValue(), aggVar);
         }
 
         gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());

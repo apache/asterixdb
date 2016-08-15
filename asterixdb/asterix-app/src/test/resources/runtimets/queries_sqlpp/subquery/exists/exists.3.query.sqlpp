@@ -23,14 +23,13 @@ WITH q22_customer_tmp AS
 (
     SELECT c_acctbal, c_custkey, substring(c_phone,1,2) AS cntrycode
     FROM  Customer
-)
-,
+),
 avg AS (
         SELECT ELEMENT AVG(c_acctbal)
         FROM  Customer
         WHERE c_acctbal > 0.0
 )[0]
-SELECT  cntrycode, count(ct) AS numcust, SUM(c_acctbal) AS totacctbal
+SELECT cntrycode, count(ct) AS numcust, SUM(c_acctbal) AS totacctbal
 FROM  q22_customer_tmp AS ct
 WHERE c_acctbal > avg
       AND EXISTS (SELECT * FROM Orders o WHERE o.o_custkey = ct.c_custkey)

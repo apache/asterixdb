@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
+import static org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil.substituteExpression;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,37 +29,45 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
-public class InlineWithExpressionVisitor extends AbstractSqlppSimpleExpressionVisitor {
+public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
+
+    public InlineWithExpressionVisitor(LangRewritingContext context) {
+        super(context);
+    }
 
     @Override
     public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws AsterixException {
         if (selectExpression.hasLetClauses()) {
             // Inlines the leading WITH list.
-            Map<VariableExpr, Expression> varExprMap = new HashMap<>();
+            Map<Expression, Expression> varExprMap = new HashMap<>();
             List<LetClause> withs = selectExpression.getLetList();
             Iterator<LetClause> with = withs.iterator();
             while (with.hasNext()) {
                 LetClause letClause = with.next();
                 // Replaces the let binding Expr.
                 Expression expr = letClause.getBindingExpr();
-                letClause.setBindingExpr(
-                        (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(expr, varExprMap));
+                Expression newBindingExpr = SqlppRewriteUtil.substituteExpression(expr, varExprMap, context);
+                letClause.setBindingExpr(newBindingExpr);
+
+                // Performs the rewriting recursively in the newBindingExpr itself.
+                super.visit(newBindingExpr, arg);
+
+                // Removes the WITH entry and adds variable-expr mapping into the varExprMap.
                 with.remove();
                 Expression bindingExpr = letClause.getBindingExpr();
                 // Wraps the binding expression with IndependentSubquery, so that free identifier references
                 // in the binding expression will not be resolved use outer-scope variables.
-                varExprMap.put(letClause.getVarExpr(), new IndependentSubquery(bindingExpr));
+                varExprMap.put(letClause.getVarExpr(), bindingExpr);
             }
 
             // Inlines WITH expressions into the select expression.
-            SelectExpression newSelectExpression = (SelectExpression) SqlppVariableSubstitutionUtil
-                    .substituteVariableWithoutContext(selectExpression, varExprMap);
+            SelectExpression newSelectExpression = (SelectExpression) substituteExpression(selectExpression,
+                    varExprMap, context);
 
             // Continues to visit the rewritten select expression.
             return super.visit(newSelectExpression, arg);

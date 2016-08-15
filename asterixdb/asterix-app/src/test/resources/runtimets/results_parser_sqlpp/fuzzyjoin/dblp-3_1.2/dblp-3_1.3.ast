@@ -40,7 +40,9 @@ FROM [  (
         LiteralExpr [STRING] [sim]
         :
         IndexAccessor [
-          Variable [ Name=$sim ]
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [sim]
+          ]
           Index:           LiteralExpr [LONG] [0]
         ]
       )
@@ -131,14 +133,8 @@ FROM [  (
               Variable [ Name=$token ]
               GROUP AS Variable [ Name=#1 ]
               (
-                token:=Variable [ Name=$token ]
                 paper:=Variable [ Name=$paper ]
-                tokenUnranked:=Variable [ Name=$tokenUnranked ]
-                lenLeft:=Variable [ Name=$lenLeft ]
-                prefixTokenRight:=Variable [ Name=$prefixTokenRight ]
-                paperRight:=Variable [ Name=$paperRight ]
-                prefixTokenLeft:=Variable [ Name=$prefixTokenLeft ]
-                paperLeft:=Variable [ Name=$paperLeft ]
+                token:=Variable [ Name=$token ]
               )
 
             Orderby
@@ -222,16 +218,8 @@ Variable [ Name=$i ]
               Variable [ Name=$token ]
               GROUP AS Variable [ Name=#3 ]
               (
-                token:=Variable [ Name=$token ]
                 paper:=Variable [ Name=$paper ]
-                tokenUnranked:=Variable [ Name=$tokenUnranked ]
-                lenRight:=Variable [ Name=$lenRight ]
-                tokensLeft:=Variable [ Name=$tokensLeft ]
-                lenLeft:=Variable [ Name=$lenLeft ]
-                prefixTokenRight:=Variable [ Name=$prefixTokenRight ]
-                paperRight:=Variable [ Name=$paperRight ]
-                prefixTokenLeft:=Variable [ Name=$prefixTokenLeft ]
-                paperLeft:=Variable [ Name=$paperLeft ]
+                token:=Variable [ Name=$token ]
               )
 
             Orderby
@@ -321,15 +309,10 @@ Variable [ Name=$i ]
       ]
       GROUP AS Variable [ Name=#5 ]
       (
-        sim:=Variable [ Name=$sim ]
-        tokensRight:=Variable [ Name=$tokensRight ]
-        lenRight:=Variable [ Name=$lenRight ]
-        tokensLeft:=Variable [ Name=$tokensLeft ]
-        lenLeft:=Variable [ Name=$lenLeft ]
-        prefixTokenRight:=Variable [ Name=$prefixTokenRight ]
-        paperRight:=Variable [ Name=$paperRight ]
-        prefixTokenLeft:=Variable [ Name=$prefixTokenLeft ]
         paperLeft:=Variable [ Name=$paperLeft ]
+        prefixTokenLeft:=Variable [ Name=$prefixTokenLeft ]
+        paperRight:=Variable [ Name=$paperRight ]
+        prefixTokenRight:=Variable [ Name=$prefixTokenRight ]
       )
 
   )

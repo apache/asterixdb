@@ -11,17 +11,7 @@ RecordConstructor [
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#2 ]
-          Field=c
-        ]
-        ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
-        ]
-      )
+      Variable [ Name=$c ]
     ]
   )
 ]

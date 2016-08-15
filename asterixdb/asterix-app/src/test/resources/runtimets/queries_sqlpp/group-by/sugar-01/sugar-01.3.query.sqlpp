@@ -22,5 +22,5 @@ USE gby;
 
 FROM Employee e
 GROUP BY e.deptno AS deptno GROUP AS g
-SELECT deptno AS deptno, coll_avg(e.salary) AS avgpay,
+SELECT deptno AS deptno, AVG(e.salary) AS avgpay,
        (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i) AS workers;

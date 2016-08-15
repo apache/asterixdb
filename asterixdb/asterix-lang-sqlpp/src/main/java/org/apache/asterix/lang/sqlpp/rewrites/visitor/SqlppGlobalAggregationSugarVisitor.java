@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -27,7 +28,6 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
@@ -51,9 +51,8 @@ public class SqlppGlobalAggregationSugarVisitor extends AbstractSqlppSimpleExpre
                 List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
                 gbyPairList.add(new GbyVariableExpressionPair(null, new LiteralExpr(new IntegerLiteral(1))));
                 List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
-                List<VariableExpr> withVarList = new ArrayList<>();
-                GroupbyClause gbyClause = new GroupbyClause(gbyPairList, decorPairList, withVarList, null, null, false,
-                        true);
+                GroupbyClause gbyClause = new GroupbyClause(gbyPairList, decorPairList, new HashMap<>(), null, null,
+                        false, true);
                 selectBlock.setGroupbyClause(gbyClause);
             }
         }

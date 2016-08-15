@@ -27,10 +27,9 @@ use test;
 select element {'sig_id':sig_id,'total_count':sig_sponsorship_count,'chapter_breakdown':by_chapter}
 from  Event as event,
       event.sponsoring_sigs as sponsor
-with  e as {'event':event,'sponsor':sponsor}
-group by sponsor.sig_id as sig_id
-with  sig_sponsorship_count as count(e),
-      by_chapter as (
+group by sponsor.sig_id as sig_id group as e
+let  sig_sponsorship_count = count(1),
+      by_chapter = (
       select element {'chapter_name':chapter_name,'escount':count(e)}
       from  e as e
       group by e.sponsor.chapter_name as chapter_name

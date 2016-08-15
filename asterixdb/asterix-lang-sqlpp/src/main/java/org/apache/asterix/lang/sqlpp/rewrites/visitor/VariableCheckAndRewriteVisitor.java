@@ -26,8 +26,8 @@ import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
@@ -102,7 +102,12 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         if (!rewriteNeeded(varExpr)) {
             return varExpr;
         }
-        Set<VariableExpr> liveVars = SqlppVariableUtil.getLiveVariables(scopeChecker.getCurrentScope());
+        // Note: WITH variables are not used for path resolution. The reason is that
+        // the accurate typing for ordered list with an UNION item type is not implemented.
+        // We currently type it as [ANY]. If we include WITH variables for path resolution,
+        // it will lead to ambiguities and the plan is going to be very complex.  An example query is:
+        // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/subquery/exists
+        Set<VariableExpr> liveVars = SqlppVariableUtil.getLiveVariables(scopeChecker.getCurrentScope(), false);
         boolean resolveAsDataset = resolveDatasetFirst(arg) && datasetExists(dataverseName, datasetName);
         if (resolveAsDataset) {
             return wrapWithDatasetFunction(dataverseName, datasetName);

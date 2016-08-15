@@ -24,7 +24,7 @@ FROM Employee e
     JOIN SuperStars s ON e.id = s.id
 GROUP BY e.department_id AS deptId GROUP AS eis
 SELECT deptId as deptId,
-    coll_avg(e.salary + i.bonus) AS avgpay,
+    AVG(e.salary + i.bonus) AS avgpay,
     (FROM eis AS v
          SELECT v.e.id AS id, v.e.salary AS salary, v.i.bonus AS bonus
          ORDER BY v.i.bonus DESC LIMIT 3

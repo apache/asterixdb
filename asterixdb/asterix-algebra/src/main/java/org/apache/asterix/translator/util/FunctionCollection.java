@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.aggregates.collections.FirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.collections.LocalFirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarMaxAggregateDescriptor;
@@ -313,6 +315,8 @@ public class FunctionCollection {
         temp.add(LocalMaxAggregateDescriptor.FACTORY);
         temp.add(MinAggregateDescriptor.FACTORY);
         temp.add(LocalMinAggregateDescriptor.FACTORY);
+        temp.add(FirstElementAggregateDescriptor.FACTORY);
+        temp.add(LocalFirstElementAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         temp.add(SerializableCountAggregateDescriptor.FACTORY);

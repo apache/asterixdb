@@ -44,8 +44,8 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    f:=Variable [ Name=$f ]
     r:=Variable [ Name=$r ]
+    f:=Variable [ Name=$f ]
   )
 
 Let Variable [ Name=$count ]

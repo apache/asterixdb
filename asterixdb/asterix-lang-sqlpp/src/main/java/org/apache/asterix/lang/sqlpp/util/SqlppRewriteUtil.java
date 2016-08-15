@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.util;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -27,10 +28,12 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupBySugarVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.CheckSubqueryVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.DeepCopyVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
 
 public class SqlppRewriteUtil {
 
@@ -39,10 +42,9 @@ public class SqlppRewriteUtil {
 
     // Applying sugar rewriting for group-by.
     public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
-            Collection<VariableExpr> targetVarList, Collection<VariableExpr> allVisableVars, ILangExpression expr,
+            Collection<VariableExpr> fieldVars, ILangExpression expr,
             LangRewritingContext context) throws AsterixException {
-        SqlppGroupBySugarVisitor visitor =
-                new SqlppGroupBySugarVisitor(context, groupVar, targetVarList, allVisableVars);
+        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, fieldVars);
         return expr.accept(visitor, null);
     }
 
@@ -70,4 +72,31 @@ public class SqlppRewriteUtil {
         return expr.accept(visitor, null);
     }
 
+    /**
+     * Substitutes expression with replacement expressions according to the exprMap.
+     *
+     * @param expression
+     *            ,
+     *            an input expression.
+     * @param exprMap
+     *            a map that maps expressions to their corresponding replacement expressions.
+     * @return an expression, where sub-expressions of the input expression (including the input expression itself)
+     *         are replaced with deep copies with their mapped replacements in the exprMap if there exists such a
+     *         replacement expression.
+     * @throws AsterixException
+     */
+    public static Expression substituteExpression(Expression expression, Map<Expression, Expression> exprMap,
+            LangRewritingContext context) throws AsterixException {
+        if (exprMap.isEmpty()) {
+            return expression;
+        }
+        // Creates a wrapper query for the expression so that if the expression itself
+        // is the key, it can also be replaced.
+        Query wrapper = new Query(false);
+        wrapper.setBody(expression);
+        // Creates a substitution visitor.
+        SqlppSubstituteExpressionVisitor visitor = new SqlppSubstituteExpressionVisitor(context, exprMap);
+        wrapper.accept(visitor, wrapper);
+        return wrapper.getBody();
+    }
 }

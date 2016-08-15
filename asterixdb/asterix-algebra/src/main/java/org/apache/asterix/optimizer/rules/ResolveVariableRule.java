@@ -43,20 +43,18 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
  * This rule resolves references to undefined identifiers as:
- * 1. variable/field-access paths, or
+ * 1. expression + field-access paths, or
  * 2. datasets
- * based on the available type and metatadata information.
+ * based on the available type and metadata information.
  */
 public class ResolveVariableRule implements IAlgebraicRewriteRule {
 
@@ -94,8 +92,8 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
         }
         boolean changed = false;
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        Triple<Boolean, String, String> fullyQualifiedDatasetPathCandidate =
-                resolveFullyQualifiedPath(funcExpr, context);
+        Triple<Boolean, String, String> fullyQualifiedDatasetPathCandidate = resolveFullyQualifiedPath(funcExpr,
+                context);
         for (Mutable<ILogicalExpression> funcArgRef : funcExpr.getArguments()) {
             if (rewriteExpressionReference(op, funcArgRef, fullyQualifiedDatasetPathCandidate, exprRef, context)) {
                 changed = true;
@@ -123,35 +121,35 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
         ILogicalExpression arg = funcExpr.getArguments().get(0).getValue();
         String unresolvedVarName = extractConstantString(arg);
         return resolveInternal(exprRef, hasMatchedDatasetForVariableName(unresolvedVarName, context),
-                findCandidatePaths(op, extractPossibleVariables(funcExpr.getArguments()), unresolvedVarName, context),
-                unresolvedVarName, fullyQualifiedDatasetPathCandidateFromParent, parentFuncRef);
+                findCandidatePaths(op, extractExprs(funcExpr.getArguments()), unresolvedVarName, context),
+                unresolvedVarName, fullyQualifiedDatasetPathCandidateFromParent, parentFuncRef, context);
     }
 
-    // Extracts all possible variables from the arguments of the "resolve" function.
-    private List<LogicalVariable> extractPossibleVariables(List<Mutable<ILogicalExpression>> args)
-            throws AlgebricksException {
-        List<LogicalVariable> vars = new ArrayList<>();
+    // Extracts all possible expressions from the arguments of the "resolve" function.
+    private List<ILogicalExpression> extractExprs(List<Mutable<ILogicalExpression>> args) throws AlgebricksException {
+        List<ILogicalExpression> exprs = new ArrayList<>();
         // The first arg is is the name of the undefined variable.
         for (int index = 1; index < args.size(); ++index) {
-            vars.add(extractVariable(args.get(index).getValue()));
+            ILogicalExpression argExpr = args.get(index).getValue();
+            exprs.add(argExpr);
         }
-        return vars;
+        return exprs;
     }
 
     // Resolves an undefined name to a dataset or a fully qualified variable/field-access path
     // based on the given information of dataset matches and candidate paths.
     private boolean resolveInternal(Mutable<ILogicalExpression> funcRef, boolean hasMatchedDataset,
-            Collection<Pair<LogicalVariable, List<String>>> varAccessCandidates, String unresolvedVarName,
+            Collection<Pair<ILogicalExpression, List<String>>> varAccessCandidates, String unresolvedVarName,
             Triple<Boolean, String, String> fullyQualifiedDatasetPathCandidateFromParent,
-            Mutable<ILogicalExpression> parentFuncRef) throws AlgebricksException {
+            Mutable<ILogicalExpression> parentFuncRef, IOptimizationContext context) throws AlgebricksException {
         AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) funcRef.getValue();
         int numVarCandidates = varAccessCandidates.size();
-        boolean hasAmbiguity =
-                hasAmbiguity(hasMatchedDataset, fullyQualifiedDatasetPathCandidateFromParent, numVarCandidates);
+        boolean hasAmbiguity = hasAmbiguity(hasMatchedDataset, fullyQualifiedDatasetPathCandidateFromParent,
+                numVarCandidates);
         if (hasAmbiguity) {
             // More than one possibilities.
-            throw new AlgebricksException(
-                    "Cannot resolve ambiguous alias (variable) reference for identifier " + unresolvedVarName);
+            throw new AlgebricksException("Cannot resolve ambiguous alias reference for undefined identifier "
+                    + unresolvedVarName);
         } else if (hasMatchedDataset) {
             // Rewrites the "resolve" function to a "dataset" function and only keep the dataset name argument.
             func.setFunctionInfo(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.DATASET));
@@ -163,15 +161,17 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             AbstractFunctionCallExpression parentFunc = (AbstractFunctionCallExpression) parentFuncRef.getValue();
             parentFunc.setFunctionInfo(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.DATASET));
             parentFunc.getArguments().clear();
-            parentFunc.getArguments()
-                    .add(new MutableObject<ILogicalExpression>(new ConstantExpression(
+            parentFunc.getArguments().add(
+                    new MutableObject<>(new ConstantExpression(
                             new AsterixConstantValue(new AString(fullyQualifiedDatasetPathCandidateFromParent.second
                                     + "." + fullyQualifiedDatasetPathCandidateFromParent.third)))));
         } else if (numVarCandidates == 1) {
             resolveAsFieldAccess(funcRef, varAccessCandidates.iterator().next());
         } else {
+            AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
             // Cannot find any resolution.
-            throw new AlgebricksException("Undefined alias (variable) reference for identifier " + unresolvedVarName);
+            throw new AlgebricksException("Cannot find dataset " + unresolvedVarName + " in dataverse "
+                    + metadataProvider.getDefaultDataverseName() + " nor an alias with name " + unresolvedVarName);
         }
         return true;
     }
@@ -187,17 +187,16 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
 
     // Resolves a "resolve" function call as a field access.
     private void resolveAsFieldAccess(Mutable<ILogicalExpression> funcRef,
-            Pair<LogicalVariable, List<String>> varAndPath) {
+            Pair<ILogicalExpression, List<String>> varAndPath) {
         // Rewrites to field-access-by-names.
-        LogicalVariable var = varAndPath.first;
+        ILogicalExpression expr = varAndPath.first;
         List<String> path = varAndPath.second;
-        Mutable<ILogicalExpression> firstArgRef = new MutableObject<>(new VariableReferenceExpression(var));
+        Mutable<ILogicalExpression> firstArgRef = new MutableObject<>(expr);
         ILogicalExpression newFunc = null;
         for (String fieldName : path) {
             List<Mutable<ILogicalExpression>> args = new ArrayList<>();
             args.add(firstArgRef);
-            args.add(new MutableObject<ILogicalExpression>(
-                    new ConstantExpression(new AsterixConstantValue(new AString(fieldName)))));
+            args.add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(fieldName)))));
             newFunc = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME), args);
             firstArgRef = new MutableObject<>(newFunc);
@@ -205,23 +204,23 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
         funcRef.setValue(newFunc);
     }
 
-    // Finds all candidate fully qualified variable/field-access paths.
-    private Set<Pair<LogicalVariable, List<String>>> findCandidatePaths(ILogicalOperator op,
-            Collection<LogicalVariable> inputLiveVars, String unresolvedVarName, IOptimizationContext context)
+    // Finds all candidate fully qualified expression/field-access paths.
+    private Set<Pair<ILogicalExpression, List<String>>> findCandidatePaths(ILogicalOperator op,
+            Collection<ILogicalExpression> referenceExprs, String unresolvedVarName, IOptimizationContext context)
             throws AlgebricksException {
-        Set<Pair<LogicalVariable, List<String>>> candidates = new HashSet<>();
+        Set<Pair<ILogicalExpression, List<String>>> candidates = new HashSet<>();
         IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
-        for (LogicalVariable var : inputLiveVars) {
-            IAType type = (IAType) env.getVarType(var);
-            candidates.addAll(findCandidatePathsForVariable(unresolvedVarName, type, var, new ArrayList<String>()));
+        for (ILogicalExpression referenceExpr : referenceExprs) {
+            IAType type = (IAType) env.getType(referenceExpr);
+            candidates.addAll(findCandidatePathsForExpr(unresolvedVarName, type, referenceExpr, new ArrayList<>()));
         }
         return candidates;
     }
 
-    // Recursively finds candidate paths under a variable.
-    private Set<Pair<LogicalVariable, List<String>>> findCandidatePathsForVariable(String unresolvedVarName,
-            IAType pathType, LogicalVariable var, List<String> parentPath) throws AlgebricksException {
-        Set<Pair<LogicalVariable, List<String>>> varAccessCandidates = new HashSet<>();
+    // Recursively finds candidate paths under an expression.
+    private Set<Pair<ILogicalExpression, List<String>>> findCandidatePathsForExpr(String unresolvedVarName,
+            IAType pathType, ILogicalExpression expr, List<String> parentPath) throws AlgebricksException {
+        Set<Pair<ILogicalExpression, List<String>>> varAccessCandidates = new HashSet<>();
         IAType type = pathType;
         if (type.getTypeTag() == ATypeTag.UNION) {
             type = ((AUnionType) type).getActualType();
@@ -230,7 +229,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
         if (tag == ATypeTag.ANY) {
             List<String> path = new ArrayList<>(parentPath);
             path.add(unresolvedVarName);
-            varAccessCandidates.add(new Pair<>(var, path));
+            varAccessCandidates.add(new Pair<>(expr, path));
         }
         if (tag == ATypeTag.RECORD) {
             ARecordType recordType = (ARecordType) type;
@@ -238,7 +237,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
                 // If the field name is possible.
                 List<String> path = new ArrayList<>(parentPath);
                 path.add(unresolvedVarName);
-                varAccessCandidates.add(new Pair<>(var, path));
+                varAccessCandidates.add(new Pair<>(expr, path));
             } else {
                 // Recursively identified possible paths.
                 String[] fieldNames = recordType.getFieldNames();
@@ -246,8 +245,8 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
                 for (int index = 0; index < fieldNames.length; ++index) {
                     List<String> path = new ArrayList<>(parentPath);
                     path.add(fieldNames[index]);
-                    varAccessCandidates
-                            .addAll(findCandidatePathsForVariable(unresolvedVarName, fieldTypes[index], var, path));
+                    varAccessCandidates.addAll(findCandidatePathsForExpr(unresolvedVarName, fieldTypes[index], expr,
+                            path));
                 }
             }
         }
@@ -284,10 +283,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
     private boolean hasMatchedDataverseDataset(String dataverseName, String datasetName, IOptimizationContext context)
             throws AlgebricksException {
         AqlMetadataProvider mdp = (AqlMetadataProvider) context.getMetadataProvider();
-        if (mdp.findDataset(dataverseName, datasetName) != null) {
-            return true;
-        }
-        return false;
+        return mdp.findDataset(dataverseName, datasetName) != null;
     }
 
     // Checks whether the name matches a dataset.
@@ -307,17 +303,6 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             }
         }
         return false;
-    }
-
-    // Extracts the variable from a variable reference expression.
-    private LogicalVariable extractVariable(ILogicalExpression expr) throws AlgebricksException {
-        if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-            VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr;
-            return varRefExpr.getVariableReference();
-        } else {
-            // The sugar visitor gurantees this would not happen.
-            throw new AlgebricksException("The argument should be a variable reference expression.");
-        }
     }
 
     // Cleans up scan collections on top of a "dataset" function call since "dataset"

@@ -77,12 +77,18 @@ public class SqlppVariableUtil {
         return varName;
     }
 
-    public static Set<VariableExpr> getLiveVariables(Scope scope) {
+    public static Set<VariableExpr> getLiveVariables(Scope scope, boolean includeWithVariables) {
         Set<VariableExpr> results = new HashSet<>();
         Set<VariableExpr> liveVars = scope.getLiveVariables();
         Iterator<VariableExpr> liveVarIter = liveVars.iterator();
         while (liveVarIter.hasNext()) {
-            results.add(liveVarIter.next());
+            VariableExpr liveVar = liveVarIter.next();
+            // Variables defined in WITH clauses are named value access.
+            // TODO(buyingi): remove this if block once we can accurately type
+            // ordered lists with UNION item type. Currently it is typed as [ANY].
+            if (includeWithVariables || !liveVar.getVar().namedValueAccess()) {
+                results.add(liveVar);
+            }
         }
         return results;
     }
@@ -148,7 +154,9 @@ public class SqlppVariableUtil {
                 bindingVars.add(var);
             }
         }
-        bindingVars.addAll(gbyClause.getWithVarList());
+        if (gbyClause.hasWithMap()) {
+            bindingVars.addAll(gbyClause.getWithVarMap().values());
+        }
         bindingVars.add(gbyClause.getGroupVar());
         return bindingVars;
     }

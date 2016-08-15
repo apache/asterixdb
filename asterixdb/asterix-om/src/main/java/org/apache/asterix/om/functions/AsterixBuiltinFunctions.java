@@ -83,6 +83,7 @@ import org.apache.asterix.om.typecomputer.impl.OrderedListOfAIntervalTypeCompute
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.PropagateTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
@@ -301,6 +302,10 @@ public class AsterixBuiltinFunctions {
             "agg-intermediate-avg", 1);
     public static final FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "agg-local-avg", 1);
+    public static final FunctionIdentifier FIRST_ELEMENT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-first-element", 1);
+    public static final FunctionIdentifier LOCAL_FIRST_ELEMENT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-local-first-element", 1);
 
     public static final FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
     public static final FunctionIdentifier SCALAR_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count",
@@ -312,6 +317,8 @@ public class AsterixBuiltinFunctions {
             "global-avg", 1);
     public static final FunctionIdentifier SCALAR_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "local-avg", 1);
+    public static final FunctionIdentifier SCALAR_FIRST_ELEMENT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "first-element", 1);
 
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -864,6 +871,9 @@ public class AsterixBuiltinFunctions {
         addFunction(SUM, NumericAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SUM, NumericAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_FIRST_ELEMENT, CollectionMemberResultType.INSTANCE, true);
+        addPrivateFunction(FIRST_ELEMENT, PropagateTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_FIRST_ELEMENT, PropagateTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SERIAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -1067,6 +1077,8 @@ public class AsterixBuiltinFunctions {
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_MAX), getAsterixFunctionInfo(MAX));
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_MIN), getAsterixFunctionInfo(MIN));
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SUM), getAsterixFunctionInfo(SUM));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_FIRST_ELEMENT),
+                getAsterixFunctionInfo(FIRST_ELEMENT));
         // SQL Aggregate Functions
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_AVG), getAsterixFunctionInfo(SQL_AVG));
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_COUNT), getAsterixFunctionInfo(SQL_COUNT));
@@ -1100,6 +1112,13 @@ public class AsterixBuiltinFunctions {
         addIntermediateAgg(LOCAL_MAX, MAX);
         addIntermediateAgg(MAX, MAX);
         addGlobalAgg(MAX, MAX);
+
+        addAgg(SCALAR_FIRST_ELEMENT);
+        addAgg(LOCAL_FIRST_ELEMENT);
+        addLocalAgg(FIRST_ELEMENT, LOCAL_FIRST_ELEMENT);
+        addIntermediateAgg(LOCAL_FIRST_ELEMENT, FIRST_ELEMENT);
+        addIntermediateAgg(FIRST_ELEMENT, FIRST_ELEMENT);
+        addGlobalAgg(FIRST_ELEMENT, FIRST_ELEMENT);
 
         addAgg(MIN);
         addLocalAgg(MIN, LOCAL_MIN);

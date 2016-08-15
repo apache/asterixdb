@@ -68,7 +68,6 @@ RecordConstructor [
         GROUP AS Variable [ Name=#1 ]
         (
           i:=Variable [ Name=$i ]
-          bin:=Variable [ Name=$bin ]
         )
 
       Orderby

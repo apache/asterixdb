@@ -25,21 +25,25 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.rewrites.ExpressionSubstitutionEnvironment;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionsVisitor;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
 // Replaces expressions that appear in having/select/order-by/limit clause and are identical to some
 // group by key expression with the group by key expression.
-public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlppSimpleExpressionVisitor {
+public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlppExpressionScopingVisitor {
+
+    public SubstituteGroupbyExpressionWithVariableVisitor(LangRewritingContext context) {
+        super(context);
+    }
 
     @Override
     public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
@@ -53,21 +57,28 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
             }
 
             // Creates a substitution visitor.
-            ExpressionSubstitutionEnvironment env =
-                    new ExpressionSubstitutionEnvironment(map, SqlppVariableUtil::getFreeVariables);
-            SubstituteGroupbyExpressionVisitor visitor = new SubstituteGroupbyExpressionVisitor();
+            SubstituteGroupbyExpressionVisitor visitor = new SubstituteGroupbyExpressionVisitor(context, map);
 
-            // Rewrites having/select/order-by/limit clauses.
+            // Rewrites LET/HAVING/SELECT clauses.
+            if(selectBlock.hasLetClausesAfterGroupby()){
+                for(LetClause letClause : selectBlock.getLetListAfterGroupby()){
+                    letClause.accept(this, arg);
+                }
+            }
             if (selectBlock.hasHavingClause()) {
-                selectBlock.getHavingClause().accept(visitor, env);
+                selectBlock.getHavingClause().accept(visitor, arg);
             }
-            selectBlock.getSelectClause().accept(visitor, env);
+            selectBlock.getSelectClause().accept(visitor, arg);
             SelectExpression selectExpression = (SelectExpression) arg;
-            if (selectExpression.hasOrderby()) {
-                selectExpression.getOrderbyClause().accept(visitor, env);
-            }
-            if (selectExpression.hasLimit()) {
-                selectExpression.getLimitClause().accept(visitor, env);
+
+            // For SET operation queries, the GROUP BY key variables will not substitute ORDER BY nor LIMIT expressions.
+            if (!selectExpression.getSelectSetOperation().hasRightInputs()) {
+                if (selectExpression.hasOrderby()) {
+                    selectExpression.getOrderbyClause().accept(visitor, arg);
+                }
+                if (selectExpression.hasLimit()) {
+                    selectExpression.getLimitClause().accept(visitor, arg);
+                }
             }
         }
         return super.visit(selectBlock, arg);
@@ -75,15 +86,19 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
 
 }
 
-class SubstituteGroupbyExpressionVisitor extends SqlppSubstituteExpressionsVisitor {
+class SubstituteGroupbyExpressionVisitor extends SqlppSubstituteExpressionVisitor {
+
+    public SubstituteGroupbyExpressionVisitor(LangRewritingContext context, Map<Expression, Expression> exprMap) {
+        super(context, exprMap);
+    }
 
     @Override
-    public Expression visit(CallExpr callExpr, ExpressionSubstitutionEnvironment env) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
         FunctionSignature signature = callExpr.getFunctionSignature();
         if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
             return callExpr;
         } else {
-            return super.visit(callExpr, env);
+            return super.visit(callExpr, arg);
         }
     }
 }

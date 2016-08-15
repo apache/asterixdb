@@ -23,8 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -144,7 +144,9 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(Projection projection, Collection<VariableExpr> freeVars) throws AsterixException {
-        projection.getExpression().accept(this, freeVars);
+        if (!projection.star()) {
+            projection.getExpression().accept(this, freeVars);
+        }
         return null;
     }
 

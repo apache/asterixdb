@@ -88,8 +88,8 @@ FROM [  (
       Variable [ Name=$j ]
       GROUP AS Variable [ Name=#1 ]
       (
-        j:=Variable [ Name=$j ]
         i:=Variable [ Name=$i ]
+        j:=Variable [ Name=$j ]
       )
 
     Orderby

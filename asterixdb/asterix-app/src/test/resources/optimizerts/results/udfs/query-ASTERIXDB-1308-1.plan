@@ -23,25 +23,19 @@
                                 -- ASSIGN  |UNPARTITIONED|
                                   -- STREAM_PROJECT  |UNPARTITIONED|
                                     -- UNNEST  |UNPARTITIONED|
-                                      -- STREAM_PROJECT  |UNPARTITIONED|
-                                        -- SUBPLAN  |UNPARTITIONED|
-                                                {
-                                                  -- ASSIGN  |UNPARTITIONED|
-                                                    -- SUBPLAN  |UNPARTITIONED|
-                                                            {
-                                                              -- AGGREGATE  |UNPARTITIONED|
-                                                                -- STREAM_SELECT  |UNPARTITIONED|
-                                                                  -- UNNEST  |UNPARTITIONED|
-                                                                    -- SUBPLAN  |UNPARTITIONED|
-                                                                            {
-                                                                              -- AGGREGATE  |UNPARTITIONED|
-                                                                                -- IN_MEMORY_STABLE_SORT [$$21(ASC)]  |UNPARTITIONED|
-                                                                                  -- UNNEST  |UNPARTITIONED|
-                                                                                    -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                                                                            }
+                                      -- SUBPLAN  |UNPARTITIONED|
+                                              {
+                                                -- AGGREGATE  |UNPARTITIONED|
+                                                  -- STREAM_SELECT  |UNPARTITIONED|
+                                                    -- UNNEST  |UNPARTITIONED|
+                                                      -- SUBPLAN  |UNPARTITIONED|
+                                                              {
+                                                                -- AGGREGATE  |UNPARTITIONED|
+                                                                  -- IN_MEMORY_STABLE_SORT [$$21(ASC)]  |UNPARTITIONED|
+                                                                    -- UNNEST  |UNPARTITIONED|
                                                                       -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                                                            }
-                                                      -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                                                }
-                                          -- ASSIGN  |UNPARTITIONED|
-                                            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                                              }
+                                                        -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                              }
+                                        -- ASSIGN  |UNPARTITIONED|
+                                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

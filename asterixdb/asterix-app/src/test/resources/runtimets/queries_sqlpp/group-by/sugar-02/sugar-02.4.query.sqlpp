@@ -26,6 +26,6 @@ FROM Employee e
     JOIN SuperStars s ON e.id = s.id
 GROUP BY deptId
 HAVING deptId = 'K55'
-SELECT e.department_id AS deptId, coll_sum(e.salary + i.bonus) AS star_cost
+SELECT e.department_id AS deptId, SUM(e.salary + i.bonus) AS star_cost
 ORDER BY deptId;
 

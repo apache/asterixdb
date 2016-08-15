@@ -43,9 +43,6 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
 
-        // Inlines WITH expressions.
-        inlineWithExpressions();
-
         // Rewrites SQL-92 global aggregations.
         rewriteGlobalAggregations();
 

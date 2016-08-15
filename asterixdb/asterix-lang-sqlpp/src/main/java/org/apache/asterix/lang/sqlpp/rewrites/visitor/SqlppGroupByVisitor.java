@@ -19,9 +19,11 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -29,13 +31,17 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.context.Scope;
+import org.apache.asterix.lang.common.clause.LimitClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.sqlpp.clause.FromClause;
+import org.apache.asterix.lang.sqlpp.clause.HavingClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
+import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -88,8 +94,9 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
     public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
         // Traverses the select block in the order of "from", "let"s, "where",
         // "group by", "let"s, "having" and "select".
+        FromClause fromClause = selectBlock.getFromClause();
         if (selectBlock.hasFromClause()) {
-            selectBlock.getFromClause().accept(this, arg);
+            fromClause.accept(this, arg);
         }
         if (selectBlock.hasLetClauses()) {
             List<LetClause> letList = selectBlock.getLetList();
@@ -101,48 +108,110 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             selectBlock.getWhereClause().accept(this, arg);
         }
         if (selectBlock.hasGroupbyClause()) {
-            selectBlock.getGroupbyClause().accept(this, arg);
-            Set<VariableExpr> withVarSet = new HashSet<>(selectBlock.getGroupbyClause().getWithVarList());
-            withVarSet.remove(selectBlock.getGroupbyClause().getGroupVar());
+            GroupbyClause groupbyClause = selectBlock.getGroupbyClause();
+            groupbyClause.accept(this, fromClause);
+            Collection<VariableExpr> visibleVarsInCurrentScope = SqlppVariableUtil.getBindingVariables(groupbyClause);
 
-            Set<VariableExpr> allVisableVars = SqlppVariableUtil
-                    .getLiveVariables(scopeChecker.getCurrentScope());
+            VariableExpr groupVar = groupbyClause.getGroupVar();
+            Set<VariableExpr> groupFieldVars = getGroupFieldVariables(groupbyClause);
+
+            Collection<VariableExpr> freeVariablesInGbyLets = new HashSet<>();
             if (selectBlock.hasLetClausesAfterGroupby()) {
                 List<LetClause> letListAfterGby = selectBlock.getLetListAfterGroupby();
                 for (LetClause letClauseAfterGby : letListAfterGby) {
                     letClauseAfterGby.accept(this, arg);
                     // Rewrites each let clause after the group-by.
-                    SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                            withVarSet, allVisableVars, letClauseAfterGby, context);
-                    // Adds let vars to all visiable vars.
-                    allVisableVars.add(letClauseAfterGby.getVarExpr());
+                    SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, letClauseAfterGby,
+                            context);
+                    Collection<VariableExpr> freeVariablesInLet = SqlppVariableUtil.getFreeVariables(letClauseAfterGby
+                            .getBindingExpr());
+                    freeVariablesInLet.removeAll(visibleVarsInCurrentScope);
+                    freeVariablesInGbyLets.addAll(freeVariablesInLet);
+                    visibleVarsInCurrentScope.add(letClauseAfterGby.getVarExpr());
                 }
             }
 
+            Collection<VariableExpr> freeVariables = new HashSet<>();
             if (selectBlock.hasHavingClause()) {
-                selectBlock.getHavingClause().accept(this, arg);
                 // Rewrites the having clause.
-                SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                        withVarSet, allVisableVars, selectBlock.getHavingClause(), context);
+                HavingClause havingClause = selectBlock.getHavingClause();
+                havingClause.accept(this, arg);
+                SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, havingClause, context);
+                freeVariables.addAll(SqlppVariableUtil.getFreeVariables(havingClause));
             }
 
             SelectExpression parentSelectExpression = (SelectExpression) arg;
-            if (parentSelectExpression.hasOrderby()) {
-                // Rewrites the order-by clause.
-                SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                        withVarSet, allVisableVars, parentSelectExpression.getOrderbyClause(), context);
-            }
-            if (parentSelectExpression.hasLimit()) {
-                // Rewrites the limit clause.
-                SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                        withVarSet, allVisableVars, parentSelectExpression.getLimitClause(), context);
+            // We cannot rewrite ORDER BY and LIMIT if it's a SET operation query.
+            if (!parentSelectExpression.getSelectSetOperation().hasRightInputs()) {
+                if (parentSelectExpression.hasOrderby()) {
+                    // Rewrites the ORDER BY clause.
+                    OrderbyClause orderbyClause = parentSelectExpression.getOrderbyClause();
+                    orderbyClause.accept(this, arg);
+                    SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, orderbyClause,
+                            context);
+                    freeVariables.addAll(SqlppVariableUtil.getFreeVariables(orderbyClause));
+                }
+                if (parentSelectExpression.hasLimit()) {
+                    // Rewrites the LIMIT clause.
+                    LimitClause limitClause = parentSelectExpression.getLimitClause();
+                    limitClause.accept(this, arg);
+                    SqlppRewriteUtil
+                            .rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, limitClause, context);
+                    freeVariables.addAll(SqlppVariableUtil.getFreeVariables(limitClause));
+                }
             }
 
             // Visits the select clause.
-            selectBlock.getSelectClause().accept(this, arg);
+            SelectClause selectClause = selectBlock.getSelectClause();
+            selectClause.accept(this, arg);
             // Rewrites the select clause.
-            SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(selectBlock.getGroupbyClause().getGroupVar(),
-                    withVarSet, allVisableVars, selectBlock.getSelectClause(), context);
+            SqlppRewriteUtil.rewriteExpressionUsingGroupVariable(groupVar, groupFieldVars, selectClause, context);
+            freeVariables.addAll(SqlppVariableUtil.getFreeVariables(selectClause));
+            freeVariables.removeAll(visibleVarsInCurrentScope);
+
+            // Gets the final free variables.
+            freeVariables.addAll(freeVariablesInGbyLets);
+
+            // Gets outer scope variables.
+            Collection<VariableExpr> decorVars = SqlppVariableUtil.getLiveVariables(
+                    scopeChecker.getCurrentScope(), true);
+            decorVars.removeAll(visibleVarsInCurrentScope);
+
+            // Need path resolution or not?
+            boolean needResolution = !decorVars.containsAll(freeVariables);
+            // If path resolution is needed, we need to include all outer scope variables in the decoration list.
+            // Otherwise, we only need to retain used free variables.
+            if (needResolution) {
+                // Tracks used variables, including WITH variables.
+                decorVars.retainAll(freeVariables);
+                // Adds all non-WITH outer scope variables, for path resolution.
+                Collection<VariableExpr> visibleOuterScopeNonWithVars = SqlppVariableUtil.getLiveVariables(
+                        scopeChecker.getCurrentScope(), false);
+                visibleOuterScopeNonWithVars.removeAll(visibleVarsInCurrentScope);
+                decorVars.addAll(visibleOuterScopeNonWithVars);
+            } else {
+                // Only retains used free variables.
+                decorVars.retainAll(freeVariables);
+            }
+            if (!decorVars.isEmpty()) {
+                // Adds used WITH variables.
+                Collection<VariableExpr> visibleOuterScopeNonWithVars = SqlppVariableUtil.getLiveVariables(
+                        scopeChecker.getCurrentScope(), false);
+                visibleOuterScopeNonWithVars.retainAll(freeVariables);
+                decorVars.addAll(visibleOuterScopeNonWithVars);
+
+                // Adds necessary decoration variables for the GROUP BY.
+                // NOTE: we need to include WITH binding variables so as they can be evaluated before
+                // the GROUP BY instead of being inlined as part of nested pipepline. The current optimzier
+                // is not able to optimize the latter case. The following query is such an example:
+                // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/dapd/q2-11
+                List<GbyVariableExpressionPair> decorList = new ArrayList<>();
+                for (VariableExpr var : decorVars) {
+                    decorList.add(new GbyVariableExpressionPair((VariableExpr) SqlppRewriteUtil.deepCopy(var),
+                            (Expression) SqlppRewriteUtil.deepCopy(var)));
+                }
+                groupbyClause.getDecorPairList().addAll(decorList);
+            }
         } else {
             selectBlock.getSelectClause().accept(this, arg);
         }
@@ -151,43 +220,35 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     @Override
     public Expression visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
-        Scope newScope = scopeChecker.extendCurrentScopeNoPush(true);
-        // Puts all group-by variables into the symbol set of the new scope.
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            gbyVarExpr.setExpr(gbyVarExpr.getExpr().accept(this, arg));
-            VariableExpr gbyVar = gbyVarExpr.getVar();
-            if (gbyVar != null) {
-                newScope.addNewVarSymbolToScope(gbyVarExpr.getVar().getVar());
-            }
-        }
-        // Puts all live variables into withVarList.
-        List<VariableExpr> withVarList = new ArrayList<>();
-        Iterator<Identifier> varIterator = scopeChecker.getCurrentScope().liveSymbols();
-        while (varIterator.hasNext()) {
-            Identifier ident = varIterator.next();
+        // Puts all FROM binding variables into withVarList.
+        FromClause fromClause = (FromClause) arg;
+        Collection<VariableExpr> fromBindingVars =
+                fromClause == null ? new ArrayList<>() : SqlppVariableUtil.getBindingVariables(fromClause);
+        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
+        for (VariableExpr fromBindingVar : fromBindingVars) {
             VariableExpr varExpr = new VariableExpr();
-            if (ident instanceof VarIdentifier) {
-                varExpr.setIsNewVar(false);
-                varExpr.setVar((VarIdentifier) ident);
-                withVarList.add(varExpr);
-                newScope.addNewVarSymbolToScope((VarIdentifier) ident);
-            }
+            varExpr.setIsNewVar(false);
+            varExpr.setVar(fromBindingVar.getVar());
+            VariableExpr newVarExpr = (VariableExpr) SqlppRewriteUtil.deepCopy(varExpr);
+            withVarMap.put(varExpr, newVarExpr);
         }
-
         // Sets the field list for the group variable.
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         if (!gc.hasGroupFieldList()) {
-            for (VariableExpr varExpr : withVarList) {
+            for (VariableExpr varExpr : fromBindingVars) {
                 Pair<Expression, Identifier> varIdPair = new Pair<>(new VariableExpr(varExpr.getVar()),
                         SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar()));
                 groupFieldList.add(varIdPair);
             }
             gc.setGroupFieldList(groupFieldList);
         } else {
-            // Check the scopes of group field variables.
             for (Pair<Expression, Identifier> groupField : gc.getGroupFieldList()) {
-                Expression newVar = groupField.first.accept(this, arg);
-                groupFieldList.add(new Pair<>(newVar, groupField.second));
+                Expression newFieldExpr = groupField.first.accept(this, arg);
+                groupFieldList.add(new Pair<>(newFieldExpr, groupField.second));
+                // Adds a field binding variable into withVarList.
+                VariableExpr bindingVar = new VariableExpr(
+                        new VarIdentifier(SqlppVariableUtil.toInternalVariableName(groupField.second.getValue())));
+                withVarMap.put(newFieldExpr, bindingVar);
             }
         }
         gc.setGroupFieldList(groupFieldList);
@@ -197,15 +258,25 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             VariableExpr groupVar = new VariableExpr(context.newVariable());
             gc.setGroupVar(groupVar);
         }
-        newScope.addNewVarSymbolToScope(gc.getGroupVar().getVar());
 
         // Adds the group variable into the "with" (i.e., re-binding) variable list.
         VariableExpr gbyVarRef = new VariableExpr(gc.getGroupVar().getVar());
         gbyVarRef.setIsNewVar(false);
-        withVarList.add(gbyVarRef);
-        gc.setWithVarList(withVarList);
+        withVarMap.put(gbyVarRef, (VariableExpr) SqlppRewriteUtil.deepCopy(gbyVarRef));
+        gc.setWithVarMap(withVarMap);
 
-        scopeChecker.replaceCurrentScope(newScope);
-        return null;
+        // Call super.visit(...) to scope variables.
+        return super.visit(gc, arg);
+    }
+
+    private Set<VariableExpr> getGroupFieldVariables(GroupbyClause groupbyClause) {
+        Set<VariableExpr> fieldVars = new HashSet<>();
+        if (groupbyClause.hasGroupFieldList()) {
+            for (Pair<Expression, Identifier> groupField : groupbyClause.getGroupFieldList()) {
+                fieldVars.add(new VariableExpr(new VarIdentifier(SqlppVariableUtil
+                        .toInternalVariableName(groupField.second.getValue()))));
+            }
+        }
+        return fieldVars;
     }
 }

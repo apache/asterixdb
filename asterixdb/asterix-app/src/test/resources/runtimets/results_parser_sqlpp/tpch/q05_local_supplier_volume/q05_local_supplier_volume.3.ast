@@ -299,8 +299,8 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    o1:=Variable [ Name=$o1 ]
     c:=Variable [ Name=$c ]
+    o1:=Variable [ Name=$o1 ]
   )
 
 Let Variable [ Name=$revenue ]

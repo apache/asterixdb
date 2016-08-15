@@ -19,8 +19,10 @@
 package org.apache.asterix.lang.common.visitor;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -88,15 +90,12 @@ public class CloneAndSubstituteVariablesVisitor extends
         if (gc.hasGroupVar()) {
             newGroupVar = generateNewVariable(context, gc.getGroupVar());
         }
-        List<VariableExpr> wList = new LinkedList<>();
-        if (gc.hasWithList()) {
-            for (VariableExpr w : gc.getWithVarList()) {
-                VarIdentifier newVar = context.getRewrittenVar(w.getVar().getId());
-                if (newVar == null) {
-                    throw new AsterixException("Could not find a rewritten variable identifier for " + w);
-                }
-                VariableExpr newWithVar = new VariableExpr(newVar);
-                wList.add(newWithVar);
+        Map<Expression, VariableExpr> newWithMap = new HashMap<>();
+        if (gc.hasWithMap()) {
+            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+                Expression newKeyVar = (Expression) entry.getKey().accept(this, env).first;
+                VariableExpr newValueVar = generateNewVariable(context, entry.getValue());
+                newWithMap.put(newKeyVar, newValueVar);
             }
         }
         List<Pair<Expression, Identifier>> newGroupFieldList = new ArrayList<>();
@@ -106,7 +105,7 @@ public class CloneAndSubstituteVariablesVisitor extends
                 newGroupFieldList.add(new Pair<Expression, Identifier>(newExpr, varId.second));
             }
         }
-        GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, wList, newGroupVar, newGroupFieldList,
+        GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, newWithMap, newGroupVar, newGroupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
         return new Pair<>(newGroup, newSubs);
     }

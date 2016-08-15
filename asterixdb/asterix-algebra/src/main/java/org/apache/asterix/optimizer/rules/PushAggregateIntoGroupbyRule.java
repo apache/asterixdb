@@ -100,8 +100,24 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                 }
             }
         }
+
+        // Collects subplans that is to be removed.
+        Map<GroupByOperator, List<ILogicalPlan>> gbyToSubplanListMap = new HashMap<>();
         for (Pair<GroupByOperator, Integer> remove : removeList) {
-            remove.first.getNestedPlans().remove((int)remove.second);
+            GroupByOperator groupByOperator = remove.first;
+            ILogicalPlan subplan = remove.first.getNestedPlans().get(remove.second);
+            if(gbyToSubplanListMap.containsKey(groupByOperator)) {
+                List<ILogicalPlan> subplans =  gbyToSubplanListMap.get(groupByOperator);
+                subplans.add(subplan);
+            } else {
+                List<ILogicalPlan> subplans = new ArrayList<>();
+                subplans.add(subplan);
+                gbyToSubplanListMap.put(groupByOperator, subplans);
+            }
+        }
+        // Removes subplans.
+        for(Map.Entry<GroupByOperator, List<ILogicalPlan>> entry: gbyToSubplanListMap.entrySet()){
+            entry.getKey().getNestedPlans().removeAll(entry.getValue());
         }
     }
 

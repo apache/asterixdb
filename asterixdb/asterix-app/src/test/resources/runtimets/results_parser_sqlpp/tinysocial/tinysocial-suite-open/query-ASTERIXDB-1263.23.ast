@@ -51,9 +51,6 @@ count
     GROUP AS Variable [ Name=#2 ]
     (
       k:=Variable [ Name=$k ]
-      t:=Variable [ Name=$t ]
-      h:=Variable [ Name=$h ]
-      #1:=Variable [ Name=#1 ]
     )
 
   Orderby

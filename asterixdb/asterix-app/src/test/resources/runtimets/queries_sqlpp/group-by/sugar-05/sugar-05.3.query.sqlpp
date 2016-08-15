@@ -25,7 +25,7 @@ SELECT ELEMENT {
             FROM Car c JOIN Tire t ON c.tire_size = t.size
             GROUP BY c.tire_size AS tire_size GROUP AS g
             SELECT tire_size AS tire_size,
-                   coll_avg(c.price + 4 * t.price) AS avg_total_price,
+                   AVG(c.price + 4 * t.price) AS avg_total_price,
                    ( FROM g AS g
                      SELECT g.c.make AS make,
                             g.c.model AS model,

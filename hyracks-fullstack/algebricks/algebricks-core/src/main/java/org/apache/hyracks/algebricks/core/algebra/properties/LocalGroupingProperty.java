@@ -100,8 +100,8 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
             }
         }
         if (!newColumns.isEmpty()) {
-            return new LocalGroupingProperty(newColumns,
-                    preferredOrderEnforcer.subList(groupKeys.size(), newColumns.size()));
+            return new LocalGroupingProperty(newColumns, preferredOrderEnforcer == null ? null
+                    : preferredOrderEnforcer.subList(groupKeys.size(), newColumns.size()));
         } else {
             return null;
         }

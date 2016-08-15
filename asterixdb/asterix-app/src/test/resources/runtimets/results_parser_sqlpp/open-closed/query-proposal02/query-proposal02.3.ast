@@ -59,8 +59,8 @@ Groupby
   Variable [ Name=$reftopic ]
   GROUP AS Variable [ Name=#1 ]
   (
-    reftopic:=Variable [ Name=$reftopic ]
     tweet:=Variable [ Name=$tweet ]
+    reftopic:=Variable [ Name=$reftopic ]
   )
 
 Orderby

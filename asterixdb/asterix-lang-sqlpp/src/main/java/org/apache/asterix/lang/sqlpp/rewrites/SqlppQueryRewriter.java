@@ -107,9 +107,6 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
 
-        // Inlines WITH expressions.
-        inlineWithExpressions();
-
         // Rewrites SQL-92 global aggregations.
         rewriteGlobalAggregations();
 
@@ -141,6 +138,10 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Replace global variable access with the dataset function for inlined expressions.
         variableCheckAndRewrite(true);
 
+        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
+        // expression is correct.
+        inlineWithExpressions();
+
         // Sets the var counter of the query.
         topExpr.setVarCounter(context.getVarCounter());
     }
@@ -170,7 +171,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         // Inlines with expressions.
-        InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor();
+        InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor(context);
         inlineWithExpressionVisitor.visit(topExpr, null);
     }
 
@@ -189,7 +190,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
         // Substitute group-by key expressions that appear in the select clause.
         SubstituteGroupbyExpressionWithVariableVisitor substituteGbyExprVisitor =
-                new SubstituteGroupbyExpressionWithVariableVisitor();
+                new SubstituteGroupbyExpressionWithVariableVisitor(context);
         substituteGbyExprVisitor.visit(topExpr, null);
     }
 
@@ -216,8 +217,8 @@ class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         // Inline column aliases.
-        InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor();
-        inlineColumnAliasVisitor.visit(topExpr, false);
+        InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor(context);
+        inlineColumnAliasVisitor.visit(topExpr, null);
     }
 
     protected void variableCheckAndRewrite(boolean overwrite) throws AsterixException {

@@ -45,17 +45,7 @@ Let Variable [ Name=$grid ]
     Let Variable [ Name=$num ]
       :=
       FunctionCall test.count@1[
-        (
-          SELECT ELEMENT [
-          FieldAccessor [
-            Variable [ Name=#2 ]
-            Field=o
-          ]
-          ]
-          FROM [            Variable [ Name=#1 ]
-            AS Variable [ Name=#2 ]
-          ]
-        )
+        Variable [ Name=$o ]
       ]
     Orderby
       Variable [ Name=$num ]

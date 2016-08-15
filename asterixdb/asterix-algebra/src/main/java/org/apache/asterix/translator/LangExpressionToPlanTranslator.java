@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.translator;
 
+import static java.util.logging.Logger.global;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
@@ -38,15 +41,15 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.clause.OrderbyClause.OrderModifier;
 import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause.OrderModifier;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.FieldBinding;
@@ -54,14 +57,14 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
-import org.apache.asterix.lang.common.expression.ListConstructor.Type;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
-import org.apache.asterix.lang.common.expression.QuantifiedExpression.Quantifier;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.expression.ListConstructor.Type;
+import org.apache.asterix.lang.common.expression.QuantifiedExpression.Quantifier;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -72,13 +75,13 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.LoadableDataSource;
 import org.apache.asterix.metadata.declared.ResultSetDataSink;
 import org.apache.asterix.metadata.declared.ResultSetSinkId;
+import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
@@ -114,15 +117,15 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
+import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -138,13 +141,13 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -786,18 +789,38 @@ class LangExpressionToPlanTranslator
         if (gc.isGroupAll()) {
             List<LogicalVariable> aggVars = new ArrayList<>();
             List<Mutable<ILogicalExpression>> aggFuncs = new ArrayList<>();
-            for (VariableExpr var : gc.getWithVarList()) {
-                LogicalVariable aggVar = context.newVar();
-                LogicalVariable oldVar = context.getVar(var);
+            // A global aggregation can still have a decoration variable list which are used for propagate
+            // outer-scope variables. Example query:
+            // asterixdb/asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/global-aggregate/q09
+            for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
+                VariableExpr vexpr = ve.getVar();
+                LogicalVariable decorVar = vexpr == null ? context.newVar() : context.newVar(vexpr);
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
+                topOp = eo.second;
                 List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>();
-                flArgs.add(new MutableObject<>(new VariableReferenceExpression(oldVar)));
+                flArgs.add(new MutableObject<>(eo.first));
+                // Calls the first-element aggregate function on a decoration variable to make sure the value
+                // is propagated through a global aggregation.
+                AggregateFunctionCallExpression firstElementAgg = AsterixBuiltinFunctions
+                        .makeAggregateFunctionExpression(
+                        AsterixBuiltinFunctions.FIRST_ELEMENT, flArgs);
+                aggVars.add(decorVar);
+                aggFuncs.add(new MutableObject<>(firstElementAgg));
+            }
+            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput =
+                        langExprToAlgExpression(entry.getKey(), topOp);
+                topOp = listifyInput.second;
+                List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>();
+                flArgs.add(new MutableObject<>(listifyInput.first));
                 AggregateFunctionCallExpression fListify = AsterixBuiltinFunctions
                         .makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, flArgs);
+                LogicalVariable aggVar = context.newVar();
                 aggVars.add(aggVar);
                 aggFuncs.add(new MutableObject<>(fListify));
                 // Hide the variable that was part of the "with", replacing it with
                 // the one bound by the aggregation op.
-                context.setVar(var, aggVar);
+                context.setVar(entry.getValue(), aggVar);
             }
             AggregateOperator aggOp = new AggregateOperator(aggVars, aggFuncs);
             aggOp.getInputs().add(topOp);
@@ -830,22 +853,23 @@ class LangExpressionToPlanTranslator
             }
 
             gOp.getInputs().add(topOp);
-            for (VariableExpr var : gc.getWithVarList()) {
-                LogicalVariable aggVar = context.newVar();
-                LogicalVariable oldVar = context.getVar(var);
+            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(
+                        entry.getKey(), new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
                 List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>(1);
-                flArgs.add(new MutableObject<>(new VariableReferenceExpression(oldVar)));
+                flArgs.add(new MutableObject<>(listifyInput.first));
                 AggregateFunctionCallExpression fListify = AsterixBuiltinFunctions
                         .makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, flArgs);
+                LogicalVariable aggVar = context.newVar();
                 AggregateOperator agg = new AggregateOperator(mkSingletonArrayList(aggVar),
-                        (List) mkSingletonArrayList(new MutableObject<>(fListify)));
+                        mkSingletonArrayList(new MutableObject<>(fListify)));
 
-                agg.getInputs().add(new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
+                agg.getInputs().add(listifyInput.second);
                 ILogicalPlan plan = new ALogicalPlanImpl(new MutableObject<>(agg));
                 gOp.getNestedPlans().add(plan);
                 // Hide the variable that was part of the "with", replacing it with
                 // the one bound by the aggregation op.
-                context.setVar(var, aggVar);
+                context.setVar(entry.getValue(), aggVar);
             }
             gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
             return new Pair<>(gOp, null);

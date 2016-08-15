@@ -23,8 +23,8 @@ Groupby
   Variable [ Name=$token ]
   GROUP AS Variable [ Name=#1 ]
   (
-    token:=Variable [ Name=$token ]
     paper:=Variable [ Name=$paper ]
+    token:=Variable [ Name=$token ]
   )
 
 Orderby

@@ -42,10 +42,12 @@ public class FieldAccessByNameResultType extends AbstractResultTypeComputer {
     @Override
     protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
         if (argIndex == 0 && type.getTypeTag() != ATypeTag.RECORD) {
-            throw new AlgebricksException("The first argument should be a RECORD, but it is " + type + ".");
+            throw new AlgebricksException("The first argument of a field access should be a RECORD, but it is " + type
+                    + ".");
         }
         if (argIndex == 1 && type.getTypeTag() != ATypeTag.STRING) {
-            throw new AlgebricksException("The second argument should be an STRING, but it is found " + type + ".");
+            throw new AlgebricksException("The second argument of a field access should be an STRING, but it is "
+                    + type + ".");
         }
     }
 

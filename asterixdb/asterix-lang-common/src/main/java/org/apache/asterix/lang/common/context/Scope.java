@@ -224,4 +224,8 @@ public final class Scope {
         }
         return vars;
     }
+
+    public Scope getParentScope(){
+        return parent;
+    }
 }

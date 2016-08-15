@@ -74,8 +74,8 @@ Let Variable [ Name=$tokens ]
           Variable [ Name=$lottery_number ]
           GROUP AS Variable [ Name=#1 ]
           (
-            lottery_number:=Variable [ Name=$lottery_number ]
             user:=Variable [ Name=$user ]
+            lottery_number:=Variable [ Name=$lottery_number ]
           )
 
         Let Variable [ Name=$count ]

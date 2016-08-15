@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -327,9 +328,23 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
             out.print(" decor ");
             printDelimitedGbyExpressions(gc.getDecorPairList(), step + 2);
         }
-        if (gc.hasWithList()) {
+        if (gc.hasWithMap()) {
             out.print(" with ");
-            this.printDelimitedExpressions(gc.getWithVarList(), COMMA, step + 2);
+            Map<Expression, VariableExpr> withVarMap = gc.getWithVarMap();
+            int index = 0;
+            int size = withVarMap.size();
+            for (Entry<Expression, VariableExpr> entry : withVarMap.entrySet()) {
+                Expression key = entry.getKey();
+                VariableExpr value = entry.getValue();
+                key.accept(this, step + 2);
+                if (!key.equals(value)) {
+                    out.print(" as ");
+                    value.accept(this, step + 2);
+                }
+                if (++index < size) {
+                    out.print(COMMA);
+                }
+            }
         }
         out.println();
         return null;

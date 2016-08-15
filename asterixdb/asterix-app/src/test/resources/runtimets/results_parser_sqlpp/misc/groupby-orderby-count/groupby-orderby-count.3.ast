@@ -11,17 +11,7 @@ RecordConstructor [
     LiteralExpr [STRING] [count]
     :
     FunctionCall twitter.count@1[
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#3 ]
-          Field=token
-        ]
-        ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#3 ]
-        ]
-      )
+      Variable [ Name=$token ]
     ]
   )
 ]
@@ -45,23 +35,13 @@ Groupby
   Variable [ Name=$token ]
   GROUP AS Variable [ Name=#1 ]
   (
-    token:=Variable [ Name=$token ]
     t:=Variable [ Name=$t ]
+    token:=Variable [ Name=$token ]
   )
 
 Orderby
   FunctionCall twitter.count@1[
-    (
-      SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=token
-      ]
-      ]
-      FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
-      ]
-    )
+    Variable [ Name=$token ]
   ]
   DESC
   Variable [ Name=$tok ]

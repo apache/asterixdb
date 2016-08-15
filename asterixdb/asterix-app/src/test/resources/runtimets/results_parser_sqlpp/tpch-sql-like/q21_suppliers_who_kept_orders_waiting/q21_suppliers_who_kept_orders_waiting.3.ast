@@ -442,17 +442,7 @@ Groupby
 Let Variable [ Name=$numwait ]
   :=
   FunctionCall tpch.count@1[
-    (
-      SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=t4
-      ]
-      ]
-      FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
-      ]
-    )
+    Variable [ Name=$t4 ]
   ]
 Orderby
   Variable [ Name=$numwait ]

@@ -19,7 +19,10 @@
 package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -256,7 +259,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     public GroupbyClause visit(GroupbyClause gc, Void arg) throws AsterixException {
         List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
         List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
-        List<VariableExpr> withVarList = new ArrayList<>();
+        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
         VariableExpr groupVarExpr = null;
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
@@ -269,8 +272,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             decorPairList.add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
                     (Expression) gbyVarExpr.getExpr().accept(this, arg)));
         }
-        for (VariableExpr withVar : gc.getWithVarList()) {
-            withVarList.add((VariableExpr) withVar.accept(this, arg));
+        for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+            withVarMap.put((Expression) entry.getKey().accept(this, arg),
+                    (VariableExpr) entry.getValue().accept(this, arg));
         }
         if (gc.hasGroupVar()) {
             groupVarExpr = (VariableExpr) gc.getGroupVar().accept(this, arg);
@@ -278,7 +282,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
             groupFieldList.add(new Pair<>((Expression) field.first.accept(this, arg), field.second));
         }
-        return new GroupbyClause(gbyPairList, decorPairList, withVarList, groupVarExpr, groupFieldList,
+        return new GroupbyClause(gbyPairList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
     }
 
@@ -386,10 +390,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public VariableExpr visit(VariableExpr varExpr, Void arg) throws AsterixException {
-        VariableExpr clonedVar =
-                new VariableExpr(new VarIdentifier(varExpr.getVar().getValue(), varExpr.getVar().getId()));
+        VariableExpr clonedVar = new VariableExpr(new VarIdentifier(varExpr.getVar()));
         clonedVar.setIsNewVar(varExpr.getIsNewVar());
-        clonedVar.setNamedValueAccess(varExpr.namedValueAccess());
         return clonedVar;
     }
 

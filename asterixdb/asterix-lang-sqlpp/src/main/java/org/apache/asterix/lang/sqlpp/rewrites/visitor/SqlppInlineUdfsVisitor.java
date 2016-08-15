@@ -26,7 +26,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
@@ -47,7 +46,7 @@ import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppCloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -75,8 +74,8 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     @Override
     protected Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
             throws AsterixException {
-        Map<VariableExpr, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
-        return (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(returnExpr, varExprMap);
+        Map<Expression, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
+        return (Expression) SqlppRewriteUtil.substituteExpression(returnExpr, varExprMap, context);
     }
 
     @Override
@@ -249,13 +248,13 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         return inlined || result.first;
     }
 
-    private Map<VariableExpr, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
+    private Map<Expression, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
             throws AsterixException {
-        Map<VariableExpr, Expression> varExprMap = new HashMap<>();
+        Map<Expression, Expression> varExprMap = new HashMap<>();
         for (LetClause lc : letClauses) {
             // inline let variables one by one iteratively.
-            lc.setBindingExpr((Expression) SqlppVariableSubstitutionUtil
-                    .substituteVariableWithoutContext(lc.getBindingExpr(), varExprMap));
+            lc.setBindingExpr((Expression) SqlppRewriteUtil.substituteExpression(lc.getBindingExpr(),
+                    varExprMap, context));
             varExprMap.put(lc.getVarExpr(), lc.getBindingExpr());
         }
         return varExprMap;

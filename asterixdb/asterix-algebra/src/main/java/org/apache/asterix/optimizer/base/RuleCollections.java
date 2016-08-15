@@ -33,6 +33,7 @@ import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
 import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
 import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
 import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ExtractGroupByDecorVariablesRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
@@ -131,9 +132,10 @@ public final class RuleCollections {
     }
 
     public static final List<IAlgebraicRewriteRule> buildInitialTranslationRuleCollection() {
-        List<IAlgebraicRewriteRule> typeInfer = new LinkedList<>();
-        typeInfer.add(new TranslateIntervalExpressionRule());
-        return typeInfer;
+        List<IAlgebraicRewriteRule> translationRules = new LinkedList<>();
+        translationRules.add(new TranslateIntervalExpressionRule());
+        translationRules.add(new ExtractGroupByDecorVariablesRule());
+        return translationRules;
     }
 
     public static final List<IAlgebraicRewriteRule> buildTypeInferenceRuleCollection() {

@@ -3,12 +3,12 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$1(DESC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$9]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$10]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$9]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$10]  |PARTITIONED|
               -- STREAM_PROJECT  |PARTITIONED|
                 -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|

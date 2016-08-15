@@ -147,8 +147,6 @@ FROM [  FunctionCall Metadata.dataset@1[
       GROUP AS Variable [ Name=#1 ]
       (
         l:=Variable [ Name=$l ]
-        o:=Variable [ Name=$o ]
-        c:=Variable [ Name=$c ]
       )
 
   )
@@ -241,10 +239,10 @@ Groupby
   ]
   GROUP AS Variable [ Name=#2 ]
   (
-    l:=Variable [ Name=$l ]
-    t:=Variable [ Name=$t ]
-    o:=Variable [ Name=$o ]
     c:=Variable [ Name=$c ]
+    o:=Variable [ Name=$o ]
+    t:=Variable [ Name=$t ]
+    l:=Variable [ Name=$l ]
   )
 
 Orderby

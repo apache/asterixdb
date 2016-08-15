@@ -18,204 +18,106 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.asterix.lang.common.clause.GroupbyClause;
+import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.clause.LimitClause;
-import org.apache.asterix.lang.common.clause.OrderbyClause;
-import org.apache.asterix.lang.common.clause.WhereClause;
-import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.FieldBinding;
-import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.expression.IfExpr;
-import org.apache.asterix.lang.common.expression.IndexAccessor;
-import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.expression.OperatorExpr;
-import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
-import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.parser.ScopeChecker;
-import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
-import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.common.struct.QuantifiedPair;
-import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
-import org.apache.asterix.lang.sqlpp.clause.FromClause;
-import org.apache.asterix.lang.sqlpp.clause.FromTerm;
-import org.apache.asterix.lang.sqlpp.clause.HavingClause;
-import org.apache.asterix.lang.sqlpp.clause.JoinClause;
-import org.apache.asterix.lang.sqlpp.clause.NestClause;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
-import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
-import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
-import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
-public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisitor<Void, Boolean> {
+public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisitor {
 
-    private final ScopeChecker scopeChecker = new ScopeChecker();
-
-    @Override
-    public Void visit(WhereClause whereClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        whereClause.getWhereExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
+    public InlineColumnAliasVisitor(LangRewritingContext context) {
+        super(context);
     }
 
     @Override
-    public Void visit(FromClause fromClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (FromTerm fromTerm : fromClause.getFromTerms()) {
-            fromTerm.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+        // Gets the map from select clause.
+        Map<Expression, Expression> map = getMap(selectBlock.getSelectClause());
 
-    @Override
-    public Void visit(FromTerm fromTerm, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        fromTerm.getLeftExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        // A from binding variable will override the alias to substitute.
-        scopeChecker.getCurrentScope().removeSymbolExpressionMapping(fromTerm.getLeftVariable());
-        if (fromTerm.hasPositionalVariable()) {
-            scopeChecker.getCurrentScope().removeSymbolExpressionMapping(fromTerm.getPositionalVariable());
-        }
-
-        for (AbstractBinaryCorrelateClause correlate : fromTerm.getCorrelateClauses()) {
-            correlate.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(JoinClause joinClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        joinClause.getRightExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        removeSubsutitions(joinClause);
-        joinClause.getConditionExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(NestClause nestClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        nestClause.getRightExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        nestClause.getConditionExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        removeSubsutitions(nestClause);
-        return null;
-    }
-
-    @Override
-    public Void visit(UnnestClause unnestClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        unnestClause.getRightExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        removeSubsutitions(unnestClause);
-        return null;
-    }
-
-    @Override
-    public Void visit(Projection projection, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        if (projection.star() || projection.getName() == null) {
-            return null;
-        }
-        projection.getExpression().accept(this, overwriteWithGbyKeyVarRefs);
-        VariableExpr columnAlias =
-                new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(projection.getName()));
-        VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstitution(columnAlias));
-        if (overwriteWithGbyKeyVarRefs) {
-            if (gbyKey != null) {
-                projection.setExpression(gbyKey);
-            }
-        } else {
-            scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(columnAlias, projection.getExpression());
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(SelectBlock selectBlock, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        // Traverses the select block in the order of "select", "group-by",
-        // "group-by" lets and "having".
-        // The first pass over the select clause will not overwrite projection expressions.
-        selectBlock.getSelectClause().accept(this, false);
-
+        // Removes all FROM/LET binding variables
         if (selectBlock.hasFromClause()) {
-            selectBlock.getFromClause().accept(this, overwriteWithGbyKeyVarRefs);
+            map.keySet().removeAll(SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
         }
         if (selectBlock.hasLetClauses()) {
-            for (LetClause letClause : selectBlock.getLetList()) {
-                letClause.accept(this, overwriteWithGbyKeyVarRefs);
-            }
+            map.keySet().removeAll(SqlppVariableUtil.getBindingVariables(selectBlock.getLetList()));
         }
+
+        // Creates a substitution visitor.
+        SqlppSubstituteExpressionVisitor visitor = new SqlppSubstituteExpressionVisitor(context, map);
+
+        // Rewrites GROUP BY/LET/HAVING clauses.
         if (selectBlock.hasGroupbyClause()) {
-            selectBlock.getGroupbyClause().accept(this, overwriteWithGbyKeyVarRefs);
+            selectBlock.getGroupbyClause().accept(visitor, arg);
         }
         if (selectBlock.hasLetClausesAfterGroupby()) {
-            for (LetClause letClauseAfterGby : selectBlock.getLetListAfterGroupby()) {
-                letClauseAfterGby.accept(this, true);
+            for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
+                letClause.accept(visitor, arg);
             }
         }
         if (selectBlock.hasHavingClause()) {
-            selectBlock.getHavingClause().accept(this, overwriteWithGbyKeyVarRefs);
+            selectBlock.getHavingClause().accept(visitor, arg);
         }
+        SelectExpression selectExpression = (SelectExpression) arg;
 
-        // Visit select clause again to overwrite projection expressions to group-by
-        // key variable references if any group-by key is the original projection
-        // column alias.
-        selectBlock.getSelectClause().accept(this, true);
-        return null;
+        // For SET operation queries, column aliases will not substitute ORDER BY nor LIMIT expressions.
+        if (!selectExpression.getSelectSetOperation().hasRightInputs()) {
+            if (selectExpression.hasOrderby()) {
+                selectExpression.getOrderbyClause().accept(visitor, arg);
+            }
+            if (selectExpression.hasLimit()) {
+                selectExpression.getLimitClause().accept(visitor, arg);
+            }
+        }
+        return super.visit(selectBlock, arg);
     }
 
-    @Override
-    public Void visit(SelectClause selectClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
+    private Map<Expression, Expression> getMap(SelectClause selectClause) throws AsterixException {
         if (selectClause.selectElement()) {
-            selectClause.getSelectElement().accept(this, overwriteWithGbyKeyVarRefs);
+            return getMap(selectClause.getSelectElement());
         }
         if (selectClause.selectRegular()) {
-            selectClause.getSelectRegular().accept(this, overwriteWithGbyKeyVarRefs);
+            return getMap(selectClause.getSelectRegular());
         }
         return null;
     }
 
-    @Override
-    public Void visit(SelectElement selectElement, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
+    private Map<Expression, Expression> getMap(SelectElement selectElement) {
         Expression expr = selectElement.getExpression();
-        expr.accept(this, overwriteWithGbyKeyVarRefs);
         if (expr.getKind() == Kind.RECORD_CONSTRUCTOR_EXPRESSION) {
             // Rewrite top-level field names (aliases), in order to be consistent with SelectRegular.
-            mapForRecordConstructor(overwriteWithGbyKeyVarRefs, (RecordConstructor) expr);
+            return mapRecordConstructor((RecordConstructor) expr);
         }
-        return null;
+        return Collections.emptyMap();
     }
 
-    /**
-     * Map aliases for a record constructor in SELECT ELEMENT.
-     *
-     * @param overwriteWithGbyKeyVarRefs,
-     *            whether we rewrite the record constructor with mapped group-by key variables.
-     * @param rc,
-     *            the RecordConstructor expression.
-     * @throws AsterixException
-     */
-    private void mapForRecordConstructor(Boolean overwriteWithGbyKeyVarRefs, RecordConstructor rc)
-            throws AsterixException {
+    private Map<Expression, Expression> getMap(SelectRegular selectRegular) {
+        return mapProjections(selectRegular.getProjections());
+    }
+
+    private Map<Expression, Expression> mapRecordConstructor(RecordConstructor rc) {
+        Map<Expression, Expression> exprMap = new HashMap<>();
         for (FieldBinding binding : rc.getFbList()) {
             Expression leftExpr = binding.getLeftExpr();
             // We only need to deal with the case that the left expression (for a field name) is
@@ -226,263 +128,20 @@ public class InlineColumnAliasVisitor extends AbstractSqlppQueryExpressionVisito
             }
             LiteralExpr literalExpr = (LiteralExpr) leftExpr;
             if (literalExpr.getValue().getLiteralType() == Literal.Type.STRING) {
-                String fieldName = literalExpr.getValue().getStringValue();
-                VariableExpr columnAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(fieldName));
-                VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-                if (overwriteWithGbyKeyVarRefs) {
-                    // Rewrites the field value expression by the mapped grouping key
-                    // (for the column alias) if there exists such a mapping.
-                    Expression gbyKey = (Expression) SqlppRewriteUtil.deepCopy(env.findSubstitution(columnAlias));
-                    if (gbyKey != null) {
-                        binding.setRightExpr(gbyKey);
-                    }
-                } else {
-                    // If this is the first pass, map a field name (i.e., column alias) to the field expression.
-                    scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(columnAlias,
-                            binding.getRightExpr());
-                }
+                String fieldName = SqlppVariableUtil.toInternalVariableName(literalExpr.getValue().getStringValue());
+                exprMap.put(new VariableExpr(new VarIdentifier(fieldName)), binding.getRightExpr());
             }
         }
+        return exprMap;
     }
 
-    @Override
-    public Void visit(SelectRegular selectRegular, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (Projection projection : selectRegular.getProjections()) {
-            projection.accept(this, overwriteWithGbyKeyVarRefs);
+    private Map<Expression, Expression> mapProjections(List<Projection> projections) {
+        Map<Expression, Expression> exprMap = new HashMap<>();
+        for (Projection projection : projections) {
+            exprMap.put(
+                    new VariableExpr(new VarIdentifier(SqlppVariableUtil.toInternalVariableName(projection.getName()))),
+                    projection.getExpression());
         }
-        return null;
-    }
-
-    @Override
-    public Void visit(SelectSetOperation selectSetOperation, Boolean overwriteWithGbyKeyVarRefs)
-            throws AsterixException {
-        selectSetOperation.getLeftInput().accept(this, overwriteWithGbyKeyVarRefs);
-        for (SetOperationRight right : selectSetOperation.getRightInputs()) {
-            right.getSetOperationRightInput().accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(SelectExpression selectExpression, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        scopeChecker.createNewScope();
-
-        // Visits let bindings.
-        if (selectExpression.hasLetClauses()) {
-            for (LetClause lc : selectExpression.getLetList()) {
-                lc.accept(this, overwriteWithGbyKeyVarRefs);
-            }
-        }
-
-        // Visits selectSetOperation
-        SelectSetOperation selectSetOperation = selectExpression.getSelectSetOperation();
-        selectSetOperation.accept(this, overwriteWithGbyKeyVarRefs);
-
-        // If there is a UNION in the selectSetOperation, we cannot overwrite order by or limit.
-        if (!selectSetOperation.hasRightInputs()) {
-            // Visits order by.
-            if (selectExpression.hasOrderby()) {
-                selectExpression.getOrderbyClause().accept(this, overwriteWithGbyKeyVarRefs);
-            }
-            // Visits limit.
-            if (selectExpression.hasLimit()) {
-                selectExpression.getLimitClause().accept(this, overwriteWithGbyKeyVarRefs);
-            }
-        }
-
-        // Exits the scope that were entered within this select expression
-        scopeChecker.removeCurrentScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(LetClause letClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        if (overwriteWithGbyKeyVarRefs) {
-            Expression newBindExpr = (Expression) SqlppVariableSubstitutionUtil
-                    .substituteVariableWithoutContext(letClause.getBindingExpr(), env);
-            letClause.setBindingExpr(newBindExpr);
-        }
-        letClause.getBindingExpr().accept(this, false);
-        // A let binding variable will override the alias to substitute.
-        scopeChecker.getCurrentScope().removeSymbolExpressionMapping(letClause.getVarExpr());
-        return null;
-    }
-
-    @Override
-    public Void visit(OrderbyClause oc, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        List<Expression> orderExprs = new ArrayList<>();
-        for (Expression orderExpr : oc.getOrderbyList()) {
-            orderExprs.add((Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(orderExpr, env));
-            orderExpr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        oc.setOrderbyList(orderExprs);
-        return null;
-    }
-
-    @Override
-    public Void visit(GroupbyClause gc, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        Map<VariableExpr, VariableExpr> oldGbyExprsToNewGbyVarMap = new HashMap<>();
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            Expression oldGbyExpr = gbyVarExpr.getExpr();
-            Expression newExpr =
-                    (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(oldGbyExpr, env);
-            newExpr.accept(this, overwriteWithGbyKeyVarRefs);
-            gbyVarExpr.setExpr(newExpr);
-            if (oldGbyExpr.getKind() == Kind.VARIABLE_EXPRESSION) {
-                VariableExpr oldGbyVarExpr = (VariableExpr) oldGbyExpr;
-                if (env.findSubstitution(oldGbyVarExpr) != null) {
-                    // Re-mapping that needs to be added.
-                    oldGbyExprsToNewGbyVarMap.put(oldGbyVarExpr, gbyVarExpr.getVar());
-                }
-            }
-        }
-        for (Entry<VariableExpr, VariableExpr> entry : oldGbyExprsToNewGbyVarMap.entrySet()) {
-            // The group-by key variable will override the alias to substitute.
-            scopeChecker.getCurrentScope().removeSymbolExpressionMapping(entry.getKey());
-            scopeChecker.getCurrentScope().addSymbolExpressionMappingToScope(entry.getKey(), entry.getValue());
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(LimitClause limitClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        limitClause.getLimitExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(HavingClause havingClause, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        VariableSubstitutionEnvironment env = scopeChecker.getCurrentScope().getVarSubstitutionEnvironment();
-        Expression newFilterExpr = (Expression) SqlppVariableSubstitutionUtil
-                .substituteVariableWithoutContext(havingClause.getFilterExpression(), env);
-        newFilterExpr.accept(this, overwriteWithGbyKeyVarRefs);
-        havingClause.setFilterExpression(newFilterExpr);
-        return null;
-    }
-
-    @Override
-    public Void visit(Query q, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        q.getBody().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(FunctionDecl fd, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        scopeChecker.createNewScope();
-        fd.getFuncBody().accept(this, overwriteWithGbyKeyVarRefs);
-        scopeChecker.removeCurrentScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(LiteralExpr l, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        return null;
-    }
-
-    @Override
-    public Void visit(ListConstructor lc, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (Expression expr : lc.getExprList()) {
-            expr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(RecordConstructor rc, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (FieldBinding binding : rc.getFbList()) {
-            binding.getLeftExpr().accept(this, false);
-            binding.getRightExpr().accept(this, false);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(OperatorExpr operatorExpr, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (Expression expr : operatorExpr.getExprList()) {
-            expr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(IfExpr ifExpr, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        ifExpr.getCondExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        ifExpr.getThenExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        ifExpr.getElseExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(QuantifiedExpression qe, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (QuantifiedPair pair : qe.getQuantifiedList()) {
-            pair.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        qe.getSatisfiesExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(CallExpr callExpr, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        for (Expression expr : callExpr.getExprList()) {
-            expr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(VariableExpr varExpr, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        return null;
-    }
-
-    @Override
-    public Void visit(UnaryExpr u, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        u.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(FieldAccessor fa, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        fa.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(IndexAccessor ia, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        ia.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        Expression indexExpr = ia.getExpr();
-        if (indexExpr != null) {
-            indexExpr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(IndependentSubquery independentSubquery, Boolean overwriteWithGbyKeyVarRefs)
-            throws AsterixException {
-        independentSubquery.getExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    @Override
-    public Void visit(CaseExpression caseExpression, Boolean overwriteWithGbyKeyVarRefs) throws AsterixException {
-        caseExpression.getConditionExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        for (Expression expr : caseExpression.getWhenExprs()) {
-            expr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        for (Expression expr : caseExpression.getThenExprs()) {
-            expr.accept(this, overwriteWithGbyKeyVarRefs);
-        }
-        caseExpression.getElseExpr().accept(this, overwriteWithGbyKeyVarRefs);
-        return null;
-    }
-
-    private void removeSubsutitions(AbstractBinaryCorrelateClause unnestClause) {
-        scopeChecker.getCurrentScope().removeSymbolExpressionMapping(unnestClause.getRightVariable());
-        if (unnestClause.hasPositionalVariable()) {
-            scopeChecker.getCurrentScope().removeSymbolExpressionMapping(unnestClause.getPositionalVariable());
-        }
+        return exprMap;
     }
 }

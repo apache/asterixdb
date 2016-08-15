@@ -2649,7 +2649,6 @@ GroupbyClause GroupbyClause()throws ParseException :
     GroupbyClause gbc = new GroupbyClause();
     List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
     VariableExpr var = null;
-    VariableExpr withVar = null;
     Expression expr = null;
     VariableExpr decorVar = null;
     Expression decorExpr = null;
@@ -2721,7 +2720,7 @@ GroupbyClause GroupbyClause()throws ParseException :
     {
       gbc.setGbyPairList(vePairList);
       gbc.setDecorPairList(new ArrayList<GbyVariableExpressionPair>());
-      gbc.setWithVarList(new ArrayList<VariableExpr>());
+      gbc.setWithVarMap(new HashMap<Expression, VariableExpr>());
       gbc.setGroupVar(groupVar);
       gbc.setGroupFieldList(groupFieldList);
       replaceCurrentScope(newScope);

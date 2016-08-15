@@ -185,8 +185,8 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    o:=Variable [ Name=$o ]
     l:=Variable [ Name=$l ]
+    o:=Variable [ Name=$o ]
   )
 
 Orderby

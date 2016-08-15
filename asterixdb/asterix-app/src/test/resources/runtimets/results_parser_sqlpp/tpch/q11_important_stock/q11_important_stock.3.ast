@@ -192,9 +192,8 @@ FROM [  (
       ]
       GROUP AS Variable [ Name=#1 ]
       (
-        sn:=Variable [ Name=$sn ]
         ps:=Variable [ Name=$ps ]
-        sum:=Variable [ Name=$sum ]
+        sn:=Variable [ Name=$sn ]
       )
 
   )

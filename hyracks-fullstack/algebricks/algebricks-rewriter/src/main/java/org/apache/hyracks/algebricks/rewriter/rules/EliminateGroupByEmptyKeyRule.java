@@ -21,8 +21,9 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -41,7 +42,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class EliminateGroupByEmptyKeyRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -54,7 +56,8 @@ public class EliminateGroupByEmptyKeyRule implements IAlgebraicRewriteRule {
         }
         GroupByOperator groupOp = (GroupByOperator) op;
         List<LogicalVariable> groupVars = groupOp.getGbyVarList();
-        if (groupVars.size() > 0) {
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorList = groupOp.getDecorList();
+        if (!groupVars.isEmpty() || !decorList.isEmpty()) {
             return false;
         }
         List<ILogicalPlan> nestedPlans = groupOp.getNestedPlans();
@@ -81,7 +84,7 @@ public class EliminateGroupByEmptyKeyRule implements IAlgebraicRewriteRule {
 
     private Mutable<ILogicalOperator> getNestedTupleSourceReference(Mutable<ILogicalOperator> nestedTopOperatorRef) {
         Mutable<ILogicalOperator> currentOpRef = nestedTopOperatorRef;
-        while (currentOpRef.getValue().getInputs() != null && currentOpRef.getValue().getInputs().size() > 0) {
+        while (currentOpRef.getValue().getInputs() != null && !currentOpRef.getValue().getInputs().isEmpty()) {
             currentOpRef = currentOpRef.getValue().getInputs().get(0);
         }
         return currentOpRef;

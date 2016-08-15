@@ -30,8 +30,8 @@ import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -42,7 +42,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
@@ -103,13 +106,13 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
         }
 
         Expression r = flwor.getReturnExpr();
-        boolean noFlworClause = flwor.noForClause();
+        boolean noForClause = flwor.noForClause();
 
         Pair<ILogicalOperator, LogicalVariable> result;
         if (r.getKind() == Kind.VARIABLE_EXPRESSION) {
             VariableExpr v = (VariableExpr) r;
             LogicalVariable var = context.getVar(v.getVar().getId());
-            result = produceFlworPlan(noFlworClause, isTop, flworPlan, var);
+            result = produceFlworPlan(noForClause, isTop, flworPlan, var);
         } else {
             Mutable<ILogicalOperator> baseOp = new MutableObject<>(flworPlan.getValue());
             Pair<ILogicalOperator, LogicalVariable> rRes = r.accept(this, baseOp);
@@ -125,7 +128,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
                 baseOp.setValue(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(s)));
             }
             Mutable<ILogicalOperator> resOpRef = new MutableObject<>(resOp);
-            result = produceFlworPlan(noFlworClause, isTop, resOpRef, rRes.second);
+            result = produceFlworPlan(noForClause, isTop, resOpRef, rRes.second);
         }
         if (!isTop) {
             context.exitSubplan();
@@ -164,6 +167,17 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
         return aggListifyForSubquery(result.second, new MutableObject<>(result.first), false);
     }
 
+    @Override
+    protected boolean expressionNeedsNoNesting(Expression expr) {
+        boolean noForFLWOR = false;
+        // No nesting is needed for a FLWOR expression without a FOR clause.
+        if (expr.getKind() == Kind.FLWOGR_EXPRESSION) {
+            FLWOGRExpression flwor = (FLWOGRExpression) expr;
+            noForFLWOR = flwor.noForClause();
+        }
+        return noForFLWOR || super.expressionNeedsNoNesting(expr);
+    }
+
     private Pair<ILogicalOperator, LogicalVariable> produceFlworPlan(boolean noForClause, boolean isTop,
             Mutable<ILogicalOperator> resOpRef, LogicalVariable resVar) {
         if (isTop) {
@@ -171,7 +185,15 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
             pr.getInputs().add(resOpRef);
             return new Pair<>(pr, resVar);
         } else if (noForClause) {
-            return new Pair<>(resOpRef.getValue(), resVar);
+            ILogicalOperator resOp = resOpRef.getValue();
+            if (resOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                return new Pair<>(resOp, resVar);
+            }
+            LogicalVariable newResVar = context.newVar();
+            ILogicalOperator assign =
+                    new AssignOperator(newResVar, new MutableObject<>(new VariableReferenceExpression(resVar)));
+            assign.getInputs().add(resOpRef);
+            return new Pair<>(assign, newResVar);
         } else {
             return aggListifyForSubquery(resVar, resOpRef, false);
         }

@@ -113,7 +113,7 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    employment:=Variable [ Name=$employment ]
     fbu:=Variable [ Name=$fbu ]
+    employment:=Variable [ Name=$employment ]
   )
 

@@ -143,10 +143,8 @@ Groupby
   Variable [ Name=$t ]
   :=
   LiteralExpr [LONG] [1]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     lp:=Variable [ Name=$lp ]
-    p:=Variable [ Name=$p ]
-    l:=Variable [ Name=$l ]
   )
 

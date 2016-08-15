@@ -77,17 +77,7 @@ RecordConstructor [
     LiteralExpr [STRING] [numcust]
     :
     FunctionCall tpch.count@1[
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#2 ]
-          Field=ct
-        ]
-        ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
-        ]
-      )
+      Variable [ Name=$ct ]
     ]
   )
   (
@@ -132,7 +122,6 @@ Groupby
   GROUP AS Variable [ Name=#1 ]
   (
     ct:=Variable [ Name=$ct ]
-    avg:=Variable [ Name=$avg ]
   )
 
 Orderby
