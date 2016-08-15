@@ -418,14 +418,15 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
             MergeJoinPOperator mjpo = (MergeJoinPOperator) joinPo;
             MergeJoinPOperator mjpoClone = new MergeJoinPOperator(mjpo.getKind(), mjpo.getPartitioningType(),
                     mjpo.getKeysLeftBranch(), mjpo.getKeysRightBranch(), memoryJoinSize,
-                    mjpo.getMergeJoinCheckerFactory(), mjpo.getRangeId(), null);
+                    mjpo.getMergeJoinCheckerFactory(), mjpo.getLeftRangeId(), mjpo.getRightRangeId(), null);
             ijoClone.setPhysicalOperator(mjpoClone);
         } else if (joinPo.getOperatorTag() == PhysicalOperatorTag.EXTENSION_OPERATOR) {
             if (joinPo instanceof IntervalIndexJoinPOperator) {
                 IntervalIndexJoinPOperator iijpo = (IntervalIndexJoinPOperator) joinPo;
                 IntervalIndexJoinPOperator iijpoClone = new IntervalIndexJoinPOperator(iijpo.getKind(),
                         iijpo.getPartitioningType(), iijpo.getKeysLeftBranch(), iijpo.getKeysRightBranch(),
-                        memoryJoinSize, iijpo.getIntervalMergeJoinCheckerFactory(), iijpo.getRangeId(), null);
+                        memoryJoinSize, iijpo.getIntervalMergeJoinCheckerFactory(), iijpo.getLeftRangeId(),
+                        iijpo.getRightRangeId(), null);
                 ijoClone.setPhysicalOperator(iijpoClone);
             } else if (joinPo instanceof IntervalPartitionJoinPOperator) {
                 IntervalPartitionJoinPOperator ipjpo = (IntervalPartitionJoinPOperator) joinPo;
@@ -433,7 +434,8 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
                         ipjpo.getPartitioningType(), ipjpo.getKeysLeftBranch(), ipjpo.getKeysRightBranch(),
                         memoryJoinSize, ipjpo.getBuildTupleCount(), ipjpo.getProbeTupleCount(),
                         ipjpo.getBuildMaxDuration(), ipjpo.getProbeMaxDuration(), ipjpo.getAvgTuplesInFrame(),
-                        ipjpo.getIntervalMergeJoinCheckerFactory(), ipjpo.getRangeId(), null);
+                        ipjpo.getIntervalMergeJoinCheckerFactory(), ipjpo.getLeftRangeId(), ipjpo.getRightRangeId(),
+                        null);
                 ijoClone.setPhysicalOperator(iijpoClone);
             } else {
                 return null;

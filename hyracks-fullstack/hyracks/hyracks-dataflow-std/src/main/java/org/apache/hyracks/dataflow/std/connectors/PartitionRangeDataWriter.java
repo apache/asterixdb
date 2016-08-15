@@ -50,7 +50,7 @@ public class PartitionRangeDataWriter extends AbstractPartitionDataWriter {
     @Override
     public void open() throws HyracksDataException {
         super.open();
-        RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(rangeId);
+        RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(new RangeId(rangeId.getId(), ctx));
         tpc = trpcf.createPartitioner(rangeState.getRangeMap());
     }
 

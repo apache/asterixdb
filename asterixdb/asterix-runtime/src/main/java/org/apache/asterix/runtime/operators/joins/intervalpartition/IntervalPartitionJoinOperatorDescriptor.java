@@ -160,18 +160,20 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                         }
                     }
 
-                    RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(rangeId);
-                    long partitionStart = IntervalPartitionUtil.getStartOfPartition(rangeState.getRangeMap(), partition);
+                    RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx
+                            .getStateObject(new RangeId(rangeId.getId(), ctx));
+                    long partitionStart = IntervalPartitionUtil.getStartOfPartition(rangeState.getRangeMap(),
+                            partition);
                     long partitionEnd = IntervalPartitionUtil.getEndOfPartition(rangeState.getRangeMap(), partition);
-                    ITuplePartitionComputer buildHpc = new IntervalPartitionComputerFactory(buildKey, k, partitionStart,
-                            partitionEnd).createPartitioner();
-                    ITuplePartitionComputer probeHpc = new IntervalPartitionComputerFactory(probeKey, k, partitionStart,
-                            partitionEnd).createPartitioner();
+                    ITuplePartitionComputer buildHpc = new IntervalPartitionComputerFactory(buildKey, state.k,
+                            partitionStart, partitionEnd).createPartitioner();
+                    ITuplePartitionComputer probeHpc = new IntervalPartitionComputerFactory(probeKey, state.k,
+                            partitionStart, partitionEnd).createPartitioner();
 
                     state.partition = partition;
                     state.intervalPartitions = IntervalPartitionUtil.getMaxPartitions(state.k);
                     state.memoryForJoin = memsize;
-                    IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(buildKeys, probeKeys, partition, rangeState.getRangeMap());
+                    IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(buildKeys, probeKeys, partition, ctx);
                     state.ipj = new IntervalPartitionJoiner(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
                             BUILD_REL, PROBE_REL, imjc, buildRd, probeRd, buildHpc, probeHpc);
 

@@ -90,7 +90,8 @@ public class RangeForwardOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new RangeForwardTaskState(ctx.getJobletContext().getJobId(), rangeId, rangeMap);
+                    state = new RangeForwardTaskState(ctx.getJobletContext().getJobId(),
+                            new RangeId(rangeId.getId(), ctx), rangeMap);
                     ctx.setStateObject(state);
                     writer.open();
                 }

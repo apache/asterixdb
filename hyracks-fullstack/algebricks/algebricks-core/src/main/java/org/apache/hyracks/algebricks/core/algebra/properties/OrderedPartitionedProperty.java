@@ -35,6 +35,7 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
     private INodeDomain domain;
     private RangeId rangeId;
     private RangePartitioningType rangeType;
+    private IRangeMap rangeMapHint;
 
     public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain, RangeId rangeId,
             RangePartitioningType rangeType, IRangeMap rangeMapHint) {
@@ -42,6 +43,7 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
         this.orderColumns = orderColumns;
         this.rangeId = rangeId;
         this.rangeType = rangeType;
+        this.rangeMapHint = rangeMapHint;
     }
 
     public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain, RangeId rangeId) {
@@ -91,6 +93,10 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
 
     public RangeId getRangeId() {
         return rangeId;
+    }
+
+    public IRangeMap getRangeMapHint() {
+        return rangeMapHint;
     }
 
     @Override

@@ -19,18 +19,29 @@
 package org.apache.asterix.runtime.operators.joins;
 
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRangeMap;
 import org.apache.hyracks.api.dataflow.value.IRangePartitionType.RangePartitioningType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.dataflow.std.base.RangeId;
+import org.apache.hyracks.dataflow.std.misc.RangeForwardOperatorDescriptor.RangeForwardTaskState;
 
 public class OverlappingIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
+    private final RangeId rangeId;
+
+    public OverlappingIntervalMergeJoinCheckerFactory(RangeId rangeId) {
+        this.rangeId = rangeId;
+    }
 
     @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap)
-            throws HyracksDataException {
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition,
+            IHyracksTaskContext ctx) throws HyracksDataException {
         int fieldIndex = 0;
+        RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx
+                .getStateObject(new RangeId(rangeId.getId(), ctx));
+        IRangeMap rangeMap = rangeState.getRangeMap();
         if (ATypeTag.INT64.serialize() != rangeMap.getTag(0, 0)) {
             throw new HyracksDataException("Invalid range map type for interval merge join checker.");
         }

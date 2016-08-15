@@ -93,8 +93,16 @@ public class MergeJoinPOperator extends AbstractJoinPOperator {
         return mjcf;
     }
 
-    public RangeId getRangeId() {
+    public RangeId getLeftRangeId() {
         return leftRangeId;
+    }
+
+    public RangeId getRightRangeId() {
+        return rightRangeId;
+    }
+
+    public IRangeMap getRangeMapHint() {
+        return rangeMapHint;
     }
 
     @Override
@@ -113,8 +121,8 @@ public class MergeJoinPOperator extends AbstractJoinPOperator {
         for (LogicalVariable v : keysLeftBranch) {
             order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
-        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, leftRangeId, RangePartitioningType.PROJECT,
-                rangeMapHint);
+        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, leftRangeId,
+                RangePartitioningType.PROJECT, rangeMapHint);
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         propsLocal.add(new LocalOrderProperty(order));
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
@@ -176,4 +184,5 @@ public class MergeJoinPOperator extends AbstractJoinPOperator {
         ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
     }
+
 }

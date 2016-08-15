@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.runtime.operators.joins;
 
-import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class CoversIntervalMergeJoinCheckerFactory extends AbstractIntervalMergeJoinCheckerFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IRangeMap rangeMap) {
+    public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition, IHyracksTaskContext ctx) {
         return new CoversIntervalMergeJoinChecker(keys0, keys1);
     }
 

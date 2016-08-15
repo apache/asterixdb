@@ -84,8 +84,16 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         return mjcf;
     }
 
-    public RangeId getRangeId() {
+    public RangeId getLeftRangeId() {
         return leftRangeId;
+    }
+
+    public RangeId getRightRangeId() {
+        return rightRangeId;
+    }
+
+    public IRangeMap getRangeMapHint() {
+        return rangeMapHint;
     }
 
     @Override
@@ -111,7 +119,8 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         for (LogicalVariable v : keysLeftBranch) {
             order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
         }
-        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, leftRangeId, RangePartitioningType.PROJECT, rangeMapHint);
+        IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, leftRangeId,
+                RangePartitioningType.PROJECT, rangeMapHint);
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         propsLocal.add(new LocalOrderProperty(order));
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
@@ -141,8 +150,10 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
         ispRight.add(new LocalOrderProperty(orderRight));
 
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            ppLeft = new OrderedPartitionedProperty(orderLeft, null, leftRangeId, mjcf.getLeftPartitioningType(), rangeMapHint);
-            ppRight = new OrderedPartitionedProperty(orderRight, null, rightRangeId, mjcf.getRightPartitioningType(), rangeMapHint);
+            ppLeft = new OrderedPartitionedProperty(orderLeft, null, leftRangeId, mjcf.getLeftPartitioningType(),
+                    rangeMapHint);
+            ppRight = new OrderedPartitionedProperty(orderRight, null, rightRangeId, mjcf.getRightPartitioningType(),
+                    rangeMapHint);
         }
 
         pv[0] = new StructuralPropertiesVector(ppLeft, ispLeft);

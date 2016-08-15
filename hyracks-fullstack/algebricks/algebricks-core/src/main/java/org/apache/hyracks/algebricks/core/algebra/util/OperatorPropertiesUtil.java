@@ -45,6 +45,9 @@ public class OperatorPropertiesUtil {
 
     private static final String MOVABLE = "isMovable";
 
+    private OperatorPropertiesUtil() {
+    }
+
     public static <T> boolean disjoint(Collection<T> c1, Collection<T> c2) {
         for (T m : c1) {
             if (c2.contains(m)) {
@@ -58,7 +61,7 @@ public class OperatorPropertiesUtil {
     private static void getFreeVariablesInOp(ILogicalOperator op, Set<LogicalVariable> freeVars)
             throws AlgebricksException {
         VariableUtilities.getUsedVariables(op, freeVars);
-        HashSet<LogicalVariable> produced = new HashSet<LogicalVariable>();
+        HashSet<LogicalVariable> produced = new HashSet<>();
         VariableUtilities.getProducedVariables(op, produced);
         for (LogicalVariable v : produced) {
             freeVars.remove(v);
@@ -75,13 +78,13 @@ public class OperatorPropertiesUtil {
      */
     public static void getFreeVariablesInSelfOrDesc(AbstractLogicalOperator op, Set<LogicalVariable> freeVars)
             throws AlgebricksException {
-        HashSet<LogicalVariable> produced = new HashSet<LogicalVariable>();
+        HashSet<LogicalVariable> produced = new HashSet<>();
         VariableUtilities.getProducedVariables(op, produced);
         for (LogicalVariable v : produced) {
             freeVars.remove(v);
         }
 
-        HashSet<LogicalVariable> used = new HashSet<LogicalVariable>();
+        HashSet<LogicalVariable> used = new HashSet<>();
         VariableUtilities.getUsedVariables(op, used);
         for (LogicalVariable v : used) {
             freeVars.add(v);
@@ -108,7 +111,7 @@ public class OperatorPropertiesUtil {
      */
     public static void getFreeVariablesInPath(ILogicalOperator op, ILogicalOperator dest, Set<LogicalVariable> freeVars)
             throws AlgebricksException {
-        Set<LogicalVariable> producedVars = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> producedVars = new ListSet<>();
         VariableUtilities.getLiveVariables(op, freeVars);
         collectUsedAndProducedVariablesInPath(op, dest, freeVars, producedVars);
         freeVars.removeAll(producedVars);
@@ -163,13 +166,13 @@ public class OperatorPropertiesUtil {
     }
 
     public static boolean hasFreeVariablesInSelfOrDesc(AbstractLogicalOperator op) throws AlgebricksException {
-        HashSet<LogicalVariable> free = new HashSet<LogicalVariable>();
+        HashSet<LogicalVariable> free = new HashSet<>();
         getFreeVariablesInSelfOrDesc(op, free);
         return !free.isEmpty();
     }
 
     public static boolean hasFreeVariables(ILogicalOperator op) throws AlgebricksException {
-        HashSet<LogicalVariable> free = new HashSet<LogicalVariable>();
+        HashSet<LogicalVariable> free = new HashSet<>();
         getFreeVariablesInOp(op, free);
         return !free.isEmpty();
     }

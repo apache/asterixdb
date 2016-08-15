@@ -49,7 +49,6 @@ public abstract class AbstractExternalSortRunMerger {
     private final INormalizedKeyComputer nmkComputer;
     private final RecordDescriptor recordDesc;
     private final int framesLimit;
-    private final int MAX_FRAME_SIZE;
     private final int topK;
     private List<GroupVSizeFrame> inFrames;
     private VSizeFrame outputFrame;
@@ -75,14 +74,13 @@ public abstract class AbstractExternalSortRunMerger {
         this.recordDesc = recordDesc;
         this.framesLimit = framesLimit;
         this.writer = writer;
-        this.MAX_FRAME_SIZE = FrameConstants.MAX_FRAMESIZE;
         this.topK = topK;
     }
 
     public void process() throws HyracksDataException {
         IFrameWriter finalWriter = null;
         try {
-            if (runs.size() <= 0) {
+            if (runs.isEmpty()) {
                 finalWriter = prepareSkipMergingFinalResultWriter(writer);
                 finalWriter.open();
                 if (sorter != null) {
@@ -169,9 +167,10 @@ public abstract class AbstractExternalSortRunMerger {
         }
     }
 
-    private static int selectPartialRuns(int budget, List<GeneratedRunFileReader> runs,
+    private static int selectPartialRuns(int argBudget, List<GeneratedRunFileReader> runs,
             List<GeneratedRunFileReader> partialRuns, BitSet runAvailable, int stop) {
         partialRuns.clear();
+        int budget = argBudget;
         int maxFrameSizeOfGenRun = 0;
         int nextRunId = runAvailable.nextSetBit(0);
         while (budget > 0 && nextRunId >= 0 && nextRunId < stop) {
@@ -192,13 +191,14 @@ public abstract class AbstractExternalSortRunMerger {
         if (extraFreeMem > 0 && partialRuns.size() > 1) {
             int extraFrames = extraFreeMem / ctx.getInitialFrameSize();
             int avg = (extraFrames / partialRuns.size()) * ctx.getInitialFrameSize();
-            int residue = (extraFrames % partialRuns.size());
+            int residue = extraFrames % partialRuns.size();
             for (int i = 0; i < residue; i++) {
-                partialRuns.get(i).updateSize(Math.min(MAX_FRAME_SIZE,
+                partialRuns.get(i).updateSize(Math.min(FrameConstants.MAX_FRAMESIZE,
                         partialRuns.get(i).getMaxFrameSize() + avg + ctx.getInitialFrameSize()));
             }
             for (int i = residue; i < partialRuns.size() && avg > 0; i++) {
-                partialRuns.get(i).updateSize(Math.min(MAX_FRAME_SIZE, partialRuns.get(i).getMaxFrameSize() + avg));
+                partialRuns.get(i)
+                        .updateSize(Math.min(FrameConstants.MAX_FRAMESIZE, partialRuns.get(i).getMaxFrameSize() + avg));
             }
         }
 
@@ -214,17 +214,17 @@ public abstract class AbstractExternalSortRunMerger {
         }
     }
 
-    abstract protected IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter)
+    protected abstract IFrameWriter prepareSkipMergingFinalResultWriter(IFrameWriter nextWriter)
             throws HyracksDataException;
 
-    abstract protected RunFileWriter prepareIntermediateMergeRunFile() throws HyracksDataException;
+    protected abstract RunFileWriter prepareIntermediateMergeRunFile() throws HyracksDataException;
 
-    abstract protected IFrameWriter prepareIntermediateMergeResultWriter(RunFileWriter mergeFileWriter)
+    protected abstract IFrameWriter prepareIntermediateMergeResultWriter(RunFileWriter mergeFileWriter)
             throws HyracksDataException;
 
-    abstract protected IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException;
+    protected abstract IFrameWriter prepareFinalMergeResultWriter(IFrameWriter nextWriter) throws HyracksDataException;
 
-    abstract protected int[] getSortFields();
+    protected abstract int[] getSortFields();
 
     private void merge(IFrameWriter writer, List<GeneratedRunFileReader> partialRuns) throws HyracksDataException {
         RunMergingFrameReader merger = new RunMergingFrameReader(ctx, partialRuns, inFrames, getSortFields(),
