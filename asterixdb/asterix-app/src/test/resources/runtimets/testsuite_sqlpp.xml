@@ -2524,6 +2524,16 @@
         <output-dir compare="Text">gby-expr-3</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="having">
+        <output-dir compare="Text">core-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="having-2">
+        <output-dir compare="Text">core-02</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -5577,6 +5587,13 @@
     <test-case FilePath="tokenizers">
       <compilation-unit name="word-tokens_02">
         <output-dir compare="Text">word-tokens_02</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tpcds">
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1580">
+        <output-dir compare="Text">query-ASTERIXDB-1580</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
