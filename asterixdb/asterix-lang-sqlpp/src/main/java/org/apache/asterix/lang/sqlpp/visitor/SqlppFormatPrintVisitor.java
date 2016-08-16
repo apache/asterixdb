@@ -26,6 +26,7 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -45,6 +46,7 @@ import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlppVisitor<Void, Integer> {
@@ -127,6 +129,10 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
     @Override
     public Void visit(Projection projection, Integer step) throws AsterixException {
+        if (projection.star()) {
+            out.print(" * ");
+            return null;
+        }
         projection.getExpression().accept(this, step);
         String name = projection.getName();
         if (name != null) {
@@ -329,4 +335,9 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
         return null;
     }
 
+    @Override
+    public Void visit(VariableExpr v, Integer step) {
+        out.print(SqlppVariableUtil.toUserDefinedName(v.getVar().getValue()));
+        return null;
+    }
 }

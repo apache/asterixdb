@@ -66,7 +66,11 @@ public abstract class TypePropagationPolicy {
                 List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
                 ITypeEnvPointer... typeEnvs) throws AlgebricksException {
             int n = typeEnvs.length;
-            for (int i = 0; i < n; i++) {
+            // Searches from the inner branch to the outer branch.
+            // TODO(buyingyi): A split operator could lead to the case that the type for a variable could be
+            // found in both inner and outer branches. Fix computeOutputTypeEnvironment() in ProjectOperator
+            // and investigate why many test queries fail if only live variables' types are propagated.
+            for (int i = n - 1; i >= 0; i--) {
                 Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList,
                         correlatedNullableVariableLists);
                 if (t == null) {

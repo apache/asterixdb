@@ -5474,6 +5474,27 @@
         <output-dir compare="Text">relational_division</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571">
+        <output-dir compare="Text">query-ASTERIXDB-1571</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571-2">
+        <output-dir compare="Text">query-ASTERIXDB-1571</output-dir>
+        <expected-error>Need an alias for the enclosed expression</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571-3">
+        <output-dir compare="Text">query-ASTERIXDB-1571-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571-4">
+        <output-dir compare="Text">query-ASTERIXDB-1571-4</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">
