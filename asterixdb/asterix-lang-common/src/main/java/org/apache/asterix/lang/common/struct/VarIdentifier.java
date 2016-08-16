@@ -84,4 +84,9 @@ public final class VarIdentifier extends Identifier {
         VarIdentifier vid = (VarIdentifier) obj;
         return ObjectUtils.equals(value, vid.value);
     }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

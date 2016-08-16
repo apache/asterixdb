@@ -67,6 +67,24 @@
         <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1576">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>Duplicate alias definitions: samptable1</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1576-2">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>Duplicate alias definitions: s2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1576-3">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>Duplicate alias definitions: s1</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="explain">
     <test-case FilePath="explain">
