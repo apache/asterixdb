@@ -240,6 +240,13 @@
   </property>
 
   <property>
+    <name>web.queryinterface.port</name>
+    <value>19006</value>
+    <description>The port for the ASTERIX web query interface. (Default = 19006)
+    </description>
+  </property>
+
+  <property>
     <name>api.port</name>
     <value>19002</value>
     <description>The port for the ASTERIX API server. (Default = 19002)

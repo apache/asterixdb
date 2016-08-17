@@ -48,5 +48,7 @@ output
 tmp
 dist
 *~
+.DS_Store
 *.swp
 .m2*
+ß

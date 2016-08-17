@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import javax.servlet.Servlet;
 
 import org.apache.asterix.api.http.servlet.APIServlet;
+import org.apache.asterix.api.http.servlet.QueryWebInterfaceServlet;
 import org.apache.asterix.api.http.servlet.AQLAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
@@ -129,6 +130,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         serverList.add(setupWebServer(externalProperties));
         serverList.add(setupJSONAPIServer(externalProperties));
         serverList.add(setupFeedServer(externalProperties));
+        serverList.add(setupQueryWebServer(externalProperties));
         return serverList;
     }
 
@@ -205,6 +207,21 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.CLUSTER_STATE);
 
         return jsonAPIServer;
+    }
+
+    private Server setupQueryWebServer(AsterixExternalProperties externalProperties) throws Exception {
+
+        Server queryWebServer = new Server(externalProperties.getQueryWebInterfacePort());
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+
+        IHyracksClientConnection hcc = getNewHyracksClientConnection();
+        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+
+        queryWebServer.setHandler(context);
+        context.addServlet(new ServletHolder(new QueryWebInterfaceServlet()), "/*");
+        return queryWebServer;
     }
 
     protected void addServlet(ServletContextHandler context, Servlet servlet, String path) {

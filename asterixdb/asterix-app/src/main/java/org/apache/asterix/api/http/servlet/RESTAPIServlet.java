@@ -168,6 +168,10 @@ abstract class RESTAPIServlet extends HttpServlet {
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
             throws IOException {
+        // enable cross-origin resource sharing
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
         SessionConfig sessionConfig = initResponse(request, response);
         QueryTranslator.ResultDelivery resultDelivery = whichResultDelivery(request);
 
