@@ -45,6 +45,8 @@ public class AsterixCLI {
         public List<String> args;
     }
 
+    private static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
+
     public static void main(String args[]) throws Exception {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
@@ -55,7 +57,7 @@ public class AsterixCLI {
             for (String queryFile : options.args) {
                 Reader in = new FileReader(queryFile);
                 AsterixJavaClient ajc = new AsterixJavaClient(
-                        AsterixHyracksIntegrationUtil.getHyracksClientConnection(), in, compilationProvider);
+                        integrationUtil.getHyracksClientConnection(), in, compilationProvider);
                 try {
                     ajc.compile(true, false, false, false, false, true, false);
                 } finally {
@@ -80,11 +82,11 @@ public class AsterixCLI {
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
 
-        AsterixHyracksIntegrationUtil.init(false);
+        integrationUtil.init(false);
     }
 
     public static void tearDown() throws Exception {
-        AsterixHyracksIntegrationUtil.deinit(false);
+        integrationUtil.deinit(false);
     }
 
 }

@@ -133,7 +133,7 @@ public class TestNodeController {
         }
         jobletCtx = Mockito.mock(IHyracksJobletContext.class);
         Mockito.when(jobletCtx.getApplicationContext())
-                .thenReturn(AsterixHyracksIntegrationUtil.ncs[0].getApplicationContext());
+                .thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext());
         Mockito.when(jobletCtx.getJobId()).thenAnswer(new Answer<JobId>() {
             @Override
             public JobId answer(InvocationOnMock invocation) throws Throwable {
@@ -248,7 +248,7 @@ public class TestNodeController {
     }
 
     public ConstantFileSplitProvider getFileSplitProvider(Dataset dataset) {
-        FileSplit fileSplit = new FileSplit(AsterixHyracksIntegrationUtil.ncs[0].getId(),
+        FileSplit fileSplit = new FileSplit(ExecutionTestUtil.integrationUtil.ncs[0].getId(),
                 dataset.getDataverseName() + File.separator + dataset.getDatasetName());
         return new ConstantFileSplitProvider(new FileSplit[] { fileSplit });
     }
@@ -367,12 +367,12 @@ public class TestNodeController {
         ctx = Mockito.spy(ctx);
         Mockito.when(ctx.getJobletContext()).thenReturn(jobletCtx);
         Mockito.when(ctx.getIOManager())
-                .thenReturn(AsterixHyracksIntegrationUtil.ncs[0].getRootContext().getIOManager());
+                .thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getRootContext().getIOManager());
         return ctx;
     }
 
     public TransactionSubsystem getTransactionSubsystem() {
-        return (TransactionSubsystem) ((AsterixAppRuntimeContext) AsterixHyracksIntegrationUtil.ncs[0]
+        return (TransactionSubsystem) ((AsterixAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0]
                 .getApplicationContext().getApplicationObject()).getTransactionSubsystem();
     }
 
@@ -381,7 +381,7 @@ public class TestNodeController {
     }
 
     public AsterixAppRuntimeContext getAppRuntimeContext() {
-        return (AsterixAppRuntimeContext) AsterixHyracksIntegrationUtil.ncs[0].getApplicationContext()
+        return (AsterixAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext()
                 .getApplicationObject();
     }
 

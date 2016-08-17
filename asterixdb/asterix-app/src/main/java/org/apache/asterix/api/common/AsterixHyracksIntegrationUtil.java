@@ -19,13 +19,15 @@
 package org.apache.asterix.api.common;
 
 import java.io.File;
+import java.net.Inet4Address;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
 import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
 import org.apache.commons.io.FileUtils;
@@ -45,75 +47,28 @@ public class AsterixHyracksIntegrationUtil {
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
-    public static ClusterControllerService cc;
-    public static NodeControllerService[] ncs;
-    public static IHyracksClientConnection hcc;
+    public ClusterControllerService cc;
+    public NodeControllerService[] ncs;
+    public IHyracksClientConnection hcc;
 
-    private static AsterixPropertiesAccessor propertiesAccessor;
+    private AsterixPropertiesAccessor propertiesAccessor;
 
-    public static void init(boolean deleteOldInstanceData) throws Exception {
+    public void init(boolean deleteOldInstanceData) throws Exception {
         propertiesAccessor = new AsterixPropertiesAccessor();
-        ncs = new NodeControllerService[propertiesAccessor.getNodeNames().size()];
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
         }
 
-        CCConfig ccConfig = new CCConfig();
-        ccConfig.clusterNetIpAddress = "127.0.0.1";
-        ccConfig.clientNetIpAddress = "127.0.0.1";
-        ccConfig.clientNetPort = DEFAULT_HYRACKS_CC_CLIENT_PORT;
-        ccConfig.clusterNetPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
-        ccConfig.defaultMaxJobAttempts = 0;
-        ccConfig.resultTTL = 30000;
-        ccConfig.resultSweepThreshold = 1000;
-        ccConfig.appCCMainClass = CCApplicationEntryPoint.class.getName();
-        // ccConfig.useJOL = true;
-        cc = new ClusterControllerService(ccConfig);
+        cc = new ClusterControllerService(createCCConfig());
         cc.start();
 
         // Starts ncs.
-        int n = 0;
         List<String> nodes = propertiesAccessor.getNodeNames();
+        List<NodeControllerService> nodeControllers = new ArrayList<>();
         for (String ncName : nodes) {
-            NCConfig ncConfig1 = new NCConfig();
-            ncConfig1.ccHost = "localhost";
-            ncConfig1.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
-            ncConfig1.clusterNetIPAddress = "127.0.0.1";
-            ncConfig1.dataIPAddress = "127.0.0.1";
-            ncConfig1.resultIPAddress = "127.0.0.1";
-            ncConfig1.nodeId = ncName;
-            ncConfig1.resultTTL = 30000;
-            ncConfig1.resultSweepThreshold = 1000;
-            ncConfig1.appArgs = Arrays.asList("-virtual-NC");
-            String tempPath = System.getProperty(IO_DIR_KEY);
-            if (tempPath.endsWith(File.separator)) {
-                tempPath = tempPath.substring(0, tempPath.length() - 1);
-            }
-            System.err.println("Using the path: " + tempPath);
-            // get initial partitions from properties
-            String[] nodeStores = propertiesAccessor.getStores().get(ncName);
-            if (nodeStores == null) {
-                throw new Exception("Coudn't find stores for NC: " + ncName);
-            }
-            String tempDirPath = System.getProperty(IO_DIR_KEY);
-            if (!tempDirPath.endsWith(File.separator)) {
-                tempDirPath += File.separator;
-            }
-            for (int p = 0; p < nodeStores.length; p++) {
-                // create IO devices based on stores
-                String iodevicePath = tempDirPath + ncConfig1.nodeId + File.separator + nodeStores[p];
-                File ioDeviceDir = new File(iodevicePath);
-                ioDeviceDir.mkdirs();
-                if (p == 0) {
-                    ncConfig1.ioDevices = iodevicePath;
-                } else {
-                    ncConfig1.ioDevices += "," + iodevicePath;
-                }
-            }
-            ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
-            NodeControllerService nodeControllerService = new NodeControllerService(ncConfig1);
-            ncs[n] = nodeControllerService;
+            NodeControllerService nodeControllerService = new NodeControllerService(createNCConfig(ncName));
+            nodeControllers.add(nodeControllerService);
             Thread ncStartThread = new Thread() {
                 @Override
                 public void run() {
@@ -125,24 +80,76 @@ public class AsterixHyracksIntegrationUtil {
                 }
             };
             ncStartThread.start();
-            ++n;
         }
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
+        ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
     }
 
-    public static String[] getNcNames() {
+    protected CCConfig createCCConfig() {
+        CCConfig ccConfig = new CCConfig();
+        ccConfig.clusterNetIpAddress = Inet4Address.getLoopbackAddress().getHostAddress();
+        ccConfig.clientNetIpAddress = Inet4Address.getLoopbackAddress().getHostAddress();
+        ccConfig.clientNetPort = DEFAULT_HYRACKS_CC_CLIENT_PORT;
+        ccConfig.clusterNetPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
+        ccConfig.defaultMaxJobAttempts = 0;
+        ccConfig.resultTTL = 30000;
+        ccConfig.resultSweepThreshold = 1000;
+        ccConfig.appCCMainClass = CCApplicationEntryPoint.class.getName();
+        return ccConfig;
+    }
+
+    protected NCConfig createNCConfig(String ncName) throws AsterixException {
+        NCConfig ncConfig = new NCConfig();
+        ncConfig.ccHost = "localhost";
+        ncConfig.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
+        ncConfig.clusterNetIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
+        ncConfig.dataIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
+        ncConfig.resultIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
+        ncConfig.nodeId = ncName;
+        ncConfig.resultTTL = 30000;
+        ncConfig.resultSweepThreshold = 1000;
+        ncConfig.appArgs = Collections.singletonList("-virtual-NC");
+        String tempPath = System.getProperty(IO_DIR_KEY);
+        if (tempPath.endsWith(File.separator)) {
+            tempPath = tempPath.substring(0, tempPath.length() - 1);
+        }
+        System.err.println("Using the path: " + tempPath);
+        // get initial partitions from properties
+        String[] nodeStores = propertiesAccessor.getStores().get(ncName);
+        if (nodeStores == null) {
+            throw new AsterixException("Coudn't find stores for NC: " + ncName);
+        }
+        String tempDirPath = System.getProperty(IO_DIR_KEY);
+        if (!tempDirPath.endsWith(File.separator)) {
+            tempDirPath += File.separator;
+        }
+        for (int p = 0; p < nodeStores.length; p++) {
+            // create IO devices based on stores
+            String iodevicePath = tempDirPath + ncConfig.nodeId + File.separator + nodeStores[p];
+            File ioDeviceDir = new File(iodevicePath);
+            ioDeviceDir.mkdirs();
+            if (p == 0) {
+                ncConfig.ioDevices = iodevicePath;
+            } else {
+                ncConfig.ioDevices += "," + iodevicePath;
+            }
+        }
+        ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
+        return ncConfig;
+    }
+
+    public String[] getNcNames() {
         return propertiesAccessor.getNodeNames().toArray(new String[propertiesAccessor.getNodeNames().size()]);
     }
 
-    public static IHyracksClientConnection getHyracksClientConnection() {
+    public IHyracksClientConnection getHyracksClientConnection() {
         return hcc;
     }
 
-    public static void deinit(boolean deleteOldInstanceData) throws Exception {
+    public void deinit(boolean deleteOldInstanceData) throws Exception {
         //stop NCs
         ArrayList<Thread> stopNCThreads = new ArrayList<>();
-        for (int n = 0; n < ncs.length; ++n) {
-            NodeControllerService nodeControllerService = ncs[n];
+        for (NodeControllerService nodeControllerService : ncs) {
             if (nodeControllerService != null) {
                 Thread ncStopThread = new Thread() {
                     @Override
@@ -174,14 +181,14 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
-    public static void runJob(JobSpecification spec) throws Exception {
+    public void runJob(JobSpecification spec) throws Exception {
         GlobalConfig.ASTERIX_LOGGER.info(spec.toJSON().toString());
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         GlobalConfig.ASTERIX_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
     }
 
-    public static void removeTestStorageFiles() {
+    public void removeTestStorageFiles() {
         File dir = new File(System.getProperty(IO_DIR_KEY));
         for (String ncName : propertiesAccessor.getNodeNames()) {
             File ncDir = new File(dir, ncName);
@@ -189,7 +196,7 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
-    private static void deleteTransactionLogs() throws Exception {
+    private void deleteTransactionLogs() throws Exception {
         for (String ncId : propertiesAccessor.getNodeNames()) {
             File log = new File(propertiesAccessor.getTransactionLogDirs().get(ncId));
             if (log.exists()) {
@@ -206,11 +213,12 @@ public class AsterixHyracksIntegrationUtil {
      *            unused
      */
     public static void main(String[] args) {
+        AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    deinit(false);
+                    integrationUtil.deinit(false);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -219,7 +227,7 @@ public class AsterixHyracksIntegrationUtil {
         try {
             System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
 
-            init(false);
+            integrationUtil.init(false);
             while (true) {
                 Thread.sleep(10000);
             }
@@ -228,5 +236,4 @@ public class AsterixHyracksIntegrationUtil {
             System.exit(1);
         }
     }
-
 }
