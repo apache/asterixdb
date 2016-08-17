@@ -2310,8 +2310,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             String indexName = primaryIndex.getIndexName();
 
             String itemTypeName = dataset.getItemTypeName();
+            String itemTypeDataverseName = dataset.getItemTypeDataverseName();
             ARecordType itemType = (ARecordType) MetadataManager.INSTANCE
-                    .getDatatype(mdTxnCtx, dataSource.getId().getDataverseName(), itemTypeName).getDatatype();
+                    .getDatatype(mdTxnCtx, itemTypeDataverseName, itemTypeName).getDatatype();
             ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
             ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType, metaItemType);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
