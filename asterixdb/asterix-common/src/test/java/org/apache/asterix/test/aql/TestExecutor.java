@@ -23,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -423,8 +422,9 @@ public class TestExecutor {
     // and returns the contents as a string
     // This string is later passed to REST API for execution.
     public String readTestFile(File testFile) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(testFile));
-        String line = null;
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(testFile), StandardCharsets.UTF_8));
+        String line;
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");
         while ((line = reader.readLine()) != null) {
