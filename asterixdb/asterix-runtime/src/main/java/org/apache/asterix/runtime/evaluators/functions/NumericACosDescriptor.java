@@ -29,19 +29,18 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.data.std.api.IPointable;
 
-public class NumericCeilingDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+public class NumericACosDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericCeilingDescriptor();
+            return new NumericACosDescriptor();
         }
     };
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.NUMERIC_CEILING;
+        return AsterixBuiltinFunctions.NUMERIC_ACOS;
     }
 
     @Override
@@ -51,47 +50,21 @@ public class NumericCeilingDescriptor extends AbstractScalarFunctionDynamicDescr
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
-                return new NumericCeilingEvaluator(ctx, args[0]);
+                return new NumericACosEvaluator(ctx, args[0]);
             }
         };
     }
 
-    private class NumericCeilingEvaluator extends AbstractUnaryNumericFunctionEval {
+    private class NumericACosEvaluator extends AbstractUnaryNumericDoubleFunctionEval {
 
-        NumericCeilingEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
+        NumericACosEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws AlgebricksException {
-            super(context, argEvalFactory, NumericCeilingDescriptor.this.getIdentifier());
-        }
-
-        @Override
-        protected void processInt8(byte arg, IPointable resultPointable) throws AlgebricksException {
-            resultPointable.set(argPtr);
-        }
-
-        @Override
-        protected void processInt16(short arg, IPointable resultPointable) throws AlgebricksException {
-            resultPointable.set(argPtr);
-        }
-
-        @Override
-        protected void processInt32(int arg, IPointable resultPointable) throws AlgebricksException {
-            resultPointable.set(argPtr);
-        }
-
-        @Override
-        protected void processInt64(long arg, IPointable resultPointable) throws AlgebricksException {
-            resultPointable.set(argPtr);
-        }
-
-        @Override
-        protected void processFloat(float arg, IPointable resultPointable) throws AlgebricksException {
-            aFloat.setValue((float) Math.ceil(arg));
-            serialize(aFloat, floatSerde, resultPointable);
+            super(context, argEvalFactory, NumericACosDescriptor.this.getIdentifier());
         }
 
         @Override
         protected void processDouble(double arg, IPointable resultPointable) throws AlgebricksException {
-            aDouble.setValue(Math.ceil(arg));
+            aDouble.setValue(Math.acos(arg));
             serialize(aDouble, doubleSerde, resultPointable);
         }
     }

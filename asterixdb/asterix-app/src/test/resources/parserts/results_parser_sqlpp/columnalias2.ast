@@ -1,6 +1,6 @@
 Query:
 SELECT [
-FunctionCall null.SQRT@1[
+FunctionCall null.sqrt@1[
   OperatorExpr [
     FunctionCall Metadata.dataset@1[
       LiteralExpr [STRING] [t.a]

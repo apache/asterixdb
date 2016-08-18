@@ -4234,6 +4234,61 @@
         <!-- <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error> -->
       </compilation-unit>
     </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="acos">
+        <output-dir compare="Text">acos</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="asin">
+        <output-dir compare="Text">asin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="atan">
+        <output-dir compare="Text">atan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="cos">
+        <output-dir compare="Text">cos</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="sin">
+        <output-dir compare="Text">sin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="tan">
+        <output-dir compare="Text">tan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="exp">
+        <output-dir compare="Text">exp</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ln">
+        <output-dir compare="Text">ln</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="log">
+        <output-dir compare="Text">log</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="sqrt">
+        <output-dir compare="Text">sqrt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="sign">
+        <output-dir compare="Text">sign</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-closed">
     <!--

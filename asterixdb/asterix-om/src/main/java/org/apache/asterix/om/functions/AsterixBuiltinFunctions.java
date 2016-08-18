@@ -199,6 +199,23 @@ public class AsterixBuiltinFunctions {
             "numeric-idiv", 2);
     public static final FunctionIdentifier CARET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "caret", 2);
     public static final FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "abs", 1);
+    public static final FunctionIdentifier NUMERIC_ACOS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "acos",
+            1);
+    public static final FunctionIdentifier NUMERIC_ASIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "asin",
+            1);
+    public static final FunctionIdentifier NUMERIC_ATAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan",
+            1);
+    public static final FunctionIdentifier NUMERIC_COS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cos", 1);
+    public static final FunctionIdentifier NUMERIC_SIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sin", 1);
+    public static final FunctionIdentifier NUMERIC_TAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tan", 1);
+    public static final FunctionIdentifier NUMERIC_EXP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "exp", 1);
+    public static final FunctionIdentifier NUMERIC_LN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ln", 1);
+    public static final FunctionIdentifier NUMERIC_LOG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "log", 1);
+    public static final FunctionIdentifier NUMERIC_SQRT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sqrt",
+            1);
+    public static final FunctionIdentifier NUMERIC_SIGN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sign",
+            1);
+
     public static final FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "ceiling", 1);
     public static final FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "floor",
@@ -816,6 +833,17 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(NUMERIC_MOD, NumericAddSubMulDivTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_IDIV, AInt64TypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ABS, NumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ACOS, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ASIN, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ATAN, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_COS, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_SIN, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_TAN, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_EXP, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_LN, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_LOG, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_SQRT, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_SIGN, AInt8TypeComputer.INSTANCE, true);
         addFunction(NUMERIC_CEILING, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_FLOOR, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND, NumericUnaryFunctionTypeComputer.INSTANCE, true);
