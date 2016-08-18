@@ -384,18 +384,6 @@ public class QueryServiceServlet extends HttpServlet {
         }
     }
 
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String query = request.getParameter(Parameter.STATEMENT.str());
-        try {
-            handleRequest(request, response, query);
-        } catch (IOException e) {
-            // Servlet methods should not throw exceptions
-            // http://cwe.mitre.org/data/definitions/600.html
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-        }
-    }
-
     private void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
             throws IOException {
         long elapsedStart = System.nanoTime();

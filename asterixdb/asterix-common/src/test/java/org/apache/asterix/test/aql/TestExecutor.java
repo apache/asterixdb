@@ -44,10 +44,10 @@ import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
-import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
@@ -280,8 +280,8 @@ public class TestExecutor {
         return httpResponse;
     }
 
-    public InputStream executeQuery(String str, OutputFormat fmt, String url,
-            List<CompilationUnit.Parameter> params) throws Exception {
+    public InputStream executeQuery(String str, OutputFormat fmt, String url, List<CompilationUnit.Parameter> params)
+            throws Exception {
         HttpUriRequest method = constructHttpMethod(str, url, "query", false, params);
         // Set accepted output response type
         method.setHeader("Accept", fmt.mimeType());
@@ -292,7 +292,7 @@ public class TestExecutor {
     public InputStream executeQueryService(String str, OutputFormat fmt, String url,
             List<CompilationUnit.Parameter> params) throws Exception {
         setFormatParam(params, fmt);
-        HttpUriRequest method = constructHttpMethod(str, url, "statement", true, params);
+        HttpUriRequest method = constructPostMethod(str, url, "statement", true, params);
         // Set accepted output response type
         method.setHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
         HttpResponse response = executeHttpRequest(method);
@@ -315,28 +315,38 @@ public class TestExecutor {
         }
     }
 
-    private HttpUriRequest constructHttpMethod(String statement, String endpoint, String stmtParam, boolean postStmtAsParam,
-            List<CompilationUnit.Parameter> otherParams) {
-        RequestBuilder builder;
+    private HttpUriRequest constructHttpMethod(String statement, String endpoint, String stmtParam,
+            boolean postStmtAsParam, List<CompilationUnit.Parameter> otherParams) {
         if (statement.length() + endpoint.length() < MAX_URL_LENGTH) {
             // Use GET for small-ish queries
-            builder = RequestBuilder.get(endpoint);
-            builder.addParameter(stmtParam, statement);
+            return constructGetMethod(statement, endpoint, stmtParam, otherParams);
+        } else {
+            // Use POST for bigger ones to avoid 413 FULL_HEAD
+            return constructPostMethod(statement, endpoint, stmtParam, postStmtAsParam, otherParams);
+        }
+    }
+
+    private HttpUriRequest constructGetMethod(String statement, String endpoint, String stmtParam,
+            List<CompilationUnit.Parameter> otherParams) {
+        RequestBuilder builder = RequestBuilder.get(endpoint).addParameter(stmtParam, statement);
+        for (CompilationUnit.Parameter param : otherParams) {
+            builder.addParameter(param.getName(), param.getValue());
+        }
+        builder.setCharset(StandardCharsets.UTF_8);
+        return builder.build();
+    }
+
+    private HttpUriRequest constructPostMethod(String statement, String endpoint, String stmtParam,
+            boolean postStmtAsParam, List<CompilationUnit.Parameter> otherParams) {
+        RequestBuilder builder = RequestBuilder.post(endpoint);
+        if (postStmtAsParam) {
             for (CompilationUnit.Parameter param : otherParams) {
                 builder.addParameter(param.getName(), param.getValue());
             }
+            builder.addParameter(stmtParam, statement);
         } else {
-            // Use POST for bigger ones to avoid 413 FULL_HEAD
-            builder = RequestBuilder.post(endpoint);
-            if (postStmtAsParam) {
-                for (CompilationUnit.Parameter param : otherParams) {
-                    builder.addParameter(param.getName(), param.getValue());
-                }
-                builder.addParameter("statement", statement);
-            } else {
-                // this seems pretty bad - we should probably fix the API and not the client
-                builder.setEntity(new StringEntity(statement, StandardCharsets.UTF_8));
-            }
+            // this seems pretty bad - we should probably fix the API and not the client
+            builder.setEntity(new StringEntity(statement, StandardCharsets.UTF_8));
         }
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
