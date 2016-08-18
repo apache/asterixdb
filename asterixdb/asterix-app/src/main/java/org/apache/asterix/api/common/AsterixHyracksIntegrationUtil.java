@@ -214,6 +214,10 @@ public class AsterixHyracksIntegrationUtil {
      */
     public static void main(String[] args) {
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
+        run(integrationUtil);
+    }
+
+    protected static void run(final AsterixHyracksIntegrationUtil integrationUtil) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
