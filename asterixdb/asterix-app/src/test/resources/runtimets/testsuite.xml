@@ -257,6 +257,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="upsert">
+      <compilation-unit name="issue1587-foreignDataType">
+        <output-dir compare="Text">issue1587-foreignDataType</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
       <compilation-unit name="nested-index">
         <output-dir compare="Text">nested-index</output-dir>
       </compilation-unit>

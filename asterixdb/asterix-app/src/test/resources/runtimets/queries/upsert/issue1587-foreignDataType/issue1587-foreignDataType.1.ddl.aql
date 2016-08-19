@@ -17,23 +17,22 @@
  * under the License.
  */
 /*
- * Description  : Test cross dataverse functionality
- *              : create a dataset using a foreign datatype
- *              : Try dropping the foreign type's dataverse
- * Expected Res : Failure
- * Date         : 2015 Steven Jacobs
+ * Description  : Upsert into a dataset which has a foreign datatype
+ * Expected Res : Success
+ * Date         : Aug 18th 2016
  */
-
 
 drop dataverse b if exists;
 drop dataverse a if exists;
 create dataverse a;
 create dataverse b;
+use dataverse a;
 
-create type a.a as {
-id:int32
-}
+create type TypeA as closed{
+id:int32,
+age:int32
+};
 
-create dataset b.b1(a.a) primary key id;
+use dataverse b;
 
-drop dataverse a;
+create dataset UpsertTo(a.TypeA) primary key id;
