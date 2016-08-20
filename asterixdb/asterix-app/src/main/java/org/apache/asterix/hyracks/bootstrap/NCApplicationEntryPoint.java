@@ -19,6 +19,7 @@
 package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.nc.AsterixNCAppRuntimeContext;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
@@ -58,13 +60,17 @@ import org.kohsuke.args4j.Option;
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
 
-    @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)", required = false)
+    @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)",
+            required = false)
     public int metadataRmiPort = 0;
 
-    @Option(name = "-initial-run", usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
+    @Option(name = "-initial-run",
+            usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
     public boolean initialRun = false;
 
-    @Option(name = "-virtual-NC", usage = "A flag indicating if this NC is running on virtual cluster (default: false)", required = false)
+    @Option(name = "-virtual-NC",
+            usage = "A flag indicating if this NC is running on virtual cluster " + "(default: false)",
+            required = false)
     public boolean virtualNC = false;
 
     private INCApplicationContext ncApplicationContext = null;
@@ -96,11 +102,10 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
-            System.setProperty("java.rmi.server.hostname",
-                    ((NodeControllerService) ncAppCtx.getControllerService())
-                            .getConfiguration().clusterNetPublicIPAddress);
+            System.setProperty("java.rmi.server.hostname", ((NodeControllerService) ncAppCtx.getControllerService())
+                    .getConfiguration().clusterNetPublicIPAddress);
         }
-        runtimeContext = new AsterixNCAppRuntimeContext(ncApplicationContext, metadataRmiPort);
+        runtimeContext = new AsterixNCAppRuntimeContext(ncApplicationContext, metadataRmiPort, getExtensions());
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
@@ -152,6 +157,10 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (replicationEnabled && !pendingFailbackCompletion) {
             startReplicationService();
         }
+    }
+
+    protected List<AsterixExtension> getExtensions() {
+        return Collections.emptyList();
     }
 
     private void startReplicationService() throws InterruptedException {
@@ -206,8 +215,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
 
-            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                    .getLocalResourceRepository();
+            PersistentLocalResourceRepository localResourceRepository =
+                    (PersistentLocalResourceRepository) runtimeContext
+                            .getLocalResourceRepository();
             localResourceRepository.initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 

@@ -21,6 +21,8 @@ package org.apache.asterix.app.nc;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +35,7 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
+import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixExtensionProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
@@ -134,9 +137,10 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
     private final ILibraryManager libraryManager;
     private final NCExtensionManager ncExtensionManager;
 
-    public AsterixNCAppRuntimeContext(INCApplicationContext ncApplicationContext, int metadataRmiPort)
-            throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
-            IOException {
+    public AsterixNCAppRuntimeContext(INCApplicationContext ncApplicationContext, int metadataRmiPort,
+            List<AsterixExtension> extensions) throws AsterixException, InstantiationException, IllegalAccessException,
+            ClassNotFoundException, IOException {
+        List<AsterixExtension> allExtensions = new ArrayList<>();
         this.ncApplicationContext = ncApplicationContext;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
@@ -159,8 +163,11 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
                 AsterixClusterProperties.INSTANCE.getCluster());
         this.metadataRmiPort = metadataRmiPort;
         libraryManager = new ExternalLibraryManager();
-        ncExtensionManager = new NCExtensionManager(
-                new AsterixExtensionProperties(propertiesAccessor).getExtensions());
+        if (extensions != null) {
+            allExtensions.addAll(extensions);
+        }
+        allExtensions.addAll(new AsterixExtensionProperties(propertiesAccessor).getExtensions());
+        ncExtensionManager = new NCExtensionManager(allExtensions);
     }
 
     @Override
@@ -181,8 +188,8 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         metadataMergePolicyFactory = new PrefixMergePolicyFactory();
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
-                new PersistentLocalResourceRepositoryFactory(ioManager, ncApplicationContext.getNodeId(),
-                        metadataProperties);
+                new PersistentLocalResourceRepositoryFactory(
+                ioManager, ncApplicationContext.getNodeId(), metadataProperties);
 
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();

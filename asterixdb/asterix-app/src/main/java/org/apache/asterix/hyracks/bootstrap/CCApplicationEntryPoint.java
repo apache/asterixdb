@@ -47,6 +47,7 @@ import org.apache.asterix.app.external.ActiveLifecycleListener;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -96,8 +97,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), GlobalRecoveryManager.instance(),
                 libraryManager);
-        ccExtensionManager = new CompilerExtensionManager(
-                AsterixAppContextInfo.getInstance().getExtensionProperties().getExtensions());
+        ccExtensionManager = new CompilerExtensionManager(getExtensions());
         AsterixAppContextInfo.getInstance().setExtensionManager(ccExtensionManager);
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
@@ -124,6 +124,10 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
         ccAppCtx.setMessageBroker(messageBroker);
+    }
+
+    protected List<AsterixExtension> getExtensions() {
+        return AsterixAppContextInfo.getInstance().getExtensionProperties().getExtensions();
     }
 
     protected List<Server> configureServers() throws Exception {
