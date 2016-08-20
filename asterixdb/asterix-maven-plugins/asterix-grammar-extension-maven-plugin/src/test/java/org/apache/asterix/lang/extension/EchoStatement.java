@@ -44,4 +44,9 @@ public class EchoStatement implements Statement {
         return arg;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.PROCEDURE;
+    }
+
 }

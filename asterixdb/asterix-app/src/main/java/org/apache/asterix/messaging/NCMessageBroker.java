@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.messaging.AbstractApplicationMessage;
 import org.apache.asterix.common.messaging.CompleteFailbackRequestMessage;
@@ -113,6 +115,9 @@ public class NCMessageBroker implements INCMessageBroker {
                 case REPLICA_EVENT:
                     handleReplicaEvent(message);
                     break;
+                case ACTIVE_MANAGER_MESSAGE:
+                    ((ActiveManager) appContext.getActiveManager()).submit((ActiveManagerMessage) message);
+                    break;
                 default:
                     break;
             }
@@ -143,8 +148,8 @@ public class NCMessageBroker implements INCMessageBroker {
             appContext.initializeMetadata(false);
             appContext.exportMetadataNodeStub();
         } finally {
-            TakeoverMetadataNodeResponseMessage reponse = new TakeoverMetadataNodeResponseMessage(
-                    appContext.getTransactionSubsystem().getId());
+            TakeoverMetadataNodeResponseMessage reponse =
+                    new TakeoverMetadataNodeResponseMessage(appContext.getTransactionSubsystem().getId());
             sendMessage(reponse, null);
         }
     }
@@ -189,15 +194,15 @@ public class NCMessageBroker implements INCMessageBroker {
         }
 
         //mark the partitions to be closed as inactive
-        PersistentLocalResourceRepository localResourceRepo = (PersistentLocalResourceRepository) appContext
-                .getLocalResourceRepository();
+        PersistentLocalResourceRepository localResourceRepo =
+                (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
         for (Integer partitionId : msg.getPartitions()) {
             localResourceRepo.addInactivePartition(partitionId);
         }
 
         //send response after partitions prepared for failback
-        PreparePartitionsFailbackResponseMessage reponse = new PreparePartitionsFailbackResponseMessage(msg.getPlanId(),
-                msg.getRequestId(), msg.getPartitions());
+        PreparePartitionsFailbackResponseMessage reponse =
+                new PreparePartitionsFailbackResponseMessage(msg.getPlanId(), msg.getRequestId(), msg.getPartitions());
         sendMessage(reponse, null);
     }
 
@@ -207,8 +212,8 @@ public class NCMessageBroker implements INCMessageBroker {
             IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
             remoteRecoeryManager.completeFailbackProcess();
         } finally {
-            CompleteFailbackResponseMessage reponse = new CompleteFailbackResponseMessage(msg.getPlanId(),
-                    msg.getRequestId(), msg.getPartitions());
+            CompleteFailbackResponseMessage reponse =
+                    new CompleteFailbackResponseMessage(msg.getPlanId(), msg.getRequestId(), msg.getPartitions());
             sendMessage(reponse, null);
         }
     }

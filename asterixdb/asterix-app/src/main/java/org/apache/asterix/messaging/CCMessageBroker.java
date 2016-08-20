@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.active.ActivePartitionMessage;
+import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.app.external.ActiveLifecycleListener;
 import org.apache.asterix.common.messaging.AbstractApplicationMessage;
 import org.apache.asterix.common.messaging.CompleteFailbackResponseMessage;
@@ -81,7 +81,7 @@ public class CCMessageBroker implements ICCMessageBroker {
             case COMPLETE_FAILBACK_RESPONSE:
                 handleCompleteFailbcakResponse(message);
                 break;
-            case ACTIVE_ENTITY_MESSAGE:
+            case ACTIVE_ENTITY_TO_CC_MESSAGE:
                 handleActiveEntityMessage(message);
                 break;
             default:

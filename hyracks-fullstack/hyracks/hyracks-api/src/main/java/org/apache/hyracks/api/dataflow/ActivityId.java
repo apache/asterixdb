@@ -49,13 +49,17 @@ public final class ActivityId implements IWritable, Serializable {
         return odId;
     }
 
+    public void setOperatorDescriptorId(OperatorDescriptorId odId) {
+        this.odId = odId;
+    }
+
     public int getLocalId() {
         return id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (odId.hashCode() + id);
+        return odId.hashCode() + id;
     }
 
     @Override
@@ -70,6 +74,7 @@ public final class ActivityId implements IWritable, Serializable {
         return other.odId.equals(odId) && other.id == id;
     }
 
+    @Override
     public String toString() {
         return "ANID:" + odId + ":" + id;
     }
@@ -78,8 +83,8 @@ public final class ActivityId implements IWritable, Serializable {
         if (str.startsWith("ANID:")) {
             str = str.substring(5);
             int idIdx = str.lastIndexOf(':');
-            return new ActivityId(OperatorDescriptorId.parse(str.substring(0, idIdx)), Integer.parseInt(str
-                    .substring(idIdx + 1)));
+            return new ActivityId(OperatorDescriptorId.parse(str.substring(0, idIdx)),
+                    Integer.parseInt(str.substring(idIdx + 1)));
         }
         throw new IllegalArgumentException("Unable to parse: " + str);
     }

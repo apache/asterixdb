@@ -87,4 +87,9 @@ public class CreateFeedPolicyStatement implements Statement {
         return description;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
+    }
+
 }

@@ -57,4 +57,9 @@ public class FeedPolicyDropStatement implements Statement {
         return visitor.visit(this, arg);
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
+    }
+
 }

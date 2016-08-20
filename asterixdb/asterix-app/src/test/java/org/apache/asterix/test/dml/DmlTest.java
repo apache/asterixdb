@@ -27,6 +27,7 @@ import java.io.Reader;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.test.aql.TestExecutor;
@@ -59,9 +60,8 @@ public class DmlTest {
         integrationUtil.init(true);
         Reader loadReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
-        AsterixJavaClient asterixLoad = new AsterixJavaClient(
-                integrationUtil.getHyracksClientConnection(), loadReader, ERR,
-                new AqlCompilationProvider());
+        AsterixJavaClient asterixLoad = new AsterixJavaClient(integrationUtil.getHyracksClientConnection(), loadReader,
+                ERR, new AqlCompilationProvider(), new DefaultStatementExecutorFactory(null));
         try {
             asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {

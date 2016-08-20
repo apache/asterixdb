@@ -26,7 +26,6 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.indexing.IndexingConstants;
@@ -257,8 +256,8 @@ public class DatasetUtils {
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         propertyRecordBuilder.reset(recordType);
         AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

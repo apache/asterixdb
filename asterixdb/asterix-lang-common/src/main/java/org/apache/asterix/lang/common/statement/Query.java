@@ -121,4 +121,9 @@ public class Query implements Statement {
                 && ObjectUtils.equals(datasets, target.datasets) && ObjectUtils.equals(dataverses, target.dataverses)
                 && topLevel == target.topLevel;
     }
+
+    @Override
+    public byte getCategory() {
+        return Category.QUERY;
+    }
 }

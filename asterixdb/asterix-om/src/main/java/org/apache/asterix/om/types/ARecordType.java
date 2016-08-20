@@ -44,8 +44,8 @@ import org.json.JSONObject;
  */
 public class ARecordType extends AbstractComplexType {
 
-    public static final ARecordType FULLY_OPEN_RECORD_TYPE =
-            new ARecordType("OpenRecord", new String[0], new IAType[0], true);
+    public static final ARecordType FULLY_OPEN_RECORD_TYPE = new ARecordType("OpenRecord", new String[0], new IAType[0],
+            true);
 
     private static final long serialVersionUID = 1L;
     private final String[] fieldNames;
@@ -368,5 +368,15 @@ public class ARecordType extends AbstractComplexType {
             }
         }
         return false;
+    }
+
+    /**
+     * Create a fully open record type with the passed name
+     *
+     * @param name
+     * @return
+     */
+    public static ARecordType createOpenRecordType(String name) {
+        return new ARecordType(name, new String[0], new IAType[0], true);
     }
 }

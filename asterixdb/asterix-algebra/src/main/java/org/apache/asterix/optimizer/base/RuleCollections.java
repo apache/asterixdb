@@ -22,6 +22,7 @@ package org.apache.asterix.optimizer.base;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.asterix.algebra.extension.IAlgebraExtensionManager;
 import org.apache.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
@@ -152,7 +153,9 @@ public final class RuleCollections {
         return autogen;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection() {
+    //TODO(amoudi/yingyi): refactor this to use a provider instead of passing the extensionManager
+    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(
+            IAlgebraExtensionManager algebraExtensionManager) {
         List<IAlgebraicRewriteRule> normalization = new LinkedList<>();
         normalization.add(new ResolveVariableRule());
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
@@ -174,7 +177,7 @@ public final class RuleCollections {
         normalization.add(new ExtractCommonExpressionsRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new RemoveRedundantSelectRule());
-        normalization.add(new UnnestToDataScanRule());
+        normalization.add(new UnnestToDataScanRule(algebraExtensionManager));
         normalization.add(new MetaFunctionToMetaVariableRule());
         normalization.add(new FuzzyEqRule());
         normalization.add(new SimilarityCheckRule());

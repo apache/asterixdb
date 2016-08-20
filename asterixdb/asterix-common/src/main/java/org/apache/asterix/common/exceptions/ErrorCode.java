@@ -21,6 +21,8 @@ package org.apache.asterix.common.exceptions;
 public class ErrorCode {
     public static final String ASTERIX = "ASX";
     public static final int ERROR_CASTING_FIELD = 0;
+    public static final int ERROR_EXTENSION_CONFLICT = 1;
+    public static final int ERROR_PARSE_ERROR = 2;
 
     private ErrorCode() {
     }

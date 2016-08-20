@@ -108,11 +108,11 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         boolean matchInLeftSubTree = false;
         boolean matchInRightSubTree = false;
         if (leftSubTree.hasDataSource()) {
-            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assignsAndUnnests, analyzedAMs, context,
+            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.getAssignsAndUnnests(), analyzedAMs, context,
                     typeEnvironment);
         }
         if (rightSubTree.hasDataSource()) {
-            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assignsAndUnnests, analyzedAMs, context,
+            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.getAssignsAndUnnests(), analyzedAMs, context,
                     typeEnvironment);
         }
         if (!matchInLeftSubTree && !matchInRightSubTree) {
@@ -178,8 +178,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
      */
     protected void removeIndexCandidatesFromOuterBranch(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         String innerDataset = null;
-        if (rightSubTree.dataset != null) {
-            innerDataset = rightSubTree.dataset.getDatasetName();
+        if (rightSubTree.getDataset() != null) {
+            innerDataset = rightSubTree.getDataset().getDatasetName();
         }
 
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();

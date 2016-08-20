@@ -27,6 +27,9 @@ import java.util.List;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
+import org.apache.asterix.app.cc.CompilerExtensionManager;
+import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
@@ -50,10 +53,10 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.optimizer.base.RuleCollections;
-import org.apache.asterix.result.ResultUtils;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -89,19 +92,21 @@ import org.json.JSONException;
  * to Hyracks through the Hyracks client interface.
  */
 public class APIFramework {
-    public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
     private final IRewriterFactory rewriterFactory;
     private final IAstPrintVisitorFactory astPrintVisitorFactory;
     private final ILangExpressionToPlanTranslatorFactory translatorFactory;
+    private final CompilerExtensionManager cExtensionManager;
 
-    public APIFramework(ILangCompilationProvider compilationProvider) {
+    public APIFramework(ILangCompilationProvider compilationProvider, CompilerExtensionManager cExtensionManager) {
         this.rewriterFactory = compilationProvider.getRewriterFactory();
         this.astPrintVisitorFactory = compilationProvider.getAstPrintVisitorFactory();
         this.translatorFactory = compilationProvider.getExpressionToPlanTranslatorFactory();
+        this.cExtensionManager = cExtensionManager;
     }
 
-    private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultLogicalRewrites() {
+    private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>
+            buildDefaultLogicalRewrites(CompilerExtensionManager ccExtensionManager) {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<>();
         SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
         SequentialFixpointRuleController seqCtrlFullDfs = new SequentialFixpointRuleController(true);
@@ -109,14 +114,16 @@ public class APIFramework {
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildInitialTranslationRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildTypeInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildAutogenerateIDRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection()));
+        defaultLogicalRewrites
+                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(ccExtensionManager)));
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
         // fj
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildFuzzyJoinRuleCollection()));
         //
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection()));
+        defaultLogicalRewrites
+                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(ccExtensionManager)));
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
@@ -251,7 +258,7 @@ public class APIFramework {
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(AqlOptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
-        builder.setLogicalRewrites(buildDefaultLogicalRewrites());
+        builder.setLogicalRewrites(buildDefaultLogicalRewrites(cExtensionManager));
         builder.setPhysicalRewrites(buildDefaultPhysicalRewrites());
         IDataFormat format = queryMetadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
@@ -289,7 +296,7 @@ public class APIFramework {
             try {
                 LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-                ResultUtils.displayResults(pvisitor.get().toString(), conf, new ResultUtils.Stats(), null);
+                ResultUtil.displayResults(pvisitor.get().toString(), conf, new Stats(), null);
                 return null;
             } catch (IOException e) {
                 throw new AlgebricksException(e);

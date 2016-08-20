@@ -36,7 +36,8 @@ public interface IApplicationMessage extends IMessage {
         COMPLETE_FAILBACK_REQUEST,
         COMPLETE_FAILBACK_RESPONSE,
         REPLICA_EVENT,
-        ACTIVE_ENTITY_MESSAGE
+        ACTIVE_ENTITY_TO_CC_MESSAGE,
+        ACTIVE_MANAGER_MESSAGE
     }
 
     public abstract ApplicationMessageType getMessageType();

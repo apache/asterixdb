@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 public class ActiveRuntimeManager {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveRuntimeManager.class.getName());
-    private final Map<ActiveRuntimeId, ActiveRuntime> activeRuntimes;
+    private final Map<ActiveRuntimeId, ActiveSourceOperatorNodePushable> activeRuntimes;
 
     private final ExecutorService executorService;
 
@@ -61,11 +61,11 @@ public class ActiveRuntimeManager {
         }
     }
 
-    public ActiveRuntime getFeedRuntime(ActiveRuntimeId runtimeId) {
+    public ActiveSourceOperatorNodePushable getRuntime(ActiveRuntimeId runtimeId) {
         return activeRuntimes.get(runtimeId);
     }
 
-    public void registerRuntime(ActiveRuntimeId runtimeId, ActiveRuntime feedRuntime) {
+    public void registerRuntime(ActiveRuntimeId runtimeId, ActiveSourceOperatorNodePushable feedRuntime) {
         activeRuntimes.put(runtimeId, feedRuntime);
     }
 

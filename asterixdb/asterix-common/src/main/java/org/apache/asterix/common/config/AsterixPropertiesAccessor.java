@@ -28,10 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -40,14 +39,20 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.configuration.Coredump;
+import org.apache.asterix.common.configuration.Extension;
 import org.apache.asterix.common.configuration.Property;
 import org.apache.asterix.common.configuration.Store;
 import org.apache.asterix.common.configuration.TransactionLogDir;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.utils.ConfigUtil;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.IApplicationConfig;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class AsterixPropertiesAccessor {
-    private static Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
     private final String instanceName;
     private final String metadataNodeName;
@@ -62,36 +67,22 @@ public class AsterixPropertiesAccessor {
     private final Map<String, String> asterixBuildProperties = new HashMap<>();
     private final Map<String, ClusterPartition[]> nodePartitionsMap;
     private final SortedMap<Integer, ClusterPartition> clusterPartitions = new TreeMap<>();
+    // For extensions
+    private final List<AsterixExtension> extensions;
 
     /**
      * Constructor which reads asterix-configuration.xml, the old way.
+     *
      * @throws AsterixException
+     * @throws IOException
      */
-    public AsterixPropertiesAccessor() throws AsterixException {
+    public AsterixPropertiesAccessor() throws AsterixException, IOException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
         if (fileName == null) {
             fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
         }
-
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream(fileName);
-        if (is == null) {
-            try {
-                fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
-                is = new FileInputStream(fileName);
-            } catch (FileNotFoundException fnf) {
-                throw new AsterixException("Could not find configuration file " + fileName);
-            }
-        }
-
-        AsterixConfiguration asterixConfiguration = null;
+        AsterixConfiguration asterixConfiguration = configure(fileName);
         cfg = null;
-        try {
-            JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
-            Unmarshaller unmarshaller = ctx.createUnmarshaller();
-            asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(is);
-        } catch (JAXBException e) {
-            throw new AsterixException("Failed to read configuration file " + fileName);
-        }
         instanceName = asterixConfiguration.getInstanceName();
         metadataNodeName = asterixConfiguration.getMetadataNode();
         List<Store> configuredStores = asterixConfiguration.getStore();
@@ -117,7 +108,16 @@ public class AsterixPropertiesAccessor {
             nodePartitionsMap.put(store.getNcId(), nodePartitions);
             nodeNames.add(store.getNcId());
         }
-        asterixConfigurationParams = new HashMap<String, Property>();
+
+        // Get extensions
+        extensions = new ArrayList<>();
+        if (asterixConfiguration.getExtensions() != null) {
+            for (Extension ext : asterixConfiguration.getExtensions().getExtension()) {
+                extensions.add(ConfigUtil.toAsterixExtension(ext));
+            }
+        }
+
+        asterixConfigurationParams = new HashMap<>();
         for (Property p : asterixConfiguration.getProperty()) {
             asterixConfigurationParams.put(p.getName(), p);
         }
@@ -130,61 +130,113 @@ public class AsterixPropertiesAccessor {
         loadAsterixBuildProperties();
     }
 
+    private AsterixConfiguration configure(String fileName) throws IOException, AsterixException {
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(fileName)) {
+            if (is != null) {
+                return configure(is, fileName);
+            }
+        }
+        try (FileInputStream is = new FileInputStream(fileName)) {
+            return configure(is, fileName);
+        } catch (FileNotFoundException fnf1) {
+            LOGGER.warn("Failed to get configuration file " + fileName + " as FileInputStream. FileNotFoundException");
+            LOGGER.warn("Attempting to get default configuration file " + GlobalConfig.DEFAULT_CONFIG_FILE_NAME
+                    + " as FileInputStream");
+            try (FileInputStream fis = new FileInputStream(GlobalConfig.DEFAULT_CONFIG_FILE_NAME)) {
+                return configure(fis, GlobalConfig.DEFAULT_CONFIG_FILE_NAME);
+            } catch (FileNotFoundException fnf2) {
+                fnf1.addSuppressed(fnf2);
+                throw new AsterixException("Could not find configuration file " + fileName, fnf1);
+            }
+        }
+    }
+
+    private AsterixConfiguration configure(InputStream is, String fileName) throws AsterixException {
+        try {
+            JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
+            Unmarshaller unmarshaller = ctx.createUnmarshaller();
+            return (AsterixConfiguration) unmarshaller.unmarshal(is);
+        } catch (JAXBException e) {
+            throw new AsterixException("Failed to read configuration file " + fileName, e);
+        }
+    }
+
     /**
      * Constructor which wraps an IApplicationConfig.
      */
     public AsterixPropertiesAccessor(IApplicationConfig cfg) throws AsterixException {
         this.cfg = cfg;
-        instanceName = cfg.getString("asterix", "instance", "DEFAULT_INSTANCE");
+        instanceName = cfg.getString(AsterixProperties.SECTION_ASTERIX, AsterixProperties.PROPERTY_INSTANCE_NAME,
+                AsterixProperties.DEFAULT_INSTANCE_NAME);
         String mdNode = null;
         nodePartitionsMap = new HashMap<>();
-        int uniquePartitionId = 0;
-
+        MutableInt uniquePartitionId = new MutableInt(0);
+        extensions = new ArrayList<>();
         // Iterate through each configured NC.
         for (String section : cfg.getSections()) {
-            if (!section.startsWith("nc/")) {
-                continue;
+            if (section.startsWith(AsterixProperties.SECTION_PREFIX_NC)) {
+                mdNode = configureNc(section, mdNode, uniquePartitionId);
+            } else if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
+                String className = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_EXTENSION, section);
+                configureExtension(className, section);
             }
-            String ncId = section.substring(3);
-
-            // Here we figure out which is the metadata node. If any NCs
-            // declare "metadata.port", use that one; otherwise just use the first.
-            if (mdNode == null) {
-                mdNode = ncId;
-            }
-            if (cfg.getString(section, "metadata.port") != null) {
-                // QQQ But we don't actually *honor* metadata.port yet!
-                mdNode = ncId;
-            }
-
-            // Now we assign the coredump and txnlog directories for this node.
-            // QQQ Default values? Should they be specified here? Or should there
-            // be a default.ini? Certainly wherever they are, they should be platform-dependent.
-            coredumpConfig.put(ncId, cfg.getString(section, "coredumpdir", "/var/lib/asterixdb/coredump"));
-            transactionLogDirs.put(ncId, cfg.getString(section, "txnlogdir", "/var/lib/asterixdb/txn-log"));
-
-            // Now we create an array of ClusterPartitions for all the partitions
-            // on this NC.
-            String[] iodevices = cfg.getString(section, "iodevices", "/var/lib/asterixdb/iodevice").split(",");
-            String storageSubdir = cfg.getString(section, "storagedir", "storage");
-            String[] nodeStores = new String[iodevices.length];
-            ClusterPartition[] nodePartitions = new ClusterPartition[iodevices.length];
-            for (int i = 0; i < nodePartitions.length; i++) {
-                // Construct final storage path from iodevice dir + storage subdir.
-                nodeStores[i] = iodevices[i] + File.separator + storageSubdir;
-                // Create ClusterPartition instances for this NC.
-                ClusterPartition partition = new ClusterPartition(uniquePartitionId++, ncId, i);
-                clusterPartitions.put(partition.getPartitionId(), partition);
-                nodePartitions[i] = partition;
-            }
-            stores.put(ncId, nodeStores);
-            nodePartitionsMap.put(ncId, nodePartitions);
-            nodeNames.add(ncId);
         }
 
         metadataNodeName = mdNode;
         asterixConfigurationParams = null;
         loadAsterixBuildProperties();
+    }
+
+    private void configureExtension(String className, String section) {
+        Set<String> keys = cfg.getKeys(section);
+        List<Pair<String, String>> kvs = new ArrayList<>();
+        for (String key : keys) {
+            String value = cfg.getString(section, key);
+            kvs.add(new Pair<>(key, value));
+        }
+        extensions.add(new AsterixExtension(className, kvs));
+    }
+
+    private String configureNc(String section, String mdNode, MutableInt uniquePartitionId) {
+        String ncId = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_NC, section);
+        String newMetadataNode = mdNode;
+
+        // Here we figure out which is the metadata node. If any NCs
+        // declare "metadata.port", use that one; otherwise just use the first.
+        if (mdNode == null || cfg.getString(section, AsterixProperties.PROPERTY_METADATA_PORT) != null) {
+            // QQQ But we don't actually *honor* metadata.port yet!
+            newMetadataNode = ncId;
+        }
+
+        // Now we assign the coredump and txnlog directories for this node.
+        // QQQ Default values? Should they be specified here? Or should there
+        // be a default.ini? Certainly wherever they are, they should be platform-dependent.
+        coredumpConfig.put(ncId, cfg.getString(section, AsterixProperties.PROPERTY_COREDUMP_DIR,
+                AsterixProperties.DEFAULT_COREDUMP_DIR));
+        transactionLogDirs.put(ncId,
+                cfg.getString(section, AsterixProperties.PROPERTY_TXN_LOG_DIR, AsterixProperties.DEFAULT_TXN_LOG_DIR));
+
+        // Now we create an array of ClusterPartitions for all the partitions
+        // on this NC.
+        String[] iodevices = cfg.getString(section, AsterixProperties.PROPERTY_IO_DEV,
+                AsterixProperties.DEFAULT_IO_DEV).split(",");
+        String storageSubdir = cfg.getString(section, AsterixProperties.PROPERTY_STORAGE_DIR,
+                AsterixProperties.DEFAULT_STORAGE_DIR);
+        String[] nodeStores = new String[iodevices.length];
+        ClusterPartition[] nodePartitions = new ClusterPartition[iodevices.length];
+        for (int i = 0; i < nodePartitions.length; i++) {
+            // Construct final storage path from iodevice dir + storage subdir.
+            nodeStores[i] = iodevices[i] + File.separator + storageSubdir;
+            // Create ClusterPartition instances for this NC.
+            ClusterPartition partition = new ClusterPartition(uniquePartitionId.getValue(), ncId, i);
+            uniquePartitionId.increment();
+            clusterPartitions.put(partition.getPartitionId(), partition);
+            nodePartitions[i] = partition;
+        }
+        stores.put(ncId, nodeStores);
+        nodePartitionsMap.put(ncId, nodePartitions);
+        nodeNames.add(ncId);
+        return newMetadataNode;
     }
 
     private void loadAsterixBuildProperties() throws AsterixException {
@@ -242,14 +294,14 @@ public class AsterixPropertiesAccessor {
         try {
             return interpreter.interpret(value);
         } catch (IllegalArgumentException e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                StringBuilder msg =
-                        new StringBuilder("Invalid property value '" + value + "' for property '" + property + "'.\n");
+            if (LOGGER.isEnabledFor(Level.ERROR)) {
+                StringBuilder msg = new StringBuilder(
+                        "Invalid property value '" + value + "' for property '" + property + "'.\n");
                 if (p != null) {
                     msg.append("See the description: \n" + p.getDescription() + "\n");
                 }
                 msg.append("Default = " + defaultValue);
-                LOGGER.severe(msg.toString());
+                LOGGER.error(msg.toString());
             }
             throw e;
         }
@@ -270,5 +322,9 @@ public class AsterixPropertiesAccessor {
 
     public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
         return clusterPartitions;
+    }
+
+    public List<AsterixExtension> getExtensions() {
+        return extensions;
     }
 }

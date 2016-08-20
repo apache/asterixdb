@@ -16,34 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.asterix.metadata.api;
 
-import java.io.IOException;
+import java.io.Serializable;
 
-public interface IActiveRuntimeRegistry {
-
-    /**
-     * Allows registration of a runtime.
-     *
-     * @param runtime
-     * @throws Exception
-     */
-    public void registerRuntime(ActiveRuntime runtime);
+/**
+ * Represents an extension metadata entity
+ */
+public interface IExtensionMetadataEntity extends Serializable {
 
     /**
-     * Obtain runtime corresponding to a feedRuntimeId
+     * Get the dataset Id of the dataset of the entity
      *
-     * @param runtimeId
-     * @return
+     * @return the dataset Id
      */
-    public ActiveRuntime getRuntime(ActiveRuntimeId runtimeId);
-
-    /**
-     * De-register a feed
-     *
-     * @param feedConnection
-     * @throws IOException
-     */
-    void deregisterRuntime(ActiveRuntimeId runtimeId);
-
+    ExtensionMetadataDatasetId getDatasetId();
 }

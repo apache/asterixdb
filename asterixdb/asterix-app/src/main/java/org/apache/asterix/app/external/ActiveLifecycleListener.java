@@ -26,7 +26,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveJobNotificationHandler;
-import org.apache.asterix.active.ActivePartitionMessage;
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
@@ -48,15 +49,17 @@ public class ActiveLifecycleListener implements IJobLifecycleListener {
 
     @Override
     public synchronized void notifyJobStart(JobId jobId) throws HyracksException {
-        if (ActiveJobNotificationHandler.INSTANCE.isActiveJob(jobId)) {
-            jobEventInbox.add(new ActiveEvent(jobId, ActiveEvent.EventKind.JOB_START));
+        EntityId entityId = ActiveJobNotificationHandler.INSTANCE.getEntity(jobId);
+        if (entityId != null) {
+            jobEventInbox.add(new ActiveEvent(jobId, ActiveEvent.EventKind.JOB_START, entityId));
         }
     }
 
     @Override
     public synchronized void notifyJobFinish(JobId jobId) throws HyracksException {
-        if (ActiveJobNotificationHandler.INSTANCE.isActiveJob(jobId)) {
-            jobEventInbox.add(new ActiveEvent(jobId, ActiveEvent.EventKind.JOB_FINISH));
+        EntityId entityId = ActiveJobNotificationHandler.INSTANCE.getEntity(jobId);
+        if (entityId != null) {
+            jobEventInbox.add(new ActiveEvent(jobId, ActiveEvent.EventKind.JOB_FINISH, entityId));
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NO NEED TO NOTIFY JOB FINISH!");
@@ -72,7 +75,7 @@ public class ActiveLifecycleListener implements IJobLifecycleListener {
     public void receive(ActivePartitionMessage message) {
         if (ActiveJobNotificationHandler.INSTANCE.isActiveJob(message.getJobId())) {
             jobEventInbox.add(new ActiveEvent(message.getJobId(), ActiveEvent.EventKind.PARTITION_EVENT,
-                    message.getFeedId(), message.getPayload()));
+                    message.getActiveRuntimeId().getEntityId(), message));
         }
     }
 

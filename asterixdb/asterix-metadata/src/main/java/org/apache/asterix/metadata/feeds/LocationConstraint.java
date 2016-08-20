@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.api;
+package org.apache.asterix.metadata.feeds;
 
-import java.util.Map;
+public class LocationConstraint {
+    public final String location;
+    public final int partition;
 
-public interface ISubscriberRuntime {
-
-    public Map<String, String> getFeedPolicy();
-
+    public LocationConstraint(String location, int partition) {
+        this.location = location;
+        this.partition = partition;
+    }
 }

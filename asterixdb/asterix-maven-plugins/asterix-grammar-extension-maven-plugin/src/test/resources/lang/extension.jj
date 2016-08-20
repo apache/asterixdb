@@ -1,9 +1,14 @@
 import org.apache.asterix.lang.extension.EchoStatement;
+// to remove an import, we use the keyword, unimport
+// unimport package name
 
 // Merging of non-terminals can only be done on non-terminals which conform to the following structure.
 // Content will simply be prepended or appended to the base blocks.
 // Note: refrain from using the strings "before:" and "after:" in the merge areas as that will break the merge.
 // As a workaround, you can always override
+// one additional possible change is direct replacement and it can be done through
+// @merge replace "baseWord" with "extensionWord"
+
 @merge
 Statement SingleStatement() throws ParseException:
 {

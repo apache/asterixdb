@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.MetadataException;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
@@ -51,11 +50,9 @@ public class DatasetTupleTranslatorTest {
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList(), false);
 
-            Dataset dataset = new Dataset("test", "log", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES",
-                    "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115,
-                    0);
-
-            MetadataPrimaryIndexes.init();
+            Dataset dataset =
+                    new Dataset("test", "log", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES", "prefix",
+                            compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0);
             DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true);
             ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
             Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);

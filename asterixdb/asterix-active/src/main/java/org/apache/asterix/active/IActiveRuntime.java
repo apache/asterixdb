@@ -18,11 +18,20 @@
  */
 package org.apache.asterix.active;
 
-@FunctionalInterface
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public interface IActiveRuntime {
 
     /**
-     * @return the unique runtime id associated with the feedRuntime
+     * @return the unique runtime id associated with the active runtime
      */
-    public ActiveRuntimeId getRuntimeId();
+    ActiveRuntimeId getRuntimeId();
+
+    /**
+     * Stops the running activity
+     *
+     * @throws HyracksDataException
+     * @throws InterruptedException
+     */
+    void stop() throws HyracksDataException, InterruptedException;
 }

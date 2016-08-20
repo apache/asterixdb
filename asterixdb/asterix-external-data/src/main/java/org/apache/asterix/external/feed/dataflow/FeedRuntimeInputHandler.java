@@ -76,7 +76,7 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
         this.spiller =
                 fpa.spillToDiskOnCongestion() ? new FrameSpiller(ctx,
                         connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_"
-                                + runtimeId.getFeedRuntimeType() + "_" + runtimeId.getPartition(),
+                                + runtimeId.getRuntimeName() + "_" + runtimeId.getPartition(),
                         fpa.getMaxSpillOnDisk()) : null;
         this.exceptionHandler = new FeedExceptionHandler(ctx, fta);
         this.fpa = fpa;

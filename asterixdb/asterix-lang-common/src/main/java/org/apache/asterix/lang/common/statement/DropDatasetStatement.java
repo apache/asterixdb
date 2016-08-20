@@ -23,13 +23,13 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class DropStatement implements Statement {
+public class DropDatasetStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
     private boolean ifExists;
 
-    public DropStatement(Identifier dataverseName, Identifier datasetName, boolean ifExists) {
+    public DropDatasetStatement(Identifier dataverseName, Identifier datasetName, boolean ifExists) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.ifExists = ifExists;
@@ -55,6 +55,11 @@ public class DropStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
     }
 
 }

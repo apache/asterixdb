@@ -47,20 +47,21 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup> {
 
+    private static final long serialVersionUID = 1L;
     // Field indexes of serialized NodeGroup in a tuple.
     // First key field.
     public static final int NODEGROUP_NODEGROUPNAME_TUPLE_FIELD_INDEX = 0;
     // Payload field containing serialized NodeGroup.
     public static final int NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private UnorderedListBuilder listBuilder = new UnorderedListBuilder();
-    private ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+    private transient UnorderedListBuilder listBuilder = new UnorderedListBuilder();
+    private transient ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
     private List<String> nodeNames;
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.NODEGROUP_RECORDTYPE);
 
-    public NodeGroupTupleTranslator(boolean getTuple) {
+    protected NodeGroupTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.NODEGROUP_DATASET.getFieldCount());
     }
 
@@ -71,7 +72,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         int recordLength = frameTuple.getFieldLength(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord nodeGroupRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord nodeGroupRecord = recordSerDes.deserialize(in);
         String gpName = ((AString) nodeGroupRecord
                 .getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX)).getStringValue();
         IACursor cursor = ((AUnorderedList) nodeGroupRecord

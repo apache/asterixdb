@@ -25,20 +25,20 @@ public class ActiveRuntimeId implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final EntityId entityId;
-    private final String runtimeId;
+    private final String runtimeName;
     private final int partition;
     private final int hashCode;
 
-    public ActiveRuntimeId(EntityId entityId, String runtimeId, int partition) {
+    public ActiveRuntimeId(EntityId entityId, String runtimeName, int partition) {
         this.entityId = entityId;
-        this.runtimeId = runtimeId;
+        this.runtimeName = runtimeName;
         this.partition = partition;
         this.hashCode = toString().hashCode();
     }
 
     @Override
     public String toString() {
-        return "(" + entityId + ")" + "[" + partition + "]:" + runtimeId;
+        return "(" + entityId + ")" + "[" + partition + "]:" + runtimeName;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class ActiveRuntimeId implements Serializable {
             return false;
         }
         ActiveRuntimeId other = (ActiveRuntimeId) o;
-        return other.entityId.equals(entityId) && other.getFeedRuntimeType().equals(runtimeId)
+        return other.entityId.equals(entityId) && other.getRuntimeName().equals(runtimeName)
                 && other.getPartition() == partition;
     }
 
@@ -59,19 +59,15 @@ public class ActiveRuntimeId implements Serializable {
         return hashCode;
     }
 
-    public String getFeedRuntimeType() {
-        return runtimeId;
+    public String getRuntimeName() {
+        return runtimeName;
     }
 
     public int getPartition() {
         return partition;
     }
 
-    public String getRuntimeType() {
-        return runtimeId;
-    }
-
-    public EntityId getFeedId() {
+    public EntityId getEntityId() {
         return entityId;
     }
 }

@@ -23,9 +23,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.algebra.operators.physical.CommitRuntime;
-import org.apache.asterix.api.common.AsterixAppRuntimeContext;
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.app.external.TestLibrarian;
+import org.apache.asterix.app.nc.AsterixNCAppRuntimeContext;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
@@ -97,8 +96,8 @@ public class TestNodeController {
     protected static final Logger LOGGER = Logger.getLogger(TestNodeController.class.getName());
 
     protected static final String PATH_ACTUAL = "unittest" + File.separator;
-    protected static final String PATH_BASE =
-            StringUtils.join(new String[] { "src", "test", "resources", "nodetests" }, File.separator);
+    protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "nodetests" },
+            File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     protected static AsterixTransactionProperties txnProperties;
@@ -158,18 +157,18 @@ public class TestNodeController {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields);
         IndexOperation op = IndexOperation.INSERT;
-        IModificationOperationCallbackFactory modOpCallbackFactory =
-                new PrimaryIndexModificationOperationCallbackFactory(getTxnJobId(), dataset.getDatasetId(),
-                        primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, op, ResourceType.LSM_BTREE, true);
-        AsterixLSMTreeInsertDeleteOperatorDescriptor indexOpDesc =
-                getInsertOpratorDesc(primaryIndexInfo, modOpCallbackFactory);
-        LSMBTreeDataflowHelperFactory dataflowHelperFactory =
-                getPrimaryIndexDataflowHelperFactory(ctx, primaryIndexInfo);
+        IModificationOperationCallbackFactory modOpCallbackFactory = new PrimaryIndexModificationOperationCallbackFactory(
+                getTxnJobId(), dataset.getDatasetId(), primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, op,
+                ResourceType.LSM_BTREE, true);
+        AsterixLSMTreeInsertDeleteOperatorDescriptor indexOpDesc = getInsertOpratorDesc(primaryIndexInfo,
+                modOpCallbackFactory);
+        LSMBTreeDataflowHelperFactory dataflowHelperFactory = getPrimaryIndexDataflowHelperFactory(ctx,
+                primaryIndexInfo);
         Mockito.when(indexOpDesc.getIndexDataflowHelperFactory()).thenReturn(dataflowHelperFactory);
         IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
-        AsterixLSMInsertDeleteOperatorNodePushable insertOp =
-                new AsterixLSMInsertDeleteOperatorNodePushable(indexOpDesc, ctx, PARTITION,
-                        primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDescProvider, op, true);
+        AsterixLSMInsertDeleteOperatorNodePushable insertOp = new AsterixLSMInsertDeleteOperatorNodePushable(
+                indexOpDesc, ctx, PARTITION, primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDescProvider,
+                op, true);
         CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(), dataset.getDatasetId(),
                 primaryIndexInfo.primaryKeyIndexes, false, true, PARTITION);
         insertOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
@@ -185,8 +184,8 @@ public class TestNodeController {
         JobSpecification spec = new JobSpecification();
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields);
-        LSMBTreeDataflowHelperFactory indexDataflowHelperFactory =
-                getPrimaryIndexDataflowHelperFactory(ctx, primaryIndexInfo);
+        LSMBTreeDataflowHelperFactory indexDataflowHelperFactory = getPrimaryIndexDataflowHelperFactory(ctx,
+                primaryIndexInfo);
         BTreeSearchOperatorDescriptor searchOpDesc = new BTreeSearchOperatorDescriptor(spec, primaryIndexInfo.rDesc,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 primaryIndexInfo.fileSplitProvider, primaryIndexInfo.primaryIndexTypeTraits,
@@ -214,8 +213,8 @@ public class TestNodeController {
 
     public AsterixLSMTreeInsertDeleteOperatorDescriptor getInsertOpratorDesc(PrimaryIndexInfo primaryIndexInfo,
             IModificationOperationCallbackFactory modOpCallbackFactory) {
-        AsterixLSMTreeInsertDeleteOperatorDescriptor indexOpDesc =
-                Mockito.mock(AsterixLSMTreeInsertDeleteOperatorDescriptor.class);
+        AsterixLSMTreeInsertDeleteOperatorDescriptor indexOpDesc = Mockito
+                .mock(AsterixLSMTreeInsertDeleteOperatorDescriptor.class);
         Mockito.when(indexOpDesc.getLifecycleManagerProvider())
                 .thenReturn(AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
         Mockito.when(indexOpDesc.getStorageManager()).thenReturn(AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
@@ -258,12 +257,12 @@ public class TestNodeController {
             int[] primaryIndexBloomFilterKeyFields, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields) {
-        ILocalResourceMetadata localResourceMetadata =
-                new LSMBTreeLocalResourceMetadata(primaryIndexTypeTraits, primaryIndexComparatorFactories,
-                        primaryIndexBloomFilterKeyFields, true, dataset.getDatasetId(), mergePolicyFactory,
-                        mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields, filterFields);
-        ILocalResourceFactoryProvider localResourceFactoryProvider =
-                new PersistentLocalResourceFactoryProvider(localResourceMetadata, LocalResource.LSMBTreeResource);
+        ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(primaryIndexTypeTraits,
+                primaryIndexComparatorFactories, primaryIndexBloomFilterKeyFields, true, dataset.getDatasetId(),
+                mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields,
+                filterFields);
+        ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
+                localResourceMetadata, LocalResource.LSMBTreeResource);
         return localResourceFactoryProvider;
     }
 
@@ -277,8 +276,8 @@ public class TestNodeController {
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                 BLOOM_FILTER_FALSE_POSITIVE_RATE, true, primaryIndexInfo.filterTypeTraits,
                 primaryIndexInfo.filterCmpFactories, primaryIndexInfo.btreeFields, primaryIndexInfo.filterFields, true);
-        IndexDataflowHelper dataflowHelper =
-                dataflowHelperFactory.createIndexDataflowHelper(indexOpDesc, ctx, PARTITION);
+        IndexDataflowHelper dataflowHelper = dataflowHelperFactory.createIndexDataflowHelper(indexOpDesc, ctx,
+                PARTITION);
         return (LSMBTreeDataflowHelper) dataflowHelper;
     }
 
@@ -309,8 +308,8 @@ public class TestNodeController {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields);
         TreeIndexCreateOperatorDescriptor indexOpDesc = getIndexCreateOpDesc(primaryIndexInfo);
-        LSMBTreeDataflowHelper dataflowHelper =
-                getPrimaryIndexDataflowHelper(createTestContext(), primaryIndexInfo, indexOpDesc);
+        LSMBTreeDataflowHelper dataflowHelper = getPrimaryIndexDataflowHelper(createTestContext(), primaryIndexInfo,
+                indexOpDesc);
         dataflowHelper.create();
     }
 
@@ -323,11 +322,10 @@ public class TestNodeController {
     }
 
     private IBinaryComparatorFactory[] createPrimaryIndexComparatorFactories(IAType[] primaryKeyTypes) {
-        IBinaryComparatorFactory[] primaryIndexComparatorFactories =
-                new IBinaryComparatorFactory[primaryKeyTypes.length];
+        IBinaryComparatorFactory[] primaryIndexComparatorFactories = new IBinaryComparatorFactory[primaryKeyTypes.length];
         for (int j = 0; j < primaryKeyTypes.length; ++j) {
-            primaryIndexComparatorFactories[j] =
-                    AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(primaryKeyTypes[j], true);
+            primaryIndexComparatorFactories[j] = AqlBinaryComparatorFactoryProvider.INSTANCE
+                    .getBinaryComparatorFactory(primaryKeyTypes[j], true);
         }
         return primaryIndexComparatorFactories;
     }
@@ -337,8 +335,8 @@ public class TestNodeController {
         int i = 0;
         ISerializerDeserializer<?>[] primaryIndexSerdes = new ISerializerDeserializer<?>[primaryIndexNumOfTupleFields];
         for (; i < primaryKeyTypes.length; i++) {
-            primaryIndexSerdes[i] =
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(primaryKeyTypes[i]);
+            primaryIndexSerdes[i] = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(primaryKeyTypes[i]);
         }
         primaryIndexSerdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
         if (metaType != null) {
@@ -372,7 +370,7 @@ public class TestNodeController {
     }
 
     public TransactionSubsystem getTransactionSubsystem() {
-        return (TransactionSubsystem) ((AsterixAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0]
+        return (TransactionSubsystem) ((AsterixNCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0]
                 .getApplicationContext().getApplicationObject()).getTransactionSubsystem();
     }
 
@@ -380,8 +378,8 @@ public class TestNodeController {
         return getTransactionSubsystem().getTransactionManager();
     }
 
-    public AsterixAppRuntimeContext getAppRuntimeContext() {
-        return (AsterixAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext()
+    public AsterixNCAppRuntimeContext getAppRuntimeContext() {
+        return (AsterixNCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext()
                 .getApplicationObject();
     }
 
@@ -423,8 +421,8 @@ public class TestNodeController {
             this.mergePolicyProperties = mergePolicyProperties;
             this.filterFields = filterFields;
             primaryIndexNumOfTupleFields = primaryKeyTypes.length + (1 + ((metaType == null) ? 0 : 1));
-            primaryIndexTypeTraits =
-                    createPrimaryIndexTypeTraits(primaryIndexNumOfTupleFields, primaryKeyTypes, recordType, metaType);
+            primaryIndexTypeTraits = createPrimaryIndexTypeTraits(primaryIndexNumOfTupleFields, primaryKeyTypes,
+                    recordType, metaType);
             primaryIndexComparatorFactories = createPrimaryIndexComparatorFactories(primaryKeyTypes);
             primaryIndexBloomFilterKeyFields = createPrimaryIndexBloomFilterFields(primaryKeyTypes.length);
             filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recordType);
@@ -435,8 +433,8 @@ public class TestNodeController {
                     primaryIndexComparatorFactories, primaryIndexBloomFilterKeyFields, mergePolicyFactory,
                     mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields, filterFields);
             fileSplitProvider = getFileSplitProvider(dataset);
-            primaryIndexSerdes =
-                    createPrimaryIndexSerdes(primaryIndexNumOfTupleFields, primaryKeyTypes, recordType, metaType);
+            primaryIndexSerdes = createPrimaryIndexSerdes(primaryIndexNumOfTupleFields, primaryKeyTypes, recordType,
+                    metaType);
             rDesc = new RecordDescriptor(primaryIndexSerdes, primaryIndexTypeTraits);
             primaryIndexInsertFieldsPermutations = new int[primaryIndexNumOfTupleFields];
             for (int i = 0; i < primaryIndexNumOfTupleFields; i++) {
@@ -459,8 +457,8 @@ public class TestNodeController {
             ISerializerDeserializer<?>[] primaryKeySerdes = new ISerializerDeserializer<?>[primaryKeyTypes.length];
             for (int i = 0; i < primaryKeyTypes.length; i++) {
                 primaryKeyTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i]);
-                primaryKeySerdes[i] =
-                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(primaryKeyTypes[i]);
+                primaryKeySerdes[i] = AqlSerializerDeserializerProvider.INSTANCE
+                        .getSerializerDeserializer(primaryKeyTypes[i]);
             }
             RecordDescriptor searcgRecDesc = new RecordDescriptor(primaryKeySerdes, primaryKeyTypeTraits);
             IRecordDescriptorProvider rDescProvider = Mockito.mock(IRecordDescriptorProvider.class);
@@ -472,10 +470,10 @@ public class TestNodeController {
 
     public RecordDescriptor getSearchOutputDesc(IAType[] keyTypes, ARecordType recordType, ARecordType metaType) {
         int primaryIndexNumOfTupleFields = keyTypes.length + (1 + ((metaType == null) ? 0 : 1));
-        ITypeTraits[] primaryIndexTypeTraits =
-                createPrimaryIndexTypeTraits(primaryIndexNumOfTupleFields, keyTypes, recordType, metaType);
-        ISerializerDeserializer<?>[] primaryIndexSerdes =
-                createPrimaryIndexSerdes(primaryIndexNumOfTupleFields, keyTypes, recordType, metaType);
+        ITypeTraits[] primaryIndexTypeTraits = createPrimaryIndexTypeTraits(primaryIndexNumOfTupleFields, keyTypes,
+                recordType, metaType);
+        ISerializerDeserializer<?>[] primaryIndexSerdes = createPrimaryIndexSerdes(primaryIndexNumOfTupleFields,
+                keyTypes, recordType, metaType);
         return new RecordDescriptor(primaryIndexSerdes, primaryIndexTypeTraits);
     }
 }

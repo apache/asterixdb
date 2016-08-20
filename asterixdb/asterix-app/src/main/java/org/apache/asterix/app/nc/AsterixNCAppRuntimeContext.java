@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.common;
+package org.apache.asterix.app.nc;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -26,12 +26,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.api.common.AsterixAppRuntimeContextProviderForRecovery;
 import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
+import org.apache.asterix.common.config.AsterixExtensionProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
@@ -94,8 +96,8 @@ import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
-public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
-    private static final Logger LOGGER = Logger.getLogger(AsterixAppRuntimeContext.class.getName());
+public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
+    private static final Logger LOGGER = Logger.getLogger(AsterixNCAppRuntimeContext.class.getName());
 
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCApplicationContext ncApplicationContext;
@@ -129,10 +131,12 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IReplicaResourcesManager replicaResourcesManager;
     private final int metadataRmiPort;
 
-    private ILibraryManager libraryManager;
+    private final ILibraryManager libraryManager;
+    private final NCExtensionManager ncExtensionManager;
 
-    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext, int metadataRmiPort)
-            throws AsterixException {
+    public AsterixNCAppRuntimeContext(INCApplicationContext ncApplicationContext, int metadataRmiPort)
+            throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
+            IOException {
         this.ncApplicationContext = ncApplicationContext;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
@@ -151,9 +155,12 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         feedProperties = new AsterixFeedProperties(propertiesAccessor);
         buildProperties = new AsterixBuildProperties(propertiesAccessor);
-        replicationProperties =
-                new AsterixReplicationProperties(propertiesAccessor, AsterixClusterProperties.INSTANCE.getCluster());
+        replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
+                AsterixClusterProperties.INSTANCE.getCluster());
         this.metadataRmiPort = metadataRmiPort;
+        libraryManager = new ExternalLibraryManager();
+        ncExtensionManager = new NCExtensionManager(
+                new AsterixExtensionProperties(propertiesAccessor).getExtensions());
     }
 
     @Override
@@ -177,8 +184,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 new PersistentLocalResourceRepositoryFactory(ioManager, ncApplicationContext.getNodeId(),
                         metadataProperties);
 
-        localResourceRepository =
-                (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
+        localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
+                .createRepository();
 
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider =
                 new AsterixAppRuntimeContextProviderForRecovery(this);
@@ -239,16 +246,18 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
             remoteRecoveryManager = new RemoteRecoveryManager(replicationManager, this, replicationProperties);
 
-            bufferCache =
-                    new BufferCache(ioManager, prs, pcp, fileMapManager, storageProperties.getBufferCacheMaxOpenFiles(),
-                            ncApplicationContext.getThreadFactory(), replicationManager);
+            bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
+                    storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory(),
+                    replicationManager);
         } else {
             bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
                     storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
         }
 
-        // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
-        //Notes: registered components are stopped in reversed order
+        /*
+         * The order of registration is important. The buffer cache must registered before recovery and transaction
+         * managers. Notes: registered components are stopped in reversed order
+         */
         ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
         lccm.register((ILifeCycleComponent) bufferCache);
         /**
@@ -270,11 +279,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         lccm.register((ILifeCycleComponent) datasetLifecycleManager);
         lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
-
-        /**
-         * Initializes the library manager.
-         */
-        libraryManager = new ExternalLibraryManager();
     }
 
     @Override
@@ -387,7 +391,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
-    public ActiveManager getFeedManager() {
+    public ActiveManager getActiveManager() {
         return activeManager;
     }
 
@@ -432,7 +436,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Bootstrapping metadata");
         }
-        MetadataNode.INSTANCE.initialize(this);
+        MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataTupleTranslatorProvider(),
+                ncExtensionManager.getMetadataExtensions());
 
         proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
         if (proxy == null) {
@@ -442,9 +447,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         // This is a special case, we just give the metadataNode directly.
         // This way we can delay the registration of the metadataNode until
         // it is completely initialized.
-        MetadataManager.INSTANCE = new MetadataManager(proxy, MetadataNode.INSTANCE);
+        MetadataManager.instantiate(new MetadataManager(proxy, MetadataNode.INSTANCE));
         MetadataBootstrap.startUniverse(this, ncApplicationContext, newUniverse);
         MetadataBootstrap.startDDLRecovery();
+        ncExtensionManager.initializeMetadata();
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Metadata node bound");
@@ -460,6 +466,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public void unexportMetadataNodeStub() throws RemoteException {
         UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
+    }
+
+    public NCExtensionManager getNcExtensionManager() {
+        return ncExtensionManager;
     }
 
 }

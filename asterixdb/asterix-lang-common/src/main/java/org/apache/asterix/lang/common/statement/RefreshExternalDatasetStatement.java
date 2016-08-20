@@ -54,4 +54,9 @@ public class RefreshExternalDatasetStatement implements Statement {
         return Statement.Kind.EXTERNAL_DATASET_REFRESH;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
+    }
+
 }

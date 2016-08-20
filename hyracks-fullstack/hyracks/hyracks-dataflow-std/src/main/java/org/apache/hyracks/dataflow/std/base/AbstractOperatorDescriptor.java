@@ -18,20 +18,19 @@
  */
 package org.apache.hyracks.dataflow.std.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    protected final OperatorDescriptorId odId;
+    protected OperatorDescriptorId odId;
 
     protected String[] partitions;
 
@@ -57,6 +56,11 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     }
 
     @Override
+    public void setOperatorId(OperatorDescriptorId id) {
+        this.odId = id;
+    }
+
+    @Override
     public int getInputArity() {
         return inputArity;
     }
@@ -71,10 +75,12 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
         return recordDescriptors;
     }
 
+    @Override
     public String getDisplayName() {
         return displayName;
     }
 
+    @Override
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }

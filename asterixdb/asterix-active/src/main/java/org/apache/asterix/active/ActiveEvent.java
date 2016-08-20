@@ -18,16 +18,14 @@
  */
 package org.apache.asterix.active;
 
-import java.io.Serializable;
-
 import org.apache.hyracks.api.job.JobId;
 
 public class ActiveEvent {
 
     private final JobId jobId;
     private final EntityId entityId;
-    private final Serializable payload;
     private final EventKind eventKind;
+    private final Object eventObject;
 
     public enum EventKind {
         JOB_START,
@@ -35,34 +33,30 @@ public class ActiveEvent {
         PARTITION_EVENT
     }
 
-    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind) {
-        this(jobId, eventKind, null, null);
-    }
-
-    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind, EntityId feedId) {
-        this(jobId, eventKind, feedId, null);
-    }
-
-    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind, EntityId feedId, Serializable payload) {
+    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind, EntityId entityId, Object eventObject) {
         this.jobId = jobId;
+        this.entityId = entityId;
         this.eventKind = eventKind;
-        this.entityId = feedId;
-        this.payload = payload;
+        this.eventObject = eventObject;
+    }
+
+    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind, EntityId entityId) {
+        this(jobId, eventKind, entityId, null);
     }
 
     public JobId getJobId() {
         return jobId;
     }
 
-    public EntityId getFeedId() {
+    public EntityId getEntityId() {
         return entityId;
-    }
-
-    public Serializable getPayload() {
-        return payload;
     }
 
     public EventKind getEventKind() {
         return eventKind;
+    }
+
+    public Object getEventObject() {
+        return eventObject;
     }
 }

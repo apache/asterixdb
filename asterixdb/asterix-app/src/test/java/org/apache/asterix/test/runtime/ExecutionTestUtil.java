@@ -49,11 +49,15 @@ public class ExecutionTestUtil {
     public static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
 
     public static List<ILibraryManager> setUp(boolean cleanup) throws Exception {
+        return setUp(cleanup, TEST_CONFIG_FILE_NAME);
+    }
+
+    public static List<ILibraryManager> setUp(boolean cleanup, String configFile) throws Exception {
         System.out.println("Starting setup");
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting setup");
         }
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, configFile);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing pseudo cluster");
@@ -80,8 +84,8 @@ public class ExecutionTestUtil {
         libraryManagers.add(AsterixAppContextInfo.getInstance().getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : integrationUtil.ncs) {
-            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext()
-                    .getApplicationObject();
+            IAsterixAppRuntimeContext runtimeCtx =
+                    (IAsterixAppRuntimeContext) nc.getApplicationContext().getApplicationObject();
             libraryManagers.add(runtimeCtx.getLibraryManager());
         }
         return libraryManagers;

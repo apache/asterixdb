@@ -52,7 +52,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE);
 
-    public DatasourceAdapterTupleTranslator(boolean getTuple) {
+    protected DatasourceAdapterTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET.getFieldCount());
     }
 
@@ -63,7 +63,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         int recordLength = tuple.getFieldLength(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord adapterRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord adapterRecord = recordSerDes.deserialize(in);
         return createAdapterFromARecord(adapterRecord);
     }
 
@@ -71,8 +71,9 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         String dataverseName = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
-        String adapterName = ((AString) adapterRecord
-                .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX)).getStringValue();
+        String adapterName =
+                ((AString) adapterRecord.getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX))
+                        .getStringValue();
         String classname = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_CLASSNAME_FIELD_INDEX)).getStringValue();
         IDataSourceAdapter.AdapterType adapterType = IDataSourceAdapter.AdapterType.valueOf(

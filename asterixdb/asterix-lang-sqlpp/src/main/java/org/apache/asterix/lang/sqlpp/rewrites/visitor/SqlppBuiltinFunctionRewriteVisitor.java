@@ -21,7 +21,6 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -34,6 +33,7 @@ import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {

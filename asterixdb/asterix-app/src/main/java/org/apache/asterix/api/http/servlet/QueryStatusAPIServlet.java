@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -26,18 +29,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import org.apache.asterix.result.ResultReader;
+import org.apache.asterix.app.result.ResultReader;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.dataset.HyracksDataset;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class QueryStatusAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -70,7 +69,7 @@ public class QueryStatusAPIServlet extends HttpServlet {
             /* TODO(madhusudancs): We need to find a way to LOSSLESS_JSON serialize default format obtained from
              * metadataProvider in the AQLTranslator and store it as part of the result handle.
              */
-            ResultReader resultReader = new ResultReader(hcc, hds);
+            ResultReader resultReader = new ResultReader(hds);
             resultReader.open(jobId, rsId);
 
             JSONObject jsonResponse = new JSONObject();

@@ -60,4 +60,9 @@ public class Dataverse implements IMetadataEntity<Dataverse> {
     public Dataverse dropFromCache(MetadataCache cache) {
         return cache.dropDataverse(this);
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + dataverseName;
+    }
 }

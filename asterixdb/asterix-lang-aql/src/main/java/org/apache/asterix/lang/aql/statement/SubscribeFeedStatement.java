@@ -204,4 +204,9 @@ public class SubscribeFeedStatement implements Statement {
     public String[] getLocations() {
         return locations;
     }
+
+    @Override
+    public byte getCategory() {
+        return Category.PROCEDURE;
+    }
 }

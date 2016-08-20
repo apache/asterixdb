@@ -25,16 +25,17 @@ import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 /**
  * Manages a Mini (local VM) HDFS cluster with a configured number of datanodes.
- * @author ramangrover29
  */
 public class HDFSCluster {
 
@@ -90,10 +91,12 @@ public class HDFSCluster {
         Path destDir = new Path(HDFS_PATH);
         dfs.mkdirs(destDir);
         File srcDir = new File(localDataRoot + DATA_PATH);
-        File[] listOfFiles = srcDir.listFiles();
-        for (File srcFile : listOfFiles) {
-            Path path = new Path(srcFile.getAbsolutePath());
-            dfs.copyFromLocalFile(path, destDir);
+        if (srcDir.exists()) {
+            File[] listOfFiles = srcDir.listFiles();
+            for (File srcFile : listOfFiles) {
+                Path path = new Path(srcFile.getAbsolutePath());
+                dfs.copyFromLocalFile(path, destDir);
+            }
         }
     }
 
@@ -110,6 +113,7 @@ public class HDFSCluster {
             cleanupLocal();
         }
     }
+
     public static void main(String[] args) throws Exception {
         HDFSCluster cluster = new HDFSCluster();
         cluster.setup();
@@ -125,10 +129,10 @@ public class HDFSCluster {
         String hdfsUrl = "hdfs://127.0.0.1:31888";
         String hdfsPath = "/asterix/extrasmalltweets.txt";
         conf.set("fs.default.name", hdfsUrl);
-        conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+        conf.set("fs.hdfs.impl", DistributedFileSystem.class.getName());
         conf.setClassLoader(GenericAdapter.class.getClassLoader());
         conf.set("mapred.input.dir", hdfsPath);
-        conf.set("mapred.input.format.class", "org.apache.hadoop.mapred.TextInputFormat");
+        conf.set("mapred.input.format.class", TextInputFormat.class.getName());
         return conf;
     }
 

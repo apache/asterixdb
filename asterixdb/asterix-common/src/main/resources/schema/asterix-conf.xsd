@@ -56,6 +56,9 @@
     <xs:element
         name="txnLogDirPath"
         type="xs:string" />
+    <xs:element
+        name="extensionClassName"
+        type="xs:string" />
 
     <!-- definition of complex elements -->
     <xs:element name="store">
@@ -95,6 +98,29 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="extension">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="mg:extensionClassName"
+                maxOccurs="1"
+                minOccurs="1"/>
+                <xs:element ref="mg:property"
+                    minOccurs="0"
+                    maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="extensions">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="mg:extension"
+                    minOccurs="0"
+                    maxOccurs="unbounded">
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
 
     <xs:element name="asterixConfiguration">
         <xs:complexType>
@@ -117,6 +143,9 @@
                 <xs:element
                     ref="mg:transactionLogDir"
                     maxOccurs="unbounded" />
+                <xs:element ref="mg:extensions"
+                    minOccurs="0"
+                    maxOccurs="1" />
                 <xs:element
                     ref="mg:property"
                     minOccurs="0"

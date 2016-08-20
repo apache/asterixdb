@@ -24,14 +24,16 @@ import java.util.List;
 
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.Job;
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.QueryTranslator;
+import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.common.app.SessionConfig;
+import org.apache.asterix.common.app.SessionConfig.OutputFormat;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobSpecification;
 
@@ -46,20 +48,22 @@ public class AsterixJavaClient {
     private final ILangCompilationProvider compilationProvider;
     private final IParserFactory parserFactory;
     private final APIFramework apiFramework;
+    private final IStatementExecutorFactory statementExecutorFactory;
 
     public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText, PrintWriter writer,
-            ILangCompilationProvider compilationProvider) {
+            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory) {
         this.hcc = hcc;
         this.queryText = queryText;
         this.writer = writer;
         this.compilationProvider = compilationProvider;
+        this.apiFramework = new APIFramework(compilationProvider, null);
+        this.statementExecutorFactory = statementExecutorFactory;
         parserFactory = compilationProvider.getParserFactory();
-        this.apiFramework = new APIFramework(compilationProvider);
     }
 
     public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText,
-            ILangCompilationProvider compilationProvider) {
-        this(hcc, queryText, new PrintWriter(System.out, true), compilationProvider);
+            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory) {
+        this(hcc, queryText, new PrintWriter(System.out, true), compilationProvider, statementExecutorFactory);
     }
 
     public void compile() throws Exception {
@@ -68,7 +72,7 @@ public class AsterixJavaClient {
 
     public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,
             boolean printOptimizedPlan, boolean printPhysicalOpsOnly, boolean generateBinaryRuntime, boolean printJob)
-                    throws Exception {
+            throws Exception {
         queryJobSpec = null;
         dmlJobs = null;
 
@@ -90,7 +94,7 @@ public class AsterixJavaClient {
             conf.set(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS, true);
         }
 
-        QueryTranslator translator = new QueryTranslator(statements, conf, compilationProvider);
+        IStatementExecutor translator = statementExecutorFactory.create(statements, conf, compilationProvider);
         translator.compileAndExecute(hcc, null, QueryTranslator.ResultDelivery.SYNC);
         writer.flush();
     }

@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -42,7 +44,7 @@ import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class AsterixHyracksIntegrationUtil {
-
+    private static final Logger LOGGER = Logger.getLogger(AsterixHyracksIntegrationUtil.class.getName());
     private static final String IO_DIR_KEY = "java.io.tmpdir";
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
@@ -75,7 +77,7 @@ public class AsterixHyracksIntegrationUtil {
                     try {
                         nodeControllerService.start();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
                 }
             };

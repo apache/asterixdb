@@ -22,9 +22,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.QueryTranslator;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
+import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.common.app.SessionConfig;
+import org.apache.asterix.common.app.SessionConfig.OutputFormat;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.feed.api.IFeedWork;
@@ -36,6 +37,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -68,6 +70,7 @@ public class FeedWorkCollection {
 
         private static class SubscribeFeedWorkRunnable implements Runnable {
 
+            private static final DefaultStatementExecutorFactory qtFactory = new DefaultStatementExecutorFactory(null);
             private final FeedConnectionRequest request;
             private final String[] locations;
 
@@ -82,13 +85,13 @@ public class FeedWorkCollection {
                     //TODO(amoudi): route PrintWriter to log file
                     PrintWriter writer = new PrintWriter(System.err, true);
                     SessionConfig pc = new SessionConfig(writer, OutputFormat.ADM);
-                    DataverseDecl dataverseDecl =
-                            new DataverseDecl(new Identifier(request.getReceivingFeedId().getDataverse()));
+                    DataverseDecl dataverseDecl = new DataverseDecl(
+                            new Identifier(request.getReceivingFeedId().getDataverse()));
                     SubscribeFeedStatement subscribeStmt = new SubscribeFeedStatement(locations, request);
                     List<Statement> statements = new ArrayList<Statement>();
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
-                    QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
+                    IStatementExecutor translator = qtFactory.create(statements, pc, compilationProvider);
                     translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                             QueryTranslator.ResultDelivery.SYNC);
                     if (LOGGER.isEnabledFor(Level.INFO)) {

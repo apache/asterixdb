@@ -55,8 +55,8 @@ public class ActiveJobNotificationHandler implements Runnable {
                 EntityId entityId = jobInfo.getEntityId();
                 IActiveEntityEventsListener listener = entityEventListener.get(entityId);
                 if (DEBUG) {
-                    LOGGER.log(Level.INFO, "Next event is of type " + event.getEventKind());
-                    LOGGER.log(Level.INFO, "Notifying the listener");
+                    LOGGER.log(Level.WARNING, "Next event is of type " + event.getEventKind());
+                    LOGGER.log(Level.WARNING, "Notifying the listener");
                 }
                 listener.notify(event);
                 if (event.getEventKind() == EventKind.JOB_FINISH) {
@@ -74,7 +74,7 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     private void removeFinishedJob(JobId jobId) {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "Removing the job");
+            LOGGER.log(Level.WARNING, "Removing the job");
         }
         jobId2ActiveJobInfos.remove(jobId);
     }
@@ -82,7 +82,7 @@ public class ActiveJobNotificationHandler implements Runnable {
     private void removeInactiveListener(IActiveEntityEventsListener listener) {
         if (!listener.isEntityActive()) {
             if (DEBUG) {
-                LOGGER.log(Level.INFO, "Removing the listener since it is not active anymore");
+                LOGGER.log(Level.WARNING, "Removing the listener since it is not active anymore");
             }
             entityEventListener.remove(listener.getEntityId());
         }
@@ -90,40 +90,45 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     public IActiveEntityEventsListener getActiveEntityListener(EntityId entityId) {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "getActiveEntityListener(EntityId entityId) was called with entity " + entityId);
+            LOGGER.log(Level.WARNING, "getActiveEntityListener(EntityId entityId) was called with entity " + entityId);
             IActiveEntityEventsListener listener = entityEventListener.get(entityId);
-            LOGGER.log(Level.INFO, "Listener found: " + listener);
+            LOGGER.log(Level.WARNING, "Listener found: " + listener);
         }
         return entityEventListener.get(entityId);
     }
 
     public synchronized ActiveJob[] getActiveJobs() {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "getActiveJobs()  was called");
-            LOGGER.log(Level.INFO, "Number of jobs found: " + jobId2ActiveJobInfos.size());
+            LOGGER.log(Level.WARNING, "getActiveJobs()  was called");
+            LOGGER.log(Level.WARNING, "Number of jobs found: " + jobId2ActiveJobInfos.size());
         }
         return jobId2ActiveJobInfos.values().toArray(new ActiveJob[jobId2ActiveJobInfos.size()]);
     }
 
     public boolean isActiveJob(JobId jobId) {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "isActiveJob(JobId jobId) called with jobId: " + jobId);
+            LOGGER.log(Level.WARNING, "isActiveJob(JobId jobId) called with jobId: " + jobId);
             boolean found = jobId2ActiveJobInfos.get(jobId) != null;
-            LOGGER.log(Level.INFO, "Job was found to be: " + (found ? "Active" : "Inactive"));
+            LOGGER.log(Level.WARNING, "Job was found to be: " + (found ? "Active" : "Inactive"));
         }
         return jobId2ActiveJobInfos.get(jobId) != null;
     }
 
+    public EntityId getEntity(JobId jobId) {
+        ActiveJob jobInfo = jobId2ActiveJobInfos.get(jobId);
+        return jobInfo == null ? null : jobInfo.getEntityId();
+    }
+
     public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification) {
         if (DEBUG) {
-            LOGGER.log(Level.INFO,
+            LOGGER.log(Level.WARNING,
                     "notifyJobCreation(JobId jobId, JobSpecification jobSpecification) was called with jobId = "
                             + jobId);
         }
         Object property = jobSpecification.getProperty(ACTIVE_ENTITY_PROPERTY_NAME);
         if (property == null || !(property instanceof ActiveJob)) {
             if (DEBUG) {
-                LOGGER.log(Level.INFO, "Job was is not active. property found to be: " + property);
+                LOGGER.log(Level.WARNING, "Job was is not active. property found to be: " + property);
             }
             return;
         } else {
@@ -131,7 +136,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         }
         if (DEBUG) {
             boolean found = jobId2ActiveJobInfos.get(jobId) != null;
-            LOGGER.log(Level.INFO, "Job was found to be: " + (found ? "Active" : "Inactive"));
+            LOGGER.log(Level.WARNING, "Job was found to be: " + (found ? "Active" : "Inactive"));
         }
         ActiveJob jobInfo = jobId2ActiveJobInfos.get(jobId);
         if (jobInfo != null) {
@@ -139,11 +144,12 @@ public class ActiveJobNotificationHandler implements Runnable {
             IActiveEntityEventsListener listener = entityEventListener.get(entityId);
             listener.notifyJobCreation(jobId, jobSpecification);
             if (DEBUG) {
-                LOGGER.log(Level.INFO, "Listener was notified" + jobId);
+                LOGGER.log(Level.WARNING, "Listener was notified" + jobId);
             }
         } else {
             if (DEBUG) {
-                LOGGER.log(Level.INFO, "Listener was not notified since it was not registered for the job " + jobId);
+                LOGGER.log(Level.WARNING,
+                        "Listener was not notified since it was not registered for the job " + jobId);
             }
         }
     }
@@ -154,16 +160,17 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     public synchronized IActiveEntityEventsListener[] getEventListeners() {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "getEventListeners() was called");
-            LOGGER.log(Level.INFO, "returning " + entityEventListener.size() + " Listeners");
+            LOGGER.log(Level.WARNING, "getEventListeners() was called");
+            LOGGER.log(Level.WARNING, "returning " + entityEventListener.size() + " Listeners");
         }
         return entityEventListener.values().toArray(new IActiveEntityEventsListener[entityEventListener.size()]);
     }
 
     public synchronized void registerListener(IActiveEntityEventsListener listener) throws HyracksDataException {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "registerListener(IActiveEntityEventsListener listener) was called for the entity "
-                    + listener.getEntityId());
+            LOGGER.log(Level.WARNING,
+                    "registerListener(IActiveEntityEventsListener listener) was called for the entity "
+                            + listener.getEntityId());
         }
         if (entityEventListener.containsKey(listener.getEntityId())) {
             throw new HyracksDataException(
@@ -174,9 +181,9 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     public synchronized void monitorJob(JobId jobId, ActiveJob activeJob) {
         if (DEBUG) {
-            LOGGER.log(Level.INFO, "monitorJob(JobId jobId, ActiveJob activeJob) called with job id: " + jobId);
+            LOGGER.log(Level.WARNING, "monitorJob(JobId jobId, ActiveJob activeJob) called with job id: " + jobId);
             boolean found = jobId2ActiveJobInfos.get(jobId) != null;
-            LOGGER.log(Level.INFO, "Job was found to be: " + (found ? "Active" : "Inactive"));
+            LOGGER.log(Level.WARNING, "Job was found to be: " + (found ? "Active" : "Inactive"));
         }
         if (entityEventListener.containsKey(activeJob.getEntityId())) {
             if (jobId2ActiveJobInfos.containsKey(jobId)) {
@@ -184,7 +191,7 @@ public class ActiveJobNotificationHandler implements Runnable {
                 return;
             }
             if (DEBUG) {
-                LOGGER.log(Level.INFO, "monitoring started for job id: " + jobId);
+                LOGGER.log(Level.WARNING, "monitoring started for job id: " + jobId);
             }
             jobId2ActiveJobInfos.put(jobId, activeJob);
         } else {

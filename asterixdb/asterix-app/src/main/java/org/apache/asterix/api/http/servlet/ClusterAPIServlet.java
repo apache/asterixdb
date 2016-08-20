@@ -25,8 +25,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.asterix.result.ResultUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,7 +43,7 @@ public class ClusterAPIServlet extends HttpServlet {
             responseWriter.write(responseObject.toString());
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (JSONException e) {
-            ResultUtils.apiErrorHandler(responseWriter, e);
+            ResultUtil.apiErrorHandler(responseWriter, e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         responseWriter.flush();

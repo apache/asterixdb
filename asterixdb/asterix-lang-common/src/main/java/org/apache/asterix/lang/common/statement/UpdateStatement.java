@@ -86,4 +86,9 @@ public class UpdateStatement implements Statement {
                 && ObjectUtils.equals(ucs, update.ucs) && ObjectUtils.equals(vars, update.vars);
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
+    }
+
 }

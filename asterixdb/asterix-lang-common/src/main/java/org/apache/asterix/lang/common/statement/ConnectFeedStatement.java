@@ -102,4 +102,9 @@ public class ConnectFeedStatement implements Statement {
         return feedName;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
+    }
+
 }

@@ -117,4 +117,9 @@ public class DeleteStatement implements Statement {
         return equals && ObjectUtils.equals(dataverses, target.dataverses)
                 && ObjectUtils.equals(rewrittenQuery, target.rewrittenQuery) && ObjectUtils.equals(vars, target.vars);
     }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
+    }
 }

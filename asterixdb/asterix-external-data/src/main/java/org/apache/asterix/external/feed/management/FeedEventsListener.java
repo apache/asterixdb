@@ -158,7 +158,7 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
     }
 
     private void handleIntakePartitionStarts(ActiveEvent message, ActiveJob jobInfo) {
-        if (feedPipeline.get(message.getFeedId()).first.decrementAndGet() == 0) {
+        if (feedPipeline.get(message.getEntityId()).first.decrementAndGet() == 0) {
             ((FeedIntakeInfo) jobInfo).getIntakeFeedJoint().setState(State.ACTIVE);
             jobInfo.setState(ActivityState.ACTIVE);
             notifyFeedEventSubscribers(FeedLifecycleEvent.FEED_INTAKE_STARTED);
@@ -339,7 +339,7 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         return locations;
     }
 
-    private void notifyFeedEventSubscribers(FeedLifecycleEvent event) {
+    private synchronized void notifyFeedEventSubscribers(FeedLifecycleEvent event) {
         if (subscribers != null && !subscribers.isEmpty()) {
             for (IFeedLifecycleEventSubscriber subscriber : subscribers) {
                 subscriber.handleFeedEvent(event);

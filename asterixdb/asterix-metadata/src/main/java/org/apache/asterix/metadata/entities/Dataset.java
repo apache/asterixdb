@@ -25,14 +25,22 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 
 /**
  * Metadata describing a dataset.
  */
 public class Dataset implements IMetadataEntity<Dataset> {
 
-    private static final long serialVersionUID = 1L;
+    /**
+     * Dataset related operations
+     */
+    public static final byte OP_READ = 0x00;
+    public static final byte OP_INSERT = 0x01;
+    public static final byte OP_DELETE = 0x02;
+    public static final byte OP_UPSERT = 0x03;
 
+    private static final long serialVersionUID = 1L;
     private final String dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
@@ -82,6 +90,13 @@ public class Dataset implements IMetadataEntity<Dataset> {
         this.datasetId = datasetId;
         this.pendingOp = pendingOp;
         this.hints = hints;
+    }
+
+    public Dataset(Dataset dataset) {
+        this(dataset.dataverseName, dataset.datasetName, dataset.itemTypeDataverseName, dataset.itemTypeName,
+                dataset.metaItemTypeDataverseName, dataset.metaItemTypeName, dataset.nodeGroupName,
+                dataset.compactionPolicy, dataset.compactionPolicyProperties, dataset.datasetDetails, dataset.hints,
+                dataset.datasetType, dataset.datasetId, dataset.pendingOp);
     }
 
     public String getDataverseName() {
@@ -174,6 +189,10 @@ public class Dataset implements IMetadataEntity<Dataset> {
             return false;
         }
         return true;
+    }
+
+    public boolean allow(ProjectOperator project, byte operation) {
+        return !hasMetaPart();
     }
 
     @Override

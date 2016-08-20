@@ -19,6 +19,8 @@
 
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -42,8 +44,6 @@ import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 /***
  * The REST API that takes a dataverse name and a dataset name as the input
@@ -94,8 +94,8 @@ public class ConnectorAPIServlet extends HttpServlet {
                 return;
             }
             boolean temp = dataset.getDatasetDetails().isTemp();
-            FileSplit[] fileSplits = metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName,
-                    datasetName, temp);
+            FileSplit[] fileSplits =
+                    metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName, datasetName, temp);
             ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
                     dataset.getItemTypeName());
             List<List<String>> primaryKeys = DatasetUtils.getPartitioningKeys(dataset);

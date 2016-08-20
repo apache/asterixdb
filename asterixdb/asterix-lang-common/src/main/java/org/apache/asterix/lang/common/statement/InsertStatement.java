@@ -82,4 +82,9 @@ public class InsertStatement implements Statement {
                 && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query);
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
+    }
+
 }

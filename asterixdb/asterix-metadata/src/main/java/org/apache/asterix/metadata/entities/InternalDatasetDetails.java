@@ -154,14 +154,14 @@ public class InternalDatasetDetails implements IDatasetDetails {
         AMutableString aString = new AMutableString("");
         AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
         @SuppressWarnings("unchecked")
-        ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+        ISerializerDeserializer<ABoolean> booleanSerde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
         @SuppressWarnings("unchecked")
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         @SuppressWarnings("unchecked")
-        ISerializerDeserializer<AInt8> int8Serde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.AINT8);
+        ISerializerDeserializer<AInt8> int8Serde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
 
         // write field 0
         fieldValue.reset();
@@ -280,8 +280,8 @@ public class InternalDatasetDetails implements IDatasetDetails {
         propertyRecordBuilder.reset(recordType);
         AMutableString aString = new AMutableString("");
         @SuppressWarnings("unchecked")
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

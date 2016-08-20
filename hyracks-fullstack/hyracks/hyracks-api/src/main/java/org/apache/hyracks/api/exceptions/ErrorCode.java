@@ -26,6 +26,7 @@ public class ErrorCode {
     public static final int ERROR_PROCESSING_TUPLE = 0;
     public static final int INVALID_OPERATOR_OPERATION = 1;
     public static final int FAILURE_ON_NODE = 2;
+    public static final int ILLEGAL_ARGUMENT = 3;
 
     private ErrorCode() {
     }

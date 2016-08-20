@@ -16,40 +16,49 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.asterix.common.api;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
-import org.apache.hyracks.api.job.JobId;
+import org.apache.commons.lang3.ObjectUtils;
 
-public class ActivePartitionMessage extends AbstractApplicationMessage {
+public class ExtensionId implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private final EntityId feedId;
-    private final JobId jobId;
-    private final Serializable payload;
+    private final String name;
+    private final int version;
 
-    public ActivePartitionMessage(EntityId feedId, JobId jobId, Serializable payload) {
-        this.feedId = feedId;
-        this.jobId = jobId;
-        this.payload = payload;
+    public ExtensionId(String name, int version) {
+        this.name = name;
+        this.version = version;
     }
 
     @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.ACTIVE_ENTITY_MESSAGE;
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(getName().hashCode(), version);
     }
 
-    public EntityId getFeedId() {
-        return feedId;
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o instanceof ExtensionId) {
+            ExtensionId oExtensionId = (ExtensionId) o;
+            return version == oExtensionId.version && ObjectUtils.equals(name, oExtensionId.getName());
+        }
+        return false;
     }
 
-    public JobId getJobId() {
-        return jobId;
+    public int getVersion() {
+        return version;
     }
 
-    public Serializable getPayload() {
-        return payload;
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name + ":" + version;
     }
 }

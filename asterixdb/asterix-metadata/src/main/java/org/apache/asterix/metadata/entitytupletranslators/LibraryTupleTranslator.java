@@ -52,7 +52,7 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.LIBRARY_RECORDTYPE);
 
-    public LibraryTupleTranslator(boolean getTuple) {
+    protected LibraryTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.LIBRARY_DATASET.getFieldCount());
     }
 
@@ -63,15 +63,17 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         int recordLength = frameTuple.getFieldLength(LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord libraryRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord libraryRecord = recordSerDes.deserialize(in);
         return createLibraryFromARecord(libraryRecord);
     }
 
     private Library createLibraryFromARecord(ARecord libraryRecord) {
-        String dataverseName = ((AString) libraryRecord
-                .getValueByPos(MetadataRecordTypes.LIBRARY_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
-        String libraryName = ((AString) libraryRecord
-                .getValueByPos(MetadataRecordTypes.LIBRARY_ARECORD_NAME_FIELD_INDEX)).getStringValue();
+        String dataverseName =
+                ((AString) libraryRecord.getValueByPos(MetadataRecordTypes.LIBRARY_ARECORD_DATAVERSENAME_FIELD_INDEX))
+                        .getStringValue();
+        String libraryName =
+                ((AString) libraryRecord.getValueByPos(MetadataRecordTypes.LIBRARY_ARECORD_NAME_FIELD_INDEX))
+                        .getStringValue();
 
         return new Library(dataverseName, libraryName);
     }

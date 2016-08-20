@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,40 +38,38 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.api.common.APIFramework;
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.QueryTranslator;
+import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.common.app.SessionConfig;
+import org.apache.asterix.common.app.SessionConfig.OutputFormat;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.result.ResultReader;
-import org.apache.asterix.result.ResultUtils;
+import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
-
 public class APIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
     private static final Logger LOGGER = Logger.getLogger(APIServlet.class.getName());
+    public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
     private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
+    private final transient IStatementExecutorFactory statementExectorFactory;
 
-    public APIServlet() {
-        this.aqlCompilationProvider = new AqlCompilationProvider();
-        this.sqlppCompilationProvider = new SqlppCompilationProvider();
+    public APIServlet(ILangCompilationProvider aqlCompilationProvider,
+            ILangCompilationProvider sqlppCompilationProvider, IStatementExecutorFactory statementExecutorFactory) {
+        this.aqlCompilationProvider = aqlCompilationProvider;
+        this.sqlppCompilationProvider = sqlppCompilationProvider;
+        this.statementExectorFactory = statementExecutorFactory;
     }
 
     @Override
@@ -124,20 +125,21 @@ public class APIServlet extends HttpServlet {
             sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             MetadataManager.INSTANCE.init();
-            QueryTranslator translator = new QueryTranslator(aqlStatements, sessionConfig, compilationProvider);
+            IStatementExecutor translator =
+                    statementExectorFactory.create(aqlStatements, sessionConfig, compilationProvider);
             double duration = 0;
             long startTime = System.currentTimeMillis();
-            translator.compileAndExecute(hcc, hds, QueryTranslator.ResultDelivery.SYNC);
+            translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.SYNC);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
-            out.println(APIFramework.HTML_STATEMENT_SEPARATOR);
+            out.println(HTML_STATEMENT_SEPARATOR);
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
-            ResultUtils.webUIParseExceptionHandler(out, pe, query);
+            ResultUtil.webUIParseExceptionHandler(out, pe, query);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            ResultUtils.webUIErrorHandler(out, e);
+            ResultUtil.webUIErrorHandler(out, e);
         }
     }
 

@@ -62,4 +62,9 @@ public class NodegroupDecl implements Statement {
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
     }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
+    }
 }

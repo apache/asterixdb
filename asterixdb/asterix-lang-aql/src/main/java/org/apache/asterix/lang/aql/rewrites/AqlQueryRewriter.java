@@ -112,8 +112,8 @@ class AqlQueryRewriter implements IQueryRewriter {
         buildOtherUdfs(topExpr.getBody(), otherFDecls, funIds);
         declaredFunctions.addAll(otherFDecls);
         if (!declaredFunctions.isEmpty()) {
-            AQLInlineUdfsVisitor visitor = new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(),
-                    declaredFunctions, metadataProvider);
+            AQLInlineUdfsVisitor visitor =
+                    new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(), declaredFunctions, metadataProvider);
             while (topExpr.accept(visitor, declaredFunctions)) {
                 // loop until no more changes
             }
@@ -154,9 +154,9 @@ class AqlQueryRewriter implements IQueryRewriter {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
-                        throw new AsterixException("Recursive invocation "
-                                + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
-                                + functionDecl.getSignature());
+                        throw new AsterixException(
+                                "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature()
+                                        + " <==> " + functionDecl.getSignature());
                     }
                     functionDecls.add(functionDecl);
                     buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);

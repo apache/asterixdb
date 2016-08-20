@@ -18,24 +18,19 @@
  */
 package org.apache.asterix.api.http.servlet;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 
 public class QueryAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final byte ALLOWED_CATEGORIES = Statement.Category.QUERY;
 
-    private static final List<Byte> allowedStatements = Collections.unmodifiableList(Arrays.asList(
-            Statement.Kind.DATAVERSE_DECL, Statement.Kind.FUNCTION_DECL, Statement.Kind.QUERY, Statement.Kind.SET,
-            Statement.Kind.WRITE, Statement.Kind.RUN));
-
-    public QueryAPIServlet(ILangCompilationProvider compilationProvider) {
-        super(compilationProvider);
+    public QueryAPIServlet(ILangCompilationProvider compilationProvider,
+            IStatementExecutorFactory queryTranslatorFactory) {
+        super(compilationProvider, queryTranslatorFactory);
     }
 
     @Override
@@ -44,8 +39,8 @@ public class QueryAPIServlet extends RESTAPIServlet {
     }
 
     @Override
-    protected List<Byte> getAllowedStatements() {
-        return allowedStatements;
+    protected byte getAllowedCategories() {
+        return ALLOWED_CATEGORIES;
     }
 
     @Override

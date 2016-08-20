@@ -78,4 +78,9 @@ public class RunStatement implements Statement {
         return Statement.Kind.RUN;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.QUERY;
+    }
+
 }

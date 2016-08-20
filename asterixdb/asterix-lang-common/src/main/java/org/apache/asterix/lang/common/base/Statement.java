@@ -34,6 +34,28 @@ public interface Statement extends ILangExpression {
      */
     public byte getKind();
 
+    /**
+     *  get a byte representing the statement category.
+     *  Each category describes the type of modifications this statement does.
+     *
+     * @return kind byte
+     */
+    public byte getCategory();
+
+    public class Category {
+        /** no modifications */
+        public static final byte QUERY = 0x01;
+        /** modify data */
+        public static final byte UPDATE = 0x02;
+        /** modify metadata */
+        public static final byte DDL = 0x04;
+        /** modify anything */
+        public static final byte PROCEDURE = 0x08;
+
+        private Category() {
+        }
+    }
+
     public class Kind {
         public static final byte DATASET_DECL = 0x00;
         public static final byte DATAVERSE_DECL = 0x01;
@@ -70,6 +92,7 @@ public interface Statement extends ILangExpression {
         public static final byte COMPACT = 0x20;
         public static final byte EXTERNAL_DATASET_REFRESH = 0x21;
         public static final byte RUN = 0x22;
+        public static final byte EXTENSION = 0x23;
 
         private Kind() {
         }

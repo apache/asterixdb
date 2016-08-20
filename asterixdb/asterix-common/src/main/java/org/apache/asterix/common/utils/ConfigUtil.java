@@ -16,18 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.utils;
 
-package org.apache.asterix.common.config;
+import java.util.ArrayList;
 
-public class MetadataConstants {
+import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.configuration.Extension;
+import org.apache.asterix.common.configuration.Property;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
-    // Name of the dataverse the metadata lives in.
-    public final static String METADATA_DATAVERSE_NAME = "Metadata";
+public class ConfigUtil {
 
-    // Name of the node group where metadata is stored on.
-    public final static String METADATA_NODEGROUP_NAME = "MetadataGroup";
+    private ConfigUtil() {
+    }
 
-    // Name of the default nodegroup where internal/feed datasets will be partitioned
-    // if an explicit nodegroup is not specified at the time of creation of a dataset
-    public static final String METADATA_DEFAULT_NODEGROUP_NAME = "DEFAULT_NG_ALL_NODES";
+    public static AsterixExtension toAsterixExtension(Extension ext) {
+        String className = ext.getExtensionClassName();
+        ArrayList<Pair<String, String>> args = new ArrayList<>();
+        for (Property property : ext.getProperty()) {
+            args.add(new Pair<>(property.getName(), property.getValue()));
+        }
+        return new AsterixExtension(className, args);
+    }
 }

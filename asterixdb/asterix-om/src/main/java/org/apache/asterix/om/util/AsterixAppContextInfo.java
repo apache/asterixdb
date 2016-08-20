@@ -18,11 +18,13 @@
  */
 package org.apache.asterix.om.util;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
 import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
+import org.apache.asterix.common.config.AsterixExtensionProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
@@ -59,12 +61,15 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixFeedProperties feedProperties;
     private AsterixBuildProperties buildProperties;
     private AsterixReplicationProperties replicationProperties;
+    private AsterixExtensionProperties extensionProperties;
     private final IGlobalRecoveryMaanger globalRecoveryMaanger;
     private IHyracksClientConnection hcc;
     private final ILibraryManager libraryManager;
+    private Object extensionManager;
 
     public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
-            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager) throws AsterixException {
+            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager)
+            throws AsterixException, IOException {
         if (INSTANCE != null) {
             return;
         }
@@ -86,8 +91,9 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         INSTANCE.feedProperties = new AsterixFeedProperties(propertiesAccessor);
-        INSTANCE.replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
-                AsterixClusterProperties.INSTANCE.getCluster());
+        INSTANCE.extensionProperties = new AsterixExtensionProperties(propertiesAccessor);
+        INSTANCE.replicationProperties =
+                new AsterixReplicationProperties(propertiesAccessor, AsterixClusterProperties.INSTANCE.getCluster());
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
         Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
@@ -172,5 +178,17 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public ILibraryManager getLibraryManager() {
         return libraryManager;
+    }
+
+    public Object getExtensionManager() {
+        return extensionManager;
+    }
+
+    public void setExtensionManager(Object extensionManager) {
+        this.extensionManager = extensionManager;
+    }
+
+    public AsterixExtensionProperties getExtensionProperties() {
+        return extensionProperties;
     }
 }

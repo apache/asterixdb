@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.result;
+package org.apache.asterix.app.result;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,44 +24,52 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
-import java.util.HashMap;
+import java.util.AbstractMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.http.servlet.APIServlet;
+import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ResultUtils {
-    static Map<Character, String> HTML_ENTITIES = new HashMap<Character, String>();
+public class ResultUtil {
+    private static final Logger LOGGER = Logger.getLogger(ResultUtil.class.getName());
+    public static final Map<Character, String> HTML_ENTITIES = Collections.unmodifiableMap(Stream.of(
+            new AbstractMap.SimpleImmutableEntry<>('"', "&quot;"), new AbstractMap.SimpleImmutableEntry<>('&', "&amp;"),
+            new AbstractMap.SimpleImmutableEntry<>('<', "&lt;"), new AbstractMap.SimpleImmutableEntry<>('>', "&gt;"))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
-    static {
-        HTML_ENTITIES.put('"', "&quot;");
-        HTML_ENTITIES.put('&', "&amp;");
-        HTML_ENTITIES.put('<', "&lt;");
-        HTML_ENTITIES.put('>', "&gt;");
+    private ResultUtil() {
+
     }
 
-    public static class Stats {
-        public long count;
-        public long size;
-    }
-
-    public static String escapeHTML(String s) {
-        for (Character c : HTML_ENTITIES.keySet()) {
-            if (s.indexOf(c) >= 0) {
-                s = s.replace(c.toString(), HTML_ENTITIES.get(c));
+    /**
+     * escapes html entities in aString
+     *
+     * @param aString
+     * @return escaped String
+     */
+    public static String escapeHTML(String aString) {
+        String escaped = aString;
+        for (Entry<Character, String> entry : HTML_ENTITIES.entrySet()) {
+            if (escaped.indexOf(entry.getKey()) >= 0) {
+                escaped = escaped.replace(entry.getKey().toString(), entry.getValue());
             }
         }
-        return s;
+        return escaped;
     }
 
     public static void displayResults(ResultReader resultReader, SessionConfig conf, Stats stats,
@@ -90,6 +98,7 @@ public class ResultUtils {
             }
             errorResp.put("stacktrace", errorStackTrace);
         } catch (JSONException e) {
+            LOGGER.warn("Failed to build the result's JSON object", e);
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
         return errorResp;
@@ -120,7 +129,7 @@ public class ResultUtils {
             errorCode = 4;
         }
 
-        JSONObject errorResp = ResultUtils.getErrorResponse(errorCode, extractErrorMessage(e), extractErrorSummary(e),
+        JSONObject errorResp = ResultUtil.getErrorResponse(errorCode, extractErrorMessage(e), extractErrorSummary(e),
                 extractFullStackTrace(e));
         out.write(errorResp.toString());
     }
@@ -150,12 +159,13 @@ public class ResultUtils {
     }
 
     private static Throwable getRootCause(Throwable cause) {
+        Throwable currentCause = cause;
         Throwable nextCause = cause.getCause();
-        while (nextCause != null) {
-            cause = nextCause;
+        while (nextCause != null && nextCause != currentCause) {
+            currentCause = nextCause;
             nextCause = cause.getCause();
         }
-        return cause;
+        return currentCause;
     }
 
     /**
@@ -220,6 +230,7 @@ public class ResultUtils {
      *            The default template string if the template file does not exist or is not readable
      * @return The template string to be used to render the output.
      */
+    //TODO(till|amoudi|mblow|yingyi|ceej|imaxon): path is ignored completely!!
     private static String readTemplateFile(String path, String defaultTemplate) {
         String errorTemplate = defaultTemplate;
         try {
@@ -236,7 +247,7 @@ public class ResultUtils {
             }
             errorTemplate = sb.toString();
         } catch (IOException ioe) {
-            // If there is an IOException reading the error template html file, default value of error template is used.
+            LOGGER.warn("Unable to read template error message file", ioe);
         }
         return errorTemplate;
     }

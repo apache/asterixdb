@@ -45,7 +45,6 @@ import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -102,7 +101,7 @@ import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
-import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
@@ -145,6 +144,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -314,7 +314,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = InsertStatement()
     | stmt = DeleteStatement()
     | stmt = UpdateStatement()
-    | stmt = FeedStatement()
+    | stmt = ConnectionStatement()
     | stmt = CompactStatement()
     | stmt = ExplainStatement()
     | stmt = Query(false) <SEMICOLON>
@@ -870,7 +870,7 @@ Statement DropStatement() throws ParseException:
   (
     Dataset() pairId = QualifiedName() ifExists = IfExists()
       {
-        stmt = new DropStatement(pairId.first, pairId.second, ifExists);
+        stmt = new DropDatasetStatement(pairId.first, pairId.second, ifExists);
       }
     | <INDEX> tripleId = DoubleQualifiedName() ifExists = IfExists()
       {
@@ -1097,7 +1097,7 @@ Statement CompactStatement() throws ParseException:
     }
 }
 
-Statement FeedStatement() throws ParseException:
+Statement ConnectionStatement() throws ParseException:
 {
   Pair<Identifier,Identifier> feedNameComponents = null;
   Pair<Identifier,Identifier> datasetNameComponents = null;
@@ -1108,18 +1108,54 @@ Statement FeedStatement() throws ParseException:
 }
 {
   (
-    <CONNECT> <FEED> feedNameComponents = QualifiedName() <TO> Dataset() datasetNameComponents = QualifiedName() (policy = GetPolicy())?
-      {
-        stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, policy, getVarCounter());
-      }
-    | <DISCONNECT> <FEED> feedNameComponents = QualifiedName() <FROM> Dataset() datasetNameComponents = QualifiedName()
+    <CONNECT> stmt = ConnectStatement()
+  | <DISCONNECT> stmt = DisconnectStatement()
+  )
+  {
+    return stmt;
+  }
+}
+
+Statement DisconnectStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> feedNameComponents = null;
+  Pair<Identifier,Identifier> datasetNameComponents = null;
+
+  Map<String,String> configuration = null;
+  Statement stmt = null;
+  String policy = null;
+}
+{
+  (
+    <FEED> feedNameComponents = QualifiedName() <FROM> Dataset() datasetNameComponents = QualifiedName()
       {
         stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
       }
   )
-    {
-      return stmt;
-    }
+  {
+    return stmt;
+  }
+}
+
+Statement ConnectStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> feedNameComponents = null;
+  Pair<Identifier,Identifier> datasetNameComponents = null;
+
+  Map<String,String> configuration = null;
+  Statement stmt = null;
+  String policy = null;
+}
+{
+  (
+    <FEED> feedNameComponents = QualifiedName() <TO> Dataset() datasetNameComponents = QualifiedName() (policy = GetPolicy())?
+      {
+        stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, policy, getVarCounter());
+      }
+  )
+  {
+    return stmt;
+  }
 }
 
 Map<String,String> Configuration()  throws ParseException :
@@ -2289,13 +2325,15 @@ Expression CaseExpr() throws ParseException:
    }
 }
 
-SelectExpression SelectExpression(boolean subquery) throws ParseException: {
+SelectExpression SelectExpression(boolean subquery) throws ParseException:
+{
   List<LetClause> letClauses = new ArrayList<LetClause>();
   SelectSetOperation selectSetOperation;
   OrderbyClause orderbyClause = null;
   LimitClause limitClause = null;
   createNewScope();
-} {
+}
+{
     ( letClauses = LetClause() )?
     selectSetOperation = SelectSetOperation()
     (orderbyClause = OrderbyClause() {})?
@@ -2305,7 +2343,8 @@ SelectExpression SelectExpression(boolean subquery) throws ParseException: {
     }
 }
 
-SelectSetOperation SelectSetOperation() throws ParseException: {
+SelectSetOperation SelectSetOperation() throws ParseException:
+{
   SetOperationInput setOperationInputLeft;
   List<SetOperationRight> setOperationRights = new ArrayList<SetOperationRight>();
 }
@@ -2337,7 +2376,8 @@ SelectSetOperation SelectSetOperation() throws ParseException: {
   }
 }
 
-SelectExpression Subquery() throws ParseException: {
+SelectExpression Subquery() throws ParseException:
+{
    SelectExpression selectExpr = null;
 }
 {
@@ -2347,7 +2387,8 @@ SelectExpression Subquery() throws ParseException: {
   }
 }
 
-SelectBlock SelectBlock() throws ParseException: {
+SelectBlock SelectBlock() throws ParseException:
+{
   SelectClause selectClause = null;
   FromClause fromClause = null;
   List<LetClause> fromLetClauses = null;
@@ -2397,7 +2438,8 @@ SelectBlock SelectBlock() throws ParseException: {
   }
 }
 
-SelectClause SelectClause() throws ParseException: {
+SelectClause SelectClause() throws ParseException:
+{
   SelectRegular selectRegular = null;
   SelectElement selectElement = null;
   boolean distinct = false;
@@ -2420,7 +2462,8 @@ SelectClause SelectClause() throws ParseException: {
   }
 }
 
-SelectRegular SelectRegular() throws ParseException: {
+SelectRegular SelectRegular() throws ParseException:
+{
   List<Projection> projections = new ArrayList<Projection>();
 }
 {
@@ -2436,7 +2479,8 @@ SelectRegular SelectRegular() throws ParseException: {
   }
 }
 
-SelectElement SelectElement() throws ParseException: {
+SelectElement SelectElement() throws ParseException:
+{
   Expression expr = null;
   String name = null;
 }
@@ -2447,7 +2491,8 @@ SelectElement SelectElement() throws ParseException: {
   }
 }
 
-Projection Projection() throws ParseException: {
+Projection Projection() throws ParseException :
+{
   Expression expr = null;
   Identifier identifier = null;
   String name = null;

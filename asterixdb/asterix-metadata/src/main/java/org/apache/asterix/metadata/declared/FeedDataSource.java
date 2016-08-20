@@ -18,20 +18,39 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.api.IFeed;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedDataSource extends AqlDataSource {
+public class FeedDataSource extends AqlDataSource implements IMutationDataSource {
 
     private final Feed feed;
     private final EntityId sourceFeedId;
@@ -113,6 +132,7 @@ public class FeedDataSource extends AqlDataSource {
         return pkTypes;
     }
 
+    @Override
     public List<ScalarFunctionCallExpression> getKeyAccessExpression() {
         return keyAccessExpression;
     }
@@ -127,10 +147,12 @@ public class FeedDataSource extends AqlDataSource {
         return dataScanVariables.get(0);
     }
 
+    @Override
     public boolean isChange() {
         return pkTypes != null;
     }
 
+    @Override
     public List<LogicalVariable> getPkVars(List<LogicalVariable> allVars) {
         if (pkTypes == null) {
             return null;
@@ -139,6 +161,47 @@ public class FeedDataSource extends AqlDataSource {
             return allVars.subList(2, allVars.size());
         } else {
             return allVars.subList(1, allVars.size());
+        }
+    }
+
+    @Override
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDatasourceScanRuntime(
+            AqlMetadataProvider aqlMetadataProvider, IDataSource<AqlSourceId> dataSource,
+            List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
+            List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema,
+            IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
+            throws AlgebricksException {
+        try {
+            ARecordType feedOutputType = (ARecordType) itemType;
+            ISerializerDeserializer payloadSerde = NonTaggedDataFormat.INSTANCE.getSerdeProvider()
+                    .getSerializerDeserializer(feedOutputType);
+            ArrayList<ISerializerDeserializer> serdes = new ArrayList<>();
+            serdes.add(payloadSerde);
+            if (metaItemType != null) {
+                serdes.add(AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaItemType));
+            }
+            if (pkTypes != null) {
+                for (IAType type : pkTypes) {
+                    serdes.add(AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type));
+                }
+            }
+            RecordDescriptor feedDesc = new RecordDescriptor(
+                    serdes.toArray(new ISerializerDeserializer[serdes.size()]));
+            FeedPolicyEntity feedPolicy = (FeedPolicyEntity) getProperties()
+                    .get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+            if (feedPolicy == null) {
+                throw new AlgebricksException("Feed not configured with a policy");
+            }
+            feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
+            FeedConnectionId feedConnectionId = new FeedConnectionId(getId().getDataverseName(),
+                    getId().getDatasourceName(), getTargetDataset());
+            FeedCollectOperatorDescriptor feedCollector = new FeedCollectOperatorDescriptor(jobSpec, feedConnectionId,
+                    getSourceFeedId(), feedOutputType, feedDesc, feedPolicy.getProperties(), getLocation());
+
+            return new Pair<>(feedCollector, new AlgebricksAbsolutePartitionConstraint(getLocations()));
+
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
         }
     }
 }

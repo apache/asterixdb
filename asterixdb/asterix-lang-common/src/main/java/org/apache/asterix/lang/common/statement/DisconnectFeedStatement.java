@@ -75,4 +75,9 @@ public class DisconnectFeedStatement implements Statement {
         return "disconnect feed " + feedName + " from " + datasetName;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
+    }
+
 }

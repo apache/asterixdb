@@ -20,13 +20,13 @@ package org.apache.asterix.external.feed.runtime;
 
 import java.util.Map;
 
-import org.apache.asterix.active.ActiveRuntime;
 import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.IActiveRuntime;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
-import org.apache.asterix.external.feed.api.ISubscriberRuntime;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Represents the feed runtime that collects feed tuples from another feed.
@@ -34,18 +34,19 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
  * intake job. For a secondary feed, tuples are collected from the intake/compute
  * runtime associated with the source feed.
  */
-public class CollectionRuntime extends ActiveRuntime implements ISubscriberRuntime {
+public class CollectionRuntime implements IActiveRuntime {
 
-    private final FeedConnectionId connectionId; // [Dataverse - Feed - Dataset]
-    private final ISubscribableRuntime sourceRuntime; // Runtime that provides the data
-    private final Map<String, String> feedPolicy; // Policy associated with the feed
-    private final FeedFrameCollector frameCollector; // Collector that can be plugged into a frame distributor
+    private final FeedConnectionId connectionId;        // [Dataverse - Feed - Dataset]
+    private final ISubscribableRuntime sourceRuntime;   // Runtime that provides the data
+    private final Map<String, String> feedPolicy;       // Policy associated with the feed
+    private final FeedFrameCollector frameCollector;    // Collector that can be plugged into a frame distributor
     private final IHyracksTaskContext ctx;
+    private final ActiveRuntimeId runtimeId;
 
     public CollectionRuntime(FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
             ISubscribableRuntime sourceRuntime, Map<String, String> feedPolicy, IHyracksTaskContext ctx,
             FeedFrameCollector frameCollector) {
-        super(runtimeId);
+        this.runtimeId = runtimeId;
         this.connectionId = connectionId;
         this.sourceRuntime = sourceRuntime;
         this.feedPolicy = feedPolicy;
@@ -68,7 +69,6 @@ public class CollectionRuntime extends ActiveRuntime implements ISubscriberRunti
                 || frameCollector.getState().equals(FeedFrameCollector.State.HANDOVER);
     }
 
-    @Override
     public Map<String, String> getFeedPolicy() {
         return feedPolicy;
     }
@@ -87,5 +87,14 @@ public class CollectionRuntime extends ActiveRuntime implements ISubscriberRunti
 
     public IHyracksTaskContext getCtx() {
         return ctx;
+    }
+
+    @Override
+    public ActiveRuntimeId getRuntimeId() {
+        return runtimeId;
+    }
+
+    @Override
+    public void stop() throws HyracksDataException, InterruptedException {
     }
 }

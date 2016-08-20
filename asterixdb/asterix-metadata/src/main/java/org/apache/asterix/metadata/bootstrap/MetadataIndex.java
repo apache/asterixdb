@@ -24,14 +24,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IMetadataIndex;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -44,7 +43,9 @@ import org.apache.hyracks.api.io.FileReference;
 /**
  * Descriptor for a primary or secondary index on metadata datasets.
  */
-public final class MetadataIndex implements IMetadataIndex {
+public class MetadataIndex implements IMetadataIndex {
+
+    private static final long serialVersionUID = 1L;
     // Name of dataset that is indexed.
     protected final String datasetName;
     // Name of index. null for primary indexes. non-null for secondary indexes.
@@ -52,6 +53,7 @@ public final class MetadataIndex implements IMetadataIndex {
     // Types of key fields.
     protected final IAType[] keyTypes;
     // Names of key fields. Used to compute partitionExprs.
+    // Note: used list implementation must implement java.io.Serializable
     protected final List<List<String>> keyNames;
     // Field permutation for BTree insert. Auto-created based on numFields.
     protected final int[] fieldPermutation;
@@ -82,13 +84,13 @@ public final class MetadataIndex implements IMetadataIndex {
 
     public MetadataIndex(MetadataIndexImmutableProperties indexImmutableProperties, int numFields, IAType[] keyTypes,
             List<List<String>> keyNames, int numSecondaryIndexKeys, ARecordType payloadType, boolean isPrimaryIndex,
-            int[] primaryKeyIndexes) throws MetadataException {
+            int[] primaryKeyIndexes) {
         // Sanity checks.
         if (keyTypes.length != keyNames.size()) {
-            throw new MetadataException("Unequal number of key types and names given.");
+            throw new AssertionError("Unequal number of key names and key types");
         }
         if (keyTypes.length > numFields) {
-            throw new MetadataException("Number of keys given is greater than total number of fields.");
+            throw new AssertionError("Key size is larger than total number of fields");
         }
         // Set simple fields.
         this.datasetName = indexImmutableProperties.getDatasetName();
@@ -101,7 +103,7 @@ public final class MetadataIndex implements IMetadataIndex {
         for (int i = 0; i < numFields; i++) {
             fieldPermutation[i] = i;
         }
-        // Create serdes for RecordDescriptor;
+        // Create serdes for RecordDescriptor
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] serdes = new ISerializerDeserializer[numFields];
         for (int i = 0; i < keyTypes.length; i++) {
@@ -189,7 +191,7 @@ public final class MetadataIndex implements IMetadataIndex {
 
     @Override
     public List<List<String>> getPartitioningExpr() {
-        ArrayList<List<String>> partitioningExpr = new ArrayList<List<String>>();
+        ArrayList<List<String>> partitioningExpr = new ArrayList<>();
         for (int i = 0; i < keyNames.size(); i++) {
             partitioningExpr.add(keyNames.get(i));
         }

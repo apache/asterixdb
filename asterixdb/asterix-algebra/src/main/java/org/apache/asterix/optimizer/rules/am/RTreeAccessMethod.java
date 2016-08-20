@@ -50,10 +50,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
 /**
@@ -61,13 +59,13 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
  */
 public class RTreeAccessMethod implements IAccessMethod {
 
-    private static List<FunctionIdentifier> funcIdents = new ArrayList<FunctionIdentifier>();
+    private static List<FunctionIdentifier> funcIdents = new ArrayList<>();
 
     static {
         funcIdents.add(AsterixBuiltinFunctions.SPATIAL_INTERSECT);
     }
 
-    public static RTreeAccessMethod INSTANCE = new RTreeAccessMethod();
+    public static final RTreeAccessMethod INSTANCE = new RTreeAccessMethod();
 
     @Override
     public List<FunctionIdentifier> getOptimizableFunctions() {
@@ -107,7 +105,7 @@ public class RTreeAccessMethod implements IAccessMethod {
             return false;
         }
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
-        subTree.dataSourceRef.setValue(primaryIndexUnnestOp);
+        subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
         return true;
     }
 
@@ -125,16 +123,17 @@ public class RTreeAccessMethod implements IAccessMethod {
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
             boolean hasGroupBy) throws AlgebricksException {
-        // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
+        // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left
+        // side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
-        OptimizableOperatorSubTree indexSubTree = null;
-        OptimizableOperatorSubTree probeSubTree = null;
+        OptimizableOperatorSubTree indexSubTree;
+        OptimizableOperatorSubTree probeSubTree;
 
         // We assume that the left subtree is the outer branch and the right subtree is the inner branch.
         // This assumption holds true since we only use an index from the right subtree.
         // The following is just a sanity check.
         if (rightSubTree.hasDataSourceScan()
-                && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
+                && dataset.getDatasetName().equals(rightSubTree.getDataset().getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         } else {
@@ -143,8 +142,8 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         LogicalVariable newNullPlaceHolderVar = null;
         if (isLeftOuterJoin) {
-            //get a new null place holder variable that is the first field variable of the primary key
-            //from the indexSubTree's datasourceScanOp
+            // get a new null place holder variable that is the first field variable of the primary key
+            // from the indexSubTree's datasourceScanOp
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
         }
 
@@ -156,15 +155,15 @@ public class RTreeAccessMethod implements IAccessMethod {
         }
 
         if (isLeftOuterJoin && hasGroupBy) {
-            //reset the null place holder variable
+            // reset the null place holder variable
             AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
         }
 
-        indexSubTree.dataSourceRef.setValue(primaryIndexUnnestOp);
+        indexSubTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
         // Change join into a select with the same condition.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         SelectOperator topSelect = new SelectOperator(joinOp.getCondition(), isLeftOuterJoin, newNullPlaceHolderVar);
-        topSelect.getInputs().add(indexSubTree.rootRef);
+        topSelect.getInputs().add(indexSubTree.getRootRef());
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
         // Replace the original join with the new subtree rooted at the select op.
@@ -175,12 +174,12 @@ public class RTreeAccessMethod implements IAccessMethod {
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
-        Dataset dataset = indexSubTree.dataset;
-        ARecordType recordType = indexSubTree.recordType;
-        ARecordType metaRecordType = indexSubTree.metaRecordType;
+        Dataset dataset = indexSubTree.getDataset();
+        ARecordType recordType = indexSubTree.getRecordType();
+        ARecordType metaRecordType = indexSubTree.getMetaRecordType();
 
         int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
         Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
@@ -194,16 +193,18 @@ public class RTreeAccessMethod implements IAccessMethod {
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
         // we made sure indexSubTree has datasource scan
-        AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.dataSourceRef.getValue();
+        AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.getDataSourceRef()
+                .getValue();
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // A spatial object is serialized in the constant of the func expr we are optimizing.
         // The R-Tree expects as input an MBR represented with 1 field per dimension.
-        // Here we generate vars and funcs for extracting MBR fields from the constant into fields of a tuple (as the R-Tree expects them).
+        // Here we generate vars and funcs for extracting MBR fields from the constant into fields of a tuple (as the
+        // R-Tree expects them).
         // List of variables for the assign.
-        ArrayList<LogicalVariable> keyVarList = new ArrayList<LogicalVariable>();
+        ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         // List of expressions for the assign.
-        ArrayList<Mutable<ILogicalExpression>> keyExprList = new ArrayList<Mutable<ILogicalExpression>>();
+        ArrayList<Mutable<ILogicalExpression>> keyExprList = new ArrayList<>();
         Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(optFuncExpr,
                 indexSubTree, probeSubTree);
         ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
@@ -237,23 +238,18 @@ public class RTreeAccessMethod implements IAccessMethod {
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
             // We are optimizing a join, place the assign op top of the probe subtree.
-            assignSearchKeys.getInputs().add(probeSubTree.rootRef);
+            assignSearchKeys.getInputs().add(probeSubTree.getRootRef());
         }
 
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, false, retainInput, retainNull);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            UnnestMapOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp,
-                    dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull);
-            return externalDataAccessOp;
-        } else {
-            AbstractUnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp,
-                    dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true, retainInput, false,
-                    false);
-            return primaryIndexUnnestOp;
-        }
+        return dataset.getDatasetType() == DatasetType.EXTERNAL
+                ? AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp, dataset, recordType,
+                        secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull)
+                : AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp, dataset, recordType, metaRecordType,
+                        secondaryIndexUnnestOp, context, true, retainInput, false, false);
     }
 
     @Override

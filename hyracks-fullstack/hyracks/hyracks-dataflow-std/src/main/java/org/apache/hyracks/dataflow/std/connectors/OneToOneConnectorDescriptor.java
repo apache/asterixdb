@@ -48,7 +48,7 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         return edwFactory.createFrameWriter(index);
     }
 

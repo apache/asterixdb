@@ -81,7 +81,7 @@ import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
-import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -1218,7 +1218,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(DropStatement del, Mutable<ILogicalOperator> arg)
+    public Pair<ILogicalOperator, LogicalVariable> visit(DropDatasetStatement del, Mutable<ILogicalOperator> arg)
             throws AsterixException {
         // TODO Auto-generated method stub
         return null;

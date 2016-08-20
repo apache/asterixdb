@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.declared.FeedDataSource;
+import org.apache.asterix.metadata.declared.IMutationDataSource;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
@@ -86,11 +86,11 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             LogicalVariable metaVar = dataSource.getMetaVariable(allVars);
             LogicalExpressionReferenceTransform currentTransformer = null;
             if (dataSource.getDatasourceType() == AqlDataSourceType.FEED) {
-                FeedDataSource fds = (FeedDataSource) dataSource;
-                if (fds.isChange()) {
+                IMutationDataSource mds = (IMutationDataSource) dataSource;
+                if (mds.isChange()) {
                     transformers = new ArrayList<>();
-                    transformers.add(new MetaKeyExpressionReferenceTransform(fds.getPkVars(allVars),
-                            fds.getKeyAccessExpression()));
+                    transformers.add(new MetaKeyExpressionReferenceTransform(mds.getPkVars(allVars),
+                            mds.getKeyAccessExpression()));
                 } else if (metaVar != null) {
                     transformers = new ArrayList<>();
                     transformers.add(new MetaKeyToFieldAccessTransform(metaVar));
@@ -98,7 +98,7 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             }
             if (!dataSource.hasMeta() && transformers == null) {
                 return inputTransfomer;
-            };
+            }
             if (metaVar != null) {
                 currentTransformer = new LogicalExpressionReferenceTransform(dataVar, metaVar);
             }
@@ -286,7 +286,7 @@ class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransf
                 throw new AlgebricksException("Unsupported field name type " + fieldNameType.getTypeTag());
         }
         IFunctionInfo finfoAccess = FunctionUtil.getFunctionInfo(functionIdentifier);
-        ArrayList<Mutable<ILogicalExpression>> argExprs = new ArrayList<Mutable<ILogicalExpression>>(2);
+        ArrayList<Mutable<ILogicalExpression>> argExprs = new ArrayList<>(2);
         argExprs.add(new MutableObject<>(new VariableReferenceExpression(metaVar)));
         argExprs.add(new MutableObject<>(fieldNameExpression));
         exprRef.setValue(new ScalarFunctionCallExpression(finfoAccess, argExprs));

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -26,9 +29,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.result.ResultReader;
-import org.apache.asterix.result.ResultUtils;
+import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.common.app.SessionConfig;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -37,9 +41,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
 
 public class QueryResultAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -77,7 +78,7 @@ public class QueryResultAPIServlet extends HttpServlet {
             JobId jobId = new JobId(handle.getLong(0));
             ResultSetId rsId = new ResultSetId(handle.getLong(1));
 
-            ResultReader resultReader = new ResultReader(hcc, hds);
+            ResultReader resultReader = new ResultReader(hds);
             resultReader.open(jobId, rsId);
 
             // QQQ The output format is determined by the initial
@@ -87,7 +88,7 @@ public class QueryResultAPIServlet extends HttpServlet {
             // originally determined there. Need to save this value on
             // some object that we can obtain here.
             SessionConfig sessionConfig = RESTAPIServlet.initResponse(request, response);
-            ResultUtils.displayResults(resultReader, sessionConfig, new ResultUtils.Stats(), null);
+            ResultUtil.displayResults(resultReader, sessionConfig, new Stats(), null);
 
         } catch (Exception e) {
             out.println(e.getMessage());

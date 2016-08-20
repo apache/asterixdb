@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.result;
+package org.apache.asterix.app.result;
 
 import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
@@ -42,7 +41,7 @@ public class ResultReader {
 
     public static final int FRAME_SIZE = AsterixAppContextInfo.getInstance().getCompilerProperties().getFrameSize();
 
-    public ResultReader(IHyracksClientConnection hcc, IHyracksDataset hdc) throws Exception {
+    public ResultReader(IHyracksDataset hdc) {
         hyracksDataset = hdc;
     }
 

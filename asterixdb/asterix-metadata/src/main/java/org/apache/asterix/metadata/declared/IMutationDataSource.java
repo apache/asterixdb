@@ -16,24 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.asterix.metadata.declared;
 
-public class ActiveRuntime implements IActiveRuntime {
+import java.util.List;
 
-    /** A unique identifier for the runtime **/
-    protected final ActiveRuntimeId runtimeId;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 
-    public ActiveRuntime(ActiveRuntimeId runtimeId) {
-        this.runtimeId = runtimeId;;
-    }
+public interface IMutationDataSource {
 
-    @Override
-    public ActiveRuntimeId getRuntimeId() {
-        return runtimeId;
-    }
+    boolean isChange();
 
-    @Override
-    public String toString() {
-        return runtimeId.toString();
-    }
+    List<LogicalVariable> getPkVars(List<LogicalVariable> allVars);
+
+    List<ScalarFunctionCallExpression> getKeyAccessExpression();
+
 }

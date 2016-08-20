@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class ExternalFile implements Serializable, Comparable<ExternalFile> {
 
@@ -118,21 +119,21 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
     }
 
     @Override
+    public int hashCode() {
+        return ObjectUtils.hashCodeMulti(dataverseName, datasetName, fileName);
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if (obj == null)
-            return false;
-        if (obj == this)
+        if (obj == this) {
             return true;
-        if (!(obj instanceof ExternalFile))
+        }
+        if (!(obj instanceof ExternalFile)) {
             return false;
+        }
         ExternalFile anotherFile = (ExternalFile) obj;
-        if (fileNumber != anotherFile.fileNumber)
-            return false;
-        if (!dataverseName.equals(anotherFile.dataverseName))
-            return false;
-        if (!datasetName.equals(anotherFile.datasetName))
-            return false;
-        return true;
+        return fileNumber == anotherFile.fileNumber && ObjectUtils.equals(dataverseName, anotherFile.getDataverseName())
+                && ObjectUtils.equals(datasetName, anotherFile.getDatasetName());
     }
 
     @Override

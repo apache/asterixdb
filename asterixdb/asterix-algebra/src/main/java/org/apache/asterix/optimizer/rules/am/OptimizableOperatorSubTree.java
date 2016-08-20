@@ -21,6 +21,8 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.metadata.declared.AqlDataSource;
+import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -38,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
@@ -59,24 +62,24 @@ public class OptimizableOperatorSubTree {
         NO_DATASOURCE
     }
 
-    public ILogicalOperator root = null;
-    public Mutable<ILogicalOperator> rootRef = null;
-    public final List<Mutable<ILogicalOperator>> assignsAndUnnestsRefs = new ArrayList<Mutable<ILogicalOperator>>();
-    public final List<AbstractLogicalOperator> assignsAndUnnests = new ArrayList<AbstractLogicalOperator>();
-    public Mutable<ILogicalOperator> dataSourceRef = null;
-    public DataSourceType dataSourceType = DataSourceType.NO_DATASOURCE;
+    private ILogicalOperator root = null;
+    private Mutable<ILogicalOperator> rootRef = null;
+    private final List<Mutable<ILogicalOperator>> assignsAndUnnestsRefs = new ArrayList<>();
+    private final List<AbstractLogicalOperator> assignsAndUnnests = new ArrayList<>();
+    private Mutable<ILogicalOperator> dataSourceRef = null;
+    private DataSourceType dataSourceType = DataSourceType.NO_DATASOURCE;
 
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
-    public Dataset dataset = null;
-    public ARecordType recordType = null;
-    public ARecordType metaRecordType = null;
+    private Dataset dataset = null;
+    private ARecordType recordType = null;
+    private ARecordType metaRecordType = null;
 
     // Additional datasources can exist if IntroduceJoinAccessMethodRule has been applied.
     // (E.g. There are index-nested-loop-joins in the plan.)
-    public List<Mutable<ILogicalOperator>> ixJoinOuterAdditionalDataSourceRefs = null;
-    public List<DataSourceType> ixJoinOuterAdditionalDataSourceTypes = null;
-    public List<Dataset> ixJoinOuterAdditionalDatasets = null;
-    public List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
+    private List<Mutable<ILogicalOperator>> ixJoinOuterAdditionalDataSourceRefs = null;
+    private List<DataSourceType> ixJoinOuterAdditionalDataSourceTypes = null;
+    private List<Dataset> ixJoinOuterAdditionalDatasets = null;
+    private List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
 
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) throws AlgebricksException {
         reset();
@@ -102,12 +105,12 @@ public class OptimizableOperatorSubTree {
                 if (!OperatorPropertiesUtil.isMovable(subTreeOp)) {
                     return false;
                 } else {
-                    assignsAndUnnestsRefs.add(subTreeOpRef);
-                    assignsAndUnnests.add(subTreeOp);
+                    getAssignsAndUnnestsRefs().add(subTreeOpRef);
+                    getAssignsAndUnnests().add(subTreeOp);
                 }
                 subTreeOpRef = subTreeOp.getInputs().get(0);
                 subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
-            };
+            }
         } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.SELECT);
 
         // Match data source (datasource scan or primary index search).
@@ -118,12 +121,12 @@ public class OptimizableOperatorSubTree {
         AbstractLogicalOperator subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
 
         if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-            dataSourceType = DataSourceType.DATASOURCE_SCAN;
-            dataSourceRef = subTreeOpRef;
+            setDataSourceType(DataSourceType.DATASOURCE_SCAN);
+            setDataSourceRef(subTreeOpRef);
             return true;
         } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            dataSourceType = DataSourceType.COLLECTION_SCAN;
-            dataSourceRef = subTreeOpRef;
+            setDataSourceType(DataSourceType.COLLECTION_SCAN);
+            setDataSourceRef(subTreeOpRef);
             return true;
         } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
             // There can be multiple unnest-map or datasource-scan operators
@@ -141,40 +144,40 @@ public class OptimizableOperatorSubTree {
                             AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                             jobGenParams.readFromFuncArgs(f.getArguments());
                             if (jobGenParams.isPrimaryIndex()) {
-                                if (dataSourceRef == null) {
-                                    dataSourceRef = subTreeOpRef;
-                                    dataSourceType = DataSourceType.PRIMARY_INDEX_LOOKUP;
+                                if (getDataSourceRef() == null) {
+                                    setDataSourceRef(subTreeOpRef);
+                                    setDataSourceType(DataSourceType.PRIMARY_INDEX_LOOKUP);
                                 } else {
                                     // One datasource already exists. This is an additional datasource.
                                     initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
-                                    ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.PRIMARY_INDEX_LOOKUP);
-                                    ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
+                                    getIxJoinOuterAdditionalDataSourceTypes().add(DataSourceType.PRIMARY_INDEX_LOOKUP);
+                                    getIxJoinOuterAdditionalDataSourceRefs().add(subTreeOpRef);
                                 }
                                 dataSourceFound = true;
                             }
                         } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.EXTERNAL_LOOKUP)) {
                             // External lookup case
-                            if (dataSourceRef == null) {
-                                dataSourceRef = subTreeOpRef;
-                                dataSourceType = DataSourceType.EXTERNAL_SCAN;
+                            if (getDataSourceRef() == null) {
+                                setDataSourceRef(subTreeOpRef);
+                                setDataSourceType(DataSourceType.EXTERNAL_SCAN);
                             } else {
                                 // One datasource already exists. This is an additional datasource.
                                 initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
-                                ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.EXTERNAL_SCAN);
-                                ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
+                                getIxJoinOuterAdditionalDataSourceTypes().add(DataSourceType.EXTERNAL_SCAN);
+                                getIxJoinOuterAdditionalDataSourceRefs().add(subTreeOpRef);
                             }
                             dataSourceFound = true;
                         }
                     }
                 } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                     initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
-                    ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.DATASOURCE_SCAN);
-                    ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
+                    getIxJoinOuterAdditionalDataSourceTypes().add(DataSourceType.DATASOURCE_SCAN);
+                    getIxJoinOuterAdditionalDataSourceRefs().add(subTreeOpRef);
                     dataSourceFound = true;
                 } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
                     initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
-                    ixJoinOuterAdditionalDataSourceTypes.add(DataSourceType.COLLECTION_SCAN);
-                    ixJoinOuterAdditionalDataSourceRefs.add(subTreeOpRef);
+                    getIxJoinOuterAdditionalDataSourceTypes().add(DataSourceType.COLLECTION_SCAN);
+                    getIxJoinOuterAdditionalDataSourceRefs().add(subTreeOpRef);
                 }
 
                 // Traverse the subtree while there are operators in the path.
@@ -208,14 +211,14 @@ public class OptimizableOperatorSubTree {
         List<Mutable<ILogicalOperator>> sourceOpRefs = new ArrayList<Mutable<ILogicalOperator>>();
         List<DataSourceType> dsTypes = new ArrayList<DataSourceType>();
 
-        sourceOpRefs.add(dataSourceRef);
-        dsTypes.add(dataSourceType);
+        sourceOpRefs.add(getDataSourceRef());
+        dsTypes.add(getDataSourceType());
 
         // If there are multiple datasources in the subtree, we need to find the dataset for these.
-        if (ixJoinOuterAdditionalDataSourceRefs != null) {
-            for (int i = 0; i < ixJoinOuterAdditionalDataSourceRefs.size(); i++) {
-                sourceOpRefs.add(ixJoinOuterAdditionalDataSourceRefs.get(i));
-                dsTypes.add(ixJoinOuterAdditionalDataSourceTypes.get(i));
+        if (getIxJoinOuterAdditionalDataSourceRefs() != null) {
+            for (int i = 0; i < getIxJoinOuterAdditionalDataSourceRefs().size(); i++) {
+                sourceOpRefs.add(getIxJoinOuterAdditionalDataSourceRefs().get(i));
+                dsTypes.add(getIxJoinOuterAdditionalDataSourceTypes().get(i));
             }
         }
 
@@ -223,6 +226,14 @@ public class OptimizableOperatorSubTree {
             switch (dsTypes.get(i)) {
                 case DATASOURCE_SCAN:
                     DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) sourceOpRefs.get(i).getValue();
+                    IDataSource<?> datasource = dataSourceScan.getDataSource();
+                    if (datasource instanceof AqlDataSource) {
+                        AqlDataSourceType dsType = ((AqlDataSource) datasource).getDatasourceType();
+                        if (dsType != AqlDataSourceType.INTERNAL_DATASET
+                                && dsType != AqlDataSourceType.EXTERNAL_DATASET) {
+                            return false;
+                        }
+                    }
                     Pair<String, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
                     dataverseName = datasetInfo.first;
                     datasetName = datasetInfo.second;
@@ -244,8 +255,8 @@ public class OptimizableOperatorSubTree {
                     break;
                 case COLLECTION_SCAN:
                     if (i != 0) {
-                        ixJoinOuterAdditionalDatasets.add(null);
-                        ixJoinOuterAdditionalRecordTypes.add(null);
+                        getIxJoinOuterAdditionalDatasets().add(null);
+                        getIxJoinOuterAdditionalRecordTypes().add(null);
                     }
                     continue;
                 case NO_DATASOURCE:
@@ -266,24 +277,24 @@ public class OptimizableOperatorSubTree {
                 if (i == 0) {
                     return false;
                 } else {
-                    ixJoinOuterAdditionalDatasets.add(null);
-                    ixJoinOuterAdditionalRecordTypes.add(null);
+                    getIxJoinOuterAdditionalDatasets().add(null);
+                    getIxJoinOuterAdditionalRecordTypes().add(null);
                 }
             }
             rType = (ARecordType) itemType;
 
             // Get the meta record type for that dataset.
-            IAType metaItemType = metadataProvider.findType(ds.getMetaItemTypeDataverseName(),
-                    ds.getMetaItemTypeName());
+            IAType metaItemType =
+                    metadataProvider.findType(ds.getMetaItemTypeDataverseName(), ds.getMetaItemTypeName());
 
             // First index is always the primary datasource in this subtree.
             if (i == 0) {
-                dataset = ds;
-                recordType = rType;
-                metaRecordType = (ARecordType) metaItemType;
+                setDataset(ds);
+                setRecordType(rType);
+                setMetaRecordType((ARecordType) metaItemType);
             } else {
-                ixJoinOuterAdditionalDatasets.add(ds);
-                ixJoinOuterAdditionalRecordTypes.add(rType);
+                getIxJoinOuterAdditionalDatasets().add(ds);
+                getIxJoinOuterAdditionalRecordTypes().add(rType);
             }
 
             dataverseName = null;
@@ -296,14 +307,14 @@ public class OptimizableOperatorSubTree {
     }
 
     public boolean hasDataSource() {
-        return dataSourceType != DataSourceType.NO_DATASOURCE;
+        return getDataSourceType() != DataSourceType.NO_DATASOURCE;
     }
 
     public boolean hasIxJoinOuterAdditionalDataSource() {
         boolean dataSourceFound = false;
-        if (ixJoinOuterAdditionalDataSourceTypes != null) {
-            for (int i = 0; i < ixJoinOuterAdditionalDataSourceTypes.size(); i++) {
-                if (ixJoinOuterAdditionalDataSourceTypes.get(i) != DataSourceType.NO_DATASOURCE) {
+        if (getIxJoinOuterAdditionalDataSourceTypes() != null) {
+            for (int i = 0; i < getIxJoinOuterAdditionalDataSourceTypes().size(); i++) {
+                if (getIxJoinOuterAdditionalDataSourceTypes().get(i) != DataSourceType.NO_DATASOURCE) {
                     dataSourceFound = true;
                     break;
                 }
@@ -313,13 +324,13 @@ public class OptimizableOperatorSubTree {
     }
 
     public boolean hasDataSourceScan() {
-        return dataSourceType == DataSourceType.DATASOURCE_SCAN;
+        return getDataSourceType() == DataSourceType.DATASOURCE_SCAN;
     }
 
     public boolean hasIxJoinOuterAdditionalDataSourceScan() {
-        if (ixJoinOuterAdditionalDataSourceTypes != null) {
-            for (int i = 0; i < ixJoinOuterAdditionalDataSourceTypes.size(); i++) {
-                if (ixJoinOuterAdditionalDataSourceTypes.get(i) == DataSourceType.DATASOURCE_SCAN) {
+        if (getIxJoinOuterAdditionalDataSourceTypes() != null) {
+            for (int i = 0; i < getIxJoinOuterAdditionalDataSourceTypes().size(); i++) {
+                if (getIxJoinOuterAdditionalDataSourceTypes().get(i) == DataSourceType.DATASOURCE_SCAN) {
                     return true;
                 }
             }
@@ -328,33 +339,33 @@ public class OptimizableOperatorSubTree {
     }
 
     public void reset() {
-        root = null;
-        rootRef = null;
-        assignsAndUnnestsRefs.clear();
-        assignsAndUnnests.clear();
-        dataSourceRef = null;
-        dataSourceType = DataSourceType.NO_DATASOURCE;
-        ixJoinOuterAdditionalDataSourceRefs = null;
-        ixJoinOuterAdditionalDataSourceTypes = null;
-        dataset = null;
-        ixJoinOuterAdditionalDatasets = null;
-        recordType = null;
-        ixJoinOuterAdditionalRecordTypes = null;
+        setRoot(null);
+        setRootRef(null);
+        getAssignsAndUnnestsRefs().clear();
+        getAssignsAndUnnests().clear();
+        setDataSourceRef(null);
+        setDataSourceType(DataSourceType.NO_DATASOURCE);
+        setIxJoinOuterAdditionalDataSourceRefs(null);
+        setIxJoinOuterAdditionalDataSourceTypes(null);
+        setDataset(null);
+        setIxJoinOuterAdditionalDatasets(null);
+        setRecordType(null);
+        setIxJoinOuterAdditionalRecordTypes(null);
     }
 
     public void getPrimaryKeyVars(List<LogicalVariable> target) throws AlgebricksException {
-        switch (dataSourceType) {
+        switch (getDataSourceType()) {
             case DATASOURCE_SCAN:
-                DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) dataSourceRef.getValue();
-                int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+                DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) getDataSourceRef().getValue();
+                int numPrimaryKeys = DatasetUtils.getPartitioningKeys(getDataset()).size();
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     target.add(dataSourceScan.getVariables().get(i));
                 }
                 break;
             case PRIMARY_INDEX_LOOKUP:
-                UnnestMapOperator unnestMapOp = (UnnestMapOperator) dataSourceRef.getValue();
+                UnnestMapOperator unnestMapOp = (UnnestMapOperator) getDataSourceRef().getValue();
                 List<LogicalVariable> primaryKeys = null;
-                primaryKeys = AccessMethodUtils.getPrimaryKeyVarsFromPrimaryUnnestMap(dataset, unnestMapOp);
+                primaryKeys = AccessMethodUtils.getPrimaryKeyVarsFromPrimaryUnnestMap(getDataset(), unnestMapOp);
                 target.addAll(primaryKeys);
                 break;
             case NO_DATASOURCE:
@@ -364,14 +375,14 @@ public class OptimizableOperatorSubTree {
     }
 
     public List<LogicalVariable> getDataSourceVariables() throws AlgebricksException {
-        switch (dataSourceType) {
+        switch (getDataSourceType()) {
             case DATASOURCE_SCAN:
             case EXTERNAL_SCAN:
             case PRIMARY_INDEX_LOOKUP:
-                AbstractScanOperator scanOp = (AbstractScanOperator) dataSourceRef.getValue();
+                AbstractScanOperator scanOp = (AbstractScanOperator) getDataSourceRef().getValue();
                 return scanOp.getVariables();
             case COLLECTION_SCAN:
-                return new ArrayList<LogicalVariable>();
+                return new ArrayList<>();
             case NO_DATASOURCE:
             default:
                 throw new AlgebricksException("The subtree does not have any data source.");
@@ -379,16 +390,16 @@ public class OptimizableOperatorSubTree {
     }
 
     public List<LogicalVariable> getIxJoinOuterAdditionalDataSourceVariables(int idx) throws AlgebricksException {
-        if (ixJoinOuterAdditionalDataSourceRefs != null && ixJoinOuterAdditionalDataSourceRefs.size() > idx) {
-            switch (ixJoinOuterAdditionalDataSourceTypes.get(idx)) {
+        if (getIxJoinOuterAdditionalDataSourceRefs() != null && getIxJoinOuterAdditionalDataSourceRefs().size() > idx) {
+            switch (getIxJoinOuterAdditionalDataSourceTypes().get(idx)) {
                 case DATASOURCE_SCAN:
                 case EXTERNAL_SCAN:
                 case PRIMARY_INDEX_LOOKUP:
-                    AbstractScanOperator scanOp = (AbstractScanOperator) ixJoinOuterAdditionalDataSourceRefs.get(idx)
-                            .getValue();
+                    AbstractScanOperator scanOp =
+                            (AbstractScanOperator) getIxJoinOuterAdditionalDataSourceRefs().get(idx).getValue();
                     return scanOp.getVariables();
                 case COLLECTION_SCAN:
-                    return new ArrayList<LogicalVariable>();
+                    return new ArrayList<>();
                 case NO_DATASOURCE:
                 default:
                     throw new AlgebricksException("The subtree does not have any additional data sources.");
@@ -399,12 +410,109 @@ public class OptimizableOperatorSubTree {
     }
 
     public void initializeIxJoinOuterAddtionalDataSourcesIfEmpty() {
-        if (ixJoinOuterAdditionalDataSourceRefs == null) {
-            ixJoinOuterAdditionalDataSourceRefs = new ArrayList<Mutable<ILogicalOperator>>();
-            ixJoinOuterAdditionalDataSourceTypes = new ArrayList<DataSourceType>();
-            ixJoinOuterAdditionalDatasets = new ArrayList<Dataset>();
-            ixJoinOuterAdditionalRecordTypes = new ArrayList<ARecordType>();
+        if (getIxJoinOuterAdditionalDataSourceRefs() == null) {
+            setIxJoinOuterAdditionalDataSourceRefs(new ArrayList<Mutable<ILogicalOperator>>());
+            setIxJoinOuterAdditionalDataSourceTypes(new ArrayList<DataSourceType>());
+            setIxJoinOuterAdditionalDatasets(new ArrayList<Dataset>());
+            setIxJoinOuterAdditionalRecordTypes(new ArrayList<ARecordType>());
         }
+    }
+
+    public ILogicalOperator getRoot() {
+        return root;
+    }
+
+    public void setRoot(ILogicalOperator root) {
+        this.root = root;
+    }
+
+    public Mutable<ILogicalOperator> getRootRef() {
+        return rootRef;
+    }
+
+    public void setRootRef(Mutable<ILogicalOperator> rootRef) {
+        this.rootRef = rootRef;
+    }
+
+    public List<Mutable<ILogicalOperator>> getAssignsAndUnnestsRefs() {
+        return assignsAndUnnestsRefs;
+    }
+
+    public List<AbstractLogicalOperator> getAssignsAndUnnests() {
+        return assignsAndUnnests;
+    }
+
+    public Mutable<ILogicalOperator> getDataSourceRef() {
+        return dataSourceRef;
+    }
+
+    public void setDataSourceRef(Mutable<ILogicalOperator> dataSourceRef) {
+        this.dataSourceRef = dataSourceRef;
+    }
+
+    public DataSourceType getDataSourceType() {
+        return dataSourceType;
+    }
+
+    public void setDataSourceType(DataSourceType dataSourceType) {
+        this.dataSourceType = dataSourceType;
+    }
+
+    public Dataset getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(Dataset dataset) {
+        this.dataset = dataset;
+    }
+
+    public ARecordType getRecordType() {
+        return recordType;
+    }
+
+    public void setRecordType(ARecordType recordType) {
+        this.recordType = recordType;
+    }
+
+    public ARecordType getMetaRecordType() {
+        return metaRecordType;
+    }
+
+    public void setMetaRecordType(ARecordType metaRecordType) {
+        this.metaRecordType = metaRecordType;
+    }
+
+    public List<Mutable<ILogicalOperator>> getIxJoinOuterAdditionalDataSourceRefs() {
+        return ixJoinOuterAdditionalDataSourceRefs;
+    }
+
+    public void setIxJoinOuterAdditionalDataSourceRefs(
+            List<Mutable<ILogicalOperator>> ixJoinOuterAdditionalDataSourceRefs) {
+        this.ixJoinOuterAdditionalDataSourceRefs = ixJoinOuterAdditionalDataSourceRefs;
+    }
+
+    public List<DataSourceType> getIxJoinOuterAdditionalDataSourceTypes() {
+        return ixJoinOuterAdditionalDataSourceTypes;
+    }
+
+    public void setIxJoinOuterAdditionalDataSourceTypes(List<DataSourceType> ixJoinOuterAdditionalDataSourceTypes) {
+        this.ixJoinOuterAdditionalDataSourceTypes = ixJoinOuterAdditionalDataSourceTypes;
+    }
+
+    public List<Dataset> getIxJoinOuterAdditionalDatasets() {
+        return ixJoinOuterAdditionalDatasets;
+    }
+
+    public void setIxJoinOuterAdditionalDatasets(List<Dataset> ixJoinOuterAdditionalDatasets) {
+        this.ixJoinOuterAdditionalDatasets = ixJoinOuterAdditionalDatasets;
+    }
+
+    public List<ARecordType> getIxJoinOuterAdditionalRecordTypes() {
+        return ixJoinOuterAdditionalRecordTypes;
+    }
+
+    public void setIxJoinOuterAdditionalRecordTypes(List<ARecordType> ixJoinOuterAdditionalRecordTypes) {
+        this.ixJoinOuterAdditionalRecordTypes = ixJoinOuterAdditionalRecordTypes;
     }
 
 }

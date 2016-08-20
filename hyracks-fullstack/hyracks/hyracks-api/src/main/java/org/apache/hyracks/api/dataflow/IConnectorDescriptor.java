@@ -68,7 +68,7 @@ public interface IConnectorDescriptor extends Serializable {
      */
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-                    throws HyracksDataException;
+            throws HyracksDataException;
 
     /**
      * Factory metod to create the receive side reader that reads data from this
@@ -136,4 +136,9 @@ public interface IConnectorDescriptor extends Serializable {
      * @throws JSONException
      */
     public JSONObject toJSON() throws JSONException;
+
+    /**
+     * Sets the connector Id
+     */
+    public void setConnectorId(ConnectorDescriptorId cdId);
 }

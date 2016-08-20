@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.result;
+package org.apache.asterix.app.result;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -24,9 +24,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.api.common.SessionConfig;
+import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.comm.IFrame;
@@ -41,7 +43,7 @@ public class ResultPrinter {
     private static FrameManager resultDisplayFrameMgr = new FrameManager(ResultReader.FRAME_SIZE);
 
     private final SessionConfig conf;
-    private final ResultUtils.Stats stats;
+    private final Stats stats;
     private final ARecordType recordType;
 
     private boolean indentJSON;
@@ -52,7 +54,7 @@ public class ResultPrinter {
     // Whether this is the first instance being output
     private boolean notFirst = false;
 
-    public ResultPrinter(SessionConfig conf, ResultUtils.Stats stats, ARecordType recordType) {
+    public ResultPrinter(SessionConfig conf, Stats stats, ARecordType recordType) {
         this.conf = conf;
         this.stats = stats;
         this.recordType = recordType;
@@ -142,9 +144,9 @@ public class ResultPrinter {
             record = JSONUtil.quoteAndEscape(record);
         }
         conf.out().print(record);
-        ++stats.count;
+        stats.setCount(stats.getCount() + 1);
         // TODO(tillw) fix this approximation
-        stats.size += record.length();
+        stats.setSize(stats.getSize() + record.length());
     }
 
     public void print(String record) throws HyracksDataException {

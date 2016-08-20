@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -30,9 +33,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.QueryTranslator;
+import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.common.app.SessionConfig;
+import org.apache.asterix.common.app.SessionConfig.OutputFormat;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -41,26 +46,26 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.result.ResultReader;
-import org.apache.asterix.result.ResultUtils;
+import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.json.JSONObject;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
-
 abstract class RESTAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final ILangCompilationProvider compilationProvider;
     private final IParserFactory parserFactory;
+    private final transient IStatementExecutorFactory statementExecutorFactory;
 
-    public RESTAPIServlet(ILangCompilationProvider compilationProvider) {
+    public RESTAPIServlet(ILangCompilationProvider compilationProvider,
+            IStatementExecutorFactory statementExecutorFactory) {
         this.compilationProvider = compilationProvider;
         this.parserFactory = compilationProvider.getParserFactory();
+        this.statementExecutorFactory = statementExecutorFactory;
     }
 
     /**
@@ -193,26 +198,27 @@ abstract class RESTAPIServlet extends HttpServlet {
             List<Statement> aqlStatements = parser.parse();
             if (!containsForbiddenStatements(aqlStatements)) {
                 MetadataManager.INSTANCE.init();
-                QueryTranslator translator = new QueryTranslator(aqlStatements, sessionConfig, compilationProvider);
+                IStatementExecutor translator =
+                        statementExecutorFactory.create(aqlStatements, sessionConfig, compilationProvider);
                 translator.compileAndExecute(hcc, hds, resultDelivery);
             }
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
-            String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
+            String errorMessage = ResultUtil.buildParseExceptionMessage(pe, query);
             JSONObject errorResp =
-                    ResultUtils.getErrorResponse(2, errorMessage, "", ResultUtils.extractFullStackTrace(pe));
+                    ResultUtil.getErrorResponse(2, errorMessage, "", ResultUtil.extractFullStackTrace(pe));
             sessionConfig.out().write(errorResp.toString());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            ResultUtils.apiErrorHandler(sessionConfig.out(), e);
+            ResultUtil.apiErrorHandler(sessionConfig.out(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
     private boolean containsForbiddenStatements(List<Statement> aqlStatements) throws AsterixException {
         for (Statement st : aqlStatements) {
-            if (!getAllowedStatements().contains(st.getKind())) {
+            if ((st.getCategory() & getAllowedCategories()) == 0) {
                 throw new AsterixException(String.format(getErrorMessage(), st.getKind()));
             }
         }
@@ -233,7 +239,7 @@ abstract class RESTAPIServlet extends HttpServlet {
 
     protected abstract String getQueryParameter(HttpServletRequest request);
 
-    protected abstract List<Byte> getAllowedStatements();
+    protected abstract byte getAllowedCategories();
 
     protected abstract String getErrorMessage();
 }

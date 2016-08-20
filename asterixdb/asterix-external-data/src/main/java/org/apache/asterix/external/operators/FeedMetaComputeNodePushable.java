@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveManager;
-import org.apache.asterix.active.ActiveRuntime;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
@@ -60,12 +59,6 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
      * in accordance with the associated ingestion policy
      **/
     private FeedPolicyEnforcer policyEnforcer;
-
-    /**
-     * The Feed Runtime instance associated with the operator. Feed Runtime
-     * captures the state of the operator while the feed is active.
-     */
-    private ActiveRuntime feedRuntime;
 
     /**
      * A unique identifier for the feed instance. A feed instance represents
@@ -112,7 +105,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.partition = partition;
         this.connectionId = feedConnectionId;
         this.feedManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject()).getFeedManager();
+                .getApplicationObject()).getActiveManager();
         this.message = new VSizeFrame(ctx);
         TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
         this.opDesc = feedMetaOperatorDescriptor;
@@ -142,8 +135,6 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         } else {
             writer = new SyncFeedRuntimeInputHandler(ctx, coreOperator, fta);
         }
-        feedRuntime = new ActiveRuntime(runtimeId);
-        feedManager.getActiveRuntimeRegistry().registerRuntime(feedRuntime);
     }
 
     @Override
@@ -164,17 +155,9 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            deregister();
-        } finally {
-            if (opened) {
-                writer.close();
-            }
+        if (opened) {
+            writer.close();
         }
-    }
-
-    private void deregister() {
-        feedManager.getActiveRuntimeRegistry().deregisterRuntime(feedRuntime.getRuntimeId());
     }
 
     @Override

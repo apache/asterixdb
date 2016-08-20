@@ -18,21 +18,22 @@
  */
 package org.apache.asterix.api.http.servlet;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 
 public class AQLAPIServlet extends RESTAPIServlet {
 
     private static final long serialVersionUID = 1L;
     private static final String AQL_STMT_PARAM_NAME = "aql";
-    private static final List<Byte> ALLOWED_STATEMENTS = Statement.KINDS;
+    private static final byte ALLOWED_CATEGORIES = Statement.Category.QUERY | Statement.Category.UPDATE
+            | Statement.Category.DDL | Statement.Category.PROCEDURE;
 
-    public AQLAPIServlet(ILangCompilationProvider compilationProvider) {
-        super(compilationProvider);
+    public AQLAPIServlet(ILangCompilationProvider compilationProvider,
+            IStatementExecutorFactory statementExecutorFactory) {
+        super(compilationProvider, statementExecutorFactory);
     }
 
     @Override
@@ -41,13 +42,12 @@ public class AQLAPIServlet extends RESTAPIServlet {
     }
 
     @Override
-    protected List<Byte> getAllowedStatements() {
-        return ALLOWED_STATEMENTS;
+    protected byte getAllowedCategories() {
+        return ALLOWED_CATEGORIES;
     }
 
     @Override
     protected String getErrorMessage() {
         throw new IllegalStateException();
     }
-
 }

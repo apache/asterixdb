@@ -80,16 +80,16 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        SplitterMaterializerActivityNode sma = new SplitterMaterializerActivityNode(
-                new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
+        SplitterMaterializerActivityNode sma =
+                new SplitterMaterializerActivityNode(new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
         builder.addActivity(this, sma);
         builder.addSourceEdge(0, sma, 0);
         int pipelineOutputIndex = 0;
         int activityId = MATERIALIZE_READER_ACTIVITY_ID;
         for (int i = 0; i < outputArity; i++) {
             if (outputMaterializationFlags[i]) {
-                MaterializeReaderActivityNode mra = new MaterializeReaderActivityNode(
-                        new ActivityId(odId, activityId++));
+                MaterializeReaderActivityNode mra =
+                        new MaterializeReaderActivityNode(new ActivityId(odId, activityId++));
                 builder.addActivity(this, mra);
                 builder.addBlockingEdge(sma, mra);
                 builder.addTargetEdge(i, mra, 0);
@@ -135,6 +135,15 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                     }
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                         FrameUtils.flushFrame(bufferAccessor, writers[i]);
+                    }
+                }
+
+                @Override
+                public void flush() throws HyracksDataException {
+                    if (!requiresMaterialization) {
+                        for (IFrameWriter writer : writers) {
+                            writer.flush();
+                        }
                     }
                 }
 
@@ -218,4 +227,5 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
             };
         }
     }
+
 }

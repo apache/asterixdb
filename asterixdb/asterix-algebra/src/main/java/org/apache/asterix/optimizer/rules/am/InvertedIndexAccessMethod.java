@@ -99,7 +99,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         INVALID
     }
 
-    private static List<FunctionIdentifier> funcIdents = new ArrayList<FunctionIdentifier>();
+    private static List<FunctionIdentifier> funcIdents = new ArrayList<>();
 
     static {
         funcIdents.add(AsterixBuiltinFunctions.STRING_CONTAINS);
@@ -110,7 +110,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     // These function identifiers are matched in this AM's analyzeFuncExprArgs(),
     // and are not visible to the outside driver.
-    private static HashSet<FunctionIdentifier> secondLevelFuncIdents = new HashSet<FunctionIdentifier>();
+    private static HashSet<FunctionIdentifier> secondLevelFuncIdents = new HashSet<>();
 
     static {
         secondLevelFuncIdents.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
@@ -276,11 +276,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         ILogicalExpression arg1 = funcExpr.getArguments().get(0).getValue();
         ILogicalExpression arg2 = funcExpr.getArguments().get(1).getValue();
         // Determine whether one arg is constant, and the other is non-constant.
-        ILogicalExpression constArg = null;
-        ILogicalExpression nonConstArg = null;
+        ILogicalExpression constArg;
+        ILogicalExpression nonConstArg;
         if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && arg2.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if it is on the first argument
+            // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if it is on
+            // the first argument
             if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
                 return false;
             }
@@ -368,11 +369,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             IOptimizationContext context) throws AlgebricksException {
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
-        Dataset dataset = indexSubTree.dataset;
-        ARecordType recordType = indexSubTree.recordType;
-        ARecordType metaRecordType = indexSubTree.metaRecordType;
+        Dataset dataset = indexSubTree.getDataset();
+        ARecordType recordType = indexSubTree.getRecordType();
+        ARecordType metaRecordType = indexSubTree.getMetaRecordType();
         // we made sure indexSubTree has datasource scan
-        DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.dataSourceRef.getValue();
+        DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.getDataSourceRef().getValue();
 
         InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams(chosenIndex.getIndexName(),
                 chosenIndex.getIndexType(), dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
@@ -403,7 +404,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             // We are optimizing a join. Add the input variable to the secondaryIndexFuncArgs.
             LogicalVariable inputSearchVariable = getInputSearchVar(optFuncExpr, indexSubTree);
             keyVarList.add(inputSearchVariable);
-            inputOp = (AbstractLogicalOperator) probeSubTree.root;
+            inputOp = (AbstractLogicalOperator) probeSubTree.getRoot();
         }
         jobGenParams.setKeyVarList(keyVarList);
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
@@ -440,7 +441,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(null, subTree, null, chosenIndex, analysisCtx,
                 false, false, false, context);
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
-        subTree.dataSourceRef.setValue(indexPlanRootOp);
+        subTree.getDataSourceRef().setValue(indexPlanRootOp);
         return true;
     }
 
@@ -451,14 +452,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             boolean hasGroupBy) throws AlgebricksException {
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
-        OptimizableOperatorSubTree indexSubTree = null;
-        OptimizableOperatorSubTree probeSubTree = null;
+        OptimizableOperatorSubTree indexSubTree;
+        OptimizableOperatorSubTree probeSubTree;
 
         // We assume that the left subtree is the outer branch and the right subtree is the inner branch.
         // This assumption holds true since we only use an index from the right subtree.
         // The following is just a sanity check.
         if (rightSubTree.hasDataSourceScan()
-                && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
+                && dataset.getDatasetName().equals(rightSubTree.getDataset().getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         } else {
@@ -469,8 +470,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // The arguments of edit-distance-contains() function are asymmetrical, we can only use index
         // if the dataset of index subtree and the dataset of first argument's subtree is the same
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS
-                && optFuncExpr.getOperatorSubTree(0).dataset != null && !optFuncExpr.getOperatorSubTree(0).dataset
-                        .getDatasetName().equals(indexSubTree.dataset.getDatasetName())) {
+                && optFuncExpr.getOperatorSubTree(0).getDataset() != null && !optFuncExpr.getOperatorSubTree(0)
+                        .getDataset().getDatasetName().equals(indexSubTree.getDataset().getDatasetName())) {
             return false;
         }
 
@@ -489,9 +490,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Remember the original probe subtree, and its primary-key variables,
         // so we can later retrieve the missing attributes via an equi join.
-        List<LogicalVariable> originalSubTreePKs = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> originalSubTreePKs = new ArrayList<>();
         // Remember the primary-keys of the new probe subtree for the top-level equi join.
-        List<LogicalVariable> surrogateSubTreePKs = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> surrogateSubTreePKs = new ArrayList<>();
 
         // Copy probe subtree, replacing their variables with new ones. We will use the original variables
         // to stitch together a top-level equi join.
@@ -499,8 +500,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 join.getCondition().getValue(), optFuncExpr, originalSubTreePKs, surrogateSubTreePKs, context);
 
         // Remember original live variables from the index sub tree.
-        List<LogicalVariable> indexSubTreeLiveVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(indexSubTree.root, indexSubTreeLiveVars);
+        List<LogicalVariable> indexSubTreeLiveVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(indexSubTree.getRoot(), indexSubTreeLiveVars);
 
         // Clone the original join condition because we may have to modify it (and we also need the original).
         ILogicalExpression joinCond = join.getCondition().getValue().cloneExpression();
@@ -510,22 +511,22 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
                 || optFuncExpr.getFuncExpr()
                         .getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
-            panicJoinRef = new MutableObject<ILogicalOperator>(joinRef.getValue());
-            panicVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+            panicJoinRef = new MutableObject<>(joinRef.getValue());
+            panicVarMap = new HashMap<>();
             Mutable<ILogicalOperator> newProbeRootRef = createPanicNestedLoopJoinPlan(panicJoinRef, indexSubTree,
                     probeSubTree, optFuncExpr, chosenIndex, panicVarMap, context);
-            probeSubTree.rootRef.setValue(newProbeRootRef.getValue());
-            probeSubTree.root = newProbeRootRef.getValue();
+            probeSubTree.getRootRef().setValue(newProbeRootRef.getValue());
+            probeSubTree.setRoot(newProbeRootRef.getValue());
         }
         // Create regular indexed-nested loop join path.
         ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(null, indexSubTree, probeSubTree, chosenIndex,
                 analysisCtx, true, isLeftOuterJoin, true, context);
-        indexSubTree.dataSourceRef.setValue(indexPlanRootOp);
+        indexSubTree.getDataSourceRef().setValue(indexPlanRootOp);
 
         // Change join into a select with the same condition.
         SelectOperator topSelect = new SelectOperator(new MutableObject<ILogicalExpression>(joinCond), isLeftOuterJoin,
                 newNullPlaceHolderVar);
-        topSelect.getInputs().add(indexSubTree.rootRef);
+        topSelect.getInputs().add(indexSubTree.getRootRef());
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
         ILogicalOperator topOp = topSelect;
@@ -535,10 +536,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
             indexSubTreeLiveVars.addAll(originalSubTreePKs);
             indexSubTreeLiveVars.add(inputSearchVar);
-            List<LogicalVariable> panicPlanLiveVars = new ArrayList<LogicalVariable>();
+            List<LogicalVariable> panicPlanLiveVars = new ArrayList<>();
             VariableUtilities.getLiveVariables(panicJoinRef.getValue(), panicPlanLiveVars);
             // Create variable mapping for union all operator.
-            List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
+            List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = new ArrayList<>();
             for (int i = 0; i < indexSubTreeLiveVars.size(); i++) {
                 LogicalVariable indexSubTreeVar = indexSubTreeLiveVars.get(i);
                 LogicalVariable panicPlanVar = panicVarMap.get(indexSubTreeVar);
@@ -593,7 +594,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         Map<LogicalVariable, LogicalVariable> joinInputSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
         // Init with all live vars.
         List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(probeSubTree.root, liveVars);
+        VariableUtilities.getLiveVariables(probeSubTree.getRoot(), liveVars);
         for (LogicalVariable var : liveVars) {
             joinInputSubTreeVarMap.put(var, var);
         }
@@ -612,25 +613,25 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Create first copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context, context, newProbeSubTreeVarMap);
-        ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.root);
+        ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.getRoot());
         inferTypes(newProbeSubTree, context);
         Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);
         // Create second copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context, context, joinInputSubTreeVarMap);
-        ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.root);
+        ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.getRoot());
         inferTypes(joinInputSubTree, context);
-        probeSubTree.rootRef.setValue(joinInputSubTree);
+        probeSubTree.getRootRef().setValue(joinInputSubTree);
 
         // Remember the original probe subtree reference so we can return it.
-        Mutable<ILogicalOperator> originalProbeSubTreeRootRef = probeSubTree.rootRef;
+        Mutable<ILogicalOperator> originalProbeSubTreeRootRef = probeSubTree.getRootRef();
 
         // Replace the original probe subtree with its copy.
-        Dataset origDataset = probeSubTree.dataset;
-        ARecordType origRecordType = probeSubTree.recordType;
+        Dataset origDataset = probeSubTree.getDataset();
+        ARecordType origRecordType = probeSubTree.getRecordType();
         probeSubTree.initFromSubTree(newProbeSubTreeRootRef);
-        probeSubTree.dataset = origDataset;
-        probeSubTree.recordType = origRecordType;
+        probeSubTree.setDataset(origDataset);
+        probeSubTree.setRecordType(origRecordType);
 
         // Replace the variables in the join condition based on the mapping of variables
         // in the new probe subtree.
@@ -673,12 +674,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // We split the plan into two "branches", and add selections on each side.
         AbstractLogicalOperator replicateOp = new ReplicateOperator(2);
-        replicateOp.getInputs().add(new MutableObject<ILogicalOperator>(probeSubTree.root));
+        replicateOp.getInputs().add(new MutableObject<ILogicalOperator>(probeSubTree.getRoot()));
         replicateOp.setExecutionMode(ExecutionMode.PARTITIONED);
         context.computeAndSetTypeEnvironmentForOperator(replicateOp);
 
         // Create select ops for removing tuples that are filterable and not filterable, respectively.
-        IVariableTypeEnvironment probeTypeEnv = context.getOutputTypeEnvironment(probeSubTree.root);
+        IVariableTypeEnvironment probeTypeEnv = context.getOutputTypeEnvironment(probeSubTree.getRoot());
         IAType inputSearchVarType;
         if (chosenIndex.isEnforcingKeyFileds()) {
             inputSearchVarType = optFuncExpr.getFieldType(optFuncExpr.findLogicalVar(inputSearchVar));
@@ -691,12 +692,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 isFilterableSelectOpRef, isNotFilterableSelectOpRef);
 
         List<LogicalVariable> originalLiveVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(indexSubTree.root, originalLiveVars);
+        VariableUtilities.getLiveVariables(indexSubTree.getRoot(), originalLiveVars);
 
         // Copy the scan subtree in indexSubTree.
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
                 context, context);
-        ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.root);
+        ILogicalOperator scanSubTree = deepCopyVisitor.deepCopy(indexSubTree.getRoot());
 
         Map<LogicalVariable, LogicalVariable> copyVarMap = deepCopyVisitor.getInputToOutputVariableMapping();
         panicVarMap.putAll(copyVarMap);
@@ -1020,7 +1021,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             return null;
         }
 
-        for (AbstractLogicalOperator op : subTree.assignsAndUnnests) {
+        for (AbstractLogicalOperator op : subTree.getAssignsAndUnnests()) {
             if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
                 continue;
             }

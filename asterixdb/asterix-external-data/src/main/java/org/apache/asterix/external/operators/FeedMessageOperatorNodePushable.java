@@ -63,7 +63,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         this.partition = partition;
         IAsterixAppRuntimeContext runtimeCtx =
                 (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
-        this.feedManager = (ActiveManager) runtimeCtx.getFeedManager();
+        this.feedManager = (ActiveManager) runtimeCtx.getActiveManager();
     }
 
     @Override
@@ -98,8 +98,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         EntityId sourceFeedId = endFeedMessage.getSourceFeedId();
         ActiveRuntimeId subscribableRuntimeId =
                 new ActiveRuntimeId(sourceFeedId, FeedRuntimeType.INTAKE.toString(), partition);
-        ISubscribableRuntime feedRuntime =
-                (ISubscribableRuntime) feedManager.getSubscribableRuntime(subscribableRuntimeId);
+        ISubscribableRuntime feedRuntime = (ISubscribableRuntime) feedManager.getRuntime(subscribableRuntimeId);
         AdapterRuntimeManager adapterRuntimeManager = ((IngestionRuntime) feedRuntime).getAdapterRuntimeManager();
         adapterRuntimeManager.stop();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -129,8 +128,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             }
 
             runtimeId = new ActiveRuntimeId(endFeedMessage.getSourceFeedId(), runtimeType.toString(), partition);
-            CollectionRuntime feedRuntime =
-                    (CollectionRuntime) feedManager.getActiveRuntimeRegistry().getRuntime(runtimeId);
+            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getRuntime(runtimeId);
             if (feedRuntime != null) {
                 feedRuntime.getSourceRuntime().unsubscribe(feedRuntime);
             }
@@ -150,11 +148,10 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     ActiveRuntimeId feedSubscribableRuntimeId = new ActiveRuntimeId(connectionId.getFeedId(),
                             FeedRuntimeType.COMPUTE.toString(), partition);
                     ISubscribableRuntime feedRuntime =
-                            (ISubscribableRuntime) feedManager.getSubscribableRuntime(feedSubscribableRuntimeId);
+                            (ISubscribableRuntime) feedManager.getRuntime(feedSubscribableRuntimeId);
                     runtimeId = new ActiveRuntimeId(endFeedMessage.getSourceFeedId(),
                             FeedRuntimeType.COMPUTE_COLLECT.toString(), partition);
-                    CollectionRuntime feedCollectionRuntime =
-                            (CollectionRuntime) feedManager.getActiveRuntimeRegistry().getRuntime(runtimeId);
+                    CollectionRuntime feedCollectionRuntime = (CollectionRuntime) feedManager.getRuntime(runtimeId);
                     feedRuntime.unsubscribe(feedCollectionRuntime);
                     break;
                 default:

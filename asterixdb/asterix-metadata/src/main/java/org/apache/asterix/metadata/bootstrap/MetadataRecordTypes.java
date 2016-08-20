@@ -510,7 +510,7 @@ public final class MetadataRecordTypes {
     private MetadataRecordTypes() {
     }
 
-    private static ARecordType createRecordType(String recordTypeName, String[] fieldNames, IAType[] fieldTypes,
+    public static ARecordType createRecordType(String recordTypeName, String[] fieldNames, IAType[] fieldTypes,
             boolean isOpen) {
         ARecordType recordType = new ARecordType(recordTypeName, fieldNames, fieldTypes, isOpen);
         if (recordTypeName != null) {
@@ -519,7 +519,7 @@ public final class MetadataRecordTypes {
         return recordType;
     }
 
-    private static final ARecordType createPropertiesRecordType() {
+    public static final ARecordType createPropertiesRecordType() {
         return createRecordType(
                 // RecordTypeName
                 null,

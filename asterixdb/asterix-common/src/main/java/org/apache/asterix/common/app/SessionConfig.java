@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.common;
+package org.apache.asterix.common.app;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -105,6 +105,7 @@ public class SessionConfig {
      */
     public static final String FORMAT_QUOTE_RECORD = "quote-record";
 
+    @FunctionalInterface
     public interface ResultDecorator {
         AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException;
     }
@@ -179,7 +180,7 @@ public class SessionConfig {
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
-        this.flags = new HashMap<String, Boolean>();
+        this.flags = new HashMap<>();
     }
 
     /**
@@ -228,13 +229,13 @@ public class SessionConfig {
     /**
      * Specify all out-of-band settings at once. For convenience of older code.
      */
-    public void setOOBData(boolean expr_tree, boolean rewritten_expr_tree, boolean logical_plan,
-            boolean optimized_logical_plan, boolean hyracks_job) {
-        this.set(OOB_EXPR_TREE, expr_tree);
-        this.set(OOB_REWRITTEN_EXPR_TREE, rewritten_expr_tree);
-        this.set(OOB_LOGICAL_PLAN, logical_plan);
-        this.set(OOB_OPTIMIZED_LOGICAL_PLAN, optimized_logical_plan);
-        this.set(OOB_HYRACKS_JOB, hyracks_job);
+    public void setOOBData(boolean exprTree, boolean rewrittenExprTree, boolean logicalPlan,
+            boolean optimizedLogicalPlan, boolean hyracksJob) {
+        this.set(OOB_EXPR_TREE, exprTree);
+        this.set(OOB_REWRITTEN_EXPR_TREE, rewrittenExprTree);
+        this.set(OOB_LOGICAL_PLAN, logicalPlan);
+        this.set(OOB_OPTIMIZED_LOGICAL_PLAN, optimizedLogicalPlan);
+        this.set(OOB_HYRACKS_JOB, hyracksJob);
     }
 
     /**

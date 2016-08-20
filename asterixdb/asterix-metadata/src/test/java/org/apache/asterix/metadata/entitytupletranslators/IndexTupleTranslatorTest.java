@@ -32,7 +32,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Index;
@@ -62,16 +61,14 @@ public class IndexTupleTranslatorTest {
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList(), false);
 
-            Dataset dataset = new Dataset("test", "d1", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES",
-                    "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115,
-                    0);
+            Dataset dataset =
+                    new Dataset("test", "d1", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES", "prefix",
+                            compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0);
 
             Index index = new Index("test", "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), -1, false, false, 0);
-
-            MetadataPrimaryIndexes.init();
 
             MetadataNode mockMetadataNode = mock(MetadataNode.class);
             when(mockMetadataNode.getDatatype(any(), anyString(), anyString())).thenReturn(new Datatype("test", "d1",

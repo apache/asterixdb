@@ -76,4 +76,9 @@ public class TypeDecl implements Statement {
         return datagenAnnotation;
     }
 
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
+    }
+
 }

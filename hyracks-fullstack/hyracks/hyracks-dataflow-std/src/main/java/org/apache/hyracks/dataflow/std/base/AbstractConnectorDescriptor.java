@@ -18,19 +18,18 @@
  */
 package org.apache.hyracks.dataflow.std.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public abstract class AbstractConnectorDescriptor implements IConnectorDescriptor {
     private static final long serialVersionUID = 1L;
-    protected final ConnectorDescriptorId id;
+    protected ConnectorDescriptorId id;
 
     protected String displayName;
 
@@ -39,14 +38,17 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
         displayName = getClass().getName() + "[" + id + "]";
     }
 
+    @Override
     public ConnectorDescriptorId getConnectorId() {
         return id;
     }
 
+    @Override
     public String getDisplayName() {
         return displayName;
     }
 
+    @Override
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
@@ -66,5 +68,10 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
             ICCApplicationContext appCtx) {
         // do nothing
+    }
+
+    @Override
+    public void setConnectorId(ConnectorDescriptorId id) {
+        this.id = id;
     }
 }

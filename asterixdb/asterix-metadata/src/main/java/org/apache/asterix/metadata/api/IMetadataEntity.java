@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.metadata.api;
 
 import java.io.Serializable;
@@ -24,7 +23,6 @@ import java.io.Serializable;
 import org.apache.asterix.metadata.MetadataCache;
 
 public interface IMetadataEntity<T> extends Serializable {
-
     public static final int PENDING_NO_OP = 0;
     public static final int PENDING_ADD_OP = 1;
     public static final int PENDING_DROP_OP = 2;
@@ -32,4 +30,5 @@ public interface IMetadataEntity<T> extends Serializable {
     public T addToCache(MetadataCache cache);
 
     public T dropFromCache(MetadataCache cache);
+
 }
