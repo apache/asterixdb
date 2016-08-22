@@ -68,7 +68,7 @@ public class LangRecordParseUtil {
                 parseLiteral((LiteralExpr) expr, serialized);
                 break;
             case RECORD_CONSTRUCTOR_EXPRESSION:
-                parseRecord((RecordConstructor) expr, serialized);
+                parseRecord((RecordConstructor) expr, serialized, true);
                 break;
             case LIST_CONSTRUCTOR_EXPRESSION:
                 parseList((ListConstructor) expr, serialized);
@@ -82,7 +82,7 @@ public class LangRecordParseUtil {
         }
     }
 
-    public static void parseRecord(RecordConstructor recordValue, ArrayBackedValueStorage serialized)
+    public static void parseRecord(RecordConstructor recordValue, ArrayBackedValueStorage serialized, boolean tagged)
             throws HyracksDataException {
         AMutableString fieldNameString = new AMutableString(null);
         ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
@@ -112,7 +112,7 @@ public class LangRecordParseUtil {
             parseExpression(fb.getRightExpr(), fieldValue);
             recordBuilder.addField(fieldName, fieldValue);
         }
-        recordBuilder.write(serialized.getDataOutput(), true);
+        recordBuilder.write(serialized.getDataOutput(), tagged);
     }
 
     private static void parseList(ListConstructor valueExpr, ArrayBackedValueStorage serialized)

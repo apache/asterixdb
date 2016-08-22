@@ -21,7 +21,9 @@ package org.apache.asterix.algebra.extension;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An interface that provides an extension mechanism to extend a language with additional statements
@@ -44,5 +46,5 @@ public interface IExtensionStatement extends Statement {
      * @throws Exception
      */
     void handle(IStatementExecutor statementExecutor, AqlMetadataProvider metadataProvider,
-            IHyracksClientConnection hcc) throws Exception;
+            IHyracksClientConnection hcc) throws HyracksDataException, AlgebricksException;
 }

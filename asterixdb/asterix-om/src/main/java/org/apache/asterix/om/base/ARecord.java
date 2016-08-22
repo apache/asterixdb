@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ARecord implements IAObject {
+    public static final ARecord EMPTY_OPEN_RECORD = new ARecord(ARecordType.FULLY_OPEN_RECORD_TYPE, new IAObject[] {});
 
     protected ARecordType type;
     protected IAObject[] fields;

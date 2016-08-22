@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -30,6 +31,11 @@ public class AsterixExtension {
     public AsterixExtension(String className, List<Pair<String, String>> args) {
         this.className = className;
         this.args = args;
+    }
+
+    public AsterixExtension(String className) {
+        this.className = className;
+        this.args = Collections.emptyList();
     }
 
     public List<Pair<String, String>> getArgs() {
