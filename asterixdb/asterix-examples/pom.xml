@@ -36,6 +36,7 @@
 
   <properties>
     <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
   </properties>
 
   <packaging>pom</packaging>

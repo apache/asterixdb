@@ -29,6 +29,7 @@
 
   <properties>
     <root.dir>${basedir}/../../..</root.dir>
+    <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
   </properties>
   <dependencies>
     <dependency>
