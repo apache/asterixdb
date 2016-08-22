@@ -58,6 +58,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class TestExecutor {
@@ -267,14 +268,22 @@ public class TestExecutor {
             // In future this may be changed depending on the requested
             // output format sent to the servlet.
             String errorBody = EntityUtils.toString(httpResponse.getEntity());
-            JSONObject result = new JSONObject(errorBody);
-            String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                    result.getString("stacktrace") };
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            String exceptionMsg = "HTTP operation failed: " + errors[0]
-                    + "\nSTATUS LINE: " + httpResponse.getStatusLine()
-                    + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2];
-            throw new Exception(exceptionMsg);
+            try {
+                JSONObject result = new JSONObject(errorBody);
+                String[] errors = {result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                        result.getString("stacktrace")};
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+                String exceptionMsg = "HTTP operation failed: " + errors[0]
+                        + "\nSTATUS LINE: " + httpResponse.getStatusLine()
+                        + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2];
+                throw new Exception(exceptionMsg);
+            } catch (JSONException e) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorBody);
+                String exceptionMsg = "HTTP operation failed: response is not valid-JSON (see nested exception)"
+                        + "\nSTATUS LINE: " + httpResponse.getStatusLine()
+                        + "\nERROR_BODY: " + errorBody;
+                throw new Exception(exceptionMsg, e);
+            }
         }
         return httpResponse;
     }
