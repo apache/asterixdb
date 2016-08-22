@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -29,7 +26,6 @@ import java.util.logging.Logger;
 import javax.servlet.Servlet;
 
 import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.api.http.servlet.QueryWebInterfaceServlet;
 import org.apache.asterix.api.http.servlet.AQLAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
@@ -39,6 +35,7 @@ import org.apache.asterix.api.http.servlet.QueryAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryServiceServlet;
 import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
+import org.apache.asterix.api.http.servlet.QueryWebInterfaceServlet;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
@@ -71,6 +68,9 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
@@ -218,7 +218,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return jsonAPIServer;
     }
 
-    private Server setupQueryWebServer(AsterixExternalProperties externalProperties) throws Exception {
+    protected Server setupQueryWebServer(AsterixExternalProperties externalProperties) throws Exception {
 
         Server queryWebServer = new Server(externalProperties.getQueryWebInterfacePort());
 
