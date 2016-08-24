@@ -46,12 +46,12 @@ public class TwitterUtil {
         public static final String LOCATION_EU = "Europe";
         public static final String LANGUAGES = "languages"; // languages to track
         public static final String TRACK = "keywords"; // terms to track
-        public static final String  FILTER_LEVEL = "filter-level";
+        public static final String FILTER_LEVEL = "filter-level";
     }
 
     public static class GeoConstants {
-        public static final double[][] US = new double[][] { { -124.848974, 24.396308 }, { -66.885444, 49.384358 } };
-        public static final double[][] EU = new double[][]{{-29.7,36.7},{79.2,72.0}};
+        private static final double[][] US = new double[][] { { -124.848974, 24.396308 }, { -66.885444, 49.384358 } };
+        private static final double[][] EU = new double[][] { { -29.7, 36.7 }, { 79.2, 72.0 } };
         public static Map<String, double[][]> boundingBoxes = initializeBoundingBoxes();
     }
 
@@ -83,24 +83,25 @@ public class TwitterUtil {
 
         if (m.matches()) {
             String[] locationStrings = locationValue.trim().split(";\\s*");
-            locations = new double[locationStrings.length*2][2];
+            locations = new double[locationStrings.length * 2][2];
 
-            for(int i=0; i<locationStrings.length; i++) {
+            for (int i = 0; i < locationStrings.length; i++) {
                 if (locationStrings[i].contains(",")) {
                     String[] coordinatesString = locationStrings[i].split(",");
-                    for(int k=0; k < 2; k++) {
+                    for (int k = 0; k < 2; k++) {
                         for (int l = 0; l < 2; l++) {
                             try {
                                 locations[2 * i + k][l] = Double.parseDouble(coordinatesString[2 * k + l]);
                             } catch (NumberFormatException ne) {
-                                throw new AsterixException("Incorrect coordinate value " + coordinatesString[2 * k + l]);
+                                throw new AsterixException(
+                                        "Incorrect coordinate value " + coordinatesString[2 * k + l]);
                             }
                         }
                     }
                 } else if (GeoConstants.boundingBoxes.containsKey(locationStrings[i])) {
                     // Only add known locations
                     double loc[][] = GeoConstants.boundingBoxes.get(locationStrings[i]);
-                    for(int k=0; k < 2; k++) {
+                    for (int k = 0; k < 2; k++) {
                         for (int l = 0; l < 2; l++) {
                             locations[2 * i + k][l] = loc[k][l];
                         }
@@ -132,7 +133,7 @@ public class TwitterUtil {
             if (trackValue.contains(",")) {
                 keywords = trackValue.trim().split(",\\s*");
             } else {
-                keywords = new String[] {trackValue};
+                keywords = new String[] { trackValue };
             }
             filterQuery = filterQuery.track(keywords);
         }
@@ -146,7 +147,7 @@ public class TwitterUtil {
             if (langValue.contains(",")) {
                 languages = langValue.trim().split(",\\s*");
             } else {
-                languages = new String[] {langValue};
+                languages = new String[] { langValue };
             }
             filterQuery = filterQuery.language(languages);
         }
@@ -163,9 +164,9 @@ public class TwitterUtil {
         }
 
         // Filtering level: none, low or medium (defaul=none)
-        if(filterQuery != null) {
+        if (filterQuery != null) {
             String filterValue = configuration.get(ConfigurationConstants.FILTER_LEVEL);
-            if (filterValue!=null) {
+            if (filterValue != null) {
                 filterQuery = filterQuery.filterLevel(filterValue);
             }
         }
@@ -188,8 +189,11 @@ public class TwitterUtil {
                 builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
                 builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
                 LOGGER.warning(builder.toString());
-                LOGGER.warning("Unable to configure Twitter adapter due to incomplete/incorrect authentication credentials");
-                LOGGER.warning("For details on how to obtain OAuth authentication token, visit https://dev.twitter.com/oauth/overview/application-owner-access-tokens");
+                LOGGER.warning(
+                        "Unable to configure Twitter adapter due to incomplete/incorrect authentication credentials");
+                LOGGER.warning(
+                        "For details on how to obtain OAuth authentication token, visit https://dev.twitter.com/oauth"
+                                + "/overview/application-owner-access-tokens");
             }
         }
         Twitter twitter = tf.getInstance();
@@ -205,6 +209,7 @@ public class TwitterUtil {
     private static ConfigurationBuilder getAuthConfiguration(Map<String, String> configuration) {
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true);
+        cb.setJSONStoreEnabled(true);
         String oAuthConsumerKey = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_KEY);
         String oAuthConsumerSecret = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_SECRET);
         String oAuthAccessToken = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN);

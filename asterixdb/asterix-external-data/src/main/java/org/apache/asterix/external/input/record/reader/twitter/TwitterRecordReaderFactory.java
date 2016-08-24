@@ -37,7 +37,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import twitter4j.FilterQuery;
 import twitter4j.Status;
 
-public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> {
+public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TwitterRecordReaderFactory.class.getName());
@@ -114,7 +114,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
     }
 
     @Override
-    public IRecordReader<? extends Status> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public IRecordReader<? extends String> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         if (pull) {
             return new TwitterPullRecordReader(TwitterUtil.getTwitterService(configuration),
@@ -133,8 +133,8 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<Status> 
     }
 
     @Override
-    public Class<? extends Status> getRecordClass() {
-        return Status.class;
+    public Class<? extends String> getRecordClass() {
+        return String.class;
     }
 
     private boolean validateConfiguration(Map<String, String> configuration) {
