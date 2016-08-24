@@ -290,6 +290,7 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitRangeForwardOperator(RangeForwardOperator op, Void arg) throws AlgebricksException {
+        standardLayout(op);
         return null;
     }
 

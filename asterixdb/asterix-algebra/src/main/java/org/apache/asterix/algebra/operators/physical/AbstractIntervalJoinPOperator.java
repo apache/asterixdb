@@ -55,7 +55,7 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
 
     private final List<LogicalVariable> keysLeftBranch;
     private final List<LogicalVariable> keysRightBranch;
-    private final IIntervalMergeJoinCheckerFactory mjcf;
+    protected final IIntervalMergeJoinCheckerFactory mjcf;
     private final RangeId leftRangeId;
     private final RangeId rightRangeId;
     private final IRangeMap rangeMapHint;
@@ -115,14 +115,11 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator iop, IOptimizationContext context) {
-        ArrayList<OrderColumn> order = new ArrayList<>();
-        for (LogicalVariable v : keysLeftBranch) {
-            order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
-        }
+        ArrayList<OrderColumn> order = getLeftRangeOrderColumn();
         IPartitioningProperty pp = new OrderedPartitionedProperty(order, null, leftRangeId,
                 RangePartitioningType.PROJECT, rangeMapHint);
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
-        propsLocal.add(new LocalOrderProperty(order));
+        propsLocal.add(new LocalOrderProperty(getLeftLocalSortOrderColumn()));
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
     }
 
@@ -134,32 +131,47 @@ public abstract class AbstractIntervalJoinPOperator extends AbstractJoinPOperato
 
         IPartitioningProperty ppLeft = null;
         List<ILocalStructuralProperty> ispLeft = new ArrayList<>();
+        ispLeft.add(new LocalOrderProperty(getLeftLocalSortOrderColumn()));
+
         IPartitioningProperty ppRight = null;
         List<ILocalStructuralProperty> ispRight = new ArrayList<>();
-
-        ArrayList<OrderColumn> orderLeft = new ArrayList<>();
-        for (LogicalVariable v : keysLeftBranch) {
-            orderLeft.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
-        }
-        ispLeft.add(new LocalOrderProperty(orderLeft));
-
-        ArrayList<OrderColumn> orderRight = new ArrayList<>();
-        for (LogicalVariable v : keysRightBranch) {
-            orderRight.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
-        }
-        ispRight.add(new LocalOrderProperty(orderRight));
+        ispRight.add(new LocalOrderProperty(getRightLocalSortOrderColumn()));
 
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            ppLeft = new OrderedPartitionedProperty(orderLeft, null, leftRangeId, mjcf.getLeftPartitioningType(),
-                    rangeMapHint);
-            ppRight = new OrderedPartitionedProperty(orderRight, null, rightRangeId, mjcf.getRightPartitioningType(),
-                    rangeMapHint);
+            ppLeft = new OrderedPartitionedProperty(getLeftRangeOrderColumn(), null, leftRangeId,
+                    mjcf.getLeftPartitioningType(), rangeMapHint);
+            ppRight = new OrderedPartitionedProperty(getRightRangeOrderColumn(), null, rightRangeId,
+                    mjcf.getRightPartitioningType(), rangeMapHint);
         }
 
         pv[0] = new StructuralPropertiesVector(ppLeft, ispLeft);
         pv[1] = new StructuralPropertiesVector(ppRight, ispRight);
         IPartitioningRequirementsCoordinator prc = IPartitioningRequirementsCoordinator.NO_COORDINATION;
         return new PhysicalRequirements(pv, prc);
+    }
+
+    protected ArrayList<OrderColumn> getLeftLocalSortOrderColumn() {
+        return getLeftRangeOrderColumn();
+    }
+
+    protected ArrayList<OrderColumn> getRightLocalSortOrderColumn() {
+        return getRightRangeOrderColumn();
+    }
+
+    protected ArrayList<OrderColumn> getLeftRangeOrderColumn() {
+        ArrayList<OrderColumn> order = new ArrayList<>();
+        for (LogicalVariable v : keysLeftBranch) {
+            order.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
+        }
+        return order;
+    }
+
+    protected ArrayList<OrderColumn> getRightRangeOrderColumn() {
+        ArrayList<OrderColumn> orderRight = new ArrayList<>();
+        for (LogicalVariable v : keysRightBranch) {
+            orderRight.add(new OrderColumn(v, mjcf.isOrderAsc() ? OrderKind.ASC : OrderKind.DESC));
+        }
+        return orderRight;
     }
 
     @Override

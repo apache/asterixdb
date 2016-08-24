@@ -79,7 +79,7 @@ public class AsterixPropertiesAccessor {
                 fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
                 is = new FileInputStream(fileName);
             } catch (FileNotFoundException fnf) {
-                throw new AsterixException("Could not find configuration file " + fileName);
+                throw new AsterixException("Could not find configuration file " + fileName, fnf);
             }
         }
 
@@ -90,7 +90,7 @@ public class AsterixPropertiesAccessor {
             Unmarshaller unmarshaller = ctx.createUnmarshaller();
             asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(is);
         } catch (JAXBException e) {
-            throw new AsterixException("Failed to read configuration file " + fileName);
+            throw new AsterixException("Failed to read configuration file " + fileName, e);
         }
         instanceName = asterixConfiguration.getInstanceName();
         metadataNodeName = asterixConfiguration.getMetadataNode();
@@ -117,7 +117,7 @@ public class AsterixPropertiesAccessor {
             nodePartitionsMap.put(store.getNcId(), nodePartitions);
             nodeNames.add(store.getNcId());
         }
-        asterixConfigurationParams = new HashMap<String, Property>();
+        asterixConfigurationParams = new HashMap<>();
         for (Property p : asterixConfiguration.getProperty()) {
             asterixConfigurationParams.put(p.getName(), p);
         }

@@ -58,7 +58,7 @@ public final class RangeId implements Serializable {
 
     @Override
     public String toString() {
-        return "RangeId(#" + id + (partition >= 0 ? "," + partition : "") + ")";
+        return "RangeId(" + id + (partition >= 0 ? "," + partition : "") + ")";
     }
 
     @Override
@@ -74,4 +74,5 @@ public final class RangeId implements Serializable {
     public int hashCode() {
         return id;
     }
+
 }

@@ -27,7 +27,7 @@ public final class FunctionIdentifier implements Serializable {
     private final String name;
     private final int arity;
 
-    public final static int VARARGS = -1;
+    public static final int VARARGS = -1;
 
     public FunctionIdentifier(String namespace, String name) {
         this(namespace, name, VARARGS);
@@ -60,6 +60,7 @@ public final class FunctionIdentifier implements Serializable {
         return name.hashCode() + namespace.hashCode();
     }
 
+    @Override
     public String toString() {
         return getNamespace() + ":" + name;
     }

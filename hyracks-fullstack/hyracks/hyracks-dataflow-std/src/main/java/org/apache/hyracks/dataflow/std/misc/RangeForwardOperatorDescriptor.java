@@ -73,6 +73,16 @@ public class RangeForwardOperatorDescriptor extends AbstractOperatorDescriptor {
         public IRangeMap getRangeMap() {
             return rangeMap;
         }
+
+        public static RangeForwardTaskState getRangeState(int rangeId, IHyracksTaskContext ctx)
+                throws HyracksDataException {
+            RangeId rangeIdObject = new RangeId(rangeId, ctx);
+            RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(rangeIdObject);
+            if (rangeState == null) {
+                throw new HyracksDataException("Range state is missing for " + rangeIdObject + ".");
+            }
+            return rangeState;
+        }
     }
 
     private final class ForwardActivityNode extends AbstractActivityNode {

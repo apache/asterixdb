@@ -45,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -55,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.JoinPartitioningType;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MaterializePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MergeJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
@@ -223,65 +225,65 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
 
         // Connect main path
         connectOperators(leftIntervalSplitRef, leftSortedInput, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftIntervalSplitRef.getValue());
+        updateOperatorContext(context, leftIntervalSplitRef);
         connectOperators(leftMaterialize0Ref, leftIntervalSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftMaterialize0Ref.getValue());
+        updateOperatorContext(context, leftMaterialize0Ref);
         connectOperators(leftMaterialize1Ref, leftIntervalSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftMaterialize1Ref.getValue());
+        updateOperatorContext(context, leftMaterialize1Ref);
         connectOperators(leftMaterialize2Ref, leftIntervalSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftMaterialize2Ref.getValue());
+        updateOperatorContext(context, leftMaterialize2Ref);
 
         connectOperators(leftStartsSplitRef, leftMaterialize0Ref, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftStartsSplitRef.getValue());
+        updateOperatorContext(context, leftStartsSplitRef);
 
         connectOperators(rightIntervalSplitRef, rightSortedInput, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightIntervalSplitRef.getValue());
+        updateOperatorContext(context, rightIntervalSplitRef);
         connectOperators(rightMaterialize0Ref, rightIntervalSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightMaterialize0Ref.getValue());
+        updateOperatorContext(context, rightMaterialize0Ref);
         connectOperators(rightMaterialize1Ref, rightIntervalSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightMaterialize1Ref.getValue());
+        updateOperatorContext(context, rightMaterialize1Ref);
         connectOperators(rightMaterialize2Ref, rightIntervalSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightMaterialize2Ref.getValue());
+        updateOperatorContext(context, rightMaterialize2Ref);
 
         connectOperators(rightStartsSplitRef, rightMaterialize0Ref, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightStartsSplitRef.getValue());
+        updateOperatorContext(context, rightStartsSplitRef);
 
         // Connect left and right starts path
         connectOperators(startsJoinRef, leftStartsSplitRef, context);
         connectOperators(startsJoinRef, rightStartsSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(startsJoinRef.getValue());
+        updateOperatorContext(context, startsJoinRef);
 
         // Connect left ends path
         connectOperators(leftEndsJoinRef, leftMaterialize1Ref, context);
         connectOperators(leftEndsJoinRef, rightStartsSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftEndsJoinRef.getValue());
+        updateOperatorContext(context, leftEndsJoinRef);
         connectOperators(union1Ref, startsJoinRef, context);
         connectOperators(union1Ref, leftEndsJoinRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(union1Ref.getValue());
+        updateOperatorContext(context, union1Ref);
 
         // Connect left covers path
         connectOperators(leftCoversJoinRef, leftMaterialize2Ref, context);
         connectOperators(leftCoversJoinRef, rightStartsSplitRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(leftCoversJoinRef.getValue());
+        updateOperatorContext(context, leftCoversJoinRef);
         connectOperators(union2Ref, union1Ref, context);
         connectOperators(union2Ref, leftCoversJoinRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(union2Ref.getValue());
+        updateOperatorContext(context, union2Ref);
 
         // Connect right ends path
         connectOperators(rightEndsJoinRef, leftStartsSplitRef, context);
         connectOperators(rightEndsJoinRef, rightMaterialize1Ref, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightEndsJoinRef.getValue());
+        updateOperatorContext(context, rightEndsJoinRef);
         connectOperators(union3Ref, union2Ref, context);
         connectOperators(union3Ref, rightEndsJoinRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(union3Ref.getValue());
+        updateOperatorContext(context, union3Ref);
 
         // Connect right covers path
         connectOperators(rightCoversJoinRef, leftStartsSplitRef, context);
         connectOperators(rightCoversJoinRef, rightMaterialize2Ref, context);
-        context.computeAndSetTypeEnvironmentForOperator(rightCoversJoinRef.getValue());
+        updateOperatorContext(context, rightCoversJoinRef);
         connectOperators(union4Ref, union3Ref, context);
         connectOperators(union4Ref, rightCoversJoinRef, context);
-        context.computeAndSetTypeEnvironmentForOperator(union4Ref.getValue());
+        updateOperatorContext(context, union4Ref);
 
         // Update context
         opRef.setValue(union4Ref.getValue());
@@ -297,6 +299,14 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
         context.addToDontApplySet(this, union3);
         context.addToDontApplySet(this, union4);
         return true;
+    }
+
+    private void updateOperatorContext(IOptimizationContext context, Mutable<ILogicalOperator> operatorRef)
+            throws AlgebricksException {
+//        operatorRef.getValue().recomputeSchema();
+//        operatorRef.getValue().computeDeliveredPhysicalProperties(context);
+        context.computeAndSetTypeEnvironmentForOperator(operatorRef.getValue());
+        OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) operatorRef, context);
     }
 
     private LogicalVariable getSortKey(ILogicalOperator op) {
@@ -341,6 +351,7 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
             child.getValue().getInputs().add(eoRef);
             context.computeAndSetTypeEnvironmentForOperator(eo);
             context.computeAndSetTypeEnvironmentForOperator(child.getValue());
+            OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull((AbstractLogicalOperator) eo, context);
         } else {
             if (parent.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE) {
                 ReplicateOperator ro = (ReplicateOperator) parent.getValue();
@@ -418,7 +429,8 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
             MergeJoinPOperator mjpo = (MergeJoinPOperator) joinPo;
             MergeJoinPOperator mjpoClone = new MergeJoinPOperator(mjpo.getKind(), mjpo.getPartitioningType(),
                     mjpo.getKeysLeftBranch(), mjpo.getKeysRightBranch(), memoryJoinSize,
-                    mjpo.getMergeJoinCheckerFactory(), mjpo.getLeftRangeId(), mjpo.getRightRangeId(), null);
+                    mjpo.getMergeJoinCheckerFactory(), mjpo.getLeftRangeId(), mjpo.getRightRangeId(),
+                    mjpo.getRangeMapHint());
             ijoClone.setPhysicalOperator(mjpoClone);
         } else if (joinPo.getOperatorTag() == PhysicalOperatorTag.EXTENSION_OPERATOR) {
             if (joinPo instanceof IntervalIndexJoinPOperator) {
@@ -426,16 +438,15 @@ public class IntervalSplitPartitioningRule implements IAlgebraicRewriteRule {
                 IntervalIndexJoinPOperator iijpoClone = new IntervalIndexJoinPOperator(iijpo.getKind(),
                         iijpo.getPartitioningType(), iijpo.getKeysLeftBranch(), iijpo.getKeysRightBranch(),
                         memoryJoinSize, iijpo.getIntervalMergeJoinCheckerFactory(), iijpo.getLeftRangeId(),
-                        iijpo.getRightRangeId(), null);
+                        iijpo.getRightRangeId(), iijpo.getRangeMapHint());
                 ijoClone.setPhysicalOperator(iijpoClone);
             } else if (joinPo instanceof IntervalPartitionJoinPOperator) {
                 IntervalPartitionJoinPOperator ipjpo = (IntervalPartitionJoinPOperator) joinPo;
                 IntervalPartitionJoinPOperator iijpoClone = new IntervalPartitionJoinPOperator(ipjpo.getKind(),
                         ipjpo.getPartitioningType(), ipjpo.getKeysLeftBranch(), ipjpo.getKeysRightBranch(),
-                        memoryJoinSize, ipjpo.getBuildTupleCount(), ipjpo.getProbeTupleCount(),
-                        ipjpo.getBuildMaxDuration(), ipjpo.getProbeMaxDuration(), ipjpo.getAvgTuplesInFrame(),
-                        ipjpo.getIntervalMergeJoinCheckerFactory(), ipjpo.getLeftRangeId(), ipjpo.getRightRangeId(),
-                        null);
+                        memoryJoinSize, ipjpo.getK(), ipjpo.getIntervalMergeJoinCheckerFactory(),
+                        ipjpo.getLeftPartitionVar(), ipjpo.getRightPartitionVar(), ipjpo.getLeftRangeId(),
+                        ipjpo.getRightRangeId(), ipjpo.getRangeMapHint());
                 ijoClone.setPhysicalOperator(iijpoClone);
             } else {
                 return null;

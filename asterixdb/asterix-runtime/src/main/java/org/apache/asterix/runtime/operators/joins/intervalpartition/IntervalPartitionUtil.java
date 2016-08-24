@@ -29,6 +29,7 @@ import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.value.IRangeMap;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 
 public class IntervalPartitionUtil {
@@ -230,6 +231,27 @@ public class IntervalPartitionUtil {
             }
         }
         return inMemoryMap;
+    }
+
+    public static long getPartitionDuration(long partitionStart, long partitionEnd, int k) throws HyracksDataException {
+        if (k <= 2) {
+            throw new HyracksDataException("k is to small for interval partitioner.");
+        }
+        long duration = (partitionEnd - partitionStart) / (k - 2);
+        if (duration <= 0) {
+            duration = 1;
+        }
+        return duration;
+    }
+
+    public static int getIntervalPartition(long point, long partitionStart, long partitionDuration, int k)
+            throws HyracksDataException {
+        if (point < partitionStart) {
+            return 0;
+        }
+        long pointFloor = Math.floorDiv(point - partitionStart, partitionDuration);
+        // Add one to the partition, since 0 represents any point before the start partition point.
+        return (int) Math.min(pointFloor + 1, k - 1L);
     }
 
 }

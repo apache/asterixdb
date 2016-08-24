@@ -335,7 +335,7 @@ public final class RuleCollections {
         prepareForJobGenRewrites
                 .add(new IsolateHyracksOperatorsRule(HeuristicOptimizer.hyraxOperatorsBelowWhichJobGenIsDisabled));
         prepareForJobGenRewrites.add(new ExtractCommonOperatorsRule());
-        prepareForJobGenRewrites.add(new IntervalSplitPartitioningRule());
+        //prepareForJobGenRewrites.add(new IntervalSplitPartitioningRule());
         // Re-infer all types, so that, e.g., the effect of not-is-null is
         // propagated.
         prepareForJobGenRewrites.add(new ReinferAllTypesRule());

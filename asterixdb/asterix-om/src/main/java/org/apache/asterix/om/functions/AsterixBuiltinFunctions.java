@@ -525,6 +525,10 @@ public class AsterixBuiltinFunctions {
             "interval-ends", 2);
     public static final FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "interval-ended-by", 2);
+    public static final FunctionIdentifier INTERVAL_PARTITION_JOIN_START = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval-partition-join-start", 3);
+    public static final FunctionIdentifier INTERVAL_PARTITION_JOIN_END = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "interval-partition-join-end", 3);
     public static final FunctionIdentifier CURRENT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "current-time", 0);
     public static final FunctionIdentifier CURRENT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -1009,6 +1013,8 @@ public class AsterixBuiltinFunctions {
         addFunction(INTERVAL_COVERED_BY, ABooleanTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_ENDS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_ENDED_BY, ABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERVAL_PARTITION_JOIN_START, AInt32TypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERVAL_PARTITION_JOIN_END, AInt32TypeComputer.INSTANCE, true);
         addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE, false);
         addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE, false);
         addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, false);

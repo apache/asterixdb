@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
@@ -34,24 +31,12 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
     private final long partitionStart;
     private final long partitionDuration;
 
-    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionComputerFactory.class.getName());
-
     public IntervalPartitionComputerFactory(int intervalFieldId, int k, long partitionStart, long partitionEnd)
             throws HyracksDataException {
         this.intervalFieldId = intervalFieldId;
         this.k = k;
         this.partitionStart = partitionStart;
-        if (k <= 2) {
-            throw new HyracksDataException("k is to small for interval partitioner.");
-        }
-        long duration = (partitionEnd - partitionStart) / (k - 2);
-        if (duration <= 0) {
-            duration = 1;
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.fine("The interval partitioner using the smallest duration (1).");
-            }
-        }
-        partitionDuration = duration;
+        this.partitionDuration = IntervalPartitionUtil.getPartitionDuration(partitionStart, partitionEnd, k);
     }
 
     @Override
@@ -66,12 +51,7 @@ public class IntervalPartitionComputerFactory implements ITuplePartitionComputer
             }
 
             private int getIntervalPartition(long point) throws HyracksDataException {
-                if (point < partitionStart) {
-                    return 0;
-                }
-                long pointFloor = Math.floorDiv(point - partitionStart, partitionDuration);
-                // Add one to the partition, since 0 represents any point before the start partition point.
-                return (int) Math.min(pointFloor + 1, k - 1L);
+                return IntervalPartitionUtil.getIntervalPartition(point, partitionStart, partitionDuration, k);
             }
 
             public int getIntervalPartitionI(IFrameTupleAccessor accessor, int tIndex, int fieldId)

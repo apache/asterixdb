@@ -154,7 +154,7 @@ public class IntervalLocalRangeOperatorDescriptor extends AbstractOperatorDescri
                         writers[i].open();
                         resultAppender[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
                     }
-                    RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx.getStateObject(new RangeId(rangeId.getId(), ctx));
+                    RangeForwardTaskState rangeState = RangeForwardTaskState.getRangeState(rangeId.getId(), ctx);
                     IRangeMap rangeMap = rangeState.getRangeMap();
                     nodeRangeStart = getPartitionBoundryStart(rangeMap);
                     nodeRangeEnd = getPartitionBoundryEnd(rangeMap);

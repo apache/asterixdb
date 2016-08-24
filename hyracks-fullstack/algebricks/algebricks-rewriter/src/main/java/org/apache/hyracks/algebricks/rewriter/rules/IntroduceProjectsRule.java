@@ -48,10 +48,10 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
 
-    private final Set<LogicalVariable> usedVars = new HashSet<LogicalVariable>();
-    private final Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
-    private final Set<LogicalVariable> producedVars = new HashSet<LogicalVariable>();
-    private final List<LogicalVariable> projectVars = new ArrayList<LogicalVariable>();
+    private final Set<LogicalVariable> usedVars = new HashSet<>();
+    private final Set<LogicalVariable> liveVars = new HashSet<>();
+    private final Set<LogicalVariable> producedVars = new HashSet<>();
+    private final List<LogicalVariable> projectVars = new ArrayList<>();
     protected boolean hasRun = false;
 
     @Override
@@ -78,7 +78,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
         VariableUtilities.getUsedVariables(op, usedVars);
 
         // In the top-down pass, maintain a set of variables that are used in op and all its parents.
-        HashSet<LogicalVariable> parentsUsedVars = new HashSet<LogicalVariable>();
+        HashSet<LogicalVariable> parentsUsedVars = new HashSet<>();
         parentsUsedVars.addAll(parentUsedVars);
         parentsUsedVars.addAll(usedVars);
 
@@ -115,7 +115,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
                 ILogicalOperator childOp = op.getInputs().get(i).getValue();
                 liveVars.clear();
                 VariableUtilities.getLiveVariables(childOp, liveVars);
-                List<LogicalVariable> vars = new ArrayList<LogicalVariable>();
+                List<LogicalVariable> vars = new ArrayList<>();
                 vars.addAll(projectVars);
                 // Only retain those variables that are live in the i-th input branch.
                 vars.retainAll(liveVars);
@@ -132,8 +132,8 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
             liveVars.clear();
             VariableUtilities.getLiveVariables(op.getInputs().get(0).getValue(), liveVars);
             ProjectOperator projectOp = (ProjectOperator) op;
-            List<LogicalVariable> projectVars = projectOp.getVariables();
-            if (liveVars.size() == projectVars.size() && liveVars.containsAll(projectVars)) {
+            List<LogicalVariable> projectVarsTemp = projectOp.getVariables();
+            if (liveVars.size() == projectVarsTemp.size() && liveVars.containsAll(projectVarsTemp)) {
                 boolean eliminateProject = true;
                 // For UnionAll the variables must also be in exactly the correct order.
                 if (parentOp.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
@@ -155,7 +155,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
 
     private boolean canEliminateProjectBelowUnion(UnionAllOperator unionOp, ProjectOperator projectOp,
             int unionInputIndex) throws AlgebricksException {
-        List<LogicalVariable> orderedLiveVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> orderedLiveVars = new ArrayList<>();
         VariableUtilities.getLiveVariables(projectOp.getInputs().get(0).getValue(), orderedLiveVars);
         int numVars = orderedLiveVars.size();
         for (int i = 0; i < numVars; i++) {

@@ -585,8 +585,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
                     List<ILocalStructuralProperty> reqdLocals = required.getLocalProperties();
 
-                    // Add RangeForwardOperator.
-                    addRangeForwardOperator(op.getInputs().get(i), opp.getRangeId(), opp.getRangeMapHint(), context);
+                    // The RangeForwardOperator should already be in the plan.
 
                     boolean propWasSet = false;
                     pop = null;

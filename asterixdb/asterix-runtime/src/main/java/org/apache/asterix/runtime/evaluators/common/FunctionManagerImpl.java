@@ -35,12 +35,12 @@ public class FunctionManagerImpl implements IFunctionManager {
     private final Map<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory> functions;
 
     public FunctionManagerImpl() {
-        functions = new HashMap<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory>();
+        functions = new HashMap<>();
     }
 
     @Override
     public synchronized IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
-        Pair<FunctionIdentifier, Integer> key = new Pair<FunctionIdentifier, Integer>(fid, fid.getArity());
+        Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
         IFunctionDescriptorFactory factory = functions.get(key);
         if (factory == null) {
             throw new AlgebricksException("Inappropriate use of function " + "'" + fid.getName() + "'");
@@ -58,7 +58,7 @@ public class FunctionManagerImpl implements IFunctionManager {
     public synchronized void unregisterFunction(IFunctionDescriptorFactory descriptorFactory)
             throws AlgebricksException {
         FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-        Pair<FunctionIdentifier, Integer> key = new Pair<FunctionIdentifier, Integer>(fid, fid.getArity());
+        Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
         functions.remove(key);
     }
 

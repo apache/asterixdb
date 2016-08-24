@@ -261,6 +261,8 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalMetByDes
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalOverlappedByDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalOverlappingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalOverlapsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionJoinEndDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalPartitionJoinStartDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalStartedByDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
@@ -400,6 +402,10 @@ public class FunctionCollection {
         // the number of arguments of the function depend on the first few arguments.
         temp.add(SimilarityJaccardPrefixDescriptor.FACTORY);
         temp.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
+
+        // Partition functions for interval partition join pre-sorting
+        temp.add(IntervalPartitionJoinStartDescriptor.FACTORY);
+        temp.add(IntervalPartitionJoinEndDescriptor.FACTORY);
 
         // functions that need generated class for null-handling.
         List<IFunctionDescriptorFactory> functionsToInjectUnkownHandling = new ArrayList<>();

@@ -39,8 +39,7 @@ public class OverlappingIntervalMergeJoinCheckerFactory extends AbstractInterval
     public IIntervalMergeJoinChecker createMergeJoinChecker(int[] keys0, int[] keys1, int partition,
             IHyracksTaskContext ctx) throws HyracksDataException {
         int fieldIndex = 0;
-        RangeForwardTaskState rangeState = (RangeForwardTaskState) ctx
-                .getStateObject(new RangeId(rangeId.getId(), ctx));
+        RangeForwardTaskState rangeState = RangeForwardTaskState.getRangeState(rangeId.getId(), ctx);
         IRangeMap rangeMap = rangeState.getRangeMap();
         if (ATypeTag.INT64.serialize() != rangeMap.getTag(0, 0)) {
             throw new HyracksDataException("Invalid range map type for interval merge join checker.");
