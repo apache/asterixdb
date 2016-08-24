@@ -56,6 +56,7 @@ public class AsterixHyracksIntegrationUtil {
     private AsterixPropertiesAccessor propertiesAccessor;
 
     public void init(boolean deleteOldInstanceData) throws Exception {
+        ncs = new NodeControllerService[0]; // ensure that ncs is not null
         propertiesAccessor = new AsterixPropertiesAccessor();
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
