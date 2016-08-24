@@ -2739,6 +2739,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key-02">
+        <output-dir compare="Text">btree-index-composite-key-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key-mixed-intervals">
         <output-dir compare="Text">btree-index-composite-key-mixed-intervals</output-dir>
       </compilation-unit>

@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create internal and external datasets in more than one dataverse and query metadata to verify entries in Metadata.
- * Expected Res : Success
- * Date         : Sep 20 2012
- */
 
-for $l in dataset('Metadata.Dataset')
-where $l.DataverseName='test1' or $l.DataverseName='test2' or $l.DataverseName='TwitterData'
-order by $l.DataverseName, $l.DatasetName, $l.DatatypeDataverseName
-return $l
+use dataverse test;
 
+// Outer - $l (LineItem), Inner - $o (Orders)
+for $l in dataset('LineItem')
+for $o in dataset('Orders')
+where $l.l_orderkey /*+ indexnl */ = $o.o_orderkey
+order by $o.o_orderkey,$l.l_orderkey
+return
+{ "o_orderkey": $o.o_orderkey, "l_orderkey": $l.l_orderkey  }

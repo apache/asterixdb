@@ -25,4 +25,5 @@
 select element l
 from  `Metadata.Dataset` as l
 where ((l.DataverseName = 'test1') or (l.DataverseName = 'test2') or (l.DataverseName = 'TwitterData'))
+order by l.DataverseName, l.DatasetName, l.DatatypeDataverseName
 ;

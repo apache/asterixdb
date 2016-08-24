@@ -36,3 +36,20 @@ Where
       LiteralExpr [STRING] [TwitterData]
     ]
   ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$l ]
+    Field=DataverseName
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$l ]
+    Field=DatasetName
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$l ]
+    Field=DatatypeDataverseName
+  ]
+  ASC
+
