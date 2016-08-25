@@ -83,6 +83,7 @@ public class AsterixHyracksIntegrationUtil {
                 }
             };
             ncStartThread.start();
+            ncStartThread.join();
         }
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
         ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
