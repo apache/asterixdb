@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +30,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class LocalGroupingProperty extends AbstractGroupingProperty implements ILocalStructuralProperty {
 
-    // preferredOrderEnforcer, if not null, is guaranteed to enforce grouping on
-    // columnSet
-    private List<LogicalVariable> preferredOrderEnforcer;
+    // preferredOrderEnforcer, which is guaranteed to enforce grouping on columnSet
+    private final List<LogicalVariable> preferredOrderEnforcer = new ArrayList<>();
 
     public LocalGroupingProperty(Set<LogicalVariable> columnSet) {
         super(columnSet);
@@ -39,7 +39,9 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
 
     public LocalGroupingProperty(Set<LogicalVariable> columnSet, List<LogicalVariable> preferredOrderEnforcer) {
         this(columnSet);
-        this.preferredOrderEnforcer = preferredOrderEnforcer;
+        if (preferredOrderEnforcer != null) {
+            this.preferredOrderEnforcer.addAll(preferredOrderEnforcer);
+        }
     }
 
     @Override
@@ -84,11 +86,7 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
                 break;
             }
         }
-        if (!newColumns.isEmpty()) {
-            return new LocalGroupingProperty(newColumns, preferredOrderEnforcer.subList(0, newColumns.size()));
-        } else {
-            return null;
-        }
+        return createNewLocalGroupingProperty(newColumns);
     }
 
     @Override
@@ -99,12 +97,7 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
                 newColumns.add(v);
             }
         }
-        if (!newColumns.isEmpty()) {
-            return new LocalGroupingProperty(newColumns, preferredOrderEnforcer == null ? null
-                    : preferredOrderEnforcer.subList(groupKeys.size(), newColumns.size()));
-        } else {
-            return null;
-        }
+        return createNewLocalGroupingProperty(newColumns);
     }
 
     @Override
@@ -113,5 +106,16 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
         Set<LogicalVariable> normalizedColumnSet =
                 normalizeAndReduceGroupingColumns(columnSet, equivalenceClasses, fds);
         return new LocalGroupingProperty(normalizedColumnSet, preferredOrderEnforcer);
+    }
+
+    // Creates a new local grouping property from a new column set.
+    private LocalGroupingProperty createNewLocalGroupingProperty(Set<LogicalVariable> newColumns) {
+        if (newColumns.isEmpty()) {
+            return null;
+        }
+        int numColumns = newColumns.size();
+        List<LogicalVariable> newOrderEnforcer = preferredOrderEnforcer.size() > numColumns ? preferredOrderEnforcer
+                .subList(0, numColumns) : preferredOrderEnforcer;
+        return new LocalGroupingProperty(newColumns, newOrderEnforcer);
     }
 }
