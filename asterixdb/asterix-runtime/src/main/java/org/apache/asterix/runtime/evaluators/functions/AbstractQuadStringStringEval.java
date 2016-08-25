@@ -23,6 +23,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
@@ -35,7 +36,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -107,17 +107,17 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
         strPtr3rd.set(array2.getByteArray(), array2.getStartOffset() + 1, array2.getLength());
         strPtr4th.set(array3.getByteArray(), array3.getStartOffset() + 1, array3.getLength());
 
-        String res = compute(strPtr1st, strPtr2nd, strPtr3rd, strPtr4th);
-        resultBuffer.setValue(res);
         try {
+            String res = compute(strPtr1st, strPtr2nd, strPtr3rd, strPtr4th);
+            resultBuffer.setValue(res);
             strSerde.serialize(resultBuffer, dout);
-        } catch (HyracksDataException e) {
+        } catch (IOException e) {
             throw new AlgebricksException(e);
         }
         result.set(resultStorage);
     }
 
     protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,
-            UTF8StringPointable strPtr3rd, UTF8StringPointable strPtr4th) throws AlgebricksException;
+            UTF8StringPointable strPtr3rd, UTF8StringPointable strPtr4th) throws IOException;
 
 }

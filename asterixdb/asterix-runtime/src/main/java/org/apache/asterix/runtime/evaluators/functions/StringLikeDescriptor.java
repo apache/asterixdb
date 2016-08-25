@@ -18,21 +18,19 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.IOException;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.utils.RegExpMatcher;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
-import org.apache.hyracks.data.std.util.UTF8CharSequence;
 
 /**
  * Creates new Matcher and Pattern objects each time the value of the pattern
@@ -58,47 +56,33 @@ public class StringLikeDescriptor extends AbstractScalarFunctionDynamicDescripto
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
-
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1],
-                        AsterixBuiltinFunctions.STRING_MATCHES) {
-
-                    private Pattern pattern = null;
-                    private Matcher matcher = null;
-                    private ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
-                    private UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
-                    private UTF8CharSequence carSeq = new UTF8CharSequence();
+                        StringLikeDescriptor.this.getIdentifier()) {
+                    private final RegExpMatcher matcher = new RegExpMatcher();
+                    private final RegExpMatcher.IRegExpPatternGenerator patternGenerator = new LikePatternGenerator();
 
                     @Override
                     protected boolean compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr)
-                            throws AlgebricksException {
-                        boolean newPattern = false;
-                        if (pattern == null || lastPatternPtr.compareTo(patternPtr) != 0) {
-                            newPattern = true;
-                        }
-                        if (newPattern) {
-                            StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-                            // ! object creation !
-                            pattern = Pattern.compile(StringEvaluatorUtils.toRegex(lastPatternPtr.toString()));
-                        }
-
-                        carSeq.reset(srcPtr);
-                        if (newPattern) {
-                            matcher = pattern.matcher(carSeq);
-                        } else {
-                            matcher.reset(carSeq);
-                        }
-                        return matcher.find();
+                            throws IOException {
+                        matcher.build(srcPtr, patternPtr, null, patternGenerator);
+                        return matcher.matches();
                     }
-
                 };
             }
         };
+    }
+
+    class LikePatternGenerator implements RegExpMatcher.IRegExpPatternGenerator {
+
+        @Override
+        public String toRegExpPatternString(String input) {
+            return StringEvaluatorUtils.toRegex(input);
+        }
     }
 
 };

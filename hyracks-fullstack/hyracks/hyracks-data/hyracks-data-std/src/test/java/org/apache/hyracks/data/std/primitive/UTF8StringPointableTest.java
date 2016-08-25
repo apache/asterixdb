@@ -19,10 +19,12 @@
 
 package org.apache.hyracks.data.std.primitive;
 
+import static org.apache.hyracks.data.std.primitive.UTF8StringPointable.generateUTF8Pointable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.util.string.UTF8StringSample;
@@ -30,21 +32,17 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Test;
 
 public class UTF8StringPointableTest {
-    public static UTF8StringPointable STRING_EMPTY = UTF8StringPointable
-            .generateUTF8Pointable(UTF8StringSample.EMPTY_STRING);
-    public static UTF8StringPointable STRING_UTF8_MIX = UTF8StringPointable
-            .generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX);
-    public static UTF8StringPointable STRING_UTF8_MIX_LOWERCASE = UTF8StringPointable.generateUTF8Pointable(
+    public static UTF8StringPointable STRING_EMPTY = generateUTF8Pointable(UTF8StringSample.EMPTY_STRING);
+    public static UTF8StringPointable STRING_UTF8_MIX = generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX);
+    public static UTF8StringPointable STRING_UTF8_MIX_LOWERCASE = generateUTF8Pointable(
             UTF8StringSample.STRING_UTF8_MIX_LOWERCASE);
 
-    public static UTF8StringPointable STRING_LEN_127 = UTF8StringPointable
-            .generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
-    public static UTF8StringPointable STRING_LEN_128 = UTF8StringPointable
-            .generateUTF8Pointable(UTF8StringSample.STRING_LEN_128);
+    public static UTF8StringPointable STRING_LEN_127 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
+    public static UTF8StringPointable STRING_LEN_128 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_128);
 
     @Test
     public void testGetStringLength() throws Exception {
-        UTF8StringPointable utf8Ptr = UTF8StringPointable.generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
+        UTF8StringPointable utf8Ptr = generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
         assertEquals(127, utf8Ptr.getUTF8Length());
         assertEquals(1, utf8Ptr.getMetaDataLength());
         assertEquals(127, utf8Ptr.getStringLength());
@@ -84,7 +82,7 @@ public class UTF8StringPointableTest {
 
     @Test
     public void testConcat() throws Exception {
-        UTF8StringPointable expected = UTF8StringPointable.generateUTF8Pointable(
+        UTF8StringPointable expected = generateUTF8Pointable(
                 UTF8StringSample.generateStringRepeatBy(UTF8StringSample.ONE_ASCII_CHAR, 127 + 128));
 
         GrowableArray storage = new GrowableArray();
@@ -132,9 +130,9 @@ public class UTF8StringPointableTest {
         assertEquals(0, STRING_EMPTY.compareTo(result));
 
         storage.reset();
-        UTF8StringPointable testPtr = UTF8StringPointable.generateUTF8Pointable("Mix中文123");
-        UTF8StringPointable pattern = UTF8StringPointable.generateUTF8Pointable("文");
-        UTF8StringPointable expect = UTF8StringPointable.generateUTF8Pointable("Mix中");
+        UTF8StringPointable testPtr = generateUTF8Pointable("Mix中文123");
+        UTF8StringPointable pattern = generateUTF8Pointable("文");
+        UTF8StringPointable expect = generateUTF8Pointable("Mix中");
         testPtr.substrBefore(pattern, builder, storage);
         result.set(storage.getByteArray(), 0, storage.getLength());
         assertEquals(0, expect.compareTo(result));
@@ -149,14 +147,13 @@ public class UTF8StringPointableTest {
         UTF8StringPointable result = new UTF8StringPointable();
         result.set(storage.getByteArray(), 0, storage.getLength());
 
-        UTF8StringPointable expect = UTF8StringPointable
-                .generateUTF8Pointable(Character.toString(UTF8StringSample.ONE_ASCII_CHAR));
+        UTF8StringPointable expect = generateUTF8Pointable(Character.toString(UTF8StringSample.ONE_ASCII_CHAR));
         assertEquals(0, expect.compareTo(result));
 
         storage.reset();
-        UTF8StringPointable testPtr = UTF8StringPointable.generateUTF8Pointable("Mix中文123");
-        UTF8StringPointable pattern = UTF8StringPointable.generateUTF8Pointable("文");
-        expect = UTF8StringPointable.generateUTF8Pointable("123");
+        UTF8StringPointable testPtr = generateUTF8Pointable("Mix中文123");
+        UTF8StringPointable pattern = generateUTF8Pointable("文");
+        expect = generateUTF8Pointable("123");
         testPtr.substrAfter(pattern, builder, storage);
         result.set(storage.getByteArray(), 0, storage.getLength());
         assertEquals(0, expect.compareTo(result));
@@ -185,9 +182,79 @@ public class UTF8StringPointableTest {
 
         result.set(storage.getByteArray(), 0, storage.getLength());
 
-        UTF8StringPointable expected = UTF8StringPointable
-                .generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX_LOWERCASE.toUpperCase());
+        UTF8StringPointable expected = generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX_LOWERCASE.toUpperCase());
+        assertEquals(0, expected.compareTo(result));
+    }
+
+    @Test
+    public void testInitCap() throws Exception {
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+        GrowableArray storage = new GrowableArray();
+
+        UTF8StringPointable result = new UTF8StringPointable();
+        UTF8StringPointable input = generateUTF8Pointable("this is it.i am;here.");
+        input.initCap(builder, storage);
+
+        result.set(storage.getByteArray(), 0, storage.getLength());
+
+        UTF8StringPointable expected = generateUTF8Pointable("This Is It.I Am;Here.");
+        assertEquals(0, expected.compareTo(result));
+    }
+
+    @Test
+    public void testTrim() throws Exception {
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+        GrowableArray storage = new GrowableArray();
+        UTF8StringPointable result = new UTF8StringPointable();
+        UTF8StringPointable input = generateUTF8Pointable("  this is it.i am;here.  ");
+
+        // Trims both sides.
+        input.trim(builder, storage, true, true, CharSet.getInstance(" "));
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        UTF8StringPointable expected = generateUTF8Pointable("this is it.i am;here.");
         assertEquals(0, expected.compareTo(result));
 
+        // Only trims the right side.
+        storage.reset();
+        input.trim(builder, storage, false, true, CharSet.getInstance(" "));
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("  this is it.i am;here.");
+        assertEquals(0, expected.compareTo(result));
+
+        // Only trims the left side.
+        storage.reset();
+        input.trim(builder, storage, true, false, CharSet.getInstance(" "));
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("this is it.i am;here.  ");
+        assertEquals(0, expected.compareTo(result));
     }
+
+    @Test
+    public void testTrimWithPattern() throws Exception {
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+        GrowableArray storage = new GrowableArray();
+        UTF8StringPointable result = new UTF8StringPointable();
+        UTF8StringPointable input = generateUTF8Pointable("  this is it.i am;here.  ");
+
+        // Trims both sides.
+        input.trim(builder, storage, true, true, CharSet.getInstance(" hert."));
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        UTF8StringPointable expected = generateUTF8Pointable("is is it.i am;");
+        assertEquals(0, expected.compareTo(result));
+
+        // Only trims the right side.
+        storage.reset();
+        input.trim(builder, storage, false, true, CharSet.getInstance(" hert."));
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("  this is it.i am;");
+        assertEquals(0, expected.compareTo(result));
+
+        // Only trims the left side.
+        storage.reset();
+        input.trim(builder, storage, true, false, CharSet.getInstance(" hert."));
+        result.set(storage.getByteArray(), 0, storage.getLength());
+        expected = generateUTF8Pointable("is is it.i am;here.  ");
+        assertEquals(0, expected.compareTo(result));
+    }
+
 }

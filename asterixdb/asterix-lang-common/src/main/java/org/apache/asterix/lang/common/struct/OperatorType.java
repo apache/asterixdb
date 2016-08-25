@@ -32,6 +32,7 @@ public enum OperatorType {
     NEQ("!="),
     PLUS("+"),
     MINUS("-"),
+    CONCAT("||"),
     MUL("*"),
     DIV("/"), // float/double
     // divide

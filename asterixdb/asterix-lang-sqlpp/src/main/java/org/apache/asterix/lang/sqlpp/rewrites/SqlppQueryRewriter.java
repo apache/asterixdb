@@ -59,6 +59,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewrit
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGlobalAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppListInputFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SubstituteGroupbyExpressionWithVariableVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -122,6 +123,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite(true);
 
+        // Rewrites several variable-arg functions into their corresponding internal list-input functions.
+        rewriteListInputFunctions();
+
         // Inlines functions.
         inlineDeclaredUdfs();
 
@@ -152,6 +156,14 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
         SqlppGlobalAggregationSugarVisitor globalAggregationVisitor = new SqlppGlobalAggregationSugarVisitor();
         globalAggregationVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteListInputFunctions() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        SqlppListInputFunctionRewriteVisitor listInputFunctionVisitor = new SqlppListInputFunctionRewriteVisitor();
+        listInputFunctionVisitor.visit(topExpr, null);
     }
 
     protected void rewriteFunctionNames() throws AsterixException {

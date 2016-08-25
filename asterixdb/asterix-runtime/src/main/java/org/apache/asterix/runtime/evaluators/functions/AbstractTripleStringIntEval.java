@@ -1,0 +1,72 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.asterix.runtime.evaluators.functions;
+
+import java.io.IOException;
+
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+
+public abstract class AbstractTripleStringIntEval extends AbstractTripleStringEval {
+
+    @SuppressWarnings("rawtypes")
+    private final ISerializerDeserializer intSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINT32);
+    private final AMutableInt32 resultValue = new AMutableInt32(0);
+
+    public AbstractTripleStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
+            IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID)
+            throws AlgebricksException {
+        super(context, eval0, eval1, eval2, funcID);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void process(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable thrid,
+            IPointable result)
+ throws IOException {
+        resultValue.setValue(compute(first, second, thrid));
+        intSerde.serialize(resultValue, dout);
+        result.set(resultStorage);
+    }
+
+    /**
+     * Computes an integer value from three input strings.
+     *
+     * @param first
+     *            , the first input argument.
+     * @param second
+     *            , the second input argument.
+     * @param third
+     *            , the second input argument.
+     * @return an integer value.
+     * @throws IOException
+     */
+    protected abstract int compute(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable third)
+            throws IOException;
+}

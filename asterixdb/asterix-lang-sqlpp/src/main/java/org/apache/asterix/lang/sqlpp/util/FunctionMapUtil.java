@@ -18,12 +18,16 @@
  */
 package org.apache.asterix.lang.sqlpp.util;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -43,12 +47,27 @@ public class FunctionMapUtil {
         FUNCTION_NAME_MAP.put("lower", "lowercase"); // SQL: lower, AQL: lowercase
         FUNCTION_NAME_MAP.put("substr", "substring"); // SQL: substr,  AQL: substring
         FUNCTION_NAME_MAP.put("upper", "uppercase"); //SQL: upper, AQL: uppercase
+        FUNCTION_NAME_MAP.put("title", "initcap"); //SQL: title, SQL/AQL: initcap
+        FUNCTION_NAME_MAP.put("regexp_contains", "matches"); //SQL: regexp_contains, AQL: matches
+        FUNCTION_NAME_MAP.put("regexp_like", "regexp-like"); //SQL: regexp_like, AQL: regexp-like
+        FUNCTION_NAME_MAP.put("regexp_position", "regexp-position"); //SQL: regexp_position, AQL: regexp-position
+        FUNCTION_NAME_MAP.put("regexp_replace", "replace"); //SQL: regexp_replace, AQL: replace
+    }
+
+    // Maps from a variable-arg SQL function names to an internal list-arg function name.
+    private static final Map<String, String> LIST_INPUT_FUNCTION_MAP = new HashMap<>();
+
+    static {
+        LIST_INPUT_FUNCTION_MAP.put("concat", "string-concat");
+        LIST_INPUT_FUNCTION_MAP.put("greatest", CORE_AGGREGATE_PREFIX + SQL_PREFIX + "max");
+        LIST_INPUT_FUNCTION_MAP.put("least", CORE_AGGREGATE_PREFIX + SQL_PREFIX + "min");
     }
 
     /**
      * Whether a function signature is a SQL-92 core aggregate function.
      *
-     * @param fs,
+     * @param signature
+     *            ,
      *            the function signature.
      * @return true if the function signature is a SQL-92 core aggregate,
      *         false otherwise.
@@ -117,6 +136,25 @@ public class FunctionMapUtil {
                     + fs.getName().toLowerCase() + " could potentially express the intent.");
         }
         return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
+    }
+
+    /**
+     * Rewrites a variable-arg, user-surface function call into an internal, list-arg function.
+     *
+     * @param callExpr
+     *            The input call expression.
+     * @return a new call expression that calls the corresponding AsterixDB internal function.
+     */
+    public static CallExpr normalizedListInputFunctions(CallExpr callExpr) {
+        FunctionSignature fs = callExpr.getFunctionSignature();
+        String internalFuncName = LIST_INPUT_FUNCTION_MAP.get(fs.getName().toLowerCase());
+        if (internalFuncName == null) {
+            return callExpr;
+        }
+        callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_NS, internalFuncName, 1));
+        callExpr.setExprList(new ArrayList<>(Collections.singletonList(new ListConstructor(
+                ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList()))));
+        return callExpr;
     }
 
     /**

@@ -18,14 +18,11 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -34,11 +31,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.data.std.util.GrowableArray;
-import org.apache.hyracks.data.std.util.UTF8StringBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -51,49 +43,18 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
-                return new IScalarEvaluator() {
-
-                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private final DataOutput out = resultStorage.getDataOutput();
-                    private final IPointable inputArg = new VoidPointable();
-                    private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-
-                    private final GrowableArray array = new GrowableArray();
-                    private final UTF8StringBuilder builder = new UTF8StringBuilder();
-                    private final UTF8StringPointable string = new UTF8StringPointable();
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new AbstractUnaryStringStringEval(ctx, args[0], StringLowerCaseDescriptor.this.getIdentifier()) {
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-
-                        try {
-                            resultStorage.reset();
-                            eval.evaluate(tuple, inputArg);
-                            byte[] serString = inputArg.getByteArray();
-                            int offset = inputArg.getStartOffset();
-                            int len = inputArg.getLength() - 1;
-
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                string.set(serString, offset + 1, len - 1);
-                                array.reset();
-                                UTF8StringPointable.lowercase(string, builder, array);
-
-                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                                out.write(array.getByteArray(), 0, array.getLength());
-                            } else {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_LOWERCASE.getName()
-                                        + ": expects input type STRING/NULL but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[offset]));
-                            }
-                            result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(e1);
-                        }
+                    protected void process(UTF8StringPointable inputString, IPointable resultPointable)
+                            throws IOException {
+                        inputString.lowercase(resultBuilder, resultArray);
                     }
                 };
             }

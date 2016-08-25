@@ -1816,7 +1816,7 @@ Expression IsExpr() throws ParseException:
     boolean not = false;
 }
 {
-    operand = AddExpr()
+    operand = ConcatExpr()
     ( <IS> (<NOT> { not = true; })? (<NULL> | <MISSING> | <UNKOWN>)
       {
         String functionName = "is-" + token.image.toLowerCase();
@@ -1833,6 +1833,38 @@ Expression IsExpr() throws ParseException:
     }
 }
 
+Expression ConcatExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = AddExpr()
+    (
+      LOOKAHEAD(1)
+      (<CONCAT>)
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+          op.addOperand(operand);
+          op.setCurrentop(true);
+        }
+        try{
+            ((OperatorExpr)op).addOperator(token.image);
+        } catch (Exception e){
+            throw new ParseException(e.getMessage());
+        }
+    }
+    operand = AddExpr()
+    {
+      op.addOperand(operand);
+    }
+    )*
+
+    {
+       return op==null? operand: op;
+    }
+}
 
 Expression AddExpr()throws ParseException:
 {
@@ -1842,7 +1874,7 @@ Expression AddExpr()throws ParseException:
 {
     operand = MultExpr()
     (
-       LOOKAHEAD(1)
+      LOOKAHEAD(1)
       (<PLUS> | <MINUS>)
       {
         if (op == null) {
@@ -2302,7 +2334,7 @@ Expression CaseExpr() throws ParseException:
    List<Expression> whenExprs = new ArrayList<Expression>();
    List<Expression> thenExprs = new ArrayList<Expression>();
    Expression elseExpr = null;
-   
+
    Expression whenExpr = null;
    Expression thenExpr = null;
 }
@@ -3005,6 +3037,7 @@ TOKEN [IGNORE_CASE]:
 TOKEN :
 {
     <CARET : "^">
+  | <CONCAT : "||">
   | <DIV : "/">
   | <IDIV : "idiv">
   | <MINUS : "-">

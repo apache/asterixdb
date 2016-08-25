@@ -18,84 +18,47 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.IOException;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.utils.RegExpMatcher;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
-import org.apache.hyracks.data.std.util.UTF8CharSequence;
 
-public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class StringRegExpReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringReplaceDescriptor();
+            return new StringRegExpReplaceDescriptor();
         }
     };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
-
                 return new AbstractTripleStringStringEval(ctx, args[0], args[1], args[2],
-                        AsterixBuiltinFunctions.STRING_REPLACE) {
-
-                    private Pattern pattern = null;
-                    private Matcher matcher = null;
-                    private String replaceStr;
-                    private StringBuffer resultBuf = new StringBuffer();
-                    private ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
-                    private UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
-                    private ByteArrayAccessibleOutputStream lastReplaceStorage = new ByteArrayAccessibleOutputStream();
-                    private UTF8StringPointable lastReplacePtr = new UTF8StringPointable();
-                    private UTF8CharSequence carSeq = new UTF8CharSequence();
+                        StringRegExpReplaceDescriptor.this.getIdentifier()) {
+                    private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override
                     protected String compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr,
-                            UTF8StringPointable replacePtr) throws AlgebricksException {
-                        resultBuf.setLength(0);
-                        final boolean newPattern = (pattern == null || lastPatternPtr.compareTo(patternPtr) != 0);
-                        final boolean newReplace = (pattern == null || lastReplacePtr.compareTo(replacePtr) != 0);
-                        if (newPattern) {
-                            StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
-                            // ! object creation !
-                            pattern = Pattern.compile(lastPatternPtr.toString());
-                        }
-                        if (newReplace) {
-                            StringEvaluatorUtils.copyResetUTF8Pointable(replacePtr, lastReplaceStorage, lastReplacePtr);
-                            replaceStr = replacePtr.toString();
-                        }
-
-                        carSeq.reset(srcPtr);
-                        if (newPattern) {
-                            matcher = pattern.matcher(carSeq);
-                        } else {
-                            matcher.reset(carSeq);
-                        }
-
-                        while (matcher.find()) {
-                            matcher.appendReplacement(resultBuf, replaceStr);
-                        }
-                        matcher.appendTail(resultBuf);
-                        return resultBuf.toString();
+                            UTF8StringPointable replacePtr) throws IOException {
+                        matcher.build(srcPtr, patternPtr);
+                        return matcher.replace(replacePtr);
                     }
                 };
             }

@@ -1146,6 +1146,16 @@
         <output-dir compare="Text">binary_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="greatest_mixed">
+        <output-dir compare="Text">greatest_mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="least_mixed">
+        <output-dir compare="Text">least_mixed</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="constructor">
     <test-case FilePath="constructor">
@@ -5073,6 +5083,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="concat_pipe">
+        <output-dir compare="Text">concat_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat_pipe_multi">
+        <output-dir compare="Text">concat_pipe_multi</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat_func">
+        <output-dir compare="Text">concat_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="constructor">
         <output-dir compare="Text">constructor</output-dir>
       </compilation-unit>
@@ -5148,6 +5173,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="initcap">
+        <output-dir compare="Text">initcap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="length_01">
         <output-dir compare="Text">length_01</output-dir>
       </compilation-unit>
@@ -5170,6 +5200,11 @@
     <test-case FilePath="string">
       <compilation-unit name="lowercase">
         <output-dir compare="Text">lowercase</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="ltrim">
+        <output-dir compare="Text">ltrim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -5238,6 +5273,46 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="position">
+        <output-dir compare="Text">position</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains">
+        <output-dir compare="Text">matches06</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains_with_flag">
+        <output-dir compare="Text">matches23</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like">
+        <output-dir compare="Text">regexp_like</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like_with_flag">
+        <output-dir compare="Text">matches23</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position">
+        <output-dir compare="Text">regexp_position</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_replace">
+        <output-dir compare="Text">replace22</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="replace1">
         <output-dir compare="Text">replace1</output-dir>
       </compilation-unit>
@@ -5260,6 +5335,11 @@
     <test-case FilePath="string">
       <compilation-unit name="replace3">
         <output-dir compare="Text">replace3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="rtrim">
+        <output-dir compare="Text">rtrim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -5465,6 +5545,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="title">
+        <output-dir compare="Text">initcap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="toLowerCase02">
         <output-dir compare="Text">toLowerCase02</output-dir>
       </compilation-unit>
@@ -5477,6 +5562,11 @@
     <test-case FilePath="string">
       <compilation-unit name="toLowerCase04">
         <output-dir compare="Text">toLowerCase04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="trim">
+        <output-dir compare="Text">trim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">

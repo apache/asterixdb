@@ -18,92 +18,53 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractTripleStringStringEval implements IScalarEvaluator {
+public abstract class AbstractTripleStringStringEval extends AbstractTripleStringEval {
 
-    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private DataOutput dout = resultStorage.getDataOutput();
-    private IPointable array0 = new VoidPointable();
-    private IPointable array1 = new VoidPointable();
-    private IPointable array2 = new VoidPointable();
-    private IScalarEvaluator eval0;
-    private IScalarEvaluator eval1;
-    private IScalarEvaluator eval2;
-
-    private AMutableString resultBuffer = new AMutableString("");
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer strSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer stringSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
-
-    private final UTF8StringPointable strPtr1st = new UTF8StringPointable();
-    private final UTF8StringPointable strPtr2nd = new UTF8StringPointable();
-    private final UTF8StringPointable strPtr3rd = new UTF8StringPointable();
-
-    private final FunctionIdentifier funcID;
+    private final AMutableString resultValue = new AMutableString("");
 
     public AbstractTripleStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID)
             throws AlgebricksException {
-        this.eval0 = eval0.createScalarEvaluator(context);
-        this.eval1 = eval1.createScalarEvaluator(context);
-        this.eval2 = eval2.createScalarEvaluator(context);
-        this.funcID = funcID;
+        super(context, eval0, eval1, eval2, funcID);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-        eval0.evaluate(tuple, array0);
-        eval1.evaluate(tuple, array1);
-        eval2.evaluate(tuple, array2);
-
-        resultStorage.reset();
-        if (array0.getByteArray()[array0.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || array1.getByteArray()[array1.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || array2.getByteArray()[array2.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new AlgebricksException(funcID.getName()
-                    + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL), but got ("
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[array0.getStartOffset()])
-                    + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[array1.getStartOffset()])
-                    + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[array2.getStartOffset()])
-                    + ".");
-        }
-
-        strPtr1st.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());
-        strPtr2nd.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
-        strPtr3rd.set(array2.getByteArray(), array2.getStartOffset() + 1, array2.getLength());
-
-        String res = compute(strPtr1st, strPtr2nd, strPtr3rd);
-        resultBuffer.setValue(res);
-        try {
-            strSerde.serialize(resultBuffer, dout);
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
+    protected void process(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable thrid,
+            IPointable result) throws IOException {
+        resultValue.setValue(compute(first, second, thrid));
+        stringSerde.serialize(resultValue, dout);
         result.set(resultStorage);
     }
 
-    protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,
-            UTF8StringPointable strPtr3rd) throws AlgebricksException;
+    /**
+     * Computes a string value from three input strings.
+     *
+     * @param first
+     *            , the first input argument.
+     * @param second
+     *            , the second input argument.
+     * @param third
+     *            , the second input argument.
+     * @return a string value.
+     * @throws IOException
+     */
+    protected abstract String compute(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable third)
+            throws IOException;
 }
