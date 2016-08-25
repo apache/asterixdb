@@ -35,13 +35,16 @@ import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 
 public class InMemoryIntervalPartitionJoin {
 
+    private static final Logger LOGGER = Logger.getLogger(InMemoryIntervalPartitionJoin.class.getName());
+
     private final FrameTupleAccessor accessorBuild;
     private final FrameTupleAppender appender;
     private final IFrameBufferManager fbm;
     private BufferInfo bufferInfo;
     private final IIntervalMergeJoinChecker imjc;
 
-    private static final Logger LOGGER = Logger.getLogger(InMemoryIntervalPartitionJoin.class.getName());
+    private long joinComparisonCount = 0;
+    private long joinResultCount = 0;
 
     public InMemoryIntervalPartitionJoin(IHyracksTaskContext ctx, IFrameBufferManager fbm,
             IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd, RecordDescriptor probeRd)
@@ -55,6 +58,14 @@ public class InMemoryIntervalPartitionJoin {
                 "InMemoryIntervalPartitionJoin has been created for Thread ID " + Thread.currentThread().getId() + ".");
     }
 
+    public long getComparisonCount() {
+        return joinComparisonCount;
+    }
+
+    public long getResultCount() {
+        return joinResultCount;
+    }
+
     public void join(IFrameTupleAccessor accessorProbe, int probeTupleIndex, IFrameWriter writer)
             throws HyracksDataException {
         if (fbm.getNumFrames() != 0) {
@@ -62,9 +73,11 @@ public class InMemoryIntervalPartitionJoin {
                 fbm.getFrame(frameIndex, bufferInfo);
                 accessorBuild.reset(bufferInfo.getBuffer());
                 for (int buildTupleIndex = 0; buildTupleIndex < accessorBuild.getTupleCount(); ++buildTupleIndex) {
-                    if (imjc.checkToSaveInResult(accessorBuild, buildTupleIndex, accessorProbe, probeTupleIndex, false)) {
+                    if (imjc.checkToSaveInResult(accessorBuild, buildTupleIndex, accessorProbe, probeTupleIndex,
+                            false)) {
                         appendToResult(accessorBuild, buildTupleIndex, accessorProbe, probeTupleIndex, writer);
                     }
+                    joinComparisonCount++;
                 }
             }
         }
@@ -77,5 +90,6 @@ public class InMemoryIntervalPartitionJoin {
     private void appendToResult(IFrameTupleAccessor accessorBuild, int buildSidetIx, IFrameTupleAccessor accessorProbe,
             int probeSidetIx, IFrameWriter writer) throws HyracksDataException {
         FrameUtils.appendConcatToWriter(writer, appender, accessorBuild, buildSidetIx, accessorProbe, probeSidetIx);
+        joinResultCount++;
     }
 }

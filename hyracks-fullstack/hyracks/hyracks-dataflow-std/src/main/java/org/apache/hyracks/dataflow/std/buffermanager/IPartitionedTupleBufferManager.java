@@ -31,6 +31,8 @@ public interface IPartitionedTupleBufferManager {
 
     int getNumTuples(int partition);
 
+    int getNumFrames(int partition);
+
     int getPhysicalSize(int partition);
 
     /**

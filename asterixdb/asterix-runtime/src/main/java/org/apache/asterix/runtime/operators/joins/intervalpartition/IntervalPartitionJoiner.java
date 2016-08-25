@@ -52,13 +52,15 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  */
 public class IntervalPartitionJoiner {
 
-    // Used for special probe BigObject which can not be held into the Join memory
-    private FrameTupleAppender bigProbeFrameAppender;
+    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoiner.class.getName());
 
-    enum SIDE {
+    private enum SIDE {
         BUILD,
         PROBE
     }
+
+    // Used for special probe BigObject which can not be held into the Join memory
+    private FrameTupleAppender bigProbeFrameAppender;
 
     private IHyracksTaskContext ctx;
 
@@ -85,8 +87,6 @@ public class IntervalPartitionJoiner {
     private final FrameTupleAccessor accessorBuild;
     private final FrameTupleAccessor accessorProbe;
 
-    private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoiner.class.getName());
-
     // stats information
     private IntervalPartitionJoinData ipjd;
 
@@ -94,6 +94,12 @@ public class IntervalPartitionJoiner {
     private TuplePointer tempPtr = new TuplePointer();
 
     private IIntervalMergeJoinChecker imjc;
+
+    private long joinComparisonCount = 0;
+    private long joinResultCount = 0;
+    private long spillCount = 0;
+    private long spillReadCount = 0;
+    private long spillWriteCount = 0;
 
     public IntervalPartitionJoiner(IHyracksTaskContext ctx, int memForJoin, int k, int numOfPartitions,
             String buildRelName, String probeRelName, IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd,
@@ -220,6 +226,8 @@ public class IntervalPartitionJoiner {
 
     private void spillPartition(int pid) throws HyracksDataException {
         RunFileWriter writer = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.BUILD);
+        spillCount++;
+        spillWriteCount += buildBufferManager.getNumFrames(pid);
         buildBufferManager.flushPartition(pid, writer);
         buildBufferManager.clearPartition(pid);
         ipjd.buildSpill(pid);
@@ -261,7 +269,9 @@ public class IntervalPartitionJoiner {
     private void flushAndClearBuildSpilledPartition() throws HyracksDataException {
         for (int pid = ipjd.buildNextSpilled(0); pid >= 0; pid = ipjd.buildNextSpilled(pid + 1)) {
             if (buildBufferManager.getNumTuples(pid) > 0) {
-                buildBufferManager.flushPartition(pid, getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.BUILD));
+                spillWriteCount += buildBufferManager.getNumFrames(pid);
+                RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.BUILD);
+                buildBufferManager.flushPartition(pid, runFileWriter);
                 buildBufferManager.clearPartition(pid);
                 buildRFWriters[pid].close();
             }
@@ -271,7 +281,9 @@ public class IntervalPartitionJoiner {
     private void flushAndClearProbeSpilledPartition() throws HyracksDataException {
         for (int pid = 0; pid < numOfPartitions; ++pid) {
             if (probeBufferManager.getNumTuples(pid) > 0) {
-                probeBufferManager.flushPartition(pid, getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.PROBE));
+                spillWriteCount += probeBufferManager.getNumFrames(pid);
+                RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.PROBE);
+                probeBufferManager.flushPartition(pid, runFileWriter);
                 probeBufferManager.clearPartition(pid);
                 probeRFWriters[pid].close();
             }
@@ -310,6 +322,7 @@ public class IntervalPartitionJoiner {
                     return false;
                 }
             }
+            spillReadCount++;
         }
 
         r.close();
@@ -329,13 +342,15 @@ public class IntervalPartitionJoiner {
     }
 
     private void createInMemoryJoiner(int pid) throws HyracksDataException {
-        this.inMemJoiner[pid] = new InMemoryIntervalPartitionJoin(ctx,
+        inMemJoiner[pid] = new InMemoryIntervalPartitionJoin(ctx,
                 buildBufferManager.getPartitionFrameBufferManager(pid), imjc, buildRd, probeRd);
     }
 
     private void closeInMemoryJoiner(int pid, IFrameWriter writer) throws HyracksDataException {
-        this.inMemJoiner[pid].closeJoin(writer);
-        this.inMemJoiner[pid] = null;
+        joinComparisonCount += inMemJoiner[pid].getComparisonCount();
+        joinResultCount += inMemJoiner[pid].getResultCount();
+        inMemJoiner[pid].closeJoin(writer);
+        inMemJoiner[pid] = null;
     }
 
     public void initProbe() throws HyracksDataException {
@@ -374,6 +389,8 @@ public class IntervalPartitionJoiner {
                             break;
                         }
                         RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(victim, SIDE.PROBE);
+                        spillCount++;
+                        spillWriteCount += probeBufferManager.getNumFrames(pid);
                         probeBufferManager.flushPartition(victim, runFileWriter);
                         probeBufferManager.clearPartition(victim);
                     }
@@ -582,7 +599,7 @@ public class IntervalPartitionJoiner {
         }
 
         public int buildNextInMemory(int pid) {
-            int nextPid =  buildSpilledStatus.nextClearBit(pid);
+            int nextPid = buildSpilledStatus.nextClearBit(pid);
             if (nextPid >= numOfPartitions) {
                 return -1;
             }
@@ -643,6 +660,11 @@ public class IntervalPartitionJoiner {
             if (rfw != null) {
                 FileUtils.deleteQuietly(rfw.getFileReference().getFile());
             }
+        }
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("IntervalPartitionJoiner statitics: " + joinComparisonCount + " comparisons, "
+                    + joinResultCount + " results, " + spillCount + " spills, " + spillWriteCount
+                    + " spill frames written, " + spillReadCount + " spill frames read.");
         }
     }
 

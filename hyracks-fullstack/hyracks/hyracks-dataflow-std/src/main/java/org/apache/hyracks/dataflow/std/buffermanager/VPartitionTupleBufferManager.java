@@ -90,6 +90,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     }
 
     @Override
+    public int getNumFrames(int partition) {
+        return partitionArray[partition].getNumFrames();
+    }
+
+    @Override
     public int getPhysicalSize(int partitionId) {
         int size = 0;
         IFrameBufferManager partition = partitionArray[partitionId];

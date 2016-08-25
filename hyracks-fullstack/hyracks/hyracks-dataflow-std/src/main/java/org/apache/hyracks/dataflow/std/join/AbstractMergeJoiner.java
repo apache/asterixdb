@@ -53,15 +53,13 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
     protected static final int LEFT_PARTITION = 0;
     protected static final int RIGHT_PARTITION = 1;
 
+    protected final ByteBuffer[] inputBuffer;
+    protected final FrameTupleAppender resultAppender;
     protected final ITupleAccessor[] inputAccessor;
-    protected ByteBuffer[] inputBuffer;
-
-    private MergeJoinLocks locks;
-    private MergeStatus status;
+    protected final MergeStatus status;
 
     private final int partition;
-
-    protected FrameTupleAppender resultAppender;
+    private final MergeJoinLocks locks;
 
     public AbstractMergeJoiner(IHyracksTaskContext ctx, int partition, MergeStatus status, MergeJoinLocks locks,
             RecordDescriptor leftRd, RecordDescriptor rightRd) throws HyracksDataException {

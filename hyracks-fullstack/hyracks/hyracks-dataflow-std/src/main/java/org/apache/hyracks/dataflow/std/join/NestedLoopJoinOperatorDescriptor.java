@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.dataflow.std.join;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -98,21 +95,8 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
     public static class JoinCacheTaskState extends AbstractStateObject {
         private NestedLoopJoin joiner;
 
-        public JoinCacheTaskState() {
-        }
-
         private JoinCacheTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
-        }
-
-        @Override
-        public void toBytes(DataOutput out) throws IOException {
-
-        }
-
-        @Override
-        public void fromBytes(DataInput in) throws IOException {
-
         }
     }
 
@@ -132,8 +116,8 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator(ctx);
-            final IPredicateEvaluator predEvaluator = ((predEvaluatorFactory != null)
-                    ? predEvaluatorFactory.createPredicateEvaluator() : null);
+            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory != null)
+                    ? predEvaluatorFactory.createPredicateEvaluator() : null;
 
             final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nullWriterFactories1.length] : null;
             if (isLeftOuter) {
@@ -142,7 +126,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 }
             }
 
-            IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
+            return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private JoinCacheTaskState state;
 
                 @Override
@@ -170,9 +154,9 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    // No variables to update.
                 }
             };
-            return op;
         }
     }
 
@@ -186,8 +170,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
-
-            IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
+            return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private JoinCacheTaskState state;
 
                 @Override
@@ -216,7 +199,6 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     writer.fail();
                 }
             };
-            return op;
         }
     }
 }

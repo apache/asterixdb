@@ -24,11 +24,9 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
@@ -48,24 +46,27 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  */
 public class MergeJoiner extends AbstractMergeJoiner {
 
-    private MergeStatus status;
+    private static final Logger LOGGER = Logger.getLogger(MergeJoiner.class.getName());
 
     private final IDeallocatableFramePool framePool;
-    private IDeletableTupleBufferManager bufferManager;
-    private ITuplePointerAccessor memoryAccessor;
-    private LinkedList<TuplePointer> memoryBuffer = new LinkedList<>();
+    private final IDeletableTupleBufferManager bufferManager;
+    private final ITuplePointerAccessor memoryAccessor;
+    private final LinkedList<TuplePointer> memoryBuffer = new LinkedList<>();
 
     private int leftStreamIndex;
-    private RunFileStream runFileStream;
+    private final RunFileStream runFileStream;
 
     private final IMergeJoinChecker mjc;
 
-    private static final Logger LOGGER = Logger.getLogger(MergeJoiner.class.getName());
+    private long joinComparisonCount = 0;
+    private long joinResultCount = 0;
+    private long spillWriteCount = 0;
+    private long spillReadCount = 0;
+    private long spillCount = 0;
 
     public MergeJoiner(IHyracksTaskContext ctx, int memorySize, int partition, MergeStatus status, MergeJoinLocks locks,
             IMergeJoinChecker mjc, RecordDescriptor leftRd, RecordDescriptor rightRd) throws HyracksDataException {
         super(ctx, partition, status, locks, leftRd, rightRd);
-        this.status = status;
         this.mjc = mjc;
 
         // Memory (right buffer)
@@ -81,8 +82,6 @@ public class MergeJoiner extends AbstractMergeJoiner {
         leftStreamIndex = TupleAccessor.UNSET;
         runFileStream = new RunFileStream(ctx, "left", status.branch[LEFT_PARTITION]);
 
-        // Result
-        resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(
                     "MergeJoiner has started partition " + partition + " with " + memorySize + " frames of memory.");
@@ -107,11 +106,17 @@ public class MergeJoiner extends AbstractMergeJoiner {
             int rightTupleIndex, IFrameWriter writer) throws HyracksDataException {
         FrameUtils.appendConcatToWriter(writer, resultAppender, accessorLeft, leftTupleIndex, accessorRight,
                 rightTupleIndex);
+        joinResultCount++;
     }
 
     @Override
     public void closeResult(IFrameWriter writer) throws HyracksDataException {
         resultAppender.write(writer, true);
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("MergeJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
+                    + " results, " + spillCount + " spills, " + spillWriteCount + " spill frames written, "
+                    + spillReadCount + " spill frames read.");
+        }
     }
 
     private void flushMemory() throws HyracksDataException {
@@ -203,15 +208,13 @@ public class MergeJoiner extends AbstractMergeJoiner {
         if (memoryHasTuples()) {
             for (int i = memoryBuffer.size() - 1; i > -1; --i) {
                 memoryAccessor.reset(memoryBuffer.get(i));
-                //                TuplePrinterUtil.printTuple("     --- A outer", inputAccessor[LEFT_PARTITION]);
-                //                TuplePrinterUtil.printTuple("     --- A inner", memoryAccessor);
                 if (mjc.checkToSaveInResult(inputAccessor[LEFT_PARTITION], inputAccessor[LEFT_PARTITION].getTupleId(),
                         memoryAccessor, memoryBuffer.get(i).getTupleIndex(), false)) {
                     // add to result
-                    //                    System.err.println("  -- Matched --");
                     addToResult(inputAccessor[LEFT_PARTITION], inputAccessor[LEFT_PARTITION].getTupleId(),
                             memoryAccessor, memoryBuffer.get(i).getTupleIndex(), writer);
                 }
+                joinComparisonCount++;
                 if (mjc.checkToRemoveInMemory(inputAccessor[LEFT_PARTITION], inputAccessor[LEFT_PARTITION].getTupleId(),
                         memoryAccessor, memoryBuffer.get(i).getTupleIndex())) {
                     // remove from memory
@@ -249,6 +252,9 @@ public class MergeJoiner extends AbstractMergeJoiner {
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Continue with left stream.");
         }
+        spillCount++;
+        spillReadCount += runFileStream.getReadCount();
+        spillWriteCount += runFileStream.getWriteCount();
     }
 
     private void unfreezeAndContinue(ITupleAccessor accessor) throws HyracksDataException {

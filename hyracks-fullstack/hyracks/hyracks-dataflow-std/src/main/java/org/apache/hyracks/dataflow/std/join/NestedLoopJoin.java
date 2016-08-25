@@ -20,6 +20,8 @@ package org.apache.hyracks.dataflow.std.join;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -43,6 +45,8 @@ import org.apache.hyracks.dataflow.std.buffermanager.VariableFrameMemoryManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 
 public class NestedLoopJoin {
+    private static final Logger LOGGER = Logger.getLogger(NestedLoopJoin.class.getName());
+
     private final FrameTupleAccessor accessorInner;
     private final FrameTupleAccessor accessorOuter;
     private final FrameTupleAppender appender;
@@ -57,6 +61,11 @@ public class NestedLoopJoin {
     private final IPredicateEvaluator predEvaluator;
     private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
     private BufferInfo tempInfo = new BufferInfo(null, -1, -1);
+
+    private long joinComparisonCount = 0;
+    private long joinResultCount = 0;
+    private long spillWriteCount = 0;
+    private long spillReadCount = 0;
 
     public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorOuter, FrameTupleAccessor accessorInner,
             ITuplePairComparator comparatorsOuter2Inner, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
@@ -99,6 +108,7 @@ public class NestedLoopJoin {
 
     public void cache(ByteBuffer buffer) throws HyracksDataException {
         runFileWriter.nextFrame(buffer);
+        spillWriteCount++;
     }
 
     public void join(ByteBuffer outerBuffer, IFrameWriter writer) throws HyracksDataException {
@@ -109,6 +119,7 @@ public class NestedLoopJoin {
                 for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
                     blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
                 }
+                spillReadCount++;
             }
             runFileReader.close();
             outerBufferMngr.reset();
@@ -135,6 +146,7 @@ public class NestedLoopJoin {
                     matchFound = true;
                     appendToResults(i, j, writer);
                 }
+                joinComparisonCount++;
             }
 
             if (!matchFound && isLeftOuter) {
@@ -149,9 +161,9 @@ public class NestedLoopJoin {
 
     private boolean evaluatePredicate(int tIx1, int tIx2) {
         if (isReversed) { //Role Reversal Optimization is triggered
-            return ((predEvaluator == null) || predEvaluator.evaluate(accessorInner, tIx2, accessorOuter, tIx1));
+            return (predEvaluator == null) || predEvaluator.evaluate(accessorInner, tIx2, accessorOuter, tIx1);
         } else {
-            return ((predEvaluator == null) || predEvaluator.evaluate(accessorOuter, tIx1, accessorInner, tIx2));
+            return (predEvaluator == null) || predEvaluator.evaluate(accessorOuter, tIx1, accessorInner, tIx2);
         }
     }
 
@@ -166,6 +178,7 @@ public class NestedLoopJoin {
     private void appendResultToFrame(FrameTupleAccessor accessor1, int tupleId1, FrameTupleAccessor accessor2,
             int tupleId2, IFrameWriter writer) throws HyracksDataException {
         FrameUtils.appendConcatToWriter(writer, appender, accessor1, tupleId1, accessor2, tupleId2);
+        joinResultCount++;
     }
 
     public void closeCache() throws HyracksDataException {
@@ -181,11 +194,17 @@ public class NestedLoopJoin {
             for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
                 blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
             }
+            spillReadCount++;
         }
         runFileReader.close();
         outerBufferMngr.reset();
 
         appender.write(writer, true);
+
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("NestedLoopJoin statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
+                    + " results, " + spillWriteCount + " frames written, " + spillReadCount + " frames read.");
+        }
     }
 
     private int compare(FrameTupleAccessor accessor0, int tIndex0, FrameTupleAccessor accessor1, int tIndex1)

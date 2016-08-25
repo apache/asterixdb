@@ -29,11 +29,9 @@ import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinCheckerFacto
 import org.apache.asterix.runtime.operators.joins.IntervalJoinUtil;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.IPartitionedDeletableTupleBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
@@ -57,23 +55,27 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
 
     private static final Logger LOGGER = Logger.getLogger(IntervalIndexJoiner.class.getName());
 
-    private IPartitionedDeletableTupleBufferManager bufferManager;
+    private final IPartitionedDeletableTupleBufferManager bufferManager;
 
-    private ActiveSweepManager[] activeManager;
-    private ITuplePointerAccessor[] memoryAccessor;
-    private int[] streamIndex;
-    private RunFileStream[] runFileStream;
+    private final ActiveSweepManager[] activeManager;
+    private final ITuplePointerAccessor[] memoryAccessor;
+    private final int[] streamIndex;
+    private final RunFileStream[] runFileStream;
 
-    private LinkedList<TuplePointer> buffer = new LinkedList<>();
+    private final LinkedList<TuplePointer> buffer = new LinkedList<>();
 
-    private IIntervalMergeJoinChecker imjc;
+    private final IIntervalMergeJoinChecker imjc;
 
-    protected byte point;
+    private final byte point;
 
-    private MergeStatus status;
+    private final int leftKey;
+    private final int rightKey;
 
-    private int leftKey;
-    private int rightKey;
+    private long joinComparisonCount = 0;
+    private long joinResultCount = 0;
+    private long spillCount = 0;
+    private long spillReadCount = 0;
+    private long spillWriteCount = 0;
 
     public IntervalIndexJoiner(IHyracksTaskContext ctx, int memorySize, int partition, MergeStatus status,
             MergeJoinLocks locks, Comparator<EndPointIndexItem> endPointComparator,
@@ -86,8 +88,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
 
         this.leftKey = leftKeys[0];
         this.rightKey = rightKeys[0];
-
-        this.status = status;
 
         RecordDescriptor[] recordDescriptors = new RecordDescriptor[JOIN_PARTITIONS];
         recordDescriptors[LEFT_PARTITION] = leftRd;
@@ -119,8 +119,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         runFileStream[LEFT_PARTITION] = new RunFileStream(ctx, "left", status.branch[LEFT_PARTITION]);
         runFileStream[RIGHT_PARTITION] = new RunFileStream(ctx, "right", status.branch[RIGHT_PARTITION]);
 
-        // Result
-        resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("IntervalIndexJoiner has started partition " + partition + " with " + memorySize
                     + " frames of memory.");
@@ -134,6 +132,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         } else {
             FrameUtils.appendConcatToWriter(writer, resultAppender, accessor1, index1, accessor2, index2);
         }
+        joinResultCount++;
     }
 
     @Override
@@ -143,6 +142,11 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         activeManager[RIGHT_PARTITION].clear();
         runFileStream[LEFT_PARTITION].close();
         runFileStream[RIGHT_PARTITION].close();
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("IntervalIndexJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
+                    + " results, " + spillCount + " spills, " + spillWriteCount + " spill frames written, "
+                    + spillReadCount + " spill frames read.");
+        }
     }
 
     private void flushMemory(int partition) throws HyracksDataException {
@@ -378,10 +382,12 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             outerAccessor.reset(outerTp);
             for (TuplePointer innerTp : inner) {
                 innerAccessor.reset(innerTp);
-                if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(),
-                        reversed)) {
-                    addToResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(), reversed, writer);
+                if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor,
+                        innerTp.getTupleIndex(), reversed)) {
+                    addToResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(),
+                            reversed, writer);
                 }
+                joinComparisonCount++;
             }
         }
         if (LOGGER.isLoggable(Level.FINE)) {
@@ -394,11 +400,12 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             ITupleAccessor tupleAccessor, boolean reversed, IFrameWriter writer) throws HyracksDataException {
         for (TuplePointer outerTp : outer) {
             outerAccessor.reset(outerTp);
-            if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), tupleAccessor, tupleAccessor.getTupleId(),
-                    reversed)) {
+            if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), tupleAccessor,
+                    tupleAccessor.getTupleId(), reversed)) {
                 addToResult(outerAccessor, outerTp.getTupleIndex(), tupleAccessor, tupleAccessor.getTupleId(), reversed,
                         writer);
             }
+            joinComparisonCount++;
         }
     }
 
@@ -427,6 +434,9 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Continue with stream (" + diskPartition + ").");
         }
+        spillCount++;
+        spillReadCount += runFileStream[diskPartition].getReadCount();
+        spillWriteCount += runFileStream[diskPartition].getWriteCount();
     }
 
     private void unfreezeAndContinue(int frozenPartition, ITupleAccessor accessor, int flushPartition)

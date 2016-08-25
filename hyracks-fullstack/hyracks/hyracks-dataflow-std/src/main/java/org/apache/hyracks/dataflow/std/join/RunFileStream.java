@@ -37,7 +37,6 @@ public class RunFileStream {
     private static final Logger LOGGER = Logger.getLogger(RunFileStream.class.getName());
 
     private final String key;
-    private int runFileCounter;
     private final IFrame runFileBuffer;
     private final IFrameTupleAppender runFileAppender;
     private RunFileWriter runFileWriter;
@@ -46,26 +45,41 @@ public class RunFileStream {
 
     private final IHyracksTaskContext ctx;
 
+    private long runFileCounter = 0;
+    private long readCount = 0;
+    private long writeCount = 0;
+
     public RunFileStream(IHyracksTaskContext ctx, String key, IRunFileStreamStatus status) throws HyracksDataException {
         this.ctx = ctx;
         this.key = key;
         this.status = status;
 
-        runFileCounter = 0;
         runFileBuffer = new VSizeFrame(ctx);
         runFileAppender = new FrameTupleAppender(new VSizeFrame(ctx));
     }
 
+    public long getReadCount() {
+        return readCount;
+    }
+
+    public long getWriteCount() {
+        return writeCount;
+    }
+
     public void startRunFile() throws HyracksDataException {
+        readCount = 0;
+        writeCount = 0;
+        runFileCounter++;
+
         status.setRunFileWriting(true);
-        String prefix = this.getClass().getSimpleName() + '-' + key + '-' + Integer.toString(runFileCounter) + '-'
+        String prefix = this.getClass().getSimpleName() + '-' + key + '-' + Long.toString(runFileCounter) + '-'
                 + this.toString();
         FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(prefix);
         runFileWriter = new RunFileWriter(file, ctx.getIOManager());
         runFileWriter.open();
-        ++runFileCounter;
         if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("A new run file has been started (key: " + key + ", number: " + runFileCounter + ", file: " + file + ").");
+            LOGGER.fine("A new run file has been started (key: " + key + ", number: " + runFileCounter + ", file: "
+                    + file + ").");
         }
     }
 
@@ -73,6 +87,7 @@ public class RunFileStream {
         int idx = accessor.getTupleId();
         if (!runFileAppender.append(accessor, idx)) {
             runFileAppender.write(runFileWriter, true);
+            writeCount++;
             runFileAppender.append(accessor, idx);
         }
     }
@@ -104,6 +119,7 @@ public class RunFileStream {
         if (runFileReader.nextFrame(runFileBuffer)) {
             accessor.reset(runFileBuffer.getBuffer());
             accessor.next();
+            readCount++;
             return true;
         }
         return false;
@@ -129,6 +145,7 @@ public class RunFileStream {
         // Flush buffer.
         if (runFileAppender.getTupleCount() > 0) {
             runFileAppender.write(runFileWriter, true);
+            writeCount++;
         }
     }
 
