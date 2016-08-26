@@ -5685,6 +5685,11 @@
         <expected-error>Cannot resolve ambiguous alias reference for undefined identifier</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1597">
+        <output-dir compare="Text">query-ASTERIXDB-1597</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">

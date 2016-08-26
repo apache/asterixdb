@@ -161,7 +161,6 @@ public final class RuleCollections {
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
         normalization.add(new EliminateSubplanRule());
         normalization.add(new EnforceOrderByAfterSubplan());
-        normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
         normalization.add(new ExtractDistinctByExpressionsRule());
@@ -175,6 +174,10 @@ public final class RuleCollections {
         normalization.add(new IntroduceDynamicTypeCastForExternalFunctionRule());
         normalization.add(new IntroduceEnforcedListTypeRule());
         normalization.add(new ExtractCommonExpressionsRule());
+
+        // Let PushAggFuncIntoStandaloneAggregateRule run after ExtractCommonExpressionsRule
+        // so that PushAggFunc can happen in fewer places.
+        normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new UnnestToDataScanRule(algebraExtensionManager));
