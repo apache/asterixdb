@@ -2449,6 +2449,17 @@
         <output-dir compare="Text">q09</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="q11">
+        <output-dir compare="Text">q01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="q12_error">
+        <output-dir compare="Text">q01</output-dir>
+        <expected-error>The parameter * can only be used in COUNT().</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="group-by">
     <test-case FilePath="group-by">
