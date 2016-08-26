@@ -41,7 +41,7 @@ create type DBLPType as closed {
 
 create dataset DBLP(DBLPType) primary key nested.id;
 
-create index ngram_index on DBLP(nested.title: string) type ngram(3) enforced;
+create index ngram_index on DBLP(nested.title: string?) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-complex_ngram-jaccard-check-multi-let.adm";
 

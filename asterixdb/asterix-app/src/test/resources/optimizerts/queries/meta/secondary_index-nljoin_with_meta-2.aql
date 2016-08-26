@@ -38,7 +38,7 @@ primary key meta().id;
 create dataset Book2(LineTypeWithNum) with meta(AuxiliaryType)
 primary key meta().id;
 
-create index NumIndex on Book1(lineid:int64) enforced;
+create index NumIndex on Book1(lineid:int64?) enforced;
 
 for $y in dataset Book2
 for $x in dataset Book1

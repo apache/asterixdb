@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Fuzzy self joins a dataset, DBLP, based on the similarity-jaccard function of its titles' 3-gram tokens.
- *                  DBLP has a 3-gram enforced open index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  DBLP has a 3-gram enforced open index on title?, and we expect the join to be transformed into an indexed nested-loop join.
  *                  We test the inlining of variables that enable the select to be pushed into the join for subsequent optimization with an index.
  * Success        : Yes
  */
@@ -41,7 +41,7 @@ create type test.DBLPType as
 
 create  dataset DBLP(DBLPType) primary key id;
 
-create  index ngram_index  on DBLP (title:string) type ngram (3) enforced;
+create  index ngram_index  on DBLP (title:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-jaccard_04.adm"
 select element {'arec':a,'brec':b,'jacc':jacc}

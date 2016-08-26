@@ -21,4 +21,4 @@ use dataverse tpch;
 
 // create secondary index on OrdersOpen(o_custkey)
 
-create index idx_Orders_Custkey on OrdersOpen(o_custkey:int32) enforced;
+create index idx_Orders_Custkey on OrdersOpen(o_custkey:int32?) enforced;

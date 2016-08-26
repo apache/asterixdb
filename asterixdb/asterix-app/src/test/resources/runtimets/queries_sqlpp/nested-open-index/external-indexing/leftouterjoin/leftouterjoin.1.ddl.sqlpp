@@ -55,9 +55,9 @@ create type test.TweetMessageType as
 
 create external  dataset TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin_nested.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
-create  index IdIx  on TweetMessages (nested.tweetid:int64) type btree enforced;
+create  index IdIx  on TweetMessages (nested.tweetid:int64?) type btree enforced;
 
-create  index msgCountAIx  on TweetMessages (nested.countA:int64) type btree enforced;
+create  index msgCountAIx  on TweetMessages (nested.countA:int64?) type btree enforced;
 
-create  index msgCountBIx  on TweetMessages (nested.countB:int64) type btree enforced;
+create  index msgCountBIx  on TweetMessages (nested.countB:int64?) type btree enforced;
 

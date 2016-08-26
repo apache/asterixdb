@@ -30,5 +30,5 @@ create type test.testType as
 
 create  dataset testDS(testType) primary key id;
 
-create  index testIdx  on testDS (`value`:string) type btree;
+create  index testIdx  on testDS (`value`:string?) type btree;
 

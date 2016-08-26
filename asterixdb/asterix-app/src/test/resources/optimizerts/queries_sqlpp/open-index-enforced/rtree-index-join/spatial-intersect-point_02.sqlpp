@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Joins two datasets on the intersection of their point attributes.
- *                  The dataset 'MyData2' has an enforced open RTree index, and we expect the
+ *                  The dataset 'MyData2' has an enforced open RTree index?, and we expect the
  *                  join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
@@ -56,7 +56,7 @@ create  dataset MyData1(MyRecord) primary key id;
 
 create  dataset MyData2(MyRecordOpen) primary key id;
 
-create  index rtree_index  on MyData2 (point:point) type rtree enforced;
+create  index rtree_index  on MyData2 (point:point?) type rtree enforced;
 
 write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm"
 select element {'a':a,'b':b}

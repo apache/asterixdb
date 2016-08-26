@@ -52,7 +52,7 @@ create type test.TweetMessageType as
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
-create  index twmSndLocIx  on TweetMessages (`sender-location`:point) type rtree enforced;
+create  index twmSndLocIx  on TweetMessages (`sender-location`:point?) type rtree enforced;
 
 create  index msgCountAIx  on TweetMessages (countA) type btree;
 

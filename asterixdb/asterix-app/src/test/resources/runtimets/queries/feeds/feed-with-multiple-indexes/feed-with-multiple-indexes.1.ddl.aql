@@ -42,8 +42,8 @@ create type Classad as open {
  };
 
 create dataset Condor(Classad) primary key GlobalJobId;
-create index caRequestCpusIdx on Condor(RequestCpus:int64) type btree enforced;
+create index caRequestCpusIdx on Condor(RequestCpus:int64?) type btree enforced;
 create index caRemoteWallClockTimeIdx on Condor(RemoteWallClockTime) type btree;
-create index caUserIdx on Condor(User:string) type btree enforced;
-create index caScheddIdx on Condor(Schedd:string) type btree enforced;
-create index caRemoteHostIdx on Condor(RemoteHost:string) type btree enforced;
+create index caUserIdx on Condor(User:string?) type btree enforced;
+create index caScheddIdx on Condor(Schedd:string?) type btree enforced;
+create index caRemoteHostIdx on Condor(RemoteHost:string?) type btree enforced;

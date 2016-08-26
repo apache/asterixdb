@@ -44,5 +44,5 @@ create type test.MyRecord as
 
 create external  dataset MyData(MyRecord) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/spatialData.json`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
-create  index idx  on MyData (id:int64) type btree enforced;
+create  index idx  on MyData (id:int64?) type btree enforced;
 

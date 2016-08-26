@@ -1415,7 +1415,7 @@ Pair<Integer, Pair<List<String>, TypeExpression>> OpenField() throws ParseExcept
 }
 {
   fieldList = NestedField()
-  ( <COLON> fieldType =  IndexedTypeExpr() )?
+  ( <COLON> fieldType =  IndexedTypeExpr() <QUES>)?
   {
     return new Pair<Integer, Pair<List<String>, TypeExpression>>
            (fieldList.first, new Pair<List<String>, TypeExpression>(fieldList.second, fieldType));

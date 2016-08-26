@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
- *                  DBLP has a secondary btree open enforced index on authors, and given the 'indexnl' hint
+ *                  DBLP has a secondary btree open enforced index on authors?, and given the 'indexnl' hint
  *                  we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
@@ -26,5 +26,5 @@
 use test;
 
 
-create  index authors_index  on DBLPOpen (authors:string) type btree enforced;
+create  index authors_index  on DBLPOpen (authors:string?) type btree enforced;
 

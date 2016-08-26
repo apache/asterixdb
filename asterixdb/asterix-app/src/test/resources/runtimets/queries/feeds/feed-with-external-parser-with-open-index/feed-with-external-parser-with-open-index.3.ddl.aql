@@ -25,7 +25,7 @@
  */
 use dataverse externallibtest;
 create dataset Condor(Classad) primary key GlobalJobId;
-create index BlockWritesIndex on Condor(BlockWrites:int64) enforced;
+create index BlockWritesIndex on Condor(BlockWrites:int64?) enforced;
 
 create feed CondorFeed using push_localfs(
 ("path"="asterix_nc1://data/external-parser/dropbox/jobads1.txt,asterix_nc1://data/external-parser/dropbox/jobads2.txt, asterix_nc1://data/external-parser/dropbox2/jobads3.txt"),

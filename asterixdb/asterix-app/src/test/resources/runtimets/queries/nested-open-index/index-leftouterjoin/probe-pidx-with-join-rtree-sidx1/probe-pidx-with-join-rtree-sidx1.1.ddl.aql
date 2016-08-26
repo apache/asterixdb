@@ -56,4 +56,4 @@ primary key nested.tweetid;
 create dataset TweetMessagesTmp(TweetMessageNestedType)
 primary key tweetid;
 
-create index twmSndLocIx on TweetMessages(nested.sender-location: point) type rtree enforced;
+create index twmSndLocIx on TweetMessages(nested.sender-location: point?) type rtree enforced;

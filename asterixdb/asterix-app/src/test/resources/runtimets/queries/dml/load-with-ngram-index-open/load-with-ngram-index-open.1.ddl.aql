@@ -40,4 +40,4 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset DBLPOpen(DBLPTypeOpen) primary key id;
 
-create index ngram_index_open on DBLPOpen(title:string) type ngram(3) enforced;
+create index ngram_index_open on DBLPOpen(title:string?) type ngram(3) enforced;

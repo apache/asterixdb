@@ -3311,6 +3311,12 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
+        <compilation-unit name="missing-optionality">
+          <output-dir compare="Text">missing-optionality</output-dir>
+          <expected-error>"?"</expected-error>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="record-type-collision">
           <output-dir compare="Text">record-type-collision</output-dir>
           <expected-error>org.apache.asterix.common.exceptions.AsterixException: A field "[value]" is already defined with the type "STRING"</expected-error>

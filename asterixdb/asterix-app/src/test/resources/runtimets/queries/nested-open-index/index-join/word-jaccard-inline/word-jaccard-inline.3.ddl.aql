@@ -25,5 +25,5 @@
 
 use dataverse test;
 
-create index keyword_index on DBLP(nested.title: string) type keyword enforced;
+create index keyword_index on DBLP(nested.title: string?) type keyword enforced;
 

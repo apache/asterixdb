@@ -40,4 +40,4 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset DBLPOpen(DBLPTypeOpen) primary key id;
 
-create index keyword_index on DBLPOpen(title:string) type keyword enforced;
+create index keyword_index on DBLPOpen(title:string?) type keyword enforced;

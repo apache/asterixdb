@@ -59,7 +59,7 @@ create  index msgCountAIx  on TweetMessages (countA) type btree;
 
 create  index msgCountBIx  on TweetMessages (countB) type btree;
 
-create  index msgTextIx  on TweetMessages (`message-text`:string) type keyword enforced;
+create  index msgTextIx  on TweetMessages (`message-text`:string?) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm"
 select element {'t1':t1.tweetid,'t2':t2.tweetid,'sim':sim[1]}

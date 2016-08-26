@@ -45,7 +45,7 @@ create type test.DBLPType as
 
 create  dataset DBLP(DBLPType) primary key nested.id;
 
-create  index ngram_index  on DBLP (nested.title:string) type ngram (3) enforced;
+create  index ngram_index  on DBLP (nested.title:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-basic_ngram-fuzzyeq-jaccard.adm"
 set `simfunction` `jaccard`;

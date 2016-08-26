@@ -21,4 +21,4 @@ use dataverse test;
 
 // create secondary index of type ngram on DBLP(title)
 
-create index ngram_index on DBLP(nested.title:string) type ngram(3) enforced;
+create index ngram_index on DBLP(nested.title:string?) type ngram(3) enforced;

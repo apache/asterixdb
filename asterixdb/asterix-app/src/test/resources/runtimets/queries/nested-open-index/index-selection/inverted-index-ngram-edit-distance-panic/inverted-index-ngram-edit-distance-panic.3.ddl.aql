@@ -19,4 +19,4 @@
 
 use dataverse test;
 
-create index ngram_index on DBLP(nested.authors: string) type ngram(3) enforced;
+create index ngram_index on DBLP(nested.authors: string?) type ngram(3) enforced;

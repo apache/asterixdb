@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Fuzzy self joins a dataset, DBLP, based on the edit-distance-check function of its authors.
- *                  DBLP has a 3-gram enforced open index on authors, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  DBLP has a 3-gram enforced open index on authors?, and we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
@@ -38,7 +38,7 @@ create type test.DBLPType as
 
 create  dataset DBLP(DBLPType) primary key id;
 
-create  index ngram_index  on DBLP (authors:string) type ngram (3) enforced;
+create  index ngram_index  on DBLP (authors:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance-check_03.adm"
 select element {'arec':a,'brec':b}

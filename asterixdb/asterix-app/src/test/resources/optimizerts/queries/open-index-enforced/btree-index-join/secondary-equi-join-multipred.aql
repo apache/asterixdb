@@ -48,7 +48,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset CSX(CSXType) primary key id;
 
-create index title_index on DBLP(title:string) enforced;
+create index title_index on DBLP(title:string?) enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multipred.adm";
 

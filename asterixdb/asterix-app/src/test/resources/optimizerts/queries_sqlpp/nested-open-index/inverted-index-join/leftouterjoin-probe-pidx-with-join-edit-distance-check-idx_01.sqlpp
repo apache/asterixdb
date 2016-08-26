@@ -57,7 +57,7 @@ create type test.TweetMessageType as
 
 create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
 
-create  index msgNgramIx  on TweetMessages (nested.`message-text`:string) type ngram (3) enforced;
+create  index msgNgramIx  on TweetMessages (nested.`message-text`:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm"
 select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested.`message-text`},'similar-tweets':(

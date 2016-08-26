@@ -49,7 +49,7 @@ create  dataset DBLP(DBLPType) primary key id;
 
 create  dataset CSX(CSXType) primary key id;
 
-create  index ngram_index  on DBLP (authors:string) type ngram (3) enforced;
+create  index ngram_index  on DBLP (authors:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance-contains.adm"
 select element {'arec':a,'brec':b}

@@ -20,5 +20,5 @@
 use tpch;
 
 
-create  index idx_Orders_Custkey  on OrdersOpen (o_custkey:int32) type btree enforced;
+create  index idx_Orders_Custkey  on OrdersOpen (o_custkey:int32?) type btree enforced;
 

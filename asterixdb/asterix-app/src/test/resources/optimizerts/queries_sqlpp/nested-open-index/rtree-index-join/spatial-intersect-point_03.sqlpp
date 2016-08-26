@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Self-joins a dataset on the intersection of its point attribute.
- *                  The dataset has an enforced open RTree index, and we expect the
+ *                  The dataset has an enforced open RTree index?, and we expect the
  *                  join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */

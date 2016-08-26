@@ -32,7 +32,7 @@ create type LineType as open {
 create dataset Book(LineType) with meta(AuxiliaryType)
 primary key meta().id;
 
-create index NumIndex on Book(lineid:int64) enforced;
+create index NumIndex on Book(lineid:int64?) enforced;
 
 for $x in dataset Book
 where $x.lineid >10

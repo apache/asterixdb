@@ -3104,6 +3104,12 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
+        <compilation-unit name="missing-optionality">
+          <output-dir compare="Text">missing-optionality</output-dir>
+          <expected-error>"?"</expected-error>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-on-closed-type">
           <output-dir compare="Text">index-on-closed-type</output-dir>
           <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Typed index on "[value]" field could be created only for open datatype</expected-error>

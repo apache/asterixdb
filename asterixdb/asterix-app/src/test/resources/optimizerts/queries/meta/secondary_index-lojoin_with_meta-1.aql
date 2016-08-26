@@ -33,9 +33,9 @@ create dataset Book(LineType) with meta(AuxiliaryType)
 primary key meta().id;
 
 create index NumIndex1 on Book(meta().num);
-create index NumIndex2 on Book(linenum:int32) enforced;
-create index NumIndex3 on Book(count1:int32) enforced;
-create index NumIndex4 on Book(count2:int32) enforced;
+create index NumIndex2 on Book(linenum:int32?) enforced;
+create index NumIndex3 on Book(count1:int32?) enforced;
+create index NumIndex4 on Book(count2:int32?) enforced;
 
 for $t1 in dataset Book
 where $t1.linenum < 10

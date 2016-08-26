@@ -56,4 +56,4 @@ create feed KVChangeStream using adapter(
     ("num-of-records"="1000")
 );
 
-create index OpenIndex on KVStore(meta().id:int32) enforced;
+create index OpenIndex on KVStore(meta().id:int32?) enforced;

@@ -42,7 +42,7 @@ create type test.TestType as
 
 create  dataset testdst(TestType) primary key nested.id;
 
-create  index sec_Idx  on testdst (nested.fname:string,nested.lname:string) type btree enforced;
+create  index sec_Idx  on testdst (nested.fname:string?,nested.lname:string?) type btree enforced;
 
 select element emp
 from  testdst as emp

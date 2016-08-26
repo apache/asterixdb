@@ -37,7 +37,7 @@ create type test.TestType as
 
 create  dataset testdst(TestType) primary key id;
 
-create  index sec_Idx  on testdst (fname:string) type btree enforced;
+create  index sec_Idx  on testdst (fname:string?) type btree enforced;
 
 select element emp
 from  testdst as emp

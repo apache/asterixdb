@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Fuzzy self joins a dataset, DBLP, based on the similarity-jaccard function of its titles' word tokens.
- *                  DBLP has an enforced open keyword index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  DBLP has an enforced open keyword index on title?, and we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
@@ -35,7 +35,7 @@ create type DBLPType as open {
 
 create dataset DBLP(DBLPType) primary key id;
 
-create index keyword_index on DBLP(title:string) type keyword enforced;
+create index keyword_index on DBLP(title:string?) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard_03.adm";
 

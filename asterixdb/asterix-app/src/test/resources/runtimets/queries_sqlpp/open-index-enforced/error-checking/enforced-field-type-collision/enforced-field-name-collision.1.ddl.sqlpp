@@ -31,5 +31,5 @@ create type test.testType as
 
 create  dataset testDS(testType) primary key id;
 
-create  index testIdx  on testDS (`value`:int32) type btree enforced;
+create  index testIdx  on testDS (`value`:int32?) type btree enforced;
 

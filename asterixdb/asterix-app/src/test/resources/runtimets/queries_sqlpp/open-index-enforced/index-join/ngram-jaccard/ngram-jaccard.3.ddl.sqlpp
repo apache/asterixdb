@@ -25,5 +25,5 @@
 use test;
 
 
-create  index ngram_index  on DBLPOpen (title:string) type ngram (3) enforced;
+create  index ngram_index  on DBLPOpen (title:string?) type ngram (3) enforced;
 

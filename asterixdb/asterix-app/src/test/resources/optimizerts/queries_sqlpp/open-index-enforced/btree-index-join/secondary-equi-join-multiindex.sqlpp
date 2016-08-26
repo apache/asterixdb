@@ -64,7 +64,7 @@ create  dataset FacebookUsers(FacebookUserType) primary key id;
 
 create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;
 
-create  index fbmIdxAutId  if not exists  on FacebookMessages (`author-id-copy`:int32) type btree enforced;
+create  index fbmIdxAutId  if not exists  on FacebookMessages (`author-id-copy`:int32?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm"
 select element {'fbu-ID':user.id,'fbm-auth-ID':message.`author-id`,'uname':user.name,'message':message.message}

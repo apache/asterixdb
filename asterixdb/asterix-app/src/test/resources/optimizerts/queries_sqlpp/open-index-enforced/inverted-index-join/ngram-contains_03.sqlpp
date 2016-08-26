@@ -38,7 +38,7 @@ create type test.DBLPType as
 
 create  dataset DBLP(DBLPType) primary key id;
 
-create  index ngram_index  on DBLP (title:string) type ngram (3) enforced;
+create  index ngram_index  on DBLP (title:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-03.adm"
 select element {'title1':o1.title,'title2':o2.title}

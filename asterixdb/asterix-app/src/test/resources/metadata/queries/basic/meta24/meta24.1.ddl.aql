@@ -31,4 +31,4 @@ id : int32
 
 create dataset testdv.t1(testtype) primary key id;
 
-create index idx1 on testdv.t1(name: string) type btree enforced;
+create index idx1 on testdv.t1(name: string?) type btree enforced;

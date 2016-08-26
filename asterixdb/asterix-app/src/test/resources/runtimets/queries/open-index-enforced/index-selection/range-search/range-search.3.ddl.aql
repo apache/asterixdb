@@ -18,4 +18,4 @@
  */
 use dataverse test;
 
-create index idx_LineItem_suppkey on LineItemOpen(l_suppkey:int32) enforced;
+create index idx_LineItem_suppkey on LineItemOpen(l_suppkey:int32?) enforced;

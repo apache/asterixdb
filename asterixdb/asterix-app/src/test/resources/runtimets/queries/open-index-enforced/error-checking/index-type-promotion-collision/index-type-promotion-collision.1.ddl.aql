@@ -25,5 +25,5 @@ create type testType as open {
 }
 
 create dataset testDS(testType) primary key id;
-create index testIdx1 on testDS(value: int64) enforced;
-create index testIdx2 on testDS(value: int32) enforced;
+create index testIdx1 on testDS(value: int64?) enforced;
+create index testIdx2 on testDS(value: int32?) enforced;

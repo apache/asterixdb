@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Joins two datasets on the intersection of their point attributes.
- *                  The dataset 'MyData2' has an enforced open RTree index, and we expect the
+ *                  The dataset 'MyData2' has an enforced open RTree index?, and we expect the
  *                  join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */

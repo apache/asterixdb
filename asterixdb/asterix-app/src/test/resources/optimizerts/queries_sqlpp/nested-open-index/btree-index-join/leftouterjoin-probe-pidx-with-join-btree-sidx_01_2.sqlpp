@@ -56,9 +56,9 @@ create type test.TweetMessageType as
 
 create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
 
-create  index msgCountAIx  on TweetMessages (nested.countA:int32) type btree enforced;
+create  index msgCountAIx  on TweetMessages (nested.countA:int32?) type btree enforced;
 
-create  index msgCountBIx  on TweetMessages (nested.countB:int32) type btree enforced;
+create  index msgCountBIx  on TweetMessages (nested.countB:int32?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
 select element {'tweetid1':t1.nested.tweetid,'count1':t1.nested.countA,'t2info':(

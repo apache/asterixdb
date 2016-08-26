@@ -39,7 +39,7 @@ create type test.DBLPType as
 
 create  dataset DBLP(DBLPType) primary key id;
 
-create  index keyword_index  on DBLP (title:string) type keyword enforced;
+create  index keyword_index  on DBLP (title:string?) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-complex_word-jaccard-check-let.adm"
 select element o

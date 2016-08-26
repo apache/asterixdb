@@ -25,4 +25,4 @@ create type testType as open {
 }
 
 create dataset testDS(testType) primary key id;
-create index testIdx on testDS(value: string);
+create index testIdx on testDS(value: string?);

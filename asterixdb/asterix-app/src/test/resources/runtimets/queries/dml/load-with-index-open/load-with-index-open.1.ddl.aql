@@ -64,5 +64,5 @@ create dataset LineItemOpen(LineItemTypeOpen)
 create dataset LineItem(LineItemType)
   primary key l_orderkey, l_linenumber;
 
-create index idx_partkey_open on LineItemOpen(l_partkey:int64) enforced;
+create index idx_partkey_open on LineItemOpen(l_partkey:int64?) enforced;
 

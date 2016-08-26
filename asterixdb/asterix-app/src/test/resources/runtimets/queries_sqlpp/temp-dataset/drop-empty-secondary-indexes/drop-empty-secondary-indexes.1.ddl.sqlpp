@@ -53,17 +53,17 @@ create temporary dataset t1(TestType) primary key id;
 
 create  index rtree_index_point  on t1 (locn) type rtree;
 
-create  index rtree_index_point_open  on t1 (open_locn:point) type rtree enforced;
+create  index rtree_index_point_open  on t1 (open_locn:point?) type rtree enforced;
 
 create  index keyWD_indx  on t1 (name) type keyword;
 
-create  index keyWD_indx_open  on t1 (nickname:string) type keyword enforced;
+create  index keyWD_indx_open  on t1 (nickname:string?) type keyword enforced;
 
 create  index secndIndx  on t1 (zip) type btree;
 
 create  index nested  on t1 (person.name.first) type btree;
 
-create  index secndIndx_open  on t1 (address:string) type btree enforced;
+create  index secndIndx_open  on t1 (address:string?) type btree enforced;
 
 drop index t1.rtree_index_point;
 drop index t1.rtree_index_point_open;

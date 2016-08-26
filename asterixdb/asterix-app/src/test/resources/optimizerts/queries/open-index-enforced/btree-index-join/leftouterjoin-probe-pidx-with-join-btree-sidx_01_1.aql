@@ -49,7 +49,7 @@ create type TweetMessageType as open {
 create dataset TweetMessages(TweetMessageType)
 primary key tweetid;
 
-create index msgCountBIx on TweetMessages(countB: int32) type btree enforced;
+create index msgCountBIx on TweetMessages(countB: int32?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm";
 

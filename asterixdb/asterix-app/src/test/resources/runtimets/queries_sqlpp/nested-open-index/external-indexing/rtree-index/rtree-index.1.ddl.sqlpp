@@ -42,5 +42,5 @@ create type test.MyRecord as
 
 create external  dataset MyData(MyRecord) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/spatialDataNested.json`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
-create  index rtree_index_point  on MyData (nested.point:point) type rtree enforced;
+create  index rtree_index_point  on MyData (nested.point:point?) type rtree enforced;
 

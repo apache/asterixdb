@@ -59,9 +59,9 @@ create  dataset DBLP(DBLPType) primary key nested.id;
 
 create  dataset CSX(CSXType) primary key nested.id;
 
-create  index title_index_DBLP  on DBLP (nested.title:string) type btree enforced;
+create  index title_index_DBLP  on DBLP (nested.title:string?) type btree enforced;
 
-create  index title_index_CSX  on CSX (nested.title:string) type btree enforced;
+create  index title_index_CSX  on CSX (nested.title:string?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join_03.adm"
 select element {'arec':a,'brec':b}

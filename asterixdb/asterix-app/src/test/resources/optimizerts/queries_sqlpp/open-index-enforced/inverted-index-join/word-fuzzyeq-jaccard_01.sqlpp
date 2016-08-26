@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Fuzzy joins two datasets, DBLP and CSX, based on ~= using Jaccard of their titles' word tokens.
- *                  DBLP has an enforced open keyword index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  DBLP has an enforced open keyword index on title?, and we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
@@ -49,7 +49,7 @@ create  dataset DBLP(DBLPType) primary key id;
 
 create  dataset CSX(CSXType) primary key id;
 
-create  index keyword_index  on DBLP (title:string) type keyword enforced;
+create  index keyword_index  on DBLP (title:string?) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.adm"
 set `simfunction` `jaccard`;

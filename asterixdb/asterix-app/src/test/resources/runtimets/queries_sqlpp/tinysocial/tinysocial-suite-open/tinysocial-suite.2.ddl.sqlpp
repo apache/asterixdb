@@ -28,7 +28,7 @@ create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
 
-create  index fbUserSinceIdx  on FacebookUsers (`user-since`:datetime) type btree enforced;
+create  index fbUserSinceIdx  on FacebookUsers (`user-since`:datetime?) type btree enforced;
 
-create  index fbAuthorIdx  on FacebookMessages (`author-id`:int64) type btree enforced;
+create  index fbAuthorIdx  on FacebookMessages (`author-id`:int64?) type btree enforced;
 

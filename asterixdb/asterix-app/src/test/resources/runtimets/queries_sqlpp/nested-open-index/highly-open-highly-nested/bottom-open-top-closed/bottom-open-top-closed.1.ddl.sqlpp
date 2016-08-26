@@ -106,21 +106,21 @@ create  dataset COFGSs(COFGS) primary key id;
 
 create  dataset PCOFGSs(PCOFGS) primary key id;
 
-create  index species  on Ss (Species:string) type btree enforced;
+create  index species  on Ss (Species:string?) type btree enforced;
 
-create  index genus  on GSs (lower.Species:string) type btree enforced;
+create  index genus  on GSs (lower.Species:string?) type btree enforced;
 
-create  index family  on FGSs (lower.lower.Species:string) type btree enforced;
+create  index family  on FGSs (lower.lower.Species:string?) type btree enforced;
 
-create  index orda  on OFGSs (lower.lower.lower.Species:string) type btree enforced;
+create  index orda  on OFGSs (lower.lower.lower.Species:string?) type btree enforced;
 
-create  index classy  on COFGSs (lower.lower.lower.lower.Species:string) type btree enforced;
+create  index classy  on COFGSs (lower.lower.lower.lower.Species:string?) type btree enforced;
 
-create  index phylum  on PCOFGSs (lower.lower.lower.lower.lower.Species:string) type btree enforced;
+create  index phylum  on PCOFGSs (lower.lower.lower.lower.lower.Species:string?) type btree enforced;
 
-create  index phylum  on KPCOFGSs (lower.lower.lower.lower.lower.lower.Species:string) type btree enforced;
+create  index phylum  on KPCOFGSs (lower.lower.lower.lower.lower.lower.Species:string?) type btree enforced;
 
-create  index class  on Classifications (fullClassification.lower.lower.lower.lower.lower.lower.Species:string) type btree enforced;
+create  index class  on Classifications (fullClassification.lower.lower.lower.lower.lower.lower.Species:string?) type btree enforced;
 
-create  index anim  on Animals (class.fullClassification.lower.lower.lower.lower.lower.lower.Species:string) type btree enforced;
+create  index anim  on Animals (class.fullClassification.lower.lower.lower.lower.lower.lower.Species:string?) type btree enforced;
 

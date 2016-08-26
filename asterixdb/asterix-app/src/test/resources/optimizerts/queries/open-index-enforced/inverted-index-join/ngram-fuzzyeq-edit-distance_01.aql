@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Fuzzy joins two datasets, DBLP and CSX, based on ~= using edit distance of their authors.
- *                  DBLP has a 3-gram enforced open index on authors, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  DBLP has a 3-gram enforced open index on authors?, and we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
@@ -45,7 +45,7 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset CSX(CSXType) primary key id;
 
-create index ngram_index on CSX(authors:string) type ngram(3) enforced;
+create index ngram_index on CSX(authors:string?) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm";
 

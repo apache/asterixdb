@@ -18,7 +18,7 @@
  */
 /*
  * Description     : Test that BTree enforced open index is used in query plan
- *                 : define the BTree enforced open index on a composite key (fname,lanme)
+ *                 : define the BTree enforced open index on a composite key (fname?,lanme?)
  *                 : predicate => where $l.fname > "Julio" and $l.lname > "Mattocks" and
  *                     $l.fname <= "Micco" and $l.lname < "Vangieson"
  * Expected Result : Success
@@ -29,5 +29,5 @@
 use test;
 
 
-create  index idx_employee_f_l_name  on employeeOpen (fname:string,lname:string) type btree enforced;
+create  index idx_employee_f_l_name  on employeeOpen (fname:string?,lname:string?) type btree enforced;
 
