@@ -23,12 +23,14 @@ import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class BinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
+    private static final BinaryBooleanInspectorImpl INSTANCE = new BinaryBooleanInspectorImpl();
     public static final IBinaryBooleanInspectorFactory FACTORY = new IBinaryBooleanInspectorFactory() {
         private static final long serialVersionUID = 1L;
 
         @Override
         public IBinaryBooleanInspector createBinaryBooleanInspector(IHyracksTaskContext ctx) {
-            return new BinaryBooleanInspectorImpl();
+            // A stateless class. no need to create an instance per call
+            return INSTANCE;
         }
     };
 

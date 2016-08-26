@@ -218,15 +218,16 @@ public class AsterixHyracksIntegrationUtil {
      */
     public static void main(String[] args) {
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
-        run(integrationUtil);
+        run(integrationUtil, false, false);
     }
 
-    protected static void run(final AsterixHyracksIntegrationUtil integrationUtil) {
+    protected static void run(final AsterixHyracksIntegrationUtil integrationUtil, boolean cleanupOnStart,
+            boolean cleanupOnShutdown) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    integrationUtil.deinit(false);
+                    integrationUtil.deinit(cleanupOnShutdown);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -235,7 +236,7 @@ public class AsterixHyracksIntegrationUtil {
         try {
             System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
 
-            integrationUtil.init(false);
+            integrationUtil.init(cleanupOnStart);
             while (true) {
                 Thread.sleep(10000);
             }

@@ -296,12 +296,7 @@
     <dependency>
       <groupId>com.couchbase.client</groupId>
       <artifactId>core-io</artifactId>
-      <version>1.2.8</version>
-    </dependency>
-    <dependency>
-      <groupId>io.reactivex</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>1.0.15</version>
+      <version>1.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>

@@ -41,13 +41,13 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class SelectOperator extends AbstractLogicalOperator {
     private final Mutable<ILogicalExpression> condition;
-    private final boolean retainNull;
+    private final boolean retainMissing;
     private final LogicalVariable nullPlaceholderVar;
 
-    public SelectOperator(Mutable<ILogicalExpression> condition, boolean retainNull,
+    public SelectOperator(Mutable<ILogicalExpression> condition, boolean retainMissing,
             LogicalVariable nullPlaceholderVar) {
         this.condition = condition;
-        this.retainNull = retainNull;
+        this.retainMissing = retainMissing;
         this.nullPlaceholderVar = nullPlaceholderVar;
     }
 
@@ -61,7 +61,7 @@ public class SelectOperator extends AbstractLogicalOperator {
     }
 
     public boolean getRetainMissing() {
-        return retainNull;
+        return retainMissing;
     }
 
     public LogicalVariable getMissingPlaceholderVariable() throws AlgebricksException {
