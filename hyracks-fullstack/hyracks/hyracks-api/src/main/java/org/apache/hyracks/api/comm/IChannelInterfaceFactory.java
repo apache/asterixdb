@@ -16,24 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.hyracks.api.comm;
 
-public interface IAsterixPropertiesProvider {
-    public AsterixStorageProperties getStorageProperties();
+public interface IChannelInterfaceFactory {
 
-    public AsterixTransactionProperties getTransactionProperties();
+    /**
+     * Creates {@link IChannelReadInterface} and assigns the passed
+     * {@link IChannelControlBlock} to it.
+     *
+     * @param ccb
+     * @return
+     */
+    public IChannelReadInterface createReadInterface(IChannelControlBlock ccb);
 
-    public AsterixCompilerProperties getCompilerProperties();
-
-    public AsterixMetadataProperties getMetadataProperties();
-
-    public AsterixExternalProperties getExternalProperties();
-
-    public AsterixFeedProperties getFeedProperties();
-
-    AsterixBuildProperties getBuildProperties();
-
-    public AsterixReplicationProperties getReplicationProperties();
-
-    public MessagingProperties getMessagingProperties();
+    /**
+     * Creates {@link IChannelWriteInterface} and assigns the passed
+     * {@link IChannelControlBlock} to it.
+     *
+     * @param ccb
+     * @return
+     */
+    public IChannelWriteInterface createWriteInterface(IChannelControlBlock ccb);
 }

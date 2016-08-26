@@ -16,24 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.hyracks.api.exceptions;
 
-public interface IAsterixPropertiesProvider {
-    public AsterixStorageProperties getStorageProperties();
+public class NetException extends Exception {
+    private static final long serialVersionUID = 1L;
 
-    public AsterixTransactionProperties getTransactionProperties();
+    public NetException() {
+        // empty constructor
+    }
 
-    public AsterixCompilerProperties getCompilerProperties();
+    public NetException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    public AsterixMetadataProperties getMetadataProperties();
+    public NetException(String message) {
+        super(message);
+    }
 
-    public AsterixExternalProperties getExternalProperties();
-
-    public AsterixFeedProperties getFeedProperties();
-
-    AsterixBuildProperties getBuildProperties();
-
-    public AsterixReplicationProperties getReplicationProperties();
-
-    public MessagingProperties getMessagingProperties();
+    public NetException(Throwable cause) {
+        super(cause);
+    }
 }

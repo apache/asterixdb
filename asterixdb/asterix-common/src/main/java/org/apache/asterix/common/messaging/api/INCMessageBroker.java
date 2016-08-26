@@ -29,12 +29,22 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param callback
      * @throws Exception
      */
-    public void sendMessage(IApplicationMessage message, IApplicationMessageCallback callback) throws Exception;
+    public void sendMessageToCC(IApplicationMessage message, IApplicationMessageCallback callback) throws Exception;
 
     /**
-     * Sends the maximum resource id on this NC to the CC.
+     * Sends application message from this NC to another NC.
      *
+     * @param message
+     * @param callback
      * @throws Exception
      */
-    public void reportMaxResourceId() throws Exception;
+    public void sendMessageToNC(String nodeId, IApplicationMessage message, IApplicationMessageCallback callback)
+            throws Exception;
+
+    /**
+     * Queue a message to this {@link INCMessageBroker} for processing
+     *
+     * @param msg
+     */
+    public void queueReceivedMessage(IApplicationMessage msg);
 }

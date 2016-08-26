@@ -20,11 +20,11 @@ package org.apache.hyracks.net.protocols.tcp;
 
 import java.io.IOException;
 
-import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.api.exceptions.NetException;
 
 public interface ITCPConnectionEventListener {
-    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException,
-            NetException;
+    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable)
+            throws IOException, NetException;
 
     public void notifyIOError(Exception e);
 }

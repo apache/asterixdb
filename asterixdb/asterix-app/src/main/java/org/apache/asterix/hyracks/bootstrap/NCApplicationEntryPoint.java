@@ -34,13 +34,14 @@ import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
-import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
 import org.apache.asterix.om.util.AsterixClusterProperties;
@@ -116,8 +117,14 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
         runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
-        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService());
+        MessagingProperties messagingProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getMessagingProperties();
+        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService(),
+                messagingProperties);
         ncApplicationContext.setMessageBroker(messageBroker);
+        MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
+                (NCMessageBroker) messageBroker, messagingProperties);
+        ncApplicationContext.setMessagingChannelInterfaceFactory(interfaceFactory);
 
         boolean replicationEnabled = AsterixClusterProperties.INSTANCE.isReplicationEnabled();
         boolean autoFailover = AsterixClusterProperties.INSTANCE.isAutoFailoverEnabled();
@@ -203,7 +210,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         //Send max resource id on this NC to the CC
-        ((INCMessageBroker) ncApplicationContext.getMessageBroker()).reportMaxResourceId();
+        ((NCMessageBroker) ncApplicationContext.getMessageBroker()).reportMaxResourceId();
 
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();

@@ -16,24 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.hyracks.api.comm;
 
-public interface IAsterixPropertiesProvider {
-    public AsterixStorageProperties getStorageProperties();
+/**
+ * A buffer acceptor that can be closed to indicate end of transmission or an error code
+ * specified to indicate an error in transmission.
+ *
+ * @author vinayakb
+ */
+public interface ICloseableBufferAcceptor extends IBufferAcceptor {
+    /**
+     * Close the buffer acceptor.
+     */
+    public void close();
 
-    public AsterixTransactionProperties getTransactionProperties();
-
-    public AsterixCompilerProperties getCompilerProperties();
-
-    public AsterixMetadataProperties getMetadataProperties();
-
-    public AsterixExternalProperties getExternalProperties();
-
-    public AsterixFeedProperties getFeedProperties();
-
-    AsterixBuildProperties getBuildProperties();
-
-    public AsterixReplicationProperties getReplicationProperties();
-
-    public MessagingProperties getMessagingProperties();
+    /**
+     * Indicate that an error occurred.
+     *
+     * @param ecode
+     *            - the error code.
+     */
+    public void error(int ecode);
 }

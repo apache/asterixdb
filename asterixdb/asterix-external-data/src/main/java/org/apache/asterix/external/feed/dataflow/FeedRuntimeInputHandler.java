@@ -24,8 +24,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.active.ConcurrentFramePool;
-import org.apache.asterix.active.FrameAction;
+import org.apache.asterix.common.memory.ConcurrentFramePool;
+import org.apache.asterix.common.memory.FrameAction;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.util.FeedUtils.Mode;
@@ -73,11 +73,12 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
             throws HyracksDataException {
         this.writer = writer;
 
-        this.spiller =
-                fpa.spillToDiskOnCongestion() ? new FrameSpiller(ctx,
+        this.spiller = fpa.spillToDiskOnCongestion()
+                ? new FrameSpiller(ctx,
                         connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_"
                                 + runtimeId.getRuntimeName() + "_" + runtimeId.getPartition(),
-                        fpa.getMaxSpillOnDisk()) : null;
+                        fpa.getMaxSpillOnDisk())
+                : null;
         this.exceptionHandler = new FeedExceptionHandler(ctx, fta);
         this.fpa = fpa;
         this.framePool = framePool;

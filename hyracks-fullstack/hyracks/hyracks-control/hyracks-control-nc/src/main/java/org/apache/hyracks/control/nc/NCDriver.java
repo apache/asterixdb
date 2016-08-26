@@ -18,11 +18,11 @@
  */
 package org.apache.hyracks.control.nc;
 
-import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.kohsuke.args4j.CmdLineParser;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.kohsuke.args4j.CmdLineParser;
 
 public class NCDriver {
     private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());

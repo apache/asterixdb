@@ -16,20 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.buffers;
+package org.apache.hyracks.api.comm;
 
 import java.nio.ByteBuffer;
 
-/**
- * Accepts buffers.
- *
- * @author vinayakb
- */
-public interface IBufferAcceptor {
-    /**
-     * Accept a buffer.
-     *
-     * @param buffer
-     */
-    public void accept(ByteBuffer buffer);
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+@FunctionalInterface
+public interface IBufferFactory {
+
+    public ByteBuffer createBuffer() throws HyracksDataException;
+
 }

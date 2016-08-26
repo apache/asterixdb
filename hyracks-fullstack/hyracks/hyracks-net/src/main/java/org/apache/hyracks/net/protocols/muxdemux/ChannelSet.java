@@ -23,7 +23,9 @@ import java.util.BitSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.MuxDemuxCommand;
+import org.apache.hyracks.api.exceptions.NetException;
 
 public class ChannelSet {
     private static final Logger LOGGER = Logger.getLogger(ChannelSet.class.getName());
@@ -224,7 +226,8 @@ public class ChannelSet {
         }
         assert idx < ccbArray.length;
         assert !allocationBitmap.get(idx);
-        ChannelControlBlock channel = new ChannelControlBlock(this, idx);
+        IChannelInterfaceFactory channelInterfaceFactory = mConn.getChannelInterfaceFactory();
+        ChannelControlBlock channel = new ChannelControlBlock(this, idx, channelInterfaceFactory);
         ccbArray[idx] = channel;
         allocationBitmap.set(idx);
         ++openChannelCount;

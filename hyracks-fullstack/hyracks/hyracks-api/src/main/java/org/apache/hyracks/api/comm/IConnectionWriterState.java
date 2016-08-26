@@ -16,25 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.buffers;
+package org.apache.hyracks.api.comm;
 
-/**
- * A buffer acceptor that can be closed to indicate end of transmission or an error code
- * specified to indicate an error in transmission.
- *
- * @author vinayakb
- */
-public interface ICloseableBufferAcceptor extends IBufferAcceptor {
-    /**
-     * Close the buffer acceptor.
-     */
-    public void close();
+import java.nio.ByteBuffer;
+
+public interface IConnectionWriterState {
 
     /**
-     * Indicate that an error occurred.
+     * Resets the connection write state based on the passed parameters.
      *
-     * @param ecode
-     *            - the error code.
+     * @param pendingBuffer
+     * @param pendingWriteSize
+     * @param ccb
      */
-    public void error(int ecode);
+    public void reset(ByteBuffer pendingBuffer, int pendingWriteSize, IChannelControlBlock ccb);
+
+    /**
+     * @return The command of this {@link IConnectionWriterState}
+     */
+    public MuxDemuxCommand getCommand();
 }

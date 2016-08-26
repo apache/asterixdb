@@ -16,20 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.api.comm;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.api.exceptions.NetException;
 
-class MuxDemuxCommand {
-    static final int MAX_CHANNEL_ID = Integer.MAX_VALUE - 1;
+public class MuxDemuxCommand {
+    public static final int MAX_CHANNEL_ID = Integer.MAX_VALUE - 1;
 
-    static final int COMMAND_SIZE = 8;
+    public static final int COMMAND_SIZE = 8;
 
-    static final int MAX_DATA_VALUE = 0x1fffffff;
+    public static final int MAX_DATA_VALUE = 0x1fffffff;
 
-    enum CommandType {
+    public enum CommandType {
         OPEN_CHANNEL,
         CLOSE_CHANNEL,
         CLOSE_CHANNEL_ACK,

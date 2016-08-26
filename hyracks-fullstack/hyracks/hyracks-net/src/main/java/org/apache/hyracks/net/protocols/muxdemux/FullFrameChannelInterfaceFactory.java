@@ -18,13 +18,22 @@
  */
 package org.apache.hyracks.net.protocols.muxdemux;
 
-import java.nio.ByteBuffer;
+import org.apache.hyracks.api.comm.IChannelControlBlock;
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.IChannelReadInterface;
+import org.apache.hyracks.api.comm.IChannelWriteInterface;
 
-/**
- * @author yingyib
- */
-public interface IBufferFactory {
+public class FullFrameChannelInterfaceFactory implements IChannelInterfaceFactory {
 
-    public ByteBuffer createBuffer();
+    public static final IChannelInterfaceFactory INSTANCE = new FullFrameChannelInterfaceFactory();
 
+    @Override
+    public IChannelReadInterface createReadInterface(IChannelControlBlock cbb) {
+        return new FullFrameChannelReadInterface(cbb);
+    }
+
+    @Override
+    public IChannelWriteInterface createWriteInterface(IChannelControlBlock cbb) {
+        return new FullFrameChannelWriteInterface(cbb);
+    }
 }

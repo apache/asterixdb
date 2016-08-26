@@ -44,7 +44,7 @@ public interface IApplicationMessage extends IMessage {
 
     /**
      * Sets a unique message id that identifies this message within an NC.
-     * This id is set by {@link INCMessageBroker#sendMessage(IApplicationMessage, IApplicationMessageCallback)}
+     * This id is set by {@link INCMessageBroker#sendMessageToCC(IApplicationMessage, IApplicationMessageCallback)}
      * when the callback is not null to notify the sender when the response to that message is received.
      *
      * @param messageId

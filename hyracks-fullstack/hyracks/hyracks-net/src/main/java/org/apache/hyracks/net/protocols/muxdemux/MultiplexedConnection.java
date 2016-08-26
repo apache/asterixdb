@@ -26,7 +26,11 @@ import java.util.BitSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.api.comm.IChannelControlBlock;
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.IConnectionWriterState;
+import org.apache.hyracks.api.comm.MuxDemuxCommand;
+import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 
@@ -121,8 +125,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     }
 
     @Override
-    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException,
-            NetException {
+    public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable)
+            throws IOException, NetException {
         if (readable) {
             driveReaderStateMachine();
         }
@@ -157,7 +161,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         return channel;
     }
 
-    class WriterState {
+    class WriterState implements IConnectionWriterState {
         private final ByteBuffer cmdWriteBuffer;
 
         final MuxDemuxCommand command;
@@ -166,7 +170,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
         private int pendingWriteSize;
 
-        private ChannelControlBlock ccb;
+        private IChannelControlBlock ccb;
 
         public WriterState() {
             cmdWriteBuffer = ByteBuffer.allocateDirect(MuxDemuxCommand.COMMAND_SIZE);
@@ -179,7 +183,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             return cmdWriteBuffer.remaining() > 0 || (pendingBuffer != null && pendingWriteSize > 0);
         }
 
-        void reset(ByteBuffer pendingBuffer, int pendingWriteSize, ChannelControlBlock ccb) {
+        @Override
+        public void reset(ByteBuffer pendingBuffer, int pendingWriteSize, IChannelControlBlock ccb) {
             cmdWriteBuffer.clear();
             command.write(cmdWriteBuffer);
             cmdWriteBuffer.flip();
@@ -221,6 +226,11 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 ccb = null;
             }
             return true;
+        }
+
+        @Override
+        public MuxDemuxCommand getCommand() {
+            return command;
         }
     }
 
@@ -413,5 +423,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             }
             readerState.reset();
         }
+    }
+
+    public IChannelInterfaceFactory getChannelInterfaceFactory() {
+        return muxDemux.getChannelInterfaceFactory();
     }
 }

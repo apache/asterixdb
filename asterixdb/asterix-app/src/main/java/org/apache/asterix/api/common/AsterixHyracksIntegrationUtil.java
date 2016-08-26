@@ -109,6 +109,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.clusterNetIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
         ncConfig.dataIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
         ncConfig.resultIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
+        ncConfig.messagingIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
         ncConfig.nodeId = ncName;
         ncConfig.resultTTL = 30000;
         ncConfig.resultSweepThreshold = 1000;

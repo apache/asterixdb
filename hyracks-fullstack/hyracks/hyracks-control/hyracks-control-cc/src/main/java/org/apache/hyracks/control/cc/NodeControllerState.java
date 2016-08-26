@@ -23,10 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.base.INodeController;
@@ -35,6 +31,9 @@ import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class NodeControllerState {
     private static final int RRD_SIZE = 720;
@@ -46,6 +45,8 @@ public class NodeControllerState {
     private final NetworkAddress dataPort;
 
     private final NetworkAddress datasetPort;
+
+    private final NetworkAddress messagingPort;
 
     private final Set<JobId> activeJobIds;
 
@@ -142,6 +143,7 @@ public class NodeControllerState {
         ncConfig = reg.getNCConfig();
         dataPort = reg.getDataPort();
         datasetPort = reg.getDatasetPort();
+        messagingPort = reg.getMessagingPort();
         activeJobIds = new HashSet<JobId>();
 
         osName = reg.getOSName();
@@ -262,6 +264,10 @@ public class NodeControllerState {
 
     public NetworkAddress getDatasetPort() {
         return datasetPort;
+    }
+
+    public NetworkAddress getMessagingPort() {
+        return messagingPort;
     }
 
     public JSONObject toSummaryJSON() throws JSONException {

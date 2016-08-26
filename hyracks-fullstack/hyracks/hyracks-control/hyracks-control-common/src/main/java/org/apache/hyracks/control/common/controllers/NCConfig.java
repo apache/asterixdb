@@ -18,18 +18,18 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.control.common.application.IniApplicationConfig;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StopOptionHandler;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.InetAddress;
-import java.util.List;
-import java.util.Map;
 
 public class NCConfig implements Serializable {
     private static final long serialVersionUID = 2L;
@@ -82,7 +82,7 @@ public class NCConfig implements Serializable {
     @Option(name = "-result-public-port", usage = "Public IP port to announce dataset result distribution listener (default: same as -result-port; must set -result-public-ip-address also)", required = false)
     public int resultPublicPort = 0;
 
-    @Option(name = "-retries", usage ="Number of attempts to contact CC before giving up (default = 5)")
+    @Option(name = "-retries", usage = "Number of attempts to contact CC before giving up (default = 5)")
     public int retries = 5;
 
     @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
@@ -112,6 +112,23 @@ public class NCConfig implements Serializable {
     @Option(name = "-config-file", usage = "Specify path to local configuration file (default: no local config)", required = false)
     public String configFile = null;
 
+    //TODO add messaging values to NC start scripts
+    @Option(name = "-messaging-ip-address", usage = "IP Address to bind messaging "
+            + "listener (default: same as -address)", required = false)
+    public String messagingIPAddress;
+
+    @Option(name = "-messaging-port", usage = "IP port to bind messaging listener "
+            + "(default: random port)", required = false)
+    public int messagingPort = 0;
+
+    @Option(name = "-messaging-public-ip-address", usage = "Public IP Address to announce messaging"
+            + " listener (default: same as -messaging-ip-address)", required = false)
+    public String messagingPublicIPAddress;
+
+    @Option(name = "-messaging-public-port", usage = "Public IP port to announce messaging listener"
+            + " (default: same as -messaging-port; must set -messaging-public-port also)", required = false)
+    public int messagingPublicPort = 0;
+
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
@@ -139,13 +156,14 @@ public class NCConfig implements Serializable {
         resultIPAddress = IniUtils.getString(ini, nodeSection, "result.address", resultIPAddress);
         resultPort = IniUtils.getInt(ini, nodeSection, "result.port", resultPort);
 
-        clusterNetPublicIPAddress = IniUtils.getString(
-                ini, nodeSection, "public.cluster.address", clusterNetPublicIPAddress);
+        clusterNetPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.cluster.address",
+                clusterNetPublicIPAddress);
         clusterNetPublicPort = IniUtils.getInt(ini, nodeSection, "public.cluster.port", clusterNetPublicPort);
         dataPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.data.address", dataPublicIPAddress);
         dataPublicPort = IniUtils.getInt(ini, nodeSection, "public.data.port", dataPublicPort);
         resultPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.result.address", resultPublicIPAddress);
         resultPublicPort = IniUtils.getInt(ini, nodeSection, "public.result.port", resultPublicPort);
+        //TODO pass messaging info from ini file
 
         retries = IniUtils.getInt(ini, nodeSection, "retries", retries);
 
@@ -169,23 +187,41 @@ public class NCConfig implements Serializable {
         }
 
         // "address" is the default for all IP addresses
-        if (clusterNetIPAddress == null) clusterNetIPAddress = ipAddress;
-        if (dataIPAddress == null) dataIPAddress = ipAddress;
-        if (resultIPAddress == null) resultIPAddress = ipAddress;
+        if (clusterNetIPAddress == null) {
+            clusterNetIPAddress = ipAddress;
+        }
+        if (dataIPAddress == null) {
+            dataIPAddress = ipAddress;
+        }
+        if (resultIPAddress == null) {
+            resultIPAddress = ipAddress;
+        }
 
         // All "public" options default to their "non-public" versions
-        if (clusterNetPublicIPAddress == null) clusterNetPublicIPAddress = clusterNetIPAddress;
-        if (clusterNetPublicPort == 0) clusterNetPublicPort = clusterNetPort;
-        if (dataPublicIPAddress == null) dataPublicIPAddress = dataIPAddress;
-        if (dataPublicPort == 0) dataPublicPort = dataPort;
-        if (resultPublicIPAddress == null) resultPublicIPAddress = resultIPAddress;
-        if (resultPublicPort == 0) resultPublicPort = resultPort;
+        if (clusterNetPublicIPAddress == null) {
+            clusterNetPublicIPAddress = clusterNetIPAddress;
+        }
+        if (clusterNetPublicPort == 0) {
+            clusterNetPublicPort = clusterNetPort;
+        }
+        if (dataPublicIPAddress == null) {
+            dataPublicIPAddress = dataIPAddress;
+        }
+        if (dataPublicPort == 0) {
+            dataPublicPort = dataPort;
+        }
+        if (resultPublicIPAddress == null) {
+            resultPublicIPAddress = resultIPAddress;
+        }
+        if (resultPublicPort == 0) {
+            resultPublicPort = resultPort;
+        }
     }
 
     /**
      * @return An IApplicationConfig representing this NCConfig.
-     * Note: Currently this only includes the values from the configuration
-     * file, not anything specified on the command-line. QQQ
+     *         Note: Currently this only includes the values from the configuration
+     *         file, not anything specified on the command-line. QQQ
      */
     public IApplicationConfig getAppConfig() {
         return new IniApplicationConfig(ini);
@@ -215,10 +251,12 @@ public class NCConfig implements Serializable {
         configuration.put("result-time-to-live", String.valueOf(resultTTL));
         configuration.put("result-sweep-threshold", String.valueOf(resultSweepThreshold));
         configuration.put("result-manager-memory", String.valueOf(resultManagerMemory));
-
+        configuration.put("messaging-ip-address", messagingIPAddress);
+        configuration.put("messaging-port", String.valueOf(messagingPort));
+        configuration.put("messaging-public-ip-address", messagingPublicIPAddress);
+        configuration.put("messaging-public-port", String.valueOf(messagingPublicPort));
         if (appNCMainClass != null) {
             configuration.put("app-nc-main-class", appNCMainClass);
         }
-
     }
 }

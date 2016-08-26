@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.api.comm;
 
-import org.apache.hyracks.net.buffers.IBufferAcceptor;
-import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
+import org.apache.hyracks.api.exceptions.NetException;
 
 /**
- * Represents the write interface of a {@link ChannelControlBlock}.
- *
- * @author vinayakb
+ * Represents the write interface of a {@link IChannelControlBlock}.
  */
 public interface IChannelWriteInterface {
     /**
@@ -56,4 +53,36 @@ public interface IChannelWriteInterface {
      *            - the size of each buffer
      */
     public void setBufferFactory(IBufferFactory bufferFactory, int limit, int frameSize);
+
+    /**
+     * Performs a pending write operation based on the current state of
+     * this {@link IChannelWriteInterface}
+     *
+     * @param writerState
+     * @throws NetException
+     */
+    public void write(IConnectionWriterState writerState) throws NetException;
+
+    /**
+     * Completes the current write operation on this {@link IChannelWriteInterface}
+     */
+    public void writeComplete();
+
+    /**
+     * Add credits to this this {@link IChannelWriteInterface}
+     *
+     * @param credit
+     */
+    public void addCredits(int credit);
+
+    /**
+     * @return The current credits of this {@link IChannelWriteInterface}
+     */
+    public int getCredits();
+
+    /**
+     * Adjusts the {@link IChannelControlBlock} writability based on the current
+     * state of this {@link IChannelWriteInterface}
+     */
+    public void adjustChannelWritability();
 }

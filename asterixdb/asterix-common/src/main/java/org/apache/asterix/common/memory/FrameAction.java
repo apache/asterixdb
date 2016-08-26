@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.asterix.common.memory;
 
 import java.nio.ByteBuffer;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 public class FrameAction {
     private static final boolean DEBUG = false;

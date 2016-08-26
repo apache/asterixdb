@@ -45,6 +45,7 @@ import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.context.AsterixFileMapManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -113,6 +114,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
     private AsterixFeedProperties feedProperties;
     private AsterixBuildProperties buildProperties;
     private AsterixReplicationProperties replicationProperties;
+    private MessagingProperties messagingProperties;
 
     private AsterixThreadExecutor threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
@@ -161,6 +163,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         buildProperties = new AsterixBuildProperties(propertiesAccessor);
         replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
                 AsterixClusterProperties.INSTANCE.getCluster());
+        messagingProperties = new MessagingProperties(propertiesAccessor);
         this.metadataRmiPort = metadataRmiPort;
         libraryManager = new ExternalLibraryManager();
         if (extensions != null) {
@@ -380,6 +383,11 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
     @Override
     public AsterixBuildProperties getBuildProperties() {
         return buildProperties;
+    }
+
+    @Override
+    public MessagingProperties getMessagingProperties() {
+        return messagingProperties;
     }
 
     @Override

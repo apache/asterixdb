@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.asterix.common.memory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -25,16 +25,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.log4j.Logger;
 
 public class ConcurrentFramePool {
     private static final boolean DEBUG = false;
-    private static final String ERROR_INVALID_FRAME_SIZE =
-            "The size should be an integral multiple of the default frame size";
-    private static final String ERROR_LARGER_THAN_BUDGET_REQUEST =
-            "The requested frame size must not be greater than the allocated budget";
+    private static final String ERROR_INVALID_FRAME_SIZE = "The size should be an integral "
+            + "multiple of the default frame size";
+    private static final String ERROR_LARGER_THAN_BUDGET_REQUEST = "The requested frame size"
+            + " must not be greater than the allocated budget";
     private static final Logger LOGGER = Logger.getLogger(ConcurrentFramePool.class.getName());
     private final String nodeId;
     private final int budget;
@@ -232,7 +233,8 @@ public class ConcurrentFramePool {
                 try {
                     frameAction.call(freeBuffer);
                 } catch (Exception e) {
-                    LOGGER.error("Error while attempting to answer a subscription. Buffer will be reclaimed", e);
+                    LOGGER.log(Level.SEVERE,
+                            "Error while attempting to answer a subscription. Buffer will be reclaimed", e);
                     // TODO(amoudi): Add test cases and get rid of recursion
                     if (handedOut == handedOutBeforeCall) {
                         release(freeBuffer);

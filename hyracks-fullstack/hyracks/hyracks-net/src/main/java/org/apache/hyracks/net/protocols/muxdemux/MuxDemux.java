@@ -23,7 +23,8 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 import org.apache.hyracks.net.protocols.tcp.TCPEndpoint;
@@ -48,6 +49,8 @@ public class MuxDemux {
 
     private final MuxDemuxPerformanceCounters perfCounters;
 
+    private final IChannelInterfaceFactory channelInterfaceFatory;
+
     /**
      * Constructor.
      *
@@ -61,11 +64,12 @@ public class MuxDemux {
      *            - Maximum number of connection attempts
      */
     public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads,
-            int maxConnectionAttempts) {
+            int maxConnectionAttempts, IChannelInterfaceFactory channelInterfaceFatory) {
         this.localAddress = localAddress;
         this.channelOpenListener = listener;
         this.maxConnectionAttempts = maxConnectionAttempts;
-        connectionMap = new HashMap<InetSocketAddress, MultiplexedConnection>();
+        this.channelInterfaceFatory = channelInterfaceFatory;
+        connectionMap = new HashMap<>();
         this.tcpEndpoint = new TCPEndpoint(new ITCPConnectionListener() {
             @Override
             public void connectionEstablished(TCPConnection connection) {
@@ -129,7 +133,7 @@ public class MuxDemux {
      * @throws NetException
      */
     public MultiplexedConnection connect(InetSocketAddress remoteAddress) throws InterruptedException, NetException {
-        MultiplexedConnection mConn = null;
+        MultiplexedConnection mConn;
         synchronized (this) {
             mConn = connectionMap.get(remoteAddress);
             if (mConn == null) {
@@ -162,5 +166,15 @@ public class MuxDemux {
      */
     public MuxDemuxPerformanceCounters getPerformanceCounters() {
         return perfCounters;
+    }
+
+    /**
+     * Gets the channel interface factory associated with channels
+     * created by this {@link MuxDemux}.
+     *
+     * @return
+     */
+    public IChannelInterfaceFactory getChannelInterfaceFactory() {
+        return channelInterfaceFatory;
     }
 }

@@ -57,7 +57,7 @@ public class GlobalResourceIdFactory implements IResourceIdFactory, IApplication
             //if no response available or it has an exception, request a new one
             if (reponse == null || reponse.getException() != null) {
                 ResourceIdRequestMessage msg = new ResourceIdRequestMessage();
-                ((INCMessageBroker) appCtx.getMessageBroker()).sendMessage(msg, this);
+                ((INCMessageBroker) appCtx.getMessageBroker()).sendMessageToCC(msg, this);
                 reponse = (ResourceIdRequestResponseMessage) resourceIdResponseQ.take();
                 if (reponse.getException() != null) {
                     throw new HyracksDataException(reponse.getException().getMessage());

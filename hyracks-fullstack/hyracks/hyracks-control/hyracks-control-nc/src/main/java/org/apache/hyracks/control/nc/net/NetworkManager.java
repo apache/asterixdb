@@ -25,16 +25,17 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
+import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.comm.channels.IChannelConnectionFactory;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
-import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
-import org.apache.hyracks.net.exceptions.NetException;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
@@ -58,13 +59,13 @@ public class NetworkManager implements IChannelConnectionFactory {
 
     private NetworkAddress publicNetworkAddress;
 
-    public NetworkManager(String inetAddress, int inetPort, PartitionManager partitionManager, int nThreads, int nBuffers,
-                          String publicInetAddress, int publicInetPort)
-            throws IOException {
+    public NetworkManager(String inetAddress, int inetPort, PartitionManager partitionManager, int nThreads,
+            int nBuffers, String publicInetAddress, int publicInetPort,
+            IChannelInterfaceFactory channelInterfaceFactory) {
         this.partitionManager = partitionManager;
         this.nBuffers = nBuffers;
         md = new MuxDemux(new InetSocketAddress(inetAddress, inetPort), new ChannelOpenListener(), nThreads,
-                MAX_CONNECTION_ATTEMPTS);
+                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory);
         // Just save these values for the moment; may be reset in start()
         publicNetworkAddress = new NetworkAddress(publicInetAddress, publicInetPort);
     }
@@ -78,12 +79,10 @@ public class NetworkManager implements IChannelConnectionFactory {
         // make it a copy of localNetworkAddress
         if (publicNetworkAddress.getAddress() == null) {
             publicNetworkAddress = localNetworkAddress;
-        }
-        else {
+        } else {
             // Likewise for public port
             if (publicNetworkAddress.getPort() == 0) {
-                publicNetworkAddress = new NetworkAddress
-                    (publicNetworkAddress.getAddress(), sockAddr.getPort());
+                publicNetworkAddress = new NetworkAddress(publicNetworkAddress.getAddress(), sockAddr.getPort());
             }
         }
     }
@@ -100,6 +99,7 @@ public class NetworkManager implements IChannelConnectionFactory {
 
     }
 
+    @Override
     public ChannelControlBlock connect(SocketAddress remoteAddress) throws InterruptedException, NetException {
         MultiplexedConnection mConn = md.connect((InetSocketAddress) remoteAddress);
         return mConn.openChannel();

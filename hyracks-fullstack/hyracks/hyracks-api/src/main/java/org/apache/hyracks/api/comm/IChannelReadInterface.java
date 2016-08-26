@@ -16,13 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.api.comm;
 
-import org.apache.hyracks.net.buffers.IBufferAcceptor;
-import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
+import java.io.IOException;
+import java.nio.channels.SocketChannel;
+
+import org.apache.hyracks.api.exceptions.NetException;
 
 /**
- * Represents the read interface of a {@link ChannelControlBlock}.
+ * Represents the read interface of a {@link IChannelControlBlock}.
  *
  * @author vinayakb
  */
@@ -56,4 +58,42 @@ public interface IChannelReadInterface {
      *            - the size of each buffer
      */
     public void setBufferFactory(IBufferFactory bufferFactory, int limit, int frameSize);
+
+    /**
+     * Try to read as much as {@code size} bytes from {@code sc}
+     *
+     * @param sc
+     * @param size
+     * @return The number of read bytes.
+     * @throws IOException
+     * @throws NetException
+     */
+    public int read(SocketChannel sc, int size) throws IOException, NetException;
+
+    /**
+     * Sets the read credits of this {@link IChannelReadInterface}
+     *
+     * @param credits
+     */
+    public void setReadCredits(int credits);
+
+    /**
+     * @return The current read credits of this {@link IChannelReadInterface}
+     */
+    public int getCredits();
+
+    /**
+     * Forces the current read buffer to be flushed
+     */
+    public void flush();
+
+    /**
+     * @return The current full buffer acceptor of this {@link IChannelReadInterface}
+     */
+    public ICloseableBufferAcceptor getFullBufferAcceptor();
+
+    /**
+     * @return The buffer factory used by this {@link IChannelReadInterface}
+     */
+    public IBufferFactory getBufferFactory();
 }

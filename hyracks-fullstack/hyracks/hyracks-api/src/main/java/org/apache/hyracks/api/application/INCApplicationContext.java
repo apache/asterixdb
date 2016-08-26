@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.context.IHyracksRootContext;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
@@ -77,4 +78,19 @@ public interface INCApplicationContext extends IApplicationContext {
      * @param handler
      */
     public void setStateDumpHandler(IStateDumpHandler handler);
+
+    /**
+     * Set the application MessagingChannelInterfaceFactory
+     *
+     * @param interfaceFactory
+     */
+    public void setMessagingChannelInterfaceFactory(IChannelInterfaceFactory interfaceFactory);
+
+    /**
+     * Get the application MessagingChannelInterfaceFactory previously set by
+     * the {@link #setMessagingChannelInterfaceFactory(IChannelInterfaceFactory)} call.
+     *
+     * @return
+     */
+    public IChannelInterfaceFactory getMessagingChannelInterfaceFactory();
 }

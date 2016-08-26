@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.test;
+package org.apache.asterix.test.memory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -24,9 +24,9 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.asterix.active.ConcurrentFramePool;
-import org.apache.asterix.active.FrameAction;
 import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.memory.ConcurrentFramePool;
+import org.apache.asterix.common.memory.FrameAction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Assert;
 import org.mockito.Mockito;
@@ -60,8 +60,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     public void testMemoryManager() {
         AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
         Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-        ConcurrentFramePool fmm =
-                new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+        ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                DEFAULT_FRAME_SIZE);
         int i = 0;
         while (fmm.get() != null) {
             i++;
@@ -75,8 +75,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             FixedSizeAllocator[] runners = new FixedSizeAllocator[NUM_THREADS];
             Thread[] threads = new Thread[NUM_THREADS];
             Arrays.parallelSetAll(runners, (int i) -> new FixedSizeAllocator(fmm));
@@ -106,8 +106,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             Random random = new Random();
             int i = 0;
             int req;
@@ -141,8 +141,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
 
             VarSizeAllocator[] runners = new VarSizeAllocator[NUM_THREADS];
             Thread[] threads = new Thread[NUM_THREADS];
@@ -180,8 +180,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     public void testAcquireReleaseMemoryManager() throws HyracksDataException {
         AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
         Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-        ConcurrentFramePool fmm =
-                new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+        ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                DEFAULT_FRAME_SIZE);
         Random random = new Random();
         ArrayDeque<ByteBuffer> stack = new ArrayDeque<>();
         while (true) {
@@ -213,8 +213,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             FixedSizeGoodAllocator[] runners = new FixedSizeGoodAllocator[NUM_THREADS];
             Thread[] threads = new Thread[NUM_THREADS];
             Arrays.parallelSetAll(runners, (int i) -> new FixedSizeGoodAllocator(fmm));
@@ -244,8 +244,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             Random random = new Random();
             ArrayDeque<ByteBuffer> stack = new ArrayDeque<>();
             int i = 0;
@@ -297,8 +297,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             VarSizeGoodAllocator[] runners = new VarSizeGoodAllocator[NUM_THREADS];
             Thread[] threads = new Thread[NUM_THREADS];
             Arrays.parallelSetAll(runners, (int i) -> new VarSizeGoodAllocator(fmm));
@@ -333,8 +333,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             int i = 0;
             ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
             LinkedBlockingDeque<ByteBuffer> buffers = new LinkedBlockingDeque<>();
@@ -399,8 +399,8 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
         try {
             AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
-            ConcurrentFramePool fmm =
-                    new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(), DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
+                    DEFAULT_FRAME_SIZE);
             int i = 0;
             ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
             LinkedBlockingDeque<ByteBuffer> buffers = new LinkedBlockingDeque<>();

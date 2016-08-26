@@ -25,16 +25,16 @@ import java.util.Queue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
-import org.apache.hyracks.net.buffers.IBufferAcceptor;
-import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
+import org.apache.hyracks.api.comm.IBufferAcceptor;
+import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
+import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
+import org.junit.Test;
+
+import junit.framework.Assert;
 
 public class NetTest {
     @Test
@@ -162,7 +162,8 @@ public class NetTest {
                 }.start();
             }
         };
-        return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), md1OpenListener, 1, 5);
+        return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), md1OpenListener, 1, 5,
+                FullFrameChannelInterfaceFactory.INSTANCE);
     }
 
     private class ChannelIO {

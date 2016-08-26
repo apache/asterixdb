@@ -16,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.exceptions;
+package org.apache.hyracks.api.comm;
 
-public class NetException extends Exception {
-    private static final long serialVersionUID = 1L;
+import java.nio.ByteBuffer;
 
-    public NetException() {
-    }
-
-    public NetException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public NetException(String message) {
-        super(message);
-    }
-
-    public NetException(Throwable cause) {
-        super(cause);
-    }
+/**
+ * Accepts buffers.
+ *
+ * @author vinayakb
+ */
+@FunctionalInterface
+public interface IBufferAcceptor {
+    /**
+     * Accept a buffer.
+     *
+     * @param buffer
+     */
+    public void accept(ByteBuffer buffer);
 }

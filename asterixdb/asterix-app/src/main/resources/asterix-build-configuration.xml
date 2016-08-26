@@ -98,4 +98,16 @@
     <description>Enabling plot of Algebricks plan to tmp folder. (Default = false)
     </description>
   </property>
+  <property>
+    <name>messaging.frame.size</name>
+    <value>4096</value>
+    <description>The frame size to be used for NC to NC messaging. (Default = 4kb)
+    </description>
+  </property>
+  <property>
+    <name>messaging.frame.count</name>
+    <value>512</value>
+    <description>Number of reusable frames for NC to NC messaging. (Default = 512)
+    </description>
+  </property>
 </asterixConfiguration>

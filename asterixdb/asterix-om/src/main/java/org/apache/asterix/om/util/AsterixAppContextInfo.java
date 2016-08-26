@@ -33,6 +33,7 @@ import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -62,6 +63,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixBuildProperties buildProperties;
     private AsterixReplicationProperties replicationProperties;
     private AsterixExtensionProperties extensionProperties;
+    private MessagingProperties messagingProperties;
     private final IGlobalRecoveryMaanger globalRecoveryMaanger;
     private IHyracksClientConnection hcc;
     private final ILibraryManager libraryManager;
@@ -92,10 +94,11 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         INSTANCE.feedProperties = new AsterixFeedProperties(propertiesAccessor);
         INSTANCE.extensionProperties = new AsterixExtensionProperties(propertiesAccessor);
-        INSTANCE.replicationProperties =
-                new AsterixReplicationProperties(propertiesAccessor, AsterixClusterProperties.INSTANCE.getCluster());
+        INSTANCE.replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
+                AsterixClusterProperties.INSTANCE.getCluster());
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
+        INSTANCE.messagingProperties = new MessagingProperties(propertiesAccessor);
         Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
@@ -190,5 +193,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
 
     public AsterixExtensionProperties getExtensionProperties() {
         return extensionProperties;
+    }
+
+    @Override
+    public MessagingProperties getMessagingProperties() {
+        return messagingProperties;
     }
 }
