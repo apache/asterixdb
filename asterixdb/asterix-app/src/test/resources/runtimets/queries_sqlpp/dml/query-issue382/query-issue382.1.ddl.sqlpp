@@ -17,6 +17,7 @@
  * under the License.
  */
 
+drop dataverse SocialNetworkData if exists;
 create  dataverse SocialNetworkData;
 
 use SocialNetworkData;

@@ -23,6 +23,7 @@
  * Date         : 3th April 2013
  */
 
+drop dataverse insertIssue if exists;
 create dataverse insertIssue;
 use dataverse insertIssue;
 

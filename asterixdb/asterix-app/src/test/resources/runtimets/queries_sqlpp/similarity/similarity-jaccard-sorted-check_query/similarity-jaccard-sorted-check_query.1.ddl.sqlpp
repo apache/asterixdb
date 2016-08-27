@@ -17,6 +17,9 @@
  * under the License.
  */
 
+drop dataverse test if exists;
+create dataverse test;
+
 use test;
 
 
