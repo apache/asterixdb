@@ -863,7 +863,7 @@ public abstract class BuiltinType implements IAType {
 
     @Override
     public boolean equals(Object object) {
-        return this.deepEqual((IAObject) object);
+        return object instanceof IAObject && deepEqual((IAObject) object);
     }
 
     @Override

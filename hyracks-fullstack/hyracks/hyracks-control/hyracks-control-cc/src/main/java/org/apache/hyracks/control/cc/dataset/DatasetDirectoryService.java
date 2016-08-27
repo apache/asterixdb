@@ -200,7 +200,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public void deinitState(JobId jobId) {
-        jobResultLocations.remove(jobResultLocations.get(jobId));
+        jobResultLocations.remove(jobId);
     }
 
     @Override

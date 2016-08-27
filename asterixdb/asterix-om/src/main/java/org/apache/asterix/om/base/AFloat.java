@@ -48,7 +48,7 @@ public class AFloat implements IAObject {
         if (!(o instanceof AFloat)) {
             return false;
         } else {
-            return value == (((AFloat) o).getFloatValue());
+            return Float.floatToIntBits(value) == Float.floatToIntBits(((AFloat) o).getFloatValue());
         }
     }
 

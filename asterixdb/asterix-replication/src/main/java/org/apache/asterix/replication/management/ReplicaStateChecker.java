@@ -54,11 +54,9 @@ public class ReplicaStateChecker implements Callable<Void> {
 
         long startTime = System.currentTimeMillis();
         InetSocketAddress replicaAddress = replica.getAddress(asterixReplicationProperties);
-        SocketChannel connection = null;
 
         while (true) {
-            try {
-                connection = SocketChannel.open();
+            try (SocketChannel connection = SocketChannel.open()) {
                 connection.configureBlocking(true);
                 connection.connect(new InetSocketAddress(replicaAddress.getHostString(), replicaAddress.getPort()));
                 ByteBuffer buffer = ReplicationProtocol.getGoodbyeBuffer();
@@ -72,12 +70,6 @@ public class ReplicaStateChecker implements Callable<Void> {
                 if (((System.currentTimeMillis() - startTime) / 1000) >= replicationTimeOut) {
                     replicationManager.updateReplicaState(replica.getId(), ReplicaState.DEAD, suspendReplication);
                     return null;
-                } else {
-                    continue;
-                }
-            } finally {
-                if (connection.isOpen()) {
-                    connection.close();
                 }
             }
         }

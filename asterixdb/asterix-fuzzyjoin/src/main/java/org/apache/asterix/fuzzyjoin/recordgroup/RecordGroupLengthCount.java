@@ -38,8 +38,7 @@ public class RecordGroupLengthCount extends RecordGroup {
         int sum = 0;
         int range = 0;
 
-        try {
-            DataInputStream in = new DataInputStream(new FileInputStream(lengthstatsPath.toString()));
+        try (DataInputStream in = new DataInputStream(new FileInputStream(lengthstatsPath))) {
             min = in.readInt();
             max = in.readInt();
             range = max - min + 1;

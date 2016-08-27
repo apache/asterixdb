@@ -18,16 +18,16 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.common.work.AbstractWork;
-import org.ini4j.Ini;
-
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.work.AbstractWork;
+import org.ini4j.Ini;
 
 /**
  * A work which is run at CC startup for each NC specified in the configuration file.
@@ -57,13 +57,13 @@ public class TriggerNCWork extends AbstractWork {
     public final void run() {
         ccs.getExecutor().execute(new Runnable() {
             @Override
+            @SuppressWarnings("squid:S2142") // suppress interrupted exception warning
             public void run() {
                 while (true) {
-                    try {
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Connecting NC service '" + ncId + "' at " + ncHost + ":" + ncPort);
-                        }
-                        Socket s = new Socket(ncHost, ncPort);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info("Connecting NC service '" + ncId + "' at " + ncHost + ":" + ncPort);
+                    }
+                    try (Socket s = new Socket(ncHost, ncPort)) {
                         ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
                         oos.writeUTF(NC_MAGIC_COOKIE);
                         oos.writeUTF(serializeIni(ccs.getCCConfig().getIni()));
