@@ -868,6 +868,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1230</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="query-ASTERIXDB-159">
+        <output-dir compare="Text">query-ASTERIXDB-159</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate-sql">
     <test-case FilePath="aggregate-sql">

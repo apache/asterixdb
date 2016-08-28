@@ -2460,6 +2460,11 @@
         <expected-error>The parameter * can only be used in COUNT().</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="query-ASTERIXDB-159">
+        <output-dir compare="Text">query-ASTERIXDB-159</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="group-by">
     <test-case FilePath="group-by">
@@ -2899,6 +2904,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="list-range">
+        <output-dir compare="Text">list-range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="listify_01">
         <output-dir compare="Text">listify_01</output-dir>
       </compilation-unit>
@@ -2962,6 +2972,16 @@
     <test-case FilePath="list">
       <compilation-unit name="query-issue428">
         <output-dir compare="Text">query-issue428</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-159-2">
+        <output-dir compare="Text">query-ASTERIXDB-159-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-159-3">
+        <output-dir compare="Text">query-ASTERIXDB-159-3</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -3091,6 +3111,12 @@
     <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-1531">
         <output-dir compare="Text">query-ASTERIXDB-1531</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-1577">
+        <output-dir compare="Text">query-ASTERIXDB-1577</output-dir>
+        <expected-error>The first argument of a field access should be a RECORD, but it is</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -34,7 +34,6 @@ import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
 import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
 import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
 import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
-import org.apache.hyracks.algebricks.rewriter.rules.ExtractGroupByDecorVariablesRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
@@ -51,6 +50,7 @@ import org.apache.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectAssignR
 import org.apache.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import org.apache.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
 import org.apache.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenceRule;
+import org.apache.asterix.optimizer.rules.ListifyUnnestingFunctionRule;
 import org.apache.asterix.optimizer.rules.LoadRecordFieldsRule;
 import org.apache.asterix.optimizer.rules.MetaFunctionToMetaVariableRule;
 import org.apache.asterix.optimizer.rules.NestGroupByRule;
@@ -92,6 +92,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesR
 import org.apache.hyracks.algebricks.rewriter.rules.ExtractCommonExpressionsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ExtractGbyExpressionsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ExtractGroupByDecorVariablesRule;
 import org.apache.hyracks.algebricks.rewriter.rules.FactorRedundantGroupAndDecorVarsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.InferTypesRule;
 import org.apache.hyracks.algebricks.rewriter.rules.InlineAssignIntoAggregateRule;
@@ -178,6 +179,7 @@ public final class RuleCollections {
         // Let PushAggFuncIntoStandaloneAggregateRule run after ExtractCommonExpressionsRule
         // so that PushAggFunc can happen in fewer places.
         normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
+        normalization.add(new ListifyUnnestingFunctionRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new UnnestToDataScanRule(algebraExtensionManager));
