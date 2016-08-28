@@ -2487,9 +2487,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 for (int j = 0; j < indexes.size(); j++) {
                     if (indexes.get(j).isSecondaryIndex()) {
-                        jobsToExecute
-                                .add(DatasetOperations.compactDatasetJobSpec(
-                                        dataverse, datasetName, metadataProvider));
+                        CompiledIndexCompactStatement cics = new CompiledIndexCompactStatement(dataverseName,
+                                datasetName, indexes.get(j).getIndexName(), indexes.get(j).getKeyFieldNames(),
+                                indexes.get(j).getKeyFieldTypes(), indexes.get(j).isEnforcingKeyFileds(),
+                                indexes.get(j).getGramLength(), indexes.get(j).getIndexType());
+                        List<Integer> keySourceIndicators = indexes.get(j).getKeyFieldSourceIndicators();
+
+                        jobsToExecute.add(IndexOperations.buildSecondaryIndexCompactJobSpec(cics, aRecordType,
+                                metaRecordType, keySourceIndicators, enforcedType, metadataProvider));
                     }
                 }
             } else {
