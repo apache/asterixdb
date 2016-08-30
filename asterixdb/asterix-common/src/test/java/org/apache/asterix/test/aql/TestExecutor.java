@@ -30,6 +30,7 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -297,6 +298,10 @@ public class TestExecutor {
         return response.getEntity().getContent();
     }
 
+    public InputStream executeQueryService(String str, String url) throws Exception {
+        return executeQueryService(str, OutputFormat.CLEAN_JSON, url, new ArrayList<>());
+    }
+
     public InputStream executeQueryService(String str, OutputFormat fmt, String url,
             List<CompilationUnit.Parameter> params) throws Exception {
         setFormatParam(params, fmt);
@@ -399,7 +404,7 @@ public class TestExecutor {
     }
 
     private InputStream getHandleResult(String handle, OutputFormat fmt) throws Exception {
-        final String url = "http://" + host + ":" + port + getPath(Servlets.QUERY_RESULT);
+        final String url = getEndpoint(Servlets.QUERY_RESULT);
 
         // Create a method instance.
         HttpUriRequest request = RequestBuilder.get(url)
@@ -523,9 +528,10 @@ public class TestExecutor {
         switch (ctx.getType()) {
             case "ddl":
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeDDL(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_DDL));
+                    executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
                 } else {
-                    executeDDL(statement, "http://" + host + ":" + port + getPath(Servlets.SQLPP_DDL));
+                    InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
+                    ResultExtractor.extract(resultStream);
                 }
                 break;
             case "update":
@@ -534,9 +540,10 @@ public class TestExecutor {
                     statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                 }
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeUpdate(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_UPDATE));
+                    executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
                 } else {
-                    executeUpdate(statement, "http://" + host + ":" + port + getPath(Servlets.SQLPP_UPDATE));
+                    InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
+                    ResultExtractor.extract(resultStream);
                 }
                 break;
             case "query":
@@ -553,26 +560,22 @@ public class TestExecutor {
                 OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
                 if (ctx.getFile().getName().endsWith("aql")) {
                     if (ctx.getType().equalsIgnoreCase("query")) {
-                        resultStream = executeQuery(statement, fmt,
-                                "http://" + host + ":" + port + getPath(Servlets.AQL_QUERY), cUnit.getParameter());
+                        resultStream = executeQuery(statement, fmt, getEndpoint(Servlets.AQL_QUERY),
+                                cUnit.getParameter());
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
-                        resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                "http://" + host + ":" + port + getPath(Servlets.AQL));
+                        resultStream = executeAnyAQLAsync(statement, false, fmt, getEndpoint(Servlets.AQL));
                     } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
-                        resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                "http://" + host + ":" + port + getPath(Servlets.AQL));
+                        resultStream = executeAnyAQLAsync(statement, true, fmt, getEndpoint(Servlets.AQL));
                     }
                 } else {
                     if (ctx.getType().equalsIgnoreCase("query")) {
-                        resultStream = executeQueryService(statement, fmt,
-                                "http://" + host + ":" + port + getPath(Servlets.QUERY_SERVICE), cUnit.getParameter());
+                        resultStream = executeQueryService(statement, fmt, getEndpoint(Servlets.QUERY_SERVICE),
+                                cUnit.getParameter());
                         resultStream = ResultExtractor.extract(resultStream);
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
-                        resultStream = executeAnyAQLAsync(statement, false, fmt,
-                                "http://" + host + ":" + port + getPath(Servlets.SQLPP));
+                        resultStream = executeAnyAQLAsync(statement, false, fmt, getEndpoint(Servlets.SQLPP));
                     } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
-                        resultStream = executeAnyAQLAsync(statement, true, fmt,
-                                "http://" + host + ":" + port + getPath(Servlets.SQLPP));
+                        resultStream = executeAnyAQLAsync(statement, true, fmt, getEndpoint(Servlets.SQLPP));
                     }
                 }
                 if (queryCount.intValue() >= expectedResultFileCtxs.size()) {
@@ -598,14 +601,14 @@ public class TestExecutor {
                 break;
             case "txnqbc": // qbc represents query before crash
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        "http://" + host + ":" + port + getPath(Servlets.AQL_QUERY), cUnit.getParameter());
+                        getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 qbcFile.getParentFile().mkdirs();
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        "http://" + host + ":" + port + getPath(Servlets.AQL_QUERY), cUnit.getParameter());
+                        getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
                 File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
@@ -616,7 +619,7 @@ public class TestExecutor {
                 break;
             case "txneu": // eu represents erroneous update
                 try {
-                    executeUpdate(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_UPDATE));
+                    executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
@@ -644,7 +647,7 @@ public class TestExecutor {
                 break;
             case "errddl": // a ddlquery that expects error
                 try {
-                    executeDDL(statement, "http://" + host + ":" + port + getPath(Servlets.AQL_DDL));
+                    executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
                 } catch (Exception e) {
                     // expected error happens
                     failed = true;
@@ -684,8 +687,7 @@ public class TestExecutor {
             case "cstate": // cluster state query
                 try {
                     fmt = OutputFormat.forCompilationUnit(cUnit);
-                    resultStream = executeClusterStateQuery(fmt,
-                            "http://" + host + ":" + port + getPath(Servlets.CLUSTER_STATE));
+                    resultStream = executeClusterStateQuery(fmt, getEndpoint(Servlets.CLUSTER_STATE));
                     expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                     actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                     actualResultFile.getParentFile().mkdirs();
@@ -849,7 +851,7 @@ public class TestExecutor {
                         + cUnit.getName() + "_qbc.adm");
     }
 
-    protected String getPath(Servlets servlet) {
-        return servlet.getPath();
+    protected String getEndpoint(Servlets servlet) {
+        return "http://" + host + ":" + port + servlet.getPath();
     }
 }

@@ -48,10 +48,13 @@ public class ResultExtractor {
         tokener.next('{');
         String name;
         String type = null;
+        String status = null;
         String results = "";
         while ((name = getFieldName(tokener)) != null) {
-            if ("requestID".equals(name) || "signature".equals(name) || "status".equals(name)) {
+            if ("requestID".equals(name) || "signature".equals(name)) {
                 getStringField(tokener);
+            } else if ("status".equals(name)) {
+                status = getStringField(tokener);
             } else if ("type".equals(name)) {
                 type = getStringField(tokener);
             } else if ("metrics".equals(name)) {
@@ -72,6 +75,9 @@ public class ResultExtractor {
             // skip along
         }
         tokener.next('}');
+        if (! "success".equals(status)) {
+            throw new Exception("Unexpected status: '" + status + "'");
+        }
         return IOUtils.toInputStream(results);
     }
 

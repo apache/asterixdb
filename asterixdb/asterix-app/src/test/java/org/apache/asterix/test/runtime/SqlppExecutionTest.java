@@ -86,7 +86,6 @@ public class SqlppExecutionTest {
             testArgs.add(new Object[] { ctx });
         }
         return testArgs;
-
     }
 
     protected TestCaseContext tcCtx;
