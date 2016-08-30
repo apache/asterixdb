@@ -37,6 +37,17 @@ $(function() {
         return (array[(rrdPtr + 1) % array.length] - array[rrdPtr]) / 10;
     }
 
+    function formatArray(array) {
+        var result = "";
+        for (var i = 0; i < array.length; ++i) {
+            if (result !== "") {
+                result += "<br/>";
+            }
+            result += "<span>" + array[i] + "</span>";
+        }
+        return result;
+    }
+
     function onDataReceived(data) {
         var result = data.result;
         $('#node-id')[0].innerHTML = result['node-id'];
@@ -47,18 +58,10 @@ $(function() {
         $('#vm-name')[0].innerHTML = result['vm-name'];
         $('#vm-version')[0].innerHTML = result['vm-version'];
         $('#vm-vendor')[0].innerHTML = result['vm-vendor'];
-        $('#classpath')[0].innerHTML = result['classpath'];
-        $('#library-path')[0].innerHTML = result['library-path'];
-        $('#boot-classpath')[0].innerHTML = result['boot-classpath'];
-        var argsHTML = "";
-        var args = result['input-arguments'];
-        for ( var i = 0; i < args.length; ++i) {
-            if (argsHTML != "") {
-                argsHTML += "<br/>";
-            }
-            argsHTML += "<span>" + args[i] + "</span>";
-        }
-        $('#input-arguments')[0].innerHTML = argsHTML;
+        $('#classpath')[0].innerHTML = formatArray(result['classpath']);
+        $('#library-path')[0].innerHTML = formatArray(result['library-path']);
+        $('#boot-classpath')[0].innerHTML = formatArray(result['boot-classpath']);
+        $('#input-arguments')[0].innerHTML = formatArray(result['input-arguments']);
         var sysLoad = result['system-load-averages'];
         var heapUsageInitSizes = result['heap-init-sizes'];
         var heapUsageUsedSizes = result['heap-used-sizes'];

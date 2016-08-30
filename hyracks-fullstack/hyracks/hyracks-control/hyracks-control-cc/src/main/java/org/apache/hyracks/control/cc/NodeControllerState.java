@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.control.cc;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -290,9 +293,9 @@ public class NodeControllerState {
         o.put("vm-name", vmName);
         o.put("vm-version", vmVersion);
         o.put("vm-vendor", vmVendor);
-        o.put("classpath", classpath);
-        o.put("library-path", libraryPath);
-        o.put("boot-classpath", bootClasspath);
+        o.put("classpath", new JSONArray(Arrays.asList(classpath.split(File.pathSeparator))));
+        o.put("library-path", new JSONArray(Arrays.asList(libraryPath.split(File.pathSeparator))));
+        o.put("boot-classpath", new JSONArray(Arrays.asList(bootClasspath.split(File.pathSeparator))));
         o.put("input-arguments", new JSONArray(inputArguments));
         o.put("rrd-ptr", rrdPtr);
         o.put("heartbeat-times", hbTime);
