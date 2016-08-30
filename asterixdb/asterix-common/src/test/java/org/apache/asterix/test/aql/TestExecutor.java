@@ -43,10 +43,10 @@ import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
-import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
@@ -249,7 +249,7 @@ public class TestExecutor {
         }
     }
 
-    private HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
+    protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         HttpClient client = HttpClients.custom()
                 .setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE)
                 .build();
@@ -270,8 +270,8 @@ public class TestExecutor {
             String errorBody = EntityUtils.toString(httpResponse.getEntity());
             try {
                 JSONObject result = new JSONObject(errorBody);
-                String[] errors = {result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                        result.getString("stacktrace")};
+                String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                        result.getString("stacktrace") };
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
                 String exceptionMsg = "HTTP operation failed: " + errors[0]
                         + "\nSTATUS LINE: " + httpResponse.getStatusLine()
@@ -307,7 +307,7 @@ public class TestExecutor {
         return response.getEntity().getContent();
     }
 
-    private void setFormatParam(List<CompilationUnit.Parameter> params, OutputFormat fmt) {
+    protected void setFormatParam(List<CompilationUnit.Parameter> params, OutputFormat fmt) {
         boolean formatSet = false;
         for (CompilationUnit.Parameter param : params) {
             if ("format".equals(param.getName())) {
@@ -344,7 +344,7 @@ public class TestExecutor {
         return builder.build();
     }
 
-    private HttpUriRequest constructPostMethod(String statement, String endpoint, String stmtParam,
+    protected HttpUriRequest constructPostMethod(String statement, String endpoint, String stmtParam,
             boolean postStmtAsParam, List<CompilationUnit.Parameter> otherParams) {
         RequestBuilder builder = RequestBuilder.post(endpoint);
         if (postStmtAsParam) {
@@ -513,7 +513,6 @@ public class TestExecutor {
             boolean isDmlRecoveryTest) throws Exception {
         executeTest(actualPath, testCaseCtx, pb, isDmlRecoveryTest, null);
     }
-
 
     public void executeTest(TestCaseContext testCaseCtx, TestFileContext ctx, String statement,
             boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
@@ -699,7 +698,7 @@ public class TestExecutor {
                 }
                 break;
             case "server": // (start <test server name> <port>
-                               // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                           // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                 try {
                     lines = statement.trim().split("\n");
                     String[] command = lines[lines.length - 1].trim().split(" ");
@@ -747,7 +746,7 @@ public class TestExecutor {
                 }
                 break;
             case "lib": // expected format <dataverse-name> <library-name>
-                            // <library-directory>
+                        // <library-directory>
                         // TODO: make this case work well with entity names containing spaces by
                         // looking for \"
                 lines = statement.split("\n");

@@ -180,4 +180,8 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     public void setMetaType(ARecordType metaType) {
         this.metaType = metaType;
     }
+
+    public IExternalDataSourceFactory getDataSourceFactory() {
+        return dataSourceFactory;
+    }
 }

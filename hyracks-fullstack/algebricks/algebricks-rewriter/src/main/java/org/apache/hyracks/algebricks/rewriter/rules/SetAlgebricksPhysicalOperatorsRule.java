@@ -37,7 +37,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -269,8 +268,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     DataSourceScanOperator scan = (DataSourceScanOperator) op;
                     IDataSource dataSource = scan.getDataSource();
                     DataSourceScanPOperator dss = new DataSourceScanPOperator(dataSource);
-                    IMetadataProvider mp = context.getMetadataProvider();
-                    if (mp.scannerOperatorIsLeaf(dataSource)) {
+                    if (dataSource.isScanAccessPathALeaf()) {
                         dss.disableJobGenBelowMe();
                     }
                     op.setPhysicalOperator(dss);

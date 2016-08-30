@@ -190,6 +190,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -696,8 +697,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         StringBuilder builder = null;
         IActiveEntityEventsListener[] listeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
         for (IActiveEntityEventsListener listener : listeners) {
-            if (listener instanceof FeedEventsListener
-                    && ((FeedEventsListener) listener).isConnectedToDataset(datasetName)) {
+            if (listener.isEntityConnectedToDataset(dataverseName, datasetName)) {
                 if (builder == null) {
                     builder = new StringBuilder();
                 }
@@ -706,7 +706,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         if (builder != null) {
             throw new AsterixException("Dataset " + dataverseName + "." + datasetName + " is currently being "
-                    + "fed into by the following feed(s).\n" + builder.toString() + "\n" + "Operation not supported");
+                    + "fed into by the following active entities.\n" + builder.toString());
         }
     }
 
@@ -1411,22 +1411,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (ds.getDatasetType() == DatasetType.INTERNAL) {
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
-            IActiveEntityEventsListener[] feedConnections = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
-            for (IActiveEntityEventsListener conn : feedConnections) {
-                if (conn.getEntityId().getExtensionName().equals(Feed.EXTENSION_NAME)
-                        && ((FeedEventsListener) conn).isConnectedToDataset(datasetName)) {
-                    FeedConnectionId connectionId = new FeedConnectionId(conn.getEntityId(), datasetName);
-                    Pair<JobSpecification, Boolean> p = FeedOperations.buildDisconnectFeedJobSpec(metadataProvider,
-                            connectionId);
-                    disconnectJobList.put(connectionId, p);
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Disconnecting feed " + connectionId.getFeedId().getEntityName() + " from dataset "
-                                + datasetName + " as dataset is being dropped");
-                    }
-                    // prepare job to remove feed log storage
-                    jobsToExecute.add(FeedOperations.buildRemoveFeedStorageJob(MetadataManager.INSTANCE.getFeed(
-                            mdTxnCtx.getValue(), connectionId.getFeedId().getDataverse(),
-                            connectionId.getFeedId().getEntityName())));
+            IActiveEntityEventsListener[] activeListeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
+            for (IActiveEntityEventsListener listener : activeListeners) {
+                if (listener.isEntityConnectedToDataset(dataverseName, datasetName)) {
+                    throw new AsterixException(
+                            "Can't drop dataset since it is connected to active entity: " + listener.getEntityId());
                 }
             }
 
@@ -1547,8 +1536,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IActiveEntityEventsListener[] listeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
             StringBuilder builder = null;
             for (IActiveEntityEventsListener listener : listeners) {
-                if (listener.getEntityId().getExtensionName().equals(Feed.EXTENSION_NAME)
-                        && ((FeedEventsListener) listener).isConnectedToDataset(datasetName)) {
+                if (listener.isEntityConnectedToDataset(dataverseName, datasetName)) {
                     if (builder == null) {
                         builder = new StringBuilder();
                     }
@@ -1557,8 +1545,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             if (builder != null) {
                 throw new AsterixException(
-                        "Dataset" + datasetName + " is currently being fed into by the following feeds " + "."
-                                + builder.toString() + "\nOperation not supported.");
+                        "Dataset" + datasetName + " is currently being fed into by the following active entities: "
+                                + builder.toString());
             }
 
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
@@ -1709,7 +1697,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     e.addSuppressed(e2);
                     abort(e, e2, mdTxnCtx);
                     throw new IllegalStateException("System is inconsistent state: pending index("
-                    + dataverseName + "." + datasetName + "."
+                            + dataverseName + "." + datasetName + "."
                             + indexName + ") couldn't be removed from the metadata", e);
                 }
             }
@@ -2008,17 +1996,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateFeedPolicyStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+    protected void handleCreateFeedPolicyStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+            throws AlgebricksException, HyracksDataException {
         String dataverse;
         String policy;
         FeedPolicyEntity newPolicy = null;
+        MetadataTransactionContext mdTxnCtx = null;
         CreateFeedPolicyStatement cfps = (CreateFeedPolicyStatement) stmt;
         dataverse = getActiveDataverse(null);
         policy = cfps.getPolicyName();
         MetadataLockManager.INSTANCE.createFeedPolicyBegin(dataverse, dataverse + "." + policy);
         try {
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
             FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE
                     .getFeedPolicy(metadataProvider.getMetadataTxnContext(), dataverse, policy);
             if (feedPolicy != null) {
@@ -2036,8 +2026,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         .getFeedPolicy(metadataProvider.getMetadataTxnContext(), dataverse,
                                 cfps.getSourcePolicyName());
                 if (sourceFeedPolicy == null) {
-                    sourceFeedPolicy = MetadataManager.INSTANCE.getFeedPolicy(metadataProvider.getMetadataTxnContext(),
-                            MetadataConstants.METADATA_DATAVERSE_NAME, cfps.getSourcePolicyName());
+                    sourceFeedPolicy =
+                            MetadataManager.INSTANCE.getFeedPolicy(metadataProvider.getMetadataTxnContext(),
+                                    MetadataConstants.METADATA_DATAVERSE_NAME, cfps.getSourcePolicyName());
                     if (sourceFeedPolicy == null) {
                         throw new AlgebricksException("Unknown policy " + cfps.getSourcePolicyName());
                     }
@@ -2061,9 +2052,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, newPolicy);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-        } catch (Exception e) {
+        } catch (RemoteException | ACIDException e) {
             abort(e, e, mdTxnCtx);
-            throw e;
+            throw new HyracksDataException(e);
         } finally {
             MetadataLockManager.INSTANCE.createFeedPolicyEnd(dataverse, dataverse + "." + policy);
         }
@@ -2350,7 +2341,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         IFeedLifecycleEventSubscriber eventSubscriber = new FeedLifecycleEventSubscriber();
         FeedEventsListener listener = (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE
                 .getActiveEntityListener(entityId);
-        if (listener == null || !listener.isConnectedToDataset(datasetName)) {
+        if (listener == null || !listener.isEntityConnectedToDataset(dataverseName, datasetName)) {
             throw new AsterixException("Feed " + feed.getFeedId().getEntityName() + " is currently not connected to "
                     + cfs.getDatasetName().getValue() + ". Invalid operation!");
         }
@@ -2873,7 +2864,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             default:
                 throw new AlgebricksException(
                         "The system \"" + runStmt.getSystem() +
-                        "\" specified in your run statement is not supported.");
+                                "\" specified in your run statement is not supported.");
         }
 
     }
@@ -3107,12 +3098,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
     }
 
+    /**
+     * Abort the ongoing metadata transaction logging the error cause
+     *
+     * @param rootE
+     * @param parentE
+     * @param mdTxnCtx
+     */
     public static void abort(Exception rootE, Exception parentE, MetadataTransactionContext mdTxnCtx) {
         try {
             if (IS_DEBUG_MODE) {
                 LOGGER.log(Level.SEVERE, rootE.getMessage(), rootE);
             }
-            MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            if (mdTxnCtx != null) {
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
         } catch (Exception e2) {
             parentE.addSuppressed(e2);
             throw new IllegalStateException(rootE);

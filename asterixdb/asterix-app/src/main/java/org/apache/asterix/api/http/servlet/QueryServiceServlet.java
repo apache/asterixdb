@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -51,7 +52,6 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -119,7 +119,7 @@ public class QueryServiceServlet extends HttpServlet {
         }
     }
 
-    private enum ResultFields {
+    public enum ResultFields {
         REQUEST_ID("requestID"),
         SIGNATURE("signature"),
         TYPE("type"),
@@ -139,7 +139,7 @@ public class QueryServiceServlet extends HttpServlet {
         }
     }
 
-    private enum ResultStatus {
+    public enum ResultStatus {
         SUCCESS("success"),
         TIMEOUT("timeout"),
         ERRORS("errors"),
@@ -331,7 +331,7 @@ public class QueryServiceServlet extends HttpServlet {
     }
 
     private static void printError(PrintWriter pw, Throwable e) {
-        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        Throwable rootCause = ResultUtil.getRootCause(e);
         if (rootCause == null) {
             rootCause = e;
         }

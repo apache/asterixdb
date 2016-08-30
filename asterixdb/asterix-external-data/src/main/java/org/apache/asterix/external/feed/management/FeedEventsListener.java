@@ -611,7 +611,7 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         cInfo.setState(ActivityState.ACTIVE);
     }
 
-    public synchronized boolean isConnectedToDataset(String datasetName) {
+    private synchronized boolean isConnectedToDataset(String datasetName) {
         for (FeedConnectionId connection : connectJobInfos.keySet()) {
             if (connection.getDatasetName().equals(datasetName)) {
                 return true;
@@ -640,5 +640,10 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
 
     public IFeedJoint getSourceFeedJoint() {
         return sourceFeedJoint;
+    }
+
+    @Override
+    public boolean isEntityConnectedToDataset(String dataverseName, String datasetName) {
+        return isConnectedToDataset(datasetName);
     }
 }

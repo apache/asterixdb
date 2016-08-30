@@ -198,4 +198,17 @@ public class ActiveJobNotificationHandler implements Runnable {
             LOGGER.severe("No listener was found for the entity: " + activeJob.getEntityId());
         }
     }
+
+    public synchronized void unregisterListener(IActiveEntityEventsListener listener) throws HyracksDataException {
+        if (DEBUG) {
+            LOGGER.log(Level.WARNING,
+                    "unregisterListener(IActiveEntityEventsListener listener) was called for the entity "
+                            + listener.getEntityId());
+        }
+        IActiveEntityEventsListener registeredListener = entityEventListener.remove(listener.getEntityId());
+        if (registeredListener == null) {
+            throw new HyracksDataException(
+                    "Active Entity Listener " + listener.getEntityId() + " hasn't been registered");
+        }
+    }
 }

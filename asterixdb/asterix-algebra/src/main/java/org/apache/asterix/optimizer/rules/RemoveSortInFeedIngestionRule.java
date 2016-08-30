@@ -18,10 +18,9 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -33,7 +32,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class RemoveSortInFeedIngestionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -51,7 +51,7 @@ public class RemoveSortInFeedIngestionRule implements IAlgebraicRewriteRule {
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 AqlDataSource dataSource = (AqlDataSource) ((DataSourceScanOperator) descendantOp).getDataSource();
-                if (dataSource.getDatasourceType().equals(AqlDataSourceType.FEED)) {
+                if (dataSource.getDatasourceType() == AqlDataSourceType.FEED) {
                     isSourceAFeed = true;
                 }
                 break;

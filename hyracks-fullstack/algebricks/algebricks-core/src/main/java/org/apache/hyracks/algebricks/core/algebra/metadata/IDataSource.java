@@ -31,4 +31,7 @@ public interface IDataSource<T> {
     public IDataSourcePropertiesProvider getPropertiesProvider();
 
     public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList);
+
+    // https://issues.apache.org/jira/browse/ASTERIXDB-1619
+    public boolean isScanAccessPathALeaf();
 }

@@ -144,4 +144,9 @@ public class LoadableDataSource extends AqlDataSource {
         RecordDescriptor rDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
         return aqlMetadataProvider.buildLoadableDatasetScan(jobSpec, adapterFactory, rDesc);
     }
+
+    @Override
+    public boolean isScanAccessPathALeaf() {
+        return true;
+    }
 }

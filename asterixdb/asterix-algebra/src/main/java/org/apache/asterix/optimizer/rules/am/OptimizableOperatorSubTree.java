@@ -228,7 +228,7 @@ public class OptimizableOperatorSubTree {
                     DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) sourceOpRefs.get(i).getValue();
                     IDataSource<?> datasource = dataSourceScan.getDataSource();
                     if (datasource instanceof AqlDataSource) {
-                        AqlDataSourceType dsType = ((AqlDataSource) datasource).getDatasourceType();
+                        byte dsType = ((AqlDataSource) datasource).getDatasourceType();
                         if (dsType != AqlDataSourceType.INTERNAL_DATASET
                                 && dsType != AqlDataSourceType.EXTERNAL_DATASET) {
                             return false;

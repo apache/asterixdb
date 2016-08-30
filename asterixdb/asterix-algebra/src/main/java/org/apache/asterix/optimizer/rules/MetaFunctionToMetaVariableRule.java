@@ -85,7 +85,10 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             LogicalVariable dataVar = dataSource.getDataRecordVariable(allVars);
             LogicalVariable metaVar = dataSource.getMetaVariable(allVars);
             LogicalExpressionReferenceTransform currentTransformer = null;
-            if (dataSource.getDatasourceType() == AqlDataSourceType.FEED) {
+            // https://issues.apache.org/jira/browse/ASTERIXDB-1618
+            if (dataSource.getDatasourceType() != AqlDataSourceType.EXTERNAL_DATASET
+                    && dataSource.getDatasourceType() != AqlDataSourceType.INTERNAL_DATASET
+                    && dataSource.getDatasourceType() != AqlDataSourceType.LOADABLE) {
                 IMutationDataSource mds = (IMutationDataSource) dataSource;
                 if (mds.isChange()) {
                     transformers = new ArrayList<>();

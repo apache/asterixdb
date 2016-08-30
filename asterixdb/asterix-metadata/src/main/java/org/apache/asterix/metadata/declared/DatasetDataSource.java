@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.declared;
 
 import java.util.List;
 
+import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
@@ -48,7 +49,7 @@ public class DatasetDataSource extends AqlDataSource {
     private Dataset dataset;
 
     public DatasetDataSource(AqlSourceId id, Dataset dataset, IAType itemType, IAType metaItemType,
-            AqlDataSourceType datasourceType, IDatasetDetails datasetDetails, INodeDomain datasetDomain)
+            byte datasourceType, IDatasetDetails datasetDetails, INodeDomain datasetDomain)
             throws AlgebricksException {
         super(id, itemType, metaItemType, datasourceType, datasetDomain);
         this.dataset = dataset;
@@ -139,6 +140,11 @@ public class DatasetDataSource extends AqlDataSource {
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }
+    }
+
+    @Override
+    public boolean isScanAccessPathALeaf() {
+        return dataset.getDatasetType() == DatasetType.EXTERNAL;
     }
 
 }

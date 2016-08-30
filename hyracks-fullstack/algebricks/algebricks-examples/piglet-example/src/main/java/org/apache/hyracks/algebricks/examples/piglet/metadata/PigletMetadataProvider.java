@@ -83,7 +83,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         PigletFileDataSource ds = (PigletFileDataSource) dataSource;
 
         FileSplit[] fileSplits = ds.getFileSplits();
@@ -133,14 +133,9 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
     }
 
     @Override
-    public boolean scannerOperatorIsLeaf(IDataSource<String> dataSource) {
-        return true;
-    }
-
-    @Override
     public Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriteFileRuntime(IDataSink sink,
             int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         PigletFileDataSink ds = (PigletFileDataSink) sink;
         FileSplit[] fileSplits = ds.getFileSplits();
         String[] locations = new String[fileSplits.length];
@@ -192,7 +187,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }

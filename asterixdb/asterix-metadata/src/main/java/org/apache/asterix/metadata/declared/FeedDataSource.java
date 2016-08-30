@@ -204,4 +204,9 @@ public class FeedDataSource extends AqlDataSource implements IMutationDataSource
             throw new AlgebricksException(e);
         }
     }
+
+    @Override
+    public boolean isScanAccessPathALeaf() {
+        return true;
+    }
 }

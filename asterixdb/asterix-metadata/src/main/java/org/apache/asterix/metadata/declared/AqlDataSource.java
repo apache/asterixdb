@@ -24,29 +24,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
-import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
-import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
-import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
-import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -56,19 +46,24 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
     protected final AqlSourceId id;
     protected final IAType itemType;
     protected final IAType metaItemType;
-    protected final AqlDataSourceType datasourceType;
+    protected final byte datasourceType;
     protected IAType[] schemaTypes;
     protected INodeDomain domain;
     protected Map<String, Serializable> properties = new HashMap<>();
 
-    public enum AqlDataSourceType {
-        INTERNAL_DATASET,
-        EXTERNAL_DATASET,
-        FEED,
-        LOADABLE
+    public static class AqlDataSourceType {
+        // positive range is reserved for core datasource types
+        public static final byte INTERNAL_DATASET = 0x00;
+        public static final byte EXTERNAL_DATASET = 0x01;
+        public static final byte FEED = 0x02;
+        public static final byte LOADABLE = 0x03;
+
+        // Hide implicit public constructor
+        private AqlDataSourceType() {
+        }
     }
 
-    public AqlDataSource(AqlSourceId id, IAType itemType, IAType metaItemType, AqlDataSourceType datasourceType,
+    public AqlDataSource(AqlSourceId id, IAType itemType, IAType metaItemType, byte datasourceType,
             INodeDomain domain) throws AlgebricksException {
         this.id = id;
         this.itemType = itemType;
@@ -118,72 +113,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         }
     }
 
-    private static class AqlDataSourcePartitioningProvider implements IDataSourcePropertiesProvider {
-
-        private final AqlDataSource ds;
-
-        private final INodeDomain domain;
-
-        public AqlDataSourcePartitioningProvider(AqlDataSource dataSource, INodeDomain domain) {
-            this.ds = dataSource;
-            this.domain = domain;
-        }
-
-        @Override
-        public IPhysicalPropertiesVector computePropertiesVector(List<LogicalVariable> scanVariables) {
-            IPhysicalPropertiesVector propsVector = null;
-            IPartitioningProperty pp;
-            List<ILocalStructuralProperty> propsLocal;
-            int n;
-            switch (ds.getDatasourceType()) {
-                case LOADABLE:
-                case EXTERNAL_DATASET:
-                    pp = new RandomPartitioningProperty(domain);
-                    propsLocal = new ArrayList<ILocalStructuralProperty>();
-                    ds.computeLocalStructuralProperties(propsLocal, scanVariables);
-                    propsVector = new StructuralPropertiesVector(pp, propsLocal);
-                    break;
-
-                case FEED:
-                    n = scanVariables.size();
-                    if (n < 2) {
-                        pp = new RandomPartitioningProperty(domain);
-                    } else {
-                        Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
-                        pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
-                        pp = new UnorderedPartitionedProperty(pvars, domain);
-                    }
-                    propsLocal = new ArrayList<ILocalStructuralProperty>();
-                    propsVector = new StructuralPropertiesVector(pp, propsLocal);
-                    break;
-
-                case INTERNAL_DATASET:
-                    n = scanVariables.size();
-                    Set<LogicalVariable> pvars = new ListSet<LogicalVariable>();
-                    if (n < 2) {
-                        pp = new RandomPartitioningProperty(domain);
-                    } else {
-                        pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
-                        pp = new UnorderedPartitionedProperty(pvars, domain);
-                    }
-                    propsLocal = new ArrayList<ILocalStructuralProperty>();
-                    List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
-                    for (LogicalVariable pkVar : pvars) {
-                        orderColumns.add(new OrderColumn(pkVar, OrderKind.ASC));
-                    }
-                    propsLocal.add(new LocalOrderProperty(orderColumns));
-                    propsVector = new StructuralPropertiesVector(pp, propsLocal);
-                    break;
-
-                default:
-                    throw new IllegalArgumentException();
-            }
-            return propsVector;
-        }
-
-    }
-
-    public AqlDataSourceType getDatasourceType() {
+    public byte getDatasourceType() {
         return datasourceType;
     }
 

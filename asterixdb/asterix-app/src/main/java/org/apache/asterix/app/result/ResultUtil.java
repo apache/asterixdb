@@ -158,12 +158,12 @@ public class ResultUtil {
         return errorMessage.toString();
     }
 
-    private static Throwable getRootCause(Throwable cause) {
+    public static Throwable getRootCause(Throwable cause) {
         Throwable currentCause = cause;
         Throwable nextCause = cause.getCause();
         while (nextCause != null && nextCause != currentCause) {
             currentCause = nextCause;
-            nextCause = cause.getCause();
+            nextCause = nextCause.getCause();
         }
         return currentCause;
     }
