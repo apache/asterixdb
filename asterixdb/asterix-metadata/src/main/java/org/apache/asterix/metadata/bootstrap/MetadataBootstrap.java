@@ -32,9 +32,9 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
-import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
@@ -59,10 +59,10 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
-import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.BuiltinType;
@@ -248,16 +248,8 @@ public class MetadataBootstrap {
     }
 
     public static void insertNodes(MetadataTransactionContext mdTxnCtx) throws Exception {
-        Iterator<String> iter = nodeNames.iterator();
-        // Set<Entry<String, String[]>> set = nodeStores.entrySet();
-        // Iterator<Entry<String, String[]>> im = set.iterator();
-
-        while (iter.hasNext()) {
-            // Map.Entry<String, String[]> me = (Map.Entry<String,
-            // String[]>)im.next();
-            MetadataManager.INSTANCE.addNode(mdTxnCtx, new Node(iter.next(), 0, 0/*
-                                                                                  * , me . getValue ( )
-                                                                                  */));
+        for (String nodesName : nodeNames) {
+            MetadataManager.INSTANCE.addNode(mdTxnCtx, new Node(nodesName, 0, 0));
         }
     }
 

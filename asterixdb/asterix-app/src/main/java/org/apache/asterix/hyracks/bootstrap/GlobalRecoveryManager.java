@@ -203,20 +203,18 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                          * Note: Throwing this illegal state exception will terminate this thread
                          * and feeds listeners will not be notified.
                          */
-                        LOGGER.severe("Global recovery was not completed successfully" + e);
+                        LOGGER.log(Level.SEVERE, "Global recovery was not completed successfully: ", e);
                         try {
                             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                         } catch (Exception e1) {
-                            if (LOGGER.isLoggable(Level.SEVERE)) {
-                                LOGGER.severe("Exception in aborting" + e.getMessage());
-                            }
+                            LOGGER.log(Level.SEVERE, "Exception in aborting", e1);
                             throw new IllegalStateException(e1);
                         }
                     }
                     AsterixClusterProperties.INSTANCE.setGlobalRecoveryCompleted(true);
                     LOGGER.info("Global Recovery Completed");
                 }
-            });
+            }, "RecoveryThread");
             setState(newState);
             recoveryThread.start();
         }

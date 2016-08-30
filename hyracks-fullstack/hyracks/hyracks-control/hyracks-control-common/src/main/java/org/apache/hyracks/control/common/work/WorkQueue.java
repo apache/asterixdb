@@ -39,14 +39,14 @@ public class WorkQueue {
     private AtomicInteger dequeueCount;
     private int threadPriority = Thread.MAX_PRIORITY;
 
-    public WorkQueue(int threadPriority) {
+    public WorkQueue(String id, int threadPriority) {
         if (threadPriority != Thread.MAX_PRIORITY && threadPriority != Thread.NORM_PRIORITY
                 && threadPriority != Thread.MIN_PRIORITY) {
             throw new IllegalArgumentException("Illegal thread priority number.");
         }
         this.threadPriority = threadPriority;
         queue = new LinkedBlockingQueue<AbstractWork>();
-        thread = new WorkerThread();
+        thread = new WorkerThread(id);
         stopSemaphore = new Semaphore(1);
         stopped = true;
         if(DEBUG) {
@@ -101,7 +101,8 @@ public class WorkQueue {
     }
 
     private class WorkerThread extends Thread {
-        WorkerThread() {
+        WorkerThread(String id) {
+            setName("Worker:" + id);
             setDaemon(true);
             setPriority(threadPriority);
         }

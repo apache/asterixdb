@@ -72,7 +72,7 @@ public class AsterixHyracksIntegrationUtil {
         for (String ncName : nodes) {
             NodeControllerService nodeControllerService = new NodeControllerService(createNCConfig(ncName));
             nodeControllers.add(nodeControllerService);
-            Thread ncStartThread = new Thread() {
+            Thread ncStartThread = new Thread("IntegrationUtil-" + ncName) {
                 @Override
                 public void run() {
                     try {

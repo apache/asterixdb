@@ -191,7 +191,8 @@ public class ClusterControllerService implements IControllerService {
                 return size() > allowedSize;
             }
         };
-        workQueue = new WorkQueue(Thread.MAX_PRIORITY); // WorkQueue is in charge of heartbeat as well as other events.
+        // WorkQueue is in charge of heartbeat as well as other events.
+        workQueue = new WorkQueue("ClusterController", Thread.MAX_PRIORITY);
         this.timer = new Timer(true);
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ICCContext() {

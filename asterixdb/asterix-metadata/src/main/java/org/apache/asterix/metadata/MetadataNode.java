@@ -1145,6 +1145,9 @@ public class MetadataNode implements IMetadataNode {
             IValueExtractor<ResultType> valueExtractor, List<ResultType> results)
             throws MetadataException, IndexException, IOException {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
+        if (index.getFile() == null) {
+            throw new MetadataException("No file for Index " + index.getDataverseName() + "." + index.getIndexName());
+        }
         String resourceName = index.getFile().toString();
         IIndex indexInstance = datasetLifecycleManager.getIndex(resourceName);
         datasetLifecycleManager.open(resourceName);
