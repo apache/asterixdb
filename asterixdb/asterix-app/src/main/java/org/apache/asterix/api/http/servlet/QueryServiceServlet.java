@@ -49,8 +49,8 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -390,7 +390,6 @@ public class QueryServiceServlet extends HttpServlet {
     private void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
             throws IOException {
         long elapsedStart = System.nanoTime();
-
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter resultWriter = new PrintWriter(stringWriter);
 
@@ -408,6 +407,9 @@ public class QueryServiceServlet extends HttpServlet {
         printSignature(resultWriter);
         printType(resultWriter, sessionConfig);
         try {
+            if (query == null || query.isEmpty()) {
+                throw new AsterixException("Empty request, no statement provided");
+            }
             IHyracksClientConnection hcc;
             IHyracksDataset hds;
             ServletContext context = getServletContext();
