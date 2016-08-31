@@ -21,10 +21,7 @@ package org.apache.hyracks.control.cc.work;
 
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.common.deployment.DeploymentRun;
-import org.apache.hyracks.control.common.deployment.DeploymentStatus;
 import org.apache.hyracks.control.common.shutdown.ShutdownRun;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
@@ -44,7 +41,7 @@ public class NotifyShutdownWork extends SynchronizableWork {
     public void doRun() {
         /** triggered remotely by a NC to notify that the NC is shutting down */
         ShutdownRun sRun = ccs.getShutdownRun();
-        LOGGER.info("Recieved shutdown acknowledgement from NC ID:" + nodeId);
+        LOGGER.info("Received shutdown acknowledgement from NC ID:" + nodeId);
         sRun.notifyShutdown(nodeId);
     }
 

@@ -205,7 +205,7 @@ public class AsterixClusterProperties {
         for (ClusterPartition p : clusterPartitions.values()) {
             if (!p.isActive()) {
                 state = ClusterState.UNUSABLE;
-                LOGGER.info("Cluster is in UNSABLE state");
+                LOGGER.info("Cluster is in UNUSABLE state");
                 return;
             }
         }
