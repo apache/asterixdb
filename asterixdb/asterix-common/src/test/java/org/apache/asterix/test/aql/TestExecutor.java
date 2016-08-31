@@ -851,7 +851,11 @@ public class TestExecutor {
                         + cUnit.getName() + "_qbc.adm");
     }
 
+    protected String getPath(Servlets servlet) {
+        return servlet.getPath();
+    }
+
     protected String getEndpoint(Servlets servlet) {
-        return "http://" + host + ":" + port + servlet.getPath();
+        return "http://" + host + ":" + port + getPath(servlet);
     }
 }
