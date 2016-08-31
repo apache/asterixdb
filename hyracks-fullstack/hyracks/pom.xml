@@ -90,10 +90,6 @@
       <id>hyracks-public</id>
       <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
     </repository>
-    <repository>
-      <id>jboss-public</id>
-      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-    </repository>
   </repositories>
 
   <pluginRepositories>

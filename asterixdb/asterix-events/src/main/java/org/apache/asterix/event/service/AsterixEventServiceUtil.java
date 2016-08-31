@@ -32,8 +32,10 @@ import java.io.StringWriter;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -78,6 +80,8 @@ public class AsterixEventServiceUtil {
 
     public static final String MANAGIX_INTERNAL_DIR = ".installer";
     public static final String MANAGIX_CONF_XML = "conf" + File.separator + "managix-conf.xml";
+
+    private static final int BUFFER_SIZE = 4096;
 
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
             AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
@@ -316,25 +320,25 @@ public class AsterixEventServiceUtil {
     }
 
     public static void unzip(String sourceFile, String destDir) throws IOException {
-        BufferedOutputStream dest = null;
-        FileInputStream fis = new FileInputStream(sourceFile);
-        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
-        ZipEntry entry = null;
+        final FileInputStream fis = new FileInputStream(sourceFile);
+        final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
+        final File destDirFile = new File(destDir);
+        final byte [] data = new byte[BUFFER_SIZE];
 
-        int BUFFER_SIZE = 4096;
+        ZipEntry entry;
+        Set<String> visitedDirs = new HashSet<>();
         createDir(destDir);
         while ((entry = zis.getNextEntry()) != null) {
-            String dst = destDir + File.separator + entry.getName();
+            createDir(destDirFile, entry, visitedDirs);
             if (entry.isDirectory()) {
-                createDir(destDir, entry);
                 continue;
             }
             int count;
-            byte data[] = new byte[BUFFER_SIZE];
 
             // write the file to the disk
+            File dst = new File(destDir, entry.getName());
             FileOutputStream fos = new FileOutputStream(dst);
-            dest = new BufferedOutputStream(fos, BUFFER_SIZE);
+            BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER_SIZE);
             while ((count = zis.read(data, 0, BUFFER_SIZE)) != -1) {
                 dest.write(data, 0, count);
             }
@@ -424,12 +428,16 @@ public class AsterixEventServiceUtil {
         writer.close();
     }
 
-    private static void createDir(String destDirectory, ZipEntry entry) {
+    private static void createDir(File destDirectory, ZipEntry entry, Set<String> visitedDirs) {
         String name = entry.getName();
         int index = name.lastIndexOf(File.separator);
-        String dirSequence = name.substring(0, index);
-        File newDirs = new File(destDirectory + File.separator + dirSequence);
-        newDirs.mkdirs();
+        if (index != -1) {
+            String dirSequence = name.substring(0, index);
+            if (visitedDirs.add(dirSequence)) {
+                File newDirs = new File(destDirectory, dirSequence);
+                newDirs.mkdirs();
+            }
+        }
     }
 
     private static void createDir(String destDirectory) {
