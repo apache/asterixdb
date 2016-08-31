@@ -33,6 +33,7 @@ import org.kohsuke.args4j.ParserProperties;
 public class AsterixHelperExecution {
 
     public static final String ASTERIX_HELPER = "asterixhelper";
+    public static final int COMMAND_USAGE_ALIGNMENT = 20;
 
     protected AsterixHelperExecution() {
     }
@@ -41,7 +42,7 @@ public class AsterixHelperExecution {
             "squid:S106", // use of System.err
             "squid:S1166" // rethrow or log exception
     })
-    protected int execute(String [] argArray) throws IOException {
+    public int execute(String [] argArray) throws IOException {
         Args args = createArgs();
         CmdLineParser parser = createParser(args);
         try {
@@ -59,7 +60,7 @@ public class AsterixHelperExecution {
             System.err.println("ERROR: " + e.getMessage() + "\n\n"
                     + "Usage: " + getHelperCommandName() + " [options] <command>\n\n"
                     + "Commands:");
-            printCommandUsage(System.err);
+            printCommandsUsage(System.err);
             System.err.println("Options:");
             parser.printUsage(System.err);
             System.err.flush();
@@ -71,10 +72,18 @@ public class AsterixHelperExecution {
         return ASTERIX_HELPER;
     }
 
-    protected void printCommandUsage(PrintStream out) {
+    protected void printCommandsUsage(PrintStream out) {
         for (Command command : Command.values()) {
-            out.println("  " + command.name().toLowerCase() + " " + command.usage());
+            printCommandUsage(out, command.name(), command.usage());
         }
+    }
+
+    protected void printCommandUsage(PrintStream out, String name, String usage) {
+        StringBuilder padding = new StringBuilder();
+        for (int i = name.length(); i < COMMAND_USAGE_ALIGNMENT; i++) {
+            padding.append(' ');
+        }
+        out.println("  " + name.toLowerCase() + padding.toString() + " : " + usage);
     }
 
     protected CmdLineParser createParser(Args args) {

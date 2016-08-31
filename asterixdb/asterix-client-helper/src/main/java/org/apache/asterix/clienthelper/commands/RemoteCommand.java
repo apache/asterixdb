@@ -26,7 +26,7 @@ import java.net.URL;
 import org.apache.asterix.clienthelper.Args;
 
 public abstract class RemoteCommand extends ClientCommand {
-    enum Method {
+    protected enum Method {
         GET,
         POST
     }
