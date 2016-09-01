@@ -342,7 +342,7 @@ public class QueryServiceServlet extends HttpServlet {
         printField(pw, ErrorField.CODE.str(), "1");
         final String msg = rootCause.getMessage();
         printField(pw, ErrorField.MSG.str(),
-                JSONUtil.escape(rootCause.getClass().getName() + ": " + msg != null ? msg : ""), addStack);
+                JSONUtil.escape(rootCause.getClass().getName() + ": " + (msg != null ? msg : "")), addStack);
         if (addStack) {
             StringWriter sw = new StringWriter();
             PrintWriter stackWriter = new PrintWriter(sw);
@@ -453,10 +453,10 @@ public class QueryServiceServlet extends HttpServlet {
 
         GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, result);
 
+        response.setStatus(respCode);
         response.getWriter().print(result);
         if (response.getWriter().checkError()) {
             LOGGER.warning("Error flushing output writer");
         }
-        response.setStatus(respCode);
     }
 }

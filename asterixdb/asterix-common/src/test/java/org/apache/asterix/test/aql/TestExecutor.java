@@ -250,21 +250,25 @@ public class TestExecutor {
         }
     }
 
+    protected HttpResponse executeAndCheckHttpRequest(HttpUriRequest method) throws Exception {
+        return checkResponse(executeHttpRequest(method));
+    }
+
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         HttpClient client = HttpClients.custom()
                 .setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE)
                 .build();
-        HttpResponse httpResponse;
-
         try {
-            httpResponse = client.execute(method);
+            return client.execute(method);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
             throw e;
         }
-        int statusCode = httpResponse.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK) {
+    }
+
+    protected HttpResponse checkResponse(HttpResponse httpResponse) throws Exception {
+        if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
             // QQQ For now, we are indeed assuming we get back JSON errors.
             // In future this may be changed depending on the requested
             // output format sent to the servlet.
@@ -294,7 +298,7 @@ public class TestExecutor {
         HttpUriRequest method = constructHttpMethod(str, url, "query", false, params);
         // Set accepted output response type
         method.setHeader("Accept", fmt.mimeType());
-        HttpResponse response = executeHttpRequest(method);
+        HttpResponse response = executeAndCheckHttpRequest(method);
         return response.getEntity().getContent();
     }
 
@@ -368,7 +372,7 @@ public class TestExecutor {
     public InputStream executeClusterStateQuery(OutputFormat fmt, String url) throws Exception {
         HttpUriRequest request = RequestBuilder.get(url).setHeader("Accept", fmt.mimeType()).build();
 
-        HttpResponse response = executeHttpRequest(request);
+        HttpResponse response = executeAndCheckHttpRequest(request);
         return response.getEntity().getContent();
     }
 
@@ -381,7 +385,7 @@ public class TestExecutor {
                 .build();
 
         // Execute the method.
-        executeHttpRequest(request);
+        executeAndCheckHttpRequest(request);
     }
 
     // Executes AQL in either async or async-defer mode.
@@ -393,7 +397,7 @@ public class TestExecutor {
                 .setHeader("Accept", fmt.mimeType())
                 .build();
 
-        HttpResponse response = executeHttpRequest(request);
+        HttpResponse response = executeAndCheckHttpRequest(request);
         InputStream resultStream = response.getEntity().getContent();
 
         String theHandle = IOUtils.toString(resultStream, "UTF-8");
@@ -412,7 +416,7 @@ public class TestExecutor {
                 .setHeader("Accept", fmt.mimeType())
                 .build();
 
-        HttpResponse response = executeHttpRequest(request);
+        HttpResponse response = executeAndCheckHttpRequest(request);
         return response.getEntity().getContent();
     }
 
@@ -429,7 +433,7 @@ public class TestExecutor {
                 .build();
 
         // Execute the method.
-        executeHttpRequest(request);
+        executeAndCheckHttpRequest(request);
     }
 
     // Method that reads a DDL/Update/Query File
