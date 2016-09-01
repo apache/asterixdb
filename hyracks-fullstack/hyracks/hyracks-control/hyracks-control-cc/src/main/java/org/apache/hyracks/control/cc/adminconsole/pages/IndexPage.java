@@ -92,7 +92,10 @@ public class IndexPage extends AbstractPage {
     }
 
     private String longToDateString(long milliseconds) {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm:ss");
+        if (milliseconds == 0) {
+            return "n/a";
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss");
         Date date = new Date(milliseconds);
         return sdf.format(date);
     }
