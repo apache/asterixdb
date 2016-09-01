@@ -19,6 +19,8 @@
 package org.apache.asterix.api.http.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
@@ -28,7 +30,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.json.JSONObject;
 
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
@@ -39,23 +43,31 @@ public class ShutdownAPIServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("utf-8");
-
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
         Thread t = new Thread(() -> {
             try {
                 hcc.stopCluster();
             } catch (Exception e) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Exception stopping cluster", e);
             }
-        });
-        t.start();
-        response.setStatus(HttpServletResponse.SC_ACCEPTED);
-    }
+        }, "Shutdown Servlet Worker");
 
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("status", "SHUTTING_DOWN");
+            jsonObject.put("date", new Date());
+            jsonObject.put("cluster" , AsterixClusterProperties.INSTANCE.getClusterStateDescription());
+
+            final PrintWriter writer = response.getWriter();
+            writer.print(jsonObject.toString(4));
+            writer.close();
+        } catch (Exception e) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, "Exception writing response", e);
+        }
+        t.start();
     }
 }
