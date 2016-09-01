@@ -412,13 +412,13 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>java.lang.NullPointerException</expected-error>
+        <expected-error>Type not found for partitioning key [name]</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The partitioning key "[open-type]" cannot be of type RECORD.</expected-error>
+        <expected-error>Error: The partitioning key [open-type] cannot be of type RECORD.</expected-error>
       </compilation-unit>
     </test-case>
     <!-- Feed datasets are not supported anymore
@@ -432,13 +432,13 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>java.lang.NullPointerException</expected-error>
+        <expected-error>Type not found for partitioning key [point]</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The partitioning key "[id]" cannot be nullable</expected-error>
+        <expected-error>Error: The partitioning key [id] cannot be nullable</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">

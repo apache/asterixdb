@@ -3034,9 +3034,9 @@
     <test-case FilePath="misc">
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
-        <expected-error>java.lang.NullPointerException</expected-error>
-        <expected-error>Cannot find dataset</expected-error>
-        <expected-error>Cannot find dataset testds in dataverse test nor an alias with name testds</expected-error>
+        <expected-error>Type not found for partitioning key [id]</expected-error>
+        <expected-error>Cannot find dataset testds in dataverse test</expected-error>
+        <expected-error>Cannot find dataset testds in dataverse test nor an alias with name testds!</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
