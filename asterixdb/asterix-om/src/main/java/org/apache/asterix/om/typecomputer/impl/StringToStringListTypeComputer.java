@@ -16,39 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class Substring2TypeComputer extends AbstractResultTypeComputer {
-    public static final Substring2TypeComputer INSTANCE = new Substring2TypeComputer();
+public class StringToStringListTypeComputer extends AbstractStringTypeComputer {
 
-    @Override
-    public void checkArgType(int argIndex, IAType type) throws AlgebricksException {
-        ATypeTag tag = type.getTypeTag();
-        if (argIndex == 0 && tag != ATypeTag.STRING) {
-            throw new AlgebricksException("First argument should be string Type.");
-        }
-        if (argIndex == 1) {
-            switch (tag) {
-                case INT8:
-                case INT16:
-                case INT32:
-                case INT64:
-                    break;
-                default:
-                    throw new AlgebricksException("Second argument should be integer Type.");
-            }
-        }
+    public static final StringToStringListTypeComputer INSTANCE = new StringToStringListTypeComputer();
+
+    private StringToStringListTypeComputer() {
     }
 
     @Override
-    public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return BuiltinType.ASTRING;
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        return new AOrderedListType(BuiltinType.ASTRING, null);
     }
 }

@@ -178,23 +178,40 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
-     * return the byte offset of the first character of the matching string. Not including the MetaLength
-     *
-     * @param src
-     * @param pattern
-     * @param ignoreCase
-     * @return
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @return the byte offset of the first character of the matching string. Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        return find(src, pattern, ignoreCase, 0);
+    }
+
+    /**
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @param startMatch,
+     *            the start offset.
+     * @return the byte offset of the first character of the matching string after <code>startMatchPos}</code>.
+     *         Not including the MetaLength.
+     */
+    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+        int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
         final int srcStart = src.getMetaDataLength();
         final int pttnStart = pattern.getMetaDataLength();
 
-        int startMatch = 0;
         int maxStart = srcUtfLen - pttnUtfLen;
-        while (startMatch <= maxStart) {
-            int c1 = startMatch;
+        while (startMatchPos <= maxStart) {
+            int c1 = startMatchPos;
             int c2 = 0;
             while (c1 < srcUtfLen && c2 < pttnUtfLen) {
                 char ch1 = src.charAt(srcStart + c1);
@@ -209,9 +226,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 c2 += pattern.charSize(pttnStart + c2);
             }
             if (c2 == pttnUtfLen) {
-                return startMatch;
+                return startMatchPos;
             }
-            startMatch += src.charSize(srcStart + startMatch);
+            startMatchPos += src.charSize(srcStart + startMatchPos);
         }
         return -1;
     }

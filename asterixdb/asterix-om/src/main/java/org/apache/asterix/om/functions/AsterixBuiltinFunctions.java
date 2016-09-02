@@ -78,7 +78,6 @@ import org.apache.asterix.om.typecomputer.impl.OpenARecordTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.OrderedListConstructorTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAInt32TypeComputer;
-import org.apache.asterix.om.typecomputer.impl.OrderedListOfAInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAIntervalTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
@@ -90,9 +89,11 @@ import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
 import org.apache.asterix.om.typecomputer.impl.StringBooleanTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringInt32TypeComputer;
+import org.apache.asterix.om.typecomputer.impl.StringIntToStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringStringTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.StringToInt64ListTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.StringToStringListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubsetCollectionTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.Substring2TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubstringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SwitchCaseComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
@@ -310,6 +311,10 @@ public class AsterixBuiltinFunctions {
             "string-concat", 1);
     public static final FunctionIdentifier STRING_JOIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string-join", 2);
+    public static final FunctionIdentifier STRING_REPEAT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "repeat", 2);
+    public static final FunctionIdentifier STRING_SPLIT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "split",
+            2);
 
     public static final FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
     public static final FunctionIdentifier FEED_COLLECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -884,10 +889,10 @@ public class AsterixBuiltinFunctions {
 
         addFunction(STRING_LIKE, BooleanFunctionTypeComputer.INSTANCE, true);
         addFunction(STRING_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
-        addFunction(STRING_TO_CODEPOINT, OrderedListOfAInt64TypeComputer.INSTANCE, true);
+        addFunction(STRING_TO_CODEPOINT, StringToInt64ListTypeComputer.INSTANCE, true);
         addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true);
         addFunction(STRING_CONCAT, AStringTypeComputer.INSTANCE, true);
-        addFunction(SUBSTRING2, Substring2TypeComputer.INSTANCE, true);
+        addFunction(SUBSTRING2, StringIntToStringTypeComputer.INSTANCE, true);
         addFunction(STRING_LENGTH, UnaryStringInt64TypeComputer.INSTANCE, true);
         addFunction(STRING_LOWERCASE, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_UPPERCASE, StringStringTypeComputer.INSTANCE, true);
@@ -913,6 +918,8 @@ public class AsterixBuiltinFunctions {
         addFunction(SUBSTRING_AFTER, StringStringTypeComputer.INSTANCE, true);
         addPrivateFunction(STRING_EQUAL, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_JOIN, AStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_REPEAT, StringIntToStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_SPLIT, StringToStringListTypeComputer.INSTANCE, true);
 
         addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(POINT_CONSTRUCTOR, APointTypeComputer.INSTANCE, true);

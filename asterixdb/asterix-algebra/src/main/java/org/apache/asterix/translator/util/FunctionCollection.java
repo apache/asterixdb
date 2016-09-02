@@ -222,6 +222,8 @@ import org.apache.asterix.runtime.evaluators.functions.StringRegExpPositionDescr
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpPositionWithFlagDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceWithFlagsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringRepeatDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringSplitDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringStartsWithDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringTrim2Descriptor;
@@ -513,6 +515,8 @@ public class FunctionCollection {
         functionsToInjectUnkownHandling.add(StringLTrim2Descriptor.FACTORY);
         functionsToInjectUnkownHandling.add(StringRTrim2Descriptor.FACTORY);
         functionsToInjectUnkownHandling.add(StringPositionDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(StringRepeatDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(StringSplitDescriptor.FACTORY);
 
         // Constructors
         functionsToInjectUnkownHandling.add(ABooleanConstructorDescriptor.FACTORY);
