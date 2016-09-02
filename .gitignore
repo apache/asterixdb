@@ -1,6 +1,5 @@
 invIndex*
 primaryBTree*
-bin
 target
 .classpath
 .settings
@@ -13,8 +12,6 @@ asterix_logs
 build
 asterixdb/asterix-opt
 asterixdb/asterix-app/src/test/resources/externallib
-asterixdb/asterix-app/rttest
-asterixdb/asterix-app/mdtest
 asterixdb/asterix-app/opttest
 asterixdb/asterix-app/parserts
 asterixdb/asterix-app/library

@@ -34,5 +34,17 @@
       <outputDirectory>bin</outputDirectory>
       <fileMode>0755</fileMode>
     </fileSet>
+    <fileSet>
+      <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
+      <outputDirectory>etc</outputDirectory>
+      <includes>
+        <include>*.xml</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>target/generated-resources/appassembler/booter-windows/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
   </fileSets>
 </assembly>

@@ -29,7 +29,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>appassembler-maven-plugin</artifactId>
-        <version>1.3</version>
+        <version>1.10</version>
         <configuration>
           <assembleDirectory>
             ${project.build.directory}/appassembler
@@ -46,7 +46,15 @@
               <mainClass>org.apache.asterix.clienthelper.AsterixHelper</mainClass>
             </program>
           </programs>
-          <daemons/>
+          <daemons>
+            <daemon>
+              <id>asterixhelper</id>
+              <mainClass>org.apache.asterix.clienthelper.AsterixHelper</mainClass>
+              <platforms>
+                <platform>booter-windows</platform>
+              </platforms>
+            </daemon>
+          </daemons>
         </configuration>
         <executions>
           <execution>
@@ -83,6 +91,11 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.mojo.appassembler</groupId>
+      <artifactId>appassembler-booter</artifactId>
+      <version>1.10</version>
     </dependency>
   </dependencies>
 </project>

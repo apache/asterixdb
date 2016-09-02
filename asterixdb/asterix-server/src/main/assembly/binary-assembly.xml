@@ -69,10 +69,9 @@
     </fileSet>
     <fileSet>
       <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
-      <outputDirectory>bin</outputDirectory>
+      <outputDirectory>etc</outputDirectory>
       <includes>
-        <include>asterixcc.xml</include>
-        <include>asterixnc.xml</include>
+        <include>*.xml</include>
       </includes>
     </fileSet>
 

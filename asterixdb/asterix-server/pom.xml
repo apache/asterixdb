@@ -44,7 +44,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>appassembler-maven-plugin</artifactId>
-        <version>1.3</version>
+        <version>1.10</version>
         <configuration>
           <assembleDirectory>
             ${project.build.directory}/appassembler
@@ -235,7 +235,7 @@
     <dependency>
       <groupId>org.codehaus.mojo.appassembler</groupId>
       <artifactId>appassembler-booter</artifactId>
-      <version>1.3.1</version>
+      <version>1.10</version>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
