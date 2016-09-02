@@ -3119,6 +3119,11 @@
         <expected-error>The first argument of a field access should be a RECORD, but it is</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="uuid">
+        <output-dir compare="Text">uuid</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-index-enforced">
     <test-group name="open-index-enforced/error-checking">
@@ -4152,6 +4157,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="power">
+        <output-dir compare="Text">power</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="round-half-to-even0">
         <output-dir compare="Text">round-half-to-even0</output-dir>
       </compilation-unit>
@@ -4262,6 +4272,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="trunc">
+        <output-dir compare="Text">trunc</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_double_02">
         <output-dir compare="Text">unary-minus_double_02</output-dir>
       </compilation-unit>
@@ -4300,6 +4315,11 @@
     <test-case FilePath="numeric">
       <compilation-unit name="atan">
         <output-dir compare="Text">atan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="atan2">
+        <output-dir compare="Text">atan2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">

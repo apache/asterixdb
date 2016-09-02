@@ -72,7 +72,9 @@ import org.apache.asterix.om.typecomputer.impl.NotMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NullableDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAddSubMulDivTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAggTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.NumericRoundHalfToEven2TypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NumericDoubleOutputFunctionTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NumericInt8OutputFunctionTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NumericRound2TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericUnaryFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenARecordTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
@@ -207,6 +209,8 @@ public class AsterixBuiltinFunctions {
             1);
     public static final FunctionIdentifier NUMERIC_ATAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan",
             1);
+    public static final FunctionIdentifier NUMERIC_ATAN2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan2",
+            2);
     public static final FunctionIdentifier NUMERIC_COS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cos", 1);
     public static final FunctionIdentifier NUMERIC_SIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sin", 1);
     public static final FunctionIdentifier NUMERIC_TAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tan", 1);
@@ -228,6 +232,8 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "round-half-to-even", 1);
     public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "round-half-to-even", 2);
+    public static final FunctionIdentifier NUMERIC_TRUNC = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trunc",
+            2);
 
     // binary functions
     public static final FunctionIdentifier BINARY_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -642,6 +648,7 @@ public class AsterixBuiltinFunctions {
 
     public static final FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-uuid", 0);
+    public static final FunctionIdentifier UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uuid", 0);
     public static final FunctionIdentifier CREATE_QUERY_UID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-query-uid", 0);
 
@@ -806,7 +813,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(CHECK_UNKNOWN, NotMissingTypeComputer.INSTANCE, true);
         addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE, true);
         addFunction(BOOLEAN_CONSTRUCTOR, StringBooleanTypeComputer.INSTANCE, true);
-        addPrivateFunction(CARET, NumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addFunction(CARET, NumericAddSubMulDivTypeComputer.INSTANCE, true);
         addFunction(CIRCLE_CONSTRUCTOR, ACircleTypeComputer.INSTANCE, true);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
 
@@ -819,6 +826,7 @@ public class AsterixBuiltinFunctions {
         addFunction(CREATE_POLYGON, APolygonTypeComputer.INSTANCE, true);
         addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE, true);
         addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
+        addFunction(UUID, AUUIDTypeComputer.INSTANCE, false);
         addFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
         addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
 
@@ -861,22 +869,24 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(NUMERIC_MOD, NumericAddSubMulDivTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_IDIV, AInt64TypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ABS, NumericUnaryFunctionTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ACOS, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ASIN, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ATAN, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_COS, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_SIN, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_TAN, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_EXP, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_LN, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_LOG, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_SQRT, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_SIGN, AInt8TypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ACOS, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ASIN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ATAN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ATAN2, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_COS, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_SIN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_TAN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_EXP, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_LN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_LOG, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_SQRT, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_SIGN, NumericInt8OutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_CEILING, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_FLOOR, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NumericUnaryFunctionTypeComputer.INSTANCE, true);
-        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRoundHalfToEven2TypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRound2TypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_TRUNC, NumericRound2TypeComputer.INSTANCE, true);
 
         addFunction(BINARY_LENGTH, UnaryBinaryInt64TypeComputer.INSTANCE, true);
         addFunction(PARSE_BINARY, ABinaryTypeComputer.INSTANCE, true);

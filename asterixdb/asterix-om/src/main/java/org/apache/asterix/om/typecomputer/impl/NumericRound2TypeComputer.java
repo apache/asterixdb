@@ -30,11 +30,11 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class NumericRoundHalfToEven2TypeComputer extends AbstractResultTypeComputer {
+public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
 
-    public static final NumericRoundHalfToEven2TypeComputer INSTANCE = new NumericRoundHalfToEven2TypeComputer();
+    public static final NumericRound2TypeComputer INSTANCE = new NumericRound2TypeComputer();
 
-    private NumericRoundHalfToEven2TypeComputer() {
+    private NumericRound2TypeComputer() {
 
     }
 

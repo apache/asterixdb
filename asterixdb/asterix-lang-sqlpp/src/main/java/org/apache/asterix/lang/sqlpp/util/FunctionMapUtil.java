@@ -52,6 +52,7 @@ public class FunctionMapUtil {
         FUNCTION_NAME_MAP.put("regexp_like", "regexp-like"); //SQL: regexp_like, AQL: regexp-like
         FUNCTION_NAME_MAP.put("regexp_position", "regexp-position"); //SQL: regexp_position, AQL: regexp-position
         FUNCTION_NAME_MAP.put("regexp_replace", "replace"); //SQL: regexp_replace, AQL: replace
+        FUNCTION_NAME_MAP.put("power", "caret"); //SQL: pow, AQL: caret
     }
 
     // Maps from a variable-arg SQL function names to an internal list-arg function name.
