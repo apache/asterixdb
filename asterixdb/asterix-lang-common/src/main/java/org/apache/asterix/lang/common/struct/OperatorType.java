@@ -43,7 +43,9 @@ public enum OperatorType {
     LIKE("like"),
     NOT_LIKE("not_like"),
     IN("in"),
-    NOT_IN("not_in");
+    NOT_IN("not_in"),
+    BETWEEN("between"),
+    NOT_BETWEEN("not_between");
 
     private final String symbol;
 

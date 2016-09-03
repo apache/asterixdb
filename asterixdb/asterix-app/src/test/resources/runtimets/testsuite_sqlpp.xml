@@ -933,6 +933,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="datetime_range_between">
+        <output-dir compare="Text">datetime_range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="datetime_tzeq">
         <output-dir compare="Text">datetime_tzeq</output-dir>
       </compilation-unit>
@@ -1050,6 +1055,11 @@
     <test-case FilePath="comparison">
       <compilation-unit name="int8_null">
         <output-dir compare="Text">int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="int_not_between">
+        <output-dir compare="Text">int_not_between</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">

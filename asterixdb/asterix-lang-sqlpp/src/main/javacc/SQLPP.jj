@@ -1750,7 +1750,7 @@ Expression RelExpr()throws ParseException:
   IExpressionAnnotation annotation = null;
 }
 {
-    operand = IsExpr()
+    operand = BetweenExpr()
     {
       if (operand instanceof VariableExpr) {
         String hint = getHint(token);
@@ -1788,7 +1788,7 @@ Expression RelExpr()throws ParseException:
           }
         }
 
-       operand = IsExpr()
+       operand = BetweenExpr()
       {
          broadcast = false;
          if (operand instanceof VariableExpr) {
@@ -1807,6 +1807,63 @@ Expression RelExpr()throws ParseException:
        }
        return op==null? operand: op;
      }
+}
+
+Expression BetweenExpr()throws ParseException:
+{
+  boolean not = false;
+  OperatorExpr op = null;
+  Expression operand = null;
+  IExpressionAnnotation annotation = null;
+}
+{
+    operand = IsExpr()
+    (
+      LOOKAHEAD(2)
+      (<NOT> { not = true; })? <BETWEEN>
+        {
+          String mhint = getHint(token);
+          if (mhint != null) {
+            if (mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+                annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
+            } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+                annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
+            }
+          }
+          String operator = token.image.toLowerCase();
+          if(not){
+            operator = "not_" + operator;
+          }
+          if (op == null) {
+            op = new OperatorExpr();
+            op.addOperand(operand);
+            op.setCurrentop(true);
+          }
+          try{
+            op.addOperator(operator);
+          } catch (AsterixException e){
+            throw new ParseException(e.getMessage());
+          }
+        }
+
+       operand = IsExpr()
+       {
+         op.addOperand(operand);
+       }
+
+       <AND>
+       operand = IsExpr()
+       {
+         op.addOperand(operand);
+       }
+    )?
+
+    {
+       if (annotation != null) {
+         op.addHint(annotation);
+       }
+       return op==null? operand: op;
+    }
 }
 
 Expression IsExpr() throws ParseException:
