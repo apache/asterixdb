@@ -16,30 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.resource;
+package org.apache.asterix.runtime.transaction;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.asterix.common.messaging.ResourceIdRequestMessage;
-import org.apache.asterix.common.messaging.ResourceIdRequestResponseMessage;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.IApplicationMessageCallback;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.runtime.message.ResourceIdRequestMessage;
+import org.apache.asterix.runtime.message.ResourceIdRequestResponseMessage;
 import org.apache.hyracks.api.application.IApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 /**
- * A resource id factory that generates unique resource ids across all NCs by requesting unique ids from the cluster controller.
+ * A resource id factory that generates unique resource ids across all NCs by requesting
+ * unique ids from the cluster controller.
  */
 public class GlobalResourceIdFactory implements IResourceIdFactory, IApplicationMessageCallback {
 
     private final IApplicationContext appCtx;
     private final LinkedBlockingQueue<IApplicationMessage> resourceIdResponseQ;
+    private final String nodeId;
 
     public GlobalResourceIdFactory(IApplicationContext appCtx) {
         this.appCtx = appCtx;
         this.resourceIdResponseQ = new LinkedBlockingQueue<>();
+        this.nodeId = ((NodeControllerService) appCtx.getControllerService()).getApplicationContext().getNodeId();
     }
 
     @Override
@@ -47,16 +51,16 @@ public class GlobalResourceIdFactory implements IResourceIdFactory, IApplication
         try {
             ResourceIdRequestResponseMessage reponse = null;
             //if there already exists a response, use it
-            if (resourceIdResponseQ.size() > 0) {
+            if (!resourceIdResponseQ.isEmpty()) {
                 synchronized (resourceIdResponseQ) {
-                    if (resourceIdResponseQ.size() > 0) {
+                    if (!resourceIdResponseQ.isEmpty()) {
                         reponse = (ResourceIdRequestResponseMessage) resourceIdResponseQ.take();
                     }
                 }
             }
             //if no response available or it has an exception, request a new one
             if (reponse == null || reponse.getException() != null) {
-                ResourceIdRequestMessage msg = new ResourceIdRequestMessage();
+                ResourceIdRequestMessage msg = new ResourceIdRequestMessage(nodeId);
                 ((INCMessageBroker) appCtx.getMessageBroker()).sendMessageToCC(msg, this);
                 reponse = (ResourceIdRequestResponseMessage) resourceIdResponseQ.take();
                 if (reponse.getException() != null) {

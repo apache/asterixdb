@@ -44,7 +44,9 @@ import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.service.IControllerService;
@@ -148,7 +150,7 @@ public class ClusterControllerService implements IControllerService {
 
     private final IDatasetDirectoryService datasetDirectoryService;
 
-    private long jobCounter;
+    private final JobIdFactory jobIdFactory;
 
     private final Map<DeploymentId, DeploymentRun> deploymentRunMap;
 
@@ -162,8 +164,8 @@ public class ClusterControllerService implements IControllerService {
         this.ccConfig = ccConfig;
         File jobLogFolder = new File(ccConfig.ccRoot, "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
-        nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
-        ipAddressNodeNameMap = new HashMap<InetAddress, Set<String>>();
+        nodeRegistry = new LinkedHashMap<>();
+        ipAddressNodeNameMap = new HashMap<>();
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
         IIPCI ccIPCI = new ClusterControllerIPCI();
         clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI,
@@ -172,7 +174,7 @@ public class ClusterControllerService implements IControllerService {
         clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
                 new JavaSerializationBasedPayloadSerializerDeserializer());
         webServer = new WebServer(this);
-        activeRunMap = new HashMap<JobId, JobRun>();
+        activeRunMap = new HashMap<>();
         runMapArchive = new LinkedHashMap<JobId, JobRun>() {
             private static final long serialVersionUID = 1L;
 
@@ -195,28 +197,12 @@ public class ClusterControllerService implements IControllerService {
         workQueue = new WorkQueue("ClusterController", Thread.MAX_PRIORITY);
         this.timer = new Timer(true);
         final ClusterTopology topology = computeClusterTopology(ccConfig);
-        ccContext = new ICCContext() {
-            @Override
-            public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws Exception {
-                GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(ClusterControllerService.this, map);
-                workQueue.scheduleAndSync(ginmw);
-            }
-
-            @Override
-            public ClusterControllerInfo getClusterControllerInfo() {
-                return info;
-            }
-
-            @Override
-            public ClusterTopology getClusterTopology() {
-                return topology;
-            }
-        };
+        ccContext = new ClusterControllerContext(topology);
         sweeper = new DeadNodeSweeper();
         datasetDirectoryService = new DatasetDirectoryService(ccConfig.resultTTL, ccConfig.resultSweepThreshold);
-        jobCounter = 0;
+        jobIdFactory = new JobIdFactory();
 
-        deploymentRunMap = new HashMap<DeploymentId, DeploymentRun>();
+        deploymentRunMap = new HashMap<>();
         stateDumpRunMap = new HashMap<>();
     }
 
@@ -361,10 +347,6 @@ public class ClusterControllerService implements IControllerService {
         return appCtx;
     }
 
-    private JobId createJobId() {
-        return new JobId(jobCounter++);
-    }
-
     public ClusterControllerInfo getClusterControllerInfo() {
         return info;
     }
@@ -381,6 +363,34 @@ public class ClusterControllerService implements IControllerService {
         return new NetworkAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
     }
 
+    private final class ClusterControllerContext implements ICCContext {
+        private final ClusterTopology topology;
+
+        private ClusterControllerContext(ClusterTopology topology) {
+            this.topology = topology;
+        }
+
+        @Override
+        public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException {
+            GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(ClusterControllerService.this, map);
+            try {
+                workQueue.scheduleAndSync(ginmw);
+            } catch (Exception e) {
+                throw new HyracksDataException(e);
+            }
+        }
+
+        @Override
+        public ClusterControllerInfo getClusterControllerInfo() {
+            return info;
+        }
+
+        @Override
+        public ClusterTopology getClusterTopology() {
+            return topology;
+        }
+    }
+
     private class DeadNodeSweeper extends TimerTask {
         @Override
         public void run() {
@@ -393,6 +403,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private class HyracksClientInterfaceIPCI implements IIPCI {
+
         @Override
         public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload,
                 Exception exception) {
@@ -426,7 +437,7 @@ public class ClusterControllerService implements IControllerService {
                 case START_JOB: {
                     HyracksClientInterfaceFunctions.StartJobFunction sjf =
                             (HyracksClientInterfaceFunctions.StartJobFunction) fn;
-                    JobId jobId = createJobId();
+                    JobId jobId = jobIdFactory.create();
                     workQueue.schedule(new JobStartWork(ClusterControllerService.this, sjf.getDeploymentId(),
                             sjf.getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
                     return;
@@ -693,5 +704,4 @@ public class ClusterControllerService implements IControllerService {
     public synchronized ShutdownRun getShutdownRun() {
         return shutdownCallback;
     }
-
 }

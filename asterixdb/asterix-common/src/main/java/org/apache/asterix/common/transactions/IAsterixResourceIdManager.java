@@ -16,32 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.common.transactions;
 
-public class ResourceIdRequestResponseMessage extends AbstractApplicationMessage {
-    private static final long serialVersionUID = 1L;
+public interface IAsterixResourceIdManager {
 
-    private long resourceId;
-    private Exception exception;
+    long createResourceId();
 
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.RESOURCE_ID_RESPONSE;
-    }
+    boolean reported(String nodeId);
 
-    public long getResourceId() {
-        return resourceId;
-    }
+    void report(String nodeId, long maxResourceId);
 
-    public void setResourceId(long resourceId) {
-        this.resourceId = resourceId;
-    }
-
-    public Exception getException() {
-        return exception;
-    }
-
-    public void setException(Exception exception) {
-        this.exception = exception;
-    }
 }

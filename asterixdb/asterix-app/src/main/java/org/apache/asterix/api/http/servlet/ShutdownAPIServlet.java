@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
@@ -30,11 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONObject;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 public class ShutdownAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -60,7 +60,7 @@ public class ShutdownAPIServlet extends HttpServlet {
         try {
             jsonObject.put("status", "SHUTTING_DOWN");
             jsonObject.put("date", new Date());
-            jsonObject.put("cluster" , AsterixClusterProperties.INSTANCE.getClusterStateDescription());
+            jsonObject.put("cluster", AsterixClusterProperties.INSTANCE.getClusterStateDescription());
 
             final PrintWriter writer = response.getWriter();
             writer.print(jsonObject.toString(4));

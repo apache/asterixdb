@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import java.util.Arrays;
 
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.BuiltinType;

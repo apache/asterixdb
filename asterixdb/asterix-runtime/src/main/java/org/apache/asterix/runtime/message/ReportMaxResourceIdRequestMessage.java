@@ -16,24 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.runtime.message;
 
-public abstract class AbstractFailbackPlanMessage extends AbstractApplicationMessage {
+import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
+public class ReportMaxResourceIdRequestMessage extends AbstractApplicationMessage {
     private static final long serialVersionUID = 1L;
-    protected final long planId;
-    protected final int requestId;
 
-    public AbstractFailbackPlanMessage(long planId, int requestId) {
-        this.planId = planId;
-        this.requestId = requestId;
+    @Override
+    public void handle(IControllerService cs) throws HyracksDataException {
+        ReportMaxResourceIdMessage.send((NodeControllerService) cs);
     }
 
-    public long getPlanId() {
-        return planId;
-    }
-
-    public int getRequestId() {
-        return requestId;
+    @Override
+    public String type() {
+        return "REPORT_MAX_RESOURCE_ID_REQUEST";
     }
 }

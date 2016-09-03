@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.util;
+package org.apache.asterix.runtime.util;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -26,37 +26,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 
 /**
  * Utility class for obtaining information on the set of Hyracks NodeController
  * processes that are running on a given host.
  */
-public class AsterixRuntimeUtil {
+public class RuntimeUtils {
 
-    public static Set<String> getNodeControllersOnIP(InetAddress ipAddress) throws Exception {
-        Map<InetAddress, Set<String>> nodeControllerInfo = getNodeControllerMap();
-        Set<String> nodeControllersAtLocation = nodeControllerInfo.get(ipAddress);
-        return nodeControllersAtLocation;
+    private RuntimeUtils() {
     }
 
-    public static List<String> getAllNodeControllers() throws Exception {
+    public static Set<String> getNodeControllersOnIP(InetAddress ipAddress) throws HyracksDataException {
+        Map<InetAddress, Set<String>> nodeControllerInfo = getNodeControllerMap();
+        return nodeControllerInfo.get(ipAddress);
+    }
+
+    public static List<String> getAllNodeControllers() throws HyracksDataException {
         Collection<Set<String>> nodeControllersCollection = getNodeControllerMap().values();
-        List<String> nodeControllers = new ArrayList<String>();
+        List<String> nodeControllers = new ArrayList<>();
         for (Set<String> ncCollection : nodeControllersCollection) {
             nodeControllers.addAll(ncCollection);
         }
         return nodeControllers;
     }
 
-    public static Map<InetAddress, Set<String>> getNodeControllerMap() throws Exception {
-        Map<InetAddress, Set<String>> map = new HashMap<InetAddress, Set<String>>();
-        AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
+    public static Map<InetAddress, Set<String>> getNodeControllerMap() throws HyracksDataException {
+        Map<InetAddress, Set<String>> map = new HashMap<>();
+        AsterixAppContextInfo.INSTANCE.getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
         return map;
     }
 
-    public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) throws Exception {
-        ClusterControllerService ccs = (ClusterControllerService) AsterixAppContextInfo.getInstance()
+    public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) {
+        ClusterControllerService ccs = (ClusterControllerService) AsterixAppContextInfo.INSTANCE
                 .getCCApplicationContext().getControllerService();
         map.putAll(ccs.getIpAddressNodeNameMap());
     }

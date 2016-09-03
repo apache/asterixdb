@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.util;
+package org.apache.asterix.runtime.util;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.logging.Level;
@@ -38,20 +39,20 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
-import org.apache.asterix.common.messaging.CompleteFailbackRequestMessage;
-import org.apache.asterix.common.messaging.CompleteFailbackResponseMessage;
-import org.apache.asterix.common.messaging.PreparePartitionsFailbackRequestMessage;
-import org.apache.asterix.common.messaging.PreparePartitionsFailbackResponseMessage;
-import org.apache.asterix.common.messaging.ReplicaEventMessage;
-import org.apache.asterix.common.messaging.TakeoverMetadataNodeRequestMessage;
-import org.apache.asterix.common.messaging.TakeoverMetadataNodeResponseMessage;
-import org.apache.asterix.common.messaging.TakeoverPartitionsRequestMessage;
-import org.apache.asterix.common.messaging.TakeoverPartitionsResponseMessage;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
-import org.apache.asterix.common.replication.NodeFailbackPlan;
-import org.apache.asterix.common.replication.NodeFailbackPlan.FailbackPlanState;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.runtime.message.CompleteFailbackRequestMessage;
+import org.apache.asterix.runtime.message.CompleteFailbackResponseMessage;
+import org.apache.asterix.runtime.message.NodeFailbackPlan;
+import org.apache.asterix.runtime.message.NodeFailbackPlan.FailbackPlanState;
+import org.apache.asterix.runtime.message.PreparePartitionsFailbackRequestMessage;
+import org.apache.asterix.runtime.message.PreparePartitionsFailbackResponseMessage;
+import org.apache.asterix.runtime.message.ReplicaEventMessage;
+import org.apache.asterix.runtime.message.TakeoverMetadataNodeRequestMessage;
+import org.apache.asterix.runtime.message.TakeoverMetadataNodeResponseMessage;
+import org.apache.asterix.runtime.message.TakeoverPartitionsRequestMessage;
+import org.apache.asterix.runtime.message.TakeoverPartitionsResponseMessage;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.json.JSONException;
@@ -62,10 +63,10 @@ import org.json.JSONObject;
  */
 
 public class AsterixClusterProperties {
-    /**
-     * TODO: currently after instance restarts we require all nodes to join again, otherwise the cluster wont be ACTIVE.
-     * we may overcome this by storing the cluster state before the instance shutdown and using it on startup to identify
-     * the nodes that are expected the join.
+    /*
+     * TODO: currently after instance restarts we require all nodes to join again,
+     * otherwise the cluster wont be ACTIVE. we may overcome this by storing the cluster state before the instance
+     * shutdown and using it on startup to identify the nodes that are expected the join.
      */
 
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());
@@ -75,7 +76,7 @@ public class AsterixClusterProperties {
     private static final String CLUSTER_NET_IP_ADDRESS_KEY = "cluster-net-ip-address";
     private static final String IO_DEVICES = "iodevices";
     private static final String DEFAULT_STORAGE_DIR_NAME = "storage";
-    private Map<String, Map<String, String>> activeNcConfiguration = new HashMap<String, Map<String, String>>();
+    private Map<String, Map<String, String>> activeNcConfiguration = new HashMap<>();
 
     private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
@@ -105,24 +106,23 @@ public class AsterixClusterProperties {
                 Unmarshaller unmarshaller = ctx.createUnmarshaller();
                 cluster = (Cluster) unmarshaller.unmarshal(is);
             } catch (JAXBException e) {
-                throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE);
+                throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE, e);
             }
         } else {
             cluster = null;
         }
         // if this is the CC process
-        if (AsterixAppContextInfo.getInstance() != null) {
-            if (AsterixAppContextInfo.getInstance().getCCApplicationContext() != null) {
-                node2PartitionsMap = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodePartitions();
-                clusterPartitions = AsterixAppContextInfo.getInstance().getMetadataProperties().getClusterPartitions();
-                currentMetadataNode = AsterixAppContextInfo.getInstance().getMetadataProperties().getMetadataNodeName();
-                replicationEnabled = isReplicationEnabled();
-                autoFailover = isAutoFailoverEnabled();
-                if (autoFailover) {
-                    pendingTakeoverRequests = new HashMap<>();
-                    pendingProcessingFailbackPlans = new LinkedList<>();
-                    planId2FailbackPlanMap = new HashMap<>();
-                }
+        if (AsterixAppContextInfo.INSTANCE.initialized()
+                && AsterixAppContextInfo.INSTANCE.getCCApplicationContext() != null) {
+            node2PartitionsMap = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodePartitions();
+            clusterPartitions = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getClusterPartitions();
+            currentMetadataNode = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
+            replicationEnabled = isReplicationEnabled();
+            autoFailover = isAutoFailoverEnabled();
+            if (autoFailover) {
+                pendingTakeoverRequests = new HashMap<>();
+                pendingProcessingFailbackPlans = new LinkedList<>();
+                planId2FailbackPlanMap = new HashMap<>();
             }
         }
     }
@@ -214,12 +214,9 @@ public class AsterixClusterProperties {
             state = ClusterState.ACTIVE;
             LOGGER.info("Cluster is now ACTIVE");
             //start global recovery
-            AsterixAppContextInfo.getInstance().getGlobalRecoveryManager().startGlobalRecovery();
-            if (autoFailover) {
-                //if there are any pending failback requests, process them
-                if (pendingProcessingFailbackPlans.size() > 0) {
-                    processPendingFailbackPlans();
-                }
+            AsterixAppContextInfo.INSTANCE.getGlobalRecoveryManager().startGlobalRecovery();
+            if (autoFailover && !pendingProcessingFailbackPlans.isEmpty()) {
+                processPendingFailbackPlans();
             }
         } else {
             requestMetadataNodeTakeover();
@@ -227,26 +224,11 @@ public class AsterixClusterProperties {
     }
 
     /**
-     * Returns the number of IO devices configured for a Node Controller
-     *
-     * @param nodeId
-     *            unique identifier of the Node Controller
-     * @return number of IO devices. -1 if the node id is not valid. A node id
-     *         is not valid if it does not correspond to the set of registered
-     *         Node Controllers.
-     */
-    public int getNumberOfIODevices(String nodeId) {
-        String[] ioDevs = getIODevices(nodeId);
-        return ioDevs == null ? -1 : ioDevs.length;
-    }
-
-    /**
      * Returns the IO devices configured for a Node Controller
      *
      * @param nodeId
      *            unique identifier of the Node Controller
-     * @return a list of IO devices. null if node id is not valid. A node id is not valid
-     *         if it does not correspond to the set of registered Node Controllers.
+     * @return a list of IO devices.
      */
     public synchronized String[] getIODevices(String nodeId) {
         Map<String, String> ncConfig = activeNcConfiguration.get(nodeId);
@@ -255,7 +237,7 @@ public class AsterixClusterProperties {
                 LOGGER.warning("Configuration parameters for nodeId " + nodeId
                         + " not found. The node has not joined yet or has left.");
             }
-            return null;
+            return new String[0];
         }
         return ncConfig.get(IO_DEVICES).split(",");
     }
@@ -274,7 +256,7 @@ public class AsterixClusterProperties {
     }
 
     public synchronized Set<String> getParticipantNodes() {
-        Set<String> participantNodes = new HashSet<String>();
+        Set<String> participantNodes = new HashSet<>();
         for (String pNode : activeNcConfiguration.keySet()) {
             participantNodes.add(pNode);
         }
@@ -316,7 +298,7 @@ public class AsterixClusterProperties {
     }
 
     public static int getNumberOfNodes() {
-        return AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames().size();
+        return AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodeNames().size();
     }
 
     public synchronized ClusterPartition[] getNodePartitions(String nodeId) {
@@ -349,12 +331,12 @@ public class AsterixClusterProperties {
     private synchronized void requestPartitionsTakeover(String failedNodeId) {
         //replica -> list of partitions to takeover
         Map<String, List<Integer>> partitionRecoveryPlan = new HashMap<>();
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.getInstance()
+        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE
                 .getReplicationProperties();
 
         //collect the partitions of the failed NC
         List<ClusterPartition> lostPartitions = getNodeAssignedPartitions(failedNodeId);
-        if (lostPartitions.size() > 0) {
+        if (!lostPartitions.isEmpty()) {
             for (ClusterPartition partition : lostPartitions) {
                 //find replicas for this partitions
                 Set<String> partitionReplicas = replicationProperties.getNodeReplicasIds(partition.getNodeId());
@@ -362,15 +344,8 @@ public class AsterixClusterProperties {
                 for (String replica : partitionReplicas) {
                     //TODO (mhubail) currently this assigns the partition to the first found active replica.
                     //It needs to be modified to consider load balancing.
-                    if (activeNcConfiguration.containsKey(replica) && !failedNodes.contains(replica)) {
-                        if (!partitionRecoveryPlan.containsKey(replica)) {
-                            List<Integer> replicaPartitions = new ArrayList<>();
-                            replicaPartitions.add(partition.getPartitionId());
-                            partitionRecoveryPlan.put(replica, replicaPartitions);
-                        } else {
-                            partitionRecoveryPlan.get(replica).add(partition.getPartitionId());
-                        }
-                    }
+                    addActiveReplica(replica, partition, partitionRecoveryPlan);
+                    // bug? will always break on first loop execution
                     break;
                 }
             }
@@ -382,11 +357,12 @@ public class AsterixClusterProperties {
             } else {
                 LOGGER.info("Partitions to recover: " + lostPartitions);
             }
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.getInstance()
+            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
                     .getCCApplicationContext().getMessageBroker();
             //For each replica, send a request to takeover the assigned partitions
-            for (String replica : partitionRecoveryPlan.keySet()) {
-                Integer[] partitionsToTakeover = partitionRecoveryPlan.get(replica).toArray(new Integer[] {});
+            for (Entry<String, List<Integer>> entry : partitionRecoveryPlan.entrySet()) {
+                String replica = entry.getKey();
+                Integer[] partitionsToTakeover = entry.getValue().toArray(new Integer[entry.getValue().size()]);
                 long requestId = clusterRequestId++;
                 TakeoverPartitionsRequestMessage takeoverRequest = new TakeoverPartitionsRequestMessage(requestId,
                         replica, partitionsToTakeover);
@@ -399,9 +375,21 @@ public class AsterixClusterProperties {
                      * has failed. When the failure notification arrives, we will send any pending request
                      * that belongs to the failed NC to a different active replica.
                      */
-                    LOGGER.warning("Failed to send takeover request: " + takeoverRequest);
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Failed to send takeover request: " + takeoverRequest, e);
                 }
+            }
+        }
+    }
+
+    private void addActiveReplica(String replica, ClusterPartition partition,
+            Map<String, List<Integer>> partitionRecoveryPlan) {
+        if (activeNcConfiguration.containsKey(replica) && !failedNodes.contains(replica)) {
+            if (!partitionRecoveryPlan.containsKey(replica)) {
+                List<Integer> replicaPartitions = new ArrayList<>();
+                replicaPartitions.add(partition.getPartitionId());
+                partitionRecoveryPlan.put(replica, replicaPartitions);
+            } else {
+                partitionRecoveryPlan.get(replica).add(partition.getPartitionId());
             }
         }
     }
@@ -436,11 +424,11 @@ public class AsterixClusterProperties {
 
     private synchronized void requestMetadataNodeTakeover() {
         //need a new node to takeover metadata node
-        ClusterPartition metadataPartiton = AsterixAppContextInfo.getInstance().getMetadataProperties()
+        ClusterPartition metadataPartiton = AsterixAppContextInfo.INSTANCE.getMetadataProperties()
                 .getMetadataPartition();
         //request the metadataPartition node to register itself as the metadata node
         TakeoverMetadataNodeRequestMessage takeoverRequest = new TakeoverMetadataNodeRequestMessage();
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.getInstance()
+        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
                 .getCCApplicationContext().getMessageBroker();
         try {
             messageBroker.sendApplicationMessageToNC(takeoverRequest, metadataPartiton.getActiveNodeId());
@@ -450,8 +438,8 @@ public class AsterixClusterProperties {
              * has failed. When the failure notification arrives, a new NC will be assigned to
              * the metadata partition and a new metadata node takeover request will be sent to it.
              */
-            LOGGER.warning("Failed to send metadata node takeover request to: " + metadataPartiton.getActiveNodeId());
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING,
+                    "Failed to send metadata node takeover request to: " + metadataPartiton.getActiveNodeId(), e);
         }
     }
 
@@ -479,7 +467,7 @@ public class AsterixClusterProperties {
         planId2FailbackPlanMap.put(plan.getPlanId(), plan);
 
         //get all partitions this node requires to resync
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.getInstance()
+        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE
                 .getReplicationProperties();
         Set<String> nodeReplicas = replicationProperties.getNodeReplicationClients(failingBackNodeId);
         for (String replicaId : nodeReplicas) {
@@ -531,7 +519,7 @@ public class AsterixClusterProperties {
                      * if the returning node is the original metadata node,
                      * then metadata node will change after the failback completes
                      */
-                    String originalMetadataNode = AsterixAppContextInfo.getInstance().getMetadataProperties()
+                    String originalMetadataNode = AsterixAppContextInfo.INSTANCE.getMetadataProperties()
                             .getMetadataNodeName();
                     if (originalMetadataNode.equals(failbackNode)) {
                         plan.setNodeToReleaseMetadataManager(currentMetadataNode);
@@ -541,23 +529,9 @@ public class AsterixClusterProperties {
 
                     //force new jobs to wait
                     state = ClusterState.REBALANCING;
-
-                    ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.getInstance()
+                    ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
                             .getCCApplicationContext().getMessageBroker();
-                    //send requests to other nodes to complete on-going jobs and prepare partitions for failback
-                    Set<PreparePartitionsFailbackRequestMessage> planFailbackRequests = plan.getPlanFailbackRequests();
-                    for (PreparePartitionsFailbackRequestMessage request : planFailbackRequests) {
-                        try {
-                            messageBroker.sendApplicationMessageToNC(request, request.getNodeID());
-                            plan.addPendingRequest(request);
-                        } catch (Exception e) {
-                            LOGGER.warning("Failed to send failback request to: " + request.getNodeID());
-                            e.printStackTrace();
-                            plan.notifyNodeFailure(request.getNodeID());
-                            revertFailedFailbackPlanEffects();
-                            break;
-                        }
-                    }
+                    handleFailbackRequests(plan, messageBroker);
                     /**
                      * wait until the current plan is completed before processing the next plan.
                      * when the current one completes or is reverted, the cluster state will be
@@ -568,6 +542,21 @@ public class AsterixClusterProperties {
                     //this plan failed before sending any requests -> nothing to rollback
                     planId2FailbackPlanMap.remove(plan.getPlanId());
                 }
+            }
+        }
+    }
+
+    private void handleFailbackRequests(NodeFailbackPlan plan, ICCMessageBroker messageBroker) {
+        //send requests to other nodes to complete on-going jobs and prepare partitions for failback
+        for (PreparePartitionsFailbackRequestMessage request : plan.getPlanFailbackRequests()) {
+            try {
+                messageBroker.sendApplicationMessageToNC(request, request.getNodeID());
+                plan.addPendingRequest(request);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Failed to send failback request to: " + request.getNodeID(), e);
+                plan.notifyNodeFailure(request.getNodeID());
+                revertFailedFailbackPlanEffects();
+                break;
             }
         }
     }
@@ -585,13 +574,12 @@ public class AsterixClusterProperties {
             CompleteFailbackRequestMessage request = plan.getCompleteFailbackRequestMessage();
 
             //send complete resync and takeover partitions to the failing back node
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.getInstance()
+            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
                     .getCCApplicationContext().getMessageBroker();
             try {
                 messageBroker.sendApplicationMessageToNC(request, request.getNodeId());
             } catch (Exception e) {
-                LOGGER.warning("Failed to send complete failback request to: " + request.getNodeId());
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Failed to send complete failback request to: " + request.getNodeId(), e);
                 notifyFailbackPlansNodeFailure(request.getNodeId());
                 revertFailedFailbackPlanEffects();
             }
@@ -617,7 +605,7 @@ public class AsterixClusterProperties {
     }
 
     private synchronized void notifyImpactedReplicas(String nodeId, ClusterEventType event) {
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.getInstance()
+        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE
                 .getReplicationProperties();
         Set<String> remoteReplicas = replicationProperties.getRemoteReplicasIds(nodeId);
         String nodeIdAddress = "";
@@ -627,7 +615,7 @@ public class AsterixClusterProperties {
         }
 
         ReplicaEventMessage msg = new ReplicaEventMessage(nodeId, nodeIdAddress, event);
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.getInstance()
+        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
                 .getCCApplicationContext().getMessageBroker();
         for (String replica : remoteReplicas) {
             //if the remote replica is alive, send the event
@@ -635,7 +623,7 @@ public class AsterixClusterProperties {
                 try {
                     messageBroker.sendApplicationMessageToNC(msg, replica);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Failed sending an application message to an NC", e);
                 }
             }
         }

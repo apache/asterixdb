@@ -16,34 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.runtime.message;
 
-import java.util.Set;
+import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.service.IControllerService;
 
-public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage {
+public class TakeoverMetadataNodeResponseMessage extends AbstractApplicationMessage {
 
     private static final long serialVersionUID = 1L;
-    private final Set<Integer> partitions;
+    private final String nodeId;
 
-    public CompleteFailbackResponseMessage(long planId, int requestId, Set<Integer> partitions) {
-        super(planId, requestId);
-        this.partitions = partitions;
+    public TakeoverMetadataNodeResponseMessage(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
     }
 
     @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.COMPLETE_FAILBACK_RESPONSE;
-    }
-
-    public Set<Integer> getPartitions() {
-        return partitions;
+    public void handle(IControllerService cs) throws HyracksDataException {
+        AsterixClusterProperties.INSTANCE.processMetadataNodeTakeoverResponse(this);
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Plan ID: " + planId);
-        sb.append(" Partitions: " + partitions);
-        return sb.toString();
+    public String type() {
+        return "TAKEOVER_METADATA_NODE_RESPONSE";
     }
 }

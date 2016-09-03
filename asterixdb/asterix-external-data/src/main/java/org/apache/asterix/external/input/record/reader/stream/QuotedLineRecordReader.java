@@ -20,10 +20,9 @@ package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class QuotedLineRecordReader extends LineRecordReader {
@@ -36,7 +35,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
             throws HyracksDataException {
         super(hasHeader, stream);
         if ((quoteString == null) || (quoteString.length() != 1)) {
-            throw new HyracksDataException(ExternalDataExceptionUtils.incorrectParameterMessage(
+            throw new HyracksDataException(ExceptionUtils.incorrectParameterMessage(
                     ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));
         }
         this.quote = quoteString.charAt(0);

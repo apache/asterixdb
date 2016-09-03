@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.resource;
+package org.apache.asterix.runtime.transaction;
 
 import org.apache.hyracks.api.application.IApplicationContext;
 

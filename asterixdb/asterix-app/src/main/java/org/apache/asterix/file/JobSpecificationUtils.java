@@ -19,12 +19,12 @@
 package org.apache.asterix.file;
 
 import org.apache.asterix.common.config.AsterixCompilerProperties;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class JobSpecificationUtils {
     public static JobSpecification createJobSpecification() {
-        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
+        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.INSTANCE.getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         JobSpecification spec = new JobSpecification(frameSize);
         return spec;

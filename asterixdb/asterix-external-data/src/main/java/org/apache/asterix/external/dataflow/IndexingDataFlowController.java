@@ -20,8 +20,6 @@ package org.apache.asterix.external.dataflow;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
-
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
@@ -34,7 +32,7 @@ public class IndexingDataFlowController<T> extends RecordDataFlowController<T> {
     private final IExternalIndexer indexer;
 
     public IndexingDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            @Nonnull IRecordDataParser<T> dataParser, @Nonnull IRecordReader<? extends T> recordReader,
+            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader,
             IExternalIndexer indexer) throws IOException {
         super(ctx, tupleForwarder, dataParser, recordReader, 1 + indexer.getNumberOfFields());
         this.indexer = indexer;

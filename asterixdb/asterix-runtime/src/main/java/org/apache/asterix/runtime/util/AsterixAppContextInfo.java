@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.util;
+package org.apache.asterix.runtime.util;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -37,7 +37,7 @@ import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
+import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
 import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -51,9 +51,11 @@ import org.apache.hyracks.storage.common.IStorageManagerInterface;
  */
 public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IAsterixPropertiesProvider {
 
-    private static AsterixAppContextInfo INSTANCE;
-    private final ICCApplicationContext appCtx;
-
+    public static final AsterixAppContextInfo INSTANCE = new AsterixAppContextInfo();
+    private ICCApplicationContext appCtx;
+    private IGlobalRecoveryMaanger globalRecoveryMaanger;
+    private ILibraryManager libraryManager;
+    private IAsterixResourceIdManager resourceIdManager;
     private AsterixCompilerProperties compilerProperties;
     private AsterixExternalProperties externalProperties;
     private AsterixMetadataProperties metadataProperties;
@@ -64,19 +66,26 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixReplicationProperties replicationProperties;
     private AsterixExtensionProperties extensionProperties;
     private MessagingProperties messagingProperties;
-    private final IGlobalRecoveryMaanger globalRecoveryMaanger;
     private IHyracksClientConnection hcc;
-    private final ILibraryManager libraryManager;
     private Object extensionManager;
+    private volatile boolean initialized = false;
 
-    public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
-            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager)
+    private AsterixAppContextInfo() {
+    }
+
+    public static synchronized void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
+            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager,
+            IAsterixResourceIdManager resourceIdManager)
             throws AsterixException, IOException {
-        if (INSTANCE != null) {
-            return;
+        if (INSTANCE.initialized) {
+            throw new AsterixException(AsterixAppContextInfo.class.getSimpleName() + " has been initialized already");
         }
-        INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc, globalRecoveryMaanger, libraryManager);
-
+        INSTANCE.initialized = true;
+        INSTANCE.appCtx = ccAppCtx;
+        INSTANCE.hcc = hcc;
+        INSTANCE.globalRecoveryMaanger = globalRecoveryMaanger;
+        INSTANCE.libraryManager = libraryManager;
+        INSTANCE.resourceIdManager = resourceIdManager;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
         AsterixPropertiesAccessor propertiesAccessor;
@@ -102,16 +111,8 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
-    private AsterixAppContextInfo(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
-            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager) {
-        this.appCtx = ccAppCtx;
-        this.hcc = hcc;
-        this.globalRecoveryMaanger = globalRecoveryMaanger;
-        this.libraryManager = libraryManager;
-    }
-
-    public static AsterixAppContextInfo getInstance() {
-        return INSTANCE;
+    public boolean initialized() {
+        return initialized;
     }
 
     @Override
@@ -198,5 +199,9 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public MessagingProperties getMessagingProperties() {
         return messagingProperties;
+    }
+
+    public IAsterixResourceIdManager getResourceIdManager() {
+        return resourceIdManager;
     }
 }

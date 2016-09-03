@@ -16,50 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.runtime.message;
 
 import java.util.Set;
 
-public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPlanMessage {
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.service.IControllerService;
+
+public class PreparePartitionsFailbackResponseMessage extends AbstractFailbackPlanMessage {
 
     private static final long serialVersionUID = 1L;
     private final Set<Integer> partitions;
-    private boolean releaseMetadataNode = false;
-    private final String nodeID;
 
-    public PreparePartitionsFailbackRequestMessage(long planId, int requestId, String nodeId, Set<Integer> partitions) {
+    public PreparePartitionsFailbackResponseMessage(long planId, int requestId, Set<Integer> partitions) {
         super(planId, requestId);
-        this.nodeID = nodeId;
         this.partitions = partitions;
-    }
-
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.PREPARE_PARTITIONS_FAILBACK_REQUEST;
     }
 
     public Set<Integer> getPartitions() {
         return partitions;
     }
 
-    public boolean isReleaseMetadataNode() {
-        return releaseMetadataNode;
-    }
-
-    public void setReleaseMetadataNode(boolean releaseMetadataNode) {
-        this.releaseMetadataNode = releaseMetadataNode;
-    }
-
-    public String getNodeID() {
-        return nodeID;
+    @Override
+    public void handle(IControllerService cs) throws HyracksDataException {
+        AsterixClusterProperties.INSTANCE.processPreparePartitionsFailbackResponse(this);
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Plan ID: " + planId);
-        sb.append(" Partitions: " + partitions);
-        sb.append(" releaseMetadataNode: " + releaseMetadataNode);
-        return sb.toString();
+    public String type() {
+        return "PREPARE_PARTITIONS_FAILBACK_RESPONSE";
     }
 }

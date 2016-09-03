@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 
 public interface IExternalDataSourceFactory extends Serializable {
@@ -73,11 +73,11 @@ public interface IExternalDataSourceFactory extends Serializable {
             AlgebricksAbsolutePartitionConstraint constraints, int count) {
         if (constraints == null) {
             ArrayList<String> locs = new ArrayList<String>();
-            Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
+            Map<String, String[]> stores = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getStores();
             int i = 0;
             while (i < count) {
                 for (String node : stores.keySet()) {
-                    int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(node);
+                    int numIODevices = AsterixClusterProperties.INSTANCE.getIODevices(node).length;
                     for (int k = 0; k < numIODevices; k++) {
                         locs.add(node);
                         i++;

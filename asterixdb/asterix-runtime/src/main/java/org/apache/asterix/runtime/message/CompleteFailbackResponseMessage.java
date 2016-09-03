@@ -16,41 +16,43 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.runtime.message;
 
 import java.util.Set;
 
-public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage {
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.service.IControllerService;
+
+public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage {
 
     private static final long serialVersionUID = 1L;
     private final Set<Integer> partitions;
-    private final String nodeId;
 
-    public CompleteFailbackRequestMessage(long planId, int requestId, String nodeId, Set<Integer> partitions) {
+    public CompleteFailbackResponseMessage(long planId, int requestId, Set<Integer> partitions) {
         super(planId, requestId);
-        this.nodeId = nodeId;
         this.partitions = partitions;
-    }
-
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.COMPLETE_FAILBACK_REQUEST;
     }
 
     public Set<Integer> getPartitions() {
         return partitions;
     }
 
-    public String getNodeId() {
-        return nodeId;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Plan ID: " + planId);
-        sb.append(" Node ID: " + nodeId);
         sb.append(" Partitions: " + partitions);
         return sb.toString();
+    }
+
+    @Override
+    public void handle(IControllerService cs) throws HyracksDataException {
+        AsterixClusterProperties.INSTANCE.processCompleteFailbackResponse(this);
+    }
+
+    @Override
+    public String type() {
+        return "COMPLETE_FAILBACK_RESPONSE";
     }
 }

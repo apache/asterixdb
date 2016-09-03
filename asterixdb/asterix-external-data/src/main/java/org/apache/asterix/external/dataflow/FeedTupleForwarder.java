@@ -20,8 +20,6 @@ package org.apache.asterix.external.dataflow;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
-
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -46,7 +44,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
     private boolean paused = false;
     private boolean initialized;
 
-    public FeedTupleForwarder(@Nonnull FeedLogManager feedLogManager) {
+    public FeedTupleForwarder(FeedLogManager feedLogManager) {
         this.feedLogManager = feedLogManager;
     }
 

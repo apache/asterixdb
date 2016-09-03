@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,22 +60,27 @@ import com.google.common.cache.CacheBuilder;
 
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
+    // Public constants
+    public static final String METADATA_FILE_NAME = ".metadata";
+    // Private constants
     private static final Logger LOGGER = Logger.getLogger(PersistentLocalResourceRepository.class.getName());
-    private final String[] mountPoints;
     private static final String STORAGE_METADATA_DIRECTORY = "asterix_root_metadata";
     private static final String STORAGE_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata";
     private static final long STORAGE_LOCAL_RESOURCE_ID = -4321;
-    public static final String METADATA_FILE_NAME = ".metadata";
-    public static final int STORAGE_VERSION = LIFOMetaDataFrame.VERSION;
-    private final Cache<String, LocalResource> resourceCache;
-    private final String nodeId;
     private static final int MAX_CACHED_RESOURCES = 1000;
-    private IReplicationManager replicationManager;
-    private boolean isReplicationEnabled = false;
-    private Set<String> filesToBeReplicated;
+    private static final FilenameFilter METADATA_FILES_FILTER =
+            (File dir, String name) -> name.equalsIgnoreCase(METADATA_FILE_NAME);
+    // Finals
+    private final String[] mountPoints;
+    private final String nodeId;
+    private final Cache<String, LocalResource> resourceCache;
     private final SortedMap<Integer, ClusterPartition> clusterPartitions;
     private final Set<Integer> nodeOriginalPartitions;
     private final Set<Integer> nodeActivePartitions;
+    // Mutables
+    private boolean isReplicationEnabled = false;
+    private Set<String> filesToBeReplicated;
+    private IReplicationManager replicationManager;
     private Set<Integer> nodeInactivePartitions;
 
     public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId,
@@ -88,8 +94,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             if (!mountPointDir.exists()) {
                 throw new HyracksDataException(mountPointDir.getAbsolutePath() + " doesn't exist.");
             }
-            if (!mountPoint.endsWith(System.getProperty("file.separator"))) {
-                mountPoints[i] = mountPoint + System.getProperty("file.separator");
+            if (!mountPoint.endsWith(File.separator)) {
+                mountPoints[i] = mountPoint + File.separator;
             } else {
                 mountPoints[i] = mountPoint;
             }
@@ -120,9 +126,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             LOGGER.info("Initializing local resource repository ... ");
         }
 
-        //create storage metadata file (This file is used to locate the root storage directory after instance restarts).
-        //TODO with the existing cluster configuration file being static and distributed on all NCs, we can find out the storage root
-        //directory without looking at this file. This file could potentially store more information, otherwise no need to keep it.
+        /*
+         * create storage metadata file
+         * (This file is used to locate the root storage directory after instance restarts).
+         * TODO with the existing cluster configuration file being static and distributed on all NCs
+         * we can find out the storage root directory without looking at this file.
+         * This file could potentially store more information, otherwise no need to keep it.
+         */
         for (int i = 0; i < mountPoints.length; i++) {
             File storageMetadataFile = getStorageMetadataFile(mountPoints[i], nodeId, i);
             File storageMetadataDir = storageMetadataFile.getParentFile();
@@ -138,9 +148,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                     "created the root-metadata-file's directory: " + storageMetadataDir.getAbsolutePath());
 
             String storageRootDirPath;
-            if (storageRootDirName.startsWith(System.getProperty("file.separator"))) {
+            if (storageRootDirName.startsWith(File.separator)) {
                 storageRootDirPath = mountPoints[i]
-                        + storageRootDirName.substring(System.getProperty("file.separator").length());
+                        + storageRootDirName.substring(File.separator.length());
             } else {
                 storageRootDirPath = mountPoints[i] + storageRootDirName;
             }
@@ -215,45 +225,50 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return new File(resourcePath + File.separator + METADATA_FILE_NAME);
     }
 
-    public HashMap<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
+    public Map<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
         //TODO During recovery, the memory usage currently is proportional to the number of resources available.
         //This could be fixed by traversing all resources on disk until the required resource is found.
-        HashMap<Long, LocalResource> resourcesMap = new HashMap<Long, LocalResource>();
-
+        Map<Long, LocalResource> resourcesMap = new HashMap<>();
         for (int i = 0; i < mountPoints.length; i++) {
             File storageRootDir = getStorageRootDirectoryIfExists(mountPoints[i], nodeId, i);
             if (storageRootDir == null) {
                 continue;
             }
-
             //load all local resources.
             File[] partitions = storageRootDir.listFiles();
             for (File partition : partitions) {
                 File[] dataverseFileList = partition.listFiles();
                 if (dataverseFileList != null) {
                     for (File dataverseFile : dataverseFileList) {
-                        if (dataverseFile.isDirectory()) {
-                            File[] indexFileList = dataverseFile.listFiles();
-                            if (indexFileList != null) {
-                                for (File indexFile : indexFileList) {
-                                    if (indexFile.isDirectory()) {
-                                        File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
-                                        if (metadataFiles != null) {
-                                            for (File metadataFile : metadataFiles) {
-                                                LocalResource localResource = readLocalResource(metadataFile);
-                                                resourcesMap.put(localResource.getResourceId(), localResource);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        loadDataverse(dataverseFile, resourcesMap);
                     }
                 }
             }
         }
-
         return resourcesMap;
+    }
+
+    private void loadDataverse(File dataverseFile, Map<Long, LocalResource> resourcesMap) throws HyracksDataException {
+        if (dataverseFile.isDirectory()) {
+            File[] indexFileList = dataverseFile.listFiles();
+            if (indexFileList != null) {
+                for (File indexFile : indexFileList) {
+                    loadIndex(indexFile, resourcesMap);
+                }
+            }
+        }
+    }
+
+    private void loadIndex(File indexFile, Map<Long, LocalResource> resourcesMap) throws HyracksDataException {
+        if (indexFile.isDirectory()) {
+            File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
+            if (metadataFiles != null) {
+                for (File metadataFile : metadataFiles) {
+                    LocalResource localResource = readLocalResource(metadataFile);
+                    resourcesMap.put(localResource.getResourceId(), localResource);
+                }
+            }
+        }
     }
 
     @Override
@@ -273,46 +288,52 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 File[] dataverseFileList = partition.listFiles();
                 if (dataverseFileList != null) {
                     for (File dataverseFile : dataverseFileList) {
-                        if (dataverseFile.isDirectory()) {
-                            File[] indexFileList = dataverseFile.listFiles();
-                            if (indexFileList != null) {
-                                for (File indexFile : indexFileList) {
-                                    if (indexFile.isDirectory()) {
-                                        File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
-                                        if (metadataFiles != null) {
-                                            for (File metadataFile : metadataFiles) {
-                                                LocalResource localResource = readLocalResource(metadataFile);
-                                                maxResourceId = Math.max(maxResourceId, localResource.getResourceId());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        maxResourceId = getMaxResourceIdForDataverse(dataverseFile, maxResourceId);
                     }
                 }
             }
         }
+        return maxResourceId;
+    }
 
+    private long getMaxResourceIdForDataverse(File dataverseFile, long maxSoFar) throws HyracksDataException {
+        long maxResourceId = maxSoFar;
+        if (dataverseFile.isDirectory()) {
+            File[] indexFileList = dataverseFile.listFiles();
+            if (indexFileList != null) {
+                for (File indexFile : indexFileList) {
+                    maxResourceId = getMaxResourceIdForIndex(indexFile, maxResourceId);
+                }
+            }
+        }
+        return maxResourceId;
+    }
+
+    private long getMaxResourceIdForIndex(File indexFile, long maxSoFar) throws HyracksDataException {
+        long maxResourceId = maxSoFar;
+        if (indexFile.isDirectory()) {
+            File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
+            if (metadataFiles != null) {
+                for (File metadataFile : metadataFiles) {
+                    LocalResource localResource = readLocalResource(metadataFile);
+                    maxResourceId = Math.max(maxResourceId, localResource.getResourceId());
+                }
+            }
+        }
         return maxResourceId;
     }
 
     private static String getFileName(String baseDir, long resourceId) {
-        if (resourceId == STORAGE_LOCAL_RESOURCE_ID) {
-            return baseDir;
-        } else {
-            if (!baseDir.endsWith(System.getProperty("file.separator"))) {
-                baseDir += System.getProperty("file.separator");
-            }
-            return baseDir + METADATA_FILE_NAME;
-        }
+        return (resourceId == STORAGE_LOCAL_RESOURCE_ID) ? baseDir
+                : baseDir.endsWith(File.separator) ? (baseDir + METADATA_FILE_NAME)
+                        : (baseDir + File.separator + METADATA_FILE_NAME);
     }
 
     public static LocalResource readLocalResource(File file) throws HyracksDataException {
         try (FileInputStream fis = new FileInputStream(file);
                 ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
             LocalResource resource = (LocalResource) oisFromFis.readObject();
-            if (resource.getVersion() == PersistentLocalResourceRepository.STORAGE_VERSION) {
+            if (resource.getVersion() == LIFOMetaDataFrame.VERSION) {
                 return resource;
             } else {
                 throw new AsterixException("Storage version mismatch.");
@@ -322,23 +343,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    private static final FilenameFilter METADATA_FILES_FILTER = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            if (name.equalsIgnoreCase(METADATA_FILE_NAME)) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    };
-
     public void setReplicationManager(IReplicationManager replicationManager) {
         this.replicationManager = replicationManager;
         isReplicationEnabled = replicationManager.isReplicationEnabled();
 
         if (isReplicationEnabled) {
-            filesToBeReplicated = new HashSet<String>();
+            filesToBeReplicated = new HashSet<>();
             nodeInactivePartitions = ConcurrentHashMap.newKeySet();
         }
     }
@@ -379,12 +389,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public void deleteStorageData(boolean deleteStorageMetadata) throws IOException {
         for (int i = 0; i < mountPoints.length; i++) {
             File storageDir = getStorageRootDirectoryIfExists(mountPoints[i], nodeId, i);
-            if (storageDir != null) {
-                if (storageDir.isDirectory()) {
-                    FileUtils.deleteDirectory(storageDir);
-                }
+            if (storageDir != null && storageDir.isDirectory()) {
+                FileUtils.deleteDirectory(storageDir);
             }
-
             if (deleteStorageMetadata) {
                 //delete the metadata root directory
                 File storageMetadataFile = getStorageMetadataFile(mountPoints[i], nodeId, i);
@@ -405,8 +412,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static File getStorageMetadataFile(String mountPoint, String nodeId, int ioDeviceId) {
         String storageMetadataFileName = getStorageMetadataDirPath(mountPoint, nodeId, ioDeviceId) + File.separator
                 + STORAGE_METADATA_FILE_NAME_PREFIX;
-        File storageMetadataFile = new File(storageMetadataFileName);
-        return storageMetadataFile;
+        return new File(storageMetadataFileName);
     }
 
     /**

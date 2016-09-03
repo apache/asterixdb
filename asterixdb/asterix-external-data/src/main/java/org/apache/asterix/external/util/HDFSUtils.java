@@ -29,8 +29,8 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -49,7 +49,7 @@ import org.apache.hyracks.hdfs.scheduler.Scheduler;
 public class HDFSUtils {
 
     public static Scheduler initializeHDFSScheduler() {
-        ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
+        ICCContext ccContext = AsterixAppContextInfo.INSTANCE.getCCApplicationContext().getCCContext();
         Scheduler scheduler = null;
         try {
             scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
@@ -61,7 +61,7 @@ public class HDFSUtils {
     }
 
     public static IndexingScheduler initializeIndexingHDFSScheduler() {
-        ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
+        ICCContext ccContext = AsterixAppContextInfo.INSTANCE.getCCApplicationContext().getCCContext();
         IndexingScheduler scheduler = null;
         try {
             scheduler = new IndexingScheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
@@ -80,6 +80,7 @@ public class HDFSUtils {
      * 1. NoOp means appended file
      * 2. AddOp means new file
      * 3. UpdateOp means the delta of a file
+     *
      * @return
      * @throws IOException
      */
@@ -109,7 +110,7 @@ public class HDFSUtils {
                                 .add(new FileSplit(filePath,
                                         block.getOffset(), (block.getLength() + block.getOffset()) < file.getSize()
                                                 ? block.getLength() : (file.getSize() - block.getOffset()),
-                                block.getHosts()));
+                                        block.getHosts()));
                         orderedExternalFiles.add(file);
                     }
                 }
@@ -201,17 +202,17 @@ public class HDFSUtils {
     public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(
             AlgebricksAbsolutePartitionConstraint clusterLocations) {
         if (clusterLocations == null) {
-            ArrayList<String> locs = new ArrayList<String>();
-            Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
-            for (String i : stores.keySet()) {
-                int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(i);
+            ArrayList<String> locs = new ArrayList<>();
+            Map<String, String[]> stores = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getStores();
+            for (String node : stores.keySet()) {
+                int numIODevices = AsterixClusterProperties.INSTANCE.getIODevices(node).length;
                 for (int k = 0; k < numIODevices; k++) {
-                    locs.add(i);
+                    locs.add(node);
                 }
             }
             String[] cluster = new String[locs.size()];
             cluster = locs.toArray(cluster);
-            clusterLocations = new AlgebricksAbsolutePartitionConstraint(cluster);
+            return new AlgebricksAbsolutePartitionConstraint(cluster);
         }
         return clusterLocations;
     }

@@ -16,31 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
-
-import java.util.Arrays;
+package org.apache.asterix.common.exceptions;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ExternalDataExceptionUtils {
+public class ExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
     public static final String MISSING_PARAMETER = "Missing parameter.\n";
     public static final String PARAMETER_NAME = "Parameter name: ";
     public static final String EXPECTED_VALUE = "Expected value: ";
     public static final String PASSED_VALUE = "Passed value: ";
 
+    private ExceptionUtils() {
+    }
+
     public static String incorrectParameterMessage(String parameterName, String expectedValue, String passedValue) {
-        return INCORRECT_PARAMETER + PARAMETER_NAME + parameterName + ExternalDataConstants.LF + EXPECTED_VALUE
-                + expectedValue + ExternalDataConstants.LF + PASSED_VALUE + passedValue;
-    }
-
-    public static String concat(String... vals) {
-        return Arrays.toString(vals);
-    }
-
-    // For now, we are accepting all exceptions as resolvable by adapter.
-    public static boolean isResolvable(Exception e) {
-        return true;
+        return INCORRECT_PARAMETER + PARAMETER_NAME + parameterName + System.lineSeparator() + EXPECTED_VALUE
+                + expectedValue + System.lineSeparator() + PASSED_VALUE + passedValue;
     }
 
     public static HyracksDataException suppressIntoHyracksDataException(HyracksDataException hde, Throwable th) {

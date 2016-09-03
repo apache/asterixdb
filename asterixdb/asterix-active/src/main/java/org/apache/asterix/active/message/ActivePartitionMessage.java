@@ -20,9 +20,12 @@ package org.apache.asterix.active.message;
 
 import java.io.Serializable;
 
+import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.service.IControllerService;
 
 public class ActivePartitionMessage extends AbstractApplicationMessage {
 
@@ -45,11 +48,6 @@ public class ActivePartitionMessage extends AbstractApplicationMessage {
         this.payload = payload;
     }
 
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.ACTIVE_ENTITY_TO_CC_MESSAGE;
-    }
-
     public ActiveRuntimeId getActiveRuntimeId() {
         return activeRuntimeId;
     }
@@ -64,5 +62,15 @@ public class ActivePartitionMessage extends AbstractApplicationMessage {
 
     public byte getEvent() {
         return event;
+    }
+
+    @Override
+    public void handle(IControllerService cs) throws HyracksDataException {
+        ActiveLifecycleListener.INSTANCE.receive(this);
+    }
+
+    @Override
+    public String type() {
+        return "ACTIVE_ENTITY_TO_CC_MESSAGE";
     }
 }

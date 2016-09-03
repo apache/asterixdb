@@ -36,7 +36,7 @@ import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -92,7 +92,7 @@ public class FeedWorkCollection {
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
                     IStatementExecutor translator = qtFactory.create(statements, pc, compilationProvider);
-                    translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                    translator.compileAndExecute(AsterixAppContextInfo.INSTANCE.getHcc(), null,
                             QueryTranslator.ResultDelivery.SYNC);
                     if (LOGGER.isEnabledFor(Level.INFO)) {
                         LOGGER.info("Submitted connection requests for execution: " + request);

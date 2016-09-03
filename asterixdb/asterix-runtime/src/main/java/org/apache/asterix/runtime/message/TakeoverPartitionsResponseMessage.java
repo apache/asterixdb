@@ -16,7 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.runtime.message;
+
+import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.service.IControllerService;
 
 public class TakeoverPartitionsResponseMessage extends AbstractApplicationMessage {
 
@@ -31,11 +36,6 @@ public class TakeoverPartitionsResponseMessage extends AbstractApplicationMessag
         this.partitions = partitionsToTakeover;
     }
 
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.TAKEOVER_PARTITIONS_RESPONSE;
-    }
-
     public Integer[] getPartitions() {
         return partitions;
     }
@@ -46,5 +46,15 @@ public class TakeoverPartitionsResponseMessage extends AbstractApplicationMessag
 
     public long getRequestId() {
         return requestId;
+    }
+
+    @Override
+    public void handle(IControllerService cs) throws HyracksDataException {
+        AsterixClusterProperties.INSTANCE.processPartitionTakeoverResponse(this);
+    }
+
+    @Override
+    public String type() {
+        return "TAKEOVER_PARTITIONS_RESPONSE";
     }
 }

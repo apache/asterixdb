@@ -20,8 +20,8 @@ package org.apache.asterix.metadata.api;
 
 import java.util.List;
 
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.metadata.bootstrap.MetadataIndex;
-import org.apache.asterix.metadata.bootstrap.MetadataIndexImmutableProperties;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 

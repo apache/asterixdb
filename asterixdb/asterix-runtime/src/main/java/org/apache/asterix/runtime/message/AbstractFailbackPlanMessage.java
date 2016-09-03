@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.asterix.runtime.message;
 
-import java.util.Set;
+import org.apache.asterix.common.messaging.AbstractApplicationMessage;
 
-public class PreparePartitionsFailbackResponseMessage extends AbstractFailbackPlanMessage {
+public abstract class AbstractFailbackPlanMessage extends AbstractApplicationMessage {
 
     private static final long serialVersionUID = 1L;
-    private final Set<Integer> partitions;
+    protected final long planId;
+    protected final int requestId;
 
-    public PreparePartitionsFailbackResponseMessage(long planId, int requestId, Set<Integer> partitions) {
-        super(planId, requestId);
-        this.partitions = partitions;
+    public AbstractFailbackPlanMessage(long planId, int requestId) {
+        this.planId = planId;
+        this.requestId = requestId;
     }
 
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.PREPARE_PARTITIONS_FAILBACK_RESPONSE;
+    public long getPlanId() {
+        return planId;
     }
 
-    public Set<Integer> getPartitions() {
-        return partitions;
+    public int getRequestId() {
+        return requestId;
     }
 }

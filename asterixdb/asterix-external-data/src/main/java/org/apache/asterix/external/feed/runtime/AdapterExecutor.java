@@ -19,7 +19,6 @@
 package org.apache.asterix.external.feed.runtime;
 
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
-import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.log4j.Logger;
 
@@ -58,12 +57,7 @@ public class AdapterExecutor implements Runnable {
                 continueIngestion = false;
             } catch (Exception e) {
                 LOGGER.error("Exception during feed ingestion ", e);
-                // Check if the adapter wants to continue ingestion
-                if (ExternalDataExceptionUtils.isResolvable(e)) {
-                    continueIngestion = adapter.handleException(e);
-                } else {
-                    continueIngestion = false;
-                }
+                continueIngestion = adapter.handleException(e);
                 failedIngestion = !continueIngestion;
             }
         }

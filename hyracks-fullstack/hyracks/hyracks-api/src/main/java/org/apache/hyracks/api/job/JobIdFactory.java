@@ -16,22 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging;
+package org.apache.hyracks.api.job;
 
-public class ReportMaxResourceIdMessage extends AbstractApplicationMessage {
-    private static final long serialVersionUID = 1L;
-    public long maxResourceId;
+public class JobIdFactory {
+    private long id = 0;
 
-    @Override
-    public ApplicationMessageType getMessageType() {
-        return ApplicationMessageType.REPORT_MAX_RESOURCE_ID_RESPONSE;
-    }
-
-    public long getMaxResourceId() {
-        return maxResourceId;
-    }
-
-    public void setMaxResourceId(long maxResourceId) {
-        this.maxResourceId = maxResourceId;
+    public JobId create() {
+        return new JobId(id++);
     }
 }
