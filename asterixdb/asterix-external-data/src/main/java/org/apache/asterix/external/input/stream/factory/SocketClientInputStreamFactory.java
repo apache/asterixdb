@@ -33,6 +33,7 @@ import org.apache.asterix.external.input.stream.SocketClientInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -44,7 +45,7 @@ public class SocketClientInputStreamFactory implements IInputStreamFactory {
     private List<Pair<String, Integer>> sockets;
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, sockets.size());
         return clusterLocations;
     }

@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
@@ -36,6 +35,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -62,7 +62,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, 1);
         return clusterLocations;
     }
@@ -78,9 +78,11 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 ADMDataParser parser;
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;
-                IAsterixPropertiesProvider propertiesProvider = (IAsterixPropertiesProvider) ((NodeControllerService) ctx
-                        .getJobletContext().getApplicationContext().getControllerService()).getApplicationContext()
-                                .getApplicationObject();
+                IAsterixPropertiesProvider propertiesProvider =
+                        (IAsterixPropertiesProvider) ((NodeControllerService) ctx
+                                .getJobletContext().getApplicationContext().getControllerService())
+                                        .getApplicationContext()
+                                        .getApplicationObject();
                 ClusterPartition nodePartition = propertiesProvider.getMetadataProperties().getNodePartitions()
                         .get(nodeId)[0];
                 parser = new ADMDataParser(outputType, true);

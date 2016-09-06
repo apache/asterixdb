@@ -19,6 +19,8 @@
 package org.apache.asterix.lang.common.util;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
@@ -39,6 +41,7 @@ import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -68,7 +71,7 @@ public class LangRecordParseUtil {
                 parseLiteral((LiteralExpr) expr, serialized);
                 break;
             case RECORD_CONSTRUCTOR_EXPRESSION:
-                parseRecord((RecordConstructor) expr, serialized, true);
+                parseRecord((RecordConstructor) expr, serialized, true, Collections.emptyList());
                 break;
             case LIST_CONSTRUCTOR_EXPRESSION:
                 parseList((ListConstructor) expr, serialized);
@@ -82,7 +85,8 @@ public class LangRecordParseUtil {
         }
     }
 
-    public static void parseRecord(RecordConstructor recordValue, ArrayBackedValueStorage serialized, boolean tagged)
+    public static void parseRecord(RecordConstructor recordValue, ArrayBackedValueStorage serialized, boolean tagged,
+            List<Pair<String, String>> defaults)
             throws HyracksDataException {
         AMutableString fieldNameString = new AMutableString(null);
         ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
@@ -91,28 +95,46 @@ public class LangRecordParseUtil {
         recordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
         recordBuilder.init();
         List<FieldBinding> fbList = recordValue.getFbList();
+        HashSet<String> fieldNames = new HashSet<>();
         for (FieldBinding fb : fbList) {
             fieldName.reset();
             fieldValue.reset();
             // get key
-            Expression keyExpr = fb.getLeftExpr();
-            if (keyExpr.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
-                        "JSON key can only be of type %1$s", Expression.Kind.LITERAL_EXPRESSION);
+            fieldNameString.setValue(exprToStringLiteral(fb.getLeftExpr()).getStringValue());
+            if (!fieldNames.add(fieldNameString.getStringValue())) {
+                throw new HyracksDataException(
+                        "Field " + fieldNameString.getStringValue() + " was specified multiple times");
             }
-            LiteralExpr keyLiteralExpr = (LiteralExpr) keyExpr;
-            Literal keyLiteral = keyLiteralExpr.getValue();
-            if (keyLiteral.getLiteralType() != Literal.Type.STRING) {
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
-                        "JSON key can only be of type %1$s", Literal.Type.STRING);
-            }
-            fieldNameString.setValue(keyLiteral.getStringValue());
             stringSerde.serialize(fieldNameString, fieldName.getDataOutput());
             // get value
             parseExpression(fb.getRightExpr(), fieldValue);
             recordBuilder.addField(fieldName, fieldValue);
         }
+        // defaults
+        for (Pair<String, String> kv : defaults) {
+            if (!fieldNames.contains(kv.first)) {
+                fieldName.reset();
+                fieldValue.reset();
+                stringSerde.serialize(new AString(kv.first), fieldName.getDataOutput());
+                stringSerde.serialize(new AString(kv.second), fieldValue.getDataOutput());
+                recordBuilder.addField(fieldName, fieldValue);
+            }
+        }
         recordBuilder.write(serialized.getDataOutput(), tagged);
+    }
+
+    public static Literal exprToStringLiteral(Expression expr) throws HyracksDataException {
+        if (expr.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
+            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+                    "Expected expression can only be of type %1$s", Expression.Kind.LITERAL_EXPRESSION);
+        }
+        LiteralExpr keyLiteralExpr = (LiteralExpr) expr;
+        Literal keyLiteral = keyLiteralExpr.getValue();
+        if (keyLiteral.getLiteralType() != Literal.Type.STRING) {
+            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+                    "Expected Literal can only be of type %1$s", Literal.Type.STRING);
+        }
+        return keyLiteral;
     }
 
     private static void parseList(ListConstructor valueExpr, ArrayBackedValueStorage serialized)

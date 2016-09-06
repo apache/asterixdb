@@ -31,11 +31,11 @@ import org.apache.asterix.external.util.TwitterUtil;
 import org.apache.asterix.external.util.TwitterUtil.AuthenticationConstants;
 import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import twitter4j.FilterQuery;
-import twitter4j.Status;
 
 public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> {
 
@@ -55,7 +55,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, INTAKE_CARDINALITY);
         return clusterLocations;
     }

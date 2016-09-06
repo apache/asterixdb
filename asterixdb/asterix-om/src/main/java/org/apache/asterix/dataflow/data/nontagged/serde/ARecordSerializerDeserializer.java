@@ -21,6 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
@@ -39,6 +40,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -205,6 +207,26 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             ISerializerDeserializer valueSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(record.getType().getFieldTypes()[i]);
             valueSerde.serialize(record.getValueByPos(i), fieldValueBytes.getDataOutput());
+            confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
+        }
+        confRecordBuilder.write(dataOutput, writeTypeTag);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void serializeSimpleSchemalessRecord(List<Pair<String, String>> record, DataOutput dataOutput,
+            boolean writeTypeTag)
+            throws HyracksDataException {
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
+        RecordBuilder confRecordBuilder = new RecordBuilder();
+        confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+        ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
+        ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
+        for (int i = 0; i < record.size(); i++) {
+            fieldValueBytes.reset();
+            fieldNameBytes.reset();
+            stringSerde.serialize(new AString(record.get(i).first), fieldNameBytes.getDataOutput());
+            stringSerde.serialize(new AString(record.get(i).second), fieldValueBytes.getDataOutput());
             confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
         }
         confRecordBuilder.write(dataOutput, writeTypeTag);

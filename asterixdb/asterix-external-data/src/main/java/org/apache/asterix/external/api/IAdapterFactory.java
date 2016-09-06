@@ -21,10 +21,10 @@ package org.apache.asterix.external.api;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -52,8 +52,12 @@ public interface IAdapterFactory extends Serializable {
      * constraint can be expressed as a node IP address or a node controller id.
      * In the former case, the IP address is translated to a node controller id
      * running on the node with the given IP address.
+     *
+     * @throws AlgebricksException
+     * @throws HyracksDataException
      */
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException;
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
+            throws HyracksDataException, AlgebricksException;
 
     /**
      * Creates an instance of IDatasourceAdapter.
@@ -68,9 +72,11 @@ public interface IAdapterFactory extends Serializable {
     /**
      * @param libraryManager
      * @param configuration
-     * @throws Exception
+     * @throws AlgebricksException
+     * @throws HyracksDataException
      */
-    public void configure(ILibraryManager libraryManager, Map<String, String> configuration) throws AsterixException;
+    public void configure(ILibraryManager libraryManager, Map<String, String> configuration)
+            throws HyracksDataException, AlgebricksException;
 
     public void setOutputType(ARecordType outputType);
 

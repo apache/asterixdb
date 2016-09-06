@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
@@ -45,6 +44,7 @@ import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
@@ -75,7 +75,8 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
+            throws HyracksDataException, AlgebricksException {
         return dataSourceFactory.getPartitionConstraint();
     }
 
@@ -89,7 +90,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
                 .getApplicationContext().getApplicationObject();
         try {
             restoreExternalObjects(runtimeCtx.getLibraryManager());
-        } catch (AsterixException e) {
+        } catch (Exception e) {
             throw new HyracksDataException(e);
         }
         if (isFeed) {
@@ -107,7 +108,8 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         }
     }
 
-    private void restoreExternalObjects(ILibraryManager libraryManager) throws AsterixException {
+    private void restoreExternalObjects(ILibraryManager libraryManager)
+            throws HyracksDataException, AlgebricksException {
         if (dataSourceFactory == null) {
             dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(libraryManager, configuration);
             // create and configure parser factory
@@ -126,7 +128,8 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     }
 
     @Override
-    public void configure(ILibraryManager libraryManager, Map<String, String> configuration) throws AsterixException {
+    public void configure(ILibraryManager libraryManager, Map<String, String> configuration)
+            throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
         ExternalDataUtils.validateDataSourceParameters(configuration);
         dataSourceFactory = DatasourceFactoryProvider.getExternalDataSourceFactory(libraryManager, configuration);
@@ -144,7 +147,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         nullifyExternalObjects();
     }
 
-    private void configureFeedLogManager() throws AsterixException {
+    private void configureFeedLogManager() throws HyracksDataException, AlgebricksException {
         this.isFeed = ExternalDataUtils.isFeed(configuration);
         if (isFeed) {
             feedLogFileSplits = FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),

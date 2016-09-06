@@ -21,7 +21,6 @@ package org.apache.asterix.external.provider;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
@@ -30,7 +29,9 @@ import org.apache.asterix.external.api.IIndexingAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class represents the entry point to all things adapters
@@ -39,7 +40,8 @@ public class AdapterFactoryProvider {
 
     // Adapters
     public static IAdapterFactory getAdapterFactory(ILibraryManager libraryManager, String adapterName,
-            Map<String, String> configuration, ARecordType itemType, ARecordType metaType) throws AsterixException {
+            Map<String, String> configuration, ARecordType itemType, ARecordType metaType)
+            throws HyracksDataException, AlgebricksException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(itemType);
@@ -51,7 +53,7 @@ public class AdapterFactoryProvider {
     // Indexing Adapters
     public static IIndexingAdapterFactory getIndexingAdapterFactory(ILibraryManager libraryManager, String adapterName,
             Map<String, String> configuration, ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp,
-            ARecordType metaType) throws AsterixException {
+            ARecordType metaType) throws HyracksDataException, AlgebricksException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(itemType);
@@ -64,7 +66,8 @@ public class AdapterFactoryProvider {
     // Lookup Adapters
     public static LookupAdapterFactory<?> getLookupAdapterFactory(ILibraryManager libraryManager,
             Map<String, String> configuration, ARecordType recordType, int[] ridFields, boolean retainInput,
-            boolean retainMissing, IMissingWriterFactory missingWriterFactory) throws AsterixException {
+            boolean retainMissing, IMissingWriterFactory missingWriterFactory)
+            throws HyracksDataException, AlgebricksException {
         LookupAdapterFactory<?> adapterFactory = new LookupAdapterFactory<>(recordType, ridFields, retainInput,
                 retainMissing, missingWriterFactory);
         adapterFactory.configure(libraryManager, configuration);

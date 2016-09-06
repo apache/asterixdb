@@ -28,6 +28,7 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -45,7 +46,7 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImp
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         int count = urls.size();
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, count);
         return clusterLocations;
