@@ -31,4 +31,6 @@ public interface IMergeJoiner {
 
     void setFrame(int partition, ByteBuffer buffer);
 
+    void closeInput(int partition) throws HyracksDataException;
+
 }

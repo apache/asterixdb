@@ -69,7 +69,7 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
         ipLeft.getEnd(endLeft);
         ipRight.getStart(startRight);
-        return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, startRight) >= 0;
+        return ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), endLeft, startRight) > 0;
     }
 
     @Override
@@ -79,7 +79,7 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         IntervalJoinUtil.getIntervalPointable(accessorRight, idRight, tvp, ipRight);
         ipLeft.getStart(startLeft);
         ipRight.getEnd(endRight);
-        return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0);
+        return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) < 0);
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class AbstractIntervalMergeJoinChecker implements IIntervalMerge
         IntervalJoinUtil.getIntervalPointable(accessorRight, rightTupleIndex, idRight, tvp, ipRight);
         ipLeft.getStart(startLeft);
         ipRight.getEnd(endRight);
-        return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) <= 0);
+        return !(ch.compare(ipLeft.getTypeTag(), ipRight.getTypeTag(), startLeft, endRight) < 0);
     }
 
     @Override

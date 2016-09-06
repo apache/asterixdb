@@ -34,6 +34,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.join.MergeBranchStatus.Stage;
 
 /**
  * The merge join is made up of two operators: left and right.
@@ -105,6 +106,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             private final RecordDescriptor leftRd;
             private MergeJoinTaskState state;
             private boolean first = true;
+            int count = 0;
 
             public LeftJoinerOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
                 this.ctx = ctx;
@@ -141,6 +143,8 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 locks.getLock(partition).lock();
+
+                count++;
                 if (first) {
                     state.status.branch[LEFT_ACTIVITY_ID].setStageData();
                     first = false;
@@ -171,6 +175,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     if (state.failed) {
                         writer.fail();
                     } else {
+                        state.joiner.closeInput(LEFT_ACTIVITY_ID);
                         state.joiner.processMergeUsingLeftTuple(writer);
                         state.joiner.closeResult(writer);
                         writer.close();
@@ -180,6 +185,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 } finally {
                     locks.getLock(partition).unlock();
                 }
+//                System.err.println("Left next calls: " + count);
             }
         }
     }
@@ -188,7 +194,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
         private static final long serialVersionUID = 1L;
 
         private final ActivityId joinAid;
-        private MergeJoinLocks locks;
+        private final MergeJoinLocks locks;
 
         public RightDataActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
             super(id);
@@ -202,8 +208,8 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 throws HyracksDataException {
             locks.setPartitions(nPartitions);
             RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            final IMergeJoinChecker mjc = mergeJoinCheckerFactory.createMergeJoinChecker(leftKeys, rightKeys,
-                    partition, ctx);
+            final IMergeJoinChecker mjc = mergeJoinCheckerFactory.createMergeJoinChecker(leftKeys, rightKeys, partition,
+                    ctx);
             return new RightDataOperator(ctx, partition, inRecordDesc, mjc);
         }
 
@@ -215,6 +221,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             private final IMergeJoinChecker mjc;
             private MergeJoinTaskState state;
             private boolean first = true;
+            int count = 0;
 
             public RightDataOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc,
                     IMergeJoinChecker mjc) {
@@ -250,12 +257,14 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 locks.getLock(partition).lock();
+                count++;
                 if (first) {
                     state.status.branch[RIGHT_ACTIVITY_ID].setStageData();
                     first = false;
                 }
                 try {
-                    while (!state.status.continueRightLoad && state.status.branch[LEFT_ACTIVITY_ID].hasMore()) {
+                    while (!state.status.continueRightLoad
+                            && state.status.branch[LEFT_ACTIVITY_ID].getStatus() != Stage.CLOSED) {
                         // Wait for the state to request right frame unless left has finished.
                         locks.getRight(partition).await();
                     }
@@ -289,6 +298,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 } finally {
                     locks.getLock(partition).unlock();
                 }
+//                System.err.println("Right next calls: " + count);
             }
         }
     }

@@ -62,6 +62,7 @@ public class NestedLoopJoin {
     private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
     private BufferInfo tempInfo = new BufferInfo(null, -1, -1);
 
+    private final int partition;
     private long joinComparisonCount = 0;
     private long joinResultCount = 0;
     private long spillWriteCount = 0;
@@ -104,6 +105,8 @@ public class NestedLoopJoin {
                 .createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
         runFileWriter = new RunFileWriter(file, ctx.getIOManager());
         runFileWriter.open();
+
+        partition = ctx.getTaskAttemptId().getTaskId().getPartition();
     }
 
     public void cache(ByteBuffer buffer) throws HyracksDataException {
@@ -202,8 +205,9 @@ public class NestedLoopJoin {
         appender.write(writer, true);
 
         if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("NestedLoopJoin statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
-                    + " results, " + spillWriteCount + " frames written, " + spillReadCount + " frames read.");
+            LOGGER.warning("NestedLoopJoin statitics: " + partition + " partition, " + joinComparisonCount
+                    + " comparisons, " + joinResultCount + " results, " + spillWriteCount + " frames written, "
+                    + spillReadCount + " frames read.");
         }
     }
 

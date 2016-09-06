@@ -48,6 +48,7 @@ public class RunFileStream {
     private long runFileCounter = 0;
     private long readCount = 0;
     private long writeCount = 0;
+    private long tupleCount = 0;
 
     public RunFileStream(IHyracksTaskContext ctx, String key, IRunFileStreamStatus status) throws HyracksDataException {
         this.ctx = ctx;
@@ -56,6 +57,10 @@ public class RunFileStream {
 
         runFileBuffer = new VSizeFrame(ctx);
         runFileAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+    }
+
+    public long getFileCount() {
+        return runFileCounter;
     }
 
     public long getReadCount() {
@@ -67,8 +72,6 @@ public class RunFileStream {
     }
 
     public void startRunFile() throws HyracksDataException {
-        readCount = 0;
-        writeCount = 0;
         runFileCounter++;
 
         status.setRunFileWriting(true);
@@ -89,7 +92,9 @@ public class RunFileStream {
             runFileAppender.write(runFileWriter, true);
             writeCount++;
             runFileAppender.append(accessor, idx);
+            tupleCount = 0;
         }
+        tupleCount++;
     }
 
     public void openRunFile(ITupleAccessor accessor) throws HyracksDataException {

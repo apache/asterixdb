@@ -60,6 +60,7 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
 
     private final int partition;
     private final MergeJoinLocks locks;
+    protected long[] frameCounts = { 0, 0 };
 
     public AbstractMergeJoiner(IHyracksTaskContext ctx, int partition, MergeStatus status, MergeJoinLocks locks,
             RecordDescriptor leftRd, RecordDescriptor rightRd) throws HyracksDataException {
@@ -98,12 +99,13 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         return TupleStatus.LOADED;
     }
 
-    protected TupleStatus loadMemoryTuple(int joinId) {
+    protected TupleStatus loadMemoryTuple(int branch) {
         TupleStatus loaded;
-        if (inputAccessor[joinId] != null && inputAccessor[joinId].exists()) {
+        if (inputAccessor[branch] != null && inputAccessor[branch].exists()) {
             // Still processing frame.
+            int test = inputAccessor[branch].getTupleCount();
             loaded = TupleStatus.LOADED;
-        } else if (status.branch[joinId].hasMore()) {
+        } else if (status.branch[branch].hasMore()) {
             loaded = TupleStatus.UNKNOWN;
         } else {
             // No more frames or tuples to process.
@@ -113,14 +115,14 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
     }
 
     @Override
-    public void setFrame(int partition, ByteBuffer buffer) {
-        inputBuffer[partition].clear();
-        if (inputBuffer[partition].capacity() < buffer.capacity()) {
-            inputBuffer[partition].limit(buffer.capacity());
+    public void setFrame(int branch, ByteBuffer buffer) {
+        inputBuffer[branch].clear();
+        if (inputBuffer[branch].capacity() < buffer.capacity()) {
+            inputBuffer[branch].limit(buffer.capacity());
         }
-        inputBuffer[partition].put(buffer.array(), 0, buffer.capacity());
-        inputAccessor[partition].reset(inputBuffer[partition]);
-        inputAccessor[partition].next();
+        inputBuffer[branch].put(buffer.array(), 0, buffer.capacity());
+        inputAccessor[branch].reset(inputBuffer[branch]);
+        inputAccessor[branch].next();
+        frameCounts[branch]++;
     }
-
 }
