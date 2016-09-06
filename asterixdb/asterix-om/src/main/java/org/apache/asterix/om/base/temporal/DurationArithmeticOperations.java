@@ -23,18 +23,24 @@ package org.apache.asterix.om.base.temporal;
  */
 public class DurationArithmeticOperations {
 
-    private final static GregorianCalendarSystem calSystem = GregorianCalendarSystem.getInstance();
+    private static final GregorianCalendarSystem GREG_CAL = GregorianCalendarSystem.getInstance();
+
+    private DurationArithmeticOperations() {
+    }
 
     /**
      * Add a duration (with yearMonth and dayTime) onto a time point. The algorithm works as described in
      * <a
      * href="http://www.w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes">"XML: adding durations to dateTimes"</a>.
      * <p/>
-     * The basic algorithm is like this: duration is applied to the time point as two separated fields: year-month field and day-time field. Year-month field is applied firstly by reserving the correct day within the month's range (for example add 1M to 03-31 will return 04-30). Then day-time field is applied.
+     * The basic algorithm is like this: duration is applied to the time point as two separated fields: year-month
+     * field and day-time field. Year-month field is applied firstly by reserving the correct day within the month's
+     * range (for example add 1M to 03-31 will return 04-30). Then day-time field is applied.
      * <p/>
      *
      * @param pointChronon
-     *            The time instance where the duration will be added, represented as the milliseconds since the anchored time (00:00:00 for time type, 1970-01-01T00:00:00Z for datetime and date types).
+     *            The time instance where the duration will be added, represented as the milliseconds since the
+     *            anchored time (00:00:00 for time type, 1970-01-01T00:00:00Z for datetime and date types).
      * @param yearMonthDuration
      *            The year-month-duration to be added
      * @param dayTimeDuration
@@ -54,19 +60,19 @@ public class DurationArithmeticOperations {
             return rtnChronon;
         }
 
-        int year = calSystem.getYear(pointChronon);
-        int month = calSystem.getMonthOfYear(pointChronon, year);
-        int day = calSystem.getDayOfMonthYear(pointChronon, year, month);
-        int hour = calSystem.getHourOfDay(pointChronon);
-        int min = calSystem.getMinOfHour(pointChronon);
-        int sec = calSystem.getSecOfMin(pointChronon);
-        int ms = calSystem.getMillisOfSec(pointChronon);
+        int year = GREG_CAL.getYear(pointChronon);
+        int month = GREG_CAL.getMonthOfYear(pointChronon, year);
+        int day = GREG_CAL.getDayOfMonthYear(pointChronon, year, month);
+        int hour = GREG_CAL.getHourOfDay(pointChronon);
+        int min = GREG_CAL.getMinOfHour(pointChronon);
+        int sec = GREG_CAL.getSecOfMin(pointChronon);
+        int ms = GREG_CAL.getMillisOfSec(pointChronon);
 
         // Apply the year-month duration
         int carry = yearMonthDuration / 12;
         month += (yearMonthDuration % 12);
 
-        if (month < 0) {
+        if (month < 1) {
             month += 12;
             carry -= 1;
         } else if (month > 12) {
@@ -76,7 +82,7 @@ public class DurationArithmeticOperations {
 
         year += carry;
 
-        boolean isLeapYear = calSystem.isLeapYear(year);
+        boolean isLeapYear = GREG_CAL.isLeapYear(year);
 
         if (isLeapYear) {
             if (day > GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month - 1]) {
@@ -88,7 +94,7 @@ public class DurationArithmeticOperations {
             }
         }
 
-        return calSystem.getChronon(year, month, day, hour, min, sec, ms, 0) + dayTimeDuration;
+        return GREG_CAL.getChronon(year, month, day, hour, min, sec, ms, 0) + dayTimeDuration;
     }
 
 }
