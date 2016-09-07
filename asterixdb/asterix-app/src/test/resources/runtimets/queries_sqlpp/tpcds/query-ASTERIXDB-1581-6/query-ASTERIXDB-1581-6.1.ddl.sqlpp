@@ -1,0 +1,82 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+drop dataverse tpcds if exists;
+create dataverse tpcds;
+
+use tpcds;
+
+create type tpcds.store_sales_type as closed {
+    ss_sold_date_sk:           int64?,
+    ss_sold_time_sk:           int64?,
+    ss_item_sk:                int64,
+    ss_customer_sk:            int64?,
+    ss_cdemo_sk:               int64?,
+    ss_hdemo_sk:               int64?,
+    ss_addr_sk:                int64?,
+    ss_store_sk:               int64?,
+    ss_promo_sk:               int64?,
+    ss_ticket_number:          int64,
+    ss_quantity:               int64?,
+    ss_wholesale_cost:         double?,
+    ss_list_price:             double?,
+    ss_sales_price:            double?,
+    ss_ext_discount_amt:       double?,
+    ss_ext_sales_price:        double?,
+    ss_ext_wholesale_cost:     double?,
+    ss_ext_list_price:         double?,
+    ss_ext_tax:                double?,
+    ss_coupon_amt:             double?,
+    ss_net_paid:               double?,
+    ss_net_paid_inc_tax:       double?,
+    ss_net_profit:             double?
+}
+
+
+create type tpcds.item_type as closed {
+    i_item_sk:                 int64,
+    i_item_id:                 string,
+    i_rec_start_date:          string?,
+    i_rec_end_date:            string?,
+    i_item_desc:               string?,
+    i_current_price:           double?,
+    i_wholesale_cost:          double?,
+    i_brand_id:                int64? ,
+    i_brand:                   string?,
+    i_class_id:                int64? ,
+    i_class:                   string?,
+    i_category_id:             int64? ,
+    i_category:                string?,
+    i_manufact_id:             int64? ,
+    i_manufact:                string?,
+    i_size:                    string?,
+    i_formulation:             string?,
+    i_color:                   string?,
+    i_units:                   string?,
+    i_container:               string?,
+    i_manager_id:              int64?,
+    i_product_name:            string?
+}
+
+create dataset store_sales (store_sales_type)
+primary key ss_item_sk, ss_ticket_number;
+
+create dataset item (item_type)
+primary key i_item_sk;

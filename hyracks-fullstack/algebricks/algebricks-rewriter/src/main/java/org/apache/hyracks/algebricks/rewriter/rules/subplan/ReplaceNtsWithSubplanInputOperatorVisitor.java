@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +79,7 @@ class ReplaceNtsWithSubplanInputOperatorVisitor implements IQueryOperatorVisitor
 
     // The map that maps the input variables to the subplan to their deep-copied
     // variables.
-    private final Map<LogicalVariable, LogicalVariable> varMap = new HashMap<>();
+    private final LinkedHashMap<LogicalVariable, LogicalVariable> varMap = new LinkedHashMap<>();
 
     // Whether the original copy has been used.
     private boolean isOriginalCopyUsed = false;

@@ -263,9 +263,14 @@ public class OperatorPropertiesUtil {
         return false;
     }
 
-    public static boolean isCardinalityOne(ILogicalOperator operator) throws AlgebricksException {
+    public static boolean isCardinalityExactOne(ILogicalOperator operator) throws AlgebricksException {
         CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
         return operator.accept(visitor, null) == 1L;
+    }
+
+    public static boolean isCardinalityZeroOrOne(ILogicalOperator operator) throws AlgebricksException {
+        CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
+        return operator.accept(visitor, null) <= 1;
     }
 
     /**

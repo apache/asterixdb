@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public interface IDataSource<T> {
     public T getId();
@@ -34,4 +35,6 @@ public interface IDataSource<T> {
 
     // https://issues.apache.org/jira/browse/ASTERIXDB-1619
     public boolean isScanAccessPathALeaf();
+
+    public INodeDomain getDomain();
 }

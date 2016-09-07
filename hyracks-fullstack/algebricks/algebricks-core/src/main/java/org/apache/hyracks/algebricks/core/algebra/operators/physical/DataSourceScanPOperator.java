@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -34,6 +35,12 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceProperties
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
+import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 
@@ -71,6 +78,24 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         DataSourceScanOperator dssOp = (DataSourceScanOperator) op;
         IDataSourcePropertiesProvider dspp = dataSource.getPropertiesProvider();
         deliveredProperties = dspp.computePropertiesVector(dssOp.getVariables());
+    }
+
+    @Override
+    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+        if (op.getInputs().isEmpty()) {
+            return emptyUnaryRequirements();
+        }
+        ILogicalOperator childOp = op.getInputs().get(0).getValue();
+        // Empty tuple source is a special case that can be partitioned in the same way as the data scan.
+        if (childOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            return emptyUnaryRequirements();
+        }
+        INodeDomain domain = dataSource.getDomain();
+        return new PhysicalRequirements(
+                new StructuralPropertiesVector[] {
+                        new StructuralPropertiesVector(new BroadcastPartitioningProperty(domain), null) },
+                IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 
     @SuppressWarnings("unchecked")

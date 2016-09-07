@@ -23,10 +23,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AString;
@@ -66,7 +67,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -78,6 +78,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -135,7 +136,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
     // Maps live variables at <code>subplanInputOperator</code> to variables in
     // the flattened nested plan.
-    private final Map<LogicalVariable, LogicalVariable> subplanInputVarToCurrentVarMap = new HashMap<>();
+    private final LinkedHashMap<LogicalVariable, LogicalVariable> subplanInputVarToCurrentVarMap = new
+            LinkedHashMap<>();
 
     // Maps variables in the flattened nested plan to live variables at
     // <code>subplannputOperator</code>.
@@ -154,7 +156,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     /**
      * @param context
      *            the optimization context
-     * @param subplanInputOperator
+     * @param subplanOperator
      *            the input operator to the target subplan operator, which is to
      *            be inlined.
      * @throws AlgebricksException
@@ -625,8 +627,6 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
      *
      * @param op
      *            the logical operator for aggregate or running aggregate.
-     * @param keyVarsToEnforce
-     *            the set of variables that needs to preserve.
      * @return the wrapped group-by operator if {@code keyVarsToEnforce} is not
      *         empty, and {@code op} otherwise.
      * @throws AlgebricksException
@@ -637,7 +637,9 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             return op;
         }
         GroupByOperator gbyOp = new GroupByOperator();
-        for (LogicalVariable keyVar : correlatedKeyVars) {
+        // Creates a copy of correlatedKeyVars, to fix the ConcurrentModificationExcetpion in ASTERIXDB-1581.
+        List<LogicalVariable> copyOfCorrelatedKeyVars = new ArrayList<>(correlatedKeyVars);
+        for (LogicalVariable keyVar : copyOfCorrelatedKeyVars) {
             // This limits the visitor can only be applied to a nested logical
             // plan inside a Subplan operator,
             // where the keyVarsToEnforce forms a candidate key which can

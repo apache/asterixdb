@@ -18,9 +18,16 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -36,11 +43,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -58,13 +65,29 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultO
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
- * A visitor that provides the basic inference of tuple cardinalities of an
- * operator's output. There are only two cases: 1. the cardinality is one in the
- * worst case; 2. the cardinality is some unknown value.
+ * A visitor that provides the basic, static inference of tuple cardinalities of an
+ * operator's output. There are only three cases:
+ * <p/>
+ * 1. ZERO_OR_ONE: the cardinality is either zero or one.
+ * <p/>
+ * 2. ONE: the cardinality is exactly one in any case;
+ * <p/>
+ * 3. ZERO_OR_ONE_GROUP: if we group output tuples of the operator by any variable in <code>keyVariables</code>, it will
+ * result in zero or one group;
+ * <p/>
+ * 4. ONE_GROUP: if we group output tuples of the operator by any variable in <code>keyVariables</code>, it will
+ * result in exact one group;
+ * <p/>
+ * 5. the cardinality is some unknown value.
  */
 public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long, Void> {
-    private static final Long ONE = 1L;
-    private static final Long UNKNOWN = 1000L;
+    private static final long ZERO_OR_ONE = 0L;
+    private static final long ONE = 1L;
+    private static final long ZERO_OR_ONE_GROUP = 2L;
+    private static final long ONE_GROUP = 3L;
+    private static final long UNKNOWN = 1000L;
+
+    private final Set<LogicalVariable> keyVariables = new HashSet<>();
 
     @Override
     public Long visitAggregateOperator(AggregateOperator op, Void arg) throws AlgebricksException {
@@ -78,29 +101,43 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Void arg) throws AlgebricksException {
-        // Empty tuple source sends one empty tuple to kick off the pipeline.
+        // Empty tuple source operator sends an empty tuple to downstream operators.
         return ONE;
     }
 
     @Override
     public Long visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
-        return op.getInputs().get(0).getValue().accept(this, arg);
+        ILogicalOperator inputOp = op.getInputs().get(0).getValue();
+        long inputCardinality = inputOp.accept(this, arg);
+        List<LogicalVariable> gbyVar = op.getGbyVarList();
+        if (inputCardinality == ONE_GROUP && keyVariables.containsAll(gbyVar)) {
+            keyVariables.clear();
+            return ONE;
+        }
+        if (inputCardinality == ZERO_OR_ONE_GROUP && keyVariables.containsAll(gbyVar)) {
+            keyVariables.clear();
+            return ZERO_OR_ONE;
+        }
+        // ZERO_OR_ONE, ONE, ZERO_OR_ONE_GROUP, ONE_GROUP, OR UNKNOWN
+        return inputCardinality;
     }
 
     @Override
     public Long visitLimitOperator(LimitOperator op, Void arg) throws AlgebricksException {
-        // This is only a worst-case estimate
-        return op.getInputs().get(0).getValue().accept(this, arg);
+        return adjustCardinalityForTupleReductionOperator(op.getInputs().get(0).getValue().accept(this, arg));
     }
 
     @Override
     public Long visitInnerJoinOperator(InnerJoinOperator op, Void arg) throws AlgebricksException {
-        return visitJoin(op, arg);
+        // Inner join can have 0 to M * N tuples, where M is the cardinality of the left input branch
+        // and N is the cardinality of the right input branch.
+        // We only provide inference for the case the JOIN condition is TRUE.
+        return visitInnerJoin(op, arg);
     }
 
     @Override
     public Long visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Void arg) throws AlgebricksException {
-        return visitJoin(op, arg);
+        return visitLeftOuterUnnest(op, arg);
     }
 
     @Override
@@ -120,8 +157,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitSelectOperator(SelectOperator op, Void arg) throws AlgebricksException {
-        // This is only a worst-case inference.
-        return op.getInputs().get(0).getValue().accept(this, arg);
+        return adjustCardinalityForTupleReductionOperator(op.getInputs().get(0).getValue().accept(this, arg));
     }
 
     @Override
@@ -131,6 +167,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitProjectOperator(ProjectOperator op, Void arg) throws AlgebricksException {
+        keyVariables.retainAll(op.getVariables()); // Only returns live variables.
         return op.getInputs().get(0).getValue().accept(this, arg);
     }
 
@@ -176,7 +213,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void arg) throws AlgebricksException {
-        return UNKNOWN;
+        return visitLeftOuterUnnest(op, arg);
     }
 
     @Override
@@ -186,7 +223,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
-        return UNKNOWN;
+        return visitLeftOuterUnnest(op, arg);
     }
 
     @Override
@@ -239,23 +276,96 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
     public Long visitIntersectOperator(IntersectOperator op, Void arg) throws AlgebricksException {
         long cardinality = UNKNOWN;
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            Long branchCardinality = inputOpRef.getValue().accept(this, arg);
-            if (branchCardinality < cardinality) {
-                cardinality = branchCardinality;
+            long inputCardinality = inputOpRef.getValue().accept(this, arg);
+            if (inputCardinality <= ONE) {
+                return ZERO_OR_ONE;
+            }
+            if (inputCardinality == ZERO_OR_ONE_GROUP || inputCardinality == ONE_GROUP) {
+                cardinality = ZERO_OR_ONE_GROUP;
             }
         }
         return cardinality;
     }
 
-    private long visitJoin(ILogicalOperator op, Void arg) throws AlgebricksException {
-        long cardinality = 1L;
-        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            cardinality *= inputOpRef.getValue().accept(this, arg);
+    // Visits an operator that has the left outer semantics, e.g.,
+    // left outer join, left outer unnest, left outer unnest map.
+    private long visitLeftOuterUnnest(ILogicalOperator operator, Void arg) throws AlgebricksException {
+        ILogicalOperator left = operator.getInputs().get(0).getValue();
+        long leftCardinality = left.accept(this, arg);
+        if (leftCardinality == ONE) {
+            keyVariables.clear();
+            VariableUtilities.getLiveVariables(left, keyVariables);
+            return ONE_GROUP;
         }
-        if (cardinality > ONE) {
-            cardinality = UNKNOWN;
+        if (leftCardinality == ZERO_OR_ONE) {
+            keyVariables.clear();
+            VariableUtilities.getLiveVariables(left, keyVariables);
+            return ZERO_OR_ONE_GROUP;
         }
-        return cardinality;
+        // ZERO_OR_ONE_GROUP, ONE_GROUP (maintained from the left branch) or UNKNOWN.
+        return leftCardinality;
+    }
+
+    // Visits an inner join operator, particularly, deals with the case the join is a cartesian product.
+    private long visitInnerJoin(InnerJoinOperator joinOperator, Void arg) throws AlgebricksException {
+        ILogicalExpression conditionExpr = joinOperator.getCondition().getValue();
+        if (!conditionExpr.equals(ConstantExpression.TRUE)) {
+            // Currently we are not able to estimate for more general join conditions.
+            return UNKNOWN;
+        }
+        Set<LogicalVariable> newKeyVars = new HashSet<>();
+
+        // Visits the left branch and adds left key variables (if the left branch delivers one group).
+        ILogicalOperator left = joinOperator.getInputs().get(0).getValue();
+        long leftCardinality = left.accept(this, arg);
+        newKeyVars.addAll(keyVariables);
+
+        // Visits the right branch and adds right key variables (if the right branch delivers one group).
+        ILogicalOperator right = joinOperator.getInputs().get(1).getValue();
+        long rightCardinality = right.accept(this, arg);
+        newKeyVars.addAll(keyVariables);
+
+        // If any branch has carinality zero or one, the result will have cardinality zero or one.
+        if (leftCardinality == ZERO_OR_ONE && rightCardinality == ZERO_OR_ONE) {
+            return ZERO_OR_ONE;
+        }
+
+        // If both branches has cardinality one, the result for sure has cardinality one.
+        if (leftCardinality == ONE && rightCardinality == ONE) {
+            return ONE;
+        }
+
+        keyVariables.clear();
+        // If one branch has cardinality zero_or_one, the result for sure has cardinality one.
+        if (leftCardinality == ZERO_OR_ONE || rightCardinality == ZERO_OR_ONE) {
+            VariableUtilities.getLiveVariables(leftCardinality == ONE ? left : right, keyVariables);
+            return ZERO_OR_ONE_GROUP;
+        }
+
+        // If one branch has cardinality one, the result has one group.
+        if (leftCardinality == ONE || rightCardinality == ONE) {
+            VariableUtilities.getLiveVariables(leftCardinality == ONE ? left : right, keyVariables);
+            return ONE_GROUP;
+        }
+
+        // If one branch has zero or one group, the result has one zero or one group.
+        if (leftCardinality == ONE_GROUP || rightCardinality == ONE_GROUP || leftCardinality == ZERO_OR_ONE_GROUP
+                || rightCardinality == ZERO_OR_ONE_GROUP) {
+            keyVariables.addAll(newKeyVars);
+            return Math.min(leftCardinality, rightCardinality);
+        }
+        return UNKNOWN;
+    }
+
+    // For operators including SELECT and LIMIT.
+    private long adjustCardinalityForTupleReductionOperator(long inputCardinality) {
+        if (inputCardinality == ONE) {
+            return ZERO_OR_ONE;
+        }
+        if (inputCardinality == ONE_GROUP) {
+            return ZERO_OR_ONE_GROUP;
+        }
+        return inputCardinality;
     }
 
 }

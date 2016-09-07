@@ -5671,6 +5671,16 @@
   </test-group>
   <test-group name="subquery">
     <test-case FilePath="subquery">
+      <compilation-unit name="aggregate_join">
+        <output-dir compare="Text">aggregate_join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="aggregate_join_external">
+        <output-dir compare="Text">aggregate_join_external</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="gby_inline">
         <output-dir compare="Text">gby_inline</output-dir>
       </compilation-unit>
@@ -5868,6 +5878,46 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="query-ASTERIXDB-1580">
         <output-dir compare="Text">query-ASTERIXDB-1580</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581">
+        <output-dir compare="Text">query-ASTERIXDB-1581</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-2">
+        <output-dir compare="Text">query-ASTERIXDB-1581-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-3">
+        <output-dir compare="Text">query-ASTERIXDB-1581-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-4">
+        <output-dir compare="Text">query-ASTERIXDB-1581-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-5">
+        <output-dir compare="Text">query-ASTERIXDB-1581-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-6">
+        <output-dir compare="Text">query-ASTERIXDB-1581-6</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-correlated">
+          <output-dir compare="Text">query-ASTERIXDB-1581-correlated</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1581-correlated-2">
+        <output-dir compare="Text">query-ASTERIXDB-1581-2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">

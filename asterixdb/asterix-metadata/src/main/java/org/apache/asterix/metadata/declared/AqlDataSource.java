@@ -77,6 +77,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         return schemaTypes;
     }
 
+    @Override
     public INodeDomain getDomain() {
         return domain;
     }
