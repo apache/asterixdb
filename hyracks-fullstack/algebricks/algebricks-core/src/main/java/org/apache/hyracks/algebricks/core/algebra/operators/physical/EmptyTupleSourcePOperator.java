@@ -26,7 +26,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -50,8 +49,7 @@ public class EmptyTupleSourcePOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED,
-                new LinkedList<ILocalStructuralProperty>());
+        deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, new LinkedList<>());
     }
 
     @Override

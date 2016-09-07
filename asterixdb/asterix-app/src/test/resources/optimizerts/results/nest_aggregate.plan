@@ -8,7 +8,7 @@
                     {
                       -- AGGREGATE  |LOCAL|
                         -- STREAM_LIMIT  |LOCAL|
-                          -- IN_MEMORY_STABLE_SORT [$$41(ASC)]  |LOCAL|
+                          -- IN_MEMORY_STABLE_SORT [$$39(ASC)]  |LOCAL|
                             -- MICRO_PRE_CLUSTERED_GROUP_BY[$$51]  |LOCAL|
                                     {
                                       -- AGGREGATE  |LOCAL|
@@ -29,7 +29,7 @@
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$34][$$39]  |PARTITIONED|
+                            -- HYBRID_HASH_JOIN [$$34][$$40]  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- HYBRID_HASH_JOIN [$$34][$$35]  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -45,7 +45,7 @@
                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$39]  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$40]  |PARTITIONED|
                                 -- ASSIGN  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

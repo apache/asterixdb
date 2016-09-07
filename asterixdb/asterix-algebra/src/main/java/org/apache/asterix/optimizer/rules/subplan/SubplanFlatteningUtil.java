@@ -31,8 +31,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
@@ -62,7 +62,7 @@ class SubplanFlatteningUtil {
         InlineAllNtsInSubplanVisitor visitor = new InlineAllNtsInSubplanVisitor(context, subplanOp);
 
         // Rewrites the query plan.
-        ILogicalOperator topOp = subplanOp.getNestedPlans().get(0).getRoots().get(0).getValue();
+        ILogicalOperator topOp = findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0)).getValue();
         ILogicalOperator opToVisit = topOp.getInputs().get(0).getValue();
         ILogicalOperator result = opToVisit.accept(visitor, null);
         topOp.getInputs().get(0).setValue(result);
@@ -143,6 +143,54 @@ class SubplanFlatteningUtil {
     }
 
     /**
+     * Whether the query plan rooted {@code currentOp} contains a data source scan operator,
+     * with considering nested subplans.
+     *
+     * @param currentOp
+     *            the current operator
+     * @return true if {@code currentOp} contains a data source scan operator; false otherwise.
+     */
+    public static boolean containsOperatorsInternal(ILogicalOperator currentOp,
+            Set<LogicalOperatorTag> interestedOperatorTags) {
+        if (interestedOperatorTags.contains(currentOp.getOperatorTag())) {
+            return true;
+        }
+        if (currentOp.getOperatorTag() == LogicalOperatorTag.SUBPLAN
+                && containsOperators((SubplanOperator) currentOp, interestedOperatorTags)) {
+                return true;
+        }
+        for (Mutable<ILogicalOperator> childRef : currentOp.getInputs()) {
+            if (containsOperatorsInternal(childRef.getValue(), interestedOperatorTags)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Finds the lowest aggregate operator that should be put into a nested aggregation pipeline within a group-by
+     * operator.
+     * <p/>
+     * Note that neither binary input operators nor data scan can be put into a group by operator.
+     *
+     * @param currentOpRef,
+     *            the current root operator reference to look at.
+     * @return the operator reference of the lowest qualified aggregate operator.
+     */
+    public static Mutable<ILogicalOperator> findLowestAggregate(Mutable<ILogicalOperator> currentOpRef) {
+        ILogicalOperator currentOp = currentOpRef.getValue();
+        // Neither binary input operators nor data scan can be put into a group by operator.
+        if (currentOp.getInputs().size() != 1 || currentOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            return null;
+        }
+        Mutable<ILogicalOperator> childReturn = findLowestAggregate(currentOp.getInputs().get(0));
+        if (childReturn == null) {
+            return currentOp.getOperatorTag() == LogicalOperatorTag.AGGREGATE ? currentOpRef : null;
+        }
+        return childReturn;
+    }
+
+    /**
      * Determine whether a subplan could be rewritten as a join-related special case.
      * The conditions include:
      * a. there is a join (let's call it J1.) in the nested plan,
@@ -172,32 +220,6 @@ class SubplanFlatteningUtil {
             }
         }
         return new Pair<Boolean, ILogicalOperator>(true, visitor.getQualifiedNts());
-    }
-
-    /**
-     * Whether the query plan rooted {@code currentOp} contains a data source scan operator,
-     * with considering nested subplans.
-     *
-     * @param currentOp
-     *            the current operator
-     * @return true if {@code currentOp} contains a data source scan operator; false otherwise.
-     */
-    private static boolean containsOperatorsInternal(ILogicalOperator currentOp,
-            Set<LogicalOperatorTag> interestedOperatorTags) {
-        if (interestedOperatorTags.contains(currentOp.getOperatorTag())) {
-            return true;
-        }
-        if (currentOp.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-            if (containsOperators((SubplanOperator) currentOp, interestedOperatorTags)) {
-                return true;
-            }
-        }
-        for (Mutable<ILogicalOperator> childRef : currentOp.getInputs()) {
-            if (containsOperatorsInternal(childRef.getValue(), interestedOperatorTags)) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

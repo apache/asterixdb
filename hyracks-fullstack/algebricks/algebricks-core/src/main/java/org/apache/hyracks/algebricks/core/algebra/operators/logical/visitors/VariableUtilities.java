@@ -20,10 +20,11 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -111,7 +112,25 @@ public class VariableUtilities {
         substituteVariables(op, v1, v2, true, ctx);
     }
 
-    public static void substituteVariables(ILogicalOperator op, Map<LogicalVariable, LogicalVariable> varMap,
+    /**
+     * Substitute variable references inside an operator according to a variable map.
+     *
+     * @param op,
+     *            the operator for variable substitution.
+     * @param varMap,
+     *            a map that maps old variables to new variables. Note that we enforce
+     *            the map to be a LinkedHashMap so as to be able to perform recursive
+     *            variable substitution within one pass. The order of variable substitution
+     *            is the entry insertion order of the LinkedHashMap. Typically, the LinkedHashMap
+     *            is populated by recursively, bottom-up traversing of the query plan.
+     *            For example, if $1->$2 and $2->$3 are orderly inserted into the map, $1 will be
+     *            replaced by $3 in the outcome of this method call.
+     *
+     * @param ctx,
+     *            a typing context that keeps track of types of each variable.
+     * @throws AlgebricksException
+     */
+    public static void substituteVariables(ILogicalOperator op, LinkedHashMap<LogicalVariable, LogicalVariable> varMap,
             ITypingContext ctx) throws AlgebricksException {
         for (Map.Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
             VariableUtilities.substituteVariables(op, entry.getKey(), entry.getValue(), ctx);

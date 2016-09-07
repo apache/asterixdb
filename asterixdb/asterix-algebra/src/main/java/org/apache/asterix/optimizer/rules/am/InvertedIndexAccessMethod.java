@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +65,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -73,6 +73,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -589,9 +590,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // will have all primary-key and secondary-search keys replaced, but retains all other original variables.
 
         // Variable replacement map for the first copy.
-        Map<LogicalVariable, LogicalVariable> newProbeSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+        LinkedHashMap<LogicalVariable, LogicalVariable> newProbeSubTreeVarMap = new LinkedHashMap<>();
         // Variable replacement map for the second copy.
-        Map<LogicalVariable, LogicalVariable> joinInputSubTreeVarMap = new HashMap<LogicalVariable, LogicalVariable>();
+        LinkedHashMap<LogicalVariable, LogicalVariable> joinInputSubTreeVarMap = new LinkedHashMap<>();
         // Init with all live vars.
         List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(probeSubTree.getRoot(), liveVars);

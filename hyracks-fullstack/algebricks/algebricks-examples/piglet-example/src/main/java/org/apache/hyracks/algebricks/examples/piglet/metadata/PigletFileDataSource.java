@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceProperties
 import org.apache.hyracks.algebricks.core.algebra.properties.FileSplitDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
@@ -53,6 +54,12 @@ public class PigletFileDataSource implements IDataSource<String> {
                 return vec;
             }
         };
+
+    }
+
+    @Override
+    public INodeDomain getDomain() {
+        return new FileSplitDomain(fileSplits);
     }
 
     @Override

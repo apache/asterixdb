@@ -161,7 +161,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
         List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(operator, liveVars);
 
-        if (OperatorPropertiesUtil.isCardinalityOne(operator)) {
+        if (OperatorPropertiesUtil.isCardinalityZeroOrOne(operator)) {
             for (LogicalVariable liveVar : liveVars) {
                 if (freeVars.contains(liveVar)) {
                     varsWithCardinalityOne.add(liveVar);

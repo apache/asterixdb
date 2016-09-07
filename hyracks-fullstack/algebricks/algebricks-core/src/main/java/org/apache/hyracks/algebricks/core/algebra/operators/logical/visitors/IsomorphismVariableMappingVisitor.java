@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -300,10 +300,13 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapChildren(ILogicalOperator op, ILogicalOperator opArg) throws AlgebricksException {
+        if (op.getOperatorTag() != opArg.getOperatorTag()) {
+            return;
+        }
         List<Mutable<ILogicalOperator>> inputs = op.getInputs();
         List<Mutable<ILogicalOperator>> inputsArg = opArg.getInputs();
         if (inputs.size() != inputsArg.size()) {
-            throw new AlgebricksException("children are not isomoprhic");
+            return;
         }
         for (int i = 0; i < inputs.size(); i++) {
             ILogicalOperator input = inputs.get(i).getValue();
@@ -313,8 +316,11 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariables(ILogicalOperator left, ILogicalOperator right) throws AlgebricksException {
-        List<LogicalVariable> producedVarLeft = new ArrayList<LogicalVariable>();
-        List<LogicalVariable> producedVarRight = new ArrayList<LogicalVariable>();
+        if (left.getOperatorTag() != right.getOperatorTag()) {
+            return;
+        }
+        List<LogicalVariable> producedVarLeft = new ArrayList<>();
+        List<LogicalVariable> producedVarRight = new ArrayList<>();
         VariableUtilities.getProducedVariables(left, producedVarLeft);
         VariableUtilities.getProducedVariables(right, producedVarRight);
         mapVariables(producedVarLeft, producedVarRight);
@@ -334,6 +340,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
 
     private void mapVariablesForAbstractAssign(ILogicalOperator left, ILogicalOperator right)
             throws AlgebricksException {
+        if (left.getOperatorTag() != right.getOperatorTag()) {
+            return;
+        }
         AbstractAssignOperator leftOp = (AbstractAssignOperator) left;
         AbstractAssignOperator rightOp = (AbstractAssignOperator) right;
         List<LogicalVariable> producedVarLeft = new ArrayList<LogicalVariable>();
@@ -345,6 +354,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariablesForGroupBy(ILogicalOperator left, ILogicalOperator right) throws AlgebricksException {
+        if (left.getOperatorTag() != right.getOperatorTag()) {
+            return;
+        }
         GroupByOperator leftOp = (GroupByOperator) left;
         GroupByOperator rightOp = (GroupByOperator) right;
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> leftPairs = leftOp.getGroupByList();
@@ -423,6 +435,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariablesStandard(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
+        if (op.getOperatorTag() != arg.getOperatorTag()) {
+            return;
+        }
         mapChildren(op, arg);
         mapVariables(op, arg);
     }
@@ -436,6 +451,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariablesForUnion(ILogicalOperator op, ILogicalOperator arg) {
+        if (op.getOperatorTag() != arg.getOperatorTag()) {
+            return;
+        }
         UnionAllOperator union = (UnionAllOperator) op;
         UnionAllOperator unionArg = (UnionAllOperator) arg;
         mapVarTripleList(union.getVariableMappings(), unionArg.getVariableMappings());
@@ -463,6 +481,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     }
 
     private void mapVariablesForIntersect(IntersectOperator op, ILogicalOperator arg) {
+        if (op.getOperatorTag() != arg.getOperatorTag()) {
+            return;
+        }
         IntersectOperator opArg = (IntersectOperator) arg;
         if (op.getNumInput() != opArg.getNumInput()) {
             return;

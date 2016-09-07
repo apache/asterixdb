@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -69,6 +70,9 @@ public class RemoveCartesianProductWithEmptyBranchRule implements IAlgebraicRewr
         }
         Set<LogicalVariable> liveVariables = new HashSet<>();
         VariableUtilities.getLiveVariables(op, liveVariables);
-        return liveVariables.isEmpty();
+        // No variables will be populated and the cardinality does not change.
+        // If there is only one tuple from the branch, the output cardinality
+        // of the cartesian product will not be changed.
+        return liveVariables.isEmpty() && OperatorPropertiesUtil.isCardinalityExactOne(op);
     }
 }

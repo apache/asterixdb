@@ -26,14 +26,12 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -50,16 +48,14 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN
-                && op.getOperatorTag() != LogicalOperatorTag.UNNEST) {
+        ILogicalOperator op = opRef.getValue();
+        if (!isScanOrUnnest(op)) {
             return false;
         }
 
         Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
-
-        if (!(op2 instanceof AbstractScanOperator) && !descOrSelfIsSourceScan(op2)) {
+        ILogicalOperator op2 = opRef2.getValue();
+        if (!isScanOrUnnest(op2) && !descOrSelfIsSourceScan(op2)) {
             return false;
         }
         // Make sure that op does not use any variables produced by op2.
@@ -88,7 +84,7 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
                      * to check if currentOpRef holds a DataSourceScanOperator.
                      */
                     && currentOpRef.getValue().getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
-                    && descOrSelfIsSourceScan((AbstractLogicalOperator) currentOpRef.getValue())) {
+                    && descOrSelfIsSourceScan(currentOpRef.getValue())) {
                 if (opsAreIndependent(currentOpRef.getValue(), tupleSourceOpRef.getValue())) {
                     /** move down the boundary if the operator is independent of the tuple source */
                     boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
@@ -120,32 +116,57 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
             }
         }
 
+        // If the left branch has cardinality one, we do not need to rewrite the unary pipeline
+        // into a cartesian product.
+        ILogicalOperator innerBranchOperator = opRef.getValue();
+        ILogicalOperator boundaryOperator = boundaryOpRef.getValue();
+        if (OperatorPropertiesUtil.isCardinalityZeroOrOne(boundaryOperator)
+                // Note that for an external data source, the following check returns false.
+                // Thus, it does not produce absolutely correct plan for the CASE expression
+                // that contains subqueries over external datasets in THEN/ELSE branches, in
+                // the sense that if the condition is not satisfied, the corresponding THEN/ELSE
+                // branch should not be evaluated at all. Rewriting to a join will actually
+                // evaluates those branches.
+                // Fixing ASTERIXDB-1620 will ensure correctness for external datasets.
+                && !descOrSelfIsLeafSourceScan(innerBranchOperator, boundaryOperator)) {
+            return false;
+        }
+
         /** join the two independent branches */
-        InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE),
-                new MutableObject<ILogicalOperator>(boundaryOpRef.getValue()),
-                new MutableObject<ILogicalOperator>(opRef.getValue()));
+        InnerJoinOperator join = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
+                new MutableObject<>(boundaryOperator), new MutableObject<>(innerBranchOperator));
         opRef.setValue(join);
         ILogicalOperator ets = new EmptyTupleSourceOperator();
         context.computeAndSetTypeEnvironmentForOperator(ets);
         boundaryOpRef.setValue(ets);
-        context.computeAndSetTypeEnvironmentForOperator(boundaryOpRef.getValue());
-        context.computeAndSetTypeEnvironmentForOperator(opRef.getValue());
+        context.computeAndSetTypeEnvironmentForOperator(boundaryOperator);
+        context.computeAndSetTypeEnvironmentForOperator(innerBranchOperator);
         context.computeAndSetTypeEnvironmentForOperator(join);
         return true;
     }
 
-    private boolean descOrSelfIsSourceScan(AbstractLogicalOperator op2) {
-        // Disregard data source scans in a subplan.
-        if (op2.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-            return false;
-        }
-        if (op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
-                && op2.getOperatorTag() != LogicalOperatorTag.UNNEST) {
+    private boolean descOrSelfIsSourceScan(ILogicalOperator op) {
+        if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             return true;
         }
-        for (Mutable<ILogicalOperator> cRef : op2.getInputs()) {
-            AbstractLogicalOperator alo = (AbstractLogicalOperator) cRef.getValue();
-            if (descOrSelfIsSourceScan(alo)) {
+        for (Mutable<ILogicalOperator> cRef : op.getInputs()) {
+            if (descOrSelfIsSourceScan(cRef.getValue())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean descOrSelfIsLeafSourceScan(ILogicalOperator op, ILogicalOperator bottomOp) {
+        if (op == bottomOp) {
+            return false;
+        }
+        if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            DataSourceScanOperator dataSourceScanOperator = (DataSourceScanOperator) op;
+            return dataSourceScanOperator.getDataSource().isScanAccessPathALeaf();
+        }
+        for (Mutable<ILogicalOperator> cRef : op.getInputs()) {
+            if (descOrSelfIsLeafSourceScan(cRef.getValue(), bottomOp)) {
                 return true;
             }
         }
@@ -166,6 +187,11 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
             }
         }
         return true;
+    }
+
+    private boolean isScanOrUnnest(ILogicalOperator op) {
+        LogicalOperatorTag opTag = op.getOperatorTag();
+        return opTag == LogicalOperatorTag.DATASOURCESCAN || opTag == LogicalOperatorTag.UNNEST;
     }
 
 }

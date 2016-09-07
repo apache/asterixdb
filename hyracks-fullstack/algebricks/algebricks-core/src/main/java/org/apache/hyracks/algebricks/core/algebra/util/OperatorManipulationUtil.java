@@ -86,7 +86,8 @@ public class OperatorManipulationUtil {
                 AbstractLogicalOperator currentOp = op;
                 while (currentOp.getInputs().size() == 1) {
                     AbstractLogicalOperator child = (AbstractLogicalOperator) currentOp.getInputs().get(0).getValue();
-                    if (child.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
+                    // Empty tuple source is a special case that can be partitioned in the same way as the data scan.
+                    if (child.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
                         break;
                     }
                     child.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
