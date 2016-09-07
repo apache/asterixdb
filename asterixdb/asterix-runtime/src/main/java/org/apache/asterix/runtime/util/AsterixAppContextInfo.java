@@ -108,7 +108,8 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
         INSTANCE.messagingProperties = new MessagingProperties(propertiesAccessor);
-        Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
+        Logger.getLogger("org.apache.asterix").setLevel(INSTANCE.externalProperties.getLogLevel());
+        Logger.getLogger("org.apache.hyracks").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
     public boolean initialized() {

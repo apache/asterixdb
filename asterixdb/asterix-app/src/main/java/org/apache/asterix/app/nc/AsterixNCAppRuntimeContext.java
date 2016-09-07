@@ -175,7 +175,8 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
 
     @Override
     public void initialize(boolean initialRun) throws IOException, ACIDException {
-        Logger.getLogger("org.apache").setLevel(externalProperties.getLogLevel());
+        Logger.getLogger("org.apache.asterix").setLevel(externalProperties.getLogLevel());
+        Logger.getLogger("org.apache.hyracks").setLevel(externalProperties.getLogLevel());
 
         threadExecutor = new AsterixThreadExecutor(ncApplicationContext.getThreadFactory());
         fileMapManager = new AsterixFileMapManager();
