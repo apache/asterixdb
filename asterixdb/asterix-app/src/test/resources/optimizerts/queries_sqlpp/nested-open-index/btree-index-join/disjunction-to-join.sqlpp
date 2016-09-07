@@ -22,8 +22,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -40,9 +40,9 @@ create type test.TestType as
   nested : NestedTestType
 }
 
-create  table TestSet(TestType) primary key id;
+create  dataset TestSet(TestType) primary key id;
 
-create  index TestSetIndex  on TestSet (nested.idx:string) type btree enforced;
+create  index TestSetIndex  on TestSet (nested.idx:string?) type btree enforced;
 
 select element x
 from  TestSet as x

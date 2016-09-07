@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -63,28 +62,28 @@ public class NestedTupleSourcePOperator extends AbstractPhysicalOperator {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) dataSource.getValue().getInputs().get(0).getValue();
         IPhysicalPropertiesVector inheritedProps = op2.getDeliveredPhysicalProperties();
         AbstractLogicalOperator parent = (AbstractLogicalOperator) dataSource.getValue();
-        if (parent.getOperatorTag() == LogicalOperatorTag.GROUP) {
-            // The following part computes the data property regarding to each particular group.
-            // TODO(buyingyi): we need to add the original data property as well. But currently
-            // there are places assuming there is only one LocalOrderProperty and one
-            // LocalGroupingProperty delivered by an operator.
-            GroupByOperator gby = (GroupByOperator) parent;
-            List<ILocalStructuralProperty> originalLocalProperties = inheritedProps.getLocalProperties();
-            List<ILocalStructuralProperty> newLocalProperties = null;
-            if (originalLocalProperties != null) {
-                newLocalProperties = new ArrayList<ILocalStructuralProperty>();
-                for (ILocalStructuralProperty lsp : inheritedProps.getLocalProperties()) {
-                    ILocalStructuralProperty newLsp = lsp.regardToGroup(gby.getGbyVarList());
-                    if (newLsp != null) {
-                        newLocalProperties.add(newLsp);
-                    }
+        if (parent.getOperatorTag() != LogicalOperatorTag.GROUP) {
+            deliveredProperties = inheritedProps.clone();
+            return;
+        }
+        GroupByOperator gby = (GroupByOperator) parent;
+        List<ILocalStructuralProperty> originalLocalProperties = inheritedProps.getLocalProperties();
+        List<ILocalStructuralProperty> newLocalProperties = null;
+        if (originalLocalProperties != null) {
+            newLocalProperties = new ArrayList<>();
+            for (ILocalStructuralProperty lsp : originalLocalProperties) {
+                ILocalStructuralProperty groupLocalLsp = lsp.regardToGroup(gby.getGbyVarList());
+                if (groupLocalLsp != null) {
+                    // Adds the property that is satisfied in the context of a particular group.
+                    newLocalProperties.add(groupLocalLsp);
                 }
             }
-            deliveredProperties = new StructuralPropertiesVector(inheritedProps.getPartitioningProperty(),
-                    newLocalProperties);
-        } else {
-            deliveredProperties = inheritedProps.clone();
+            // Adds the original local properties as they are still maintained.
+            // The optimizer should be able to process multiple delivered local order/grouping properties.
+            newLocalProperties.addAll(originalLocalProperties);
         }
+        deliveredProperties =
+                new StructuralPropertiesVector(inheritedProps.getPartitioningProperty(), newLocalProperties);
     }
 
     @Override
@@ -99,8 +98,8 @@ public class NestedTupleSourcePOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         propagatedSchema.addAllVariables(outerPlanSchema);
         NestedTupleSourceRuntimeFactory runtime = new NestedTupleSourceRuntimeFactory();
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
-                context);
+        RecordDescriptor recDesc =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         builder.contributeMicroOperator(op, runtime, recDesc);
     }
 

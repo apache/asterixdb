@@ -25,8 +25,8 @@
  * Date            : 7th August 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -52,7 +52,7 @@ create type test.Emp as
   nested : Nested
 }
 
-create  table employeeTmp(EmpTmp) primary key id;
+create  dataset employeeTmp(EmpTmp) primary key id;
 
-create  table employee(Emp) primary key nested.id;
+create  dataset employee(Emp) primary key nested.id;
 

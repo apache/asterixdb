@@ -21,9 +21,9 @@ package org.apache.asterix.metadata.feeds;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 
 public class BuiltinFeedPolicies {
 
@@ -152,7 +152,8 @@ public class BuiltinFeedPolicies {
         policyParams.put(FeedPolicyAccessor.TIME_TRACKING, "true");
 
         String description = "AdvancedFT 100% Discard during congestion";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "AdvancedFT_Spill", description, policyParams);
+        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "AdvancedFT_Spill", description,
+                policyParams);
     }
 
     // AdvancedFT_Spill

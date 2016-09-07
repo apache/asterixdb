@@ -42,7 +42,7 @@ public abstract class AbstractComplexType implements IAType {
 
     @Override
     public boolean equals(Object object) {
-        return this.deepEqual((IAObject) object);
+        return object instanceof IAObject && deepEqual((IAObject) object);
     }
 
     public abstract boolean containsType(IAType type);

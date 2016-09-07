@@ -21,11 +21,12 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.algebra.extension.IAlgebraExtensionManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
@@ -43,6 +44,7 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.translator.util.PlanTranslationUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -66,6 +68,11 @@ import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependenc
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
+    private final IAlgebraExtensionManager algebraExtensionManager;
+
+    public UnnestToDataScanRule(IAlgebraExtensionManager algebraExtensionManager) {
+        this.algebraExtensionManager = algebraExtensionManager;
+    }
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -148,19 +155,17 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, variables, recordType,
                         metaRecordType, dataset, context);
                 return true;
-            }
-
-            if (fid.equals(AsterixBuiltinFunctions.FEED_COLLECT)) {
+            } else if (fid.equals(AsterixBuiltinFunctions.FEED_COLLECT)) {
                 if (unnest.getPositionalVariable() != null) {
                     throw new AlgebricksException("No positional variables are allowed over feeds.");
                 }
 
-                String dataverse = getStringArgument(f, 0);
-                String sourceFeedName = getStringArgument(f, 1);
-                String getTargetFeed = getStringArgument(f, 2);
-                String subscriptionLocation = getStringArgument(f, 3);
-                String targetDataset = getStringArgument(f, 4);
-                String outputType = getStringArgument(f, 5);
+                String dataverse = ConstantExpressionUtil.getStringArgument(f, 0);
+                String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 1);
+                String getTargetFeed = ConstantExpressionUtil.getStringArgument(f, 2);
+                String subscriptionLocation = ConstantExpressionUtil.getStringArgument(f, 3);
+                String targetDataset = ConstantExpressionUtil.getStringArgument(f, 4);
+                String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
 
                 AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
 
@@ -188,10 +193,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 }
                 // Does it produce pk?
                 if (ds.isChange()) {
-                    int numOfPKs = ds.getPkTypes().size();
-                    for (int i = 0; i < numOfPKs; i++) {
-                        feedDataScanOutputVariables.addAll(pkVars);
-                    }
+                    feedDataScanOutputVariables.addAll(pkVars);
                 }
 
                 DataSourceScanOperator scan = new DataSourceScanOperator(feedDataScanOutputVariables, ds);
@@ -200,8 +202,9 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                 opRef.setValue(scan);
                 context.computeAndSetTypeEnvironmentForOperator(scan);
                 return true;
+            } else if (algebraExtensionManager != null) {
+                return algebraExtensionManager.unnestToDataScan(opRef, context, unnest, unnestExpr, f);
             }
-
         }
 
         return false;
@@ -295,25 +298,6 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             dataverseName = datasetNameComponents[0];
             datasetName = datasetNameComponents[1];
         }
-        return new Pair<String, String>(dataverseName, datasetName);
-    }
-
-    private String getStringArgument(AbstractFunctionCallExpression f, int index) {
-
-        ILogicalExpression expr = f.getArguments().get(index).getValue();
-        if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
-        }
-        ConstantExpression ce = (ConstantExpression) expr;
-        IAlgebricksConstantValue acv = ce.getValue();
-        if (!(acv instanceof AsterixConstantValue)) {
-            return null;
-        }
-        AsterixConstantValue acv2 = (AsterixConstantValue) acv;
-        if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
-            return null;
-        }
-        String argument = ((AString) acv2.getObject()).getStringValue();
-        return argument;
+        return new Pair<>(dataverseName, datasetName);
     }
 }

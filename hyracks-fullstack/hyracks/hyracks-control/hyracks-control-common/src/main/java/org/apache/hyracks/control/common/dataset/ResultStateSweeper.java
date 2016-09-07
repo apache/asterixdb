@@ -49,14 +49,14 @@ public class ResultStateSweeper implements Runnable {
     }
 
     @Override
+    @SuppressWarnings("squid:S2142") // catch interrupted exception
     public void run() {
         while (true) {
             try {
                 Thread.sleep(resultSweepThreshold);
                 sweep();
             } catch (InterruptedException e) {
-                LOGGER.severe("Result cleaner thread interrupted, but we continue running it.");
-                // There isn't much we can do really here
+                LOGGER.severe("Result cleaner thread interrupted, shutting down.");
                 break; // the interrupt was explicit from another thread. This thread should shut down...
             }
         }

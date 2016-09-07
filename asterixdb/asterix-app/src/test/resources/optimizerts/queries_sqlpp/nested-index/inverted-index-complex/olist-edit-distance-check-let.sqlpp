@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -55,9 +55,9 @@ create type test.CustomerType as
   nested : CustomerTypetmp
 }
 
-create  table Customers(CustomerType) primary key nested.cid;
+create  dataset Customers(CustomerType) primary key nested.cid;
 
-create  table Customers2(CustomerType) primary key nested.cid;
+create  dataset Customers2(CustomerType) primary key nested.cid;
 
 create  index interests_index  on Customers (nested.interests) type keyword;
 

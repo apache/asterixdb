@@ -29,7 +29,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  * Represents the AQL statement for creating a secondary feed.
  * A secondary feed is one that derives its data from another (primary/secondary) feed.
  */
-public class CreateSecondaryFeedStatement extends CreateFeedStatement implements Statement {
+public class CreateSecondaryFeedStatement extends CreateFeedStatement {
 
     /** The source feed that provides data for this secondary feed. */
     private final Pair<Identifier, Identifier> sourceQName;
@@ -50,8 +50,8 @@ public class CreateSecondaryFeedStatement extends CreateFeedStatement implements
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_SECONDARY_FEED;
+    public byte getKind() {
+        return Statement.Kind.CREATE_SECONDARY_FEED;
     }
 
     @Override

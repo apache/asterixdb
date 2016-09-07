@@ -25,19 +25,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -71,12 +68,7 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
             ILogicalExpression e1 = argIter.next().getValue();
             ILogicalExpression e2 = argIter.next().getValue();
             IAType t2 = (IAType) env.getType(e2);
-            String fieldName = null;
-            if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                ConstantExpression nameExpr = (ConstantExpression) e1;
-                AsterixConstantValue acv = (AsterixConstantValue) nameExpr.getValue();
-                fieldName = ((AString) acv.getObject()).getStringValue();
-            }
+            String fieldName = ConstantExpressionUtil.getStringConstant(e1);
             if (fieldName != null && t2 != null && TypeHelper.isClosed(t2)) {
                 namesList.add(fieldName);
                 typesList.add(t2);

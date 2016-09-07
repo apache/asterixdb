@@ -2,20 +2,20 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$15(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$15(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$17(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$17(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- STREAM_PROJECT  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- HYBRID_HASH_JOIN [$$17][$$18]  |PARTITIONED|
-                    -- HASH_PARTITION_EXCHANGE [$$17]  |PARTITIONED|
+                  -- HYBRID_HASH_JOIN [$$19][$$20]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$19]  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ASSIGN  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    -- HASH_PARTITION_EXCHANGE [$$18]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|
                       -- ASSIGN  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -43,7 +43,7 @@ create type test.LineItemType as
   l_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
 create  index idx_partkey  on LineItem (l_partkey) type btree;
 

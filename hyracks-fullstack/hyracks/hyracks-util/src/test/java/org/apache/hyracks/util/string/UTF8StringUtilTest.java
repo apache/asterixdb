@@ -38,11 +38,13 @@ import static org.apache.hyracks.util.string.UTF8StringUtil.lowerCaseHash;
 import static org.apache.hyracks.util.string.UTF8StringUtil.normalize;
 import static org.apache.hyracks.util.string.UTF8StringUtil.rawByteCompareTo;
 import static org.apache.hyracks.util.string.UTF8StringUtil.hash;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class UTF8StringUtilTest {
@@ -63,6 +65,14 @@ public class UTF8StringUtilTest {
     public void testGetStringLength() throws Exception {
         byte[] buffer = writeStringToBytes(STRING_UTF8_MIX);
         assertEquals(STRING_UTF8_MIX.length(), getStringLength(buffer, 0));
+    }
+
+    @Test
+    public void testChinese() {
+        byte[] bufferDe = writeStringToBytes("的");
+        byte[] bufferLi = writeStringToBytes("离");
+        int ret = compareTo(bufferDe, 0, bufferLi, 0);
+        assertTrue(ret != 0);
     }
 
     @Test

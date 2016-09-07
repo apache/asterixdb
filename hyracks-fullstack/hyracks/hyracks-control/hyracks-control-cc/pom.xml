@@ -29,26 +29,27 @@
 
   <properties>
     <root.dir>${basedir}/../../..</root.dir>
+    <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
   </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-common</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>8.0.0.RC0</version>
+      <version>9.3.11.v20160721</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
-      <version>8.0.0.RC0</version>
+      <version>9.3.11.v20160721</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>

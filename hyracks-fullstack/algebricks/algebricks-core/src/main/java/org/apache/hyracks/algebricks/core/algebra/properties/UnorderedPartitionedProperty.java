@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
@@ -44,10 +43,9 @@ public final class UnorderedPartitionedProperty extends AbstractGroupingProperty
     @Override
     public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
             List<FunctionalDependency> fds) {
-        UnorderedPartitionedProperty partitioningProperty = new UnorderedPartitionedProperty(new ListSet<>(columnSet),
-                domain);
-        partitioningProperty.normalizeGroupingColumns(equivalenceClasses, fds);
-        return partitioningProperty;
+        Set<LogicalVariable> normalizedColumnSet =
+                normalizeAndReduceGroupingColumns(columnSet, equivalenceClasses, fds);
+        return new UnorderedPartitionedProperty(normalizedColumnSet, domain);
     }
 
     @Override

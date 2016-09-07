@@ -20,9 +20,9 @@ package org.apache.hyracks.comm.channels;
 
 import java.net.SocketAddress;
 
-import org.apache.hyracks.net.exceptions.NetException;
-import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
+import org.apache.hyracks.api.comm.IChannelControlBlock;
+import org.apache.hyracks.api.exceptions.NetException;
 
 public interface IChannelConnectionFactory {
-    public ChannelControlBlock connect(SocketAddress remoteAddress) throws InterruptedException, NetException;
+    public IChannelControlBlock connect(SocketAddress remoteAddress) throws InterruptedException, NetException;
 }

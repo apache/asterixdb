@@ -56,7 +56,7 @@ FunctionCall tpch.sum@1[
               LiteralExpr [STRING] [Brand#12]
             ]
             and
-            FunctionCall tpch.reg-exp@2[
+            FunctionCall tpch.matches@2[
               FieldAccessor [
                 Variable [ Name=$p ]
                 Field=p_container
@@ -100,7 +100,7 @@ FunctionCall tpch.sum@1[
               LiteralExpr [LONG] [5]
             ]
             and
-            FunctionCall tpch.reg-exp@2[
+            FunctionCall tpch.matches@2[
               FieldAccessor [
                 Variable [ Name=$l ]
                 Field=l_shipmode
@@ -128,7 +128,7 @@ FunctionCall tpch.sum@1[
               LiteralExpr [STRING] [Brand#23]
             ]
             and
-            FunctionCall tpch.reg-exp@2[
+            FunctionCall tpch.matches@2[
               FieldAccessor [
                 Variable [ Name=$p ]
                 Field=p_container
@@ -172,7 +172,7 @@ FunctionCall tpch.sum@1[
               LiteralExpr [LONG] [10]
             ]
             and
-            FunctionCall tpch.reg-exp@2[
+            FunctionCall tpch.matches@2[
               FieldAccessor [
                 Variable [ Name=$l ]
                 Field=l_shipmode
@@ -200,7 +200,7 @@ FunctionCall tpch.sum@1[
               LiteralExpr [STRING] [Brand#34]
             ]
             and
-            FunctionCall tpch.reg-exp@2[
+            FunctionCall tpch.matches@2[
               FieldAccessor [
                 Variable [ Name=$p ]
                 Field=p_container
@@ -244,7 +244,7 @@ FunctionCall tpch.sum@1[
               LiteralExpr [LONG] [15]
             ]
             and
-            FunctionCall tpch.reg-exp@2[
+            FunctionCall tpch.matches@2[
               FieldAccessor [
                 Variable [ Name=$l ]
                 Field=l_shipmode

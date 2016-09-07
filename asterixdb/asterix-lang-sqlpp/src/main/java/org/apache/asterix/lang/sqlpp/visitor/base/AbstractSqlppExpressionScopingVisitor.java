@@ -19,10 +19,12 @@
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -55,6 +57,8 @@ import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -76,9 +80,13 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     @Override
     public Expression visit(FromClause fromClause, ILangExpression arg) throws AsterixException {
-        scopeChecker.extendCurrentScope();
+        Scope scopeForFromClause = scopeChecker.extendCurrentScope();
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             fromTerm.accept(this, fromClause);
+
+            // Merges the variables defined in the current from term into the scope of the current from clause.
+            Scope scopeForFromTerm = scopeChecker.removeCurrentScope();
+            mergeScopes(scopeForFromClause, scopeForFromTerm);
         }
         return null;
     }
@@ -87,16 +95,16 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(FromTerm fromTerm, ILangExpression arg) throws AsterixException {
         scopeChecker.createNewScope();
         // Visit the left expression of a from term.
-        fromTerm.setLeftExpression(fromTerm.getLeftExpression().accept(this, fromTerm));
+        fromTerm.setLeftExpression(visit(fromTerm.getLeftExpression(), fromTerm));
 
         // Registers the data item variable.
         VariableExpr leftVar = fromTerm.getLeftVariable();
-        scopeChecker.getCurrentScope().addNewVarSymbolToScope(leftVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), leftVar.getVar());
 
         // Registers the positional variable
         if (fromTerm.hasPositionalVariable()) {
             VariableExpr posVar = fromTerm.getPositionalVariable();
-            scopeChecker.getCurrentScope().addNewVarSymbolToScope(posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
         }
         // Visits join/unnest/nest clauses.
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
@@ -107,32 +115,29 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     @Override
     public Expression visit(JoinClause joinClause, ILangExpression arg) throws AsterixException {
-        Scope backupScope = scopeChecker.removeCurrentScope();
-        Scope parentScope = scopeChecker.getCurrentScope();
+        Scope leftScope = scopeChecker.removeCurrentScope();
         scopeChecker.createNewScope();
         // NOTE: the two join branches cannot be correlated, instead of checking
         // the correlation here,
         // we defer the check to the query optimizer.
-        joinClause.setRightExpression(joinClause.getRightExpression().accept(this, joinClause));
+        joinClause.setRightExpression(visit(joinClause.getRightExpression(), joinClause));
 
         // Registers the data item variable.
         VariableExpr rightVar = joinClause.getRightVariable();
-        scopeChecker.getCurrentScope().addNewVarSymbolToScope(rightVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar());
 
         if (joinClause.hasPositionalVariable()) {
             // Registers the positional variable.
             VariableExpr posVar = joinClause.getPositionalVariable();
-            scopeChecker.getCurrentScope().addNewVarSymbolToScope(posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
         }
 
         Scope rightScope = scopeChecker.removeCurrentScope();
-        Scope mergedScope = new Scope(scopeChecker, parentScope);
-        mergedScope.merge(backupScope);
-        mergedScope.merge(rightScope);
-        scopeChecker.pushExistingScope(mergedScope);
+        mergeScopes(leftScope, rightScope);
+        scopeChecker.pushExistingScope(leftScope);
         // The condition expression can refer to the just registered variables
         // for the right branch.
-        joinClause.setConditionExpression(joinClause.getConditionExpression().accept(this, joinClause));
+        joinClause.setConditionExpression(visit(joinClause.getConditionExpression(), joinClause));
         return null;
     }
 
@@ -141,53 +146,65 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // NOTE: the two branches of a NEST cannot be correlated, instead of
         // checking the correlation here, we defer the check to the query
         // optimizer.
-        nestClause.setRightExpression(nestClause.getRightExpression().accept(this, nestClause));
+        nestClause.setRightExpression(visit(nestClause.getRightExpression(), nestClause));
 
         // Registers the data item variable.
         VariableExpr rightVar = nestClause.getRightVariable();
-        scopeChecker.getCurrentScope().addNewVarSymbolToScope(rightVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar());
 
         if (nestClause.hasPositionalVariable()) {
             // Registers the positional variable.
             VariableExpr posVar = nestClause.getPositionalVariable();
-            scopeChecker.getCurrentScope().addNewVarSymbolToScope(posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
         }
 
         // The condition expression can refer to the just registered variables
         // for the right branch.
-        nestClause.setConditionExpression(nestClause.getConditionExpression().accept(this, nestClause));
+        nestClause.setConditionExpression(visit(nestClause.getConditionExpression(), nestClause));
         return null;
     }
 
     @Override
     public Expression visit(UnnestClause unnestClause, ILangExpression arg) throws AsterixException {
-        unnestClause.setRightExpression(unnestClause.getRightExpression().accept(this, unnestClause));
+        unnestClause.setRightExpression(visit(unnestClause.getRightExpression(), unnestClause));
 
         // register the data item variable
         VariableExpr rightVar = unnestClause.getRightVariable();
-        scopeChecker.getCurrentScope().addNewVarSymbolToScope(rightVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar());
 
         if (unnestClause.hasPositionalVariable()) {
             // register the positional variable
             VariableExpr posVar = unnestClause.getPositionalVariable();
-            scopeChecker.getCurrentScope().addNewVarSymbolToScope(posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
         }
         return null;
     }
 
     @Override
     public Expression visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws AsterixException {
+        Scope scopeBeforeCurrentBranch = scopeChecker.getCurrentScope();
+        scopeChecker.createNewScope();
         selectSetOperation.getLeftInput().accept(this, arg);
-        for (SetOperationRight right : selectSetOperation.getRightInputs()) {
-            scopeChecker.createNewScope();
-            right.getSetOperationRightInput().accept(this, arg);
+        if (selectSetOperation.hasRightInputs()) {
+            for (SetOperationRight right : selectSetOperation.getRightInputs()) {
+                // Exit scopes that were entered within a previous select expression
+                while (scopeChecker.getCurrentScope() != scopeBeforeCurrentBranch) {
+                    scopeChecker.removeCurrentScope();
+                }
+                scopeChecker.createNewScope();
+                right.getSetOperationRightInput().accept(this, arg);
+            }
+            // Exit scopes that were entered within the last branch of the set operation.
+            while (scopeChecker.getCurrentScope() != scopeBeforeCurrentBranch) {
+                scopeChecker.removeCurrentScope();
+            }
         }
         return null;
     }
 
     @Override
     public Expression visit(Query q, ILangExpression arg) throws AsterixException {
-        q.setBody(q.getBody().accept(this, q));
+        q.setBody(visit(q.getBody(), q));
         q.setVarCounter(scopeChecker.getVarCounter());
         context.setVarCounter(scopeChecker.getVarCounter());
         return null;
@@ -196,25 +213,53 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     @Override
     public Expression visit(FunctionDecl fd, ILangExpression arg) throws AsterixException {
         scopeChecker.createNewScope();
-        fd.setFuncBody(fd.getFuncBody().accept(this, fd));
+        fd.setFuncBody(visit(fd.getFuncBody(), fd));
         scopeChecker.removeCurrentScope();
         return null;
     }
 
     @Override
     public Expression visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
-        Scope newScope = scopeChecker.extendCurrentScopeNoPush(true);
+        // After a GROUP BY, variables defined before the current SELECT BLOCK (e.g., in a WITH clause
+        // or an outer scope query) should still be visible.
+        Scope newScope = new Scope(scopeChecker, scopeChecker.getCurrentScope().getParentScope());
         // Puts all group-by variables into the symbol set of the new scope.
-        for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
-            gbyVarExpr.setExpr(gbyVarExpr.getExpr().accept(this, gc));
-            VariableExpr gbyVar = gbyVarExpr.getVar();
-            if (gbyVar != null) {
-                newScope.addNewVarSymbolToScope(gbyVarExpr.getVar().getVar());
+        for (GbyVariableExpressionPair gbyKeyVarExpr : gc.getGbyPairList()) {
+            gbyKeyVarExpr.setExpr(visit(gbyKeyVarExpr.getExpr(), gc));
+            VariableExpr gbyKeyVar = gbyKeyVarExpr.getVar();
+            if (gbyKeyVar != null) {
+                addNewVarSymbolToScope(newScope, gbyKeyVar.getVar());
             }
         }
-        for (VariableExpr withVar : gc.getWithVarList()) {
-            newScope.addNewVarSymbolToScope(withVar.getVar());
+        if (gc.hasGroupFieldList()) {
+            for (Pair<Expression, Identifier> gbyField : gc.getGroupFieldList()) {
+                gbyField.first = visit(gbyField.first, arg);
+            }
         }
+        if (gc.hasDecorList()) {
+            for (GbyVariableExpressionPair decorVarExpr : gc.getDecorPairList()) {
+                decorVarExpr.setExpr(visit(decorVarExpr.getExpr(), gc));
+                VariableExpr decorVar = decorVarExpr.getVar();
+                if (decorVar != null) {
+                    addNewVarSymbolToScope(newScope, decorVar.getVar());
+                }
+            }
+        }
+        if (gc.hasGroupVar()) {
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), gc.getGroupVar().getVar());
+        }
+        if (gc.hasWithMap()) {
+            Map<Expression, VariableExpr> newWithMap = new HashMap<>();
+            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+                Expression expr = visit(entry.getKey(), arg);
+                Expression newKey = expr;
+                VariableExpr value = entry.getValue();
+                addNewVarSymbolToScope(newScope, value.getVar());
+                newWithMap.put(newKey, value);
+            }
+            gc.setWithVarMap(newWithMap);
+        }
+        // Replaces the current scope with the new scope.
         scopeChecker.replaceCurrentScope(newScope);
         return null;
     }
@@ -222,7 +267,10 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     @Override
     public Expression visit(LimitClause limitClause, ILangExpression arg) throws AsterixException {
         scopeChecker.pushForbiddenScope(scopeChecker.getCurrentScope());
-        limitClause.setLimitExpr(limitClause.getLimitExpr().accept(this, limitClause));
+        limitClause.setLimitExpr(visit(limitClause.getLimitExpr(), limitClause));
+        if(limitClause.hasOffset()) {
+            limitClause.setOffset(visit(limitClause.getOffset(), limitClause));
+        }
         scopeChecker.popForbiddenScope();
         return null;
     }
@@ -230,8 +278,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     @Override
     public Expression visit(LetClause letClause, ILangExpression arg) throws AsterixException {
         scopeChecker.extendCurrentScope();
-        letClause.setBindingExpr(letClause.getBindingExpr().accept(this, letClause));
-        scopeChecker.getCurrentScope().addNewVarSymbolToScope(letClause.getVarExpr().getVar());
+        letClause.setBindingExpr(visit(letClause.getBindingExpr(), letClause));
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), letClause.getVarExpr().getVar());
         return null;
     }
 
@@ -243,8 +291,11 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // visit let list
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
+                // Variables defined in WITH clauses are considered as named access instead of real variables.
+                letClause.getVarExpr().getVar().setNamedValueAccess(true);
                 letClause.accept(this, selectExpression);
             }
+            scopeChecker.createNewScope();
         }
 
         // visit the main select.
@@ -274,7 +325,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // variables defined in the parent scope.
         Scope scope = new Scope(scopeChecker, scopeChecker.getCurrentScope(), true);
         scopeChecker.pushExistingScope(scope);
-        independentSubquery.setExpr(independentSubquery.getExpr().accept(this, arg));
+        independentSubquery.setExpr(visit(independentSubquery.getExpr(), independentSubquery));
         scopeChecker.removeCurrentScope();
         return independentSubquery;
     }
@@ -283,10 +334,10 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(QuantifiedExpression qe, ILangExpression arg) throws AsterixException {
         scopeChecker.createNewScope();
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
-            scopeChecker.getCurrentScope().addNewVarSymbolToScope(pair.getVarExpr().getVar());
-            pair.setExpr(pair.getExpr().accept(this, qe));
+            pair.setExpr(visit(pair.getExpr(), qe));
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), pair.getVarExpr().getVar());
         }
-        qe.setSatisfiesExpr(qe.getSatisfiesExpr().accept(this, qe));
+        qe.setSatisfiesExpr(visit(qe.getSatisfiesExpr(), qe));
         scopeChecker.removeCurrentScope();
         return qe;
     }
@@ -317,5 +368,26 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         argList.add(new LiteralExpr(new StringLiteral(varName)));
         argList.addAll(liveVars);
         return new CallExpr(resolveFunction, argList);
+    }
+
+    // Adds a new encountered alias identifier into a scope
+    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var) throws AsterixException {
+        if (scope.findLocalSymbol(var.getValue()) != null) {
+            throw new AsterixException("Duplicate alias definitions: "
+                    + SqlppVariableUtil.toUserDefinedName(var.getValue()));
+        }
+        scope.addNewVarSymbolToScope(var);
+    }
+
+    // Merges <code>scopeToBeMerged</code> into <code>hostScope</code>.
+    private void mergeScopes(Scope hostScope, Scope scopeToBeMerged) throws AsterixException {
+        Set<String> symbolsToBeMerged = scopeToBeMerged.getLocalSymbols();
+        for (String symbolToBeMerged : symbolsToBeMerged) {
+            if (hostScope.findLocalSymbol(symbolToBeMerged) != null) {
+                throw new AsterixException("Duplicate alias definitions: "
+                        + SqlppVariableUtil.toUserDefinedName(symbolToBeMerged));
+            }
+        }
+        hostScope.merge(scopeToBeMerged);
     }
 }

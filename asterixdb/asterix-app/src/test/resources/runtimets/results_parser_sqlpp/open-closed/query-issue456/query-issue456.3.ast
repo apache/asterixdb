@@ -6,9 +6,8 @@ OrderedListConstructor [
   FunctionCall test.sql-count@1[
     (
       SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=id
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [id]
       ]
       ]
       FROM [        Variable [ Name=#1 ]
@@ -38,7 +37,6 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    id:=Variable [ Name=$id ]
     x:=Variable [ Name=$x ]
   )
 

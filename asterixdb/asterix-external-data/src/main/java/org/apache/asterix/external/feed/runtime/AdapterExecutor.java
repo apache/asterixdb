@@ -19,8 +19,7 @@
 package org.apache.asterix.external.feed.runtime;
 
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
-import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.util.ExternalDataExceptionUtils;
+import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.log4j.Logger;
 
 /**
@@ -30,13 +29,12 @@ public class AdapterExecutor implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(AdapterExecutor.class.getName());
 
-    private final DistributeFeedFrameWriter writer;     // A writer that sends frames to multiple receivers (that can
+    private final IFrameWriter writer; // A writer that sends frames to multiple receivers (that can
     // increase or decrease at any time)
-    private final FeedAdapter adapter;                 // The adapter
+    private final FeedAdapter adapter; // The adapter
     private final AdapterRuntimeManager adapterManager;// The runtime manager <-- two way visibility -->
 
-    public AdapterExecutor(int partition, DistributeFeedFrameWriter writer, FeedAdapter adapter,
-            AdapterRuntimeManager adapterManager) {
+    public AdapterExecutor(IFrameWriter writer, FeedAdapter adapter, AdapterRuntimeManager adapterManager) {
         this.writer = writer;
         this.adapter = adapter;
         this.adapterManager = adapterManager;
@@ -59,12 +57,7 @@ public class AdapterExecutor implements Runnable {
                 continueIngestion = false;
             } catch (Exception e) {
                 LOGGER.error("Exception during feed ingestion ", e);
-                // Check if the adapter wants to continue ingestion
-                if (ExternalDataExceptionUtils.isResolvable(e)) {
-                    continueIngestion = adapter.handleException(e);
-                } else {
-                    continueIngestion = false;
-                }
+                continueIngestion = adapter.handleException(e);
                 failedIngestion = !continueIngestion;
             }
         }

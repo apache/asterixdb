@@ -80,6 +80,12 @@ public class TypeTagUtil {
                 return BuiltinType.ADAYTIMEDURATION;
             case UUID:
                 return BuiltinType.AUUID;
+            case RECORD:
+                return ARecordType.FULLY_OPEN_RECORD_TYPE;
+            case UNORDEREDLIST:
+                return AUnorderedListType.FULLY_OPEN_UNORDEREDLIST_TYPE;
+            case ORDEREDLIST:
+                return AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
             default:
                 throw new AsterixException("Typetag " + typeTag + " is not a built-in type");
         }

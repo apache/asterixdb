@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -42,6 +43,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -128,8 +130,12 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
 
     @Override
     public Void visit(Projection projection, Integer step) throws AsterixException {
-        projection.getExpression().accept(this, step);
-        out.println(skip(step) + projection.getName());
+        if (projection.star()) {
+            out.println(skip(step) + "*");
+        } else {
+            projection.getExpression().accept(this, step);
+            out.println(skip(step) + projection.getName());
+        }
         return null;
     }
 
@@ -250,8 +256,8 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     @Override
     public Void visit(CallExpr pf, Integer step) throws AsterixException {
         FunctionSignature functionSignature = pf.getFunctionSignature();
-        FunctionSignature normalizedFunctionSignature = FunctionMapUtil
-                .normalizeBuiltinFunctionSignature(functionSignature, false);
+        FunctionSignature normalizedFunctionSignature =
+                FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, false);
         if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
             functionSignature = normalizedFunctionSignature;
         }
@@ -296,6 +302,27 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     @Override
     public Void visit(IndependentSubquery independentSubquery, Integer arg) throws AsterixException {
         independentSubquery.getExpr().accept(this, arg);
+        return null;
+    }
+
+    @Override
+    public Void visit(CaseExpression caseExpr, Integer step) throws AsterixException {
+        out.print(skip(step) + "CASE");
+        caseExpr.getConditionExpr().accept(this, step + 2);
+        out.println();
+        List<Expression> whenExprs = caseExpr.getWhenExprs();
+        List<Expression> thenExprs = caseExpr.getThenExprs();
+        for (int index = 0; index < whenExprs.size(); ++index) {
+            out.print(skip(step) + "WHEN ");
+            whenExprs.get(index).accept(this, step + 2);
+            out.print(skip(step) + "THEN ");
+            thenExprs.get(index).accept(this, step + 2);
+            out.println();
+        }
+        out.print(skip(step) + "ELSE ");
+        caseExpr.getElseExpr().accept(this, step + 2);
+        out.println();
+        out.println(skip(step) + "END");
         return null;
     }
 

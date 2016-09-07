@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.om.types.IAType;
@@ -38,7 +38,7 @@ public class CompiledStatements {
 
     public static interface ICompiledStatement {
 
-        public Kind getKind();
+        public byte getKind();
     }
 
     public static class CompiledDatasetDropStatement implements ICompiledStatement {
@@ -59,8 +59,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.DATASET_DROP;
+        public byte getKind() {
+            return Statement.Kind.DATASET_DROP;
         }
     }
 
@@ -83,8 +83,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.CREATE_DATAVERSE;
+        public byte getKind() {
+            return Statement.Kind.CREATE_DATAVERSE;
         }
     }
 
@@ -100,8 +100,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.NODEGROUP_DROP;
+        public byte getKind() {
+            return Statement.Kind.NODEGROUP_DROP;
         }
     }
 
@@ -129,8 +129,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.INDEX_DROP;
+        public byte getKind() {
+            return Statement.Kind.INDEX_DROP;
         }
     }
 
@@ -152,8 +152,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.DATAVERSE_DROP;
+        public byte getKind() {
+            return Statement.Kind.DATAVERSE_DROP;
         }
     }
 
@@ -169,8 +169,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.TYPE_DROP;
+        public byte getKind() {
+            return Statement.Kind.TYPE_DROP;
         }
     }
 
@@ -241,8 +241,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.CREATE_INDEX;
+        public byte getKind() {
+            return Statement.Kind.CREATE_INDEX;
         }
     }
 
@@ -285,8 +285,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.LOAD;
+        public byte getKind() {
+            return Statement.Kind.LOAD;
         }
     }
 
@@ -322,8 +322,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.INSERT;
+        public byte getKind() {
+            return Statement.Kind.INSERT;
         }
     }
 
@@ -334,8 +334,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.UPSERT;
+        public byte getKind() {
+            return Statement.Kind.UPSERT;
         }
     }
 
@@ -380,8 +380,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.CONNECT_FEED;
+        public byte getKind() {
+            return Statement.Kind.CONNECT_FEED;
         }
 
         public String getPolicyName() {
@@ -405,7 +405,7 @@ public class CompiledStatements {
         }
 
         public String getFeedName() {
-            return request.getReceivingFeedId().getFeedName();
+            return request.getReceivingFeedId().getEntityName();
         }
 
         @Override
@@ -418,8 +418,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.SUBSCRIBE_FEED;
+        public byte getKind() {
+            return Statement.Kind.SUBSCRIBE_FEED;
         }
     }
 
@@ -449,8 +449,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.DISCONNECT_FEED;
+        public byte getKind() {
+            return Statement.Kind.DISCONNECT_FEED;
         }
 
     }
@@ -494,8 +494,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.DELETE;
+        public byte getKind() {
+            return Statement.Kind.DELETE;
         }
 
     }
@@ -518,8 +518,8 @@ public class CompiledStatements {
         }
 
         @Override
-        public Kind getKind() {
-            return Kind.COMPACT;
+        public byte getKind() {
+            return Statement.Kind.COMPACT;
         }
     }
 

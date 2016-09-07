@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import javax.annotation.Nonnull;
-
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
@@ -38,7 +36,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
     protected final int numOfTupleFields;
 
     public RecordDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            @Nonnull IRecordDataParser<T> dataParser, @Nonnull IRecordReader<? extends T> recordReader,
+            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader,
             int numOfTupleFields) {
         super(ctx, tupleForwarder);
         this.dataParser = dataParser;

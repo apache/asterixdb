@@ -23,8 +23,8 @@
  * Date           :  March 30th 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -43,5 +43,5 @@ create type test.Schema as
   lat_lon : point
 }
 
-create  table tdtst(Schema) primary key id_32;
+create  dataset tdtst(Schema) primary key id_32;
 

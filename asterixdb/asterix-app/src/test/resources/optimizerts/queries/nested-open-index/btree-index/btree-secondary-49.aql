@@ -40,7 +40,7 @@ create type TestType as open {
 
 create dataset testdst(TestType) primary key nested.id;
 
-create index sec_Idx on testdst(nested.fname:string,nested.lname:string) enforced;
+create index sec_Idx on testdst(nested.fname:string?,nested.lname:string?) enforced;
 
 for $emp in dataset('testdst')
 where $emp.nested.fname <= "Craig" and $emp.nested.lname > "Kevin"

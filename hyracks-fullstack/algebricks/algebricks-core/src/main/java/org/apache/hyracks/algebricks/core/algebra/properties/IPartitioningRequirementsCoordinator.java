@@ -52,7 +52,7 @@ public interface IPartitioningRequirementsCoordinator {
         public Pair<Boolean, IPartitioningProperty> coordinateRequirements(IPartitioningProperty rqdpp,
                 IPartitioningProperty firstDeliveredPartitioning, ILogicalOperator op, IOptimizationContext context)
                 throws AlgebricksException {
-            if (firstDeliveredPartitioning != null
+            if (firstDeliveredPartitioning != null && rqdpp != null
                     && firstDeliveredPartitioning.getPartitioningType() == rqdpp.getPartitioningType()) {
                 switch (rqdpp.getPartitioningType()) {
                     case UNORDERED_PARTITIONED: {

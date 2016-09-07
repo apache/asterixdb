@@ -67,7 +67,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     protected ISerializerDeserializer<AInt32> aInt32Serde;
 
     @SuppressWarnings("unchecked")
-    public FeedPolicyTupleTranslator(boolean getTuple) {
+    protected FeedPolicyTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FEED_POLICY_DATASET.getFieldCount());
         aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
@@ -173,8 +173,8 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         propertyRecordBuilder.reset(MetadataRecordTypes.POLICY_PARAMS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

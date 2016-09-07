@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import javax.annotation.Nonnull;
-
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -34,7 +32,7 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     protected final FeedLogManager feedLogManager;
 
     public AbstractFeedDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            @Nonnull FeedLogManager feedLogManager, int numOfFields) {
+            FeedLogManager feedLogManager, int numOfFields) {
         this.feedLogManager = feedLogManager;
         this.numOfFields = numOfFields;
         this.ctx = ctx;

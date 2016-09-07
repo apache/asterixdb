@@ -21,4 +21,4 @@ SELECT SQRT(t.a*t.b) AS root FROM tbl_name root
 GROUP BY root.id
 WITH u AS root.time
 HAVING root.orders > 0
-ORDER BY u; 
+ORDER BY u;

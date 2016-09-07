@@ -50,10 +50,7 @@ public class TypeHelper {
             case ANY:
                 return false;
             case UNION:
-                if (!isClosed(((AUnionType) t).getActualType())) {
-                    return false;
-                }
-                return true;
+                return isClosed(((AUnionType) t).getActualType());
             default:
                 return true;
         }

@@ -93,6 +93,11 @@
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">
+      <compilation-unit name="create-policy-from-file">
+        <output-dir compare="Text">create-policy-from-file</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="change-feed-with-meta-with-mixed-index">
         <output-dir compare="Text">change-feed-with-meta-with-mixed-index</output-dir>
       </compilation-unit>
@@ -146,8 +151,25 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
+      <compilation-unit name="revised-tweet-parser">
+        <output-dir compare="Text">revised-tweet-parser</output-dir>
+        <expected-error>One or more parameters are missing from adapter configuration</expected-error>
+        <expected-error>Unknown source feed</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="feed-with-external-parser">
         <output-dir compare="Text">feed-with-external-parser</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser-with-open-index">
+        <output-dir compare="Text">feed-with-external-parser-with-open-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser-with-two-open-indexes">
+        <output-dir compare="Text">feed-with-external-parser-with-two-open-indexes</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -180,12 +202,6 @@
         <output-dir compare="Text">feeds_07</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Fails constantly and not clear what is intended
-    <test-case FilePath="feeds">
-      <compilation-unit name="feeds_06">
-        <output-dir compare="Text">feeds_06</output-dir>
-      </compilation-unit>
-    </test-case> -->
     <test-case FilePath="feeds">
       <compilation-unit name="drop-dataverse-with-disconnected-feed">
         <output-dir compare="Text">drop-dataverse-with-disconnected-feed</output-dir>
@@ -211,13 +227,6 @@
         <output-dir compare="Text">feeds_03</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Fails constantly
-    <test-case FilePath="feeds">
-        <compilation-unit name="feeds_04">
-            <output-dir compare="Text">feeds_04</output-dir>
-        </compilation-unit>
-    </test-case>
-    -->
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_08">
         <output-dir compare="Text">feeds_08</output-dir>
@@ -248,16 +257,16 @@
         <output-dir compare="Text">issue_230_feeds</output-dir>
       </compilation-unit>
     </test-case>
-    <!--<test-case FilePath="feeds">
-      <compilation-unit name="issue_711_feeds">
-        <output-dir compare="Text">issue_711_feeds</output-dir>
-      </compilation-unit>
-    </test-case>-->
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">
       <compilation-unit name="filtered-dataset">
         <output-dir compare="Text">filtered-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="issue1587-foreignDataType">
+        <output-dir compare="Text">issue1587-foreignDataType</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="upsert">
@@ -347,6 +356,21 @@
         <output-dir compare="Text">query-issue550</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-883">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1463">
+        <output-dir compare="Text">query-ASTERIXDB-1485</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1485">
+        <output-dir compare="Text">query-ASTERIXDB-1485</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="union">
     <test-case FilePath="union">
@@ -382,6 +406,11 @@
     <test-case FilePath="union">
       <compilation-unit name="query-ASTERIXDB-1047">
         <output-dir compare="Text">query-ASTERIXDB-1047</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="query-ASTERIXDB-1354">
+        <output-dir compare="Text">query-ASTERIXDB-1354</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -838,6 +867,11 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="query-ASTERIXDB-1230">
         <output-dir compare="Text">query-ASTERIXDB-1230</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="query-ASTERIXDB-159">
+        <output-dir compare="Text">query-ASTERIXDB-159</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -1933,6 +1967,16 @@
         <output-dir compare="Text">delete-multi-statement</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="query-ASTERIXDB-867">
+        <output-dir compare="Text">query-ASTERIXDB-867</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="query-ASTERIXDB-1406">
+        <output-dir compare="Text">query-ASTERIXDB-1406</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="employee">
     <test-case FilePath="employee">
@@ -2608,6 +2652,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-aqlplus_4">
+        <output-dir compare="Text">dblp-csx-aqlplus_4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-csx-dblp-aqlplus_1">
         <output-dir compare="Text">dblp-csx-dblp-aqlplus_1</output-dir>
       </compilation-unit>
@@ -2693,6 +2742,11 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key">
         <output-dir compare="Text">btree-index-composite-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-key-02">
+        <output-dir compare="Text">btree-index-composite-key-02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -3126,7 +3180,7 @@
     <test-case FilePath="misc">
       <compilation-unit name="partition-by-nonexistent-field"> <!-- Seriously?? 3 expected errors -->
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
-        <expected-error>java.lang.NullPointerException</expected-error>
+        <expected-error>Type not found for partitioning key [id]</expected-error>
         <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot find dataset</expected-error>
         <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Could not find dataset</expected-error>
       </compilation-unit>
@@ -3149,6 +3203,11 @@
     <test-case FilePath="misc">
       <compilation-unit name="ifthenelse_01">
         <output-dir compare="Text">ifthenelse_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="ifthenelse_02">
+        <output-dir compare="Text">ifthenelse_02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -3210,6 +3269,26 @@
         <output-dir compare="Text">query-ASTERIXDB-1203</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-819">
+        <output-dir compare="Text">query-ASTERIXDB-819</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-819-2">
+        <output-dir compare="Text">query-ASTERIXDB-819-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-971">
+        <output-dir compare="Text">query-ASTERIXDB-971-aql</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-1531">
+        <output-dir compare="Text">query-ASTERIXDB-1531</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-index-enforced">
     <test-group name="open-index-enforced/error-checking">
@@ -3235,6 +3314,12 @@
         <compilation-unit name="missing-enforce-statement">
           <output-dir compare="Text">missing-enforce-statement</output-dir>
           <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot create typed index on "[value]" field without enforcing it's type</expected-error>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/error-checking">
+        <compilation-unit name="missing-optionality">
+          <output-dir compare="Text">missing-optionality</output-dir>
+          <expected-error>"?"</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
@@ -4006,6 +4091,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="caret1">
+        <output-dir compare="Text">caret1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="abs0">
         <output-dir compare="Text">abs0</output-dir>
       </compilation-unit>
@@ -4544,7 +4634,7 @@
     <test-case FilePath="open-closed"><!-- Throws two exceptions. need to be checked. proposal: (fixed expected results) -->
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
-        <expected-error>java.lang.IllegalStateException: type mismatch: missing a required closed field name:string</expected-error>
+        <expected-error>HyracksDataException: ASX0000: Field type DOUBLE can't be promoted to type STRING</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
@@ -5380,6 +5470,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-equal-public">
+        <output-dir compare="Text">string-equal-public</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="string-join1">
         <output-dir compare="Text">string-join1</output-dir>
       </compilation-unit>
@@ -5737,6 +5832,11 @@
     </test-case>
     <test-case FilePath="tpch">
       <compilation-unit name="q01_pricing_summary_report_nt">
+        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="q01-ASTERIXDB-830">
         <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
       </compilation-unit>
     </test-case>
@@ -6354,6 +6454,12 @@
   </test-group>
   <test-group name="load">
     <test-case FilePath="load">
+      <compilation-unit name="load_non-empty_index">
+        <output-dir compare="Text">load_non-empty_index</output-dir>
+        <expected-error>Cannot load an index that is not empty</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
       <compilation-unit name="dataset-with-meta">
         <output-dir compare="Text">dataset-with-meta</output-dir>
         <expected-error>load dataset is not supported on Datasets with Meta records</expected-error>
@@ -6483,6 +6589,11 @@
         <output-dir compare="Text">adm_binary</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="utf8">
+        <output-dir compare="Text">utf8</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hints">
     <test-case FilePath="hints">
@@ -6607,6 +6718,11 @@
     <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue849-2">
         <output-dir compare="Text">query_issue849-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query-ASTERIXDB-769">
+        <output-dir compare="Text">query-ASTERIXDB-769</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

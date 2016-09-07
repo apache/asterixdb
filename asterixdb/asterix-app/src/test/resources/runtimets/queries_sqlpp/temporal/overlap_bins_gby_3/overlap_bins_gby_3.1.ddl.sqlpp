@@ -21,8 +21,8 @@
  * Expected result: success
  **/
 
-drop  database multitask if exists;
-create  database multitask;
+drop  dataverse multitask if exists;
+create  dataverse multitask;
 
 use multitask;
 
@@ -35,5 +35,5 @@ create type multitask.LogType as
   app : string
 }
 
-create  table logs(LogType) primary key row_id;
+create  dataset logs(LogType) primary key row_id;
 

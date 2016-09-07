@@ -22,8 +22,8 @@
  * Date            : March 27 2015
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 
@@ -48,5 +48,5 @@ create type tpch.LineItemType as
   l_comment : string
 }
 
-create temporary table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create temporary dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 

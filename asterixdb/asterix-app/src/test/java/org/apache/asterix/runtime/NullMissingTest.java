@@ -47,15 +47,15 @@ public class NullMissingTest {
             String className = func.getClass().getName();
             // We test all generated functions except
             // record functions, which requires type settings (we test them in runtime tests);
-            if (className.contains("generated") && !className.contains("record")) {
+            if (className.contains("generated") && !className.contains("record") && !className.contains("Cast")) {
                 testFunction(func);
             }
         }
     }
 
     private void testFunction(IFunctionDescriptorFactory funcFactory) throws Exception {
-        AbstractScalarFunctionDynamicDescriptor funcDesc = (AbstractScalarFunctionDynamicDescriptor) funcFactory
-                .createFunctionDescriptor();
+        AbstractScalarFunctionDynamicDescriptor funcDesc =
+                (AbstractScalarFunctionDynamicDescriptor) funcFactory.createFunctionDescriptor();
         int inputArity = funcDesc.getIdentifier().getArity();
         Iterator<IScalarEvaluatorFactory[]> argEvalFactoryIterator = getArgCombinations(inputArity);
         int index = 0;

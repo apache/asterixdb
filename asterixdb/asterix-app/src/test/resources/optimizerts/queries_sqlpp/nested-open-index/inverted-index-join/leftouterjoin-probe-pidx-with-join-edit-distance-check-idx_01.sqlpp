@@ -23,8 +23,8 @@
  * Date         : 8th May 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -55,9 +55,9 @@ create type test.TweetMessageType as
   nested : TweetMessageNestedType
 }
 
-create  table TweetMessages(TweetMessageType) primary key nested.tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
 
-create  index msgNgramIx  on TweetMessages (nested.`message-text`:string) type ngram (3) enforced;
+create  index msgNgramIx  on TweetMessages (nested.`message-text`:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm"
 select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested.`message-text`},'similar-tweets':(

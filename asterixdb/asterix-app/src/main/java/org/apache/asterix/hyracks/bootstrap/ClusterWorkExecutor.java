@@ -30,7 +30,7 @@ import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.ClusterManager;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 
 public class ClusterWorkExecutor implements Runnable {
 

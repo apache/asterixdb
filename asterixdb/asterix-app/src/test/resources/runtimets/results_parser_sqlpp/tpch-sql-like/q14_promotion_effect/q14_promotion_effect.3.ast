@@ -7,34 +7,38 @@ OperatorExpr [
   FunctionCall tpch.sum@1[
     (
       SELECT ELEMENT [
-      FunctionCall tpch.switch-case@5[
-        OperatorExpr [
-          FieldAccessor [
-            Variable [ Name=$i ]
-            Field=p_type
-          ]
-          like
-          LiteralExpr [STRING] [PROMO%]
-        ]
-        LiteralExpr [TRUE]
-        OperatorExpr [
-          FieldAccessor [
-            Variable [ Name=$i ]
-            Field=l_extendedprice
-          ]
-          *
-          OperatorExpr [
-            LiteralExpr [LONG] [1]
-            -
+      CASE          OperatorExpr [
             FieldAccessor [
               Variable [ Name=$i ]
-              Field=l_discount
+              Field=p_type
+            ]
+            like
+            LiteralExpr [STRING] [PROMO%]
+          ]
+
+      WHEN           LiteralExpr [TRUE]
+      THEN           OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=l_extendedprice
+            ]
+            *
+            OperatorExpr [
+              LiteralExpr [LONG] [1]
+              -
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l_discount
+              ]
             ]
           ]
-        ]
-        LiteralExpr [FALSE]
-        LiteralExpr [DOUBLE] [0.0]
-      ]
+
+      WHEN           LiteralExpr [FALSE]
+      THEN           LiteralExpr [DOUBLE] [0.0]
+
+      ELSE           LiteralExpr [NULL]
+
+      END
       ]
       FROM [        Variable [ Name=$lp ]
         AS Variable [ Name=$i ]
@@ -142,10 +146,8 @@ Groupby
   Variable [ Name=$t ]
   :=
   LiteralExpr [LONG] [1]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     lp:=Variable [ Name=$lp ]
-    p:=Variable [ Name=$p ]
-    l:=Variable [ Name=$l ]
   )
 

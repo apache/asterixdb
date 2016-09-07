@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.utils.AsterixConstants;
 import org.apache.asterix.event.driver.EventDriver;
 import org.apache.asterix.event.error.VerificationUtil;
 import org.apache.asterix.event.model.AsterixInstance;
@@ -72,8 +73,8 @@ public class PatternCreator {
 
         for (Node node : cluster.getNode()) {
             if (copyHyracksToNC) {
-                Pattern copyHyracksForNC = createCopyHyracksPattern(asterixInstanceName, cluster, node.getClusterIp(),
-                        destDir);
+                Pattern copyHyracksForNC =
+                        createCopyHyracksPattern(asterixInstanceName, cluster, node.getClusterIp(), destDir);
                 ps.add(copyHyracksForNC);
             }
         }
@@ -389,8 +390,8 @@ public class PatternCreator {
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
         String username = cluster.getUsername() != null ? cluster.getUsername() : System.getProperty("user.name");
         String workingDir = cluster.getWorkingDir().getDir();
-        String destDir = workingDir + File.separator + "library" + File.separator + dataverse + File.separator
-                + libraryName;
+        String destDir =
+                workingDir + File.separator + "library" + File.separator + dataverse + File.separator + libraryName;
         String fileToTransfer = new File(libraryPath).getAbsolutePath();
 
         Iterator<Node> installTargets = cluster.getNode().iterator();
@@ -434,8 +435,8 @@ public class PatternCreator {
         patternList.add(p);
 
         Iterator<Node> uninstallTargets = cluster.getNode().iterator();
-        String libDir = workingDir + File.separator + "library" + File.separator + dataverse + File.separator
-                + libraryName;
+        String libDir =
+                workingDir + File.separator + "library" + File.separator + dataverse + File.separator + libraryName;
         Node uninstallNode = uninstallTargets.next();
         nodeid = new Nodeid(new Value(null, uninstallNode.getId()));
         event = new Event("file_delete", nodeid, libDir);
@@ -606,8 +607,8 @@ public class PatternCreator {
         String username = cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername();
         String srcHost = cluster.getMasterNode().getClientIp();
         Nodeid nodeid = new Nodeid(new Value(null, EventDriver.CLIENT_NODE.getId()));
-        String srcDir = cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir()
-                : cluster.getMasterNode().getLogDir();
+        String srcDir =
+                cluster.getMasterNode().getLogDir() == null ? cluster.getLogDir() : cluster.getMasterNode().getLogDir();
         String destDir = outputDir + File.separator + "cc";
         String pargs = username + " " + srcHost + " " + srcDir + " " + destDir;
         Event event = new Event("directory_copy", nodeid, pargs);

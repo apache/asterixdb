@@ -24,8 +24,8 @@
  *  Date            : 11th Nov 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -43,7 +43,7 @@ create type test.TestType as
   nested : TestTypetmp
 }
 
-create  table testdst(TestType) primary key nested.id;
+create  dataset testdst(TestType) primary key nested.id;
 
 create  index sec_Idx  on testdst (nested.fname,nested.lname) type btree;
 

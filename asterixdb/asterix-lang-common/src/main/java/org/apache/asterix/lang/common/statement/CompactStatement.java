@@ -34,8 +34,8 @@ public class CompactStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.COMPACT;
+    public byte getKind() {
+        return Statement.Kind.COMPACT;
     }
 
     public Identifier getDataverseName() {
@@ -49,5 +49,10 @@ public class CompactStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 }

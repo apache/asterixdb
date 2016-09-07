@@ -129,11 +129,12 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                     public Pair<Boolean, IPartitioningProperty> coordinateRequirements(
                             IPartitioningProperty requirements, IPartitioningProperty firstDeliveredPartitioning,
                             ILogicalOperator op, IOptimizationContext context) throws AlgebricksException {
-                        if (firstDeliveredPartitioning != null && firstDeliveredPartitioning
+                        if (firstDeliveredPartitioning != null && requirements != null && firstDeliveredPartitioning
                                 .getPartitioningType() == requirements.getPartitioningType()) {
                             switch (requirements.getPartitioningType()) {
                                 case UNORDERED_PARTITIONED: {
-                                    UnorderedPartitionedProperty upp1 = (UnorderedPartitionedProperty) firstDeliveredPartitioning;
+                                    UnorderedPartitionedProperty upp1 =
+                                            (UnorderedPartitionedProperty) firstDeliveredPartitioning;
                                     Set<LogicalVariable> set1 = upp1.getColumnSet();
                                     UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) requirements;
                                     Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
@@ -142,8 +143,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                     Set<LogicalVariable> keysCurrent = uppreq.getColumnSet();
                                     List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(keysCurrent))
                                             ? keysRightBranch : keysLeftBranch;
-                                    List<LogicalVariable> keysSecond = keysFirst == keysRightBranch ? keysLeftBranch
-                                            : keysRightBranch;
+                                    List<LogicalVariable> keysSecond =
+                                            keysFirst == keysRightBranch ? keysLeftBranch : keysRightBranch;
                                     for (LogicalVariable r : uppreq.getColumnSet()) {
                                         EquivalenceClass ecSnd = eqmap.get(r);
                                         boolean found = false;
@@ -177,8 +178,8 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                                 + " to agree with partitioning property " + firstDeliveredPartitioning
                                                 + " delivered by previous input operator.");
                                     }
-                                    UnorderedPartitionedProperty upp2 = new UnorderedPartitionedProperty(modifuppreq,
-                                            requirements.getNodeDomain());
+                                    UnorderedPartitionedProperty upp2 =
+                                            new UnorderedPartitionedProperty(modifuppreq, requirements.getNodeDomain());
                                     return new Pair<Boolean, IPartitioningProperty>(false, upp2);
                                 }
                                 case ORDERED_PARTITIONED: {

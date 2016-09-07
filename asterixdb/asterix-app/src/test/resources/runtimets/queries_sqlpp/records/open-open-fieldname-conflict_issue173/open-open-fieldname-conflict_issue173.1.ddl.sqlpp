@@ -22,8 +22,8 @@
  * Author: zheilbron
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -34,5 +34,5 @@ create type test.opentype as
   fname2 : string
 }
 
-create  table testds(opentype) primary key fname1;
+create  dataset testds(opentype) primary key fname1;
 

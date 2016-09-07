@@ -29,7 +29,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.INodeResolver;
-import org.apache.asterix.om.util.AsterixRuntimeUtil;
+import org.apache.asterix.runtime.util.RuntimeUtils;
 
 /**
  * Resolves a value (DNS/IP Address) or a (Node Controller Id) to the id of a Node Controller running at the location.
@@ -86,7 +86,7 @@ public class NodeResolver implements INodeResolver {
     private static void updateNCs() throws Exception {
         synchronized (ncMap) {
             ncMap.clear();
-            AsterixRuntimeUtil.getNodeControllerMap(ncMap);
+            RuntimeUtils.getNodeControllerMap(ncMap);
             synchronized (ncs) {
                 ncs.clear();
                 for (Entry<InetAddress, Set<String>> entry : ncMap.entrySet()) {

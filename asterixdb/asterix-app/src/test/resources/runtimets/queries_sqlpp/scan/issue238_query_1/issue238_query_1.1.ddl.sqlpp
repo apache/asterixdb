@@ -26,8 +26,8 @@
 
 /* scan and print an ADM file as a dataset of closed records */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -41,5 +41,5 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLPadm(DBLPType) primary key id;
+create  dataset DBLPadm(DBLPType) primary key id;
 

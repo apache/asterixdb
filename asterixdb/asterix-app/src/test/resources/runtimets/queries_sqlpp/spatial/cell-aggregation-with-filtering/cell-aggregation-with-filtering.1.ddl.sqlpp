@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -36,7 +36,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table TwitterData(Tweet) primary key id on group1;
+create  dataset TwitterData(Tweet) primary key id on group1;
 
 create  index rtree_index_point  on TwitterData (loc) type rtree;
 

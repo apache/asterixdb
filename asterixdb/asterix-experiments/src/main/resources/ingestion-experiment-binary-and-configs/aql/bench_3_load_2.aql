@@ -1,0 +1,7 @@
+use dataverse SocialNetworkData;
+
+load dataset GleambookMessages using
+localfs(("path"="172.23.100.190:///hd1/datagen/gbook_messages.adm,172.23.100.191:///hd1/datagen/gbook_messages.adm,172.23.100.192:///hd1/datagen/gbook_messages.adm,172.23.100.193:///hd1/datagen/gbook_messages.adm"),("format"="adm"));
+
+load dataset GleambookUsers using
+localfs(("path"="172.23.100.190:///hd1/datagen/gbook_users.adm,172.23.100.191:///hd1/datagen/gbook_users.adm,172.23.100.192:///hd1/datagen/gbook_users.adm,172.23.100.193:///hd1/datagen/gbook_users.adm"),("format"="adm"));

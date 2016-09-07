@@ -21,11 +21,12 @@ package org.apache.asterix.external.operators;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -47,7 +48,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
 
     /** The unique identifier of the feed that is being ingested. **/
-    private final FeedId feedId;
+    private final EntityId feedId;
 
     private final FeedPolicyAccessor policyAccessor;
 
@@ -71,7 +72,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, IAdapterFactory adapterFactory,
             ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor, RecordDescriptor rDesc) {
         super(spec, 0, 1);
-        this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
+        this.feedId = new EntityId(FeedConnectionId.FEED_EXTENSION_NAME, primaryFeed.getDataverseName(),
+                primaryFeed.getFeedName());
         this.adaptorFactory = adapterFactory;
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
@@ -82,7 +84,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             String adapterFactoryClassName, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor,
             RecordDescriptor rDesc) {
         super(spec, 0, 1);
-        this.feedId = new FeedId(primaryFeed.getDataverseName(), primaryFeed.getFeedName());
+        this.feedId = new EntityId(FeedConnectionId.FEED_EXTENSION_NAME, primaryFeed.getDataverseName(),
+                primaryFeed.getFeedName());
         this.adaptorFactoryClassName = adapterFactoryClassName;
         this.adaptorLibraryName = adapterLibraryName;
         this.adaptorConfiguration = primaryFeed.getAdapterConfiguration();
@@ -124,7 +127,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         return adapterFactory;
     }
 
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return feedId;
     }
 

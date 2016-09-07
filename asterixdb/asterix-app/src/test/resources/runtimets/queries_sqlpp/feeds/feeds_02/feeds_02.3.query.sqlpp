@@ -18,11 +18,12 @@
  */
 /*
  * Description  : Create a feed dataset that uses the feed simulator adapter.
+                  Begin ingestion and verify contents of the dataset post completion.
+ * Expected Res : Success
+ * Date         : 24th Dec 2012
+ */
 
 use feeds;
-
-
 select element x
 from  Tweets as x
-order by x.id
-;
+order by x.id;

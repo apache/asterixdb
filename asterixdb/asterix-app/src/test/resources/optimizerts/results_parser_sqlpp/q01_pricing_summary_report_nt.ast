@@ -188,17 +188,7 @@ RecordConstructor [
     LiteralExpr [STRING] [count_order]
     :
     FunctionCall tpch.count@1[
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#2 ]
-          Field=l
-        ]
-        ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
-        ]
-      )
+      Variable [ Name=$l ]
     ]
   )
 ]

@@ -24,13 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -103,8 +100,24 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                 }
             }
         }
+
+        // Collects subplans that is to be removed.
+        Map<GroupByOperator, List<ILogicalPlan>> gbyToSubplanListMap = new HashMap<>();
         for (Pair<GroupByOperator, Integer> remove : removeList) {
-            remove.first.getNestedPlans().remove((int)remove.second);
+            GroupByOperator groupByOperator = remove.first;
+            ILogicalPlan subplan = remove.first.getNestedPlans().get(remove.second);
+            if(gbyToSubplanListMap.containsKey(groupByOperator)) {
+                List<ILogicalPlan> subplans =  gbyToSubplanListMap.get(groupByOperator);
+                subplans.add(subplan);
+            } else {
+                List<ILogicalPlan> subplans = new ArrayList<>();
+                subplans.add(subplan);
+                gbyToSubplanListMap.put(groupByOperator, subplans);
+            }
+        }
+        // Removes subplans.
+        for(Map.Entry<GroupByOperator, List<ILogicalPlan>> entry: gbyToSubplanListMap.entrySet()){
+            entry.getKey().getNestedPlans().removeAll(entry.getValue());
         }
     }
 

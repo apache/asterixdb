@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 
@@ -54,8 +54,8 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table LineItems_q1(LineItemType) primary key l_orderkey on group1;
+create  dataset LineItems_q1(LineItemType) primary key l_orderkey on group1;
 
-create  table LineID(LineIDType) primary key l_orderkey on group1;
+create  dataset LineID(LineIDType) primary key l_orderkey on group1;
 
 delete from LineItems_q1;

@@ -46,4 +46,8 @@ public interface ILSMComponent {
     public ComponentState getState();
 
     public ILSMComponentFilter getLSMComponentFilter();
+
+    public void setMostRecentMarkerLSN(long lsn);
+
+    public long getMostRecentMarkerLSN();
 }

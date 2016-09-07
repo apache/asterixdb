@@ -28,7 +28,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 import twitter4j.Status;
 
-public class TweetParserFactory implements IRecordDataParserFactory<Status> {
+public class TweetParserFactory implements IRecordDataParserFactory<String> {
 
     private static final long serialVersionUID = 1L;
     private ARecordType recordType;
@@ -44,18 +44,19 @@ public class TweetParserFactory implements IRecordDataParserFactory<Status> {
     }
 
     @Override
-    public IRecordDataParser<Status> createRecordParser(IHyracksTaskContext ctx) {
+    public IRecordDataParser<String> createRecordParser(IHyracksTaskContext ctx) {
         TweetParser dataParser = new TweetParser(recordType);
         return dataParser;
     }
 
     @Override
-    public Class<? extends Status> getRecordClass() {
-        return Status.class;
+    public Class<? extends String> getRecordClass() {
+        return String.class;
     }
 
     @Override
     public void setMetaType(ARecordType metaType) {
+        // do nothing
     }
 
 }

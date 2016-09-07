@@ -22,8 +22,8 @@
 * Date         : 04 Jun 2015
 */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -79,5 +79,5 @@ create type test.Animal as
   id : int64
 }
 
-create  table Animals(Animal) primary key id;
+create  dataset Animals(Animal) primary key id;
 

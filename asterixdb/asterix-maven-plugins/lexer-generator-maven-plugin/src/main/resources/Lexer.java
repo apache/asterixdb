@@ -73,23 +73,22 @@ public class [LEXER_NAME] {
 //  Public interface
 // ================================================================================
 
-    public [LEXER_NAME](java.io.Reader stream) throws IOException{
+    public [LEXER_NAME](java.io.Reader stream) throws IOException {
         reInit(stream);
     }
 
-    public [LEXER_NAME]() throws IOException{
+    public [LEXER_NAME]() {
         reInit();
     }
 
-    public void setBuffer(char[] buffer){
+    public void setBuffer(char[] buffer) {
         this.buffer = buffer;
         tokenBegin = bufpos = 0;
         containsEscapes = false;
-        line++;
         tokenBegin = -1;
     }
 
-    public void reInit(){
+    public void reInit() {
         bufsize        = Integer.MAX_VALUE;
         endOf_UNUSED_Buffer = bufsize;
         endOf_USED_Buffer = bufsize;
@@ -100,7 +99,7 @@ public class [LEXER_NAME] {
         maxUnusedBufferSize = bufsize;
     }
 
-    public void reInit(java.io.Reader stream) throws IOException{
+    public void reInit(java.io.Reader stream) throws IOException {
         done();
         inputStream    = stream;
         bufsize        = 4096;
@@ -118,11 +117,11 @@ public class [LEXER_NAME] {
     }
 
     public String getLastTokenImage() {
-        if (bufpos >= tokenBegin)
+        if (bufpos >= tokenBegin) {
             return new String(buffer, tokenBegin, bufpos - tokenBegin);
-          else
-            return new String(buffer, tokenBegin, bufsize - tokenBegin) +
-                                  new String(buffer, 0, bufpos);
+        } else {
+            return new String(buffer, tokenBegin, bufsize - tokenBegin) + new String(buffer, 0, bufpos);
+        }
     }
 
     public int getColumn() {
@@ -164,27 +163,21 @@ public class [LEXER_NAME] {
     protected void updateLineColumn(char c){
         column++;
 
-        if (prevCharIsLF)
-        {
+        if (prevCharIsLF) {
             prevCharIsLF = false;
             line += (column = 1);
-        }
-        else if (prevCharIsCR)
-        {
+        } else if (prevCharIsCR) {
             prevCharIsCR = false;
-            if (c == '\n')
-            {
+            if (c == '\n') {
                 prevCharIsLF = true;
-            }
-            else
-            {
+            } else {
                 line += (column = 1);
             }
         }
 
         if (c=='\r') {
             prevCharIsCR = true;
-        } else if(c == '\n') {
+        } else if (c == '\n') {
             prevCharIsLF = true;
         }
     }
@@ -194,73 +187,79 @@ public class [LEXER_NAME] {
 // ================================================================================
 
     protected char readNextChar() throws IOException {
-        if (++bufpos >= endOf_USED_Buffer)
+        if (++bufpos >= endOf_USED_Buffer) {
             fillBuff();
+        }
         char c = buffer[bufpos];
         updateLineColumn(c);
         return c;
     }
 
     protected boolean fillBuff() throws IOException {
-        if (endOf_UNUSED_Buffer == endOf_USED_Buffer) // If no more unused buffer space
-        {
-          if (endOf_UNUSED_Buffer == bufsize)         // -- If the previous unused space was
-          {                                           // -- at the end of the buffer
-            if (tokenBegin > maxUnusedBufferSize)     // -- -- If the first N bytes before
-            {                                         //       the current token are enough
-              bufpos = endOf_USED_Buffer = 0;         // -- -- -- setup buffer to use that fragment
-              endOf_UNUSED_Buffer = tokenBegin;
+        if (endOf_UNUSED_Buffer == endOf_USED_Buffer) {
+            // If no more unused buffer space
+            if (endOf_UNUSED_Buffer == bufsize) {
+                // If the previous unused space was at the end of the buffer
+                if (tokenBegin > maxUnusedBufferSize) {
+                    // If the first N bytes before the current token are enough
+                    // setup buffer to use that fragment
+                    bufpos = endOf_USED_Buffer = 0;
+                    endOf_UNUSED_Buffer = tokenBegin;
+                } else if (tokenBegin < 0){
+                    // If no token yet
+                    // reuse the whole buffer
+                    bufpos = endOf_USED_Buffer = 0;
+                } else {
+                    // Otherwise expand buffer after its end
+                    ExpandBuff(false);
+                }
+            } else if (endOf_UNUSED_Buffer > tokenBegin){
+                // If the endOf_UNUSED_Buffer is after the token
+                // set endOf_UNUSED_Buffer to the end of the buffer
+                endOf_UNUSED_Buffer = bufsize;
+            } else if ((tokenBegin - endOf_UNUSED_Buffer) < maxUnusedBufferSize) {
+                // If between endOf_UNUSED_Buffer and the token there is NOT enough space expand the buffer
+                // reorganizing it
+                ExpandBuff(true);
+            } else {
+                // Otherwise there is enough space at the start
+                // so we set the buffer to use that fragment
+                endOf_UNUSED_Buffer = tokenBegin;
             }
-            else if (tokenBegin < 0)                  // -- -- If no token yet
-              bufpos = endOf_USED_Buffer = 0;         // -- -- -- reuse the whole buffer
-            else
-              ExpandBuff(false);                      // -- -- Otherwise expand buffer after its end
-          }
-          else if (endOf_UNUSED_Buffer > tokenBegin)  // If the endOf_UNUSED_Buffer is after the token
-            endOf_UNUSED_Buffer = bufsize;            // -- set endOf_UNUSED_Buffer to the end of the buffer
-          else if ((tokenBegin - endOf_UNUSED_Buffer) < maxUnusedBufferSize)
-          {                                           // If between endOf_UNUSED_Buffer and the token
-            ExpandBuff(true);                         // there is NOT enough space expand the buffer
-          }                                           // reorganizing it
-          else
-            endOf_UNUSED_Buffer = tokenBegin;         // Otherwise there is enough space at the start
-        }                                             // so we set the buffer to use that fragment
+        }
         int i;
-        if ((i = inputStream.read(buffer, endOf_USED_Buffer, endOf_UNUSED_Buffer - endOf_USED_Buffer)) == -1)
-        {
+        if ((i = inputStream.read(buffer, endOf_USED_Buffer, endOf_UNUSED_Buffer - endOf_USED_Buffer)) == -1) {
             inputStream.close();
-            buffer[endOf_USED_Buffer]=(char)EOF_CHAR;
+            buffer[endOf_USED_Buffer] = (char)EOF_CHAR;
             endOf_USED_Buffer++;
             return false;
+        } else {
+            endOf_USED_Buffer += i;
         }
-            else
-                endOf_USED_Buffer += i;
         return true;
     }
 
 
-    protected void ExpandBuff(boolean wrapAround)
-    {
-      char[] newbuffer = new char[bufsize + maxUnusedBufferSize];
+    protected void ExpandBuff(boolean wrapAround) {
+        char[] newbuffer = new char[bufsize + maxUnusedBufferSize];
 
-      try {
-        if (wrapAround) {
-          System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);
-          System.arraycopy(buffer, 0, newbuffer, bufsize - tokenBegin, bufpos);
-          buffer = newbuffer;
-          endOf_USED_Buffer = (bufpos += (bufsize - tokenBegin));
+        try {
+            if (wrapAround) {
+                System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);
+                System.arraycopy(buffer, 0, newbuffer, bufsize - tokenBegin, bufpos);
+                buffer = newbuffer;
+                endOf_USED_Buffer = (bufpos += (bufsize - tokenBegin));
+            } else {
+                System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);
+                buffer = newbuffer;
+                endOf_USED_Buffer = (bufpos -= tokenBegin);
+            }
+        } catch (Throwable t) {
+            throw new Error(t.getMessage());
         }
-        else {
-          System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);
-          buffer = newbuffer;
-          endOf_USED_Buffer = (bufpos -= tokenBegin);
-        }
-      } catch (Throwable t) {
-          throw new Error(t.getMessage());
-      }
 
-      bufsize += maxUnusedBufferSize;
-      endOf_UNUSED_Buffer = bufsize;
-      tokenBegin = 0;
+        bufsize += maxUnusedBufferSize;
+        endOf_UNUSED_Buffer = bufsize;
+        tokenBegin = 0;
     }
 }

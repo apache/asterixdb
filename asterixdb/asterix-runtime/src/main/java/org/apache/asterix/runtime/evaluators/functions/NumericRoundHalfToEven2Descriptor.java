@@ -155,7 +155,8 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
                                 float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
-                                if (Float.isNaN(val) || Float.isInfinite(val) || val == -0.0F || val == 0.0F) {
+                                if (Float.isNaN(val) || Float.isInfinite(val) || Float.compare(val, -0.0F) == 0
+                                        || Float.compare(val, 0.0F) == 0) {
                                     aFloat.setValue(val);
                                     serde.serialize(aFloat, out);
                                 } else {
@@ -168,7 +169,8 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                                 serde = AqlSerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
                                 double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
-                                if (Double.isNaN(val) || Double.isInfinite(val) || val == -0.0D || val == 0.0D) {
+                                if (Double.isNaN(val) || Double.isInfinite(val) || Double.compare(val, -0.0D) == 0
+                                        || Double.compare(val, 0.0D) == 0) {
                                     aDouble.setValue(val);
                                     serde.serialize(aDouble, out);
                                 } else {

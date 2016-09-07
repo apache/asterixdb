@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AsterixDB Console</title>
+  <link rel="stylesheet" href="/queryui/css/bootstrap.min.css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/queryui/css/bootstrap-theme.min.css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/queryui/css/master.css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/queryui/css/json-formatter.min.css" media="screen" title="no title" charset="utf-8">
+  <link rel="stylesheet" href="/queryui/css/codemirror.css" media="screen" title="no title" charset="utf-8">
+  <script src="/queryui/js/jquery-1.12.4.min.js" charset="utf-8"></script>
+  <script src="/queryui/js/angular.min.js" charset="utf-8"></script>
+  <script src="/queryui/js/json-formatter.min.js" charset="utf-8"></script>
+  <script src="/queryui/js/bootstrap.min.js" charset="utf-8"></script>
+  <script src="/queryui/js/codemirror.js" charset="utf-8"></script>
+  <script src="/queryui/js/ui-codemirror.js" charset="utf-8"></script>
+  <script src="/queryui/js/aql-mode.js" charset="utf-8"></script>
+  <script src="/queryui/js/javascript.js" charset="utf-8"></script>
+  <script src="/queryui/js/main.js" charset="utf-8"></script>
+</head>
+<body ng-app="queryui">
+  <div class="row main-container" ng-controller="queryCtrl" ng-init="init()">
+    <div class="col-md-4 left-container" ng-class="leftContainerClass()">
+        <div>
+            <div class="row" ng-show="collapsed">
+                <div class="row-fluid">
+                    <div class="col-sm-12 text-center"><img class="logo-collapsed" src="/queryui/img/asterixlogo-collapsed.png" alt=""/></div>
+                </div>
+                <div class="row-fluid">
+                    <div class="col-sm-12 text-center"><span class="glyphicon glyphicon-menu-hamburger asterix-button"
+                                                           ng-class="collapsed == true ? 'asterix-button-selected' : '' "
+                                                           ng-click="collapsed = !collapsed"></span></div>
+                </div>
+            </div>
+            <div class="row" ng-hide="collapsed">
+                <div class="col-sm-10"><img class="logo" src="/queryui/img/finalasterixlogo.png" alt=""/></div>
+                <div class="col-sm-2 text-right" ng-hide="maximized"><span class="glyphicon glyphicon-menu-left asterix-button"
+                                                       ng-class="collapsed == true ? 'asterix-button-selected' : '' "
+                                                       ng-click="collapsed = !collapsed"></span></div>
+            </div>
+            <div ng-hide="collapsed" class="row">
+                <div class="col-sm-12">
+                    <div class="left-using-container">
+                        <label for="usingSelect" class="col-sm-2 control-label">Using</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="usingSelect" ng-model="selected_dataverse">
+                                <option ng-repeat="entry in dataverses" >{{entry}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-hide="collapsed" class="row">
+                <div class="col-sm-12">
+                    <div class="input-container">
+                        <div id="input-tab">
+                            <ul class="nav nav-justified asterix-nav">
+                                <li ng-class="current_tab == 0 ? 'asterix-nav-active' : '' "><a href="#" ng-click="current_tab = 0">Query</a></li>
+                                <li ng-class="current_tab == 1 ? 'asterix-nav-active' : '' "><a href="#" ng-click="current_tab = 1">History</a></li>
+                            </ul>
+                            <div class="asterix-tabpage" ng-if="current_tab == 0">
+                                <textarea ui-codemirror="queryCmOptions" name="Text1" ng-model="$parent.query_input" class="form-control input-container-code" placeholder="Query" cols="40" rows="15"></textarea>
+                                <div class="icon-maximize"><span class="glyphicon glyphicon-fullscreen asterix-button" aria-hidden="true"
+                                                                 ng-class="$parent.maximized == true ? 'asterix-button-selected' : '' "
+                                                                 ng-click="$parent.maximized = !$parent.maximized"></span></div>
+                            </div>
+                            <div class="asterix-tabpage" ng-if="current_tab == 1">
+                                <div class="asterix-tabpage-scroll">
+                                    <div class="asterix-well margin-bottom" ng-repeat="query in history.slice().reverse() track by $index">
+                                        <div class="row">
+                                            <div class="col-md-8"><code>{{query[0]}}</code></div>
+                                            <div class="col-md-4 asterix-well-right"><a href="" ng-click="previewHistory(query)">Preview</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="icon-maximize"><span class="glyphicon glyphicon-fullscreen asterix-button" aria-hidden="true"
+                                                                 ng-class="$parent.maximized == true ? 'asterix-button-selected' : '' "
+                                                                 ng-click="$parent.maximized = !$parent.maximized"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-hide="collapsed" class="row vh-spacer">
+                <div class="col-sm-12">
+                    <button type="button" class="btn btn-asterix center-block" ng-click="query()" ng-if="uiReady">Run</button>
+                    <button type="button" class="btn btn-asterix center-block" ng-if="!uiReady">Loading Wait..</button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="false">
+            <div class="row">
+                <div class="col-sm-12"><img class="logo logo-collapsed" src="/queryui/img/finalasterixlogo.png" alt="" /></div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 text-center"><span class="glyphicon glyphicon-menu-hamburger asterix-button"
+                                                         ng-class="collapsed == true ? 'asterix-button-selected' : '' "
+                                                         ng-click="collapsed = !collapsed"></span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 right-container" ng-class="rightContainerClass()">
+      <p class="asterix-status">{{statusText}}</p>
+      <div class="alert alert-danger" role="alert" ng-if="errorText != null">{{errorText}}</div>
+      <div class="right-toolbar">
+        <span class="glyphicon glyphicon-align-justify asterix-button" aria-hidden="true"
+          ng-class="current_list == 0 ? 'asterix-button-selected' : '' "
+          ng-click="current_list = 0"></span>
+        <span class="glyphicon glyphicon-th-large asterix-button" aria-hidden="true"
+          ng-class="current_list == 1 ? 'asterix-button-selected' : '' "
+          ng-click="current_list = 1"></span>
+      </div>
+      <div class="asterix-list-view" ng-if="current_list == 0 && results.length != 0">
+        <table class="table table-hover asterix-table">
+          <tbody>
+            <tr ng-repeat="record in $parent.results track by $index">
+              <td ng-repeat="key in recordFunctions.ObjectKeys(record)" class="asterix-inline-item" ng-class="isRecordPlus(record,key)" ng-click="viewRecord(record)">
+                <p class="small asterix-small">{{key == -1 ? 'value' : key}}</p>{{recordFunctions.ObjectValue(record,key)}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="asterix-list-wells" ng-if="current_list == 1 && results.length != 0">
+        <div ng-repeat="record in $parent.results track by $index" class="asterix-well flex-well" ng-click="viewRecord(record)">
+          <div ng-repeat="key in recordFunctions.ObjectKeys(record)" class="row asterix-well-row">
+            <div class="col-sm-6" ng-class="isRecordPlus(record,key)">{{recordFunctions.ObjectValue(record,key)}}</div>
+            <div class="col-sm-6 asterix-well-right"><p class="small asterix-small">{{key == -1 ? 'value' : key}}</p></div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12" ng-if="isNested(record)">
+              <span class="label label-warning">NESTED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="recordModel" role="dialog">
+          <div class="modal-dialog">
+            <div id="input-tab">
+              <ul class="nav nav-justified asterix-nav">
+                <li ng-class="current_preview_tab == 0 ? 'asterix-nav-active' : '' "><a href="#" ng-click="current_preview_tab = 0">Record Viewer</a></li>
+                <li ng-class="current_preview_tab == 1 ? 'asterix-nav-active' : '' "><a href="#" ng-click="current_preview_tab = 1">JSON Viewer</a></li>
+                <!-- <li><a href="#" data-dismiss="modal">
+                  <span class="glyphicon glyphicon-remove"></span>
+                </a></li> -->
+              </ul>
+              <div class="asterix-tabpage" ng-if="current_preview_tab == 0">
+              <json-formatter open="2" ng-if="selectedItem != null" json="selectedItem"></json-formatter>
+              </div>
+              <div class="asterix-tabpage" ng-if="current_preview_tab == 1">
+                <pre ng-bind="previewJSON(selectedItem)"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+</body>
+</html>

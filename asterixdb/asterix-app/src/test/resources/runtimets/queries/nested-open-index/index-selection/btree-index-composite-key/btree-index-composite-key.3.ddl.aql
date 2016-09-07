@@ -27,4 +27,4 @@
 
 use dataverse test;
 
-create index idx_employee_f_l_name on employee(nested.fname:string,nested.lname:string) enforced;
+create index idx_employee_f_l_name on employee(nested.fname:string?,nested.lname:string?) enforced;

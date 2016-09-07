@@ -40,7 +40,9 @@ FROM [  (
         LiteralExpr [STRING] [sim]
         :
         IndexAccessor [
-          Variable [ Name=$sim ]
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [sim]
+          ]
           Index:           LiteralExpr [LONG] [0]
         ]
       )
@@ -145,26 +147,16 @@ FROM [  (
               Variable [ Name=$token ]
               GROUP AS Variable [ Name=#1 ]
               (
-                id:=Variable [ Name=$id ]
-                token:=Variable [ Name=$token ]
                 paper:=Variable [ Name=$paper ]
-                tokenUnranked:=Variable [ Name=$tokenUnranked ]
-                lenDBLP:=Variable [ Name=$lenDBLP ]
-                tokensUnrankedDBLP:=Variable [ Name=$tokensUnrankedDBLP ]
-                idDBLP:=Variable [ Name=$idDBLP ]
-                prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-                paperCSX:=Variable [ Name=$paperCSX ]
-                prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
-                paperDBLP:=Variable [ Name=$paperDBLP ]
+                token:=Variable [ Name=$token ]
               )
 
             Orderby
               FunctionCall fuzzyjoin.sql-count@1[
                 (
                   SELECT ELEMENT [
-                  FieldAccessor [
-                    Variable [ Name=#2 ]
-                    Field=id
+                  FunctionCall Metadata.dataset@1[
+                    LiteralExpr [STRING] [id]
                   ]
                   ]
                   FROM [                    Variable [ Name=#1 ]
@@ -249,30 +241,16 @@ Variable [ Name=$i ]
               Variable [ Name=$token ]
               GROUP AS Variable [ Name=#3 ]
               (
-                id:=Variable [ Name=$id ]
-                token:=Variable [ Name=$token ]
                 paper:=Variable [ Name=$paper ]
-                tokenUnranked:=Variable [ Name=$tokenUnranked ]
-                lenCSX:=Variable [ Name=$lenCSX ]
-                tokensUnrankedCSX:=Variable [ Name=$tokensUnrankedCSX ]
-                idCSX:=Variable [ Name=$idCSX ]
-                tokensDBLP:=Variable [ Name=$tokensDBLP ]
-                lenDBLP:=Variable [ Name=$lenDBLP ]
-                tokensUnrankedDBLP:=Variable [ Name=$tokensUnrankedDBLP ]
-                idDBLP:=Variable [ Name=$idDBLP ]
-                prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-                paperCSX:=Variable [ Name=$paperCSX ]
-                prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
-                paperDBLP:=Variable [ Name=$paperDBLP ]
+                token:=Variable [ Name=$token ]
               )
 
             Orderby
               FunctionCall fuzzyjoin.sql-count@1[
                 (
                   SELECT ELEMENT [
-                  FieldAccessor [
-                    Variable [ Name=#4 ]
-                    Field=id
+                  FunctionCall Metadata.dataset@1[
+                    LiteralExpr [STRING] [id]
                   ]
                   ]
                   FROM [                    Variable [ Name=#3 ]
@@ -333,19 +311,10 @@ Variable [ Name=$i ]
       Variable [ Name=$idCSX ]
       GROUP AS Variable [ Name=#5 ]
       (
-        sim:=Variable [ Name=$sim ]
-        tokensCSX:=Variable [ Name=$tokensCSX ]
-        lenCSX:=Variable [ Name=$lenCSX ]
-        tokensUnrankedCSX:=Variable [ Name=$tokensUnrankedCSX ]
-        idCSX:=Variable [ Name=$idCSX ]
-        tokensDBLP:=Variable [ Name=$tokensDBLP ]
-        lenDBLP:=Variable [ Name=$lenDBLP ]
-        tokensUnrankedDBLP:=Variable [ Name=$tokensUnrankedDBLP ]
-        idDBLP:=Variable [ Name=$idDBLP ]
-        prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-        paperCSX:=Variable [ Name=$paperCSX ]
-        prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
         paperDBLP:=Variable [ Name=$paperDBLP ]
+        prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
+        paperCSX:=Variable [ Name=$paperCSX ]
+        prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
       )
 
   )

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-DROP DATABASE test IF EXISTS;
-CREATE DATABASE test;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
 
 
@@ -46,6 +46,6 @@ CREATE TYPE CustomerType AS CLOSED {
 }
 
 
-CREATE TABLE Customer(CustomerType) PRIMARY KEY c_custkey;
+CREATE DATASET Customer(CustomerType) PRIMARY KEY c_custkey;
 
-CREATE TABLE Orders(OrderType) PRIMARY KEY o_orderkey;
+CREATE DATASET Orders(OrderType) PRIMARY KEY o_orderkey;

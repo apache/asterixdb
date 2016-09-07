@@ -23,24 +23,25 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.management.FeedManager;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.policy.FeedPolicyEnforcer;
-import org.apache.asterix.external.feed.runtime.FeedRuntime;
-import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.asterix.external.util.FeedUtils;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 /*
@@ -60,12 +61,6 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     private FeedPolicyEnforcer policyEnforcer;
 
     /**
-     * The Feed Runtime instance associated with the operator. Feed Runtime
-     * captures the state of the operator while the feed is active.
-     */
-    private FeedRuntime feedRuntime;
-
-    /**
      * A unique identifier for the feed instance. A feed instance represents
      * the flow of data from a feed to a dataset.
      **/
@@ -78,7 +73,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     private int partition;
 
     /** The (singleton) instance of IFeedManager **/
-    private FeedManager feedManager;
+    private ActiveManager feedManager;
 
     private FrameTupleAccessor fta;
 
@@ -109,18 +104,17 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
         this.partition = partition;
         this.connectionId = feedConnectionId;
-        this.feedManager = (FeedManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject()).getFeedManager();
+        this.feedManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+                .getApplicationObject()).getActiveManager();
         this.message = new VSizeFrame(ctx);
-        ctx.setSharedObject(message);
+        TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
         this.opDesc = feedMetaOperatorDescriptor;
         this.recordDescProvider = recordDescProvider;
     }
 
     @Override
     public void open() throws HyracksDataException {
-        FeedRuntimeId runtimeId =
-                new FeedRuntimeId(connectionId.getFeedId(), runtimeType, partition, FeedRuntimeId.DEFAULT_TARGET_ID);
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(connectionId.getFeedId(), runtimeType.toString(), partition);
         try {
             initializeNewFeedRuntime(runtimeId);
             opened = true;
@@ -131,18 +125,16 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         }
     }
 
-    private void initializeNewFeedRuntime(FeedRuntimeId runtimeId) throws Exception {
+    private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
         FeedPolicyAccessor fpa = policyEnforcer.getFeedPolicyAccessor();
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
         if (fpa.bufferingEnabled()) {
             writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator, fpa, fta,
-                    feedManager.getFeedMemoryManager());
+                    feedManager.getFramePool());
         } else {
             writer = new SyncFeedRuntimeInputHandler(ctx, coreOperator, fta);
         }
-        feedRuntime = new FeedRuntime(runtimeId);
-        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, feedRuntime);
     }
 
     @Override
@@ -163,17 +155,9 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            deregister();
-        } finally {
-            if (opened) {
-                writer.close();
-            }
+        if (opened) {
+            writer.close();
         }
-    }
-
-    private void deregister() {
-        feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId, feedRuntime.getRuntimeId());
     }
 
     @Override

@@ -106,20 +106,20 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                                 ByteBuffer buffer = ctx.allocateFrame();
                                 boolean fail = false;
                                 boolean done = false;
-                                boolean flush = false;
                                 while (!fail && !done) {
                                     synchronized (MaterializingPipelinedPartition.this) {
-                                        if (flushRequest) {
-                                            flushRequest = false;
-                                            flush = true;
-                                        }
-                                        while (offset >= size && !eos && !failed && !flush) {
+                                        while (offset >= size && !eos && !failed) {
+                                            if (flushRequest) {
+                                                flushRequest = false;
+                                                writer.flush();
+                                            }
                                             try {
                                                 MaterializingPipelinedPartition.this.wait();
                                             } catch (InterruptedException e) {
                                                 throw new HyracksDataException(e);
                                             }
                                         }
+                                        flushRequest = false;
                                         fail = failed;
                                         done = eos && offset >= size;
                                     }
@@ -134,10 +134,6 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                                         offset += readLen;
                                         buffer.flip();
                                         writer.nextFrame(buffer);
-                                        if (flush) {
-                                            writer.flush();
-                                            flush = false;
-                                        }
                                     }
                                 }
                             }

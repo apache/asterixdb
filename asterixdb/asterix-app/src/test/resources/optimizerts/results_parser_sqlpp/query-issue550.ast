@@ -181,6 +181,5 @@ Groupby
   GROUP AS Variable [ Name=#1 ]
   (
     s:=Variable [ Name=$s ]
-    sample:=Variable [ Name=$sample ]
   )
 

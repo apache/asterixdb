@@ -45,13 +45,13 @@ public class FrameTupleAppender extends AbstractFrameAppender implements IFrameT
      * append fieldSlots and bytes to the current frame
      */
     @Override
-    public boolean append(int[] fieldSlots, byte[] bytes, int offset, int length) throws HyracksDataException {
-        if (canHoldNewTuple(fieldSlots.length, length)) {
-            for (int i = 0; i < fieldSlots.length; ++i) {
-                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, fieldSlots[i]);
+    public boolean append(int[] fieldEndOffsets, byte[] bytes, int offset, int length) throws HyracksDataException {
+        if (canHoldNewTuple(fieldEndOffsets.length, length)) {
+            for (int i = 0; i < fieldEndOffsets.length; ++i) {
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, fieldEndOffsets[i]);
             }
-            System.arraycopy(bytes, offset, array, tupleDataEndOffset + fieldSlots.length * 4, length);
-            tupleDataEndOffset += fieldSlots.length * 4 + length;
+            System.arraycopy(bytes, offset, array, tupleDataEndOffset + fieldEndOffsets.length * 4, length);
+            tupleDataEndOffset += fieldEndOffsets.length * 4 + length;
             IntSerDeUtils.putInt(getBuffer().array(),
                     FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
@@ -63,19 +63,24 @@ public class FrameTupleAppender extends AbstractFrameAppender implements IFrameT
     }
 
     public boolean append(ITupleReference tuple) throws HyracksDataException {
-        int tupleSize = 0;
+        int length = 0;
         for (int i = 0; i < tuple.getFieldCount(); i++) {
-            tupleSize += tuple.getFieldLength(i);
+            length += tuple.getFieldLength(i);
         }
-        if (canHoldNewTuple(tuple.getFieldCount(), tupleSize)) {
-            int offset = 0;
+
+        if (canHoldNewTuple(tuple.getFieldCount(), length)) {
+            length = 0;
             for (int i = 0; i < tuple.getFieldCount(); ++i) {
-                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, offset);
-                System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), array,
-                        tupleDataEndOffset + tuple.getFieldCount() * 4, tuple.getFieldLength(i));
-                offset += tuple.getFieldLength(i);
+                length += tuple.getFieldLength(i);
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, length);
             }
-            tupleDataEndOffset += tuple.getFieldCount() * 4 + tupleSize;
+            length = 0;
+            for (int i = 0; i < tuple.getFieldCount(); ++i) {
+                System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), array,
+                        tupleDataEndOffset + tuple.getFieldCount() * 4 + length, tuple.getFieldLength(i));
+                length += tuple.getFieldLength(i);
+            }
+            tupleDataEndOffset += tuple.getFieldCount() * 4 + length;
             IntSerDeUtils.putInt(getBuffer().array(),
                     FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;

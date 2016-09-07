@@ -31,6 +31,6 @@ id : int32
 
 create dataset testdv.t1(testtype) primary key id;
 
-create index idx1 on testdv.t1(name: string) enforced;
+create index idx1 on testdv.t1(name: string?) enforced;
 
 /* drop index testdv.t1.idx1; */

@@ -103,7 +103,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(ListConstructor lc, List<FunctionDecl> arg) throws AsterixException {
-        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(lc.getExprList(), arg);
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(lc.getExprList(), arg);
         lc.setExprList(p.second);
         return p.first;
     }
@@ -114,24 +114,24 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         for (FieldBinding b : rc.getFbList()) {
             Pair<Boolean, Expression> leftExprInlined = inlineUdfsInExpr(b.getLeftExpr(), arg);
             b.setLeftExpr(leftExprInlined.second);
-            changed = changed | leftExprInlined.first;
+            changed = changed || leftExprInlined.first;
             Pair<Boolean, Expression> rightExprInlined = inlineUdfsInExpr(b.getRightExpr(), arg);
             b.setRightExpr(rightExprInlined.second);
-            changed = changed | rightExprInlined.first;
+            changed = changed || rightExprInlined.first;
         }
         return changed;
     }
 
     @Override
     public Boolean visit(CallExpr pf, List<FunctionDecl> arg) throws AsterixException {
-        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(pf.getExprList(), arg);
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(pf.getExprList(), arg);
         pf.setExprList(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(OperatorExpr ifbo, List<FunctionDecl> arg) throws AsterixException {
-        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(ifbo.getExprList(), arg);
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(ifbo.getExprList(), arg);
         ifbo.setExprList(p.second);
         return p.first;
     }
@@ -192,7 +192,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(OrderbyClause oc, List<FunctionDecl> arg) throws AsterixException {
-        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(oc.getOrderbyList(), arg);
+        Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(oc.getOrderbyList(), arg);
         oc.setOrderbyList(p.second);
         return p.first;
     }
@@ -249,53 +249,52 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             throws AsterixException {
         if (expr.getKind() != Kind.CALL_EXPRESSION) {
             boolean r = expr.accept(this, arg);
-            return new Pair<Boolean, Expression>(r, expr);
+            return new Pair<>(r, expr);
+        }
+        CallExpr f = (CallExpr) expr;
+        boolean r = expr.accept(this, arg);
+        FunctionDecl implem = findFuncDeclaration(f.getFunctionSignature(), arg);
+        if (implem == null) {
+            return new Pair<>(r, expr);
         } else {
-            CallExpr f = (CallExpr) expr;
-            boolean r = expr.accept(this, arg);
-            FunctionDecl implem = findFuncDeclaration(f.getFunctionSignature(), arg);
-            if (implem == null) {
-                return new Pair<Boolean, Expression>(r, expr);
-            } else {
-                // Rewrite the function body itself (without setting unbounded variables to dataset access).
-                // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
-                implem.setFuncBody(rewriteFunctionBody(implem.getFuncBody()));
-                // it's one of the functions we want to inline
-                List<LetClause> clauses = new ArrayList<LetClause>();
-                Iterator<VarIdentifier> paramIter = implem.getParamList().iterator();
-                VariableSubstitutionEnvironment subts = new VariableSubstitutionEnvironment();
-                for (Expression e : f.getExprList()) {
-                    VarIdentifier param = paramIter.next();
-                    // Obs: we could do smth about passing also literals, or let
-                    // variable inlining to take care of this.
-                    if (e.getKind() == Kind.VARIABLE_EXPRESSION) {
-                        subts.addSubstituion(new VariableExpr(param), e);
-                    } else {
-                        VarIdentifier newV = context.newVariable();
-                        Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = e.accept(cloneVisitor,
-                                new VariableSubstitutionEnvironment());
-                        LetClause c = new LetClause(new VariableExpr(newV), (Expression) p1.first);
-                        clauses.add(c);
-                        subts.addSubstituion(new VariableExpr(param), new VariableExpr(newV));
-                    }
-                }
-
-                Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = implem.getFuncBody().accept(cloneVisitor,
-                        subts);
-                Expression resExpr;
-                if (clauses.isEmpty()) {
-                    resExpr = (Expression) p2.first;
+            // Rewrite the function body itself (without setting unbounded variables to dataset access).
+            // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
+            implem.setFuncBody(rewriteFunctionBody(implem.getFuncBody()));
+            // it's one of the functions we want to inline
+            List<LetClause> clauses = new ArrayList<>();
+            Iterator<VarIdentifier> paramIter = implem.getParamList().iterator();
+            VariableSubstitutionEnvironment subts = new VariableSubstitutionEnvironment();
+            for (Expression e : f.getExprList()) {
+                VarIdentifier param = paramIter.next();
+                // Obs: we could do smth about passing also literals, or let
+                // variable inlining to take care of this.
+                if (e.getKind() == Kind.VARIABLE_EXPRESSION) {
+                    subts.addSubstituion(new VariableExpr(param), e);
                 } else {
-                    resExpr = generateQueryExpression(clauses, (Expression) p2.first);
+                    VarIdentifier newV = context.newVariable();
+                    Pair<ILangExpression, VariableSubstitutionEnvironment> p1 =
+                            e.accept(cloneVisitor, new VariableSubstitutionEnvironment());
+                    LetClause c = new LetClause(new VariableExpr(newV), (Expression) p1.first);
+                    clauses.add(c);
+                    subts.addSubstituion(new VariableExpr(param), new VariableExpr(newV));
                 }
-                return new Pair<Boolean, Expression>(true, resExpr);
             }
+
+            Pair<ILangExpression, VariableSubstitutionEnvironment> p2 =
+                    implem.getFuncBody().accept(cloneVisitor, subts);
+            Expression resExpr;
+            if (clauses.isEmpty()) {
+                resExpr = (Expression) p2.first;
+            } else {
+                resExpr = generateQueryExpression(clauses, (Expression) p2.first);
+            }
+            return new Pair<>(true, resExpr);
         }
     }
 
-    protected Pair<Boolean, ArrayList<Expression>> inlineUdfsInExprList(List<Expression> exprList,
-            List<FunctionDecl> fds) throws AsterixException {
-        ArrayList<Expression> newList = new ArrayList<Expression>();
+    protected Pair<Boolean, List<Expression>> inlineUdfsInExprList(List<Expression> exprList, List<FunctionDecl> fds)
+            throws AsterixException {
+        ArrayList<Expression> newList = new ArrayList<>();
         boolean changed = false;
         for (Expression e : exprList) {
             Pair<Boolean, Expression> p = inlineUdfsInExpr(e, fds);
@@ -304,11 +303,11 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
                 changed = true;
             }
         }
-        return new Pair<Boolean, ArrayList<Expression>>(changed, newList);
+        return new Pair<>(changed, newList);
     }
 
     protected Expression rewriteFunctionBody(Expression expr) throws AsterixException {
-        Query wrappedQuery = new Query();
+        Query wrappedQuery = new Query(false);
         wrappedQuery.setBody(expr);
         wrappedQuery.setTopLevel(false);
         IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();

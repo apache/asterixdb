@@ -18,7 +18,7 @@
  */
 
 declare function GT(a,b) {
-if ((a > b))
-    then true
+    case when a > b then true
     else false
+    end
 };

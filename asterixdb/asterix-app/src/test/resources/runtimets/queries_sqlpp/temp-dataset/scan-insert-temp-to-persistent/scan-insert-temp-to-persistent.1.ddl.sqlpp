@@ -23,8 +23,8 @@
  * Date            : March 27 2015
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -48,7 +48,7 @@ create type test.MyMiniRecord as
   point : point
 }
 
-create temporary table MyData(MyRecord) primary key id;
+create temporary dataset MyData(MyRecord) primary key id;
 
-create  table MyMiniData(MyMiniRecord) primary key id;
+create  dataset MyMiniData(MyMiniRecord) primary key id;
 

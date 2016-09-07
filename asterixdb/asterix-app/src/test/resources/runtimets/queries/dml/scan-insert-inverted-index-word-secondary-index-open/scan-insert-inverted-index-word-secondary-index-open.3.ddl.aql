@@ -26,4 +26,4 @@
 use dataverse test;
 
 create index keyword_index on DBLP(title) type keyword;
-create index keyword_index1 on DBLPOpen(title:string) type keyword enforced;
+create index keyword_index1 on DBLPOpen(title:string?) type keyword enforced;

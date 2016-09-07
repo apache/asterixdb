@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.types;
 
+import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,6 +26,8 @@ import org.json.JSONObject;
 public class AUnorderedListType extends AbstractCollectionType {
 
     private static final long serialVersionUID = 1L;
+
+    public static final AUnorderedListType FULLY_OPEN_UNORDEREDLIST_TYPE = new AUnorderedListType(null,"");
 
     /**
      * @param itemType

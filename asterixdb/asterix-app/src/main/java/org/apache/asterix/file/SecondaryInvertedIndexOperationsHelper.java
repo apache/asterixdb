@@ -27,6 +27,7 @@ import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.IAType;
@@ -35,7 +36,6 @@ import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -113,8 +113,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         // Prepare record descriptor used in the assign op, and the optional
         // select op.
         secondaryFieldAccessEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeys + numFilterFields];
-        ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys
-                + numFilterFields];
+        ISerializerDeserializer[] secondaryRecFields =
+                new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys + numFilterFields];
         ISerializerDeserializer[] enforcedRecFields = new ISerializerDeserializer[1 + numPrimaryKeys + numFilterFields];
         secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
         ITypeTraits[] enforcedTypeTraits = new ITypeTraits[1 + numPrimaryKeys];
@@ -123,8 +123,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         if (numSecondaryKeys > 0) {
             secondaryFieldAccessEvalFactories[0] = FormatUtils.getDefaultFormat().getFieldAccessEvaluatorFactory(
                     isEnforcingKeyTypes ? enforcedItemType : itemType, secondaryKeyFields.get(0), numPrimaryKeys);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
-                    secondaryKeyFields.get(0), itemType);
+            Pair<IAType, Boolean> keyTypePair =
+                    Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), itemType);
             secondaryKeyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(secondaryKeyType);
@@ -154,8 +154,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         // Set tokenizer factory.
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
-        tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(), indexType,
-                gramLength);
+        tokenizerFactory =
+                NonTaggedFormatUtil.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(), indexType, gramLength);
         // Type traits for inverted-list elements. Inverted lists contain
         // primary keys.
         invListsTypeTraits = new ITypeTraits[numPrimaryKeys];
@@ -169,8 +169,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         // For tokenization, sorting and loading.
         // One token (+ optional partitioning field) + primary keys.
         numTokenKeyPairFields = (!isPartitioned) ? 1 + numPrimaryKeys : 2 + numPrimaryKeys;
-        ISerializerDeserializer[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields
-                + numFilterFields];
+        ISerializerDeserializer[] tokenKeyPairFields =
+                new ISerializerDeserializer[numTokenKeyPairFields + numFilterFields];
         ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
         tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
         tokenKeyPairFields[0] = serdeProvider.getSerializerDeserializer(secondaryKeyType);
@@ -226,11 +226,11 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                 localResourceMetadata, LocalResource.LSMInvertedIndexResource);
 
         IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
-        LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp = new LSMInvertedIndexCreateOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
-                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
-                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
+        LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp =
+                new LSMInvertedIndexCreateOperatorDescriptor(spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits,
+                        tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
+                        dataflowHelperFactory, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(invIndexCreateOp);
@@ -249,12 +249,12 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
 
         AbstractOperatorDescriptor sourceOp = primaryScanOp;
-        if (isEnforcingKeyTypes) {
+        if (isEnforcingKeyTypes && !enforcedItemType.equals(itemType)) {
             sourceOp = createCastOp(spec, dataset.getDatasetType());
             spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
         }
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp, numSecondaryKeys,
-                secondaryRecDesc);
+        AlgebricksMetaOperatorDescriptor asterixAssignOp =
+                createAssignOp(spec, sourceOp, numSecondaryKeys, secondaryRecDesc);
 
         // If any of the secondary fields are nullable, then add a select op
         // that filters nulls.
@@ -267,8 +267,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         AbstractOperatorDescriptor tokenizerOp = createTokenizerOp(spec);
 
         // Sort by token + primary keys.
-        ExternalSortOperatorDescriptor sortOp = createSortOp(spec, tokenKeyPairComparatorFactories,
-                tokenKeyPairRecDesc);
+        ExternalSortOperatorDescriptor sortOp =
+                createSortOp(spec, tokenKeyPairComparatorFactories, tokenKeyPairRecDesc);
 
         // Create secondary inverted index bulk load op.
         LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = createInvertedIndexBulkLoadOp(spec);
@@ -364,11 +364,11 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
         IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
-        LSMInvertedIndexCompactOperator compactOp = new LSMInvertedIndexCompactOperator(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
-                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
-                NoOpOperationCallbackFactory.INSTANCE);
+        LSMInvertedIndexCompactOperator compactOp =
+                new LSMInvertedIndexCompactOperator(spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits,
+                        tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
+                        dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);
 

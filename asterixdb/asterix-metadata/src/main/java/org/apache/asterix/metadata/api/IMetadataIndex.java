@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.api;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.asterix.common.transactions.DatasetId;
@@ -33,7 +34,7 @@ import org.apache.hyracks.api.io.FileReference;
 /**
  * Descriptor interface for a primary or secondary index on metadata datasets.
  */
-public interface IMetadataIndex {
+public interface IMetadataIndex extends Serializable {
     public String getDataverseName();
 
     public String getNodeGroupName();
@@ -83,5 +84,4 @@ public interface IMetadataIndex {
     boolean isPrimaryIndex();
 
     int[] getPrimaryKeyIndexes();
-
 }

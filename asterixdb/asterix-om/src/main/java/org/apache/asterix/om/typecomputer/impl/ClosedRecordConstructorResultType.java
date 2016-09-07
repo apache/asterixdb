@@ -21,20 +21,17 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import java.util.Iterator;
 
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -69,10 +66,8 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
                 e2Type = AUnionType.createUnknownableType(unionType.getActualType());
             }
             fieldTypes[i] = e2Type;
-            if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                ConstantExpression nameExpr = (ConstantExpression) e1;
-                fieldNames[i] = ((AString) ((AsterixConstantValue) nameExpr.getValue()).getObject()).getStringValue();
-            } else {
+            fieldNames[i] = ConstantExpressionUtil.getStringConstant(e1);
+            if (fieldNames[i] == null) {
                 throw new AlgebricksException(
                         "Field name " + i + "(" + e1 + ") in call to closed-record-constructor is not a constant.");
             }

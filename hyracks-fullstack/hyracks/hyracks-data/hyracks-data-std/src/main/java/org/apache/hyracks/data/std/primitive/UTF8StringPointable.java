@@ -21,6 +21,7 @@ package org.apache.hyracks.data.std.primitive;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IComparable;
@@ -177,23 +178,40 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
-     * return the byte offset of the first character of the matching string. Not including the MetaLength
-     *
-     * @param src
-     * @param pattern
-     * @param ignoreCase
-     * @return
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @return the byte offset of the first character of the matching string. Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        return find(src, pattern, ignoreCase, 0);
+    }
+
+    /**
+     * @param src,
+     *            the source string.
+     * @param pattern,
+     *            the pattern string.
+     * @param ignoreCase,
+     *            to ignore case or not.
+     * @param startMatch,
+     *            the start offset.
+     * @return the byte offset of the first character of the matching string after <code>startMatchPos}</code>.
+     *         Not including the MetaLength.
+     */
+    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+        int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
         final int srcStart = src.getMetaDataLength();
         final int pttnStart = pattern.getMetaDataLength();
 
-        int startMatch = 0;
         int maxStart = srcUtfLen - pttnUtfLen;
-        while (startMatch <= maxStart) {
-            int c1 = startMatch;
+        while (startMatchPos <= maxStart) {
+            int c1 = startMatchPos;
             int c2 = 0;
             while (c1 < srcUtfLen && c2 < pttnUtfLen) {
                 char ch1 = src.charAt(srcStart + c1);
@@ -208,9 +226,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 c2 += pattern.charSize(pttnStart + c2);
             }
             if (c2 == pttnUtfLen) {
-                return startMatch;
+                return startMatchPos;
             }
-            startMatch += src.charSize(srcStart + startMatch);
+            startMatchPos += src.charSize(srcStart + startMatchPos);
         }
         return -1;
     }
@@ -411,6 +429,17 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         lowercase(this, builder, out);
     }
 
+    /**
+     * Generates a lower case string of an input string.
+     *
+     * @param src
+     *            , the input source string.
+     * @param builder
+     *            , a builder for the resulting string.
+     * @param out
+     *            , the storage for a result string.
+     * @throws IOException
+     */
     public static void lowercase(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
         final int srcUtfLen = src.getUTF8Length();
@@ -429,6 +458,17 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         uppercase(this, builder, out);
     }
 
+    /**
+     * Generates an upper case string of an input string.
+     *
+     * @param src
+     *            , the input source string.
+     * @param builder
+     *            , a builder for the resulting string.
+     * @param out
+     *            , the storage for a result string.
+     * @throws IOException
+     */
     public static void uppercase(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
         final int srcUtfLen = src.getUTF8Length();
@@ -440,6 +480,105 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             builder.appendChar(Character.toUpperCase(src.charAt(srcStart + byteIndex)));
             byteIndex += src.charSize(srcStart + byteIndex);
         }
+        builder.finish();
+    }
+
+    public void initCap(UTF8StringBuilder builder, GrowableArray out) throws IOException {
+        initCap(this, builder, out);
+    }
+
+    /**
+     * Generates a "title" format string from an input source string, i.e., the first letter of each word
+     * is in the upper case while the other letter is in the lower case.
+     *
+     * @param src
+     *            , the input source string.
+     * @param builder
+     *            , a builder for the resulting string.
+     * @param out
+     *            , the storage for a result string.
+     * @throws IOException
+     */
+    public static void initCap(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        final int srcUtfLen = src.getUTF8Length();
+        final int srcStart = src.getMetaDataLength();
+
+        builder.reset(out, srcUtfLen);
+        boolean toUpperCase = true;
+        int byteIndex = 0;
+        while (byteIndex < srcUtfLen) {
+            char originalChar = src.charAt(srcStart + byteIndex);
+            boolean isLetter = Character.isLetter(originalChar);
+
+            // Make the first character into upper case while the later ones into lower case.
+            char resultChar = toUpperCase && isLetter ? Character.toUpperCase(originalChar) : (isLetter ? Character
+                    .toLowerCase(originalChar) : originalChar);
+            builder.appendChar(resultChar);
+            byteIndex += src.charSize(srcStart + byteIndex);
+
+            // Whether the next letter needs to switch to the upper case.
+            toUpperCase = !isLetter;
+        }
+        builder.finish();
+    }
+
+    public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right, CharSet charSet)
+            throws IOException {
+        trim(this, builder, out, left, right, charSet);
+    }
+
+    /**
+     * Generates a trimmed string of an input source string.
+     *
+     * @param srcPtr
+     *            , the input source string.
+     * @param builder
+     *            , the result string builder.
+     * @param out
+     *            , the storage for the output string.
+     * @param left
+     *            , whether to trim the left side.
+     * @param right
+     *            , whether to trim the right side.
+     * @param charSet
+     *            , the chars that should be trimmed.
+     * @throws IOException
+     */
+    public static void trim(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out, boolean left,
+            boolean right, CharSet charSet) throws IOException {
+        final int srcUtfLen = srcPtr.getUTF8Length();
+        final int srcStart = srcPtr.getMetaDataLength();
+        // Finds the start Index (inclusive).
+        int startIndex = 0;
+        if (left) {
+            while (startIndex < srcUtfLen) {
+                char ch = srcPtr.charAt(srcStart + startIndex);
+                if (!charSet.contains(ch)) {
+                    break;
+                }
+                startIndex += srcPtr.charSize(srcStart + startIndex);
+            }
+        }
+
+        // Finds the end index (exclusive).
+        int endIndex = srcUtfLen;
+        if (right) {
+            endIndex = startIndex;
+            int cursorIndex = startIndex;
+            while (cursorIndex < srcUtfLen) {
+                char ch = srcPtr.charAt(srcStart + cursorIndex);
+                cursorIndex += srcPtr.charSize(srcStart + cursorIndex);
+                if (!charSet.contains(ch)) {
+                    endIndex = cursorIndex;
+                }
+            }
+        }
+
+        // Outputs the desired substring.
+        int len = endIndex - startIndex;
+        builder.reset(out, len);
+        builder.appendUtf8StringPointable(srcPtr, srcPtr.getStartOffset() + srcStart + startIndex, len);
         builder.finish();
     }
 

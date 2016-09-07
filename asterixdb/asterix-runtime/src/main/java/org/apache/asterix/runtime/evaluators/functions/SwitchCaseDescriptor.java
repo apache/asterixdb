@@ -93,13 +93,14 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
                     }
 
                     private boolean equals(IPointable out1, IPointable out2) {
-                        if (out1.getStartOffset() != out2.getStartOffset() || out1.getLength() != out2.getLength()) {
+                        if (out1.getLength() != out2.getLength()) {
                             return false;
                         }
                         byte[] data1 = out1.getByteArray();
                         byte[] data2 = out2.getByteArray();
-                        for (int i = out1.getStartOffset(); i < out1.getLength(); i++) {
-                            if (data1[i] != data2[i]) {
+                        for (int i = out1.getStartOffset(), j = out2.getStartOffset(), k = 0; k < out1
+                                .getLength(); ++i, ++j, ++k) {
+                            if (data1[i] != data2[j]) {
                                 return false;
                             }
                         }

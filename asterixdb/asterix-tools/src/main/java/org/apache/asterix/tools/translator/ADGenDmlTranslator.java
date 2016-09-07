@@ -53,13 +53,13 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         typeDataGenMap = new HashMap<TypeSignature, TypeDataGen>();
 
         for (Statement stmt : aqlStatements) {
-            if (stmt.getKind().equals(Statement.Kind.TYPE_DECL)) {
+            if (stmt.getKind() == Statement.Kind.TYPE_DECL) {
                 TypeDecl td = (TypeDecl) stmt;
-                String typeDataverse = td.getDataverseName() == null ? defaultDataverse : td.getDataverseName()
-                        .getValue();
+                String typeDataverse =
+                        td.getDataverseName() == null ? defaultDataverse : td.getDataverseName().getValue();
 
-                Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td.getTypeDef(), td
-                        .getIdent().getValue(), typeDataverse, types);
+                Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td.getTypeDef(),
+                        td.getIdent().getValue(), typeDataverse, types);
                 types.putAll(typeInStmt);
 
                 TypeSignature signature = new TypeSignature(typeDataverse, td.getIdent().getValue());
@@ -73,7 +73,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
 
     private String getDefaultDataverse() {
         for (Statement stmt : aqlStatements) {
-            if (stmt.getKind().equals(Statement.Kind.DATAVERSE_DECL)) {
+            if (stmt.getKind() == Statement.Kind.DATAVERSE_DECL) {
                 return ((DataverseDecl) stmt).getDataverseName().getValue();
             }
         }

@@ -47,4 +47,4 @@ create external dataset MyData(MyRecord)
 using hdfs
 (("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/spatialDataNested.json"),("input-format"="text-input-format"),("input-format"="text-input-format"),("format"="adm"));
 
-create index idx on MyData(nested.id:int32) enforced;
+create index idx on MyData(nested.id:int32?) enforced;

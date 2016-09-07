@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -30,7 +30,7 @@ create type test.UserType as
   md5 : binary
 }
 
-create  table User(UserType) primary key md5;
+create  dataset User(UserType) primary key md5;
 
-create  table UserCopy(UserType) primary key md5;
+create  dataset UserCopy(UserType) primary key md5;
 

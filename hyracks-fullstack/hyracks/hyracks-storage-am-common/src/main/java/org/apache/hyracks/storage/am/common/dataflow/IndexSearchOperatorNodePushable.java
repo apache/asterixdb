@@ -199,7 +199,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         if (index != null) {
             // if index == null, then the index open was not successful
             try {
-                appender.write(writer, true);
+                if (appender.getTupleCount() > 0) {
+                    appender.write(writer, true);
+                }
             } catch (Throwable th) {
                 closeException = new HyracksDataException(th);
             }

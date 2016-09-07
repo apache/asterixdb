@@ -20,8 +20,6 @@ package org.apache.asterix.external.dataflow;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
-
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.FeedLogManager;
@@ -30,10 +28,12 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 
 public class FeedTupleForwarder implements ITupleForwarder {
 
@@ -44,7 +44,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
     private boolean paused = false;
     private boolean initialized;
 
-    public FeedTupleForwarder(@Nonnull FeedLogManager feedLogManager) {
+    public FeedTupleForwarder(FeedLogManager feedLogManager) {
         this.feedLogManager = feedLogManager;
     }
 
@@ -59,7 +59,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
             this.writer = writer;
             this.appender = new FrameTupleAppender(frame);
             // Set null feed message
-            VSizeFrame message = (VSizeFrame) ctx.getSharedObject();
+            VSizeFrame message = TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
             // a null message
             message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
             message.getBuffer().flip();

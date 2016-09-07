@@ -60,7 +60,7 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         return new LocalityAwarePartitionDataWriter(ctx, edwFactory, recordDesc, tpcf.createPartitioner(),
                 nConsumerPartitions, localityMap, index);
     }
@@ -78,8 +78,9 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
             int receiverIndex, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         for (int i = 0; i < nProducerPartitions; i++) {
-            if (localityMap.isConnected(i, receiverIndex, nConsumerPartitions))
+            if (localityMap.isConnected(i, receiverIndex, nConsumerPartitions)) {
                 expectedPartitions.set(i);
+            }
         }
         NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
                 expectedPartitions);
@@ -87,5 +88,4 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
         return new PartitionCollector(ctx, getConnectorId(), receiverIndex, expectedPartitions, frameReader,
                 channelReader);
     }
-
 }

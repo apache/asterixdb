@@ -67,10 +67,10 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
     public static final int FEED_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.FEED_RECORDTYPE);
+    private ISerializerDeserializer<ARecord> recordSerDes =
+            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.FEED_RECORDTYPE);
 
-    public FeedTupleTranslator(boolean getTuple) {
+    protected FeedTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FEED_DATASET.getFieldCount());
     }
 
@@ -87,8 +87,9 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
     private Feed createFeedFromARecord(ARecord feedRecord) {
         Feed feed = null;
-        String dataverseName = ((AString) feedRecord
-                .getValueByPos(MetadataRecordTypes.FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX)).getStringValue();
+        String dataverseName =
+                ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX))
+                        .getStringValue();
         String feedName = ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_FEED_NAME_FIELD_INDEX))
                 .getStringValue();
 
@@ -219,8 +220,8 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
                 primaryDetailsRecordBuilder.reset(MetadataRecordTypes.PRIMARY_FEED_DETAILS_RECORDTYPE);
 
                 AMutableString aString = new AMutableString("");
-                ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                        .getSerializerDeserializer(BuiltinType.ASTRING);
+                ISerializerDeserializer<AString> stringSerde =
+                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
                 // write field 0
                 fieldValue.reset();
@@ -278,8 +279,8 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         propertyRecordBuilder.reset(MetadataRecordTypes.FEED_ADAPTER_CONFIGURATION_RECORDTYPE);
         AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

@@ -22,8 +22,8 @@
  * Date            : March 27 2015
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -48,7 +48,7 @@ create type test.LineItemType as
   l_comment : string
 }
 
-create temporary table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create temporary dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
 create  index part_index  on LineItem (l_partkey) type btree;
 

@@ -24,4 +24,4 @@
  */
 use dataverse KeyVerse;
 
-create index VBucketIndex on KVStore(exp:int32) enforced;
+create index VBucketIndex on KVStore(exp:int32?) enforced;

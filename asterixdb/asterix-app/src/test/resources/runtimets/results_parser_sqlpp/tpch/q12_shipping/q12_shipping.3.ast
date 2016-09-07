@@ -13,31 +13,35 @@ RecordConstructor [
     FunctionCall tpch.sum@1[
       (
         SELECT ELEMENT [
-        FunctionCall tpch.switch-case@5[
-          OperatorExpr [
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$i ]
-                Field=o_orderpriority
+        CASE            OperatorExpr [
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=o_orderpriority
+                ]
+                =
+                LiteralExpr [STRING] [1-URGENT]
               ]
-              =
-              LiteralExpr [STRING] [1-URGENT]
-            ]
-            or
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$i ]
-                Field=o_orderpriority
+              or
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=o_orderpriority
+                ]
+                =
+                LiteralExpr [STRING] [2-HIGH]
               ]
-              =
-              LiteralExpr [STRING] [2-HIGH]
             ]
-          ]
-          LiteralExpr [TRUE]
-          LiteralExpr [LONG] [1]
-          LiteralExpr [FALSE]
-          LiteralExpr [LONG] [0]
-        ]
+
+        WHEN             LiteralExpr [TRUE]
+        THEN             LiteralExpr [LONG] [1]
+
+        WHEN             LiteralExpr [FALSE]
+        THEN             LiteralExpr [LONG] [0]
+
+        ELSE             LiteralExpr [NULL]
+
+        END
         ]
         FROM [          Variable [ Name=$o ]
           AS Variable [ Name=$i ]
@@ -51,31 +55,32 @@ RecordConstructor [
     FunctionCall tpch.sum@1[
       (
         SELECT ELEMENT [
-        FunctionCall tpch.switch-case@5[
-          OperatorExpr [
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$i ]
-                Field=o_orderpriority
+        CASE            LiteralExpr [TRUE]
+
+        WHEN             OperatorExpr [
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=o_orderpriority
+                ]
+                =
+                LiteralExpr [STRING] [1-URGENT]
               ]
-              =
-              LiteralExpr [STRING] [1-URGENT]
-            ]
-            or
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$i ]
-                Field=o_orderpriority
+              or
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=o_orderpriority
+                ]
+                =
+                LiteralExpr [STRING] [2-HIGH]
               ]
-              =
-              LiteralExpr [STRING] [2-HIGH]
             ]
-          ]
-          LiteralExpr [TRUE]
-          LiteralExpr [LONG] [0]
-          LiteralExpr [FALSE]
-          LiteralExpr [LONG] [1]
-        ]
+        THEN             LiteralExpr [LONG] [0]
+
+        ELSE             LiteralExpr [LONG] [1]
+
+        END
         ]
         FROM [          Variable [ Name=$o ]
           AS Variable [ Name=$i ]
@@ -180,8 +185,8 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    o:=Variable [ Name=$o ]
     l:=Variable [ Name=$l ]
+    o:=Variable [ Name=$o ]
   )
 
 Orderby

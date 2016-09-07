@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
@@ -73,6 +74,8 @@ public class OptimizerTest {
     private static final ILangCompilationProvider aqlCompilationProvider = new AqlCompilationProvider();
     private static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
 
+    private static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
+
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
@@ -81,7 +84,7 @@ public class OptimizerTest {
 
         HDFSCluster.getInstance().setup();
 
-        AsterixHyracksIntegrationUtil.init(true);
+        integrationUtil.init(true);
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
@@ -98,7 +101,7 @@ public class OptimizerTest {
 
         HDFSCluster.getInstance().cleanup();
 
-        AsterixHyracksIntegrationUtil.deinit(true);
+        integrationUtil.deinit(true);
     }
 
     private static void suiteBuildPerFile(File file, Collection<Object[]> testArgs, String path) {
@@ -168,8 +171,9 @@ public class OptimizerTest {
             PrintWriter plan = new PrintWriter(actualFile);
             ILangCompilationProvider provider = queryFile.getName().endsWith("aql") ? aqlCompilationProvider
                     : sqlppCompilationProvider;
-            IHyracksClientConnection hcc = AsterixHyracksIntegrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider);
+            IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
+            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider,
+                    new DefaultStatementExecutorFactory(null));
             try {
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {

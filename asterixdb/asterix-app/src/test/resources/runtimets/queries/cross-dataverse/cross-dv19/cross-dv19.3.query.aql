@@ -24,5 +24,6 @@
 
 for $l in dataset('Metadata.Dataset')
 where $l.DataverseName='test1' or $l.DataverseName='test2' or $l.DataverseName='TwitterData'
+order by $l.DataverseName, $l.DatasetName, $l.DatatypeDataverseName
 return $l
 

@@ -24,21 +24,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
-import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -47,7 +47,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  */
 public abstract class AbstractLangTranslator {
 
-    protected static final Logger LOGGER = Logger.getLogger(AbstractLangTranslator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AbstractLangTranslator.class.getName());
 
     protected static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
@@ -55,7 +55,7 @@ public abstract class AbstractLangTranslator {
 
         if (!(AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)
                 && AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted())) {
-            int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
+            int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
                 while (!AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)
@@ -84,7 +84,7 @@ public abstract class AbstractLangTranslator {
         }
 
         if (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()) {
-            int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
+            int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
                 while (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()
@@ -107,7 +107,7 @@ public abstract class AbstractLangTranslator {
         String message = null;
         String dataverse = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
         switch (stmt.getKind()) {
-            case INSERT:
+            case Statement.Kind.INSERT:
                 InsertStatement insertStmt = (InsertStatement) stmt;
                 if (insertStmt.getDataverseName() != null) {
                     dataverse = insertStmt.getDataverseName().getValue();
@@ -119,7 +119,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case DELETE:
+            case Statement.Kind.DELETE:
                 DeleteStatement deleteStmt = (DeleteStatement) stmt;
                 if (deleteStmt.getDataverseName() != null) {
                     dataverse = deleteStmt.getDataverseName().getValue();
@@ -131,7 +131,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case NODEGROUP_DROP:
+            case Statement.Kind.NODEGROUP_DROP:
                 String nodegroupName = ((NodeGroupDropStatement) stmt).getNodeGroupName().getValue();
                 invalidOperation = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME.equals(nodegroupName);
                 if (invalidOperation) {
@@ -139,17 +139,17 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
-            case DATAVERSE_DROP:
+            case Statement.Kind.DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME
-                        .equals(dvDropStmt.getDataverseName().getValue());
+                invalidOperation =
+                        MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvDropStmt.getDataverseName().getValue());
                 if (invalidOperation) {
                     message = "Cannot drop dataverse:" + dvDropStmt.getDataverseName().getValue();
                 }
                 break;
 
-            case DATASET_DROP:
-                DropStatement dropStmt = (DropStatement) stmt;
+            case Statement.Kind.DATASET_DROP:
+                DropDatasetStatement dropStmt = (DropDatasetStatement) stmt;
                 if (dropStmt.getDataverseName() != null) {
                     dataverse = dropStmt.getDataverseName().getValue();
                 }
@@ -159,7 +159,7 @@ public abstract class AbstractLangTranslator {
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
                 }
                 break;
-            case DATASET_DECL:
+            case Statement.Kind.DATASET_DECL:
                 DatasetDecl datasetStmt = (DatasetDecl) stmt;
                 Map<String, String> hints = datasetStmt.getHints();
                 if (hints != null && !hints.isEmpty()) {

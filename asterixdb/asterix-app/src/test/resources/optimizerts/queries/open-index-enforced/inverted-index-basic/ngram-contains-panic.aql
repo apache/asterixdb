@@ -35,7 +35,7 @@ create type DBLPType as open {
 
 create dataset DBLP(DBLPType) primary key id;
 
-create index ngram_index on DBLP(title:string) type ngram(3) enforced;
+create index ngram_index on DBLP(title:string?) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-basic_ngram-contains-panic.adm";
 

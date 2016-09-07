@@ -53,4 +53,4 @@ create dataset TweetMessagesTmp(TweetMessageType)
 primary key tweetid;
 
 
-create index msgNgramIx on TweetMessages(message-text: string) type ngram(3) enforced;
+create index msgNgramIx on TweetMessages(message-text: string?) type ngram(3) enforced;

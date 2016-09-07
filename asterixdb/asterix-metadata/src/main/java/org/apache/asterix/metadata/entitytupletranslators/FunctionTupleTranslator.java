@@ -60,7 +60,7 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.FUNCTION_RECORDTYPE);
 
-    public FunctionTupleTranslator(boolean getTuple) {
+    protected FunctionTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FUNCTION_DATASET.getFieldCount());
     }
 
@@ -71,15 +71,17 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
         int recordLength = frameTuple.getFieldLength(FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord functionRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord functionRecord = recordSerDes.deserialize(in);
         return createFunctionFromARecord(functionRecord);
     }
 
     private Function createFunctionFromARecord(ARecord functionRecord) {
-        String dataverseName = ((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
-        String functionName = ((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTIONNAME_FIELD_INDEX)).getStringValue();
+        String dataverseName =
+                ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_DATAVERSENAME_FIELD_INDEX))
+                        .getStringValue();
+        String functionName =
+                ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTIONNAME_FIELD_INDEX))
+                        .getStringValue();
         String arity = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_ARITY_FIELD_INDEX)).getStringValue();
 
@@ -99,8 +101,9 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
         String language = ((AString) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX)).getStringValue();
 
-        String functionKind = ((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX)).getStringValue();
+        String functionKind =
+                ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX))
+                        .getStringValue();
         return new Function(dataverseName, functionName, Integer.parseInt(arity), params, returnType, definition,
                 language, functionKind);
 

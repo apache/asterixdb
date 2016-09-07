@@ -18,8 +18,8 @@
  */
 /* scan and print a delimited text file */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -33,5 +33,5 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLP1(DBLPType) primary key id;
+create  dataset DBLP1(DBLPType) primary key id;
 

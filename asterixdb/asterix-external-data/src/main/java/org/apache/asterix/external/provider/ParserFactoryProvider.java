@@ -20,8 +20,6 @@ package org.apache.asterix.external.provider;
 
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataParserFactory;
@@ -57,7 +55,7 @@ public class ParserFactoryProvider {
     }
 
     @SuppressWarnings("rawtypes")
-    public static IDataParserFactory getDataParserFactory(@Nonnull String parser) throws AsterixException {
+    public static IDataParserFactory getDataParserFactory(String parser) throws AsterixException {
         switch (parser) {
             case ExternalDataConstants.FORMAT_ADM:
             case ExternalDataConstants.FORMAT_JSON:

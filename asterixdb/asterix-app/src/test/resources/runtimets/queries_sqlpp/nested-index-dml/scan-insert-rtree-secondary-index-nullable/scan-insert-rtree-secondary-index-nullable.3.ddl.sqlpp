@@ -20,7 +20,7 @@
 use test;
 
 
-create  table MyMiniData(MyMiniRecord) primary key nested.id;
+create  dataset MyMiniData(MyMiniRecord) primary key nested.id;
 
 create  index rtree_index_point  on MyMiniData (nested.point) type rtree;
 

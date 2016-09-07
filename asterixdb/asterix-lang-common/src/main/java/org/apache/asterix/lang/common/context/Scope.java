@@ -224,4 +224,13 @@ public final class Scope {
         }
         return vars;
     }
+
+    // Returns local symbols within the current scope.
+    public Set<String> getLocalSymbols() {
+        return symbols.keySet();
+    }
+
+    public Scope getParentScope(){
+        return parent;
+    }
 }

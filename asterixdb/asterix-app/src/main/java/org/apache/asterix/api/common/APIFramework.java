@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.common;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -26,6 +27,9 @@ import java.util.List;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
+import org.apache.asterix.app.cc.CompilerExtensionManager;
+import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
@@ -36,21 +40,23 @@ import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
 import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
+import org.apache.asterix.dataflow.data.common.ConflictingTypeResolver;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
-import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.optimizer.base.RuleCollections;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -61,11 +67,13 @@ import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.Sequentia
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
@@ -84,19 +92,21 @@ import org.json.JSONException;
  * to Hyracks through the Hyracks client interface.
  */
 public class APIFramework {
-    public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
     private final IRewriterFactory rewriterFactory;
     private final IAstPrintVisitorFactory astPrintVisitorFactory;
     private final ILangExpressionToPlanTranslatorFactory translatorFactory;
+    private final CompilerExtensionManager cExtensionManager;
 
-    public APIFramework(ILangCompilationProvider compilationProvider) {
+    public APIFramework(ILangCompilationProvider compilationProvider, CompilerExtensionManager cExtensionManager) {
         this.rewriterFactory = compilationProvider.getRewriterFactory();
         this.astPrintVisitorFactory = compilationProvider.getAstPrintVisitorFactory();
         this.translatorFactory = compilationProvider.getExpressionToPlanTranslatorFactory();
+        this.cExtensionManager = cExtensionManager;
     }
 
-    private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultLogicalRewrites() {
+    private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>
+            buildDefaultLogicalRewrites(CompilerExtensionManager ccExtensionManager) {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<>();
         SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
         SequentialFixpointRuleController seqCtrlFullDfs = new SequentialFixpointRuleController(true);
@@ -104,14 +114,16 @@ public class APIFramework {
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildInitialTranslationRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildTypeInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildAutogenerateIDRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection()));
+        defaultLogicalRewrites
+                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(ccExtensionManager)));
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
         // fj
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildFuzzyJoinRuleCollection()));
         //
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection()));
+        defaultLogicalRewrites
+                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(ccExtensionManager)));
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
@@ -148,10 +160,11 @@ public class APIFramework {
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
-                PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
+                IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
+                AlgebricksPartitionConstraint clusterLocations) {
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
-                    physicalOptimizationConfig, clusterLocations);
+                    conflictingTypeResolver, physicalOptimizationConfig, clusterLocations);
         }
     }
 
@@ -203,38 +216,36 @@ public class APIFramework {
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
-        ILangExpressionToPlanTranslator t = translatorFactory.createExpressionToPlanTranslator(queryMetadataProvider,
-                varCounter);
+        ILangExpressionToPlanTranslator t =
+                translatorFactory.createExpressionToPlanTranslator(queryMetadataProvider, varCounter);
 
         ILogicalPlan plan;
         // statement = null when it's a query
-        if (statement == null || statement.getKind() != Kind.LOAD) {
+        if (statement == null || statement.getKind() != Statement.Kind.LOAD) {
             plan = t.translate(rwQ, outputDatasetName, statement);
         } else {
             plan = t.translateLoad(statement);
         }
 
-        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
             conf.out().println();
 
             printPlanPrefix(conf, "Logical plan");
-            if (rwQ != null || (statement != null && statement.getKind() == Kind.LOAD)) {
-                StringBuilder buffer = new StringBuilder();
-                PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-                conf.out().print(buffer);
+            if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
+                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
+                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
             }
             printPlanPostfix(conf);
         }
 
         //print the plot for the logical plan
-        AsterixExternalProperties xProps = AsterixAppContextInfo.getInstance().getExternalProperties();
+        AsterixExternalProperties xProps = AsterixAppContextInfo.INSTANCE.getExternalProperties();
         Boolean plot = xProps.getIsPlottingEnabled();
         if (plot) {
             PlanPlotter.printLogicalPlan(plan);
         }
 
-        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
+        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.INSTANCE.getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
         int groupFrameLimit = (int) (compilerProperties.getGroupMemorySize() / frameSize);
@@ -249,10 +260,10 @@ public class APIFramework {
         int intervalMaxDuration = (int) (compilerProperties.getIntervalMaxDuration());
         OptimizationConfUtil.getPhysicalOptimizationConfig().getMaxIntervalDuration(intervalMaxDuration);
 
-        HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
-                AqlOptimizationContextFactory.INSTANCE);
+        HeuristicCompilerFactoryBuilder builder =
+                new HeuristicCompilerFactoryBuilder(AqlOptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
-        builder.setLogicalRewrites(buildDefaultLogicalRewrites());
+        builder.setLogicalRewrites(buildDefaultLogicalRewrites(cExtensionManager));
         builder.setPhysicalRewrites(buildDefaultPhysicalRewrites());
         IDataFormat format = queryMetadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
@@ -261,6 +272,7 @@ public class APIFramework {
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
         builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
+        builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
         builder.setClusterLocations(queryMetadataProvider.getClusterLocations());
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
@@ -273,18 +285,26 @@ public class APIFramework {
             if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                 if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                     // For Optimizer tests.
-                    StringBuilder buffer = new StringBuilder();
+                    AlgebricksAppendable buffer = new AlgebricksAppendable(conf.out());
                     PlanPrettyPrinter.printPhysicalOps(plan, buffer, 0);
-                    conf.out().print(buffer);
                 } else {
                     printPlanPrefix(conf, "Optimized logical plan");
-                    if (rwQ != null || (statement != null && statement.getKind() == Kind.LOAD)) {
-                        StringBuilder buffer = new StringBuilder();
-                        PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-                        conf.out().print(buffer);
+                    if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
+                        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
+                        PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
                     }
                     printPlanPostfix(conf);
                 }
+            }
+        }
+        if (rwQ != null && rwQ.isExplain()) {
+            try {
+                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
+                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+                ResultUtil.displayResults(pvisitor.get().toString(), conf, new Stats(), null);
+                return null;
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
             }
         }
 
@@ -323,9 +343,9 @@ public class APIFramework {
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        JobEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
-                queryMetadataProvider.isWriteTransaction());
-        JobSpecification spec = compiler.createJob(AsterixAppContextInfo.getInstance(), jobEventListenerFactory);
+        JobEventListenerFactory jobEventListenerFactory =
+                new JobEventListenerFactory(asterixJobId, queryMetadataProvider.isWriteTransaction());
+        JobSpecification spec = compiler.createJob(AsterixAppContextInfo.INSTANCE, jobEventListenerFactory);
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             printPlanPrefix(conf, "Hyracks job");

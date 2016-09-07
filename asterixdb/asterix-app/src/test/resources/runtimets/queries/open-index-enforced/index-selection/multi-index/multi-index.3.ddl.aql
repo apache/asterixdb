@@ -19,6 +19,6 @@
 
 use dataverse test;
 
-create index ngram_index on DBLPOpen(title:string) type ngram(3) enforced;
-create index keyword_index on DBLPOpen(title:string) type keyword enforced;
-create index btree_index on DBLPOpen(title:string) enforced;
+create index ngram_index on DBLPOpen(title:string?) type ngram(3) enforced;
+create index keyword_index on DBLPOpen(title:string?) type keyword enforced;
+create index btree_index on DBLPOpen(title:string?) enforced;

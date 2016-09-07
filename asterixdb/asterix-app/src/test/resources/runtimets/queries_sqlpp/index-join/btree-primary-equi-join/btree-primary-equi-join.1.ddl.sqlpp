@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -61,7 +61,7 @@ create type test.OrderType as
   items : [int64]
 }
 
-create  table Customers(CustomerType) primary key cid;
+create  dataset Customers(CustomerType) primary key cid;
 
-create  table Orders(OrderType) primary key oid;
+create  dataset Orders(OrderType) primary key oid;
 

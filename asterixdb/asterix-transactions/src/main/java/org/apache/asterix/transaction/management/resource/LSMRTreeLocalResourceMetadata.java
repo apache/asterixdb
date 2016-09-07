@@ -81,16 +81,16 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getDatasetLifecycleManager()
                 .getVirtualBufferCaches(datasetID, ioDeviceNum);
         try {
-            return LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches, file,
+                    runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
+                    rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
                     new BaseOperationTracker(datasetID,
                             runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
                     runtimeContextProvider.getLSMIOScheduler(),
                     LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
-                    rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, isPointMBR);
+                    rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, isPointMBR);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

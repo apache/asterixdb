@@ -28,11 +28,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
-
 import org.apache.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -130,27 +129,29 @@ public final class HyracksConnection implements IHyracksClientConnection {
     public DeploymentId deployBinary(List<String> jars) throws Exception {
         /** generate a deployment id */
         DeploymentId deploymentId = new DeploymentId(UUID.randomUUID().toString());
-        List<URL> binaryURLs = new ArrayList<URL>();
-        if (jars != null && jars.size() > 0) {
-            HttpClient hc = new DefaultHttpClient();
-            /** upload jars through a http client one-by-one to the CC server */
-            for (String jar : jars) {
-                int slashIndex = jar.lastIndexOf('/');
-                String fileName = jar.substring(slashIndex + 1);
-                String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/"
-                        + deploymentId.toString() + "&" + fileName;
-                HttpPut put = new HttpPut(url);
-                put.setEntity(new FileEntity(new File(jar), "application/octet-stream"));
-                HttpResponse response = hc.execute(put);
-                if (response != null) {
+        List<URL> binaryURLs = new ArrayList<>();
+        if (jars != null && !jars.isEmpty()) {
+            CloseableHttpClient hc = new DefaultHttpClient();
+            try {
+                /** upload jars through a http client one-by-one to the CC server */
+                for (String jar : jars) {
+                    int slashIndex = jar.lastIndexOf('/');
+                    String fileName = jar.substring(slashIndex + 1);
+                    String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/"
+                            + deploymentId.toString() + "&" + fileName;
+                    HttpPut put = new HttpPut(url);
+                    put.setEntity(new FileEntity(new File(jar), "application/octet-stream"));
+                    HttpResponse response = hc.execute(put);
                     response.getEntity().consumeContent();
+                    if (response.getStatusLine().getStatusCode() != 200) {
+                        hci.unDeployBinary(deploymentId);
+                        throw new HyracksException(response.getStatusLine().toString());
+                    }
+                    /** add the uploaded URL address into the URLs of jars to be deployed at NCs */
+                    binaryURLs.add(new URL(url));
                 }
-                if (response.getStatusLine().getStatusCode() != 200) {
-                    hci.unDeployBinary(deploymentId);
-                    throw new HyracksException(response.getStatusLine().toString());
-                }
-                /** add the uploaded URL address into the URLs of jars to be deployed at NCs */
-                binaryURLs.add(new URL(url));
+            } finally {
+                hc.close();
             }
         }
         /** deploy the URLs to the CC and NCs */

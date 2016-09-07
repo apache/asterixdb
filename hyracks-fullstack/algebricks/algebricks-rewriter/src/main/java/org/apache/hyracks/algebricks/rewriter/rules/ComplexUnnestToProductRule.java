@@ -92,11 +92,12 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
         // If we found a join, simply use it as the outer root.
         if (unnestOrJoin.getOperatorTag() != LogicalOperatorTag.INNERJOIN
                 && unnestOrJoin.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
-            // We've found a second unnest. First, sanity check that the unnest does not produce any vars that are used by the plan above (until the first unnest).
-            List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
-            VariableUtilities.getProducedVariables(unnestOrJoin, producedVars);
-            for (LogicalVariable producedVar : producedVars) {
-                if (innerUsedVars.contains(producedVar)) {
+            // We've found a second unnest. First, sanity check that the unnest does not output any live variables
+            // that are used by the plan above (until the first unnest).
+            List<LogicalVariable> liveVars = new ArrayList<>();
+            VariableUtilities.getLiveVariables(unnestOrJoin, liveVars);
+            for (LogicalVariable liveVar : liveVars) {
+                if (innerUsedVars.contains(liveVar)) {
                     return false;
                 }
             }

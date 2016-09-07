@@ -52,4 +52,4 @@ primary key tweetid;
 create dataset TweetMessagesTmp(TweetMessageType)
 primary key tweetid;
 
-create index msgCountBIx on TweetMessages(countB: int64) type btree enforced;
+create index msgCountBIx on TweetMessages(countB: int64?) type btree enforced;

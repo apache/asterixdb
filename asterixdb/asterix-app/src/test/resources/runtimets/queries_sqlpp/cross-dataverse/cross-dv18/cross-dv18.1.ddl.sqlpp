@@ -24,11 +24,11 @@
  * Ignored      : Not part of the current test build because of Issue 199
  */
 
-drop  database test if exists;
-drop  database fest if exists;
-create  database test;
+drop  dataverse test if exists;
+drop  dataverse fest if exists;
+create  dataverse test;
 
-create  database fest;
+create  dataverse fest;
 
 create type test.testtype as
 {
@@ -40,7 +40,7 @@ create type fest.testtype as
   id : int32
 }
 
-create  table test.t1(testtype) primary key id;
+create  dataset test.t1(testtype) primary key id;
 
-create  table fest.t1(testtype) primary key id;
+create  dataset fest.t1(testtype) primary key id;
 

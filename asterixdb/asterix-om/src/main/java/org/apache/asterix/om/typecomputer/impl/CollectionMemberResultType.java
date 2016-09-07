@@ -37,8 +37,9 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
     @Override
     protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
         if (type.getTypeTag() != ATypeTag.UNORDEREDLIST && type.getTypeTag() != ATypeTag.ORDEREDLIST) {
-            throw new AlgebricksException("The input type for input argument " + argIndex + "(" + type.getDisplayName()
-                    + ")" + " is not expected.");
+            throw new AlgebricksException(
+                    "Unnest or index access expects the input to be a collection, but it was of type "
+                    + type);
         }
     }
 

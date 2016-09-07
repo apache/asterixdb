@@ -65,10 +65,13 @@ public final class NodeRegistration implements Serializable {
 
     private final HeartbeatSchema hbSchema;
 
+    private final NetworkAddress messagingPort;
+
     public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
             NetworkAddress datasetPort, String osName, String arch, String osVersion, int nProcessors, String vmName,
             String vmVersion, String vmVendor, String classpath, String libraryPath, String bootClasspath,
-            List<String> inputArguments, Map<String, String> systemProperties, HeartbeatSchema hbSchema) {
+            List<String> inputArguments, Map<String, String> systemProperties, HeartbeatSchema hbSchema,
+            NetworkAddress messagingPort) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
@@ -87,6 +90,7 @@ public final class NodeRegistration implements Serializable {
         this.inputArguments = inputArguments;
         this.systemProperties = systemProperties;
         this.hbSchema = hbSchema;
+        this.messagingPort = messagingPort;
     }
 
     public InetSocketAddress getNodeControllerAddress() {
@@ -159,5 +163,9 @@ public final class NodeRegistration implements Serializable {
 
     public Map<String, String> getSystemProperties() {
         return systemProperties;
+    }
+
+    public NetworkAddress getMessagingPort() {
+        return messagingPort;
     }
 }

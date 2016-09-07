@@ -23,8 +23,8 @@
  * Date            : March 13 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -54,7 +54,7 @@ create type test.MyRecordOpen as
   circle : circle
 }
 
-create  table MyData(MyRecord) primary key id;
+create  dataset MyData(MyRecord) primary key id;
 
-create  table MyDataOpen(MyRecordOpen) primary key id;
+create  dataset MyDataOpen(MyRecordOpen) primary key id;
 

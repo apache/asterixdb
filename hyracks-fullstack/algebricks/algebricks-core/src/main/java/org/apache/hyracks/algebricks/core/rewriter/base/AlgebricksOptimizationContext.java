@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
@@ -44,6 +45,9 @@ import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesV
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.dataflow.std.base.RangeId;
 
+/**
+ * The Algebricks default implementation for IOptimizationContext.
+ */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class AlgebricksOptimizationContext implements IOptimizationContext {
 
@@ -84,21 +88,23 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private final IMissableTypeComputer nullableTypeComputer;
     private final INodeDomain defaultNodeDomain;
     private final LogicalOperatorPrettyPrintVisitor prettyPrintVisitor;
+    private final IConflictingTypeResolver conflictingTypeResovler;
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
-            IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
-            PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations) {
+            IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
+            IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
+            AlgebricksPartitionConstraint clusterLocations) {
         this(varCounter, expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
-                nullableTypeComputer, physicalOptimizationConfig, clusterLocations,
+                missableTypeComputer, conflictingTypeResovler, physicalOptimizationConfig, clusterLocations,
                 new LogicalOperatorPrettyPrintVisitor());
     }
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
-            PhysicalOptimizationConfig physicalOptimizationConfig, AlgebricksPartitionConstraint clusterLocations,
-            LogicalOperatorPrettyPrintVisitor prettyPrintVisitor) {
+            IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
+            AlgebricksPartitionConstraint clusterLocations, LogicalOperatorPrettyPrintVisitor prettyPrintVisitor) {
         this.varCounter = varCounter;
         this.rangeIdCounter = -1;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
@@ -108,6 +114,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         this.physicalOptimizationConfig = physicalOptimizationConfig;
         this.defaultNodeDomain = new DefaultNodeGroupDomain(clusterLocations);
         this.prettyPrintVisitor = prettyPrintVisitor;
+        this.conflictingTypeResovler = conflictingTypeResovler;
     }
 
     @Override
@@ -123,8 +130,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public LogicalVariable newVar() {
         varCounter++;
-        LogicalVariable var = new LogicalVariable(varCounter);
-        return var;
+        return new LogicalVariable(varCounter);
     }
 
     @Override
@@ -213,10 +219,7 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public List<LogicalVariable> findPrimaryKey(LogicalVariable recordVar) {
         FunctionalDependency fd = varToPrimaryKey.get(recordVar);
-        if (fd == null) {
-            return new ArrayList<>();
-        }
-        return new ArrayList<>(fd.getHead());
+        return fd == null ? new ArrayList<>() : new ArrayList<>(fd.getHead());
     }
 
     @Override
@@ -339,5 +342,10 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor() {
         return prettyPrintVisitor;
+    }
+
+    @Override
+    public IConflictingTypeResolver getConflictingTypeResolver() {
+        return conflictingTypeResovler;
     }
 }

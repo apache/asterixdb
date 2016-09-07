@@ -50,8 +50,13 @@ public class RefreshExternalDatasetStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.EXTERNAL_DATASET_REFRESH;
+    public byte getKind() {
+        return Statement.Kind.EXTERNAL_DATASET_REFRESH;
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 
 }

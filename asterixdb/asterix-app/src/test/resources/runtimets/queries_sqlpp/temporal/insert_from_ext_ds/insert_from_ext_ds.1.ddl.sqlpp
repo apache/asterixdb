@@ -22,8 +22,8 @@
  * Expected result: success
  */
 
-drop  database testdvt if exists;
-create  database testdvt;
+drop  dataverse testdvt if exists;
+create  dataverse testdvt;
 
 use testdvt;
 
@@ -40,5 +40,5 @@ create type testdvt.testtype as
   dayTimeDurationField : `day-time-duration`?
 }
 
-create external  table testds(testtype) using localfs((`path`=`asterix_nc1://data/temporal/temporalData.json`),(`format`=`adm`));
+create external  dataset testds(testtype) using localfs((`path`=`asterix_nc1://data/temporal/temporalData.json`),(`format`=`adm`));
 

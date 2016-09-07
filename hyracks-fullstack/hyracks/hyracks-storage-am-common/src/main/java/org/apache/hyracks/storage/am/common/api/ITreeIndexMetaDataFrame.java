@@ -22,6 +22,11 @@ package org.apache.hyracks.storage.am.common.api;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexMetaDataFrame {
+
+    //Storage version #. Change this if you alter any tree frame formats to stop
+    // possible corruption from old versions reading new formats.
+    public static final int VERSION = 2;
+
     public void initBuffer(byte level);
 
     public void setPage(ICachedPage page);
@@ -62,4 +67,11 @@ public interface ITreeIndexMetaDataFrame {
     public long getLSN();
 
     public void setLSN(long lsn);
+
+    public int getVersion();
+
+    // Special placeholder for LSN information of a marker log. used for rollback information
+    public long getLastMarkerLSN();
+
+    public void setLastMarkerLSN(long lsn);
 }

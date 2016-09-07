@@ -22,8 +22,8 @@
  * Date         : 25th Jun 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -38,5 +38,5 @@ create type test.FacebookMessageType as
   `send-time` : datetime
 }
 
-create  table FacebookMessages(FacebookMessageType) primary key `message-id` with filter on `send-time`;
+create  dataset FacebookMessages(FacebookMessageType) primary key `message-id` with filter on `send-time`;
 

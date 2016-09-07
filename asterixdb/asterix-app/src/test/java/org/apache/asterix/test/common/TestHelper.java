@@ -18,7 +18,18 @@
  */
 package org.apache.asterix.test.common;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public final class TestHelper {
 
@@ -31,4 +42,34 @@ public final class TestHelper {
         return false;
     }
 
+    public static String joinPath(String... pathElements) {
+        return StringUtils.join(pathElements, File.separatorChar);
+    }
+
+    public static void unzip(String sourceFile, String outputDir) throws IOException {
+        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
+            try (ZipFile zipFile = new ZipFile(sourceFile)) {
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    File entryDestination = new File(outputDir,  entry.getName());
+                    if (!entry.isDirectory()) {
+                        entryDestination.getParentFile().mkdirs();
+                        try (InputStream in = zipFile.getInputStream(entry);
+                             OutputStream out = new FileOutputStream(entryDestination)) {
+                            IOUtils.copy(in, out);
+                        }
+                    }
+                }
+            }
+        } else {
+            Process process = new ProcessBuilder("unzip", "-d", outputDir, sourceFile).start();
+            try {
+                process.waitFor();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
+            }
+        }
+    }
 }

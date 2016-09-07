@@ -22,8 +22,8 @@
  * Date:             March 6th 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -35,5 +35,5 @@ create type test.Employee as
   salary : int32
 }
 
-create  table Office(Employee) primary key id;
+create  dataset Office(Employee) primary key id;
 

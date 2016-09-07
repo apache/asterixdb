@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.IOException;
+
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -53,8 +55,7 @@ public class StringEqualDescriptor extends AbstractScalarFunctionDynamicDescript
                         AsterixBuiltinFunctions.STRING_EQUAL) {
 
                     @Override
-                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right)
-                            throws AlgebricksException {
+                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
                         return left.compareTo(right) == 0;
                     }
 

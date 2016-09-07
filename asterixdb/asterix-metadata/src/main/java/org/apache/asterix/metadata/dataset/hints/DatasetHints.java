@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.dataset.hints;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -113,7 +113,7 @@ public class DatasetHints {
                 if (intValue < 0) {
                     return new Pair<Boolean, String>(false, "Value must be >= 0");
                 }
-                int numNodesInCluster = AsterixAppContextInfo.getInstance().getMetadataProperties().getNodeNames()
+                int numNodesInCluster = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodeNames()
                         .size();
                 if (numNodesInCluster < intValue) {
                     return new Pair<Boolean, String>(false,

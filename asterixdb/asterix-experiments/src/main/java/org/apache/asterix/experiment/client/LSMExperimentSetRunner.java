@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import org.apache.asterix.experiment.action.base.SequentialActionList;
 import org.apache.asterix.experiment.builder.AbstractExperimentBuilder;
 import org.apache.asterix.experiment.builder.PerfTestAggBuilder;
+import org.apache.asterix.experiment.builder.PresetClusterPerfBuilder;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -104,14 +105,14 @@ public class LSMExperimentSetRunner {
             return sshKeyLocation;
         }
 
-        @Option(name = "-d", aliases = "--datagen-duartion", usage = "Data generation duration in seconds", metaVar = "DATAGENDURATION")
+        @Option(name = "-d", aliases = "--datagen-duration", usage = "Data generation duration in seconds", metaVar = "DATAGENDURATION")
         private int duration;
 
         public int getDuration() {
             return duration;
         }
 
-        @Option(name = "-qd", aliases = "--querygen-duartion", usage = "Query generation duration in seconds", metaVar = "QUERYGENDURATION")
+        @Option(name = "-qd", aliases = "--querygen-duration", usage = "Query generation duration in seconds", metaVar = "QUERYGENDURATION")
         private int queryDuration;
 
         public int getQueryDuration() {
@@ -287,6 +288,7 @@ public class LSMExperimentSetRunner {
                 suite.add(new Experiment5DBuilder(config));
         */
                 suite.add(new PerfTestAggBuilder(config));
+                suite.add(new PresetClusterPerfBuilder(config));
 
         Pattern p = config.getRegex() == null ? null : Pattern.compile(config.getRegex());
 

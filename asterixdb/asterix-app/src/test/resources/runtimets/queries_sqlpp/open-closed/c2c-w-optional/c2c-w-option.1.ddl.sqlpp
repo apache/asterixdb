@@ -25,8 +25,8 @@
  * Date           : 23rd May 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -39,7 +39,7 @@ create type test.TestType as
   optnl_fld : string?
 }
 
-create  table T1(TestType) primary key id;
+create  dataset T1(TestType) primary key id;
 
-create  table T2(TestType) primary key id;
+create  dataset T2(TestType) primary key id;
 

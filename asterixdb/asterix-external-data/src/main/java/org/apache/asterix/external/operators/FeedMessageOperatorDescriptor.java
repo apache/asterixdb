@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.operators;
 
-import org.apache.asterix.external.feed.api.IFeedMessage;
+import org.apache.asterix.active.IActiveMessage;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -28,17 +28,20 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
 /**
- * Sends a control message to the registered message queue for feed specified by its feedId.
+ * @deprecated
+ *             Sends a control message to the registered message queue for feed specified by its feedId.
+ *             For messaging, use IMessageBroker interfaces
  */
+@Deprecated
 public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
     private final FeedConnectionId connectionId;
-    private final IFeedMessage feedMessage;
+    private final IActiveMessage feedMessage;
 
     public FeedMessageOperatorDescriptor(JobSpecification spec, FeedConnectionId connectionId,
-            IFeedMessage feedMessage) {
+            IActiveMessage feedMessage) {
         super(spec, 0, 1);
         this.connectionId = connectionId;
         this.feedMessage = feedMessage;
@@ -47,7 +50,7 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new FeedMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition, nPartitions);
+        return new FeedMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition);
     }
 
 }

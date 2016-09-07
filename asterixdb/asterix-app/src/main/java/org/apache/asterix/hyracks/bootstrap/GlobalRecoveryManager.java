@@ -32,7 +32,6 @@ import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -41,26 +40,27 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
 
-    private static ClusterState state;
     private static final Logger LOGGER = Logger.getLogger(GlobalRecoveryManager.class.getName());
+    private static GlobalRecoveryManager instance;
+    private static ClusterState state;
     private HyracksConnection hcc;
-    public static GlobalRecoveryManager INSTANCE;
 
-    public GlobalRecoveryManager(HyracksConnection hcc) throws Exception {
-        state = ClusterState.UNUSABLE;
+    private GlobalRecoveryManager(HyracksConnection hcc) {
+        setState(ClusterState.UNUSABLE);
         this.hcc = hcc;
     }
 
     @Override
     public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds) {
-        state = AsterixClusterProperties.INSTANCE.getState();
+        setState(AsterixClusterProperties.INSTANCE.getState());
         AsterixClusterProperties.INSTANCE.setGlobalRecoveryCompleted(false);
         return Collections.emptySet();
     }
@@ -115,7 +115,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                                         // Get indexes
                                         List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
                                                 dataset.getDataverseName(), dataset.getDatasetName());
-                                        if (indexes.size() > 0) {
+                                        if (!indexes.isEmpty()) {
                                             // Get the state of the dataset
                                             ExternalDatasetDetails dsd = (ExternalDatasetDetails) dataset
                                                     .getDatasetDetails();
@@ -203,22 +203,32 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                          * Note: Throwing this illegal state exception will terminate this thread
                          * and feeds listeners will not be notified.
                          */
-                        LOGGER.severe("Global recovery was not completed successfully" + e);
+                        LOGGER.log(Level.SEVERE, "Global recovery was not completed successfully: ", e);
                         try {
                             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                         } catch (Exception e1) {
-                            if (LOGGER.isLoggable(Level.SEVERE)) {
-                                LOGGER.severe("Exception in aborting" + e.getMessage());
-                            }
+                            LOGGER.log(Level.SEVERE, "Exception in aborting", e1);
                             throw new IllegalStateException(e1);
                         }
                     }
                     AsterixClusterProperties.INSTANCE.setGlobalRecoveryCompleted(true);
                     LOGGER.info("Global Recovery Completed");
                 }
-            });
-            state = newState;
+            }, "RecoveryThread");
+            setState(newState);
             recoveryThread.start();
         }
+    }
+
+    public static GlobalRecoveryManager instance() {
+        return instance;
+    }
+
+    public static synchronized void instantiate(HyracksConnection hcc) {
+        instance = new GlobalRecoveryManager(hcc);
+    }
+
+    public static synchronized void setState(ClusterState state) {
+        GlobalRecoveryManager.state = state;
     }
 }

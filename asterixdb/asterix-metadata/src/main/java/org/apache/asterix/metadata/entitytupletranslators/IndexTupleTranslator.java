@@ -76,15 +76,15 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String INDEX_ISENFORCED_FIELD_NAME = "IsEnforced";
     public static final String INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME = "SearchKeySourceIndicator";
 
-    private OrderedListBuilder listBuilder = new OrderedListBuilder();
-    private OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
-    private AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
-    private AOrderedListType int8List = new AOrderedListType(BuiltinType.AINT8, null);
-    private ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
-    private ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
-    private List<List<String>> searchKey;
-    private List<IAType> searchKeyType;
-    private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
+    private transient OrderedListBuilder listBuilder = new OrderedListBuilder();
+    private transient OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
+    private transient AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
+    private transient AOrderedListType int8List = new AOrderedListType(BuiltinType.AINT8, null);
+    private transient ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
+    private transient ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+    private transient List<List<String>> searchKey;
+    private transient List<IAType> searchKeyType;
+    private transient AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
@@ -97,7 +97,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     private final MetadataNode metadataNode;
     private final JobId jobId;
 
-    public IndexTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
+    protected IndexTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.INDEX_DATASET.getFieldCount());
         this.jobId = jobId;
         this.metadataNode = metadataNode;

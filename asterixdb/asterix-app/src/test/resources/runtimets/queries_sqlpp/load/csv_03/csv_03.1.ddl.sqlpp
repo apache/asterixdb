@@ -23,8 +23,8 @@
  *
  */
 
-drop  database temp if exists;
-create  database temp;
+drop  dataverse temp if exists;
+create  dataverse temp;
 
 use temp;
 
@@ -40,5 +40,5 @@ create type temp.test as
   stringq : string?
 }
 
-create  table testds(test) primary key id;
+create  dataset testds(test) primary key id;
 

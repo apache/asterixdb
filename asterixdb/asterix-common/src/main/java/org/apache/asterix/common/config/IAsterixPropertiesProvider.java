@@ -34,4 +34,6 @@ public interface IAsterixPropertiesProvider {
     AsterixBuildProperties getBuildProperties();
 
     public AsterixReplicationProperties getReplicationProperties();
+
+    public MessagingProperties getMessagingProperties();
 }

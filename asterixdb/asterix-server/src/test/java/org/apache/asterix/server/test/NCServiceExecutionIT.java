@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.server.test;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.logging.Logger;
+
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -34,11 +39,6 @@ import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.logging.Logger;
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
 public class NCServiceExecutionIT {
@@ -47,7 +47,7 @@ public class NCServiceExecutionIT {
 
     // The "target" subdirectory of asterix-server. All outputs go here.
     private static final String TARGET_DIR = StringUtils
-            .join(new String[] { System.getProperty("basedir"), "target" }, File.separator);
+            .join(new String[] { "target" }, File.separator);
 
     // Directory where the NCs create and store all data, as configured by
     // src/test/resources/NCServiceExecutionIT/cc.conf.
@@ -75,7 +75,7 @@ public class NCServiceExecutionIT {
     // paths in "load" statements in test queries to find the right data. It is
     // also used for HDFSCluster.
     private static final String ASTERIX_APP_DIR = StringUtils
-            .join(new String[] { System.getProperty("basedir"), "..", "asterix-app" },
+            .join(new String[] { "..", "asterix-app" },
                     File.separator);
 
     // Path to the actual AQL test files, which we borrow from asterix-app. This is

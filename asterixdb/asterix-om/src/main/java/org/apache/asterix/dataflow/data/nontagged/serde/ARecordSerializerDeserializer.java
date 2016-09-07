@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
@@ -32,13 +32,15 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
+import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -153,7 +155,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     IAObject[] mergedFields = mergeFields(closedFields, openFields);
                     return new ARecord(mergedRecordType, mergedFields);
                 } else {
-                    return new ARecord(this.recordType, openFields);
+                    return new ARecord(openPartRecType, openFields);
                 }
             } else {
                 return new ARecord(this.recordType, closedFields);
@@ -184,8 +186,50 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             }
             recordBuilder.write(out, writeTypeTag);
         } else {
-            throw new NotImplementedException("Serializer for schemaless records is not implemented.");
+            serializeSchemalessRecord(instance, out, writeTypeTag);
         }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput, boolean writeTypeTag)
+            throws HyracksDataException {
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
+        RecordBuilder confRecordBuilder = new RecordBuilder();
+        confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+        ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
+        ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
+        for (int i = 0; i < record.getType().getFieldNames().length; i++) {
+            String fieldName = record.getType().getFieldNames()[i];
+            fieldValueBytes.reset();
+            fieldNameBytes.reset();
+            stringSerde.serialize(new AString(fieldName), fieldNameBytes.getDataOutput());
+            ISerializerDeserializer valueSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(record.getType().getFieldTypes()[i]);
+            valueSerde.serialize(record.getValueByPos(i), fieldValueBytes.getDataOutput());
+            confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
+        }
+        confRecordBuilder.write(dataOutput, writeTypeTag);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void serializeSimpleSchemalessRecord(List<Pair<String, String>> record, DataOutput dataOutput,
+            boolean writeTypeTag)
+            throws HyracksDataException {
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
+        RecordBuilder confRecordBuilder = new RecordBuilder();
+        confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+        ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
+        ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
+        for (int i = 0; i < record.size(); i++) {
+            fieldValueBytes.reset();
+            fieldNameBytes.reset();
+            stringSerde.serialize(new AString(record.get(i).first), fieldNameBytes.getDataOutput());
+            stringSerde.serialize(new AString(record.get(i).second), fieldValueBytes.getDataOutput());
+            confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
+        }
+        confRecordBuilder.write(dataOutput, writeTypeTag);
     }
 
     private IAObject[] mergeFields(IAObject[] closedFields, IAObject[] openFields) {

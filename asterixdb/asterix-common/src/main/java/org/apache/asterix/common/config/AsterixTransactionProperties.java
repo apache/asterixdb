@@ -81,12 +81,12 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     public int getLogBufferPageSize() {
         return accessor.getProperty(TXN_LOG_BUFFER_PAGESIZE_KEY, TXN_LOG_BUFFER_PAGESIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+                PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
     public long getLogPartitionSize() {
         return accessor.getProperty(TXN_LOG_PARTITIONSIZE_KEY, TXN_LOG_PARTITIONSIZE_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public int getCheckpointLSNThreshold() {
@@ -131,6 +131,6 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     public long getJobRecoveryMemorySize() {
         return accessor.getProperty(TXN_JOB_RECOVERY_MEMORY_SIZE_KEY, TXN_JOB_RECOVERY_MEMORY_SIZE_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 }

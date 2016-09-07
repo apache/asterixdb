@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -119,35 +120,40 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
     private int removeFromAssigns(AbstractLogicalOperator op, Set<LogicalVariable> toRemove,
             IOptimizationContext context) throws AlgebricksException {
         switch (op.getOperatorTag()) {
-            case ASSIGN: {
+            case ASSIGN:
                 AssignOperator assign = (AssignOperator) op;
                 if (removeUnusedVarsAndExprs(toRemove, assign.getVariables(), assign.getExpressions())) {
                     context.computeAndSetTypeEnvironmentForOperator(assign);
                 }
                 return assign.getVariables().size();
-            }
-            case AGGREGATE: {
+            case AGGREGATE:
                 AggregateOperator agg = (AggregateOperator) op;
                 if (removeUnusedVarsAndExprs(toRemove, agg.getVariables(), agg.getExpressions())) {
                     context.computeAndSetTypeEnvironmentForOperator(agg);
                 }
                 return agg.getVariables().size();
-            }
-            case UNNEST: {
+            case UNNEST:
                 UnnestOperator uOp = (UnnestOperator) op;
                 LogicalVariable pVar = uOp.getPositionalVariable();
                 if (pVar != null && toRemove.contains(pVar)) {
                     uOp.setPositionalVariable(null);
                 }
                 break;
-            }
-            case UNIONALL: {
+            case UNIONALL:
                 UnionAllOperator unionOp = (UnionAllOperator) op;
                 if (removeUnusedVarsFromUnionAll(unionOp, toRemove)) {
                     context.computeAndSetTypeEnvironmentForOperator(unionOp);
                 }
                 return unionOp.getVariableMappings().size();
-            }
+            case GROUP:
+                GroupByOperator groupByOp = (GroupByOperator) op;
+                if (removeUnusedVarsFromGroupBy(groupByOp, toRemove)) {
+                    context.computeAndSetTypeEnvironmentForOperator(groupByOp);
+                }
+                return groupByOp.getGroupByList().size() + groupByOp.getNestedPlans().size()
+                        + groupByOp.getDecorList().size();
+            default:
+                break;
         }
         return -1;
     }
@@ -168,6 +174,20 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             removeFromRemoveSet.add(varMapping.second);
         }
         toRemove.removeAll(removeFromRemoveSet);
+        return modified;
+    }
+
+    private boolean removeUnusedVarsFromGroupBy(GroupByOperator groupByOp, Set<LogicalVariable> toRemove) {
+        Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = groupByOp.getDecorList().iterator();
+        boolean modified = false;
+        while (iter.hasNext()) {
+            Pair<LogicalVariable, Mutable<ILogicalExpression>> varMapping = iter.next();
+            LogicalVariable decorVar = varMapping.first;
+            if (decorVar != null && toRemove.contains(decorVar)) {
+                iter.remove();
+                modified = true;
+            }
+        }
         return modified;
     }
 
@@ -206,25 +226,22 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         }
         boolean removeUsedVars = true;
         switch (op.getOperatorTag()) {
-            case ASSIGN: {
+            case ASSIGN:
                 AssignOperator assign = (AssignOperator) op;
                 toRemove.addAll(assign.getVariables());
                 break;
-            }
-            case AGGREGATE: {
+            case AGGREGATE:
                 AggregateOperator agg = (AggregateOperator) op;
                 toRemove.addAll(agg.getVariables());
                 break;
-            }
-            case UNNEST: {
+            case UNNEST:
                 UnnestOperator uOp = (UnnestOperator) op;
                 LogicalVariable pVar = uOp.getPositionalVariable();
                 if (pVar != null) {
                     toRemove.add(pVar);
                 }
                 break;
-            }
-            case UNIONALL: {
+            case UNIONALL:
                 UnionAllOperator unionOp = (UnionAllOperator) op;
                 for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping : unionOp
                         .getVariableMappings()) {
@@ -232,7 +249,17 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                 }
                 removeUsedVars = false;
                 break;
-            }
+            case GROUP:
+                GroupByOperator groupByOp = (GroupByOperator) op;
+                for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorMapping : groupByOp.getDecorList()) {
+                    LogicalVariable decorVar = decorMapping.first;
+                    if (decorVar != null) {
+                        toRemove.add(decorVar);
+                    }
+                }
+                break;
+            default:
+                break;
         }
         if (removeUsedVars) {
             List<LogicalVariable> used = new LinkedList<LogicalVariable>();

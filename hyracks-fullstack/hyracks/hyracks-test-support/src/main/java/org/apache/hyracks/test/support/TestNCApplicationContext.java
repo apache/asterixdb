@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
+import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.context.IHyracksRootContext;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
@@ -139,5 +140,15 @@ public class TestNCApplicationContext implements INCApplicationContext {
     @Override
     public IControllerService getControllerService() {
         return null;
+    }
+
+    @Override
+    public IChannelInterfaceFactory getMessagingChannelInterfaceFactory() {
+        return null;
+    }
+
+    @Override
+    public void setMessagingChannelInterfaceFactory(IChannelInterfaceFactory interfaceFactory) {
+        // do nothing
     }
 }

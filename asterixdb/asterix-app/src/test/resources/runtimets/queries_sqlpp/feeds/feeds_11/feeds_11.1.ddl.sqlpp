@@ -16,14 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed dataset that uses the feed simulator adapter.
 
-drop  database feeds if exists;
-create  database feeds;
-
+drop  dataverse feeds if exists;
+create  dataverse feeds;
 use feeds;
-
 
 create type feeds.TweetType as
  closed {
@@ -34,6 +30,9 @@ create type feeds.TweetType as
   timestamp : string
 }
 
-create  table Tweets(TweetType) primary key id;
-
-create  primary feed TweetFeed using file_feed ((`fs`=`localfs`),(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),(`format`=`adm`),(`type-name`=`TweetType`),(`tuple-interval`=`10`));
+create  dataset Tweets(TweetType) primary key id;
+create  primary feed TweetFeed using localfs
+((`path`=`asterix_nc1://data/twitter/obamatweets.adm`),
+(`format`=`adm`),
+(`type-name`=`TweetType`),
+(`tuple-interval`=`10`));

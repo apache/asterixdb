@@ -23,8 +23,8 @@
  *
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -49,5 +49,5 @@ create type test.Schema as
   string4 : string
 }
 
-create temporary table t1(Schema) primary key unique2;
+create temporary dataset t1(Schema) primary key unique2;
 

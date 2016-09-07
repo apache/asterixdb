@@ -2,14 +2,14 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$8(ASC) ]  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$82]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$31(ASC) ]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$104]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$82(ASC)] HASH:[$$82]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$59]  |PARTITIONED|
+            -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$104(ASC)] HASH:[$$104]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$81]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -21,25 +21,25 @@
                         -- STREAM_SELECT  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- PRE_CLUSTERED_GROUP_BY[$$79]  |PARTITIONED|
+                              -- PRE_CLUSTERED_GROUP_BY[$$101]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
-                                -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$79(ASC)] HASH:[$$79]  |PARTITIONED|
-                                  -- PRE_CLUSTERED_GROUP_BY[$$72]  |PARTITIONED|
+                                -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$101(ASC)] HASH:[$$101]  |PARTITIONED|
+                                  -- PRE_CLUSTERED_GROUP_BY[$$94]  |PARTITIONED|
                                           {
                                             -- AGGREGATE  |LOCAL|
                                               -- STREAM_SELECT  |LOCAL|
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                                           }
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- STABLE_SORT [$$72(ASC)]  |PARTITIONED|
+                                      -- STABLE_SORT [$$94(ASC)]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- HYBRID_HASH_JOIN [$$67][$$64]  |PARTITIONED|
-                                                -- HASH_PARTITION_EXCHANGE [$$67]  |PARTITIONED|
+                                              -- HYBRID_HASH_JOIN [$$89][$$86]  |PARTITIONED|
+                                                -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -66,7 +66,7 @@
                                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                -- HASH_PARTITION_EXCHANGE [$$64]  |PARTITIONED|
+                                                -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- DATASOURCE_SCAN  |PARTITIONED|

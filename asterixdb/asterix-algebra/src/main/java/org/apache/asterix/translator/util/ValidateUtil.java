@@ -107,6 +107,10 @@ public class ValidateUtil {
                     keySourceIndicators);
             for (int fidx = 0; fidx < partitioningExprTypes.size(); ++fidx) {
                 IAType fieldType = partitioningExprTypes.get(fidx);
+                if (fieldType == null) {
+                    throw new AsterixException(
+                            "Type not found for partitioning key " + partitioningExprs.get(fidx));
+                }
                 switch (fieldType.getTypeTag()) {
                     case INT8:
                     case INT16:
@@ -125,10 +129,10 @@ public class ValidateUtil {
                         break;
                     case UNION:
                         throw new AsterixException(
-                                "The partitioning key \"" + partitioningExprs.get(fidx) + "\" cannot be nullable");
+                                "The partitioning key " + partitioningExprs.get(fidx) + " cannot be nullable");
                     default:
-                        throw new AsterixException("The partitioning key \"" + partitioningExprs.get(fidx)
-                                + "\" cannot be of type " + fieldType.getTypeTag() + ".");
+                        throw new AsterixException("The partitioning key " + partitioningExprs.get(fidx)
+                                + " cannot be of type " + fieldType.getTypeTag() + ".");
                 }
             }
         }

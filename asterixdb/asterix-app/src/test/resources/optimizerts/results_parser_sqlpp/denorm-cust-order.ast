@@ -102,7 +102,7 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    o:=Variable [ Name=$o ]
     c:=Variable [ Name=$c ]
+    o:=Variable [ Name=$o ]
   )
 

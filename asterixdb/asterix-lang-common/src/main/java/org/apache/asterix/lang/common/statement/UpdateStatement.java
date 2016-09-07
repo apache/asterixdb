@@ -43,8 +43,8 @@ public class UpdateStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.UPDATE;
+    public byte getKind() {
+        return Statement.Kind.UPDATE;
     }
 
     public VariableExpr getVariableExpr() {
@@ -84,6 +84,11 @@ public class UpdateStatement implements Statement {
         UpdateStatement update = (UpdateStatement) object;
         return ObjectUtils.equals(condition, update.condition) && ObjectUtils.equals(target, update.target)
                 && ObjectUtils.equals(ucs, update.ucs) && ObjectUtils.equals(vars, update.vars);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 
 }

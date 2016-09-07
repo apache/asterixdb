@@ -24,6 +24,6 @@ use dataverse TinySocial;
 
 
 for $fbu in dataset FacebookUsers
-where (every $e in $fbu.employment satisfies "not"(is-missing($e.end-date)))
+where (every $e in $fbu.employment satisfies not(is-missing($e.end-date)))
 order by $fbu.id
 return $fbu;

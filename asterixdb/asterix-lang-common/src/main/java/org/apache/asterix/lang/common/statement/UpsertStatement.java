@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 
 public class UpsertStatement extends InsertStatement {
@@ -27,13 +28,13 @@ public class UpsertStatement extends InsertStatement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.UPSERT;
+    public byte getKind() {
+        return Statement.Kind.UPSERT;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode() + Kind.UPSERT.ordinal();
+        return super.hashCode() + Statement.Kind.UPSERT;
     }
 
     @Override

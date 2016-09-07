@@ -20,7 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.functions;
 
 import java.io.Serializable;
 
-public final class FunctionIdentifier implements Serializable {
+public class FunctionIdentifier implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String namespace;

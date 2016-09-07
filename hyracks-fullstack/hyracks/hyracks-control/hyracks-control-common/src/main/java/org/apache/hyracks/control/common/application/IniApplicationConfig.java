@@ -18,11 +18,15 @@
  */
 package org.apache.hyracks.control.common.application;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.control.common.controllers.IniUtils;
 import org.ini4j.Ini;
-
-import java.util.Set;
+import org.ini4j.Profile.Section;
 
 /**
  * An implementation of IApplicationConfig which is backed by Ini4j.
@@ -49,6 +53,11 @@ public class IniApplicationConfig implements IApplicationConfig {
     }
 
     @Override
+    public String[] getStringArray(String section, String key) {
+        return IniUtils.getStringArray(ini, section, key);
+    }
+
+    @Override
     public int getInt(String section, String key) {
         return IniUtils.getInt(ini, section, key, 0);
     }
@@ -60,7 +69,7 @@ public class IniApplicationConfig implements IApplicationConfig {
 
     @Override
     public long getLong(String section, String key) {
-        return IniUtils.getLong(ini, section, key, (long) 0);
+        return IniUtils.getLong(ini, section, key, 0);
     }
 
     @Override
@@ -76,5 +85,21 @@ public class IniApplicationConfig implements IApplicationConfig {
     @Override
     public Set<String> getKeys(String section) {
         return ini.get(section).keySet();
+    }
+
+    @Override
+    public List<Set<Map.Entry<String, String>>> getMultiSections(String section) {
+        List<Set<Map.Entry<String, String>>> list = new ArrayList<>();
+        List<Section> secs = getMulti(section);
+        if (secs != null) {
+            for (Section sec : secs) {
+                list.add(sec.entrySet());
+            }
+        }
+        return list;
+    }
+
+    private List<Section> getMulti(String section) {
+        return ini.getAll(section);
     }
 }

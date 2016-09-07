@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.IOException;
+
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -53,8 +55,7 @@ public class StringEndsWithDescriptor extends AbstractScalarFunctionDynamicDescr
                         AsterixBuiltinFunctions.STRING_ENDS_WITH) {
 
                     @Override
-                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right)
-                            throws AlgebricksException {
+                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
                         return UTF8StringPointable.endsWith(left, right, false);
                     }
 

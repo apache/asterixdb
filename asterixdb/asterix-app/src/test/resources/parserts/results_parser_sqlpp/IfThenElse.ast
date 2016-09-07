@@ -1,15 +1,15 @@
 Query:
 SELECT ELEMENT [
-IfExpr [
-  Condition:
-    OperatorExpr [
+CASE    OperatorExpr [
       LiteralExpr [LONG] [2]
       >
       LiteralExpr [LONG] [1]
     ]
-  Then:
-    LiteralExpr [LONG] [20]
-  Else:
-    LiteralExpr [LONG] [10]
-]
+
+WHEN     LiteralExpr [TRUE]
+THEN     LiteralExpr [LONG] [20]
+
+ELSE     LiteralExpr [LONG] [10]
+
+END
 ]

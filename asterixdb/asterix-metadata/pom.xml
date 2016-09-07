@@ -39,31 +39,25 @@
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-common</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-om</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-runtime</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-events</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <type>jar</type>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -79,14 +73,9 @@
       <artifactId>hyracks-storage-am-lsm-rtree</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-hdfs-core</artifactId>
-      <version>${hyracks.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-external-data</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>

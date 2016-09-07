@@ -29,18 +29,16 @@ Groupby
   Variable [ Name=$token ]
   GROUP AS Variable [ Name=#1 ]
   (
-    id:=Variable [ Name=$id ]
-    token:=Variable [ Name=$token ]
     paper:=Variable [ Name=$paper ]
+    token:=Variable [ Name=$token ]
   )
 
 Orderby
   FunctionCall fuzzyjoin.sql-count@1[
     (
       SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=id
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [id]
       ]
       ]
       FROM [        Variable [ Name=#1 ]

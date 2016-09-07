@@ -4,7 +4,7 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$33][$$48]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$34][$$49]  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
@@ -12,22 +12,22 @@
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
                 -- NESTED_LOOP  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- STREAM_SELECT  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- PRE_CLUSTERED_GROUP_BY[$$34, $$47]  |PARTITIONED|
+                            -- PRE_CLUSTERED_GROUP_BY[$$35, $$48]  |PARTITIONED|
                                     {
                                       -- AGGREGATE  |LOCAL|
                                         -- STREAM_SELECT  |LOCAL|
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                     }
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- STABLE_SORT [$$34(ASC), $$47(ASC)]  |PARTITIONED|
-                                  -- HASH_PARTITION_EXCHANGE [$$34, $$47]  |PARTITIONED|
+                                -- STABLE_SORT [$$35(ASC), $$48(ASC)]  |PARTITIONED|
+                                  -- HASH_PARTITION_EXCHANGE [$$35, $$48]  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- NESTED_LOOP  |PARTITIONED|

@@ -92,7 +92,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore/>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -105,7 +105,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore/>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -119,41 +119,41 @@
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-runtime</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-lang-common</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-lang-aql</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-lang-sqlpp</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-metadata</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-external-data</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-transactions</artifactId>
-      <version>0.8.9-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

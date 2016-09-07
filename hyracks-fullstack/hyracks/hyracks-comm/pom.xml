@@ -44,12 +44,12 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-api</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-net</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

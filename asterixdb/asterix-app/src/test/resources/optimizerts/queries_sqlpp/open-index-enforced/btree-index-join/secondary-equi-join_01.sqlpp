@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -46,11 +46,11 @@ create type test.CSXType as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 
-create  table CSX(CSXType) primary key id;
+create  dataset CSX(CSXType) primary key id;
 
-create  index title_index  on DBLP (title:string) type btree enforced;
+create  index title_index  on DBLP (title:string?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join_01.adm"
 select element {'arec':a,'brec':b}

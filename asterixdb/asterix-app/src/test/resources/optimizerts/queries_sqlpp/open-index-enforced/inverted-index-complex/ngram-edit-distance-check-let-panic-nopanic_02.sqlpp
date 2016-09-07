@@ -24,8 +24,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -38,9 +38,9 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 
-create  index ngram_index  on DBLP (authors:string) type ngram (3) enforced;
+create  index ngram_index  on DBLP (authors:string?) type ngram (3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-let-panic-nopanic_01.adm"
 select element o

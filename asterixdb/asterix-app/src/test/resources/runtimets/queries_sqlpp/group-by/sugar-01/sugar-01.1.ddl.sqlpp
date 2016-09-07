@@ -17,8 +17,8 @@
  * under the License.
  */
 
-DROP DATABASE gby IF EXISTS;
-CREATE DATABASE gby;
+DROP DATAVERSE gby IF EXISTS;
+CREATE DATAVERSE gby;
 
 USE gby;
 
@@ -26,4 +26,4 @@ CREATE TYPE EmpType AS {
   name : string
 }
 
-CREATE TABLE Employee(EmpType) PRIMARY KEY name;
+CREATE DATASET Employee(EmpType) PRIMARY KEY name;

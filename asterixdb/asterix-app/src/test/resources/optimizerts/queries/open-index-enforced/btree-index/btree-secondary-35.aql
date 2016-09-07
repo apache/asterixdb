@@ -38,7 +38,7 @@ create type TestType as open {
 
 create dataset testdst(TestType) primary key id;
 
-create index sec_Idx on testdst(fname:string,lname:string) enforced;
+create index sec_Idx on testdst(fname:string?,lname:string?) enforced;
 
 for $emp in dataset('testdst')
 where $emp.fname < "Isa"

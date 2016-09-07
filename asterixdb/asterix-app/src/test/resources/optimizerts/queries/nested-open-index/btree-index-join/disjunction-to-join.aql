@@ -37,7 +37,7 @@ create type TestType as open {
 
 
 create dataset TestSet(TestType) primary key "id";
-create index TestSetIndex on TestSet(nested.idx: string) enforced;
+create index TestSetIndex on TestSet(nested.idx: string?) enforced;
 
 for $x in dataset TestSet 
 where $x.nested.idx = "one" or $x.nested.idx = "two"

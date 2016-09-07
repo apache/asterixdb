@@ -17,8 +17,8 @@
  * under the License.
  */
 
-DROP DATABASE gby IF EXISTS;
-CREATE DATABASE gby;
+DROP DATAVERSE gby IF EXISTS;
+CREATE DATAVERSE gby;
 
 USE gby;
 
@@ -30,6 +30,6 @@ CREATE TYPE TireType AS {
   tid: string
 }
 
-CREATE TABLE Car(CarType) PRIMARY KEY cid;
-CREATE TABLE Tire(TireType) PRIMARY KEY tid;
+CREATE DATASET Car(CarType) PRIMARY KEY cid;
+CREATE DATASET Tire(TireType) PRIMARY KEY tid;
 

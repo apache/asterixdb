@@ -82,8 +82,8 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    m:=Variable [ Name=$m ]
     u:=Variable [ Name=$u ]
+    m:=Variable [ Name=$m ]
   )
 
 Orderby

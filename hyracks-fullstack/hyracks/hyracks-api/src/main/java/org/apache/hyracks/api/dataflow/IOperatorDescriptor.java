@@ -20,12 +20,11 @@ package org.apache.hyracks.api.dataflow;
 
 import java.io.Serializable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Descriptor for operators in Hyracks.
@@ -39,6 +38,13 @@ public interface IOperatorDescriptor extends Serializable {
      * @return operator id
      */
     public OperatorDescriptorId getOperatorId();
+
+    /**
+     * Sets the id of the operator.
+     *
+     * @param id
+     */
+    void setOperatorId(OperatorDescriptorId id);
 
     /**
      * Returns the number of inputs into this operator.

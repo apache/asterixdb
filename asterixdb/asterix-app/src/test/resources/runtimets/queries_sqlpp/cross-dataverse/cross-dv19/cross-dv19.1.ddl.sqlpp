@@ -22,11 +22,11 @@
  * Date         : Sep 20 2012
  */
 
-drop  database test1 if exists;
-drop  database test2 if exists;
-create  database test1;
+drop  dataverse test1 if exists;
+drop  dataverse test2 if exists;
+create  dataverse test1;
 
-create  database test2;
+create  dataverse test2;
 
 create type test1.testtype as
 {
@@ -53,17 +53,17 @@ create type test1.Tweet as
   text : string
 }
 
-create  table test1.t1(testtype) primary key id;
+create  dataset test1.t1(testtype) primary key id;
 
-create  table test2.t2(testtype) primary key id;
+create  dataset test2.t2(testtype) primary key id;
 
-create  table test2.t3(testtype) primary key id;
+create  dataset test2.t3(testtype) primary key id;
 
-create  table test1.t2(testtype) primary key id;
+create  dataset test1.t2(testtype) primary key id;
 
-create  table test1.t3(testtype) primary key id;
+create  dataset test1.t3(testtype) primary key id;
 
-create  table test2.t4(testtype) primary key id;
+create  dataset test2.t4(testtype) primary key id;
 
-create external  table test1.TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/extrasmalltweets.txt`),(`format`=`adm`));
+create external  dataset test1.TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/extrasmalltweets.txt`),(`format`=`adm`));
 

@@ -18,12 +18,6 @@
  */
 package org.apache.asterix.external.library.java;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
@@ -83,13 +77,19 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringReader;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public class JObjectAccessors {
 
@@ -465,15 +465,18 @@ public class JObjectAccessors {
             List<IVisitablePointable> fieldTypeTags = recordPointable.getFieldTypeTags();
             List<IVisitablePointable> fieldNames = recordPointable.getFieldNames();
             int index = 0;
-            boolean closedPart = true;
+            boolean closedPart;
             try {
                 IJObject fieldObject = null;
                 for (IVisitablePointable fieldPointable : fieldPointables) {
                     closedPart = index < recordType.getFieldTypes().length;
                     IVisitablePointable tt = fieldTypeTags.get(index);
-                    IAType fieldType = closedPart ? recordType.getFieldTypes()[index] : null;
                     ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                             .deserialize(tt.getByteArray()[tt.getStartOffset()]);
+                    IAType fieldType;
+                    fieldType = closedPart ?
+                            recordType.getFieldTypes()[index] :
+                            TypeTagUtil.getBuiltinTypeByTag(typeTag);
                     IVisitablePointable fieldName = fieldNames.get(index);
                     typeInfo.reset(fieldType, typeTag);
                     switch (typeTag) {
@@ -486,8 +489,8 @@ public class JObjectAccessors {
                                 // value is null
                                 fieldObject = null;
                             } else {
-                                fieldObject = pointableVisitor.visit((AListVisitablePointable) fieldPointable,
-                                        typeInfo);
+                                fieldObject = pointableVisitor
+                                        .visit((AListVisitablePointable) fieldPointable, typeInfo);
                             }
                             break;
                         case ANY:
@@ -536,15 +539,16 @@ public class JObjectAccessors {
             List<IVisitablePointable> items = pointable.getItems();
             List<IVisitablePointable> itemTags = pointable.getItemTags();
             JList list = pointable.ordered() ? new JOrderedList(listType) : new JUnorderedList(listType);
-            IJObject listItem = null;
+            IJObject listItem;
             int index = 0;
             try {
-
                 for (IVisitablePointable itemPointable : items) {
                     IVisitablePointable itemTagPointable = itemTags.get(index);
                     ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                             .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
-                    typeInfo.reset(listType.getType(), listType.getTypeTag());
+                    IAType fieldType;
+                    fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
+                    typeInfo.reset(fieldType, itemTypeTag);
                     switch (itemTypeTag) {
                         case RECORD:
                             listItem = pointableVisitor.visit((ARecordVisitablePointable) itemPointable, typeInfo);
@@ -557,10 +561,7 @@ public class JObjectAccessors {
                             throw new IllegalArgumentException(
                                     "Cannot parse list item of type " + listType.getTypeTag());
                         default:
-                            IAType itemType = ((AbstractCollectionType) listType).getItemType();
-                            typeInfo.reset(itemType, itemType.getTypeTag());
                             listItem = pointableVisitor.visit((AFlatValuePointable) itemPointable, typeInfo);
-
                     }
                     list.add(listItem);
                 }

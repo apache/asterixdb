@@ -18,13 +18,13 @@
  */
 /*
  * Description    : Self-joins a dataset on the intersection of its point attribute.
- *                  The dataset has an enforced open RTree index, and we expect the
+ *                  The dataset has an enforced open RTree index?, and we expect the
  *                  join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -40,9 +40,9 @@ create type test.MyRecord as
   rec : rectangle
 }
 
-create  table MyData(MyRecord) primary key id;
+create  dataset MyData(MyRecord) primary key id;
 
-create  index rtree_index  on MyData (point:point) type rtree enforced;
+create  index rtree_index  on MyData (point:point?) type rtree enforced;
 
 write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_03.adm"
 select element {'a':a,'b':b}

@@ -21,9 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.properties;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,13 +39,14 @@ public class PropertiesUtil {
             change = false;
             for (FunctionalDependency fd : fdList) {
                 List<LogicalVariable> h = fd.getHead();
-                if (k.containsAll(h)) {
-                    List<LogicalVariable> t = fd.getTail();
-                    for (LogicalVariable v : t) {
-                        if (!(k.contains(v))) {
-                            k.add(v);
-                            change = true;
-                        }
+                if (!k.containsAll(h)) {
+                    continue;
+                }
+                List<LogicalVariable> t = fd.getTail();
+                for (LogicalVariable v : t) {
+                    if (!(k.contains(v))) {
+                        k.add(v);
+                        change = true;
                     }
                 }
             }
@@ -55,6 +54,21 @@ public class PropertiesUtil {
         return k;
     }
 
+    /**
+     * Checks whether delivered properties can satisfy required properties, considering equivalence class and
+     * functional dependencies.
+     *
+     * @param reqd,
+     *            the required property list.
+     * @param dlvd,
+     *            the delivered property list.
+     * @param equivalenceClasses,
+     *            a map from variables to their equivalence classes.
+     * @param fds,
+     *            a list of functional dependencies.
+     * @return true if the delivered property list can satisfy the required property list;
+     *         false otherwise.
+     */
     public static boolean matchLocalProperties(List<ILocalStructuralProperty> reqd, List<ILocalStructuralProperty> dlvd,
             Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
         if (reqd == null) {
@@ -63,54 +77,45 @@ public class PropertiesUtil {
         if (dlvd == null) {
             return false;
         }
-        normalizeLocals(reqd, equivalenceClasses, fds);
-        normalizeLocals(dlvd, equivalenceClasses, fds);
+        return matchNormalizedLocalProperties(normalizeLocals(reqd, equivalenceClasses, fds),
+                normalizeLocals(dlvd, equivalenceClasses, fds));
+    }
 
-        ListIterator<ILocalStructuralProperty> dlvdIter = dlvd.listIterator();
-
-        Set<LogicalVariable> rqdCols = new ListSet<>();
-        Set<LogicalVariable> dlvdCols = new ListSet<>();
-        for (ILocalStructuralProperty r : reqd) {
-            if (r.getPropertyType() == PropertyType.LOCAL_GROUPING_PROPERTY) {
-                rqdCols.clear();
-                r.getVariables(rqdCols);
-            }
-            boolean implied = false;
-            while (!implied && dlvdIter.hasNext()) {
-                ILocalStructuralProperty d = dlvdIter.next();
-                switch (r.getPropertyType()) {
-                    case LOCAL_ORDER_PROPERTY: {
-                        if (d.getPropertyType() != PropertyType.LOCAL_ORDER_PROPERTY) {
-                            return false;
-                        }
-                        LocalOrderProperty lop = (LocalOrderProperty) d;
-                        if (lop.implies(r)) {
-                            implied = true;
-                        } else {
-                            return false;
-                        }
-                        break;
-                    }
-                    case LOCAL_GROUPING_PROPERTY: {
-                        dlvdCols.clear();
-                        d.getColumns(dlvdCols);
-                        if (d.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
-                            implied = isPrefixOf(rqdCols.iterator(), dlvdCols.iterator());
-                        } else {
-                            implied = rqdCols.equals(dlvdCols) || isPrefixOf(rqdCols.iterator(), dlvdCols.iterator());
-                        }
-                        break;
-                    }
-                    default: {
-                        throw new IllegalStateException();
-                    }
+    // Checks whether normalized delivered properties can satisfy normalized required property.
+    private static boolean matchNormalizedLocalProperties(List<ILocalStructuralProperty> reqs,
+            List<ILocalStructuralProperty> dlvds) {
+        boolean hasOrderPropertyInReq = false;
+        boolean hasGroupingPropertyInReq = false;
+        boolean orderPropertyMet = false;
+        boolean groupingPropertyMet = false;
+        for (ILocalStructuralProperty req : reqs) {
+            PropertyType reqType = req.getPropertyType();
+            hasOrderPropertyInReq |= reqType == PropertyType.LOCAL_ORDER_PROPERTY;
+            hasGroupingPropertyInReq |= reqType == PropertyType.LOCAL_GROUPING_PROPERTY;
+            for (ILocalStructuralProperty dlvd : dlvds) {
+                PropertyType dlvdType = dlvd.getPropertyType();
+                if (reqType == PropertyType.LOCAL_ORDER_PROPERTY && dlvdType != PropertyType.LOCAL_ORDER_PROPERTY) {
+                    // A grouping property cannot meet an order property, but an order property can meet a grouping
+                    // property.
+                    continue;
+                }
+                if (reqType == PropertyType.LOCAL_ORDER_PROPERTY) {
+                    LocalOrderProperty lop = (LocalOrderProperty) dlvd;
+                    // It is enough that one required ordering property is met.
+                    orderPropertyMet |= lop.implies(req);
+                } else {
+                    Set<LogicalVariable> reqdCols = new ListSet<>();
+                    Set<LogicalVariable> dlvdCols = new ListSet<>();
+                    req.getColumns(reqdCols);
+                    dlvd.getColumns(dlvdCols);
+                    // It is enough that one required grouping property is met.
+                    groupingPropertyMet |= isPrefixOf(reqdCols.iterator(), dlvdCols.iterator());
                 }
             }
-            if (!implied) {
-                return false;
-            }
         }
-        return true;
+        // Delivered properties satisfy required properties if one of required order properties is
+        // satisfied and one of required grouping properties is satisfied.
+        return (!hasOrderPropertyInReq || orderPropertyMet) && (!hasGroupingPropertyInReq || groupingPropertyMet);
     }
 
     public static boolean matchPartitioningProps(IPartitioningProperty reqd, IPartitioningProperty dlvd,
@@ -132,9 +137,9 @@ public class PropertiesUtil {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         UnorderedPartitionedProperty ud = (UnorderedPartitionedProperty) dlvd;
                         if (mayExpandProperties) {
-                            return !ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet());
+                            return (!ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet()));
                         } else {
-                            return ud.getColumnSet().equals(ur.getColumnSet());
+                            return (ud.getColumnSet().equals(ur.getColumnSet()));
                         }
                     }
                     case ORDERED_PARTITIONED: {
@@ -230,7 +235,7 @@ public class PropertiesUtil {
                 }
             }
         }
-        ArrayList<OrderColumn> norm = new ArrayList<>(orderColumns.size() - deleted);
+        List<OrderColumn> norm = new ArrayList<>(orderColumns.size() - deleted);
         for (OrderColumn oc : orderColumns) {
             if (oc != null) {
                 norm.add(oc);
@@ -244,7 +249,7 @@ public class PropertiesUtil {
         if (equivalenceClasses == null || equivalenceClasses.isEmpty()) {
             return orderColumns;
         }
-        ArrayList<OrderColumn> norm = new ArrayList<>();
+        List<OrderColumn> norm = new ArrayList<>();
         for (OrderColumn v : orderColumns) {
             EquivalenceClass ec = equivalenceClasses.get(v.getColumn());
             if (ec == null) {
@@ -281,47 +286,13 @@ public class PropertiesUtil {
         return fdSat;
     }
 
-    private static void normalizeLocals(List<ILocalStructuralProperty> props,
+    // Gets normalized local structural properties according to equivalence classes and functional dependencies.
+    private static List<ILocalStructuralProperty> normalizeLocals(List<ILocalStructuralProperty> props,
             Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
-        ListIterator<ILocalStructuralProperty> propIter = props.listIterator();
-        int pos = -1;
-        while (propIter.hasNext()) {
-            ILocalStructuralProperty p = propIter.next();
-            if (p.getPropertyType() == PropertyType.LOCAL_GROUPING_PROPERTY) {
-                ((LocalGroupingProperty) p).normalizeGroupingColumns(equivalenceClasses, fds);
-                pos++;
-            } else {
-                ((LocalOrderProperty) p).normalizeOrderingColumns(equivalenceClasses, fds);
-                pos++;
-            }
+        List<ILocalStructuralProperty> normalizedLocalProperties = new ArrayList<>();
+        for (ILocalStructuralProperty prop : props) {
+            normalizedLocalProperties.add(prop.normalize(equivalenceClasses, fds));
         }
-
-        if (pos < 1) {
-            return;
-        }
-
-        while (propIter.hasPrevious()) {
-            ILocalStructuralProperty p = propIter.previous();
-            ListIterator<ILocalStructuralProperty> secondIter = props.listIterator(pos);
-            pos--;
-            Set<LogicalVariable> cols = new ListSet<>();
-            while (secondIter.hasPrevious()) {
-                secondIter.previous().getColumns(cols);
-            }
-            secondIter = null;
-            for (FunctionalDependency fdep : fds) {
-                LinkedList<LogicalVariable> columnsOfP = new LinkedList<>();
-                p.getColumns(columnsOfP);
-                if (impliedByPrefix(columnsOfP, cols, fdep)) {
-                    propIter.remove();
-                    break;
-                }
-            }
-        }
-    }
-
-    private static boolean impliedByPrefix(List<LogicalVariable> colsOfProp, Set<LogicalVariable> colsOfPrefix,
-            FunctionalDependency fdep) {
-        return fdep.getTail().containsAll(colsOfProp) && colsOfPrefix.containsAll(fdep.getHead());
+        return normalizedLocalProperties;
     }
 }

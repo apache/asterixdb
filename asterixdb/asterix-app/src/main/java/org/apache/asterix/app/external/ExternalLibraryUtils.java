@@ -265,8 +265,8 @@ public class ExternalLibraryUtils {
                     String adapterFactoryClass = adapter.getFactoryClass().trim();
                     String adapterName = libraryName + "#" + adapter.getName().trim();
                     AdapterIdentifier aid = new AdapterIdentifier(dataverse, adapterName);
-                    DatasourceAdapter dsa = new DatasourceAdapter(aid, adapterFactoryClass,
-                            IDataSourceAdapter.AdapterType.EXTERNAL);
+                    DatasourceAdapter dsa =
+                            new DatasourceAdapter(aid, adapterFactoryClass, IDataSourceAdapter.AdapterType.EXTERNAL);
                     MetadataManager.INSTANCE.addAdapter(mdTxnCtx, dsa);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Installed adapter: " + adapterName);
@@ -334,8 +334,8 @@ public class ExternalLibraryUtils {
         }
 
         // get a reference to the specific library dir
-        File libDir = new File(
-                installDir.getAbsolutePath() + File.separator + dataverse + File.separator + libraryName);
+        File libDir =
+                new File(installDir.getAbsolutePath() + File.separator + dataverse + File.separator + libraryName);
         FilenameFilter jarFileFilter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {

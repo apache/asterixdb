@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database DMLTest if exists;
-create  database DMLTest;
+drop  dataverse DMLTest if exists;
+create  dataverse DMLTest;
 
 use DMLTest;
 
@@ -42,7 +42,7 @@ create type DMLTest.FacebookUserType as
   employment : [EmploymentType]
 }
 
-create  table FacebookUsers1(FacebookUserType) primary key id;
+create  dataset FacebookUsers1(FacebookUserType) primary key id;
 
-create  table FacebookUsers2(FacebookUserType) primary key id;
+create  dataset FacebookUsers2(FacebookUserType) primary key id;
 

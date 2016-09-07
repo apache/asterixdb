@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -42,34 +41,24 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        return false;
-    }
-
-    /**
-     * When the input schema to WriteOperator is different from the output
-     * schema in terms of variable order, add a project operator to get the
-     * write order
-     */
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.UNIONALL) {
             return false;
         }
         UnionAllOperator opUnion = (UnionAllOperator) op;
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = opUnion.getVariableMappings();
-        ArrayList<LogicalVariable> usedVariablesFromOne = new ArrayList<LogicalVariable>();
-        ArrayList<LogicalVariable> usedVariablesFromTwo = new ArrayList<LogicalVariable>();
+        ArrayList<LogicalVariable> usedVariablesFromOne = new ArrayList<>();
+        ArrayList<LogicalVariable> usedVariablesFromTwo = new ArrayList<>();
 
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : varMap) {
             usedVariablesFromOne.add(triple.first);
             usedVariablesFromTwo.add(triple.second);
         }
 
-        ArrayList<LogicalVariable> inputSchemaOne = new ArrayList<LogicalVariable>();
+        ArrayList<LogicalVariable> inputSchemaOne = new ArrayList<>();
         VariableUtilities.getLiveVariables(opUnion.getInputs().get(0).getValue(), inputSchemaOne);
 
-        ArrayList<LogicalVariable> inputSchemaTwo = new ArrayList<LogicalVariable>();
+        ArrayList<LogicalVariable> inputSchemaTwo = new ArrayList<>();
         VariableUtilities.getLiveVariables(opUnion.getInputs().get(1).getValue(), inputSchemaTwo);
 
         boolean rewritten = false;
@@ -105,8 +94,9 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
         for (int i = 0; i < finalSchemaSize; i++) {
             LogicalVariable var1 = finalSchema.get(i);
             LogicalVariable var2 = inputSchema.get(i);
-            if (!var1.equals(var2))
+            if (!var1.equals(var2)) {
                 return false;
+            }
         }
         return true;
     }

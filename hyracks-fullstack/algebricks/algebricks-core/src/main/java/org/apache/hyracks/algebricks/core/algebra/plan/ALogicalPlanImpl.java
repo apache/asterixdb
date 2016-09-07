@@ -55,9 +55,8 @@ public class ALogicalPlanImpl implements ILogicalPlan {
 
     public static String prettyPrintPlan(ILogicalPlan plan) throws AlgebricksException {
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-        StringBuilder buffer = new StringBuilder();
-        PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-        return buffer.toString();
+        PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+        return pvisitor.get().toString();
     }
 
     @Override

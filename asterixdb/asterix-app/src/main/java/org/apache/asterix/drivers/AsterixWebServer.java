@@ -19,18 +19,22 @@
 package org.apache.asterix.drivers;
 
 import org.apache.asterix.api.http.servlet.APIServlet;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 public class AsterixWebServer {
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         Server server = new Server(8080);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
 
-        context.addServlet(new ServletHolder(new APIServlet()), "/*");
+        context.addServlet(new ServletHolder(new APIServlet(new AqlCompilationProvider(),
+                new SqlppCompilationProvider(), new DefaultStatementExecutorFactory(null))), "/*");
         server.start();
         server.join();
     }

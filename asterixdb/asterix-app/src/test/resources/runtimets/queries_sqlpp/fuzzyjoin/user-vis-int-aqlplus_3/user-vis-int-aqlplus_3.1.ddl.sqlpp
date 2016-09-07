@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database fuzzyjoin if exists;
-create  database fuzzyjoin;
+drop  dataverse fuzzyjoin if exists;
+create  dataverse fuzzyjoin;
 
 use fuzzyjoin;
 
@@ -39,7 +39,7 @@ create type fuzzyjoin.VisitorType as
   interests : {{string}}
 }
 
-create  table Users(UserType) primary key uid;
+create  dataset Users(UserType) primary key uid;
 
-create  table Visitors(VisitorType) primary key vid;
+create  dataset Visitors(VisitorType) primary key vid;
 

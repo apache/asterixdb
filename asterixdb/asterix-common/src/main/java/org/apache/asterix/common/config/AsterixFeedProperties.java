@@ -41,7 +41,7 @@ public class AsterixFeedProperties extends AbstractAsterixProperties {
 
     public long getMemoryComponentGlobalBudget() {
         return accessor.getProperty(FEED_MEMORY_GLOBALBUDGET_KEY, FEED_MEMORY_GLOBALBUDGET_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     public long getMemoryAvailableWaitTimeout() {

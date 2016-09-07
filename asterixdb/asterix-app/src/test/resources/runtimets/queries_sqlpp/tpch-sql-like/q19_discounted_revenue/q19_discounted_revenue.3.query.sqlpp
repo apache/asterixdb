@@ -22,9 +22,9 @@ use tpch;
 
 set `import-private-functions` `true`;
 
-select element tpch.coll_sum((
+select element coll_sum((
     select element (l.l_extendedprice * (1 - l.l_discount))
     from  LineItem as l,
           Part as p
-    where ((p.p_partkey = l.l_partkey) and (((p.p_brand = 'Brand#12') and tpch.`reg-exp`(p.p_container,'SM CASE||SM BOX||SM PACK||SM PKG') and (l.l_quantity >= 1) and (l.l_quantity <= 11) and (p.p_size >= 1) and (p.p_size <= 5) and tpch.`reg-exp`(l.l_shipmode,'AIR||AIR REG') and (l.l_shipinstruct = 'DELIVER IN PERSON')) or ((p.p_brand = 'Brand#23') and tpch.`reg-exp`(p.p_container,'MED BAG||MED BOX||MED PKG||MED PACK') and (l.l_quantity >= 10) and (l.l_quantity <= 20) and (p.p_size >= 1) and (p.p_size <= 10) and tpch.`reg-exp`(l.l_shipmode,'AIR||AIR REG') and (l.l_shipinstruct = 'DELIVER IN PERSON')) or ((p.p_brand = 'Brand#34') and tpch.`reg-exp`(p.p_container,'LG CASE||LG BOX||LG PACK||LG PKG') and (l.l_quantity >= 20) and (l.l_quantity <= 30) and (p.p_size >= 1) and (p.p_size <= 15) and tpch.`reg-exp`(l.l_shipmode,'AIR||AIR REG') and (l.l_shipinstruct = 'DELIVER IN PERSON'))))
+    where ((p.p_partkey = l.l_partkey) and (((p.p_brand = 'Brand#12') and regexp_contains(p.p_container,'SM CASE||SM BOX||SM PACK||SM PKG') and (l.l_quantity >= 1) and (l.l_quantity <= 11) and (p.p_size >= 1) and (p.p_size <= 5) and regexp_contains(l.l_shipmode,'AIR||AIR REG') and (l.l_shipinstruct = 'DELIVER IN PERSON')) or ((p.p_brand = 'Brand#23') and regexp_contains(p.p_container,'MED BAG||MED BOX||MED PKG||MED PACK') and (l.l_quantity >= 10) and (l.l_quantity <= 20) and (p.p_size >= 1) and (p.p_size <= 10) and regexp_contains(l.l_shipmode,'AIR||AIR REG') and (l.l_shipinstruct = 'DELIVER IN PERSON')) or ((p.p_brand = 'Brand#34') and regexp_contains(p.p_container,'LG CASE||LG BOX||LG PACK||LG PKG') and (l.l_quantity >= 20) and (l.l_quantity <= 30) and (p.p_size >= 1) and (p.p_size <= 15) and regexp_contains(l.l_shipmode,'AIR||AIR REG') and (l.l_shipinstruct = 'DELIVER IN PERSON'))))
 ));

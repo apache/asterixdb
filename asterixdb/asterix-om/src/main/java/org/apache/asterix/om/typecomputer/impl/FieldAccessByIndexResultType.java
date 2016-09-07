@@ -18,19 +18,15 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 
 public class FieldAccessByIndexResultType extends AbstractResultTypeComputer {
 
@@ -56,13 +52,10 @@ public class FieldAccessByIndexResultType extends AbstractResultTypeComputer {
             return BuiltinType.ANY;
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
-        if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+        Integer pos = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
+        if (pos == null) {
             return BuiltinType.ANY;
         }
-        ConstantExpression ce = (ConstantExpression) arg1;
-        IAObject v = ((AsterixConstantValue) ce.getValue()).getObject();
-        int pos = ((AInt32) v).getIntegerValue();
         ARecordType recType = (ARecordType) firstArgType;
         return recType.getFieldTypes()[pos];
     }

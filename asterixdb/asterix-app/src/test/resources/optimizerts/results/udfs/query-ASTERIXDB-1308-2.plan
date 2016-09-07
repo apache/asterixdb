@@ -5,73 +5,56 @@
         -- STREAM_PROJECT  |PARTITIONED|
           -- SUBPLAN  |PARTITIONED|
                   {
-                    -- SUBPLAN  |LOCAL|
-                            {
-                              -- SUBPLAN  |LOCAL|
-                                      {
-                                        -- ASSIGN  |LOCAL|
-                                          -- SUBPLAN  |LOCAL|
-                                                  {
-                                                    -- AGGREGATE  |LOCAL|
-                                                      -- STREAM_SELECT  |LOCAL|
-                                                        -- ASSIGN  |LOCAL|
-                                                          -- UNNEST  |LOCAL|
-                                                            -- SUBPLAN  |LOCAL|
-                                                                    {
-                                                                      -- AGGREGATE  |LOCAL|
-                                                                        -- IN_MEMORY_STABLE_SORT [$$38(ASC)]  |LOCAL|
-                                                                          -- UNNEST  |LOCAL|
-                                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                                    }
-                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                  }
+                    -- AGGREGATE  |LOCAL|
+                      -- STREAM_SELECT  |LOCAL|
+                        -- ASSIGN  |LOCAL|
+                          -- UNNEST  |LOCAL|
+                            -- SUBPLAN  |LOCAL|
+                                    {
+                                      -- AGGREGATE  |LOCAL|
+                                        -- IN_MEMORY_STABLE_SORT [$$38(ASC)]  |LOCAL|
+                                          -- UNNEST  |LOCAL|
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
-                                -- SUBPLAN  |LOCAL|
-                                        {
-                                          -- AGGREGATE  |LOCAL|
-                                            -- IN_MEMORY_STABLE_SORT [$$98(ASC)]  |LOCAL|
-                                              -- ASSIGN  |LOCAL|
-                                                -- UNNEST  |LOCAL|
-                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
-                            }
-                      -- SUBPLAN  |LOCAL|
-                              {
-                                -- ASSIGN  |LOCAL|
+                                    }
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                  }
+            -- STREAM_PROJECT  |PARTITIONED|
+              -- SUBPLAN  |PARTITIONED|
+                      {
+                        -- AGGREGATE  |LOCAL|
+                          -- IN_MEMORY_STABLE_SORT [$$98(ASC)]  |LOCAL|
+                            -- ASSIGN  |LOCAL|
+                              -- UNNEST  |LOCAL|
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      }
+                -- SUBPLAN  |PARTITIONED|
+                        {
+                          -- AGGREGATE  |LOCAL|
+                            -- STREAM_SELECT  |LOCAL|
+                              -- ASSIGN  |LOCAL|
+                                -- UNNEST  |LOCAL|
                                   -- SUBPLAN  |LOCAL|
                                           {
                                             -- AGGREGATE  |LOCAL|
-                                              -- STREAM_SELECT  |LOCAL|
-                                                -- ASSIGN  |LOCAL|
-                                                  -- UNNEST  |LOCAL|
-                                                    -- SUBPLAN  |LOCAL|
-                                                            {
-                                                              -- AGGREGATE  |LOCAL|
-                                                                -- IN_MEMORY_STABLE_SORT [$$31(ASC)]  |LOCAL|
-                                                                  -- UNNEST  |LOCAL|
-                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                            }
-                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                              -- IN_MEMORY_STABLE_SORT [$$31(ASC)]  |LOCAL|
+                                                -- UNNEST  |LOCAL|
+                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                                           }
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
-            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- PRE_CLUSTERED_GROUP_BY[$$94, $$95, $$96, $$97]  |PARTITIONED|
-                      {
-                        -- AGGREGATE  |LOCAL|
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
-                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- STABLE_SORT [$$94(ASC), $$95(ASC), $$96(ASC), $$97(ASC)]  |PARTITIONED|
-                    -- HASH_PARTITION_EXCHANGE [$$94, $$95, $$96, $$97]  |PARTITIONED|
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        -- ASSIGN  |PARTITIONED|
-                          -- STREAM_PROJECT  |PARTITIONED|
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        }
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    -- PRE_CLUSTERED_GROUP_BY[$$94, $$95, $$96, $$97]  |PARTITIONED|
+                            {
+                              -- AGGREGATE  |LOCAL|
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            }
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- STABLE_SORT [$$94(ASC), $$95(ASC), $$96(ASC), $$97(ASC)]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$94, $$95, $$96, $$97]  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              -- ASSIGN  |PARTITIONED|
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

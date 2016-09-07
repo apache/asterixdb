@@ -27,13 +27,13 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.channels.IInputChannel;
 import org.apache.hyracks.api.channels.IInputChannelMonitor;
+import org.apache.hyracks.api.comm.IBufferAcceptor;
+import org.apache.hyracks.api.comm.IChannelControlBlock;
+import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.net.buffers.IBufferAcceptor;
-import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
-import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
 public class DatasetNetworkInputChannel implements IInputChannel {
     private static final Logger LOGGER = Logger.getLogger(DatasetNetworkInputChannel.class.getName());
@@ -54,7 +54,7 @@ public class DatasetNetworkInputChannel implements IInputChannel {
 
     private final int nBuffers;
 
-    private ChannelControlBlock ccb;
+    private IChannelControlBlock ccb;
 
     private IInputChannelMonitor monitor;
 

@@ -24,12 +24,16 @@ import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class StoragePathUtil {
+    private static final Logger LOGGER = Logger.getLogger(StoragePathUtil.class.getName());
     public static final String PARTITION_DIR_PREFIX = "partition_";
     public static final String TEMP_DATASETS_STORAGE_FOLDER = "temp";
     public static final String DATASET_INDEX_NAME_SEPARATOR = "_idx_";
@@ -69,5 +73,40 @@ public class StoragePathUtil {
 
     public static int getPartitionNumFromName(String name) {
         return Integer.parseInt(name.substring(PARTITION_DIR_PREFIX.length()));
+    }
+
+    /**
+     * Create a file
+     * Note: this method is not thread safe. It is the responsibility of the caller to ensure no path conflict when
+     * creating files simultaneously
+     *
+     * @param name
+     * @param count
+     * @return
+     * @throws HyracksDataException
+     */
+    public static File createFile(String name, int count) throws HyracksDataException {
+        try {
+            String fileName = name + "_" + count;
+            File file = new File(fileName);
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
+            if (!file.exists()) {
+                boolean success = file.createNewFile();
+                if (!success) {
+                    throw new HyracksDataException("Unable to create spill file " + fileName);
+                } else {
+                    if (LOGGER.isEnabledFor(Level.INFO)) {
+                        LOGGER.info("Created spill file " + file.getAbsolutePath());
+                    }
+                }
+            } else {
+                throw new HyracksDataException("spill file " + fileName + " already exists");
+            }
+            return file;
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

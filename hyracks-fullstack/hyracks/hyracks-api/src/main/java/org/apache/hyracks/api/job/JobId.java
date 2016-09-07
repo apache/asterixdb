@@ -36,7 +36,6 @@ public final class JobId implements IWritable, Serializable {
     }
 
     private JobId() {
-
     }
 
     public JobId(long id) {

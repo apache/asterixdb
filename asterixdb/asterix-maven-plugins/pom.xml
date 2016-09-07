@@ -56,5 +56,6 @@
     <module>record-manager-generator-maven-plugin</module>
     <module>asterix-evaluator-generator-maven-plugin</module>
     <module>asterix-test-datagenerator-maven-plugin</module>
+    <module>asterix-grammar-extension-maven-plugin</module>
   </modules>
 </project>

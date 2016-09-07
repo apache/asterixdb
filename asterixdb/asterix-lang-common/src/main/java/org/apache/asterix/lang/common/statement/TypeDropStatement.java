@@ -36,8 +36,8 @@ public class TypeDropStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.TYPE_DROP;
+    public byte getKind() {
+        return Statement.Kind.TYPE_DROP;
     }
 
     public Identifier getDataverseName() {
@@ -55,6 +55,11 @@ public class TypeDropStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
     }
 
 }

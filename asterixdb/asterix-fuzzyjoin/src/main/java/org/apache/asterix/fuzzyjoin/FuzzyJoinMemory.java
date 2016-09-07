@@ -21,7 +21,6 @@ package org.apache.asterix.fuzzyjoin;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,13 +34,13 @@ import org.apache.asterix.fuzzyjoin.invertedlist.InvertedListsLengthList;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 
 public class FuzzyJoinMemory {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length < 2) {
             System.err.println("Usage: <threshold> <file> [no runs, e.g., 1] [warm-up factor, e.g., 1]");
             System.exit(2);
         }
 
-        float similarityThreshold = Float.valueOf(args[0]);
+        float similarityThreshold = Float.parseFloat(args[0]);
         String fileName = args[1];
 
         int noRuns = 1, warmUpFactor = 1;
@@ -55,8 +54,8 @@ public class FuzzyJoinMemory {
         System.err.println("Document: " + fileName);
         System.err.println("... LOADING DATASET ...");
 
-        ArrayList<int[]> records = new ArrayList<int[]>();
-        ArrayList<Integer> rids = new ArrayList<Integer>();
+        ArrayList<int[]> records = new ArrayList<>();
+        ArrayList<Integer> rids = new ArrayList<>();
 
         FuzzyJoinMemory fj = new FuzzyJoinMemory(similarityThreshold);
 
@@ -79,38 +78,32 @@ public class FuzzyJoinMemory {
         }
     }
 
-    public static void readRecords(String fileName, List<int[]> records, List<Integer> rids) {
-        LittleEndianIntInputStream in;
-        try {
-            in = new LittleEndianIntInputStream(new BufferedInputStream(new FileInputStream(fileName)));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    @SuppressWarnings("squid:S1166") // Either log or rethrow this exception
+    public static void readRecords(String fileName, List<int[]> records, List<Integer> rids) throws IOException {
+        try (LittleEndianIntInputStream in =
+                     new LittleEndianIntInputStream(new BufferedInputStream(new FileInputStream(fileName)))) {
 
-        while (true) {
-            int rid = 0;
-            try {
-                rid = in.readInt();
-            } catch (IOException e) {
-                // FILE_EXPECTED reach of EOF
-                break;
-            }
+            while (true) {
+                int rid = 0;
+                try {
+                    rid = in.readInt();
+                } catch (IOException e) {
+                    // FILE_EXPECTED reach of EOF
+                    break;
+                }
 
-            rids.add(rid);
-            int[] record;
+                rids.add(rid);
+                int[] record;
 
-            try {
                 int size = in.readInt();
                 record = new int[size];
                 for (int j = 0; j < size; j++) {
                     int token = in.readInt();
                     record[j] = token;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
 
-            records.add(record);
+                records.add(record);
+            }
         }
     }
 
@@ -122,7 +115,7 @@ public class FuzzyJoinMemory {
     public FuzzyJoinMemory(float similarityThreshold) {
         invertedLists = new InvertedListsLengthList();
         similarityFilters = new SimilarityFiltersJaccard(similarityThreshold);
-        records = new ArrayList<int[]>();
+        records = new ArrayList<>();
     }
 
     public void add(final int[] tokens) {
@@ -142,7 +135,7 @@ public class FuzzyJoinMemory {
         //
         // self join
         //
-        final HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
+        final HashMap<Integer, Integer> counts = new HashMap<>();
         for (int indexToken = 0; indexToken < Math.min(prefixLength, tokens.length); indexToken++) {
             final int token = tokens[indexToken];
             //
@@ -182,7 +175,7 @@ public class FuzzyJoinMemory {
         //
         // verify candidates
         //
-        ArrayList<ResultJoin> results = new ArrayList<ResultJoin>();
+        ArrayList<ResultJoin> results = new ArrayList<>();
         for (Map.Entry<Integer, Integer> cand : counts.entrySet()) {
             int count = cand.getValue();
             int indexProbe = cand.getKey();
@@ -205,12 +198,12 @@ public class FuzzyJoinMemory {
 
     public List<ResultSelfJoin> runs(Collection<int[]> records, int noRuns, int warmupFactor) {
         if (records.size() < 2) {
-            return new ArrayList<ResultSelfJoin>();
+            return new ArrayList<>();
         }
 
         int noRunsTotal = noRuns * warmupFactor;
         float runtime = 0, runtimeAverage = 0;
-        ArrayList<ResultSelfJoin> results = new ArrayList<ResultSelfJoin>();
+        ArrayList<ResultSelfJoin> results = new ArrayList<>();
 
         System.err.println("# Records: " + records.size());
         System.err.print("=== BEGIN JOIN (TIMER STARTED) === ");
@@ -249,7 +242,7 @@ public class FuzzyJoinMemory {
         //
         // self join
         //
-        final HashMap<Integer, Integer> counts = new HashMap<Integer, Integer>();
+        final HashMap<Integer, Integer> counts = new HashMap<>();
         for (int indexToken = 0; indexToken < prefixLength; indexToken++) {
             final int token = tokens[indexToken];
             //
@@ -299,7 +292,7 @@ public class FuzzyJoinMemory {
         //
         // verify candidates
         //
-        ArrayList<ResultSelfJoin> results = new ArrayList<ResultSelfJoin>();
+        ArrayList<ResultSelfJoin> results = new ArrayList<>();
         for (Map.Entry<Integer, Integer> cand : counts.entrySet()) {
             int count = cand.getValue();
             int indexProbe = cand.getKey();

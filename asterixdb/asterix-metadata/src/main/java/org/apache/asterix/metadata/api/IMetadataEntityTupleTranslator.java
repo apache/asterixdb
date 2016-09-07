@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.api;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -30,7 +31,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * representation in a Hyracks tuple, and vice versa. Implementations of this
  * interface are intended to be used within an IMetadataNode.
  */
-public interface IMetadataEntityTupleTranslator<T> {
+public interface IMetadataEntityTupleTranslator<T> extends Serializable {
 
     /**
      * Transforms a metadata entity of type T from a given tuple to a Java

@@ -67,7 +67,7 @@ public class SqlppExecutionTest {
     @AfterClass
     public static void tearDown() throws Exception {
         ExecutionTestUtil.tearDown(cleanupOnStop);
-        AsterixHyracksIntegrationUtil.removeTestStorageFiles();
+        ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
     }
 
     @Parameters(name = "SqlppExecutionTest {index}: {0}")
@@ -86,7 +86,6 @@ public class SqlppExecutionTest {
             testArgs.add(new Object[] { ctx });
         }
         return testArgs;
-
     }
 
     protected TestCaseContext tcCtx;

@@ -22,7 +22,7 @@ import org.apache.asterix.common.messaging.api.IApplicationMessage;
 
 public abstract class AbstractApplicationMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
-    private long id;
+    protected long id;
 
     @Override
     public void setId(long id) {

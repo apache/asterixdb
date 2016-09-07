@@ -40,16 +40,13 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
-
+    // Final
     private final IScalarEvaluatorFactory cond;
-
     private final IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
-
-    private final boolean retainMissing;
-
-    private final int missingPlaceholderVariableIndex;
-
     private final IMissingWriterFactory missingWriterFactory;
+    // Mutable
+    private boolean retainMissing;
+    private int missingPlaceholderVariableIndex;
 
     /**
      * @param cond
@@ -69,6 +66,11 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
         this.retainMissing = retainMissing;
         this.missingPlaceholderVariableIndex = missingPlaceholderVariableIndex;
         this.missingWriterFactory = missingWriterFactory;
+    }
+
+    public void retainMissing(boolean retainMissing, int index) {
+        this.retainMissing = retainMissing;
+        this.missingPlaceholderVariableIndex = index;
     }
 
     @Override

@@ -26,6 +26,7 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -41,9 +42,11 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlppVisitor<Void, Integer> {
@@ -126,6 +129,10 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
     @Override
     public Void visit(Projection projection, Integer step) throws AsterixException {
+        if (projection.star()) {
+            out.print(" * ");
+            return null;
+        }
         projection.getExpression().accept(this, step);
         String name = projection.getName();
         if (name != null) {
@@ -307,4 +314,30 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
         return null;
     }
 
+    @Override
+    public Void visit(CaseExpression caseExpr, Integer step) throws AsterixException {
+        out.print(skip(step) + "case ");
+        caseExpr.getConditionExpr().accept(this, step + 2);
+        out.println();
+        List<Expression> whenExprs = caseExpr.getWhenExprs();
+        List<Expression> thenExprs = caseExpr.getThenExprs();
+        for (int index = 0; index < whenExprs.size(); ++index) {
+            out.print(skip(step) + "when ");
+            whenExprs.get(index).accept(this, step + 2);
+            out.print(" then ");
+            thenExprs.get(index).accept(this, step + 2);
+            out.println();
+        }
+        out.print(skip(step) + "else ");
+        caseExpr.getElseExpr().accept(this, step + 2);
+        out.println();
+        out.println(skip(step) + "end");
+        return null;
+    }
+
+    @Override
+    public Void visit(VariableExpr v, Integer step) {
+        out.print(SqlppVariableUtil.toUserDefinedName(v.getVar().getValue()));
+        return null;
+    }
 }

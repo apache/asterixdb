@@ -28,7 +28,7 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>16</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -42,7 +42,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jvm.extraargs/>
+    <jvm.extraargs />
     <jdk.version>1.8</jdk.version>
     <runSlowAQLTests>false</runSlowAQLTests>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
@@ -68,7 +68,7 @@
     <hadoop.version>2.2.0</hadoop.version>
     <junit.version>4.11</junit.version>
     <commons.io.version>2.4</commons.io.version>
-    <servlet.api.version>2.5</servlet.api.version>
+    <servlet.api.version>3.1.0</servlet.api.version>
     <json.version>20090211</json.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
   </properties>
@@ -234,7 +234,7 @@
             <module name="Checker">
               <!-- Checks for whitespace                               -->
               <!-- See http://checkstyle.sf.net/config_whitespace.html -->
-              <module name="FileTabCharacter"/>
+              <module name="FileTabCharacter" />
             </module>
           </checkstyleRules>
           <includes>**/*.java,**/*.jj</includes>
@@ -262,6 +262,11 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -283,7 +288,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -296,7 +301,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -309,7 +314,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -322,7 +327,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -335,7 +340,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -345,6 +350,19 @@
                     <versionRange>[2.17,)</versionRange>
                     <goals>
                       <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>javacc-maven-plugin</artifactId>
+                    <versionRange>[2.6,)</versionRange>
+                    <goals>
+                      <goal>jjdoc</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
@@ -387,25 +405,25 @@
     <profile>
       <id>optimizer-tests</id>
       <properties>
-        <optimizer.tests/>
+        <optimizer.tests />
       </properties>
     </profile>
     <profile>
       <id>metadata-tests</id>
       <properties>
-        <metadata.tests/>
+        <metadata.tests />
       </properties>
     </profile>
     <profile>
       <id>execution-tests</id>
       <properties>
-        <execution.tests/>
+        <execution.tests />
       </properties>
     </profile>
     <profile>
       <id>invalid-tests</id>
       <properties>
-        <invalid.tests/>
+        <invalid.tests />
       </properties>
     </profile>
     <profile>
@@ -516,7 +534,7 @@
         </plugins>
       </build>
       <properties>
-        <coverage/>
+        <coverage />
       </properties>
     </profile>
     <profile>
@@ -527,7 +545,7 @@
         </property>
       </activation>
       <properties>
-        <coverageArgLine/>
+        <coverageArgLine />
       </properties>
     </profile>
     <profile>
@@ -575,6 +593,8 @@
     <module>asterix-replication</module>
     <module>asterix-experiments</module>
     <module>asterix-coverage</module>
+    <module>asterix-active</module>
+    <module>asterix-client-helper</module>
   </modules>
 
   <repositories>
@@ -585,53 +605,13 @@
         <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
         <updatePolicy>always</updatePolicy>
         <checksumPolicy>fail</checksumPolicy>
       </snapshots>
+      <!-- TODO (mblow): copy rome dependency & update this to third-party -->
       <id>asterix-public</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/groups/asterix-public/</url>
-    </repository>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </snapshots>
-      <id>third-party</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/third-party/</url>
-    </repository>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <id>algebricks-releases</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-releases/</url>
-    </repository>
-    <repository>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </snapshots>
-      <id>algebricks-snapshots</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
-    </repository>
-    <repository>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </snapshots>
-      <id>apache-staging</id>
-      <url>https://repository.apache.org/content/repositories/orgapacheasterix-1019/</url>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/asterix-public/</url>
     </repository>
   </repositories>
   <dependencyManagement>
@@ -773,8 +753,19 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-hdfs-core</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-test-support</artifactId>
         <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-api</artifactId>
+        <version>${hyracks.version}</version>
+        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
@@ -784,7 +775,7 @@
       </dependency>
       <dependency>
         <groupId>javax.servlet</groupId>
-        <artifactId>servlet-api</artifactId>
+        <artifactId>javax.servlet-api</artifactId>
         <version>${servlet.api.version}</version>
         <type>jar</type>
       </dependency>
@@ -792,6 +783,16 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commons.io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>xerces</groupId>
+        <artifactId>xercesImpl</artifactId>
+        <version>2.11.0</version>
+      </dependency>
+      <dependency>
+        <groupId>args4j</groupId>
+        <artifactId>args4j</artifactId>
+        <version>2.33</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -16,12 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a dataset with a secondary btree index.
 
 use feeds_10;
-
-
 set `wait-for-completion-feed` `true`;
-
-connect  feed TweetFeed to  table Tweets using policy `BasicFT`;
+connect  feed TweetFeed to  dataset Tweets using policy `BasicFT`;

@@ -20,13 +20,13 @@ package org.apache.asterix.external.input.record.reader.stream;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider.Format;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -52,12 +52,13 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
+            throws HyracksDataException, AlgebricksException {
         return streamFactory.getPartitionConstraint();
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(Map<String, String> configuration) throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
         streamFactory.configure(configuration);
         format = StreamRecordReaderProvider.getReaderFormat(configuration);

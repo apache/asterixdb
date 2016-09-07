@@ -1,0 +1,124 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse tpcds if exists;
+create dataverse tpcds;
+
+use tpcds;
+
+create type tpcds.catalog_sales_type as closed {
+    cs_sold_date_sk:           int64?,
+    cs_sold_time_sk:           int64?,
+    cs_ship_date_sk:           int64?,
+    cs_bill_customer_sk:       int64?,
+    cs_bill_cdemo_sk:          int64?,
+    cs_bill_hdemo_sk:          int64?,
+    cs_bill_addr_sk:           int64?,
+    cs_ship_customer_sk:       int64?,
+    cs_ship_cdemo_sk:          int64?,
+    cs_ship_hdemo_sk:          int64?,
+    cs_ship_addr_sk:           int64?,
+    cs_call_center_sk:         int64?,
+    cs_catalog_page_sk:        int64?,
+    cs_ship_mode_sk:           int64?,
+    cs_warehouse_sk:           int64?,
+    cs_item_sk:                int64,
+    cs_promo_sk:               int64?,
+    cs_order_number:           int64,
+    cs_quantity:               int64?,
+    cs_wholesale_cost:         double?,
+    cs_list_price:             double?,
+    cs_sales_price:            double?,
+    cs_ext_discount_amt:       double?,
+    cs_ext_sales_price:        double?,
+    cs_ext_wholesale_cost:     double?,
+    cs_ext_list_price:         double?,
+    cs_ext_tax:                double?,
+    cs_coupon_amt:             double?,
+    cs_ext_ship_cost:          double?,
+    cs_net_paid:               double?,
+    cs_net_paid_inc_tax:       double?,
+    cs_net_paid_inc_ship:      double?,
+    cs_net_paid_inc_ship_tax:  double?,
+    cs_net_profit:             double?
+}
+
+create type tpcds.catalog_returns_type as closed {
+    cr_returned_date_sk:       int64?,
+    cr_returned_time_sk:       int64?,
+    cr_item_sk:                int64,
+    cr_refunded_customer_sk:   int64?,
+    cr_refunded_cdemo_sk:      int64?,
+    cr_refunded_hdemo_sk:      int64?,
+    cr_refunded_addr_sk:       int64?,
+    cr_returning_customer_sk:  int64?,
+    cr_returning_cdemo_sk:     int64?,
+    cr_returning_hdemo_sk:     int64?,
+    cr_returning_addr_sk:      int64?,
+    cr_call_center_sk:         int64?,
+    cr_catalog_page_sk:        int64?,
+    cr_ship_mode_sk:           int64?,
+    cr_warehouse_sk:           int64?,
+    cr_reason_sk:              int64?,
+    cr_order_number:           int64,
+    cr_return_quantity:        int64?,
+    cr_return_amount:          double?,
+    cr_return_tax:             double?,
+    cr_return_amt_inc_tax:     double?,
+    cr_fee:                    double?,
+    cr_return_ship_cost:       double?,
+    cr_refunded_cash:          double?,
+    cr_reversed_charge:        double?,
+    cr_store_credit:           double?,
+    cr_net_loss:               double?
+}
+
+create type tpcds.item_type as closed {
+    i_item_sk:                 int64,
+    i_item_id:                 string,
+    i_rec_start_date:          string?,
+    i_rec_end_date:            string?,
+    i_item_desc:               string?,
+    i_current_price:           double?,
+    i_wholesale_cost:          double?,
+    i_brand_id:                int64? ,
+    i_brand:                   string?,
+    i_class_id:                int64? ,
+    i_class:                   string?,
+    i_category_id:             int64? ,
+    i_category:                string?,
+    i_manufact_id:             int64? ,
+    i_manufact:                string?,
+    i_size:                    string?,
+    i_formulation:             string?,
+    i_color:                   string?,
+    i_units:                   string?,
+    i_container:               string?,
+    i_manager_id:              int64?,
+    i_product_name:            string?
+}
+
+create dataset catalog_sales (catalog_sales_type)
+primary key cs_item_sk, cs_order_number;
+
+create dataset catalog_returns (catalog_returns_type)
+primary key cr_item_sk, cr_order_number;
+
+create dataset item (item_type)
+primary key i_item_sk;

@@ -20,13 +20,16 @@ package org.apache.asterix.external.feed.runtime;
 
 import java.util.logging.Level;
 
-import org.apache.asterix.external.feed.api.ISubscriberRuntime;
+import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.active.IActiveRuntime;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 
 public class IngestionRuntime extends SubscribableRuntime {
 
@@ -34,9 +37,9 @@ public class IngestionRuntime extends SubscribableRuntime {
     private final IHyracksTaskContext ctx;
     private int numSubscribers = 0;
 
-    public IngestionRuntime(FeedId feedId, FeedRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
+    public IngestionRuntime(EntityId entityId, ActiveRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
             AdapterRuntimeManager adaptorRuntimeManager, IHyracksTaskContext ctx) {
-        super(feedId, runtimeId, feedWriter);
+        super(entityId, runtimeId, feedWriter);
         this.adapterRuntimeManager = adaptorRuntimeManager;
         this.ctx = ctx;
     }
@@ -47,9 +50,10 @@ public class IngestionRuntime extends SubscribableRuntime {
         dWriter.subscribe(collector);
         subscribers.add(collectionRuntime);
         if (numSubscribers == 0) {
-            ctx.setSharedObject(new VSizeFrame(ctx));
-            collectionRuntime.getCtx().setSharedObject(ctx.getSharedObject());
-            adapterRuntimeManager.start();
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE,
+                    TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx), collectionRuntime.getCtx());
+            start();
         }
         numSubscribers++;
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -61,7 +65,7 @@ public class IngestionRuntime extends SubscribableRuntime {
     public synchronized void unsubscribe(CollectionRuntime collectionRuntime) throws InterruptedException {
         numSubscribers--;
         if (numSubscribers == 0) {
-            adapterRuntimeManager.stop();
+            stop();
         }
         subscribers.remove(collectionRuntime);
     }
@@ -71,7 +75,7 @@ public class IngestionRuntime extends SubscribableRuntime {
     }
 
     public void terminate() {
-        for (ISubscriberRuntime subscriber : subscribers) {
+        for (IActiveRuntime subscriber : subscribers) {
             try {
                 unsubscribe((CollectionRuntime) subscriber);
             } catch (Exception e) {
@@ -82,4 +86,12 @@ public class IngestionRuntime extends SubscribableRuntime {
         }
     }
 
+    public void start() {
+        adapterRuntimeManager.start();
+    }
+
+    @Override
+    public void stop() throws InterruptedException {
+        adapterRuntimeManager.stop();
+    }
 }

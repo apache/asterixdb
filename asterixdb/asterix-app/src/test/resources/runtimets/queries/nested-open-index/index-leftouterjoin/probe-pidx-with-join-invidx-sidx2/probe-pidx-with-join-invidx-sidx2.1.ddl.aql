@@ -56,4 +56,4 @@ primary key nested.tweetid;
 create dataset TweetMessagesTmp(TweetMessageNestedType)
 primary key tweetid;
 
-create index msgNgramIx on TweetMessages(nested.message-text: string) type ngram(3) enforced;
+create index msgNgramIx on TweetMessages(nested.message-text: string?) type ngram(3) enforced;

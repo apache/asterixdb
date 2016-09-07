@@ -18,13 +18,18 @@
  */
 package org.apache.hyracks.algebricks.rewriter.rules;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -58,7 +63,12 @@ public class RemoveCartesianProductWithEmptyBranchRule implements IAlgebraicRewr
         return false;
     }
 
-    private boolean emptyBranch(ILogicalOperator op) {
-        return op.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE;
+    private boolean emptyBranch(ILogicalOperator op) throws AlgebricksException {
+        if (op.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            return true;
+        }
+        Set<LogicalVariable> liveVariables = new HashSet<>();
+        VariableUtilities.getLiveVariables(op, liveVariables);
+        return liveVariables.isEmpty();
     }
 }

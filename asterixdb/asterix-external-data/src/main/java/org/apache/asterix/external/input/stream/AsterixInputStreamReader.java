@@ -38,6 +38,7 @@ public class AsterixInputStreamReader extends Reader {
     private CharBuffer charBuffer = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
     private CharsetDecoder decoder;
     private boolean done = false;
+    private boolean remaining = false;
 
     public AsterixInputStreamReader(AsterixInputStream in) {
         this.in = in;
@@ -75,6 +76,7 @@ public class AsterixInputStreamReader extends Reader {
         charBuffer.clear();
         while (charBuffer.position() == 0) {
             if (byteBuffer.hasRemaining()) {
+                remaining = true;
                 decoder.decode(byteBuffer, charBuffer, false);
                 System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
                 if (charBuffer.position() > 0) {
@@ -97,8 +99,13 @@ public class AsterixInputStreamReader extends Reader {
                 done = true;
                 return len;
             }
-            byteBuffer.position(len);
+            if (remaining) {
+                byteBuffer.position(len + byteBuffer.position());
+            } else {
+                byteBuffer.position(len);
+            }
             byteBuffer.flip();
+            remaining = false;
             decoder.decode(byteBuffer, charBuffer, false);
             System.arraycopy(charBuffer.array(), 0, cbuf, offset, charBuffer.position());
         }

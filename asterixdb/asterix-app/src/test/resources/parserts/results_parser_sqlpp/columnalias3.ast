@@ -4,7 +4,19 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [root]
     :
-    Variable [ Name=$root ]
+    FunctionCall null.sqrt@1[
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=$t ]
+          Field=a
+        ]
+        *
+        FieldAccessor [
+          Variable [ Name=$t ]
+          Field=b
+        ]
+      ]
+    ]
   )
 ]
 ]
@@ -16,7 +28,7 @@ FROM [  FunctionCall Metadata.dataset@1[
 Groupby
   Variable [ Name=$root ]
   :=
-  FunctionCall null.SQRT@1[
+  FunctionCall null.sqrt@1[
     OperatorExpr [
       FieldAccessor [
         Variable [ Name=$t ]

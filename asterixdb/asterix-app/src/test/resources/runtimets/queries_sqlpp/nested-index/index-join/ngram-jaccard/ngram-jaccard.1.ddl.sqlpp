@@ -22,8 +22,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -56,11 +56,11 @@ create type test.CSXType as
   nested : CSXNestedType
 }
 
-create  table DBLPtmp(DBLPNestedType) primary key id;
+create  dataset DBLPtmp(DBLPNestedType) primary key id;
 
-create  table CSXtmp(CSXNestedType) primary key id;
+create  dataset CSXtmp(CSXNestedType) primary key id;
 
-create  table DBLP(DBLPType) primary key nested.id;
+create  dataset DBLP(DBLPType) primary key nested.id;
 
-create  table CSX(CSXType) primary key nested.id;
+create  dataset CSX(CSXType) primary key nested.id;
 

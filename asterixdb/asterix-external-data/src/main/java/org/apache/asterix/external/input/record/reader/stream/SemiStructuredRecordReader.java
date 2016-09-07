@@ -20,10 +20,9 @@ package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.ExternalDataExceptionUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SemiStructuredRecordReader extends StreamRecordReader {
@@ -42,7 +41,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         if (recStartString != null) {
             if (recStartString.length() != 1) {
                 throw new HyracksDataException(
-                        ExternalDataExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_START,
+                        ExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_START,
                                 ExternalDataConstants.PARAMETER_OF_SIZE_ONE, recStartString));
             }
             recordStart = recStartString.charAt(0);
@@ -53,7 +52,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         if (recEndString != null) {
             if (recEndString.length() != 1) {
                 throw new HyracksDataException(
-                        ExternalDataExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_END,
+                        ExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_RECORD_END,
                                 ExternalDataConstants.PARAMETER_OF_SIZE_ONE, recEndString));
             }
             recordEnd = recEndString.charAt(0);

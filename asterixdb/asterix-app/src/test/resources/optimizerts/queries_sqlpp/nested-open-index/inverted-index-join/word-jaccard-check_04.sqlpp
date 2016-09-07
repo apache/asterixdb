@@ -22,8 +22,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -54,13 +54,13 @@ create type test.CSXType as
   nested : CSXTypetmp
 }
 
-create  table DBLP(DBLPType) primary key nested.id;
+create  dataset DBLP(DBLPType) primary key nested.id;
 
-create  table CSX(CSXType) primary key nested.id;
+create  dataset CSX(CSXType) primary key nested.id;
 
-create  index keyword_index  on DBLP (nested.title:string) type keyword enforced;
+create  index keyword_index  on DBLP (nested.title:string?) type keyword enforced;
 
-create  index keyword_index  on CSX (nested.title:string) type keyword enforced;
+create  index keyword_index  on CSX (nested.title:string?) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_01.adm"
 select element {'arec':a,'brec':b}

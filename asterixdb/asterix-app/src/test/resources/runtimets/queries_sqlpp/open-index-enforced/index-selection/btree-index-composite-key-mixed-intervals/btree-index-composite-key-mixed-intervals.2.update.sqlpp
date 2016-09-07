@@ -18,7 +18,7 @@
  */
 /*
  * Description     : Test that BTree enforced open index is used in query plan
- *                 : define the BTree enforced open index on a composite key (fname,lanme)
+ *                 : define the BTree enforced open index on a composite key (fname?,lanme?)
  *                 : predicate => where $l.fname > "Julio" and $l.lname > "Mattocks" and
  *                     $l.fname <= "Micco" and $l.lname < "Vangieson"
  * Expected Result : Success
@@ -29,7 +29,7 @@
 use test;
 
 
-load  table employee using localfs ((`path`=`asterix_nc1://data/names.adm`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load  dataset employee using localfs ((`path`=`asterix_nc1://data/names.adm`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
 insert into employeeOpen
 select element x

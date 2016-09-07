@@ -53,7 +53,7 @@ create type TweetMessageType as open {
 create dataset TweetMessages(TweetMessageType)
 primary key nested.tweetid;
 
-create index twmSndLocIx on TweetMessages(nested.sender-location: point) type rtree enforced;
+create index twmSndLocIx on TweetMessages(nested.sender-location: point?) type rtree enforced;
 create index msgCountAIx on TweetMessages(nested.countA) type btree;
 create index msgCountBIx on TweetMessages(nested.countB) type btree;
 create index msgTextIx on TweetMessages(nested.message-text) type keyword;

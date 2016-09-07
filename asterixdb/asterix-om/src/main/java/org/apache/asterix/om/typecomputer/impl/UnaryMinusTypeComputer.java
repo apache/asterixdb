@@ -59,6 +59,7 @@ public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
             case INT64:
             case FLOAT:
             case DOUBLE:
+            case ANY:
                 return knownTypes[0];
             default:
                 return null;

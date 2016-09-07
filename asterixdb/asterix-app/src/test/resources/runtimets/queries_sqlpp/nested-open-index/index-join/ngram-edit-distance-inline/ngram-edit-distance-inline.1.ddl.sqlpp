@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -73,11 +73,11 @@ create type test.CustomerOpenType as
   nested : CustomerOpenNestedType
 }
 
-create  table Customerstmp(CustomerOpenNestedType) primary key cid;
+create  dataset Customerstmp(CustomerOpenNestedType) primary key cid;
 
-create  table Customers2tmp(CustomerNestedType) primary key cid;
+create  dataset Customers2tmp(CustomerNestedType) primary key cid;
 
-create  table Customers(CustomerOpenType) primary key nested.cid;
+create  dataset Customers(CustomerOpenType) primary key nested.cid;
 
-create  table Customers2(CustomerType) primary key nested.cid;
+create  dataset Customers2(CustomerType) primary key nested.cid;
 

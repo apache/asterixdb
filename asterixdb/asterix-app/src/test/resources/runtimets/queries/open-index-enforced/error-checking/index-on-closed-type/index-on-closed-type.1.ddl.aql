@@ -25,4 +25,4 @@ create type testType as closed {
 }
 
 create dataset testDS(testType) primary key id;
-create index testIdx on testDS(value: string) enforced;
+create index testIdx on testDS(value: string?) enforced;

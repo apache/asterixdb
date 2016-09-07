@@ -73,10 +73,8 @@ Let Variable [ Name=$tokensDBLP ]
           Variable [ Name=$token ]
           GROUP AS Variable [ Name=#1 ]
           (
-            token:=Variable [ Name=$token ]
             paper:=Variable [ Name=$paper ]
-            unrankedTokensDBLP:=Variable [ Name=$unrankedTokensDBLP ]
-            paperDBLP:=Variable [ Name=$paperDBLP ]
+            token:=Variable [ Name=$token ]
           )
 
         Orderby

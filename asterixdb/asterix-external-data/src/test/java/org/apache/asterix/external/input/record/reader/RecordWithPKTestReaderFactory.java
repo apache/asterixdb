@@ -25,6 +25,7 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.record.RecordWithPK;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<RecordWithPK<char[]>> {
@@ -33,7 +34,7 @@ public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<Recor
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, 1);
         return clusterLocations;
     }

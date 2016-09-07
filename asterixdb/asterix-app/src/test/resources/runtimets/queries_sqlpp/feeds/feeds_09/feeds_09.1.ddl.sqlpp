@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed using the synthetic feed simulator adapter.
 
-drop  database feeds_09 if exists;
-create  database feeds_09;
+drop  dataverse feeds_09 if exists;
+create  dataverse feeds_09;
 
 use feeds_09;
 
@@ -45,9 +43,9 @@ create type feeds_09.TweetMessageType as
   created_at : string,
   country : string
 }
-
-create  table SyntheticTweets(TweetMessageType) primary key id;
-
+create  dataset SyntheticTweets(TweetMessageType) primary key id;
 create  index message_text  on SyntheticTweets (message_text) type btree;
-
-create  primary feed SyntheticTweetFeed using twitter_firehose ((`duration`=`5`),(`tps`=`50`),(`tput-duration`=`5`),(`type-name`=`TweetMessageType`),(`dataverse-dataset`=`feeds:SyntheticTweets`),(`mode`=`controlled`));
+create  primary feed SyntheticTweetFeed using twitter_firehose ((`duration`=`5`),
+(`tps`=`50`),(`tput-duration`=`5`),(`type-name`=`TweetMessageType`),
+(`dataverse-dataset`=`feeds:SyntheticTweets`),(`format`=`adm`),
+(`reader-stream`=`twitter_firehose`),(`mode`=`controlled`));

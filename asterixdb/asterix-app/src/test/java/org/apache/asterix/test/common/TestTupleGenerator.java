@@ -96,33 +96,4 @@ public class TestTupleGenerator {
         }
         return tuple;
     }
-
-    private class TestTupleReference implements ITupleReference {
-        private final GrowableArray[] fields;
-
-        private TestTupleReference(GrowableArray[] fields) {
-            this.fields = fields;
-        }
-
-        @Override
-        public int getFieldCount() {
-            return fields.length;
-        }
-
-        @Override
-        public byte[] getFieldData(int fIdx) {
-
-            return fields[fIdx].getByteArray();
-        }
-
-        @Override
-        public int getFieldStart(int fIdx) {
-            return 0;
-        }
-
-        @Override
-        public int getFieldLength(int fIdx) {
-            return fields[fIdx].getLength();
-        }
-    }
 }

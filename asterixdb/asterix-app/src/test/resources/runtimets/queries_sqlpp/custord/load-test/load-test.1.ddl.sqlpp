@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -43,7 +43,7 @@ create type test.CustomerType as
 
 }
 
-create  table c1(CustomerType) primary key cid;
+create  dataset c1(CustomerType) primary key cid;
 
-create  table c2(CustomerType) primary key cid;
+create  dataset c2(CustomerType) primary key cid;
 

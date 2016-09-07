@@ -31,6 +31,7 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -38,11 +39,10 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -114,7 +114,7 @@ public class DatasetOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), datasetName, datasetName,
                         temp);
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());
 
@@ -180,7 +180,7 @@ public class DatasetOperations {
 
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadata.getMetadataTxnContext());
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                 comparatorFactories, bloomFilterKeyFields, true, dataset.getDatasetId(), compactionInfo.first,
@@ -237,7 +237,7 @@ public class DatasetOperations {
         int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, datasetName, temp);
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
+        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadata.getMetadataTxnContext());
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,

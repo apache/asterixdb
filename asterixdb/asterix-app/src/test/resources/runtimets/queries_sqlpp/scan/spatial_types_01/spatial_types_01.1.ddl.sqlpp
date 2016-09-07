@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -33,5 +33,5 @@ create type test.SpatialType as
   circle : circle
 }
 
-create external  table Spatial(SpatialType) using localfs((`path`=`asterix_nc1://data/nontagged/spatialData.json`),(`format`=`adm`));
+create external  dataset Spatial(SpatialType) using localfs((`path`=`asterix_nc1://data/nontagged/spatialData.json`),(`format`=`adm`));
 

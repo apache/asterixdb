@@ -22,8 +22,8 @@
  * Date         : Sep 4th 2012
  */
 
-drop database test if exists;
-create database test;
+drop dataverse test if exists;
+create dataverse test;
 
 use test;
 
@@ -31,7 +31,7 @@ create type test.TestType as open {
 id : int64
 }
 
-create table test.t1(TestType) primary key id;
+create dataset test.t1(TestType) primary key id;
 
 create function test.readDataset(a) {
 a

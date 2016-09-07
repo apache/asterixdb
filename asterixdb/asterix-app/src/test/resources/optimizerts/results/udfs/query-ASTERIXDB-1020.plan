@@ -14,15 +14,15 @@
               -- STREAM_SELECT  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- PRE_CLUSTERED_GROUP_BY[$$32]  |PARTITIONED|
+                    -- PRE_CLUSTERED_GROUP_BY[$$33]  |PARTITIONED|
                             {
                               -- AGGREGATE  |LOCAL|
                                 -- STREAM_SELECT  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                             }
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
+                        -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- NESTED_LOOP  |PARTITIONED|

@@ -20,6 +20,7 @@ package org.apache.asterix.external.api;
 
 import java.io.IOException;
 
+@FunctionalInterface
 public interface IRecordConverter<I, O> {
 
     public O convert(IRawRecord<? extends I> input) throws IOException;

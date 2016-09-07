@@ -104,8 +104,8 @@ Groupby
   Variable [ Name=$j ]
   GROUP AS Variable [ Name=#1 ]
   (
-    j:=Variable [ Name=$j ]
     i2:=Variable [ Name=$i2 ]
+    j:=Variable [ Name=$j ]
   )
 
 Orderby

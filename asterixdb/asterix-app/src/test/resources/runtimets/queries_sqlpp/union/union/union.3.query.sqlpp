@@ -17,20 +17,16 @@
  * under the License.
  */
 
-use TinySocial;
+USE TinySocial;
 
 
-with  t1 as (
-      select element t.id
-      from  FacebookUsers as t
-  ),
-      t2 as (
-      select element s.`message-id`
-      from  FacebookMessages as s
-  ),
-      c as t1
-      union
-      t2
-select element res
-from  c as res
-;
+SELECT DISTINCT VALUE id
+FROM
+(
+ SELECT VALUE t.id
+ FROM FacebookUsers AS t
+ UNION ALL
+ SELECT VALUE s.`message-id`
+ FROM FacebookMessages AS s
+) id
+ORDER BY id;

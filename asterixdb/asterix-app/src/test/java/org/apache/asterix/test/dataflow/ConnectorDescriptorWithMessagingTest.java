@@ -36,6 +36,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.api.test.TestFrameWriter;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -44,6 +45,7 @@ import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeser
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
+import org.apache.hyracks.dataflow.common.util.TaskUtils;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningWithMessageConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.PartitionWithMessageDataWriter;
 import org.apache.hyracks.test.support.TestUtils;
@@ -70,7 +72,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            ctx.setSharedObject(message);
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
             message.getBuffer().flip();
@@ -144,8 +146,8 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            ctx.setSharedObject(message);
-            writeRandomMessage(message, MessagingFrameTupleAppender.SNAPSHOT_MESSAGE, DEFAULT_FRAME_SIZE + 1);
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            writeRandomMessage(message, MessagingFrameTupleAppender.MARKER_MESSAGE, DEFAULT_FRAME_SIZE + 1);
             ISerializerDeserializer<?>[] serdes = new ISerializerDeserializer<?>[] {
                     Integer64SerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                     BooleanSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
@@ -165,7 +167,7 @@ public class ConnectorDescriptorWithMessagingTest {
                 fta.reset(writer.getLastFrame());
                 Assert.assertEquals(fta.getTupleCount(), 1);
                 FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
-                Assert.assertEquals(MessagingFrameTupleAppender.SNAPSHOT_MESSAGE,
+                Assert.assertEquals(MessagingFrameTupleAppender.MARKER_MESSAGE,
                         MessagingFrameTupleAppender.getMessageType(tempBuffer));
             }
             message.getBuffer().clear();
@@ -228,9 +230,9 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            ctx.setSharedObject(message);
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
-            writeRandomMessage(message, MessagingFrameTupleAppender.SNAPSHOT_MESSAGE, DEFAULT_FRAME_SIZE);
+            writeRandomMessage(message, MessagingFrameTupleAppender.MARKER_MESSAGE, DEFAULT_FRAME_SIZE);
             ISerializerDeserializer<?>[] serdes = new ISerializerDeserializer<?>[] {
                     Integer64SerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                     BooleanSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
@@ -264,7 +266,7 @@ public class ConnectorDescriptorWithMessagingTest {
                 fta.reset(writer.getLastFrame());
                 Assert.assertEquals(fta.getTupleCount(), 1);
                 FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
-                Assert.assertEquals(MessagingFrameTupleAppender.SNAPSHOT_MESSAGE,
+                Assert.assertEquals(MessagingFrameTupleAppender.MARKER_MESSAGE,
                         MessagingFrameTupleAppender.getMessageType(tempBuffer));
             }
             partitioner.close();
@@ -286,7 +288,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            ctx.setSharedObject(message);
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             message.getBuffer().put(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE);
             message.getBuffer().flip();

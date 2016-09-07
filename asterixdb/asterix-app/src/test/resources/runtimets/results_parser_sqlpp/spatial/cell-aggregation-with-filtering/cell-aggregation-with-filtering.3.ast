@@ -88,25 +88,13 @@ Groupby
   ]
   GROUP AS Variable [ Name=#1 ]
   (
-    region:=Variable [ Name=$region ]
-    keywords:=Variable [ Name=$keywords ]
     t:=Variable [ Name=$t ]
   )
 
 Let Variable [ Name=$num ]
   :=
   FunctionCall test.count@1[
-    (
-      SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=t
-      ]
-      ]
-      FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
-      ]
-    )
+    Variable [ Name=$t ]
   ]
 Orderby
   Variable [ Name=$num ]

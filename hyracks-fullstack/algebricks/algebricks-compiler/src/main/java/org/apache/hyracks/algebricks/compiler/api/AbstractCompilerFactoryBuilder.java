@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
@@ -60,6 +61,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IExpressionRuntimeProvider expressionRuntimeProvider;
     protected IExpressionTypeComputer expressionTypeComputer;
     protected IMissableTypeComputer missableTypeComputer;
+    protected IConflictingTypeResolver conflictingTypeResolver;
     protected IExpressionEvalSizeComputer expressionEvalSizeComputer;
     protected IMissingWriterFactory missingWriterFactory;
     protected INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
@@ -230,6 +232,14 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public IMissableTypeComputer getMissableTypeComputer() {
         return missableTypeComputer;
+    }
+
+    public void setConflictingTypeResolver(IConflictingTypeResolver conflictingTypeResolver) {
+        this.conflictingTypeResolver = conflictingTypeResolver;
+    }
+
+    public IConflictingTypeResolver getConflictingTypeResolver() {
+        return conflictingTypeResolver;
     }
 
 }

@@ -30,20 +30,6 @@ FROM [  FunctionCall Metadata.dataset@1[
   ]
   AS Variable [ Name=$sponsor ]
 ]
-Let Variable [ Name=$es ]
-  :=
-  RecordConstructor [
-    (
-      LiteralExpr [STRING] [event]
-      :
-      Variable [ Name=$event ]
-    )
-    (
-      LiteralExpr [STRING] [sponsor]
-      :
-      Variable [ Name=$sponsor ]
-    )
-  ]
 Groupby
   Variable [ Name=$sig_id ]
   :=
@@ -51,11 +37,10 @@ Groupby
     Variable [ Name=$sponsor ]
     Field=sig_id
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$es ]
   (
-    es:=Variable [ Name=$es ]
-    sponsor:=Variable [ Name=$sponsor ]
     event:=Variable [ Name=$event ]
+    sponsor:=Variable [ Name=$sponsor ]
   )
 
 Let Variable [ Name=$sig_sponsorship_count ]
@@ -63,13 +48,10 @@ Let Variable [ Name=$sig_sponsorship_count ]
   FunctionCall test.sql-count@1[
     (
       SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=es
+      LiteralExpr [LONG] [1]
       ]
-      ]
-      FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
+      FROM [        Variable [ Name=$es ]
+        AS Variable [ Name=#1 ]
       ]
     )
   ]
@@ -90,12 +72,12 @@ Let Variable [ Name=$by_chapter ]
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=#4 ]
+              Variable [ Name=#3 ]
               Field=e
             ]
             ]
-            FROM [              Variable [ Name=#3 ]
-              AS Variable [ Name=#4 ]
+            FROM [              Variable [ Name=#2 ]
+              AS Variable [ Name=#3 ]
             ]
           )
         ]
@@ -115,15 +97,9 @@ Let Variable [ Name=$by_chapter ]
         ]
         Field=chapter_name
       ]
-      GROUP AS Variable [ Name=#3 ]
+      GROUP AS Variable [ Name=#2 ]
       (
         e:=Variable [ Name=$e ]
-        sig_sponsorship_count:=Variable [ Name=$sig_sponsorship_count ]
-        es:=Variable [ Name=$es ]
-        event:=Variable [ Name=$event ]
-        sponsor:=Variable [ Name=$sponsor ]
-        sig_id:=Variable [ Name=$sig_id ]
-        #1:=Variable [ Name=#1 ]
       )
 
   )

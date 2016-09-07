@@ -20,11 +20,7 @@
   <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
 
 ]>
-<test-suite
-             xmlns="urn:xml.testframework.asterix.apache.org"
-             ResultOffsetPath="results"
-             QueryOffsetPath="queries_sqlpp"
-             QueryFileExtension=".sqlpp">
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="flwor">
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
@@ -66,16 +62,42 @@
         <output-dir compare="Text">query-issue550</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-883">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1576">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>Duplicate alias definitions: samptable1</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1576-2">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>Duplicate alias definitions: s2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-1576-3">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>Duplicate alias definitions: s1</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
-  <!--
-    <test-group name="union">
-        <test-case FilePath="union">
-            <compilation-unit name="union">
-                <output-dir compare="Text">union</output-dir>
-            </compilation-unit>
-        </test-case>
-    </test-group>
-    -->
+  <test-group name="explain">
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_simple">
+        <output-dir compare="Text">explain_simple</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_caps">
+        <output-dir compare="Text">explain_simple</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-case FilePath="flwor">
     <compilation-unit name="let33">
       <output-dir compare="Text">let33</output-dir>
@@ -110,19 +132,19 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unexpected type</expected-error>
+        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="sum_mixed">
         <output-dir compare="Text">sum_mixed</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unexpected type</expected-error>
+        <expected-error>Unexpected type STRING in aggregation input stream. Expected type (or a promotable type to)FLOAT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="min_mixed">
         <output-dir compare="Text">min_mixed</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unexpected type</expected-error>
+        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -546,19 +568,19 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unexpected type STRING</expected-error>
+        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="sum_mixed">
         <output-dir compare="Text">sum_mixed</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unexpected type STRING</expected-error>
+        <expected-error>Unexpected type STRING in aggregation input stream. Expected type (or a promotable type to)FLOAT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="min_mixed">
         <output-dir compare="Text">min_mixed</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unexpected type STRING</expected-error>
+        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -911,6 +933,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="datetime_range_between">
+        <output-dir compare="Text">datetime_range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="datetime_tzeq">
         <output-dir compare="Text">datetime_tzeq</output-dir>
       </compilation-unit>
@@ -1031,6 +1058,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="int_not_between">
+        <output-dir compare="Text">int_not_between</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="lt_01">
         <output-dir compare="Text">lt_01</output-dir>
       </compilation-unit>
@@ -1122,6 +1154,16 @@
     <test-case FilePath="comparison">
       <compilation-unit name="binary_null">
         <output-dir compare="Text">binary_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="greatest_mixed">
+        <output-dir compare="Text">greatest_mixed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="least_mixed">
+        <output-dir compare="Text">least_mixed</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -1349,7 +1391,18 @@
     <test-case FilePath="custord">
       <compilation-unit name="join_q_07">
         <output-dir compare="Text">join_q_06</output-dir>
-        <expected-error>Undefined alias (variable) reference for identifier c</expected-error>
+        <expected-error>Cannot find dataset c in dataverse test nor an alias with name c</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_08">
+        <output-dir compare="Text">join_q_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
+      <compilation-unit name="join_q_09">
+        <output-dir compare="Text">join_q_01</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier age</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
@@ -1405,6 +1458,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dapd">
+      <compilation-unit name="q2-2-negative">
+        <output-dir compare="Text">q2</output-dir>
+        <expected-error>Cannot find dataset e in dataverse test nor an alias with name e</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
       <compilation-unit name="q2-3">
         <output-dir compare="Text">q2</output-dir>
       </compilation-unit>
@@ -1422,6 +1481,36 @@
     <test-case FilePath="dapd">
       <compilation-unit name="q2-6">
         <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-7">
+        <output-dir compare="Text">q2-7</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-8">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-9">
+        <output-dir compare="Text">q2-9</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-10">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-11">
+        <output-dir compare="Text">q2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dapd">
+      <compilation-unit name="q2-12">
+        <output-dir compare="Text">q2-12</output-dir>
       </compilation-unit>
     </test-case>
     <!--
@@ -1581,7 +1670,7 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-duplicated-keys">
         <output-dir compare="Text">insert-duplicated-keys</output-dir>
-        <expected-error>org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException: Failed to insert key since key already exists</expected-error>
+        <expected-error>Failed to insert key since key already exists</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -1604,7 +1693,7 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-with-autogenerated-pk_adm_02">
         <output-dir compare="Text">insert-with-autogenerated-pk_adm_02</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Duplicate field id encountered</expected-error>
+        <expected-error>Duplicate field id encountered</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -1625,13 +1714,13 @@
     <test-case FilePath="dml">
       <compilation-unit name="load-with-autogenerated-pk_adm_02">
         <output-dir compare="Text">load-with-autogenerated-pk_adm_02</output-dir>
-        <expected-error>org.apache.asterix.external.parser.ADMDataParser$ParseException</expected-error>
+        <expected-error>Parse error at (0, 5): This record is closed, you can not add extra fields! new field name: id</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="load-with-autogenerated-pk_adm_03">
         <output-dir compare="Text">load-with-autogenerated-pk_adm_03</output-dir>
-        <expected-error>org.apache.asterix.external.parser.ADMDataParser$ParseException</expected-error>
+        <expected-error>Parse error at (0, 5): This record is closed, you can not add extra fields! new field name: id</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2340,7 +2429,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>The first argument should be a RECORD, but it is [ FacebookUserType: open</expected-error>
+        <expected-error>The first argument of a field access should be a RECORD, but it is [ FacebookUserType: open</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -2358,6 +2447,32 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q08">
         <output-dir compare="Text">q08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="q09">
+        <output-dir compare="Text">q09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="q10">
+        <output-dir compare="Text">q09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="q11">
+        <output-dir compare="Text">q01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="q12_error">
+        <output-dir compare="Text">q01</output-dir>
+        <expected-error>The parameter * can only be used in COUNT().</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="query-ASTERIXDB-159">
+        <output-dir compare="Text">query-ASTERIXDB-159</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -2390,6 +2505,12 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-01">
         <output-dir compare="Text">core-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="sugar-01-negative">
+        <output-dir compare="Text">core-01</output-dir>
+        <expected-error>The first argument of a field access should be a RECORD, but it is [ EmpType</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -2455,6 +2576,16 @@
     <test-case FilePath="group-by">
       <compilation-unit name="gby-expr-3">
         <output-dir compare="Text">gby-expr-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="having">
+        <output-dir compare="Text">core-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="having-2">
+        <output-dir compare="Text">core-02</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -2783,6 +2914,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="list-range">
+        <output-dir compare="Text">list-range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="listify_01">
         <output-dir compare="Text">listify_01</output-dir>
       </compilation-unit>
@@ -2848,14 +2984,59 @@
         <output-dir compare="Text">query-issue428</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-159-2">
+        <output-dir compare="Text">query-ASTERIXDB-159-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="query-ASTERIXDB-159-3">
+        <output-dir compare="Text">query-ASTERIXDB-159-3</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">
+      <compilation-unit name="case_01">
+        <output-dir compare="Text">case_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="case_02">
+        <output-dir compare="Text">case_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="case_03">
+        <output-dir compare="Text">case_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="case_04">
+        <output-dir compare="Text">case_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="case_05">
+        <output-dir compare="Text">case_05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="case_06">
+        <output-dir compare="Text">case_06</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="case_07">
+        <output-dir compare="Text">case_05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
-        <expected-error>java.lang.NullPointerException</expected-error>
-        <expected-error>Cannot find dataset</expected-error>
-        <expected-error>Undefined alias (variable) reference for identifier testds</expected-error>
+        <expected-error>Type not found for partitioning key [id]</expected-error>
+        <expected-error>Cannot find dataset testds in dataverse test</expected-error>
+        <expected-error>Cannot find dataset testds in dataverse test nor an alias with name testds!</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -2927,9 +3108,35 @@
         <output-dir compare="Text">prefix-search</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-1490">
+        <output-dir compare="Text">query-ASTERIXDB-1490</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-971">
+        <output-dir compare="Text">query-ASTERIXDB-971-sqlpp</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-1531">
+        <output-dir compare="Text">query-ASTERIXDB-1531</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-1577">
+        <output-dir compare="Text">query-ASTERIXDB-1577</output-dir>
+        <expected-error>The first argument of a field access should be a RECORD, but it is</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="uuid">
+        <output-dir compare="Text">uuid</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-index-enforced">
-    <test-group FilePath="open-index-enforced/error-checking">
+    <test-group name="open-index-enforced/error-checking">
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="enforced-field-name-collision">
           <output-dir compare="Text">enforced-field-name-collision</output-dir>
@@ -2939,23 +3146,29 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="enforced-field-type-collision">
           <output-dir compare="Text">enforced-field-type-collision</output-dir>
-          <expected-error>Error: A field "[value]" is already defined with the type "STRING"</expected-error>
+          <expected-error>A field &quot;[value]&quot; is already defined with the type &quot;STRING&quot;</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="missing-enforce-statement">
           <output-dir compare="Text">missing-enforce-statement</output-dir>
-          <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Cannot create typed index on "[value]" field without enforcing it's type</expected-error>
+          <expected-error>Cannot create typed index on "[value]" field without enforcing it's type</expected-error>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/error-checking">
+        <compilation-unit name="missing-optionality">
+          <output-dir compare="Text">missing-optionality</output-dir>
+          <expected-error>"?"</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-on-closed-type">
           <output-dir compare="Text">index-on-closed-type</output-dir>
-          <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Typed index on "[value]" field could be created only for open datatype</expected-error>
+          <expected-error>Typed index on "[value]" field could be created only for open datatype</expected-error>
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="open-index-enforced/index-join">
+    <test-group name="open-index-enforced/index-join">
       <test-case FilePath="open-index-enforced/index-join">
         <compilation-unit name="btree-secondary-equi-join">
           <output-dir compare="Text">btree-secondary-equi-join</output-dir>
@@ -2997,7 +3210,7 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="open-index-enforced/index-leftouterjoin">
+    <test-group name="open-index-enforced/index-leftouterjoin">
       <test-case FilePath="open-index-enforced/index-leftouterjoin">
         <compilation-unit name="probe-pidx-with-join-btree-sidx1">
           <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
@@ -3029,7 +3242,7 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="open-index-enforced/index-selection">
+    <test-group name="open-index-enforced/index-selection">
       <test-case FilePath="open-index-enforced/index-selection">
         <compilation-unit name="btree-index-composite-key">
           <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -3130,7 +3343,7 @@
     </test-group>
   </test-group>
   <test-group name="nested-open-index">
-    <test-group FilePath="nested-open-index/index-join">
+    <test-group name="nested-open-index/index-join">
       <test-case FilePath="nested-open-index/index-join">
         <compilation-unit name="btree-secondary-equi-join">
           <output-dir compare="Text">btree-secondary-equi-join</output-dir>
@@ -3172,7 +3385,7 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="nested-open-index/index-leftouterjoin">
+    <test-group name="nested-open-index/index-leftouterjoin">
       <test-case FilePath="nested-open-index/index-leftouterjoin">
         <compilation-unit name="probe-pidx-with-join-btree-sidx1">
           <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
@@ -3204,7 +3417,7 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="nested-open-index/index-selection">
+    <test-group name="nested-open-index/index-selection">
       <test-case FilePath="nested-open-index/index-selection">
         <compilation-unit name="btree-index-composite-key">
           <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -3327,7 +3540,7 @@
     </test-group>
   </test-group>
   <test-group name="nested-index">
-    <test-group FilePath="nested-index/index-join">
+    <test-group name="nested-index/index-join">
       <test-case FilePath="nested-index/index-join">
         <compilation-unit name="btree-primary-equi-join">
           <output-dir compare="Text">btree-primary-equi-join</output-dir>
@@ -3374,7 +3587,7 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="nested-index/index-leftouterjoin">
+    <test-group name="nested-index/index-leftouterjoin">
       <test-case FilePath="nested-index/index-leftouterjoin">
         <compilation-unit name="probe-pidx-with-join-btree-sidx1">
           <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
@@ -3406,7 +3619,7 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group FilePath="nested-index/index-selection">
+    <test-group name="nested-index/index-selection">
       <test-case FilePath="nested-index/index-selection">
         <compilation-unit name="btree-index-composite-key">
           <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -3784,6 +3997,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="caret1">
+        <output-dir compare="Text">caret1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="abs0">
         <output-dir compare="Text">abs0</output-dir>
       </compilation-unit>
@@ -3949,6 +4167,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="power">
+        <output-dir compare="Text">power</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="round-half-to-even0">
         <output-dir compare="Text">round-half-to-even0</output-dir>
       </compilation-unit>
@@ -4059,6 +4282,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="trunc">
+        <output-dir compare="Text">trunc</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="unary-minus_double_02">
         <output-dir compare="Text">unary-minus_double_02</output-dir>
       </compilation-unit>
@@ -4082,6 +4310,66 @@
       <compilation-unit name="query-issue355"> <!-- @Yingyi, This one fails in the aql tests!! -->
         <output-dir compare="Text">query-issue355</output-dir>
         <!-- <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error> -->
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="acos">
+        <output-dir compare="Text">acos</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="asin">
+        <output-dir compare="Text">asin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="atan">
+        <output-dir compare="Text">atan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="atan2">
+        <output-dir compare="Text">atan2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="cos">
+        <output-dir compare="Text">cos</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="sin">
+        <output-dir compare="Text">sin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="tan">
+        <output-dir compare="Text">tan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="exp">
+        <output-dir compare="Text">exp</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ln">
+        <output-dir compare="Text">ln</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="log">
+        <output-dir compare="Text">log</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="sqrt">
+        <output-dir compare="Text">sqrt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="sign">
+        <output-dir compare="Text">sign</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4317,7 +4605,7 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
-        <expected-error>java.lang.IllegalStateException: type mismatch: missing a required closed field name:string</expected-error>
+        <expected-error>ASX0000: Field type DOUBLE can't be promoted to type STRING</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
@@ -4868,6 +5156,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="concat_pipe">
+        <output-dir compare="Text">concat_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat_pipe_multi">
+        <output-dir compare="Text">concat_pipe_multi</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="concat_func">
+        <output-dir compare="Text">concat_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="constructor">
         <output-dir compare="Text">constructor</output-dir>
       </compilation-unit>
@@ -4943,6 +5246,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="initcap">
+        <output-dir compare="Text">initcap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="length_01">
         <output-dir compare="Text">length_01</output-dir>
       </compilation-unit>
@@ -4965,6 +5273,11 @@
     <test-case FilePath="string">
       <compilation-unit name="lowercase">
         <output-dir compare="Text">lowercase</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="ltrim">
+        <output-dir compare="Text">ltrim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -5033,6 +5346,57 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="position">
+        <output-dir compare="Text">position</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains">
+        <output-dir compare="Text">matches06</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_contains_with_flag">
+        <output-dir compare="Text">matches23</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like">
+        <output-dir compare="Text">regexp_like</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_like_with_flag">
+        <output-dir compare="Text">matches23</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position">
+        <output-dir compare="Text">regexp_position</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_position_with_flag">
+        <output-dir compare="Text">regexp_position_with_flag</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="repeat">
+        <output-dir compare="Text">repeat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="repeat_error">
+        <output-dir compare="Text">repeat</output-dir>
+        <expected-error>repeat: expects a non-negative repeating number but got -1</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="regexp_replace">
+        <output-dir compare="Text">replace22</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="replace1">
         <output-dir compare="Text">replace1</output-dir>
       </compilation-unit>
@@ -5055,6 +5419,16 @@
     <test-case FilePath="string">
       <compilation-unit name="replace3">
         <output-dir compare="Text">replace3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="rtrim">
+        <output-dir compare="Text">rtrim</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="split">
+        <output-dir compare="Text">split</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -5260,6 +5634,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="title">
+        <output-dir compare="Text">initcap</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="toLowerCase02">
         <output-dir compare="Text">toLowerCase02</output-dir>
       </compilation-unit>
@@ -5272,6 +5651,11 @@
     <test-case FilePath="string">
       <compilation-unit name="toLowerCase04">
         <output-dir compare="Text">toLowerCase04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="trim">
+        <output-dir compare="Text">trim</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -5335,9 +5719,9 @@
       <compilation-unit name="alias_negative">
         <output-dir compare="Text">alias_negative</output-dir>
         <expected-error>Need an alias for the enclosed expression</expected-error>
-        </compilation-unit>
+      </compilation-unit>
     </test-case>
-     <test-case FilePath="subquery">
+    <test-case FilePath="subquery">
       <compilation-unit name="relational_division">
         <output-dir compare="Text">relational_division</output-dir>
       </compilation-unit>
@@ -5350,6 +5734,49 @@
     <test-case FilePath="subquery">
       <compilation-unit name="relational_division3">
         <output-dir compare="Text">relational_division</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571">
+        <output-dir compare="Text">query-ASTERIXDB-1571</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571-2">
+        <output-dir compare="Text">query-ASTERIXDB-1571</output-dir>
+        <expected-error>Need an alias for the enclosed expression</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571-3">
+        <output-dir compare="Text">query-ASTERIXDB-1571-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1571-4">
+        <output-dir compare="Text">query-ASTERIXDB-1571-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1574">
+        <output-dir compare="Text">query-ASTERIXDB-1574</output-dir>
+        <expected-error>Unnest or index access expects the input to be a collection, but it was of type</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1574-2">
+        <output-dir compare="Text">query-ASTERIXDB-1574</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1574-3">
+        <output-dir compare="Text">query-ASTERIXDB-1574</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1597">
+        <output-dir compare="Text">query-ASTERIXDB-1597</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -5434,6 +5861,18 @@
     <test-case FilePath="tokenizers">
       <compilation-unit name="word-tokens_02">
         <output-dir compare="Text">word-tokens_02</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="tpcds">
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1580">
+        <output-dir compare="Text">query-ASTERIXDB-1580</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1596">
+        <output-dir compare="Text">query-ASTERIXDB-1596</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -6666,7 +7105,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Undefined alias (variable) reference for identifier y</expected-error>
+        <expected-error>Cannot find dataset y because there is no dataverse declared, nor an alias with name y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6706,19 +7145,19 @@
     <test-case FilePath="load">
       <compilation-unit name="csv_05">
         <output-dir compare="Text">csv_05</output-dir>
-        <expected-error>java.io.IOException: At record:</expected-error>
+        <expected-error>At record: 1, field#: 4 - a quote enclosing a field needs to be placed in the beginning of that field</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_06">
         <output-dir compare="Text">csv_06</output-dir>
-        <expected-error>java.io.IOException: At record:</expected-error>
+        <expected-error>At record: 1, field#: 3 - a quote enclosing a field needs to be placed in the beginning of that field</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_07">
         <output-dir compare="Text">csv_07</output-dir>
-        <expected-error>java.io.IOException: At record:</expected-error>
+        <expected-error>At record: 1, field#: 3 -  A quote enclosing a field needs to be followed by the delimiter</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
@@ -6756,7 +7195,7 @@
     <test-case FilePath="load">
       <compilation-unit name="issue650_query">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Unable to load dataset Users since it does not exist</expected-error>
+        <expected-error>Unable to load dataset Users since it does not exist</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
@@ -6788,7 +7227,7 @@
     <test-case FilePath="load">
       <compilation-unit name="duplicate-key-error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.api.exceptions.HyracksException</expected-error>
+        <expected-error>Input stream given to BTree bulk load has duplicates</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
@@ -6820,81 +7259,61 @@
     </test-case>
   </test-group>
   <test-group name="feeds">
-
-    <!--Disable it because of sporadic failures. Raman will re-enable it.
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_01">
-                <output-dir compare="Text">feeds_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_02">
-                <output-dir compare="Text">feeds_02</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_03">
-                <output-dir compare="Text">feeds_03</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_04">
-                <output-dir compare="Text">feeds_04</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-          <compilation-unit name="feeds_06">
-            <output-dir compare="Text">feeds_06</output-dir>
-          </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_07">
-                <output-dir compare="Text">feeds_07</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_08">
-                <output-dir compare="Text">feeds_08</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_09">
-                <output-dir compare="Text">feeds_09</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_10">
-                <output-dir compare="Text">feeds_10</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_11">
-                <output-dir compare="Text">feeds_11</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="feeds">
-            <compilation-unit name="feeds_12">
-                <output-dir compare="Text">feeds_12</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="issue_230_feeds">
-                <output-dir compare="Text">issue_230_feeds</output-dir>
-            </compilation-unit>
-        </test-case>
-
-        <test-case FilePath="feeds">
-            <compilation-unit name="issue_711_feeds">
-                <output-dir compare="Text">issue_711_feeds</output-dir>
-            </compilation-unit>
-        </test-case>
-        -->
-
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_07">
+        <output-dir compare="Text">feeds_07</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_08">
+        <output-dir compare="Text">feeds_08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_09">
+        <output-dir compare="Text">feeds_09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="create-policy-from-file">
+        <output-dir compare="Text">create-policy-from-file</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_01">
+        <output-dir compare="Text">feeds_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_02">
+        <output-dir compare="Text">feeds_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_03">
+        <output-dir compare="Text">feeds_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_10">
+        <output-dir compare="Text">feeds_10</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_11">
+        <output-dir compare="Text">feeds_11</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feeds_12">
+        <output-dir compare="Text">feeds_12</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="issue_230_feeds">
+        <output-dir compare="Text">issue_230_feeds</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hdfs">
     <test-case FilePath="hdfs">
@@ -7472,31 +7891,26 @@
         <output-dir compare="Text">parse</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="print">
         <output-dir compare="Text">print</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="concat">
         <output-dir compare="Text">concat</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="subbinary">
         <output-dir compare="Text">subbinary</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="find">
         <output-dir compare="Text">find</output-dir>
       </compilation-unit>
     </test-case>
-
     <test-case FilePath="binary">
       <compilation-unit name="insert">
         <output-dir compare="Text">insert</output-dir>
@@ -7587,6 +8001,55 @@
     <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest-with-pos">
         <output-dir compare="Text">left-outer-unnest-with-pos</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="union">
+    <test-case FilePath="union">
+      <compilation-unit name="union">
+        <output-dir compare="Text">union</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_heterogeneous_scalar">
+        <output-dir compare="Text">union_heterogeneous_scalar</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_negative">
+        <output-dir compare="Text">union</output-dir>
+        <expected-error>Cannot find dataset t in dataverse TinySocial nor an alias with name t</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_negative_2">
+        <output-dir compare="Text">union</output-dir>
+        <expected-error>Cannot find dataset t in dataverse TinySocial nor an alias with name t</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby">
+        <output-dir compare="Text">union_orderby</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_2">
+        <output-dir compare="Text">union_orderby_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_3">
+        <output-dir compare="Text">union_orderby_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_4">
+        <output-dir compare="Text">union_orderby_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="query-ASTERIXDB-1354-2">
+        <output-dir compare="Text">query-ASTERIXDB-1354-2</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

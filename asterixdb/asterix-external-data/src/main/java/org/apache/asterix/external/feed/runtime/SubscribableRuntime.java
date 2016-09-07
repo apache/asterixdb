@@ -22,35 +22,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.active.IActiveRuntime;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
-import org.apache.asterix.external.feed.api.ISubscriberRuntime;
 import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.management.FeedId;
 
-public abstract class SubscribableRuntime extends FeedRuntime implements ISubscribableRuntime {
+public abstract class SubscribableRuntime implements ISubscribableRuntime {
 
     protected static final Logger LOGGER = Logger.getLogger(SubscribableRuntime.class.getName());
-    protected final FeedId feedId;
-    protected final List<ISubscriberRuntime> subscribers;
+    protected final EntityId feedId;
+    protected final List<IActiveRuntime> subscribers;
     protected final DistributeFeedFrameWriter dWriter;
+    protected final ActiveRuntimeId runtimeId;
 
-    public SubscribableRuntime(FeedId feedId, FeedRuntimeId runtimeId, DistributeFeedFrameWriter dWriter) {
-        super(runtimeId);
+    public SubscribableRuntime(EntityId feedId, ActiveRuntimeId runtimeId, DistributeFeedFrameWriter dWriter) {
+        this.runtimeId = runtimeId;
         this.feedId = feedId;
         this.dWriter = dWriter;
-        this.subscribers = new ArrayList<ISubscriberRuntime>();
+        this.subscribers = new ArrayList<>();
     }
 
-    public FeedId getFeedId() {
+    @Override
+    public ActiveRuntimeId getRuntimeId() {
+        return runtimeId;
+    }
+
+    public EntityId getFeedId() {
         return feedId;
     }
 
     @Override
     public String toString() {
         return "SubscribableRuntime" + " [" + feedId + "]" + "(" + runtimeId + ")";
-    }
-
-    public FeedRuntimeType getFeedRuntimeType() {
-        return runtimeId.getFeedRuntimeType();
     }
 }

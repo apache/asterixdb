@@ -22,9 +22,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.comm.channels.IChannelConnectionFactory;
-import org.apache.hyracks.net.exceptions.NetException;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
+import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
@@ -38,7 +39,7 @@ public class ClientNetworkManager implements IChannelConnectionFactory {
         /* This is a connect only socket and does not listen to any incoming connections, so pass null to
          * localAddress and listener.
          */
-        md = new MuxDemux(null, null, nThreads, MAX_CONNECTION_ATTEMPTS);
+        md = new MuxDemux(null, null, nThreads, MAX_CONNECTION_ATTEMPTS, FullFrameChannelInterfaceFactory.INSTANCE);
     }
 
     public void start() throws IOException {

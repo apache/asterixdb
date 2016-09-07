@@ -20,12 +20,9 @@ package org.apache.hyracks.comm.channels;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
-import org.apache.hyracks.net.protocols.muxdemux.IBufferFactory;
 
-/**
- * @author yingyib
- */
 public class ReadBufferFactory implements IBufferFactory {
 
     private final int limit;
@@ -39,17 +36,12 @@ public class ReadBufferFactory implements IBufferFactory {
 
     @Override
     public ByteBuffer createBuffer() {
-        try {
-            if (counter >= limit) {
-                return null;
-            } else {
-                ByteBuffer frame = ByteBuffer.allocate(frameSize);
-                counter++;
-                return frame;
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+        if (counter >= limit) {
+            return null;
+        } else {
+            ByteBuffer frame = ByteBuffer.allocate(frameSize);
+            counter++;
+            return frame;
         }
     }
-
 }

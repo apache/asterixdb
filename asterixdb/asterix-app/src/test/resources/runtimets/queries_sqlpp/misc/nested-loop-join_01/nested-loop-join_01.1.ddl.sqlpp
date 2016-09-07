@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -39,7 +39,7 @@ create type test.VisitorType as
   interests : {{string}}
 }
 
-create  table Users(UserType) primary key uid;
+create  dataset Users(UserType) primary key uid;
 
-create  table Visitors(VisitorType) primary key vid;
+create  dataset Visitors(VisitorType) primary key vid;
 

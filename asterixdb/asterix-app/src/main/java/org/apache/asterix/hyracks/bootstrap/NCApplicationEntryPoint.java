@@ -19,30 +19,34 @@
 package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.api.common.AsterixAppRuntimeContext;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
+import org.apache.asterix.app.nc.AsterixNCAppRuntimeContext;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
-import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
-import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.asterix.runtime.message.ReportMaxResourceIdMessage;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
@@ -58,13 +62,17 @@ import org.kohsuke.args4j.Option;
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
 
-    @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)", required = false)
+    @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)",
+            required = false)
     public int metadataRmiPort = 0;
 
-    @Option(name = "-initial-run", usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
+    @Option(name = "-initial-run",
+            usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
     public boolean initialRun = false;
 
-    @Option(name = "-virtual-NC", usage = "A flag indicating if this NC is running on virtual cluster (default: false)", required = false)
+    @Option(name = "-virtual-NC",
+            usage = "A flag indicating if this NC is running on virtual cluster " + "(default: false)",
+            required = false)
     public boolean virtualNC = false;
 
     private INCApplicationContext ncApplicationContext = null;
@@ -95,7 +103,11 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
 
-        runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext, metadataRmiPort);
+        if (System.getProperty("java.rmi.server.hostname") == null) {
+            System.setProperty("java.rmi.server.hostname", ((NodeControllerService) ncAppCtx.getControllerService())
+                    .getConfiguration().clusterNetPublicIPAddress);
+        }
+        runtimeContext = new AsterixNCAppRuntimeContext(ncApplicationContext, metadataRmiPort, getExtensions());
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
@@ -106,8 +118,14 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
         runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
-        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService());
+        MessagingProperties messagingProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getMessagingProperties();
+        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService(),
+                messagingProperties);
         ncApplicationContext.setMessageBroker(messageBroker);
+        MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
+                (NCMessageBroker) messageBroker, messagingProperties);
+        ncApplicationContext.setMessagingChannelInterfaceFactory(interfaceFactory);
 
         boolean replicationEnabled = AsterixClusterProperties.INSTANCE.isReplicationEnabled();
         boolean autoFailover = AsterixClusterProperties.INSTANCE.isAutoFailoverEnabled();
@@ -147,6 +165,10 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         if (replicationEnabled && !pendingFailbackCompletion) {
             startReplicationService();
         }
+    }
+
+    protected List<AsterixExtension> getExtensions() {
+        return Collections.emptyList();
     }
 
     private void startReplicationService() throws InterruptedException {
@@ -189,8 +211,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         //Send max resource id on this NC to the CC
-        ((INCMessageBroker) ncApplicationContext.getMessageBroker()).reportMaxResourceId();
-
+        ReportMaxResourceIdMessage.send((NodeControllerService) ncApplicationContext.getControllerService());
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
@@ -201,8 +222,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
 
-            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                    .getLocalResourceRepository();
+            PersistentLocalResourceRepository localResourceRepository =
+                    (PersistentLocalResourceRepository) runtimeContext
+                            .getLocalResourceRepository();
             localResourceRepository.initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 

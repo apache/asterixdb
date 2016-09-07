@@ -25,8 +25,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -71,9 +71,9 @@ create type test.OrderType as
   nested : OrderTypetmp
 }
 
-create  table Customers(CustomerType) primary key nested.cid;
+create  dataset Customers(CustomerType) primary key nested.cid;
 
-create  table Orders(OrderType) primary key nested.oid;
+create  dataset Orders(OrderType) primary key nested.oid;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join-multipred.adm"
 select element {'customer':c.nested,'order':o.nested}

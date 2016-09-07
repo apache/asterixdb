@@ -25,6 +25,6 @@ create type FacebookMessageType as
 
 create dataset FacebookMessages(FacebookMessageType)
 primary key message-id;
-create index fbAuthorIdx on FacebookMessages(author-id: int64) type btree enforced;
-create index fbSenderLocIndex on FacebookMessages(sender-location: point) type rtree enforced;
-create index fbMessageIdx on FacebookMessages(message: string) type keyword enforced;
+create index fbAuthorIdx on FacebookMessages(author-id: int64?) type btree enforced;
+create index fbSenderLocIndex on FacebookMessages(sender-location: point?) type rtree enforced;
+create index fbMessageIdx on FacebookMessages(message: string?) type keyword enforced;

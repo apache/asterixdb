@@ -21,13 +21,11 @@ package org.apache.asterix.external.feed.dataflow;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * Provides mechanism for distributing the frames, as received from an operator to a
@@ -38,7 +36,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 public class DistributeFeedFrameWriter implements IFrameWriter {
 
     /** A unique identifier for the feed to which the incoming tuples belong. **/
-    private final FeedId feedId;
+    private final EntityId feedId;
 
     /**
      * An instance of FrameDistributor that provides the mechanism for distributing a frame to multiple readers, each
@@ -55,8 +53,8 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer,
-            FeedRuntimeType feedRuntimeType, int partition, FrameTupleAccessor fta) throws IOException {
+    public DistributeFeedFrameWriter(EntityId feedId, IFrameWriter writer, FeedRuntimeType feedRuntimeType,
+            int partition) throws IOException {
         this.feedId = feedId;
         this.frameDistributor = new FrameDistributor();
         this.feedRuntimeType = feedRuntimeType;

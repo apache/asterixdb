@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -73,15 +74,15 @@ class ARecordCaster {
     private final IVisitablePointable nullTypeTag = allocator.allocateEmpty();
     private final IVisitablePointable missingTypeTag = allocator.allocateEmpty();
 
-    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory
-            .of(UTF8StringPointable.FACTORY).createBinaryComparator();
+    private final IBinaryComparator fieldNameComparator =
+            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
     private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
     private final DataOutputStream outputDos = new DataOutputStream(outputBos);
 
     private final IVisitablePointable fieldTempReference = allocator.allocateEmpty();
-    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<>(fieldTempReference, null,
-            null);
+    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg =
+            new Triple<>(fieldTempReference, null, null);
 
     private int numInputFields = 0;
 
@@ -130,7 +131,7 @@ class ARecordCaster {
 
             // clear the previous states
             reset();
-            matchClosedPart(fieldNames, fieldTypeTags, fieldValues);
+            matchClosedPart(fieldNames, fieldTypeTags);
             writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
             resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
         } catch (AsterixException e) {
@@ -201,8 +202,8 @@ class ARecordCaster {
         quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
 
-    private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
-            List<IVisitablePointable> fieldValues) throws AsterixException, HyracksDataException {
+    private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags)
+            throws AsterixException, HyracksDataException {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -231,6 +232,9 @@ class ARecordCaster {
                             || ATypeHierarchy.canDemote(inputTypeTag, requiredTypeTag)) {
                         fieldPermutation[reqFnPos] = fnPos;
                         openFields[fnPos] = false;
+                    } else {
+                        throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_CASTING_FIELD,
+                                "Field type %1$s can't be promoted to type %2$s", inputTypeTag, requiredTypeTag);
                     }
                 }
                 fnStart++;

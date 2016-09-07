@@ -56,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSo
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
@@ -376,8 +377,7 @@ public class PigletCompiler {
 
     private String getPrettyPrintedPlan(ILogicalPlan plan) throws AlgebricksException {
         LogicalOperatorPrettyPrintVisitor v = new LogicalOperatorPrettyPrintVisitor();
-        StringBuilder buffer = new StringBuilder();
-        PlanPrettyPrinter.printPlan(plan, buffer, v, 0);
-        return buffer.toString();
+        PlanPrettyPrinter.printPlan(plan, v, 0);
+        return v.get().toString();
     }
 }

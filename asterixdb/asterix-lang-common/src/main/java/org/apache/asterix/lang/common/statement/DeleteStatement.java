@@ -51,8 +51,8 @@ public class DeleteStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DELETE;
+    public byte getKind() {
+        return Statement.Kind.DELETE;
     }
 
     public VariableExpr getVariableExpr() {
@@ -116,5 +116,10 @@ public class DeleteStatement implements Statement {
                 && ObjectUtils.equals(dataverseName, target.dataverseName);
         return equals && ObjectUtils.equals(dataverses, target.dataverses)
                 && ObjectUtils.equals(rewrittenQuery, target.rewrittenQuery) && ObjectUtils.equals(vars, target.vars);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 }

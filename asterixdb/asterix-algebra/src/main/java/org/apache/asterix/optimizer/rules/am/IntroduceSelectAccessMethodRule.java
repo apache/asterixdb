@@ -106,7 +106,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         // Analyze select condition.
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<IAccessMethod, AccessMethodAnalysisContext>();
-        if (!analyzeCondition(selectCond, subTree.assignsAndUnnests, analyzedAMs, context, typeEnvironment)) {
+        if (!analyzeCondition(selectCond, subTree.getAssignsAndUnnests(), analyzedAMs, context, typeEnvironment)) {
             return false;
         }
 
@@ -164,7 +164,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         }
         ILogicalOperator primaryUnnest = connectAll2ndarySearchPlanWithIntersect(subRoots, context);
 
-        subTree.dataSourceRef.setValue(primaryUnnest);
+        subTree.getDataSourceRef().setValue(primaryUnnest);
         return primaryUnnest != null;
     }
 

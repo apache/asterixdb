@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.external.parser.factory;
 
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
+import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -32,18 +32,13 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
+    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {
         return createParser();
     }
 
-    private ADMDataParser createParser() throws HyracksDataException {
-        try {
-            ADMDataParser parser = new ADMDataParser(recordType,
-                    ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM));
-            return parser;
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
+    private ADMDataParser createParser() {
+        return new ADMDataParser(recordType,
+                ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM));
     }
 
     @Override

@@ -48,7 +48,7 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
     // Payload field containing serialized Dataverse.
     public static final int DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private AMutableInt32 aInt32;
+    private transient AMutableInt32 aInt32;
     protected ISerializerDeserializer<AInt32> aInt32Serde;
 
     @SuppressWarnings("unchecked")
@@ -56,7 +56,7 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
             .getSerializerDeserializer(MetadataRecordTypes.DATAVERSE_RECORDTYPE);
 
     @SuppressWarnings("unchecked")
-    public DataverseTupleTranslator(boolean getTuple) {
+    protected DataverseTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATAVERSE_DATASET.getFieldCount());
         aInt32 = new AMutableInt32(-1);
         aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);

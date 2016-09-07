@@ -45,27 +45,27 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-btree</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-rtree</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-dataflow-std</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-runtime</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-common</artifactId>
-      <version>0.2.18-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

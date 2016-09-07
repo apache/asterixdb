@@ -53,9 +53,9 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
     // Payload field containing serialized ExternalFile.
     public static final int EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
-    protected AMutableInt32 aInt32 = new AMutableInt32(0);
-    protected AMutableDateTime aDateTime = new AMutableDateTime(0);
-    protected AMutableInt64 aInt64 = new AMutableInt64(0);
+    protected transient AMutableInt32 aInt32 = new AMutableInt32(0);
+    protected transient AMutableDateTime aDateTime = new AMutableDateTime(0);
+    protected transient AMutableInt64 aInt64 = new AMutableInt64(0);
 
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -70,7 +70,7 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE);
 
-    public ExternalFileTupleTranslator(boolean getTuple) {
+    protected ExternalFileTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET.getFieldCount());
     }
 
@@ -81,7 +81,7 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
         int recordLength = tuple.getFieldLength(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord externalFileRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord externalFileRecord = recordSerDes.deserialize(in);
         return createExternalFileFromARecord(externalFileRecord);
     }
 

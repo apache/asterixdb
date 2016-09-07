@@ -21,46 +21,49 @@ package org.apache.asterix.external.operators;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.active.IActiveMessage;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.external.feed.api.IFeedMessage;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.management.FeedId;
-import org.apache.asterix.external.feed.management.FeedManager;
 import org.apache.asterix.external.feed.message.EndFeedMessage;
 import org.apache.asterix.external.feed.runtime.AdapterRuntimeManager;
 import org.apache.asterix.external.feed.runtime.CollectionRuntime;
-import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
 import org.apache.asterix.external.feed.runtime.IngestionRuntime;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
- * Runtime for the FeedMessageOpertorDescriptor. This operator is responsible for communicating
- * a feed message to the local feed manager on the host node controller.
+ * @deprecated
+ *             Runtime for the FeedMessageOpertorDescriptor. This operator is responsible for communicating
+ *             a feed message to the local feed manager on the host node controller.
+ *             For messages, use IMessageBroker interfaces
  * @see FeedMessageOperatorDescriptor
  *      IFeedMessage
  *      IFeedManager
  */
+@Deprecated
 public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 
     private static final Logger LOGGER = Logger.getLogger(FeedMessageOperatorNodePushable.class.getName());
 
     private final FeedConnectionId connectionId;
-    private final IFeedMessage message;
-    private final FeedManager feedManager;
+    private final IActiveMessage message;
+    private final ActiveManager feedManager;
     private final int partition;
 
     public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId connectionId,
-            IFeedMessage feedMessage, int partition, int nPartitions) {
+            IActiveMessage feedMessage, int partition) {
         this.connectionId = connectionId;
         this.message = feedMessage;
         this.partition = partition;
         IAsterixAppRuntimeContext runtimeCtx =
                 (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
-        this.feedManager = (FeedManager) runtimeCtx.getFeedManager();
+        this.feedManager = (ActiveManager) runtimeCtx.getActiveManager();
     }
 
     @Override
@@ -77,6 +80,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                         case DISCONTINUE_SOURCE:
                             handleDiscontinueFeedTypeMessage(endFeedMessage);
                             break;
+                        default:
+                            break;
                     }
                     break;
                 default:
@@ -90,10 +95,10 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleDiscontinueFeedTypeMessage(EndFeedMessage endFeedMessage) throws Exception {
-        FeedId sourceFeedId = endFeedMessage.getSourceFeedId();
-        FeedRuntimeId subscribableRuntimeId =
-                new FeedRuntimeId(sourceFeedId, FeedRuntimeType.INTAKE, partition, FeedRuntimeId.DEFAULT_TARGET_ID);
-        ISubscribableRuntime feedRuntime = feedManager.getSubscribableRuntime(subscribableRuntimeId);
+        EntityId sourceFeedId = endFeedMessage.getSourceFeedId();
+        ActiveRuntimeId subscribableRuntimeId =
+                new ActiveRuntimeId(sourceFeedId, FeedRuntimeType.INTAKE.toString(), partition);
+        ISubscribableRuntime feedRuntime = (ISubscribableRuntime) feedManager.getRuntime(subscribableRuntimeId);
         AdapterRuntimeManager adapterRuntimeManager = ((IngestionRuntime) feedRuntime).getAdapterRuntimeManager();
         adapterRuntimeManager.stop();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -105,12 +110,12 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ending feed:" + endFeedMessage.getFeedConnectionId());
         }
-        FeedRuntimeId runtimeId = null;
+        ActiveRuntimeId runtimeId;
         FeedRuntimeType subscribableRuntimeType = ((EndFeedMessage) message).getSourceRuntimeType();
         if (endFeedMessage.isCompleteDisconnection()) {
             // subscribableRuntimeType represents the location at which the feed connection receives
             // data
-            FeedRuntimeType runtimeType = null;
+            FeedRuntimeType runtimeType;
             switch (subscribableRuntimeType) {
                 case INTAKE:
                     runtimeType = FeedRuntimeType.COLLECT;
@@ -122,10 +127,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     throw new IllegalStateException("Invalid subscribable runtime type " + subscribableRuntimeType);
             }
 
-            runtimeId = new FeedRuntimeId(endFeedMessage.getSourceFeedId(), runtimeType, partition,
-                    FeedRuntimeId.DEFAULT_TARGET_ID);
-            CollectionRuntime feedRuntime =
-                    (CollectionRuntime) feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
+            runtimeId = new ActiveRuntimeId(endFeedMessage.getSourceFeedId(), runtimeType.toString(), partition);
+            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getRuntime(runtimeId);
             if (feedRuntime != null) {
                 feedRuntime.getSourceRuntime().unsubscribe(feedRuntime);
             }
@@ -142,11 +145,13 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     throw new IllegalStateException("Illegal State, invalid runtime type  " + subscribableRuntimeType);
                 case COMPUTE:
                     // feed could be primary or secondary, doesn't matter
-                    FeedRuntimeId feedSubscribableRuntimeId = new FeedRuntimeId(connectionId.getFeedId(),
-                            FeedRuntimeType.COMPUTE, partition, FeedRuntimeId.DEFAULT_TARGET_ID);
-                    ISubscribableRuntime feedRuntime = feedManager.getSubscribableRuntime(feedSubscribableRuntimeId);
-                    CollectionRuntime feedCollectionRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager()
-                            .getFeedRuntime(connectionId, runtimeId);
+                    ActiveRuntimeId feedSubscribableRuntimeId = new ActiveRuntimeId(connectionId.getFeedId(),
+                            FeedRuntimeType.COMPUTE.toString(), partition);
+                    ISubscribableRuntime feedRuntime =
+                            (ISubscribableRuntime) feedManager.getRuntime(feedSubscribableRuntimeId);
+                    runtimeId = new ActiveRuntimeId(endFeedMessage.getSourceFeedId(),
+                            FeedRuntimeType.COMPUTE_COLLECT.toString(), partition);
+                    CollectionRuntime feedCollectionRuntime = (CollectionRuntime) feedManager.getRuntime(runtimeId);
                     feedRuntime.unsubscribe(feedCollectionRuntime);
                     break;
                 default:

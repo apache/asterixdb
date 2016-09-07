@@ -45,7 +45,7 @@ public interface IHyracksTaskContext
 
     public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymendId) throws Exception;
 
-    public void setSharedObject(Object sharedObject);
+    public void setSharedObject(Object object);
 
     public Object getSharedObject();
 }

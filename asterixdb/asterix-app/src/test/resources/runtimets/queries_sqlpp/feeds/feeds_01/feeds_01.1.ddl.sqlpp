@@ -22,8 +22,8 @@
  * Date         : 24th Dec 2012
  */
 
-drop  database feeds if exists;
-create  database feeds;
+drop  dataverse feeds if exists;
+create  dataverse feeds;
 
 use feeds;
 
@@ -37,6 +37,7 @@ create type feeds.TweetType as
   timestamp : string
 }
 
-create  table Tweets(TweetType) primary key id;
+create  dataset Tweets(TweetType) primary key id;
 
-create  primary feed TweetFeed using file_feed ((`output-type-name`=`TweetType`),(`fs`=`localfs`),(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),(`format`=`adm`),(`tuple-interval`=`10`));
+create primary feed TweetFeed using localfs
+((`type-name`=`TweetType`),(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),(`format`=`adm`),(`tuple-interval`=`10`));

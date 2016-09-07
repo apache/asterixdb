@@ -102,13 +102,8 @@ Let Variable [ Name=$tokensDBLP ]
           Variable [ Name=$token ]
           GROUP AS Variable [ Name=#1 ]
           (
-            token:=Variable [ Name=$token ]
             paper:=Variable [ Name=$paper ]
-            tokenUnranked:=Variable [ Name=$tokenUnranked ]
-            prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-            paperCSX:=Variable [ Name=$paperCSX ]
-            prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
-            paperDBLP:=Variable [ Name=$paperDBLP ]
+            token:=Variable [ Name=$token ]
           )
 
         Orderby
@@ -182,14 +177,8 @@ Let Variable [ Name=$tokensCSX ]
           Variable [ Name=$token ]
           GROUP AS Variable [ Name=#3 ]
           (
-            token:=Variable [ Name=$token ]
             paper:=Variable [ Name=$paper ]
-            tokenUnranked:=Variable [ Name=$tokenUnranked ]
-            tokensDBLP:=Variable [ Name=$tokensDBLP ]
-            prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-            paperCSX:=Variable [ Name=$paperCSX ]
-            prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
-            paperDBLP:=Variable [ Name=$paperDBLP ]
+            token:=Variable [ Name=$token ]
           )
 
         Orderby
@@ -282,13 +271,10 @@ Groupby
   Variable [ Name=$sim ]
   GROUP AS Variable [ Name=#5 ]
   (
-    sim:=Variable [ Name=$sim ]
-    tokensCSX:=Variable [ Name=$tokensCSX ]
-    tokensDBLP:=Variable [ Name=$tokensDBLP ]
-    prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-    paperCSX:=Variable [ Name=$paperCSX ]
-    prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
     paperDBLP:=Variable [ Name=$paperDBLP ]
+    prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
+    paperCSX:=Variable [ Name=$paperCSX ]
+    prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
   )
 
 Orderby

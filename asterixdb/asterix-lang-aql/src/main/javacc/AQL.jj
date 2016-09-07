@@ -44,7 +44,6 @@ import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
@@ -107,9 +106,10 @@ import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
-import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
+import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
@@ -130,6 +130,7 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -505,12 +506,14 @@ RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseEx
   String datasetName = null;
 }
 {
+  (
     <REFRESH> <EXTERNAL> <DATASET> nameComponents = QualifiedName()
     {
     redss.setDataverseName(nameComponents.first);
     redss.setDatasetName(nameComponents.second);
     return redss;
     }
+  )
 }
 
 RunStatement RunStatement() throws ParseException:
@@ -724,7 +727,7 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
       {
         cfps = new CreateFeedPolicyStatement(policyName, basePolicyName, properties, definition, ifNotExists);
       }
-     |<PATH> sourcePolicyFile = Identifier() (<DEFINITION> definition = StringLiteral())?
+     |<PATH> sourcePolicyFile = StringLiteral() (<DEFINITION> definition = StringLiteral())?
       {
         cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
       }
@@ -767,7 +770,19 @@ boolean IfNotExists() throws ParseException:
 {
 }
 {
-  ( <IF> <NOT> <EXISTS>
+  (
+    LOOKAHEAD(1)
+    <IF>
+    <IDENTIFIER>
+    (
+      {
+        if(!token.image.equals("not")){
+           throw new ParseException("Expect word \"not\" at line " + token.beginLine + ", column "
+                         + token.beginColumn +"!");
+        }
+      }
+    )
+    <EXISTS>
     {
       return true;
     }
@@ -858,7 +873,7 @@ Statement DropStatement() throws ParseException:
   (
     <DATASET> pairId = QualifiedName() ifExists = IfExists()
       {
-        stmt = new DropStatement(pairId.first, pairId.second, ifExists);
+        stmt = new DropDatasetStatement(pairId.first, pairId.second, ifExists);
       }
     | <INDEX> tripleId = DoubleQualifiedName() ifExists = IfExists()
       {
@@ -884,6 +899,10 @@ Statement DropStatement() throws ParseException:
       {
         stmt = new FeedDropStatement(pairId.first, pairId.second, ifExists);
       }
+    | <INGESTION> <POLICY> pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new FeedPolicyDropStatement(pairId.first, pairId.second, ifExists);
+      }
   )
   {
     return stmt;
@@ -894,7 +913,9 @@ boolean IfExists() throws ParseException :
 {
 }
 {
-  ( <IF> <EXISTS>
+  (
+    LOOKAHEAD(1)
+    <IF> <EXISTS>
     {
       return true;
     }
@@ -1395,7 +1416,7 @@ Pair<Integer, Pair<List<String>, TypeExpression>> OpenField() throws ParseExcept
 }
 {
   fieldList = NestedField()
-  ( <COLON> fieldType =  IndexedTypeExpr() )?
+  ( <COLON> fieldType =  IndexedTypeExpr() <QUES>)?
   {
     return new Pair<Integer, Pair<List<String>, TypeExpression>>
            (fieldList.first, new Pair<List<String>, TypeExpression>(fieldList.second, fieldType));
@@ -1522,7 +1543,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 
 Query Query() throws ParseException:
 {
-  Query query = new Query();
+  Query query = new Query(false);
   // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
   setDataverses(query.getDataverses());
   setDatasets(query.getDatasets());
@@ -1538,7 +1559,6 @@ Query Query() throws ParseException:
       setDatasets(null);
       return query;
     }
-
 }
 
 
@@ -1740,14 +1760,46 @@ Expression MultExpr()throws ParseException:
   Expression operand = null;
 }
 {
-    operand = UnionExpr()
+    operand = ExponentExpr()
 
-    (( <MUL> | <DIV> | <MOD> | <CARET> | <IDIV>)
+    (( <MUL> | <DIV> | <MOD> | <IDIV>)
       {
         if (op == null) {
           op = new OperatorExpr();
-        op.addOperand(operand);
-        op.setCurrentop(true);
+          op.addOperand(operand);
+          op.setCurrentop(true);
+        }
+        try{
+          op.addOperator(token.image);
+        } catch (AsterixException e){
+          throw new ParseException(e.getMessage());
+        }
+    }
+    operand = ExponentExpr()
+    {
+       op.addOperand(operand);
+    }
+    )*
+
+     {
+       return op==null?operand:op;
+     }
+}
+
+Expression ExponentExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = UnionExpr()
+
+    ( <CARET>
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+          op.addOperand(operand);
+          op.setCurrentop(true);
         }
         try{
           op.addOperator(token.image);
@@ -1759,11 +1811,11 @@ Expression MultExpr()throws ParseException:
     {
        op.addOperand(operand);
     }
-    )*
+    )?
 
-     {
+    {
        return op==null?operand:op;
-     }
+    }
 }
 
 Expression UnionExpr() throws ParseException:
@@ -2214,7 +2266,7 @@ Expression IfThenElse() throws ParseException:
     }
 }
 
-Expression  FLWOGR() throws ParseException:
+Expression FLWOGR() throws ParseException:
 {
     FLWOGRExpression flworg = new FLWOGRExpression();
     List<Clause> clauseList = new ArrayList<Clause>();
@@ -2366,11 +2418,11 @@ Clause OrderbyClause()throws ParseException :
 }
 Clause GroupClause()throws ParseException :
 {
-      GroupbyClause gbc = new GroupbyClause();
-      // GbyVariableExpressionPair pair = new GbyVariableExpressionPair();
-     List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
+    GroupbyClause gbc = new GroupbyClause();
+    // GbyVariableExpressionPair pair = new GbyVariableExpressionPair();
+    List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
     List<GbyVariableExpressionPair> decorPairList = new ArrayList<GbyVariableExpressionPair>();
-    List<VariableExpr> withVarList= new ArrayList<VariableExpr>();
+    Map<Expression, VariableExpr> withVarMap = new HashMap<Expression, VariableExpr>();
     VariableExpr var = null;
     VariableExpr withVar = null;
     Expression expr = null;
@@ -2426,20 +2478,20 @@ Clause GroupClause()throws ParseException :
     {
       if(withVar.getIsNewVar()==true)
           throw new ParseException("can't find variable " + withVar.getVar());
-      withVarList.add(withVar);
+      withVarMap.put(withVar, withVar);
       newScope.addNewVarSymbolToScope(withVar.getVar());
     }
     (<COMMA> withVar = VariableRef()
     {
       if(withVar.getIsNewVar()==true)
           throw new ParseException("can't find variable " + withVar.getVar());
-      withVarList.add(withVar);
+      withVarMap.put(withVar, withVar);
       newScope.addNewVarSymbolToScope(withVar.getVar());
     })*
     {
       gbc.setGbyPairList(vePairList);
       gbc.setDecorPairList(decorPairList);
-      gbc.setWithVarList(withVarList);
+      gbc.setWithVarMap(withVarMap);
       replaceCurrentScope(newScope);
       return gbc;
     }
@@ -2596,7 +2648,6 @@ TOKEN :
   | <LOAD : "load">
   | <NGRAM : "ngram">
   | <NODEGROUP : "nodegroup">
-  | <NOT : "not">
   | <OFFSET : "offset">
   | <ON : "on">
   | <OPEN : "open">

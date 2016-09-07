@@ -173,7 +173,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     AsterixBuiltinFunctions.CHECK_UNKNOWN);
         }
         if (cast) {
-            addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.CAST_RECORD);
+            addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.CAST_TYPE);
         }
         return cast || checkUnknown;
     }
@@ -210,15 +210,15 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 if (var.equals(recordVar)) {
                     /** insert an assign operator to call the function on-top-of the variable */
                     IAType actualType = (IAType) env.getVarType(var);
-                    AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(fd));
+                    AbstractFunctionCallExpression cast =
+                            new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fd));
                     cast.getArguments()
                             .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
                     /** enforce the required record type */
                     TypeCastUtils.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
                     LogicalVariable newAssignVar = context.newVar();
-                    AssignOperator newAssignOperator = new AssignOperator(newAssignVar,
-                            new MutableObject<ILogicalExpression>(cast));
+                    AssignOperator newAssignOperator =
+                            new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
                     newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op));
                     opRef.setValue(newAssignOperator);
                     context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);

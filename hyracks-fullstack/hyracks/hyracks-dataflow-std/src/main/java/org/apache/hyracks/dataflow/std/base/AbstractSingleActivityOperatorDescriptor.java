@@ -21,6 +21,7 @@ package org.apache.hyracks.dataflow.std.base;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractOperatorDescriptor implements IActivity {
@@ -36,6 +37,14 @@ public abstract class AbstractSingleActivityOperatorDescriptor extends AbstractO
     @Override
     public ActivityId getActivityId() {
         return activityNodeId;
+    }
+
+    @Override
+    public final void setOperatorId(OperatorDescriptorId id) {
+        super.setOperatorId(id);
+        if (activityNodeId != null && !activityNodeId.getOperatorDescriptorId().equals(odId)) {
+            activityNodeId.setOperatorDescriptorId(odId);
+        }
     }
 
     @Override

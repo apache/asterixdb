@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.declared.FeedDataSource;
+import org.apache.asterix.metadata.entities.Feed;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -41,7 +41,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceRandomPartitioningFeedComputationRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
         if (!op.getOperatorTag().equals(LogicalOperatorTag.ASSIGN)) {
             return false;
@@ -54,7 +55,7 @@ public class IntroduceRandomPartitioningFeedComputationRule implements IAlgebrai
 
         DataSourceScanOperator scanOp = (DataSourceScanOperator) opChild;
         AqlDataSource dataSource = (AqlDataSource) scanOp.getDataSource();
-        if (!dataSource.getDatasourceType().equals(AqlDataSourceType.FEED)) {
+        if (dataSource.getDatasourceType() != AqlDataSourceType.FEED) {
             return false;
         }
 

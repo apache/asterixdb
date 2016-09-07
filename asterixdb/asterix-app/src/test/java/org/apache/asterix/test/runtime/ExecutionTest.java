@@ -55,6 +55,7 @@ public class ExecutionTest {
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
     private static TestLibrarian librarian;
+    private static final int repeat = Integer.getInteger("test.repeat", 1);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -66,6 +67,9 @@ public class ExecutionTest {
             List<ILibraryManager> libraryManagers = ExecutionTestUtil.setUp(cleanupOnStart);
             librarian = new TestLibrarian(libraryManagers);
             testExecutor.setLibrarian(librarian);
+            if (repeat != 1) {
+                System.out.println("FYI: each test will be run " + repeat + " times.");
+            }
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;
@@ -106,7 +110,16 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        librarian.cleanup();
-        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
+        try {
+            for (int i = 1; i <= repeat; i++) {
+                if (repeat > 1) {
+                    System.err.print("[" + i + "/" + repeat + "] ");
+                }
+                librarian.cleanup();
+                testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
+            }
+        } finally {
+            System.err.flush();
+        }
     }
 }

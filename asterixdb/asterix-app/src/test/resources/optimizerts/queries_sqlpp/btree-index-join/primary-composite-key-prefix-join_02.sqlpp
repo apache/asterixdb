@@ -23,8 +23,8 @@
  * Date         : 11th November 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -35,7 +35,7 @@ create type test.Name as
   lname : string
 }
 
-create  table Names(Name) primary key fname,lname;
+create  dataset Names(Name) primary key fname,lname;
 
 write output to asterix_nc1:"rttest/btree-index-join_primary-composite-key-prefix-prefix-join_02.adm"
 select element {'emp1':emp1,'emp2':emp2}

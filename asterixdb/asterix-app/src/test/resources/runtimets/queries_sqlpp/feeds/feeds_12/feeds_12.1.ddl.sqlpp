@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed from the contents of  a file using a file_feed adaptor.
 
-drop  database feeds_12 if exists;
-create  database feeds_12;
+drop  dataverse feeds_12 if exists;
+create  dataverse feeds_12;
 
 use feeds_12;
 
@@ -34,6 +32,10 @@ create type feeds_12.TweetType as
   timestamp : string
 }
 
-create  table Tweets(TweetType) primary key id;
+create  dataset Tweets(TweetType) primary key id;
 
-create  primary feed TweetFeed using file_feed ((`fs`=`localfs`),(`path`=`asterix_nc1://data/twitter/obamatweets_duplicate.adm`),(`format`=`adm`),(`type-name`=`TweetType`),(`tuple-interval`=`10`));
+create  primary feed TweetFeed using localfs
+((`path`=`asterix_nc1://data/twitter/obamatweets_duplicate.adm`),
+(`format`=`adm`),
+(`type-name`=`TweetType`),
+(`tuple-interval`=`10`));

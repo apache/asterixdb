@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.watch.FeedActivity;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -70,11 +70,11 @@ public class SubscribeFeedStatement implements Statement {
     }
 
     public void initialize(MetadataTransactionContext mdTxnCtx) throws MetadataException {
-        this.query = new Query();
-        FeedId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
-        Feed subscriberFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx,
-                connectionRequest.getReceivingFeedId().getDataverse(),
-                connectionRequest.getReceivingFeedId().getFeedName());
+        this.query = new Query(false);
+        EntityId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
+        Feed subscriberFeed =
+                MetadataManager.INSTANCE.getFeed(mdTxnCtx, connectionRequest.getReceivingFeedId().getDataverse(),
+                        connectionRequest.getReceivingFeedId().getEntityName());
         if (subscriberFeed == null) {
             throw new IllegalStateException(" Subscriber feed " + subscriberFeed + " not found.");
         }
@@ -100,8 +100,9 @@ public class SubscribeFeedStatement implements Statement {
 
         builder.append("insert into dataset " + connectionRequest.getTargetDataset() + " ");
         builder.append(" (" + " for $x in feed-collect ('" + sourceFeedId.getDataverse() + "'" + "," + "'"
-                + sourceFeedId.getFeedName() + "'" + "," + "'" + connectionRequest.getReceivingFeedId().getFeedName()
-                + "'" + "," + "'" + connectionRequest.getSubscriptionLocation().name() + "'" + "," + "'"
+                + sourceFeedId.getEntityName() + "'" + "," + "'"
+                + connectionRequest.getReceivingFeedId().getEntityName() + "'" + "," + "'"
+                + connectionRequest.getSubscriptionLocation().name() + "'" + "," + "'"
                 + connectionRequest.getTargetDataset() + "'" + "," + "'" + feedOutputType + "'" + ")");
 
         List<String> functionsToApply = connectionRequest.getFunctionsToApply();
@@ -156,8 +157,8 @@ public class SubscribeFeedStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.SUBSCRIBE_FEED;
+    public byte getKind() {
+        return Statement.Kind.SUBSCRIBE_FEED;
     }
 
     public String getPolicy() {
@@ -179,8 +180,8 @@ public class SubscribeFeedStatement implements Statement {
 
     private String getOutputType(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         String outputType = null;
-        FeedId feedId = connectionRequest.getReceivingFeedId();
-        Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getFeedName());
+        EntityId feedId = connectionRequest.getReceivingFeedId();
+        Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getEntityName());
         FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(connectionRequest.getPolicyParameters());
         try {
             switch (feed.getFeedType()) {
@@ -202,5 +203,10 @@ public class SubscribeFeedStatement implements Statement {
 
     public String[] getLocations() {
         return locations;
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.PROCEDURE;
     }
 }

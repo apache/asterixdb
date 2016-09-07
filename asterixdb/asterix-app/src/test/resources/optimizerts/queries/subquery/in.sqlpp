@@ -17,8 +17,8 @@
  * under the License.
  */
 
-DROP DATABASE test IF EXISTS;
-CREATE DATABASE test;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
 
 

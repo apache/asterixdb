@@ -50,5 +50,5 @@ create dataset MyData(MyRecord)
 create dataset MyDataOpen(MyRecordOpen)
   primary key id;
 
-create index rtree_index_point on MyDataOpen(point:point) type rtree enforced;
+create index rtree_index_point on MyDataOpen(point:point?) type rtree enforced;
 

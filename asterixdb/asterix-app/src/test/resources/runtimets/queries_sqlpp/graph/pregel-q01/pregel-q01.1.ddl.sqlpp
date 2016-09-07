@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database Pregelix if exists;
-create  database Pregelix;
+drop  dataverse Pregelix if exists;
+create  dataverse Pregelix;
 
 use Pregelix;
 
@@ -45,9 +45,9 @@ create type Pregelix.TweetMessageType as
   `forwarded-from` : int64
 }
 
-create  table TwitterMsgs(TweetMessageType) primary key tweetid;
+create  dataset TwitterMsgs(TweetMessageType) primary key tweetid;
 
-create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
+create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 create type Pregelix.TMEdge as
 {
@@ -62,7 +62,7 @@ create type Pregelix.TMGraph as
   `populated-by` : {{TMEdge}}
 }
 
-create  table MyInputGraph(TMGraph) primary key tweetid;
+create  dataset MyInputGraph(TMGraph) primary key tweetid;
 
-create  table MyOutputGraph(TMGraph) primary key tweetid;
+create  dataset MyOutputGraph(TMGraph) primary key tweetid;
 

@@ -38,15 +38,14 @@ import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -105,31 +104,23 @@ public class AccessMethodUtils {
     }
 
     public static ConstantExpression createBooleanConstant(boolean b) {
-        if (b) {
-            return new ConstantExpression(new AsterixConstantValue(ABoolean.TRUE));
-        } else {
-            return new ConstantExpression(new AsterixConstantValue(ABoolean.FALSE));
-        }
+        return new ConstantExpression(new AsterixConstantValue(ABoolean.valueOf(b)));
     }
 
     public static String getStringConstant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
-        return ((AString) obj).getStringValue();
+        return ConstantExpressionUtil.getStringConstant(expr.getValue());
     }
 
     public static int getInt32Constant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
-        return ((AInt32) obj).getIntegerValue();
+        return ConstantExpressionUtil.getIntConstant(expr.getValue());
     }
 
     public static long getInt64Constant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
-        return ((AInt64) obj).getLongValue();
+        return ConstantExpressionUtil.getLongConstant(expr.getValue());
     }
 
     public static boolean getBooleanConstant(Mutable<ILogicalExpression> expr) {
-        IAObject obj = ((AsterixConstantValue) ((ConstantExpression) expr.getValue()).getValue()).getObject();
-        return ((ABoolean) obj).getBoolean();
+        return ConstantExpressionUtil.getBooleanConstant(expr.getValue());
     }
 
     public static boolean analyzeFuncExprArgsForOneConstAndVar(AbstractFunctionCallExpression funcExpr,

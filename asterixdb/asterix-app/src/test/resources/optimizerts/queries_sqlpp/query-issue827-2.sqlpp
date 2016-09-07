@@ -23,8 +23,8 @@
  * Date         : 3rd Dec. 2014
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 
@@ -49,7 +49,7 @@ create type tpch.LineItemType as
   l_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
 {'sum_qty_partial':tpch.coll_sum((
     select element i.l_quantity

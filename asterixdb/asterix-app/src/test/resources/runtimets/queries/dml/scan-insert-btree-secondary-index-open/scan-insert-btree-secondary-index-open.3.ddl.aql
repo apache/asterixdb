@@ -18,5 +18,5 @@
  */
 use dataverse test;
 
-create index age_index on CustomersOpen(age:int32) enforced;
+create index age_index on CustomersOpen(age:int32?) enforced;
 

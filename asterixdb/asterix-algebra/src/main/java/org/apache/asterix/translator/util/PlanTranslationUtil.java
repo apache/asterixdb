@@ -71,7 +71,6 @@ public class PlanTranslationUtil {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private static ScalarFunctionCallExpression createFieldAccessExpression(ILogicalExpression target,
             List<String> field) {
         FunctionIdentifier functionIdentifier;

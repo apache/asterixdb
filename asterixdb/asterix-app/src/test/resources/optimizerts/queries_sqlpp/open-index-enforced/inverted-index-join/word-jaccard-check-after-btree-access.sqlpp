@@ -24,8 +24,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -51,7 +51,7 @@ create type test.TweetMessageType as
   countB : int32
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create  index twmSndLocIx  on TweetMessages (`sender-location`) type rtree;
 
@@ -59,7 +59,7 @@ create  index msgCountAIx  on TweetMessages (countA) type btree;
 
 create  index msgCountBIx  on TweetMessages (countB) type btree;
 
-create  index msgTextIx  on TweetMessages (`message-text`:string) type keyword enforced;
+create  index msgTextIx  on TweetMessages (`message-text`:string?) type keyword enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm"
 select element {'t1':t1.tweetid,'t2':t2.tweetid,'sim':sim[1]}

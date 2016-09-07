@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -29,5 +29,5 @@ create type test.Emp as
   name : string?
 }
 
-create  table Employee(Emp) primary key id;
+create  dataset Employee(Emp) primary key id;
 

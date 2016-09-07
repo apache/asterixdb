@@ -19,5 +19,6 @@
 package org.apache.hyracks.storage.common.file;
 
 public interface ILocalResourceFactory {
-    public LocalResource createLocalResource(long resourceId, String resourceName, int partition, String resourcePath);
+    public LocalResource createLocalResource(long resourceId, String resourceName, int partition, int storageVersion,
+            String resourcePath);
 }

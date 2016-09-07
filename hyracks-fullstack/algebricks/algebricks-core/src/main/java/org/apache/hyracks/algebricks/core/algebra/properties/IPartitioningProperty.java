@@ -65,42 +65,7 @@ public interface IPartitioningProperty extends IStructuralProperty {
         }
     };
 
-    IPartitioningProperty UNPARTITIONED = new IPartitioningProperty() {
-
-        @Override
-        public PartitioningType getPartitioningType() {
-            return PartitioningType.UNPARTITIONED;
-        }
-
-        @Override
-        public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
-                List<FunctionalDependency> fds) {
-            return UNPARTITIONED;
-        }
-
-        @Override
-        public void getColumns(Collection<LogicalVariable> columns) {
-        }
-
-        @Override
-        public INodeDomain getNodeDomain() {
-            return DOMAIN_FOR_UNPARTITIONED_DATA;
-        }
-
-        @Override
-        public String toString() {
-            return getPartitioningType().toString();
-        }
-
-        @Override
-        public void setNodeDomain(INodeDomain domain) {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> variableMap) {
-        }
-    };
+    IPartitioningProperty UNPARTITIONED = new UnpartitionedProperty();
 
     PartitioningType getPartitioningType();
 
@@ -112,4 +77,43 @@ public interface IPartitioningProperty extends IStructuralProperty {
     void setNodeDomain(INodeDomain domain);
 
     void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap);
+}
+
+class UnpartitionedProperty implements IPartitioningProperty {
+
+    @Override
+    public PartitioningType getPartitioningType() {
+        return PartitioningType.UNPARTITIONED;
+    }
+
+    @Override
+    public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
+        return UNPARTITIONED;
+    }
+
+    @Override
+    public void getColumns(Collection<LogicalVariable> columns) {
+        // No partitioning columns for UNPARTITIONED.
+    }
+
+    @Override
+    public INodeDomain getNodeDomain() {
+        return DOMAIN_FOR_UNPARTITIONED_DATA;
+    }
+
+    @Override
+    public String toString() {
+        return getPartitioningType().toString();
+    }
+
+    @Override
+    public void setNodeDomain(INodeDomain domain) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> variableMap) {
+        // No partition columns are maintained for UNPARTITIONED.
+    }
 }

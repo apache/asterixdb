@@ -27,7 +27,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class CreatePrimaryFeedStatement extends CreateFeedStatement implements Statement {
+public class CreatePrimaryFeedStatement extends CreateFeedStatement {
 
     private final String adaptorName;
     private final Map<String, String> adaptorConfiguration;
@@ -48,8 +48,8 @@ public class CreatePrimaryFeedStatement extends CreateFeedStatement implements S
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_PRIMARY_FEED;
+    public byte getKind() {
+        return Statement.Kind.CREATE_PRIMARY_FEED;
     }
 
     @Override

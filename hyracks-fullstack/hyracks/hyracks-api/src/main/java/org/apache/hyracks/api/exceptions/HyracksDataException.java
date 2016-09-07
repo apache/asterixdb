@@ -21,61 +21,73 @@ package org.apache.hyracks.api.exceptions;
 import java.io.Serializable;
 import java.util.Formatter;
 
+/**
+ * The main execution time exception type for runtime errors in a hyracks environment
+ */
 public class HyracksDataException extends HyracksException {
     private static final long serialVersionUID = 1L;
 
     public static final String NONE = "";
-    public static final String HYRACKS = "HYR";
+    public static final int UNKNOWN = 0;
 
     private final String component;
     private final int errorCode;
     private final Serializable[] params;
-    private String nodeId;
+    private final String nodeId;
+    private transient volatile String msgCache;
 
-    private volatile transient String msgCache;
-
-    public HyracksDataException() {
-        this(NONE, ErrorCode.UNKNOWN, new Object[0]);
-    }
-
-    public HyracksDataException(String message) {
-        this(NONE, ErrorCode.UNKNOWN, message);
-    }
-
-    public HyracksDataException(Throwable cause) {
-        this(NONE, ErrorCode.UNKNOWN, cause);
-    }
-
-    public HyracksDataException(String message, Throwable cause) {
-        this(NONE, ErrorCode.UNKNOWN, message, cause);
-    }
-
-    public HyracksDataException(String component, int errorCode, Serializable... params) {
-        this.component = component;
-        this.errorCode = errorCode;
-        this.params = params;
-    }
-
-    public HyracksDataException(String component, int errorCode, String message, Serializable... params) {
-        super(message);
-        this.component = component;
-        this.errorCode = errorCode;
-        this.params = params;
-    }
-
-    public HyracksDataException(String component, int errorCode, Throwable cause, Serializable... params) {
-        super(cause);
-        this.component = component;
-        this.errorCode = errorCode;
-        this.params = params;
-    }
-
-    public HyracksDataException(String component, int errorCode, String message, Throwable cause,
+    public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,
             Serializable... params) {
         super(message, cause);
         this.component = component;
         this.errorCode = errorCode;
+        this.nodeId = nodeId;
         this.params = params;
+    }
+
+    public HyracksDataException() {
+        this(NONE, UNKNOWN, null, null, null, new Serializable[0]);
+    }
+
+    public HyracksDataException(String message) {
+        this(NONE, UNKNOWN, message, (Throwable) null, (String) null);
+    }
+
+    public HyracksDataException(Throwable cause) {
+        this(NONE, UNKNOWN, cause.getMessage(), cause, (String) null);
+    }
+
+    public HyracksDataException(Throwable cause, String nodeId) {
+        this(NONE, UNKNOWN, cause.getMessage(), cause, nodeId);
+    }
+
+    public HyracksDataException(String message, Throwable cause, String nodeId) {
+        this(NONE, UNKNOWN, message, cause, nodeId);
+    }
+
+    public HyracksDataException(String message, Throwable cause) {
+        this(NONE, UNKNOWN, message, cause, (String) null);
+    }
+
+    public HyracksDataException(String component, int errorCode, Serializable... params) {
+        this(component, errorCode, null, null, null, params);
+    }
+
+    public HyracksDataException(Throwable cause, int errorCode, Serializable... params) {
+        this(NONE, errorCode, cause.getMessage(), cause, null, params);
+    }
+
+    public HyracksDataException(String component, int errorCode, String message, Serializable... params) {
+        this(component, errorCode, message, null, null, params);
+    }
+
+    public HyracksDataException(String component, int errorCode, Throwable cause, Serializable... params) {
+        this(component, errorCode, cause.getMessage(), cause, null, params);
+    }
+
+    public HyracksDataException(String component, int errorCode, String message, Throwable cause,
+            Serializable... params) {
+        this(component, errorCode, message, cause, null, params);
     }
 
     public String getComponent() {
@@ -88,10 +100,6 @@ public class HyracksDataException extends HyracksException {
 
     public Object[] getParams() {
         return params;
-    }
-
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
     }
 
     public String getNodeId() {
@@ -111,18 +119,22 @@ public class HyracksDataException extends HyracksException {
      * Example:
      * formatMessage(HYRACKS, ErrorCode.UNKNOWN, "%1$s -- %2$s", "one", "two") returns "HYR0000: one -- two"
      *
-     * @param component the software component in which the error originated
-     * @param errorCode the error code itself
-     * @param message   the user provided error message (a format string as specified in {@link java.util.Formatter})
-     * @param params    an array of objects taht will be provided to the {@link java.util.Formatter}
+     * @param component
+     *            the software component in which the error originated
+     * @param errorCode
+     *            the error code itself
+     * @param message
+     *            the user provided error message (a format string as specified in {@link java.util.Formatter})
+     * @param params
+     *            an array of objects taht will be provided to the {@link java.util.Formatter}
      * @return the formatted string
      */
     public static String formatMessage(String component, int errorCode, String message, Serializable... params) {
         try (Formatter fmt = new Formatter()) {
-            if (! NONE.equals(component)) {
+            if (!NONE.equals(component)) {
                 fmt.format("%1$s%2$04d: ", component, errorCode);
             }
-            fmt.format(message, (Object[]) params);
+            fmt.format(message == null ? "null" : message, (Object[]) params);
             return fmt.out().toString();
         }
     }

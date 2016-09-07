@@ -172,16 +172,10 @@ Groupby
   Variable [ Name=$idCSX ]
   GROUP AS Variable [ Name=#1 ]
   (
-    tokensCSX:=Variable [ Name=$tokensCSX ]
-    unrankedTokensCSX:=Variable [ Name=$unrankedTokensCSX ]
-    idCSX:=Variable [ Name=$idCSX ]
-    tokensDBLP:=Variable [ Name=$tokensDBLP ]
-    unrankedTokensDBLP:=Variable [ Name=$unrankedTokensDBLP ]
-    idDBLP:=Variable [ Name=$idDBLP ]
-    prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
-    paperCSX:=Variable [ Name=$paperCSX ]
-    prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
     paperDBLP:=Variable [ Name=$paperDBLP ]
+    prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
+    paperCSX:=Variable [ Name=$paperCSX ]
+    prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
   )
 
 Orderby

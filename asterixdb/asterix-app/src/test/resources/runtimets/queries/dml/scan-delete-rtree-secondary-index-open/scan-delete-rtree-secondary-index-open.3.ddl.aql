@@ -25,5 +25,5 @@
 
 use dataverse test;
 
-create index rtree_index_point on MyDataOpen(point:point) type rtree enforced;
+create index rtree_index_point on MyDataOpen(point:point?) type rtree enforced;
 

@@ -21,7 +21,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
   <artifactId>algebricks</artifactId>
-  <version>0.2.18-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>algebricks</name>
 

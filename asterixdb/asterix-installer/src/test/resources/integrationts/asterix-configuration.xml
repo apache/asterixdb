@@ -41,7 +41,7 @@
 
   <property>
     <name>storage.buffercache.pagesize</name>
-    <value>131072</value>
+    <value>128KB</value>
     <description>The page size in bytes for pages in the buffer cache.
       (Default = "131072" // 128KB)
     </description>
@@ -49,7 +49,7 @@
 
   <property>
     <name>storage.buffercache.size</name>
-    <value>536870912</value>
+    <value>512MB</value>
     <description>The size of memory allocated to the disk buffer cache.
       The value should be a multiple of the buffer cache page size(Default
       = "536870912" // 512MB)
@@ -66,7 +66,7 @@
 
   <property>
     <name>storage.memorycomponent.pagesize</name>
-    <value>131072</value>
+    <value>128KB</value>
     <description>The page size in bytes for pages allocated to memory
       components. (Default = "131072" // 128KB)
     </description>
@@ -98,7 +98,7 @@
 
   <property>
     <name>storage.memorycomponent.globalbudget</name>
-    <value>1073741824</value>
+    <value>1GB</value>
     <description>The total size of memory in bytes that the sum of all
       open memory
       components cannot exceed. (Default = "536870192" // 512MB)
@@ -122,7 +122,7 @@
 
   <property>
     <name>txn.log.buffer.pagesize</name>
-    <value>524288</value>
+    <value>512KB</value>
     <description>The size of pages in the in-memory log buffer. (Default =
       "524288" // 512KB)
     </description>
@@ -130,7 +130,7 @@
 
   <property>
     <name>txn.log.partitionsize</name>
-    <value>2147483648</value>
+    <value>2GB</value>
     <description>The maximum size of a log file partition allowed before
       rotating the log to the next partition. (Default = "2147483648" //
       2GB)
@@ -197,23 +197,31 @@
 
   <property>
     <name>compiler.sortmemory</name>
-    <value>33554432</value>
+    <value>32MB</value>
     <description>The amount of memory in bytes given to sort operations.
-      (Default = "33554432" // 32mb)
+      (Default = "33554432" // 32MB)
     </description>
   </property>
 
   <property>
     <name>compiler.joinmemory</name>
-    <value>33554432</value>
+    <value>32MB</value>
     <description>The amount of memory in bytes given to join operations.
-      (Default = "33554432" // 32mb)
+      (Default = "33554432" // 32MB)
+    </description>
+  </property>
+
+  <property>
+    <name>compiler.groupmemory</name>
+    <value>32MB</value>
+    <description>The amount of memory in bytes given to group-by operations.
+      (Default = "33554432" // 32MB)
     </description>
   </property>
 
   <property>
     <name>compiler.framesize</name>
-    <value>131072</value>
+    <value>128KB</value>
     <description>The Hyracks frame size that the compiler configures per
       job. (Default = "131072" // 128KB)
     </description>

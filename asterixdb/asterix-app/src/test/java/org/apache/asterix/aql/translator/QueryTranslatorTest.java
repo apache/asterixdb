@@ -28,15 +28,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.asterix.api.common.SessionConfig;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
+import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.MasterNode;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.translator.IStatementExecutor;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -67,7 +69,7 @@ public class QueryTranslatorTest {
         when(mockCluster.getMasterNode()).thenReturn(mockMasterNode);
         when(mockMasterNode.getClientIp()).thenReturn("127.0.0.1");
 
-        QueryTranslator aqlTranslator = new QueryTranslator(statements, mockSessionConfig,
+        IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory(null).create(statements, mockSessionConfig,
                 new AqlCompilationProvider());
         List<String> parameters = new ArrayList<String>();
         parameters.add("examples/pregelix-example-jar-with-dependencies.jar");

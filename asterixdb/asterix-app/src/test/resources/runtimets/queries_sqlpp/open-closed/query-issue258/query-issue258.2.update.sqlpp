@@ -23,14 +23,16 @@
  * Date         : 21 May 2013
  */
 
-use test;
+USE test;
 
 
-insert into ds1
-if ((coll_count((
+INSERT INTO ds1
+CASE
+  WHEN coll_count((
       select element x
       from  ds2 as x
       where (x.id = 10)
-  )) <= 0))
-then {'id':10}
-else {'id':5};
+  )) <= 0
+  THEN {'id':10}
+  ELSE {'id':5}
+END;

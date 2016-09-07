@@ -23,14 +23,20 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.active.ActiveJobNotificationHandler;
+import org.apache.asterix.active.EntityId;
+import org.apache.asterix.app.external.FeedWorkCollection.SubscribeFeedWork;
 import org.apache.asterix.external.feed.api.IFeedJoint;
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.asterix.external.feed.management.FeedEventsListener;
 import org.apache.asterix.external.feed.management.FeedJointKey;
+import org.apache.asterix.external.feed.management.FeedWorkManager;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 
 public class FeedJoint implements IFeedJoint {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(FeedJoint.class.getName());
 
@@ -44,7 +50,7 @@ public class FeedJoint implements IFeedJoint {
     private final List<FeedConnectionId> receivers;
 
     /** The feedId on which the feedPoint resides **/
-    private final FeedId ownerFeedId;
+    private final EntityId ownerFeedId;
 
     /** A list of feed subscription requests submitted for subscribing to the FeedPoint's data **/
     private final List<FeedConnectionRequest> connectionRequests;
@@ -55,7 +61,7 @@ public class FeedJoint implements IFeedJoint {
 
     private FeedConnectionId provider;
 
-    public FeedJoint(FeedJointKey key, FeedId ownerFeedId, FeedRuntimeType subscriptionLocation, FeedJointType type,
+    public FeedJoint(FeedJointKey key, EntityId ownerFeedId, FeedRuntimeType subscriptionLocation, FeedJointType type,
             FeedConnectionId provider) {
         this.key = key;
         this.ownerFeedId = ownerFeedId;
@@ -106,10 +112,15 @@ public class FeedJoint implements IFeedJoint {
 
     private void handlePendingConnectionRequest() {
         for (FeedConnectionRequest connectionRequest : connectionRequests) {
-            FeedConnectionId connectionId = new FeedConnectionId(connectionRequest.getReceivingFeedId(),
-                    connectionRequest.getTargetDataset());
+            FeedConnectionId connectionId =
+                    new FeedConnectionId(connectionRequest.getReceivingFeedId(), connectionRequest.getTargetDataset());
             try {
-                FeedLifecycleListener.INSTANCE.submitFeedConnectionRequest(this, connectionRequest);
+                FeedEventsListener listener = (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE
+                        .getActiveEntityListener(connectionId.getFeedId());
+                SubscribeFeedWork work = new SubscribeFeedWork(
+                        listener.getConnectionLocations(this, connectionRequest).toArray(new String[] {}),
+                        connectionRequest);
+                FeedWorkManager.INSTANCE.submitWork(work, new SubscribeFeedWork.FeedSubscribeWorkEventListener());
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Submitted feed connection request " + connectionRequest + " at feed joint " + this);
                 }
@@ -155,7 +166,7 @@ public class FeedJoint implements IFeedJoint {
     }
 
     @Override
-    public FeedId getOwnerFeedId() {
+    public EntityId getOwnerFeedId() {
         return ownerFeedId;
     }
 

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -43,9 +43,9 @@ create type test.Schema as
   string4 : string
 }
 
-create  table onektup(Schema) primary key unique2;
+create  dataset onektup(Schema) primary key unique2;
 
-create  table tenktup1(Schema) primary key unique2;
+create  dataset tenktup1(Schema) primary key unique2;
 
-create  table tmp(Schema) primary key unique2;
+create  dataset tmp(Schema) primary key unique2;
 

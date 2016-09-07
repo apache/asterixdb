@@ -17,7 +17,7 @@
  * under the License.
  */
 
-create  table ds1(someType) primary key id;
+create  dataset ds1(someType) primary key id;
 
-create  table ds2(someType) primary key id;
+create  dataset ds2(someType) primary key id;
 

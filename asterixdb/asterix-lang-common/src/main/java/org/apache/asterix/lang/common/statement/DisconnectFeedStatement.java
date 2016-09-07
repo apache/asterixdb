@@ -61,8 +61,8 @@ public class DisconnectFeedStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DISCONNECT_FEED;
+    public byte getKind() {
+        return Statement.Kind.DISCONNECT_FEED;
     }
 
     @Override
@@ -73,6 +73,11 @@ public class DisconnectFeedStatement implements Statement {
     @Override
     public String toString() {
         return "disconnect feed " + feedName + " from " + datasetName;
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 
 }

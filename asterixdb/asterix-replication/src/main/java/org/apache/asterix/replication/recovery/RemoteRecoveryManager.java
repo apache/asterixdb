@@ -38,9 +38,9 @@ import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
-import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.asterix.replication.storage.ReplicaResourcesManager;
+import org.apache.asterix.runtime.util.AsterixClusterProperties;
 
 public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 

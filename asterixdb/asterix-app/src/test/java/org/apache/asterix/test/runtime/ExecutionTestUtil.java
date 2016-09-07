@@ -31,7 +31,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -44,25 +44,34 @@ public class ExecutionTestUtil {
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
-    protected static TestGroup FailedGroup;
+    public static TestGroup FailedGroup;
+
+    public static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
 
     public static List<ILibraryManager> setUp(boolean cleanup) throws Exception {
+        return setUp(cleanup, TEST_CONFIG_FILE_NAME, integrationUtil, true);
+    }
+
+    public static List<ILibraryManager> setUp(boolean cleanup, String configFile,
+            AsterixHyracksIntegrationUtil integrationUtil, boolean startHdfs) throws Exception {
         System.out.println("Starting setup");
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting setup");
         }
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, configFile);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing pseudo cluster");
         }
-        AsterixHyracksIntegrationUtil.init(cleanup);
+        integrationUtil.init(cleanup);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing HDFS");
         }
 
-        HDFSCluster.getInstance().setup();
+        if (startHdfs) {
+            HDFSCluster.getInstance().setup();
+        }
 
         // Set the node resolver to be the identity resolver that expects node
         // names
@@ -75,25 +84,32 @@ public class ExecutionTestUtil {
 
         List<ILibraryManager> libraryManagers = new ArrayList<>();
         // Adds the library manager for CC.
-        libraryManagers.add(AsterixAppContextInfo.getInstance().getLibraryManager());
+        libraryManagers.add(AsterixAppContextInfo.INSTANCE.getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
-        for (NodeControllerService nc : AsterixHyracksIntegrationUtil.ncs) {
-            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext()
-                    .getApplicationObject();
+        for (NodeControllerService nc : integrationUtil.ncs) {
+            IAsterixAppRuntimeContext runtimeCtx =
+                    (IAsterixAppRuntimeContext) nc.getApplicationContext().getApplicationObject();
             libraryManagers.add(runtimeCtx.getLibraryManager());
         }
         return libraryManagers;
     }
 
     public static void tearDown(boolean cleanup) throws Exception {
+        tearDown(cleanup, integrationUtil, true);
+    }
+
+    public static void tearDown(boolean cleanup, AsterixHyracksIntegrationUtil integrationUtil, boolean stopHdfs)
+            throws Exception {
         // validateBufferCacheState(); <-- Commented out until bug is fixed -->
-        AsterixHyracksIntegrationUtil.deinit(cleanup);
+        integrationUtil.deinit(cleanup);
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
             outdir.delete();
         }
-        HDFSCluster.getInstance().cleanup();
+        if (stopHdfs) {
+            HDFSCluster.getInstance().cleanup();
+        }
 
         if (FailedGroup != null && FailedGroup.getTestCase().size() > 0) {
             File temp = File.createTempFile("failed", ".xml");

@@ -22,6 +22,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class CreateDataverseStatement implements Statement {
 
@@ -31,10 +32,7 @@ public class CreateDataverseStatement implements Statement {
 
     public CreateDataverseStatement(Identifier dataverseName, String format, boolean ifNotExists) {
         this.dataverseName = dataverseName;
-        if (format == null)
-            this.format = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
-        else
-            this.format = format;
+        this.format = (format == null) ? NonTaggedDataFormat.class.getName() : format;
         this.ifNotExists = ifNotExists;
     }
 
@@ -51,12 +49,17 @@ public class CreateDataverseStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_DATAVERSE;
+    public byte getKind() {
+        return Statement.Kind.CREATE_DATAVERSE;
     }
 
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
     }
 }

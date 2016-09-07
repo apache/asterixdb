@@ -67,8 +67,8 @@ public class LoadStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.LOAD;
+    public byte getKind() {
+        return Statement.Kind.LOAD;
     }
 
     public Identifier getDatasetName() {
@@ -82,6 +82,11 @@ public class LoadStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 
 }

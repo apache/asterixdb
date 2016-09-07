@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.IOException;
+
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -52,8 +54,7 @@ public class StringContainsDescriptor extends AbstractScalarFunctionDynamicDescr
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1],
                         AsterixBuiltinFunctions.STRING_CONTAINS) {
                     @Override
-                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right)
-                            throws AlgebricksException {
+                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
                         return UTF8StringPointable.contains(left, right, false);
                     }
                 };

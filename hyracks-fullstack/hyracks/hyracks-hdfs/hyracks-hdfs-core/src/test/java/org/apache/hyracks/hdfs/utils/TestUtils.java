@@ -22,6 +22,12 @@ package org.apache.hyracks.hdfs.utils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.comm.NetworkAddress;
 
 public class TestUtils {
 
@@ -38,8 +44,8 @@ public class TestUtils {
                     throw new Exception("Actual result changed at line " + num + ":\n< " + lineExpected + "\n> ");
                 }
                 if (!equalStrings(lineExpected, lineActual)) {
-                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                            + lineActual);
+                    throw new Exception(
+                            "Result for changed at line " + num + ":\n< " + lineExpected + "\n> " + lineActual);
                 }
                 ++num;
             }
@@ -94,4 +100,16 @@ public class TestUtils {
         return true;
     }
 
+    public static Map<String, NodeControllerInfo> generateNodeControllerInfo(int numberOfNodes, String ncNamePrefix,
+            String addressPrefix, int netPort, int dataPort, int messagingPort) {
+        Map<String, NodeControllerInfo> ncNameToNcInfos = new HashMap<String, NodeControllerInfo>();
+        for (int i = 1; i <= numberOfNodes; i++) {
+            String ncId = ncNamePrefix + i;
+            String ncAddress = addressPrefix + i;
+            ncNameToNcInfos.put(ncId,
+                    new NodeControllerInfo(ncId, NodeStatus.ALIVE, new NetworkAddress(ncAddress, netPort),
+                            new NetworkAddress(ncAddress, dataPort), new NetworkAddress(ncAddress, messagingPort)));
+        }
+        return ncNameToNcInfos;
+    }
 }

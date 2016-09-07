@@ -51,7 +51,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE);
 
-    public CompactionPolicyTupleTranslator(boolean getTuple) {
+    protected CompactionPolicyTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET.getFieldCount());
     }
 
@@ -62,7 +62,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
         int recordLength = tuple.getFieldLength(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        ARecord compactionPolicyRecord = (ARecord) recordSerDes.deserialize(in);
+        ARecord compactionPolicyRecord = recordSerDes.deserialize(in);
         return createCompactionPolicyFromARecord(compactionPolicyRecord);
     }
 

@@ -18,15 +18,16 @@
  */
 package org.apache.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.Serializable;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-public class AString implements IAObject {
+public class AString implements IAObject, Serializable {
 
     protected String value;
 
@@ -50,8 +51,9 @@ public class AString implements IAObject {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AString))
+        if (!(obj instanceof AString)) {
             return false;
+        }
         return value.equals(((AString) obj).getStringValue());
     }
 

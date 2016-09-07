@@ -21,9 +21,11 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.metadata.declared.AqlIndex;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -146,25 +148,32 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         if (requiresBroadcast) {
             // For primary indexes optimizing an equality condition we can reduce the broadcast requirement to hash partitioning.
             if (isPrimaryIndex && isEqCondition) {
-                StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-                ListSet<LogicalVariable> searchKeyVars = new ListSet<LogicalVariable>();
-                searchKeyVars.addAll(lowKeyVarList);
-                searchKeyVars.addAll(highKeyVarList);
-                // Also, add a local sorting property to enforce a sort before the primary-index operator.
-                List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
-                List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
-                for (LogicalVariable orderVar : searchKeyVars) {
-                    orderColumns.add(new OrderColumn(orderVar, OrderKind.ASC));
+
+                // If this is a composite primary index, then all of the keys should be provided.
+                Index searchIndex = ((AqlIndex) idx).getIndex();
+                int numberOfKeyFields = searchIndex.getKeyFieldNames().size();
+
+                if (numberOfKeyFields < 2
+                        || (lowKeyVarList.size() == numberOfKeyFields && highKeyVarList.size() == numberOfKeyFields)) {
+                    StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
+                    ListSet<LogicalVariable> searchKeyVars = new ListSet<>();
+                    searchKeyVars.addAll(lowKeyVarList);
+                    searchKeyVars.addAll(highKeyVarList);
+                    // Also, add a local sorting property to enforce a sort before the primary-index operator.
+                    List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
+                    List<OrderColumn> orderColumns = new ArrayList<>();
+                    for (LogicalVariable orderVar : searchKeyVars) {
+                        orderColumns.add(new OrderColumn(orderVar, OrderKind.ASC));
+                    }
+                    propsLocal.add(new LocalOrderProperty(orderColumns));
+                    pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, domain),
+                            propsLocal);
+                    return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
                 }
-                propsLocal.add(new LocalOrderProperty(orderColumns));
-                pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, domain),
-                        propsLocal);
-                return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
-            } else {
-                StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-                pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(domain), null);
-                return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
             }
+            StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
+            pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(domain), null);
+            return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return super.getRequiredPropertiesForChildren(op, reqdByParent, context);
         }

@@ -44,7 +44,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     // Payload field containing serialized Node.
     public static final int NODE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private AMutableInt64 aInt64 = new AMutableInt64(-1);
+    private transient AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
@@ -54,7 +54,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     // NonTaggedSerializerDeserializerProvider.INSTANCE
     // .getSerializerDeserializer(recordType);
 
-    public NodeTupleTranslator(boolean getTuple) {
+    protected NodeTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.NODE_DATASET.getFieldCount());
     }
 

@@ -34,16 +34,17 @@ import org.apache.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
 import org.apache.hyracks.dataflow.std.collectors.PartitionCollector;
 
 public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescriptor {
+
+    private static final long serialVersionUID = 1L;
+
     public MToNBroadcastConnectorDescriptor(IConnectorDescriptorRegistry spec) {
         super(spec);
     }
 
-    private static final long serialVersionUID = 1L;
-
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         final IFrameWriter[] epWriters = new IFrameWriter[nConsumerPartitions];
         final boolean[] isOpen = new boolean[nConsumerPartitions];
         for (int i = 0; i < nConsumerPartitions; ++i) {

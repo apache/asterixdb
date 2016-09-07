@@ -49,7 +49,7 @@ create type TweetMessageType as open {
 create dataset TweetMessages(TweetMessageType)
 primary key tweetid;
 
-create index twmSndLocIx on TweetMessages(sender-location: point) type rtree enforced;
+create index twmSndLocIx on TweetMessages(sender-location: point?) type rtree enforced;
 create index msgCountAIx on TweetMessages(countA) type btree;
 create index msgCountBIx on TweetMessages(countB) type btree;
 create index msgTextIx on TweetMessages(message-text) type keyword;

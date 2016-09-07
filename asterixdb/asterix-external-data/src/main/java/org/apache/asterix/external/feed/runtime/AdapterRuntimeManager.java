@@ -22,9 +22,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
-import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.management.FeedId;
+import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.log4j.Logger;
 
 /**
@@ -34,27 +34,26 @@ public class AdapterRuntimeManager {
 
     private static final Logger LOGGER = Logger.getLogger(AdapterRuntimeManager.class.getName());
 
-    private final FeedId feedId;                    // (dataverse-feed)
+    private final EntityId feedId; // (dataverse-feed)
 
-    private final FeedAdapter feedAdapter;         // The adapter
+    private final FeedAdapter feedAdapter; // The adapter
 
-    private final AdapterExecutor adapterExecutor;  // The executor for the adapter
+    private final AdapterExecutor adapterExecutor; // The executor for the adapter
 
-    private final int partition;                    // The partition number
+    private final int partition; // The partition number
 
-    private final ExecutorService executorService;  // Executor service to run/shutdown the adapter executor
+    private final ExecutorService executorService; // Executor service to run/shutdown the adapter executor
 
-    private IngestionRuntime ingestionRuntime;      // Runtime representing the ingestion stage of a feed
+    private IngestionRuntime ingestionRuntime; // Runtime representing the ingestion stage of a feed
 
     private volatile boolean done = false;
     private volatile boolean failed = false;
 
-    public AdapterRuntimeManager(FeedId feedId, FeedAdapter feedAdapter, DistributeFeedFrameWriter writer,
-            int partition) {
-        this.feedId = feedId;
+    public AdapterRuntimeManager(EntityId entityId, FeedAdapter feedAdapter, IFrameWriter writer, int partition) {
+        this.feedId = entityId;
         this.feedAdapter = feedAdapter;
         this.partition = partition;
-        this.adapterExecutor = new AdapterExecutor(partition, writer, feedAdapter, this);
+        this.adapterExecutor = new AdapterExecutor(writer, feedAdapter, this);
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -82,11 +81,10 @@ public class AdapterRuntimeManager {
                 // stop() returned false, we try to force shutdown
                 executorService.shutdownNow();
             }
-
         }
     }
 
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return feedId;
     }
 

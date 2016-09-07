@@ -18,20 +18,19 @@
  */
 package org.apache.asterix.api.http.servlet;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 
 public class UpdateAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final byte ALLOWED_CATEGORIES = Statement.Category.QUERY | Statement.Category.UPDATE;
 
-    public UpdateAPIServlet(ILangCompilationProvider compilationProvider) {
-        super(compilationProvider);
+    public UpdateAPIServlet(ILangCompilationProvider compilationProvider,
+            IStatementExecutorFactory statementExecutorFactory) {
+        super(compilationProvider, statementExecutorFactory);
     }
 
     @Override
@@ -40,11 +39,8 @@ public class UpdateAPIServlet extends RESTAPIServlet {
     }
 
     @Override
-    protected List<Statement.Kind> getAllowedStatements() {
-        Kind[] statementsArray = { Kind.DATAVERSE_DECL, Kind.DELETE, Kind.INSERT, Kind.UPSERT, Kind.UPDATE,
-                Kind.DML_CMD_LIST, Kind.LOAD, Kind.CONNECT_FEED, Kind.DISCONNECT_FEED, Kind.SET, Kind.COMPACT,
-                Kind.EXTERNAL_DATASET_REFRESH, Kind.RUN };
-        return Arrays.asList(statementsArray);
+    protected byte getAllowedCategories() {
+        return ALLOWED_CATEGORIES;
     }
 
     @Override

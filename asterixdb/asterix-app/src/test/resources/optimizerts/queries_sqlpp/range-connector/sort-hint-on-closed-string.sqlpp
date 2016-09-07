@@ -23,8 +23,8 @@
  *  Date            : 1th May 2015
  */
 
-drop  database TinySocial if exists;
-create  database TinySocial;
+drop  dataverse TinySocial if exists;
+create  dataverse TinySocial;
 
 use TinySocial;
 
@@ -39,7 +39,7 @@ create type TinySocial.TwitterUserType as
   followers_count : int64
 }
 
-create  table TwitterUsers(TwitterUserType) primary key `screen-name`;
+create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 select element user
 from  TwitterUsers as user

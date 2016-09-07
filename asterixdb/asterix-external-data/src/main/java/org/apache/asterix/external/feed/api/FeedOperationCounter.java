@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.external.feed.api;
 
-import org.apache.asterix.external.feed.watch.FeedJobInfo;
+import org.apache.asterix.active.ActiveJob;
 
 public class FeedOperationCounter {
-    private FeedJobInfo feedJobInfo;
+    private ActiveJob feedJobInfo;
     private int partitionCount;
     private boolean failedIngestion = false;
 
@@ -45,11 +45,15 @@ public class FeedOperationCounter {
         this.failedIngestion = failedIngestion;
     }
 
-    public FeedJobInfo getFeedJobInfo() {
+    public ActiveJob getFeedJobInfo() {
         return feedJobInfo;
     }
 
-    public void setFeedJobInfo(FeedJobInfo feedJobInfo) {
+    public void setFeedJobInfo(ActiveJob feedJobInfo) {
         this.feedJobInfo = feedJobInfo;
+    }
+
+    public int decrementAndGet() {
+        return --partitionCount;
     }
 }

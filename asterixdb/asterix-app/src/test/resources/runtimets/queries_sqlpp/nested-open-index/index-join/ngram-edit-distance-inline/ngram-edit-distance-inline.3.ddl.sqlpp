@@ -26,5 +26,5 @@
 use test;
 
 
-create  index ngram_index  on Customers (nested.name:string) type ngram (3) enforced;
+create  index ngram_index  on Customers (nested.name:string?) type ngram (3) enforced;
 

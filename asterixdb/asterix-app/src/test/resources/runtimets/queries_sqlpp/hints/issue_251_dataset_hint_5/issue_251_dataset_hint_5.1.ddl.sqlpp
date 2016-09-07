@@ -23,8 +23,8 @@
 * Date         : 30th Jan 2013
 */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -38,5 +38,5 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLPadm(DBLPType) primary key id hints (`CARDINALITY`=`200`);
+create  dataset DBLPadm(DBLPType) primary key id hints (`CARDINALITY`=`200`);
 

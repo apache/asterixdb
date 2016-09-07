@@ -21,8 +21,7 @@ USE tpch;
 
 
 SELECT  year,
-        sum( `switch-case`(s_name = 'BRAZIL', true, revenue, false, 0.0) )
-        / sum(revenue) AS mkt_share
+        SUM( CASE s_name = 'BRAZIL' WHEN true THEN revenue ELSE 0.0 END ) / SUM(revenue) AS mkt_share
 FROM  (
         SELECT o_year AS year,
                l_extendedprice * (1 - l_discount) AS revenue,

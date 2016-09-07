@@ -80,8 +80,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public LogManager(TransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
-        logManagerProperties = new LogManagerProperties(this.txnSubsystem.getTransactionProperties(),
-                this.txnSubsystem.getId());
+        logManagerProperties =
+                new LogManagerProperties(this.txnSubsystem.getTransactionProperties(), this.txnSubsystem.getId());
         logFileSize = logManagerProperties.getLogPartitionSize();
         logPageSize = logManagerProperties.getLogPageSize();
         numLogPages = logManagerProperties.getNumLogPages();
@@ -171,6 +171,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
         if (logRecord.getLogType() == LogType.FLUSH) {
             logRecord.setLSN(appendLSN.get());
+        }
+        if (logRecord.isMarker()) {
+            logRecord.logAppended(appendLSN.get());
         }
         appendLSN.addAndGet(logRecord.getLogSize());
     }

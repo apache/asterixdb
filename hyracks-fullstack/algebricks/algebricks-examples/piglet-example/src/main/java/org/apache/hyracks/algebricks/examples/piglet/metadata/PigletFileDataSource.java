@@ -77,4 +77,9 @@ public class PigletFileDataSource implements IDataSource<String> {
     @Override
     public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList) {
     }
+
+    @Override
+    public boolean isScanAccessPathALeaf() {
+        return true;
+    }
 }

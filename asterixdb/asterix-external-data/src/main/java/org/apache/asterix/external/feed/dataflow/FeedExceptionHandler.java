@@ -23,10 +23,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.FrameDataException;
 import org.apache.asterix.common.exceptions.IExceptionHandler;
 import org.apache.asterix.external.util.FeedFrameUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
@@ -51,10 +51,10 @@ public class FeedExceptionHandler implements IExceptionHandler {
     @Override
     public ByteBuffer handle(HyracksDataException th, ByteBuffer frame) {
         try {
-            if (th instanceof FrameDataException) {
+            if (th.getErrorCode() == ErrorCode.ERROR_PROCESSING_TUPLE) {
+                // TODO(amoudi): add check for cause. cause should be either cast or duplicate key
                 fta.reset(frame);
-                FrameDataException fde = (FrameDataException) th;
-                int tupleIndex = fde.getTupleIndex();
+                int tupleIndex = (int) (th.getParams()[0]);
                 try {
                     logExceptionCausingTuple(tupleIndex, th);
                 } catch (Exception ex) {

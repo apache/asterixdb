@@ -39,8 +39,8 @@ public class InsertStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.INSERT;
+    public byte getKind() {
+        return Statement.Kind.INSERT;
     }
 
     public Identifier getDataverseName() {
@@ -80,6 +80,11 @@ public class InsertStatement implements Statement {
         InsertStatement target = (InsertStatement) object;
         return ObjectUtils.equals(datasetName, target.datasetName)
                 && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 
 }

@@ -22,6 +22,7 @@ package org.apache.hyracks.control.cc.work;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -60,9 +61,8 @@ public class ClusterShutdownWork extends SynchronizableWork {
             /**
              * Shutdown all the nodes...
              */
-            for (NodeControllerState ncs : nodeControllerStateMap.values()) {
-                ncs.getNodeController().shutDown();
-            }
+            nodeControllerStateMap.forEach(this::shutdownNode);
+
             ccs.getExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
@@ -72,7 +72,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
                          */
                         boolean cleanShutdown = shutdownStatus.waitForCompletion();
                         if (cleanShutdown) {
-                            callback.setValue(new Boolean(true));
+                            callback.setValue(true);
                             ccs.stop();
                             LOGGER.info("JVM Exiting.. Bye!");
                             Runtime rt = Runtime.getRuntime();
@@ -85,10 +85,10 @@ public class ClusterShutdownWork extends SynchronizableWork {
                             LOGGER.severe("Clean shutdown of NCs timed out- CC bailing out!");
                             StringBuilder unresponsive = new StringBuilder();
                             for (String s : shutdownStatus.getRemainingNodes()) {
-                                unresponsive.append(s + " ");
+                                unresponsive.append(s).append(' ');
                             }
                             LOGGER.severe("Unresponsive Nodes: " + unresponsive);
-                            callback.setValue(new Boolean(false));
+                            callback.setValue(false);
                             ccs.stop();
                             LOGGER.info("JVM Exiting.. Bye!");
                             Runtime rt = Runtime.getRuntime();
@@ -101,6 +101,15 @@ public class ClusterShutdownWork extends SynchronizableWork {
             });
         } catch (Exception e) {
             callback.setException(e);
+        }
+    }
+
+    protected void shutdownNode(String key, NodeControllerState ncState) {
+        try {
+            ncState.getNodeController().shutdown();
+        } catch (Exception e) {
+            LOGGER.log(
+                    Level.INFO, "Exception shutting down NC " + key + " (possibly dead?), continuing shutdown...", e);
         }
     }
 }

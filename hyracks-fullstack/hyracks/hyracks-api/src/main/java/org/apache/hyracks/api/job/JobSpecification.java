@@ -28,10 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.expressions.ConstantExpression;
 import org.apache.hyracks.api.constraints.expressions.PartitionCountExpression;
@@ -43,6 +39,9 @@ import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
@@ -98,7 +97,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         connMap = new HashMap<ConnectorDescriptorId, IConnectorDescriptor>();
         opInputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
         opOutputMap = new HashMap<OperatorDescriptorId, List<IConnectorDescriptor>>();
-        connectorOpMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>>();
+        connectorOpMap = new HashMap<>();
         properties = new HashMap<String, Serializable>();
         userConstraints = new HashSet<Constraint>();
         operatorIdCounter = 0;
@@ -112,6 +111,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     @Override
     public OperatorDescriptorId createOperatorDescriptorId(IOperatorDescriptor op) {
         OperatorDescriptorId odId = new OperatorDescriptorId(operatorIdCounter++);
+        op.setOperatorId(odId);
         opMap.put(odId, op);
         return odId;
     }
@@ -119,6 +119,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     @Override
     public ConnectorDescriptorId createConnectorDescriptor(IConnectorDescriptor conn) {
         ConnectorDescriptorId cdId = new ConnectorDescriptorId(connectorIdCounter++);
+        conn.setConnectorId(cdId);
         connMap.put(cdId, conn);
         return cdId;
     }
@@ -135,8 +136,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
             IOperatorDescriptor consumerOp, int consumerPort) {
         insertIntoIndexedMap(opInputMap, consumerOp.getOperatorId(), consumerPort, conn);
         insertIntoIndexedMap(opOutputMap, producerOp.getOperatorId(), producerPort, conn);
-        connectorOpMap.put(
-                conn.getConnectorId(),
+        connectorOpMap.put(conn.getConnectorId(),
                 Pair.<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> of(
                         Pair.<IOperatorDescriptor, Integer> of(producerOp, producerPort),
                         Pair.<IOperatorDescriptor, Integer> of(consumerOp, consumerPort)));
@@ -166,20 +166,20 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     }
 
     public RecordDescriptor getConnectorRecordDescriptor(IConnectorDescriptor conn) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
-                .getConnectorId());
+        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap
+                .get(conn.getConnectorId());
         return connInfo.getLeft().getLeft().getOutputRecordDescriptors()[connInfo.getLeft().getRight()];
     }
 
     public IOperatorDescriptor getConsumer(IConnectorDescriptor conn) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
-                .getConnectorId());
+        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap
+                .get(conn.getConnectorId());
         return connInfo.getRight().getLeft();
     }
 
     public int getConsumerInputIndex(IConnectorDescriptor conn) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
-                .getConnectorId());
+        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap
+                .get(conn.getConnectorId());
         return connInfo.getRight().getRight();
     }
 
@@ -220,14 +220,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     }
 
     public IOperatorDescriptor getProducer(IConnectorDescriptor conn) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
-                .getConnectorId());
+        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap
+                .get(conn.getConnectorId());
         return connInfo.getLeft().getLeft();
     }
 
     public int getProducerOutputIndex(IConnectorDescriptor conn) {
-        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap.get(conn
-                .getConnectorId());
+        Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connInfo = connectorOpMap
+                .get(conn.getConnectorId());
         return connInfo.getLeft().getRight();
     }
 
@@ -313,6 +313,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         vList.set(index, value);
     }
 
+    @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
 

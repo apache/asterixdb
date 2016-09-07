@@ -82,7 +82,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private final MetadataNode metadataNode;
     private final JobId jobId;
 
-    public DatatypeTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
+    protected DatatypeTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET.getFieldCount());
         this.jobId = jobId;
         this.metadataNode = metadataNode;
@@ -100,15 +100,17 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     private Datatype createDataTypeFromARecord(ARecord datatypeRecord) throws MetadataException {
-        String dataverseName = ((AString) datatypeRecord
-                .getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
-        String datatypeName = ((AString) datatypeRecord
-                .getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX)).getStringValue();
+        String dataverseName =
+                ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX))
+                        .getStringValue();
+        String datatypeName =
+                ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX))
+                        .getStringValue();
         IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(datatypeName);
         if (type == null) {
             // Derived Type
-            ARecord derivedTypeRecord = (ARecord) datatypeRecord
-                    .getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX);
+            ARecord derivedTypeRecord =
+                    (ARecord) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX);
             DerivedTypeTag tag = DerivedTypeTag.valueOf(
                     ((AString) derivedTypeRecord.getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_TAG_FIELD_INDEX))
                             .getStringValue());
@@ -131,11 +133,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                     String fieldTypeName;
                     while (cursor.next()) {
                         ARecord field = (ARecord) cursor.get();
-                        fieldNames[fieldId] = ((AString) field
-                                .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDNAME_FIELD_INDEX))
+                        fieldNames[fieldId] =
+                                ((AString) field.getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDNAME_FIELD_INDEX))
                                         .getStringValue();
-                        fieldTypeName = ((AString) field
-                                .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
+                        fieldTypeName =
+                                ((AString) field.getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
                                         .getStringValue();
                         boolean isNullable = ((ABoolean) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean()

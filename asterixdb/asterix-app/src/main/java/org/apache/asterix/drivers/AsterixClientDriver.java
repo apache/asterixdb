@@ -22,6 +22,7 @@ import java.io.FileReader;
 
 import org.apache.asterix.api.common.AsterixClientConfig;
 import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.hyracks.api.client.HyracksConnection;
@@ -62,7 +63,8 @@ public class AsterixClientDriver {
             boolean onlyPhysical, boolean createBinaryRuntime) throws Exception {
         ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         FileReader reader = new FileReader(filename);
-        AsterixJavaClient q = new AsterixJavaClient(hcc, reader, compilationProvider);
+        AsterixJavaClient q = new AsterixJavaClient(hcc, reader, compilationProvider,
+                new DefaultStatementExecutorFactory(null));
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

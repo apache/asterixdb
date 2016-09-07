@@ -21,11 +21,11 @@ package org.apache.asterix.lang.common.statement;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 
 public class DatasetDecl implements Statement {
     protected final Identifier name;
@@ -141,8 +141,8 @@ public class DatasetDecl implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DATASET_DECL;
+    public byte getKind() {
+        return Statement.Kind.DATASET_DECL;
     }
 
     public IDatasetDetailsDecl getDatasetDetailsDecl() {
@@ -151,6 +151,11 @@ public class DatasetDecl implements Statement {
 
     public Identifier getDataverse() {
         return dataverse;
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
     }
 
 }

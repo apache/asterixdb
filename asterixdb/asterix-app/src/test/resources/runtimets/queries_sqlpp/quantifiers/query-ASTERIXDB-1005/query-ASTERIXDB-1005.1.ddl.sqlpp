@@ -23,8 +23,8 @@
  * Date            : 10th January 2016
  */
 
-drop database deliber if exists;
-create database deliber;
+drop dataverse deliber if exists;
+create dataverse deliber;
 use deliber;
 
 // Dish served by a restaurant
@@ -49,5 +49,5 @@ dish: {{ DishesType }}
 }
 
 // Creating datasets for Users, Restaurants, and Orders
-create table Restaurants(RestaurantsType)
+create dataset Restaurants(RestaurantsType)
 primary key restr_id;

@@ -1,0 +1,50 @@
+import org.apache.asterix.lang.extension.EchoStatement;
+// to remove an import, we use the keyword, unimport
+// unimport package name
+
+// Merging of non-terminals can only be done on non-terminals which conform to the following structure.
+// Content will simply be prepended or appended to the base blocks.
+// Note: refrain from using the strings "before:" and "after:" in the merge areas as that will break the merge.
+// As a workaround, you can always override
+// one additional possible change is direct replacement and it can be done through
+// @merge replace "baseWord" with "extensionWord"
+
+@merge
+Statement SingleStatement() throws ParseException:
+{
+  // merge area 1
+  before:
+  after:
+}
+{
+  (
+    // merge area 2
+    before:
+    after:    | stmt = EchoStatement())
+  {
+    // merge area 3
+  }
+}
+
+// The default
+// Adding a new node. if a node exists, it will throw an exception.
+@new
+Statement EchoStatement() throws ParseException:
+{
+  String arg = null;
+}
+{
+  <ECHO> arg = Identifier()
+    {
+      return new EchoStatement(arg);
+    }
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <ECHO : "echo">
+}
+
+// Overriding a non-terminal. if exists in base, it will be overriden, otherwise, it will be added
+// @override

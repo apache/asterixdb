@@ -23,8 +23,8 @@
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -47,11 +47,11 @@ create type test.MyRecord as
   nested : MyRecordtmp
 }
 
-create  table MyData1tmp(MyRecordtmp) primary key id;
+create  dataset MyData1tmp(MyRecordtmp) primary key id;
 
-create  table MyData2tmp(MyRecordtmp) primary key id;
+create  dataset MyData2tmp(MyRecordtmp) primary key id;
 
-create  table MyData1(MyRecord) primary key nested.id;
+create  dataset MyData1(MyRecord) primary key nested.id;
 
-create  table MyData2(MyRecord) primary key nested.id;
+create  dataset MyData2(MyRecord) primary key nested.id;
 

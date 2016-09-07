@@ -53,7 +53,7 @@ public class ADouble implements IAObject {
     public boolean equals(Object obj) {
         if (!(obj instanceof ADouble))
             return false;
-        return value == (((ADouble) obj).getDoubleValue());
+        return Double.doubleToLongBits(value) == Double.doubleToLongBits(((ADouble) obj).getDoubleValue());
     }
 
     @Override

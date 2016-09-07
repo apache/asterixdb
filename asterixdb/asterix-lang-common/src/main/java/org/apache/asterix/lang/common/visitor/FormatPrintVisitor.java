@@ -25,11 +25,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.MetadataConstants;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -73,7 +73,7 @@ import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
-import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
@@ -96,6 +96,7 @@ import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
@@ -327,9 +328,23 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
             out.print(" decor ");
             printDelimitedGbyExpressions(gc.getDecorPairList(), step + 2);
         }
-        if (gc.hasWithList()) {
+        if (gc.hasWithMap()) {
             out.print(" with ");
-            this.printDelimitedExpressions(gc.getWithVarList(), COMMA, step + 2);
+            Map<Expression, VariableExpr> withVarMap = gc.getWithVarMap();
+            int index = 0;
+            int size = withVarMap.size();
+            for (Entry<Expression, VariableExpr> entry : withVarMap.entrySet()) {
+                Expression key = entry.getKey();
+                VariableExpr value = entry.getValue();
+                key.accept(this, step + 2);
+                if (!key.equals(value)) {
+                    out.print(" as ");
+                    value.accept(this, step + 2);
+                }
+                if (++index < size) {
+                    out.print(COMMA);
+                }
+            }
         }
         out.println();
         return null;
@@ -551,7 +566,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(DropStatement del, Integer step) throws AsterixException {
+    public Void visit(DropDatasetStatement del, Integer step) throws AsterixException {
         out.println(
                 skip(step) + "drop " + datasetSymbol + generateFullName(del.getDataverseName(), del.getDatasetName())
                         + generateIfExists(del.getIfExists()) + SEMICOLON);

@@ -52,5 +52,5 @@ create dataset Orders(OrderType)
 create dataset OrdersOpen(OrderOpenType)
 primary key o_orderkey;
 
-create index idx_Orders_Custkey on OrdersOpen(o_custkey:int32) enforced;
+create index idx_Orders_Custkey on OrdersOpen(o_custkey:int32?) enforced;
 

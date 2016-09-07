@@ -23,14 +23,13 @@ use test;
 select element {'sig_id':sig_id,'total_count':sig_sponsorship_count,'chapter_breakdown':by_chapter}
 from  Event as event,
       event.sponsoring_sigs as sponsor
-with  es as {'event':event,'sponsor':sponsor}
-group by sponsor.sig_id as sig_id
-with  sig_sponsorship_count as count(es),
-      by_chapter as (
+group by sponsor.sig_id as sig_id group as es
+let sig_sponsorship_count = count(1),
+    by_chapter = (
       select element {'chapter_name':chapter_name,'escount':count(e)}
-      from  es as e
+      from es as e
       group by e.sponsor.chapter_name as chapter_name
-  )
+    )
 order by sig_sponsorship_count desc
 limit 5
 ;

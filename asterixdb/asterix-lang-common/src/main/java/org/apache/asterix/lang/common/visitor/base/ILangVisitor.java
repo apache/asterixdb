@@ -53,7 +53,7 @@ import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
-import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -84,7 +84,7 @@ public interface ILangVisitor<R, T> {
 
     R visit(LoadStatement stmtLoad, T arg) throws AsterixException;
 
-    R visit(DropStatement del, T arg) throws AsterixException;
+    R visit(DropDatasetStatement del, T arg) throws AsterixException;
 
     R visit(InsertStatement insert, T arg) throws AsterixException;
 

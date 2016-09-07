@@ -18,15 +18,16 @@
  */
 package org.apache.asterix.external.feed.api;
 
+import java.io.Serializable;
 import java.util.List;
 
-import org.apache.asterix.external.feed.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.external.feed.management.FeedJointKey;
+import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 
-public interface IFeedJoint {
+public interface IFeedJoint extends Serializable {
 
     public enum FeedJointType {
         /** Feed Joint is located at the intake stage of a primary feed **/
@@ -100,7 +101,7 @@ public interface IFeedJoint {
      */
     public void removeReceiver(FeedConnectionId connectionId);
 
-    public FeedId getOwnerFeedId();
+    public EntityId getOwnerFeedId();
 
     /**
      * Add a feed connectionId to the set of registered subscribers

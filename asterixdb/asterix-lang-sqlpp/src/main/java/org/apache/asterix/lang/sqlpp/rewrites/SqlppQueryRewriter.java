@@ -45,6 +45,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
@@ -53,10 +54,12 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGlobalAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppListInputFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SubstituteGroupbyExpressionWithVariableVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -105,20 +108,23 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
 
-        // Inlines WITH expressions.
-        inlineWithExpressions();
-
         // Rewrites SQL-92 global aggregations.
         rewriteGlobalAggregations();
 
         // Group-by core/sugar rewrites.
         rewriteGroupBys();
 
+        // Rewrites set operations.
+        rewriteSetOperations();
+
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
 
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite(true);
+
+        // Rewrites several variable-arg functions into their corresponding internal list-input functions.
+        rewriteListInputFunctions();
 
         // Inlines functions.
         inlineDeclaredUdfs();
@@ -136,6 +142,10 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Replace global variable access with the dataset function for inlined expressions.
         variableCheckAndRewrite(true);
 
+        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
+        // expression is correct.
+        inlineWithExpressions();
+
         // Sets the var counter of the query.
         topExpr.setVarCounter(context.getVarCounter());
     }
@@ -146,6 +156,14 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
         SqlppGlobalAggregationSugarVisitor globalAggregationVisitor = new SqlppGlobalAggregationSugarVisitor();
         globalAggregationVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteListInputFunctions() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        SqlppListInputFunctionRewriteVisitor listInputFunctionVisitor = new SqlppListInputFunctionRewriteVisitor();
+        listInputFunctionVisitor.visit(topExpr, null);
     }
 
     protected void rewriteFunctionNames() throws AsterixException {
@@ -165,7 +183,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         // Inlines with expressions.
-        InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor();
+        InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor(context);
         inlineWithExpressionVisitor.visit(topExpr, null);
     }
 
@@ -184,8 +202,17 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
         // Substitute group-by key expressions that appear in the select clause.
         SubstituteGroupbyExpressionWithVariableVisitor substituteGbyExprVisitor =
-                new SubstituteGroupbyExpressionWithVariableVisitor();
+                new SubstituteGroupbyExpressionWithVariableVisitor(context);
         substituteGbyExprVisitor.visit(topExpr, null);
+    }
+
+    protected void rewriteSetOperations() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        // Rewrites set operation queries that contain order-by and limit clauses.
+        SetOperationVisitor setOperationVisitor = new SetOperationVisitor(context);
+        setOperationVisitor.visit(topExpr, null);
     }
 
     protected void rewriteOperatorExpression() throws AsterixException {
@@ -202,8 +229,8 @@ class SqlppQueryRewriter implements IQueryRewriter {
             return;
         }
         // Inline column aliases.
-        InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor();
-        inlineColumnAliasVisitor.visit(topExpr, false);
+        InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor(context);
+        inlineColumnAliasVisitor.visit(topExpr, null);
     }
 
     protected void variableCheckAndRewrite(boolean overwrite) throws AsterixException {
@@ -438,6 +465,19 @@ class SqlppQueryRewriter implements IQueryRewriter {
         @Override
         public Void visit(IndependentSubquery independentSubquery, Void arg) throws AsterixException {
             independentSubquery.getExpr().accept(this, arg);
+            return null;
+        }
+
+        @Override
+        public Void visit(CaseExpression caseExpression, Void arg) throws AsterixException {
+            caseExpression.getConditionExpr().accept(this, arg);
+            for (Expression expr : caseExpression.getWhenExprs()) {
+                expr.accept(this, arg);
+            }
+            for (Expression expr : caseExpression.getThenExprs()) {
+                expr.accept(this, arg);
+            }
+            caseExpression.getElseExpr().accept(this, arg);
             return null;
         }
 

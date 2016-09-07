@@ -27,6 +27,7 @@ import org.json.JSONObject;
 public class LogFile {
     private final File root;
 
+    private long openTime;
     private PrintWriter out;
 
     public LogFile(File root) {
@@ -34,18 +35,23 @@ public class LogFile {
     }
 
     public void open() throws Exception {
-        root.mkdirs();
-        out = new PrintWriter(new FileOutputStream(new File(root, String.valueOf(System.currentTimeMillis()) + ".log"),
-                true));
+        openTime = System.currentTimeMillis();
     }
 
-    public void log(JSONObject object) throws Exception {
+    public synchronized void log(JSONObject object) throws Exception {
+        if (out == null) {
+            root.mkdirs();
+            out = new PrintWriter(new FileOutputStream(new File(root, openTime + ".log"), true));
+        }
         out.println(object.toString(1));
         out.flush();
     }
 
-    public void close() {
-        out.flush();
-        out.close();
+    public synchronized void close() {
+        if (out != null) {
+            out.flush();
+            out.close();
+            out = null;
+        }
     }
 }

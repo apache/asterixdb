@@ -58,8 +58,8 @@ public class CreateFunctionStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CREATE_FUNCTION;
+    public byte getKind() {
+        return Statement.Kind.CREATE_FUNCTION;
     }
 
     public List<String> getParamList() {
@@ -73,6 +73,11 @@ public class CreateFunctionStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
     }
 
 }

@@ -23,8 +23,8 @@
  * Notes           : This test was written to verify the fix for issue592.
  */
 
-drop  database fooverse if exists;
-create  database fooverse;
+drop  dataverse fooverse if exists;
+create  dataverse fooverse;
 
 use fooverse;
 
@@ -40,5 +40,5 @@ create type fooverse.footype as
   bars : [bartype]?
 }
 
-create  table fooset(footype) primary key id;
+create  dataset fooset(footype) primary key id;
 

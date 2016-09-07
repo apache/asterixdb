@@ -77,8 +77,8 @@ public class ConnectFeedStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.CONNECT_FEED;
+    public byte getKind() {
+        return Statement.Kind.CONNECT_FEED;
     }
 
     public String getPolicy() {
@@ -100,6 +100,11 @@ public class ConnectFeedStatement implements Statement {
 
     public String getFeedName() {
         return feedName;
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.UPDATE;
     }
 
 }

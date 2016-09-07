@@ -16,7 +16,9 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<assembly>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
   <id>binary-assembly</id>
   <formats>
     <format>zip</format>
@@ -40,11 +42,21 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>src/main/resources</directory>
-      <outputDirectory>.</outputDirectory>
+      <directory>src/main/samples</directory>
+      <outputDirectory>samples</outputDirectory>
+      <excludes>
+        <exclude>**/*.sh</exclude>
+      </excludes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/samples</directory>
+      <outputDirectory>samples</outputDirectory>
       <includes>
-        <include>LICENSE*</include>
+        <include>**/*.sh</include>
       </includes>
+      <filtered>true</filtered>
+      <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
       <directory>target/appassembler/repo</directory>
@@ -57,10 +69,9 @@
     </fileSet>
     <fileSet>
       <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
-      <outputDirectory>bin</outputDirectory>
+      <outputDirectory>etc</outputDirectory>
       <includes>
-        <include>asterixcc.xml</include>
-        <include>asterixnc.xml</include>
+        <include>*.xml</include>
       </includes>
     </fileSet>
 
@@ -70,4 +81,14 @@
       <fileMode>0755</fileMode>
     </fileSet>
   </fileSets>
+  <dependencySets>
+    <dependencySet>
+      <useStrictFiltering>true</useStrictFiltering>
+      <unpack>true</unpack>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>org.apache.asterix:asterix-client-helper:zip:assembly:*</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>
 </assembly>

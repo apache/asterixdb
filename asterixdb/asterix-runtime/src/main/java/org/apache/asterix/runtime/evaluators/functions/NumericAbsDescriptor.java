@@ -23,40 +23,16 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
-
-import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.om.base.AMutableFloat;
-import org.apache.asterix.om.base.AMutableInt16;
-import org.apache.asterix.om.base.AMutableInt32;
-import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class NumericAbsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -73,86 +49,83 @@ public class NumericAbsDescriptor extends AbstractScalarFunctionDynamicDescripto
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
-
-                return new IScalarEvaluator() {
-
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable argPtr = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private AMutableDouble aDouble = new AMutableDouble(0);
-                    private AMutableFloat aFloat = new AMutableFloat(0);
-                    private AMutableInt64 aInt64 = new AMutableInt64(0);
-                    private AMutableInt32 aInt32 = new AMutableInt32(0);
-                    private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
-                    private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
-                    @SuppressWarnings("rawtypes")
-                    private ISerializerDeserializer serde;
-
-                    @SuppressWarnings("unchecked")
-                    @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        resultStorage.reset();
-                        eval.evaluate(tuple, argPtr);
-                        byte[] data = argPtr.getByteArray();
-                        int offset = argPtr.getStartOffset();
-
-                        try {
-                            if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT8);
-                                byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
-                                aInt8.setValue((val <= 0) ? (byte) (0 - val) : val);
-                                serde.serialize(aInt8, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT16);
-                                short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
-                                aInt16.setValue((val <= 0) ? (short) (0 - val) : val);
-                                serde.serialize(aInt16, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT32);
-                                int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
-                                aInt32.setValue((val <= 0) ? (0 - val) : val);
-                                serde.serialize(aInt32, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT64);
-                                long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
-                                aInt64.setValue((val <= 0L) ? (0L - val) : val);
-                                serde.serialize(aInt64, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
-                                aFloat.setValue((val <= 0.0f) ? 0.0f - val : val);
-                                serde.serialize(aFloat, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
-                                aDouble.setValue((val <= 0.0D) ? 0.0D - val : val);
-                                serde.serialize(aDouble, out);
-                            } else {
-                                throw new NotImplementedException(
-                                        AsterixBuiltinFunctions.NUMERIC_ABS.getName() + ": not implemented for "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
-                            }
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
-                        result.set(resultStorage);
-                    }
-                };
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+                return new NumericAbsEvaluator(ctx, args[0]);
             }
         };
+    }
+
+    private class NumericAbsEvaluator extends AbstractUnaryNumericFunctionEval {
+
+        NumericAbsEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
+                throws AlgebricksException {
+            super(context, argEvalFactory, NumericAbsDescriptor.this.getIdentifier());
+        }
+
+        @Override
+        protected void processInt8(byte arg, IPointable resultPointable) throws AlgebricksException {
+            if (arg >= 0) {
+                resultPointable.set(argPtr);
+                return;
+            }
+            aInt8.setValue((byte) (0 - arg));
+            serialize(aInt8, int8Serde, resultPointable);
+        }
+
+        @Override
+        protected void processInt16(short arg, IPointable resultPointable) throws AlgebricksException {
+            if (arg >= 0) {
+                resultPointable.set(argPtr);
+                return;
+            }
+            aInt16.setValue((short) (0 - arg));
+            serialize(aInt16, int16Serde, resultPointable);
+        }
+
+        @Override
+        protected void processInt32(int arg, IPointable resultPointable) throws AlgebricksException {
+            if (arg >= 0) {
+                resultPointable.set(argPtr);
+                return;
+            }
+            aInt32.setValue(0 - arg);
+            serialize(aInt32, int32Serde, resultPointable);
+        }
+
+        @Override
+        protected void processInt64(long arg, IPointable resultPointable) throws AlgebricksException {
+            if (arg >= 0) {
+                resultPointable.set(argPtr);
+                return;
+            }
+            aInt64.setValue(0L - arg);
+            serialize(aInt64, int64Serde, resultPointable);
+        }
+
+        @Override
+        protected void processFloat(float arg, IPointable resultPointable) throws AlgebricksException {
+            if (arg >= 0.0f) {
+                resultPointable.set(argPtr);
+                return;
+            }
+            aFloat.setValue(0.0f - arg);
+            serialize(aFloat, floatSerde, resultPointable);
+        }
+
+        @Override
+        protected void processDouble(double arg, IPointable resultPointable) throws AlgebricksException {
+            if (arg >= 0.0d) {
+                resultPointable.set(argPtr);
+                return;
+            }
+            aDouble.setValue(0.0d - arg);
+            serialize(aDouble, doubleSerde, resultPointable);
+        }
     }
 
 }

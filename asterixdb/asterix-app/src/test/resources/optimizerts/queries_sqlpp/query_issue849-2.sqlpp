@@ -23,8 +23,8 @@
  * Date         : 2nd Feb. 2015
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -34,7 +34,7 @@ create type test.sType as
   b : int32
 }
 
-create  table s(sType) primary key b;
+create  dataset s(sType) primary key b;
 
 insert into s
 select element {'b':1};

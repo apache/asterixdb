@@ -22,8 +22,8 @@
  * Expected result: success
  */
 
-drop  database timeTest if exists;
-create  database timeTest;
+drop  dataverse timeTest if exists;
+create  dataverse timeTest;
 
 use timeTest;
 
@@ -41,5 +41,5 @@ create type timeTest.timesType as
   `datetime-interval` : interval
 }
 
-create  table timeData(timesType) primary key date;
+create  dataset timeData(timesType) primary key date;
 

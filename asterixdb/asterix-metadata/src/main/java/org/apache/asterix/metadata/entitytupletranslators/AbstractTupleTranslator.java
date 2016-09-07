@@ -38,6 +38,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
  * IMetadataEntityTupleTranslator.
  */
 public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTupleTranslator<T> {
+    private static final long serialVersionUID = 1L;
     protected AMutableString aString = new AMutableString("");
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -49,10 +50,10 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
     protected ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
 
-    protected final IARecordBuilder recordBuilder;
-    protected final ArrayBackedValueStorage fieldValue;
-    protected final ArrayTupleBuilder tupleBuilder;
-    protected final ArrayTupleReference tuple;
+    protected final transient IARecordBuilder recordBuilder;
+    protected final transient ArrayBackedValueStorage fieldValue;
+    protected final transient ArrayTupleBuilder tupleBuilder;
+    protected final transient ArrayTupleReference tuple;
 
     public AbstractTupleTranslator(boolean getTuple, int fieldCount) {
         if (getTuple) {

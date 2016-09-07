@@ -105,8 +105,13 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
         }
         // set the pointer for result
         ATypeTag reqTypeTag = (arg.second).getTypeTag();
-        ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(accessor.getByteArray()[accessor.getStartOffset()]);
+        if (reqTypeTag == ATypeTag.ANY) {
+            // for open type case
+            arg.first.set(accessor);
+            return null;
+        }
+        ATypeTag inputTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(accessor.getByteArray()[accessor.getStartOffset()]);
         if (!needPromote(inputTypeTag, reqTypeTag)) {
             arg.first.set(accessor);
         } else {

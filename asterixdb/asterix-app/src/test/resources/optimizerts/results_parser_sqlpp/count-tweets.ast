@@ -61,8 +61,7 @@ Groupby
   Variable [ Name=$token ]
   GROUP AS Variable [ Name=#1 ]
   (
-    tokens:=Variable [ Name=$tokens ]
-    token:=Variable [ Name=$token ]
     t:=Variable [ Name=$t ]
+    token:=Variable [ Name=$token ]
   )
 

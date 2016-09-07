@@ -23,11 +23,12 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.feed.api.IFeedRuntime.Mode;
-import org.apache.asterix.external.feed.management.ConcurrentFramePool;
+import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.common.memory.ConcurrentFramePool;
+import org.apache.asterix.common.memory.FrameAction;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.feed.runtime.FeedRuntimeId;
+import org.apache.asterix.external.util.FeedUtils.Mode;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -67,15 +68,17 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
     private int numProcessedInMemory = 0;
     private int numStalled = 0;
 
-    public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+    public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
             IFrameWriter writer, FeedPolicyAccessor fpa, FrameTupleAccessor fta, ConcurrentFramePool framePool)
             throws HyracksDataException {
         this.writer = writer;
-        this.spiller =
-                new FrameSpiller(ctx,
+
+        this.spiller = fpa.spillToDiskOnCongestion()
+                ? new FrameSpiller(ctx,
                         connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_"
-                                + runtimeId.getFeedRuntimeType() + "_" + runtimeId.getPartition(),
-                        fpa.getMaxSpillOnDisk());
+                                + runtimeId.getRuntimeName() + "_" + runtimeId.getPartition(),
+                        fpa.getMaxSpillOnDisk())
+                : null;
         this.exceptionHandler = new FeedExceptionHandler(ctx, fta);
         this.fpa = fpa;
         this.framePool = framePool;
@@ -121,7 +124,9 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
             LOGGER.log(Level.WARNING, th.getMessage(), th);
         }
         try {
-            spiller.close();
+            if (spiller != null) {
+                spiller.close();
+            }
         } catch (Throwable th) {
             LOGGER.log(Level.WARNING, th.getMessage(), th);
         }
@@ -458,34 +463,34 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
                     frame = inbox.poll();
                     if (frame == null) {
                         // Memory queue is empty. Check spill
-                        frame = spiller.next();
-                        while (frame != null) {
-                            if (consume(frame) != null) {
-                                // We don't release the frame since this is a spill frame that we didn't get from memory
-                                // manager
-                                return;
-                            }
+                        if (spiller != null) {
                             frame = spiller.next();
+                            while (frame != null) {
+                                if (consume(frame) != null) {
+                                    // We don't release the frame since this is a spill frame that we didn't get from memory
+                                    // manager
+                                    return;
+                                }
+                                frame = spiller.next();
+                            }
                         }
                         writer.flush();
                         // At this point. We consumed all memory and spilled
                         // We can't assume the next will be in memory. what if there is 0 memory?
                         synchronized (mutex) {
                             frame = inbox.poll();
-                            if (frame == null) {
-                                // Nothing in memory
-                                if (spiller.switchToMemory()) {
-                                    if (poisoned) {
-                                        break;
-                                    }
-                                    if (DEBUG) {
-                                        LOGGER.info("Consumer is going to sleep");
-                                    }
-                                    // Nothing in disk
-                                    mutex.wait();
-                                    if (DEBUG) {
-                                        LOGGER.info("Consumer is waking up");
-                                    }
+                            // Nothing in memory
+                            if (frame == null && (spiller == null || spiller.switchToMemory())) {
+                                if (poisoned) {
+                                    break;
+                                }
+                                if (DEBUG) {
+                                    LOGGER.info("Consumer is going to sleep");
+                                }
+                                // Nothing in disk
+                                mutex.wait();
+                                if (DEBUG) {
+                                    LOGGER.info("Consumer is waking up");
                                 }
                             }
                         }

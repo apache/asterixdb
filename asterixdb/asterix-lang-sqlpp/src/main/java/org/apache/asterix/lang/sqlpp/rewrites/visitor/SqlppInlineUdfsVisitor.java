@@ -26,7 +26,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
@@ -43,10 +42,11 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppCloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -74,10 +74,8 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     @Override
     protected Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
             throws AsterixException {
-        Map<VariableExpr, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
-        Expression inlinedReturnExpr = (Expression) SqlppVariableSubstitutionUtil
-                .substituteVariableWithoutContext(returnExpr, varExprMap);
-        return inlinedReturnExpr;
+        Map<Expression, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
+        return (Expression) SqlppRewriteUtil.substituteExpression(returnExpr, varExprMap, context);
     }
 
     @Override
@@ -231,13 +229,32 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         return p.first;
     }
 
-    private Map<VariableExpr, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
+    @Override
+    public Boolean visit(CaseExpression caseExpr, List<FunctionDecl> funcs) throws AsterixException {
+        Pair<Boolean, Expression> result = inlineUdfsInExpr(caseExpr.getConditionExpr(), funcs);
+        caseExpr.setConditionExpr(result.second);
+        boolean inlined = result.first;
+
+        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(caseExpr.getWhenExprs(), funcs);
+        inlined = inlined || inlinedList.first;
+        caseExpr.setWhenExprs(inlinedList.second);
+
+        inlinedList = inlineUdfsInExprList(caseExpr.getThenExprs(), funcs);
+        inlined = inlined || inlinedList.first;
+        caseExpr.setThenExprs(inlinedList.second);
+
+        result = inlineUdfsInExpr(caseExpr.getElseExpr(), funcs);
+        caseExpr.setElseExpr(result.second);
+        return inlined || result.first;
+    }
+
+    private Map<Expression, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
             throws AsterixException {
-        Map<VariableExpr, Expression> varExprMap = new HashMap<VariableExpr, Expression>();
+        Map<Expression, Expression> varExprMap = new HashMap<>();
         for (LetClause lc : letClauses) {
             // inline let variables one by one iteratively.
-            lc.setBindingExpr((Expression) SqlppVariableSubstitutionUtil
-                    .substituteVariableWithoutContext(lc.getBindingExpr(), varExprMap));
+            lc.setBindingExpr((Expression) SqlppRewriteUtil.substituteExpression(lc.getBindingExpr(),
+                    varExprMap, context));
             varExprMap.put(lc.getVarExpr(), lc.getBindingExpr());
         }
         return varExprMap;

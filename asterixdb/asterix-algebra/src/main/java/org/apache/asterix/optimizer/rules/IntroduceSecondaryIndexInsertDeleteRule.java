@@ -146,8 +146,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 AssignOperator assignOp = (AssignOperator) op2;
                 ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
                 if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                    ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp.getExpressions()
-                            .get(0).getValue();
+                    ScalarFunctionCallExpression funcExpr =
+                            (ScalarFunctionCallExpression) assignOp.getExpressions().get(0).getValue();
                     fid = funcExpr.getFunctionIdentifier();
                 }
             }
@@ -214,10 +214,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
 
         // At this point, we have the data type info, and the indexes info as well
-        // Initialize inputs to the SINK operator Op0 (The SINK) is now without input
         if (secondaryIndexTotalCnt > 0) {
             op0.getInputs().clear();
         }
+        // Initialize inputs to the SINK operator Op0 (The SINK) is now without input
 
         // Prepare filtering field information (This is the filter created using the "filter with" key word in the
         // create dataset ddl)
@@ -247,27 +247,30 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             try {
                 DatasetDataSource ds = (DatasetDataSource) (insertOp.getDataSource());
                 ARecordType insertRecType = (ARecordType) ds.getItemType();
-                // A new variable which represents the casted record
-                LogicalVariable castedRecVar = context.newVar();
                 // create the expected record type = the original + the optional open field
                 ARecordType enforcedType = createEnforcedType(insertRecType, indexes);
                 if (!enforcedType.equals(insertRecType)) {
+                    // A new variable which represents the casted record
+                    LogicalVariable castedRecVar = context.newVar();
+                    context.addNotToBeInlinedVar(castedRecVar);
                     //introduce casting to enforced type
                     AbstractFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
+                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE));
                     // The first argument is the record
                     castFunc.getArguments()
                             .add(new MutableObject<ILogicalExpression>(insertOp.getPayloadExpression().getValue()));
                     TypeCastUtils.setRequiredAndInputTypes(castFunc, enforcedType, insertRecType);
                     // AssignOperator puts in the cast var the casted record
-                    AssignOperator castedRecordAssignOperator = new AssignOperator(castedRecVar,
-                            new MutableObject<ILogicalExpression>(castFunc));
+                    AssignOperator castedRecordAssignOperator =
+                            new AssignOperator(castedRecVar, new MutableObject<ILogicalExpression>(castFunc));
                     // Connect the current top of the plan to the cast operator
-                    castedRecordAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
-                    currentTop = castedRecordAssignOperator;
+                    castedRecordAssignOperator.getInputs().addAll(currentTop.getInputs());
+                    currentTop.getInputs().clear();
+                    currentTop.getInputs().add(new MutableObject<>(castedRecordAssignOperator));
                     enforcedRecordVar = castedRecVar;
                     recType = enforcedType;
                     context.computeAndSetTypeEnvironmentForOperator(castedRecordAssignOperator);
+                    context.computeAndSetTypeEnvironmentForOperator(currentTop);
                     // We don't need to cast the old rec, we just need an assignment function that extracts the SK
                     // and an expression which reference the new variables.
                 }
@@ -404,8 +407,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                     // Check the field type of the secondary key.
                     IAType secondaryKeyType = null;
-                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0),
-                            recType);
+                    Pair<IAType, Boolean> keyPairType =
+                            Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), recType);
                     secondaryKeyType = keyPairType.first;
 
                     List<Object> varTypes = new ArrayList<Object>();
@@ -430,11 +433,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     tokenUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     context.computeAndSetTypeEnvironmentForOperator(tokenUpdate);
 
-                    IndexInsertDeleteUpsertOperator indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
-                            insertOp.getPrimaryKeyExpressions(), tokenizeKeyExprs, filterExpression,
-                            insertOp.getOperation(), insertOp.isBulkload(),
-                            insertOp.getAdditionalNonFilteringExpressions() == null ? 0
-                                    : insertOp.getAdditionalNonFilteringExpressions().size());
+                    IndexInsertDeleteUpsertOperator indexUpdate =
+                            new IndexInsertDeleteUpsertOperator(dataSourceIndex, insertOp.getPrimaryKeyExpressions(),
+                                    tokenizeKeyExprs, filterExpression, insertOp.getOperation(), insertOp.isBulkload(),
+                                    insertOp.getAdditionalNonFilteringExpressions() == null ? 0
+                                            : insertOp.getAdditionalNonFilteringExpressions().size());
                     indexUpdate.setAdditionalFilteringExpressions(filteringExpressions);
                     indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(tokenUpdate));
 
@@ -445,11 +448,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                 } else {
                     // When TokenizeOperator is not needed
-                    IndexInsertDeleteUpsertOperator indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
-                            insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
-                            insertOp.getOperation(), insertOp.isBulkload(),
-                            insertOp.getAdditionalNonFilteringExpressions() == null ? 0
-                                    : insertOp.getAdditionalNonFilteringExpressions().size());
+                    IndexInsertDeleteUpsertOperator indexUpdate =
+                            new IndexInsertDeleteUpsertOperator(dataSourceIndex, insertOp.getPrimaryKeyExpressions(),
+                                    secondaryExpressions, filterExpression, insertOp.getOperation(),
+                                    insertOp.isBulkload(), insertOp.getAdditionalNonFilteringExpressions() == null ? 0
+                                            : insertOp.getAdditionalNonFilteringExpressions().size());
 
                     indexUpdate.setAdditionalFilteringExpressions(filteringExpressions);
                     // We add the necessary expressions for upsert
@@ -473,11 +476,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
             } else if (index.getIndexType() == IndexType.RTREE) {
                 // Get type, dimensions and number of keys
-                Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
-                        secondaryKeyFields.get(0), recType);
+                Pair<IAType, Boolean> keyPairType =
+                        Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
-                boolean isPointMBR = spatialType.getTypeTag() == ATypeTag.POINT
-                        || spatialType.getTypeTag() == ATypeTag.POINT3D;
+                boolean isPointMBR =
+                        spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
                 int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
                 int numKeys = (isPointMBR && isBulkload) ? dimension : dimension * 2;
                 // Get variables and expressions
@@ -554,11 +557,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             context.getOutputTypeEnvironment(assignCoordinates), forceFilter);
                 }
                 AqlIndex dataSourceIndex = new AqlIndex(index, dataverseName, datasetName, mp);
-                IndexInsertDeleteUpsertOperator indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
-                        insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
-                        insertOp.getOperation(), insertOp.isBulkload(),
-                        insertOp.getAdditionalNonFilteringExpressions() == null ? 0
-                                : insertOp.getAdditionalNonFilteringExpressions().size());
+                IndexInsertDeleteUpsertOperator indexUpdate =
+                        new IndexInsertDeleteUpsertOperator(dataSourceIndex, insertOp.getPrimaryKeyExpressions(),
+                                secondaryExpressions, filterExpression, insertOp.getOperation(), insertOp.isBulkload(),
+                                insertOp.getAdditionalNonFilteringExpressions() == null ? 0
+                                        : insertOp.getAdditionalNonFilteringExpressions().size());
                 indexUpdate.setAdditionalFilteringExpressions(filteringExpressions);
                 if (insertOp.getOperation() == Kind.UPSERT) {
                     // set old secondary key expressions
@@ -772,12 +775,12 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             if (!NonTaggedFormatUtil.isOptional(secondaryKeyType) && !forceFilter) {
                 continue;
             }
-            ScalarFunctionCallExpression isUnknownFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_UNKOWN),
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
-            ScalarFunctionCallExpression notFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT),
-                    new MutableObject<ILogicalExpression>(isUnknownFuncExpr));
+            ScalarFunctionCallExpression isUnknownFuncExpr =
+                    new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_UNKOWN),
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
+            ScalarFunctionCallExpression notFuncExpr =
+                    new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT),
+                            new MutableObject<ILogicalExpression>(isUnknownFuncExpr));
             filterExpressions.add(new MutableObject<ILogicalExpression>(notFuncExpr));
         }
         // No nullable secondary keys.

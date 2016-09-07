@@ -116,6 +116,14 @@ public class ARecordType extends AbstractComplexType {
         }
     }
 
+    public boolean knowsAllPossibleAdditonalFieldNames() {
+        return allPossibleAdditionalFieldNames != null;
+    }
+
+    public Set<String> getAllPossibleAdditonalFieldNames() {
+        return allPossibleAdditionalFieldNames;
+    }
+
     public String[] getFieldNames() {
         return fieldNames;
     }
@@ -360,5 +368,15 @@ public class ARecordType extends AbstractComplexType {
             }
         }
         return false;
+    }
+
+    /**
+     * Create a fully open record type with the passed name
+     *
+     * @param name
+     * @return
+     */
+    public static ARecordType createOpenRecordType(String name) {
+        return new ARecordType(name, new String[0], new IAType[0], true);
     }
 }

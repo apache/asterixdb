@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -29,9 +30,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty.PartitioningType;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
+import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
@@ -56,7 +58,6 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPartitioningProperty pp = op2.getDeliveredPhysicalProperties().getPartitioningProperty();
         this.deliveredProperties = new StructuralPropertiesVector(pp, new ArrayList<ILocalStructuralProperty>(0));
-
     }
 
     @Override
@@ -65,7 +66,8 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
         StructuralPropertiesVector pv0 = StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR;
         StructuralPropertiesVector pv1 = StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR;
         return new PhysicalRequirements(new StructuralPropertiesVector[] { pv0, pv1 },
-                IPartitioningRequirementsCoordinator.NO_COORDINATION);
+                (requirements, firstDeliveredPartitioning, operator, ctx) -> this.coordinateRequirements(requirements,
+                        firstDeliveredPartitioning));
     }
 
     @Override
@@ -74,7 +76,8 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
         // at algebricks level, union all only accepts two inputs, although at
         // hyracks
@@ -90,5 +93,22 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
     @Override
     public boolean expensiveThanMaterialization() {
         return false;
+    }
+
+    // This method implements how inputs' partitioning properties are coordinated.
+    // The partitioning property of the first input branch is kept unchanged.
+    // A random partitioning property is required for the second branch and the node domain of the first input branch
+    // will be used.
+    private Pair<Boolean, IPartitioningProperty> coordinateRequirements(IPartitioningProperty requirements,
+            IPartitioningProperty firstDeliveredPartitioning) throws AlgebricksException {
+        if (firstDeliveredPartitioning == null) {
+            return new Pair<>(true, requirements);
+        }
+        PartitioningType partType = firstDeliveredPartitioning.getPartitioningType();
+        if (partType == PartitioningType.UNPARTITIONED) {
+            return new Pair<>(true, firstDeliveredPartitioning);
+        } else {
+            return new Pair<>(true, new RandomPartitioningProperty(firstDeliveredPartitioning.getNodeDomain()));
+        }
     }
 }

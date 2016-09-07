@@ -21,9 +21,9 @@ package org.apache.asterix.metadata.entities;
 
 import java.util.Map;
 
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.management.FeedId;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
@@ -32,9 +32,10 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class Feed implements IMetadataEntity<Feed>, IFeed {
     private static final long serialVersionUID = 1L;
+    public static final String EXTENSION_NAME = "Feed";
 
     /** A unique identifier for the feed */
-    private FeedId feedId;
+    private EntityId feedId;
     /** The function that is to be applied on each incoming feed tuple **/
     private FunctionSignature appliedFunction;
     /** The type {@code FeedType} associated with the feed. **/
@@ -50,7 +51,7 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
 
     public Feed(String dataverseName, String feedName, FunctionSignature appliedFunction, IFeed.FeedType feedType,
             String sourceFeedName, String adapterName, Map<String, String> configuration) {
-        this.feedId = new FeedId(dataverseName, feedName);
+        this.feedId = new EntityId(EXTENSION_NAME, dataverseName, feedName);
         this.appliedFunction = appliedFunction;
         this.feedType = feedType;
         this.displayName = feedType + "(" + feedId + ")";
@@ -60,7 +61,7 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     }
 
     @Override
-    public FeedId getFeedId() {
+    public EntityId getFeedId() {
         return feedId;
     }
 
@@ -71,7 +72,7 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
 
     @Override
     public String getFeedName() {
-        return feedId.getFeedName();
+        return feedId.getEntityName();
     }
 
     @Override

@@ -31,12 +31,15 @@ public interface IMetaDataPageManager {
      */
     /**
      * Open an index file's metadata
-     * @param fileId The file which to open the metadata of
+     *
+     * @param fileId
+     *            The file which to open the metadata of
      */
     public void open(int fileId);
 
     /**
      * Close an index file's metadata.
+     *
      * @throws HyracksDataException
      */
 
@@ -44,7 +47,9 @@ public interface IMetaDataPageManager {
 
     /**
      * Get the location of a free page to use for index operations
-     * @param metaFrame A metadata frame to use to wrap the raw page
+     *
+     * @param metaFrame
+     *            A metadata frame to use to wrap the raw page
      * @return A page location, or -1 if no free page could be found or allocated
      * @throws HyracksDataException
      */
@@ -53,7 +58,9 @@ public interface IMetaDataPageManager {
 
     /**
      * Get the location of a block of free pages to use for index operations
-     * @param metaFrame A metadata frame to use to wrap the raw page
+     *
+     * @param metaFrame
+     *            A metadata frame to use to wrap the raw page
      * @return The starting page location, or -1 if a block of free pages could be found or allocated
      * @throws HyracksDataException
      */
@@ -62,8 +69,11 @@ public interface IMetaDataPageManager {
 
     /**
      * Add a page back to the pool of free pages within an index file
-     * @param metaFrame A metadata frame to use to wrap the raw page
-     * @param freePage The page which to return to the free space
+     *
+     * @param metaFrame
+     *            A metadata frame to use to wrap the raw page
+     * @param freePage
+     *            The page which to return to the free space
      * @throws HyracksDataException
      */
 
@@ -74,7 +84,9 @@ public interface IMetaDataPageManager {
 
     /**
      * Gets the highest page offset according to the metadata
-     * @param metaFrame A metadata frame to use to wrap the raw page
+     *
+     * @param metaFrame
+     *            A metadata frame to use to wrap the raw page
      * @return The locaiton of the highest offset page
      * @throws HyracksDataException
      */
@@ -83,8 +95,11 @@ public interface IMetaDataPageManager {
 
     /**
      * Initializes the index metadata
-     * @param metaFrame A metadata farme to use to wrap the raw page
-     * @param currentMaxPage The highest page offset to consider valid
+     *
+     * @param metaFrame
+     *            A metadata farme to use to wrap the raw page
+     * @param currentMaxPage
+     *            The highest page offset to consider valid
      * @throws HyracksDataException
      */
 
@@ -105,6 +120,7 @@ public interface IMetaDataPageManager {
 
     /**
      * Determines where the metadata page is located in an index file
+     *
      * @return The locaiton of the metadata page, or -1 if the file appears to be corrupt
      * @throws HyracksDataException
      */
@@ -113,7 +129,9 @@ public interface IMetaDataPageManager {
 
     /**
      * Initializes the metadata manager on an open index file
-     * @param metaFrame A metadata frame used to wrap the raw page
+     *
+     * @param metaFrame
+     *            A metadata frame used to wrap the raw page
      * @throws HyracksDataException
      */
 
@@ -121,6 +139,7 @@ public interface IMetaDataPageManager {
 
     /**
      * Locate the filter page in an index file
+     *
      * @return The offset of the filter page if it exists, or less than zero if no filter page exists yet
      * @throws HyracksDataException
      */
@@ -135,7 +154,9 @@ public interface IMetaDataPageManager {
 
     /**
      * Set the cached page to manage for filter data
-     * @param page The page to manage
+     *
+     * @param page
+     *            The page to manage
      */
 
     void setFilterPage(ICachedPage page);
@@ -149,4 +170,6 @@ public interface IMetaDataPageManager {
      * @throws HyracksDataException
      */
     long getLSNOffset() throws HyracksDataException;
+
+    public long getLastMarkerLSN() throws HyracksDataException;
 }

@@ -56,4 +56,4 @@ primary key nested.tweetid;
 create dataset TweetMessagesTmp(TweetMessageNestedType)
 primary key tweetid;
 
-create index msgCountBIx on TweetMessages(nested.countB: int64) type btree enforced;
+create index msgCountBIx on TweetMessages(nested.countB: int64?) type btree enforced;

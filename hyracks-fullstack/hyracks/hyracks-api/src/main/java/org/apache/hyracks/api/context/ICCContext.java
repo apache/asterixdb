@@ -23,12 +23,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.client.ClusterControllerInfo;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.topology.ClusterTopology;
 
 public interface ICCContext {
     public ClusterControllerInfo getClusterControllerInfo();
 
-    public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws Exception;
+    public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException;
 
     public ClusterTopology getClusterTopology();
 }

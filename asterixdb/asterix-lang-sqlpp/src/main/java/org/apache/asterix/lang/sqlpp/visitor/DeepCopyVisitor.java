@@ -19,7 +19,10 @@
 package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -60,6 +63,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
@@ -127,7 +131,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public Projection visit(Projection projection, Void arg) throws AsterixException {
-        return new Projection((Expression) projection.getExpression().accept(this, arg), projection.getName(),
+        return new Projection(projection.star() ? null : (Expression) projection.getExpression().accept(this, arg),
+                projection.getName(),
                 projection.star(), projection.exprStar());
     }
 
@@ -228,7 +233,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public Query visit(Query q, Void arg) throws AsterixException {
-        return new Query(q.isTopLevel(), (Expression) q.getBody().accept(this, arg), q.getVarCounter(),
+        return new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg), q.getVarCounter(),
                 q.getDataverses(), q.getDatasets());
     }
 
@@ -255,7 +260,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     public GroupbyClause visit(GroupbyClause gc, Void arg) throws AsterixException {
         List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
         List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
-        List<VariableExpr> withVarList = new ArrayList<>();
+        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
         VariableExpr groupVarExpr = null;
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
@@ -268,8 +273,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             decorPairList.add(new GbyVariableExpressionPair(var == null ? null : (VariableExpr) var.accept(this, arg),
                     (Expression) gbyVarExpr.getExpr().accept(this, arg)));
         }
-        for (VariableExpr withVar : gc.getWithVarList()) {
-            withVarList.add((VariableExpr) withVar.accept(this, arg));
+        for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+            withVarMap.put((Expression) entry.getKey().accept(this, arg),
+                    (VariableExpr) entry.getValue().accept(this, arg));
         }
         if (gc.hasGroupVar()) {
             groupVarExpr = (VariableExpr) gc.getGroupVar().accept(this, arg);
@@ -277,7 +283,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
             groupFieldList.add(new Pair<>((Expression) field.first.accept(this, arg), field.second));
         }
-        return new GroupbyClause(gbyPairList, decorPairList, withVarList, groupVarExpr, groupFieldList,
+        return new GroupbyClause(gbyPairList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
     }
 
@@ -334,11 +340,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public ListConstructor visit(ListConstructor lc, Void arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : lc.getExprList()) {
-            newExprList.add((Expression) expr.accept(this, arg));
-        }
-        return new ListConstructor(lc.getType(), newExprList);
+        return new ListConstructor(lc.getType(), copyExprList(lc.getExprList(), arg));
     }
 
     @Override
@@ -354,12 +356,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public OperatorExpr visit(OperatorExpr operatorExpr, Void arg) throws AsterixException {
-        List<Expression> newExprList = new ArrayList<>();
-        for (Expression expr : operatorExpr.getExprList()) {
-            newExprList.add((Expression) expr.accept(this, arg));
-        }
-        return new OperatorExpr(newExprList, operatorExpr.getExprBroadcastIdx(), operatorExpr.getOpList(),
-                operatorExpr.isCurrentop());
+        return new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg), operatorExpr.getExprBroadcastIdx(),
+                operatorExpr.getOpList(), operatorExpr.isCurrentop());
     }
 
     @Override
@@ -393,10 +391,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public VariableExpr visit(VariableExpr varExpr, Void arg) throws AsterixException {
-        VariableExpr clonedVar =
-                new VariableExpr(new VarIdentifier(varExpr.getVar().getValue(), varExpr.getVar().getId()));
+        VariableExpr clonedVar = new VariableExpr(new VarIdentifier(varExpr.getVar()));
         clonedVar.setIsNewVar(varExpr.getIsNewVar());
-        clonedVar.setNamedValueAccess(varExpr.namedValueAccess());
         return clonedVar;
     }
 
@@ -415,7 +411,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         Expression expr = (Expression) ia.getExpr().accept(this, arg);
         Expression indexExpr = null;
         if (ia.getIndexExpr() != null) {
-            indexExpr = ia.getIndexExpr();
+            indexExpr = (Expression) ia.getIndexExpr().accept(this, arg);
         }
         return new IndexAccessor(expr, indexExpr);
     }
@@ -423,6 +419,23 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     @Override
     public ILangExpression visit(IndependentSubquery independentSubquery, Void arg) throws AsterixException {
         return new IndependentSubquery((Expression) independentSubquery.getExpr().accept(this, arg));
+    }
+
+    @Override
+    public ILangExpression visit(CaseExpression caseExpr, Void arg) throws AsterixException {
+        Expression conditionExpr = (Expression) caseExpr.getConditionExpr().accept(this, arg);
+        List<Expression> whenExprList = copyExprList(caseExpr.getWhenExprs(), arg);
+        List<Expression> thenExprList = copyExprList(caseExpr.getThenExprs(), arg);
+        Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, arg);
+        return new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
+    }
+
+    private List<Expression> copyExprList(List<Expression> exprs, Void arg) throws AsterixException {
+        List<Expression> newExprList = new ArrayList<>();
+        for (Expression expr : exprs) {
+            newExprList.add((Expression) expr.accept(this, arg));
+        }
+        return newExprList;
     }
 
 }

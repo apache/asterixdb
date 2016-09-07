@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import org.apache.asterix.lang.common.base.Statement;
+
 public class IndexDecl extends CreateIndexStatement {
     @Override
-    public Kind getKind() {
-        return Kind.INDEX_DECL;
+    public byte getKind() {
+        return Statement.Kind.INDEX_DECL;
     }
 }

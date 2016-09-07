@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -45,6 +46,8 @@ public class AsterixCLI {
         public List<String> args;
     }
 
+    private static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
+
     public static void main(String args[]) throws Exception {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
@@ -54,8 +57,8 @@ public class AsterixCLI {
         try {
             for (String queryFile : options.args) {
                 Reader in = new FileReader(queryFile);
-                AsterixJavaClient ajc = new AsterixJavaClient(
-                        AsterixHyracksIntegrationUtil.getHyracksClientConnection(), in, compilationProvider);
+                AsterixJavaClient ajc = new AsterixJavaClient(integrationUtil.getHyracksClientConnection(), in,
+                        compilationProvider, new DefaultStatementExecutorFactory(null));
                 try {
                     ajc.compile(true, false, false, false, false, true, false);
                 } finally {
@@ -75,16 +78,17 @@ public class AsterixCLI {
         outdir.mkdirs();
 
         File log = new File("asterix_logs");
-        if (log.exists())
+        if (log.exists()) {
             FileUtils.deleteDirectory(log);
+        }
         File lsn = new File("last_checkpoint_lsn");
         lsn.deleteOnExit();
 
-        AsterixHyracksIntegrationUtil.init(false);
+        integrationUtil.init(false);
     }
 
     public static void tearDown() throws Exception {
-        AsterixHyracksIntegrationUtil.deinit(false);
+        integrationUtil.deinit(false);
     }
 
 }

@@ -27,6 +27,7 @@ import java.io.Reader;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.test.aql.TestExecutor;
@@ -46,6 +47,8 @@ public class DmlTest {
     private static final PrintWriter ERR = new PrintWriter(System.err);
     private final TestExecutor testExecutor = new TestExecutor();
 
+    private static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
+
     @Test
     public void enlistTest() throws Exception {
         File outdir = new File(PATH_ACTUAL);
@@ -54,12 +57,11 @@ public class DmlTest {
         }
         outdir.mkdirs();
 
-        AsterixHyracksIntegrationUtil.init(true);
+        integrationUtil.init(true);
         Reader loadReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
-        AsterixJavaClient asterixLoad = new AsterixJavaClient(
-                AsterixHyracksIntegrationUtil.getHyracksClientConnection(), loadReader, ERR,
-                new AqlCompilationProvider());
+        AsterixJavaClient asterixLoad = new AsterixJavaClient(integrationUtil.getHyracksClientConnection(), loadReader,
+                ERR, new AqlCompilationProvider(), new DefaultStatementExecutorFactory(null));
         try {
             asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {
@@ -69,7 +71,7 @@ public class DmlTest {
         }
         asterixLoad.execute();
 
-        AsterixHyracksIntegrationUtil.deinit(true);
+        integrationUtil.deinit(true);
         for (String d : ASTERIX_DATA_DIRS) {
             testExecutor.deleteRec(new File(d));
         }

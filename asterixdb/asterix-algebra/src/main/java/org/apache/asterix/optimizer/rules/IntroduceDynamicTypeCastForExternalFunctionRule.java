@@ -22,14 +22,13 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.functions.AsterixExternalScalarFunctionInfo;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -52,7 +51,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -64,17 +64,21 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
          * resulting plan: distribute_result - project - assign (external function call) - assign (cast-record) - assign(open_record_constructor)
          */
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        if (op1.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT)
+        if (op1.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
             return false;
+        }
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT)
+        if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT) {
             return false;
+        }
         AbstractLogicalOperator op3 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-        if (op3.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+        if (op3.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
+        }
         AbstractLogicalOperator op4 = (AbstractLogicalOperator) op3.getInputs().get(0).getValue();
-        if (op4.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+        if (op4.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
+        }
 
         // Op1 : assign (external function call), Op2 : assign (open_record_constructor)
         AssignOperator assignOp1 = (AssignOperator) op3;
@@ -84,8 +88,8 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         FunctionIdentifier fid = null;
         ILogicalExpression assignExpr = assignOp2.getExpressions().get(0).getValue();
         if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) assignOp2.getExpressions().get(0)
-                    .getValue();
+            ScalarFunctionCallExpression funcExpr =
+                    (ScalarFunctionCallExpression) assignOp2.getExpressions().get(0).getValue();
             fid = funcExpr.getFunctionIdentifier();
 
             if (fid != AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
@@ -137,7 +141,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         }
         if (cast) {
             IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0), assignOp1, context,
-                    AsterixBuiltinFunctions.CAST_RECORD);
+                    AsterixBuiltinFunctions.CAST_TYPE);
         }
         return cast || checkUnknown;
     }

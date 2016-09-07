@@ -105,20 +105,31 @@ public class UnionAllOperator extends AbstractLogicalOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getMetadataProvider());
+        IVariableTypeEnvironment env =
+                new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
         IVariableTypeEnvironment envLeft = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
+        IVariableTypeEnvironment envRight = ctx.getOutputTypeEnvironment(inputs.get(1).getValue());
         if (envLeft == null) {
             throw new AlgebricksException("Left input types for union operator are not computed.");
         }
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-            Object t1 = envLeft.getVarType(t.first);
-            if (t1 == null) {
-                throw new AlgebricksException("Failed typing union operator: no type for variable " + t.first);
+            Object typeFromLeft = getType(envLeft, t.first);
+            Object typeFromRight = getType(envRight, t.second);
+            if (typeFromLeft.equals(typeFromRight)) {
+                env.setVarType(t.third, typeFromLeft);
+            } else {
+                env.setVarType(t.third, ctx.getConflictingTypeResolver().resolve(typeFromLeft, typeFromRight));
             }
-            env.setVarType(t.third, t1);
         }
         return env;
     }
 
+    // Gets the type of a variable from an type environment.
+    private Object getType(IVariableTypeEnvironment env, LogicalVariable var) throws AlgebricksException {
+        Object type = env.getVarType(var);
+        if (type == null) {
+            throw new AlgebricksException("Failed typing union operator: no type for variable " + var);
+        }
+        return type;
+    }
 }

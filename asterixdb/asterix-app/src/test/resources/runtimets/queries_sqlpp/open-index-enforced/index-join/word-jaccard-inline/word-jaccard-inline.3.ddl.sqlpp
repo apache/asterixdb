@@ -26,5 +26,5 @@
 use test;
 
 
-create  index keyword_index  on DBLPOpen (title:string) type keyword enforced;
+create  index keyword_index  on DBLPOpen (title:string?) type keyword enforced;
 

@@ -23,8 +23,8 @@
  * Date         : 10th Oct 2014
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 

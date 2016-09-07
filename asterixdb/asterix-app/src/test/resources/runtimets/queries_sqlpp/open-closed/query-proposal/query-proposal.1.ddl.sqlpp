@@ -23,8 +23,8 @@
  * Notes           : This test was written to cover the scenario which is used in the proposal.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -47,5 +47,5 @@ create type test.TweetMessageType as
   `message-text` : string
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 

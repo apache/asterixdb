@@ -22,8 +22,8 @@
  * Date             :  07/18/2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -45,5 +45,5 @@ create type test.FacebookUserType as
   employment : [EmploymentType]
 }
 
-create  table FacebookUsers(FacebookUserType) primary key id;
+create  dataset FacebookUsers(FacebookUserType) primary key id;
 

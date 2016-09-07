@@ -74,7 +74,7 @@ public interface IAsterixAppRuntimeContext {
 
     public double getBloomFilterFalsePositiveRate();
 
-    public Object getFeedManager();
+    public Object getActiveManager();
 
     public IRemoteRecoveryManager getRemoteRecoveryManager();
 

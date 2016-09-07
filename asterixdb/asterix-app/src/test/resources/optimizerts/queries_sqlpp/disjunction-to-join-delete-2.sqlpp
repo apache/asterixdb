@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -30,7 +30,7 @@ create type test.TestType as
   `no-idx` : string
 }
 
-create  table TestSet(TestType) primary key id;
+create  dataset TestSet(TestType) primary key id;
 
 create  index TestSetIndex  on TestSet (idx) type btree;
 

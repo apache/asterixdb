@@ -18,13 +18,13 @@
  */
 /*
  * Description    : Joins two datasets on the intersection of their point attributes.
- *                  Only dataset 'MyData1' has an enforced open RTree index, hence we
+ *                  Only dataset 'MyData1' has an enforced open RTree index?, hence we
  *                  *do not* expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -45,11 +45,11 @@ create type test.MyRecordOpen as
   nested : MyRecordNestedOpen
 }
 
-create  table MyData1(MyRecordOpen) primary key nested.id;
+create  dataset MyData1(MyRecordOpen) primary key nested.id;
 
-create  table MyData2(MyRecordOpen) primary key nested.id;
+create  dataset MyData2(MyRecordOpen) primary key nested.id;
 
-create  index rtree_index  on MyData1 (nested.point:point) type rtree enforced;
+create  index rtree_index  on MyData1 (nested.point:point?) type rtree enforced;
 
 write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm"
 select element {'a':a,'b':b}

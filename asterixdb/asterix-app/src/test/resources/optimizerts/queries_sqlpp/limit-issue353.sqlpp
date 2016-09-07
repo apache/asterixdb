@@ -23,8 +23,8 @@
  * Date         : 28th April 2013
  */
 
-drop  database tpch if exists;
-create  database tpch;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
 use tpch;
 
@@ -49,7 +49,7 @@ create type tpch.LineItemType as
   l_comment : string
 }
 
-create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
 write output to asterix_nc1:"/tmp/push_limit.adm"
 select element {'l_returnflag':l.l_returnflag,'l_linestatus':l.l_linestatus,'l_shipmode':l.l_shipmode}

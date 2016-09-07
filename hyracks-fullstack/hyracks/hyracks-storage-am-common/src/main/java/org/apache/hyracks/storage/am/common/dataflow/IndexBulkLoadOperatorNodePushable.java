@@ -97,7 +97,10 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     @Override
     public void close() throws HyracksDataException {
         try {
-            bulkLoader.end();
+            // bulkloader can be null if an exception is thrown before it is initialized.
+            if (bulkLoader != null) {
+                bulkLoader.end();
+            }
         } catch (Throwable th) {
             throw new HyracksDataException(th);
         } finally {

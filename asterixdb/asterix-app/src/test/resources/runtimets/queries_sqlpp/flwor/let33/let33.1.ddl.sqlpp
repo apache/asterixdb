@@ -22,8 +22,8 @@
  * Date            : 8th November 2013
  */
 
-drop  database foo if exists;
-create  database foo if not exists ;
+drop  dataverse foo if exists;
+create  dataverse foo if not exists ;
 
 use foo;
 
@@ -34,5 +34,5 @@ create type foo.fbuser as
   name : string
 }
 
-create  table fb(fbuser) primary key id;
+create  dataset fb(fbuser) primary key id;
 

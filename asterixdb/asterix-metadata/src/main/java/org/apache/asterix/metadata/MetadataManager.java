@@ -31,6 +31,8 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
+import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
+import org.apache.asterix.metadata.api.IExtensionMetadataSearchKey;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
@@ -943,5 +945,39 @@ public class MetadataManager implements IMetadataManager {
             dataset = cache.getDataset(dataverseName, datasetName);
         }
         return dataset;
+    }
+
+    @Override
+    public <T extends IExtensionMetadataEntity> void addEntity(MetadataTransactionContext mdTxnCtx, T entity)
+            throws MetadataException {
+        try {
+            metadataNode.addEntity(mdTxnCtx.getJobId(), entity);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public <T extends IExtensionMetadataEntity> void deleteEntity(MetadataTransactionContext mdTxnCtx, T entity)
+            throws MetadataException {
+        try {
+            metadataNode.deleteEntity(mdTxnCtx.getJobId(), entity);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public <T extends IExtensionMetadataEntity> List<T> getEntities(MetadataTransactionContext mdTxnCtx,
+            IExtensionMetadataSearchKey searchKey) throws MetadataException {
+        try {
+            return metadataNode.getEntities(mdTxnCtx.getJobId(), searchKey);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    public static synchronized void instantiate(MetadataManager metadataManager) {
+        MetadataManager.INSTANCE = metadataManager;
     }
 }

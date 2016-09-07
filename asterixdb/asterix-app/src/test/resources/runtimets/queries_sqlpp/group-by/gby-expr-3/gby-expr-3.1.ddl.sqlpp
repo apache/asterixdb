@@ -17,8 +17,8 @@
  * under the License.
  */
 
-DROP DATABASE gby IF EXISTS;
-CREATE DATABASE gby;
+DROP DATAVERSE gby IF EXISTS;
+CREATE DATAVERSE gby;
 
 USE gby;
 
@@ -34,6 +34,6 @@ CREATE TYPE SuperStarType AS {
   id : string
 }
 
-CREATE TABLE Employee(EmployeeType) PRIMARY KEY id;
-CREATE TABLE Incentive(IncentiveType) PRIMARY KEY job_category;
-CREATE TABLE SuperStars(SuperStarType) PRIMARY KEY id;
+CREATE DATASET Employee(EmployeeType) PRIMARY KEY id;
+CREATE DATASET Incentive(IncentiveType) PRIMARY KEY job_category;
+CREATE DATASET SuperStars(SuperStarType) PRIMARY KEY id;

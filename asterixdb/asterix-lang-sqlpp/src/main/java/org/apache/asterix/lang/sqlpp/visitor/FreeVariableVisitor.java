@@ -23,8 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -60,6 +60,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -143,7 +144,9 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(Projection projection, Collection<VariableExpr> freeVars) throws AsterixException {
-        projection.getExpression().accept(this, freeVars);
+        if (!projection.star()) {
+            projection.getExpression().accept(this, freeVars);
+        }
         return null;
     }
 
@@ -159,8 +162,8 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         Collection<VariableExpr> fromBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause());
         Collection<VariableExpr> letsBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getLetList());
         Collection<VariableExpr> gbyBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause());
-        Collection<VariableExpr> gbyLetsBindingVars = SqlppVariableUtil
-                .getBindingVariables(selectBlock.getLetListAfterGroupby());
+        Collection<VariableExpr> gbyLetsBindingVars =
+                SqlppVariableUtil.getBindingVariables(selectBlock.getLetListAfterGroupby());
 
         selectBlock.getSelectClause().accept(this, selectFreeVars);
         // Removes group-by, from, let, and gby-let binding vars.
@@ -270,9 +273,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(OrderbyClause oc, Collection<VariableExpr> freeVars) throws AsterixException {
-        for (Expression orderExpr : oc.getOrderbyList()) {
-            orderExpr.accept(this, freeVars);
-        }
+        visit(oc.getOrderbyList(), freeVars);
         return null;
     }
 
@@ -340,9 +341,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(ListConstructor lc, Collection<VariableExpr> freeVars) throws AsterixException {
-        for (Expression expr : lc.getExprList()) {
-            expr.accept(this, freeVars);
-        }
+        visit(lc.getExprList(), freeVars);
         return null;
     }
 
@@ -357,9 +356,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(OperatorExpr operatorExpr, Collection<VariableExpr> freeVars) throws AsterixException {
-        for (Expression expr : operatorExpr.getExprList()) {
-            expr.accept(this, freeVars);
-        }
+        visit(operatorExpr.getExprList(), freeVars);
         return null;
     }
 
@@ -416,8 +413,18 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
     }
 
     @Override
-    public Void visit(IndependentSubquery independentSubquery, Collection<VariableExpr> arg) throws AsterixException {
-        independentSubquery.getExpr().accept(this, arg);
+    public Void visit(IndependentSubquery independentSubquery, Collection<VariableExpr> freeVars)
+            throws AsterixException {
+        independentSubquery.getExpr().accept(this, freeVars);
+        return null;
+    }
+
+    @Override
+    public Void visit(CaseExpression caseExpr, Collection<VariableExpr> freeVars) throws AsterixException {
+        caseExpr.getConditionExpr().accept(this, freeVars);
+        visit(caseExpr.getWhenExprs(), freeVars);
+        visit(caseExpr.getThenExprs(), freeVars);
+        caseExpr.getElseExpr().accept(this, freeVars);
         return null;
     }
 
@@ -452,6 +459,12 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             conditionFreeVars.remove(clause.getPositionalVariable());
         }
         freeVars.addAll(conditionFreeVars);
+    }
+
+    private void visit(List<Expression> exprs, Collection<VariableExpr> arg) throws AsterixException {
+        for (Expression expr : exprs) {
+            expr.accept(this, arg);
+        }
     }
 
     /**

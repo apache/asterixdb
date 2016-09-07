@@ -18,6 +18,11 @@
  */
 package org.apache.hyracks.control.cc.web;
 
+import java.util.EnumSet;
+import java.util.logging.Logger;
+
+import javax.servlet.DispatcherType;
+
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
 import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
@@ -29,31 +34,27 @@ import org.apache.wicket.protocol.http.WicketFilter;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-
-import javax.servlet.DispatcherType;
-import java.util.EnumSet;
-import java.util.logging.Logger;
 
 public class WebServer {
     private final static Logger LOGGER = Logger.getLogger(WebServer.class.getName());
 
     private final ClusterControllerService ccs;
     private final Server server;
-    private final SelectChannelConnector connector;
+    private final ServerConnector connector;
     private final HandlerCollection handlerCollection;
 
     public WebServer(ClusterControllerService ccs) throws Exception {
         this.ccs = ccs;
         server = new Server();
 
-        connector = new SelectChannelConnector();
+        connector = new ServerConnector(server);
 
         server.setConnectors(new Connector[] { connector });
 

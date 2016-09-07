@@ -52,17 +52,17 @@
                 <configuration>
                   <target if="coverage" unless="skipTests">
                     <echo message="Generating JaCoCo Reports" />
-                    <property name="asterix.dir" location="${basedir}/../.."/>
+                    <property name="asterix.dir" location="${basedir}/../.." />
 
                     <!-- gather all of the source dirs -->
                     <pathconvert property="source.dirs" pathsep=",">
                       <dirset dir="${asterix.dir}">
-                        <include name="**/src/main/java"/>
+                        <include name="**/src/main/java" />
                       </dirset>
                     </pathconvert>
 
-                    <echo message="asterix dir: ${asterix.dir}/"/>
-                    <echo message="asterix source dirs: ${source.dirs}/"/>
+                    <echo message="asterix dir: ${asterix.dir}/" />
+                    <echo message="asterix source dirs: ${source.dirs}/" />
 
                     <taskdef name="report" classname="org.jacoco.ant.ReportTask">
                       <classpath path="${basedir}/target/jacoco-jars/org.jacoco.ant.jar" />
@@ -78,13 +78,13 @@
                         <group name="AsterixDB">
                           <classfiles>
                             <fileset dir="${asterix.dir}">
-                              <include name="**/target/classes/**/*.class"/>
-                              <exclude name="**/hyracks-hdfs/hyracks-hdfs-1.x/**"/>
+                              <include name="**/target/classes/**/*.class" />
+                              <exclude name="**/hyracks-hdfs/hyracks-hdfs-1.x/**" />
                             </fileset>
                           </classfiles>
                           <sourcefiles encoding="UTF-8">
                             <multirootfileset basedirs="${source.dirs}" type="file">
-                              <include name="**/*.java"/>
+                              <include name="**/*.java" />
                             </multirootfileset>
                           </sourcefiles>
                         </group>

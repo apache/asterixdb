@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database group_no_agg if exists;
-create  database group_no_agg;
+drop  dataverse group_no_agg if exists;
+create  dataverse group_no_agg;
 
 use group_no_agg;
 
@@ -39,7 +39,7 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-create  table Customers(CustomerType) primary key c_custkey on group1;
+create  dataset Customers(CustomerType) primary key c_custkey on group1;
 
 write output to asterix_nc1:"/tmp/.adm"
 select element name

@@ -21,13 +21,18 @@ package org.apache.asterix.external.feed.watch;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.active.ActiveJob;
+import org.apache.asterix.active.ActivityState;
+import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.api.IFeedJoint;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.util.FeedUtils.JobType;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedConnectJobInfo extends FeedJobInfo {
+public class FeedConnectJobInfo extends ActiveJob {
 
+    private static final long serialVersionUID = 1L;
     private final FeedConnectionId connectionId;
     private final Map<String, String> feedPolicy;
     private final IFeedJoint sourceFeedJoint;
@@ -38,10 +43,10 @@ public class FeedConnectJobInfo extends FeedJobInfo {
     private List<String> storageLocations;
     private int partitionStarts = 0;
 
-    public FeedConnectJobInfo(JobId jobId, FeedJobState state, FeedConnectionId connectionId,
+    public FeedConnectJobInfo(EntityId entityId, JobId jobId, ActivityState state, FeedConnectionId connectionId,
             IFeedJoint sourceFeedJoint, IFeedJoint computeFeedJoint, JobSpecification spec,
             Map<String, String> feedPolicy) {
-        super(jobId, state, FeedJobInfo.JobType.FEED_CONNECT, spec);
+        super(entityId, jobId, state, JobType.FEED_CONNECT, spec);
         this.connectionId = connectionId;
         this.sourceFeedJoint = sourceFeedJoint;
         this.computeFeedJoint = computeFeedJoint;

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +29,6 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
@@ -46,7 +44,6 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
-import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
@@ -83,24 +80,20 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScoping
 public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     private final Expression groupVar;
-    private final Collection<VariableExpr> targetVars;
-    private final Collection<VariableExpr> allVisableVars;
+    private final Collection<VariableExpr> fieldVars;
 
     public SqlppGroupBySugarVisitor(LangRewritingContext context, Expression groupVar,
-            Collection<VariableExpr> targetVars, Collection<VariableExpr> allVisableVars) {
+            Collection<VariableExpr> fieldVars) {
         super(context);
         this.groupVar = groupVar;
-        this.targetVars = targetVars;
-        this.allVisableVars = allVisableVars;
-        allVisableVars.remove(groupVar);
+        this.fieldVars = fieldVars;
     }
 
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
         List<Expression> newExprList = new ArrayList<>();
         FunctionSignature signature = callExpr.getFunctionSignature();
-        boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature)
-                || FunctionMapUtil.isCoreAggregateFunction(signature);
+        boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature);
         boolean rewritten = false;
         for (Expression expr : callExpr.getExprList()) {
             Expression newExpr = aggregate ? wrapAggregationArgument(expr) : expr;
@@ -118,54 +111,32 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
 
     private Expression wrapAggregationArgument(Expression argExpr) throws AsterixException {
         Expression expr = argExpr;
-        if (expr.getKind() == Kind.SELECT_EXPRESSION) {
-            return expr;
-        }
-        Set<VariableExpr> definedVars = scopeChecker.getCurrentScope().getLiveVariables();
-        allVisableVars.addAll(definedVars);
         Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
 
-        // Whether we need to resolve undefined variables.
-        boolean needResolve = !allVisableVars.containsAll(freeVars);
-
-        Set<VariableExpr> vars = new HashSet<>(targetVars);
-        vars.removeAll(definedVars); // Exclude re-defined local variables.
-        if (!needResolve && !vars.containsAll(freeVars)) {
-            return expr;
-        }
-
-        VariableExpr var = new VariableExpr(context.newVariable());
-        FromTerm fromTerm = new FromTerm(groupVar, var, null, null);
+        VariableExpr fromBindingVar = new VariableExpr(context.newVariable());
+        FromTerm fromTerm = new FromTerm(groupVar, fromBindingVar, null, null);
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
 
+        // Maps field variable expressions to field accesses.
+        Map<Expression, Expression> varExprMap = new HashMap<>();
+        for (VariableExpr usedVar : freeVars) {
+            // Reference to a field in the group variable.
+            if (fieldVars.contains(usedVar)) {
+                // Rewrites to a reference to a field in the group variable.
+                varExprMap.put(usedVar,
+                                new FieldAccessor(fromBindingVar, SqlppVariableUtil.toUserDefinedVariableName(usedVar
+                                        .getVar())));
+            }
+        }
+
         // Select clause.
-        SelectElement selectElement = new SelectElement(expr);
+        SelectElement selectElement = new SelectElement(
+                SqlppRewriteUtil.substituteExpression(expr, varExprMap, context));
         SelectClause selectClause = new SelectClause(selectElement, null, false);
 
         // Construct the select expression.
         SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null, null, null);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-        SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
-
-        // replace variable expressions with field access
-        Map<VariableExpr, Expression> varExprMap = new HashMap<>();
-        for (VariableExpr usedVar : freeVars) {
-            if (allVisableVars.contains(usedVar)) {
-                // Reference to a defined variable.
-                if (vars.contains(usedVar)) {
-                    // Reference to a variable defined before the group-by,
-                    // i.e., not a variable defined by a LET after the group-by.
-                    varExprMap.put(usedVar,
-                            new FieldAccessor(var, SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar())));
-                }
-            } else {
-                // Reference to an undefined variable.
-                varExprMap.put(usedVar,
-                        this.wrapWithResolveFunction(usedVar, new HashSet<>(Collections.singleton(var))));
-            }
-        }
-        selectElement.setExpression(
-                (Expression) SqlppVariableSubstitutionUtil.substituteVariableWithoutContext(expr, varExprMap));
-        return selectExpression;
+        return new SelectExpression(null, selectSetOperation, null, null, true);
     }
 }

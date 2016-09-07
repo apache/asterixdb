@@ -36,12 +36,17 @@ public class DataverseDecl implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DATAVERSE_DECL;
+    public byte getKind() {
+        return Statement.Kind.DATAVERSE_DECL;
     }
 
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.QUERY;
     }
 }

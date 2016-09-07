@@ -55,9 +55,10 @@ public abstract class CreateFeedStatement implements Statement {
     }
 
     @Override
-    public abstract Kind getKind();
-
-    @Override
     public abstract <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException;
 
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
+    }
 }

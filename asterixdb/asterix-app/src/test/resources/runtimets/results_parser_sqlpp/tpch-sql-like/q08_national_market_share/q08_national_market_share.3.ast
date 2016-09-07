@@ -14,23 +14,24 @@ RecordConstructor [
       FunctionCall tpch.sum@1[
         (
           SELECT ELEMENT [
-          FunctionCall tpch.switch-case@5[
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$i ]
-                Field=s_name
+          CASE              LiteralExpr [TRUE]
+
+          WHEN               OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=s_name
+                ]
+                =
+                LiteralExpr [STRING] [BRAZIL]
               ]
-              =
-              LiteralExpr [STRING] [BRAZIL]
-            ]
-            LiteralExpr [TRUE]
-            FieldAccessor [
-              Variable [ Name=$i ]
-              Field=revenue
-            ]
-            LiteralExpr [FALSE]
-            LiteralExpr [DOUBLE] [0.0]
-          ]
+          THEN               FieldAccessor [
+                Variable [ Name=$i ]
+                Field=revenue
+              ]
+
+          ELSE               LiteralExpr [DOUBLE] [0.0]
+
+          END
           ]
           FROM [            Variable [ Name=$t ]
             AS Variable [ Name=$i ]

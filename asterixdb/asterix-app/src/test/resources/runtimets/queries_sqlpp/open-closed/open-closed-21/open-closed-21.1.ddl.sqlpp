@@ -24,8 +24,8 @@
  * Date           :  29 April 2012
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -35,7 +35,7 @@ create type test.TestType as
   id : int32
 }
 
-create  table dtst01(TestType) primary key id;
+create  dataset dtst01(TestType) primary key id;
 
 create type test.Emp as
 {
@@ -46,5 +46,5 @@ create type test.Emp as
   dob : date
 }
 
-create  table employee(Emp) primary key id;
+create  dataset employee(Emp) primary key id;
 

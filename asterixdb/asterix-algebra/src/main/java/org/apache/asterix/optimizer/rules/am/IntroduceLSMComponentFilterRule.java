@@ -19,24 +19,22 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.declared.AqlDataSource;
+import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
-import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,7 +47,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -106,7 +103,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         List<Index> datasetIndexes = ((AqlMetadataProvider) context.getMetadataProvider())
                 .getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
 
-        List<IOptimizableFuncExpr> optFuncExprs = new ArrayList<IOptimizableFuncExpr>();
+        List<IOptimizableFuncExpr> optFuncExprs = new ArrayList<>();
 
         for (int i = 0; i < analysisCtx.matchedFuncExprs.size(); i++) {
             IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(i);
@@ -127,8 +124,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
     private AssignOperator createAssignOperator(List<IOptimizableFuncExpr> optFuncExprs,
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOptimizationContext context) {
-        List<LogicalVariable> assignKeyVarList = new ArrayList<LogicalVariable>();
-        List<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<Mutable<ILogicalExpression>>();
+        List<LogicalVariable> assignKeyVarList = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<>();
 
         for (IOptimizableFuncExpr optFuncExpr : optFuncExprs) {
             ComparisonKind ck = AlgebricksBuiltinFunctions
@@ -158,15 +155,15 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
                 if (dataset.getDatasetName().compareTo(((DatasetDataSource) ds).getDataset().getDatasetName()) == 0) {
-                    List<LogicalVariable> minFilterVars = new ArrayList<LogicalVariable>();
-                    List<LogicalVariable> maxFilterVars = new ArrayList<LogicalVariable>();
+                    List<LogicalVariable> minFilterVars = new ArrayList<>();
+                    List<LogicalVariable> maxFilterVars = new ArrayList<>();
 
                     AssignOperator assignOp = createAssignOperator(optFuncExprs, minFilterVars, maxFilterVars, context);
 
                     dataSourceScanOp.setMinFilterVars(minFilterVars);
                     dataSourceScanOp.setMaxFilterVars(maxFilterVars);
 
-                    List<Mutable<ILogicalExpression>> additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();;
+                    List<Mutable<ILogicalExpression>> additionalFilteringExpressions = new ArrayList<>();
                     for (LogicalVariable var : assignOp.getVariables()) {
                         additionalFilteringExpressions
                                 .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
@@ -190,8 +187,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                     jobGenParams.readFromFuncArgs(f.getArguments());
                     if (dataset.getDatasetName().compareTo(jobGenParams.datasetName) == 0) {
-                        List<LogicalVariable> minFilterVars = new ArrayList<LogicalVariable>();
-                        List<LogicalVariable> maxFilterVars = new ArrayList<LogicalVariable>();
+                        List<LogicalVariable> minFilterVars = new ArrayList<>();
+                        List<LogicalVariable> maxFilterVars = new ArrayList<>();
 
                         AssignOperator assignOp = createAssignOperator(optFuncExprs, minFilterVars, maxFilterVars,
                                 context);
@@ -199,7 +196,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         unnestMapOp.setMinFilterVars(minFilterVars);
                         unnestMapOp.setMaxFilterVars(maxFilterVars);
 
-                        List<Mutable<ILogicalExpression>> additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();;
+                        List<Mutable<ILogicalExpression>> additionalFilteringExpressions = new ArrayList<>();
                         for (LogicalVariable var : assignOp.getVariables()) {
                             additionalFilteringExpressions
                                     .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
@@ -224,6 +221,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
+                if (ds.getDatasourceType() != AqlDataSourceType.INTERNAL_DATASET) {
+                    return null;
+                }
                 return ((DatasetDataSource) ds).getDataset();
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
                 UnnestMapOperator unnestMapOp = (UnnestMapOperator) descendantOp;
@@ -231,8 +231,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                     FunctionIdentifier fid = f.getFunctionIdentifier();
-                    String dataverseName = null;
-                    String datasetName = null;
+                    String dataverseName;
+                    String datasetName;
                     if (AsterixBuiltinFunctions.EXTERNAL_LOOKUP.equals(fid)) {
                         dataverseName = AccessMethodUtils.getStringConstant(f.getArguments().get(0));
                         datasetName = AccessMethodUtils.getStringConstant(f.getArguments().get(1));
@@ -303,7 +303,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
     private boolean findMacthedExprFieldName(IOptimizableFuncExpr optFuncExpr, AbstractLogicalOperator op,
             Dataset dataset, ARecordType recType, List<Index> datasetIndexes, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
@@ -350,7 +350,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         continue;
                     }
 
-                    String indexName = null;
+                    String indexName;
                     Index index = null;
                     ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
                     if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -412,10 +412,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 || funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
 
             //get the variable from here. Figure out which input it came from. Go to that input!!!
-            ArrayList<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
+            ArrayList<LogicalVariable> usedVars = new ArrayList<>();
             expr.getUsedVariables(usedVars);
             LogicalVariable usedVar = usedVars.get(0);
-            List<String> returnList = new ArrayList<String>();
+            List<String> returnList = new ArrayList<>();
 
             //Find the input that it came from
             for (int varCheck = 0; varCheck < op.getInputs().size(); varCheck++) {
@@ -441,27 +441,23 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             }
 
             if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-                ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
-                if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                String fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
+                if (fieldName == null) {
                     return null;
                 }
-                ConstantExpression constExpr = (ConstantExpression) nameArg;
-                returnList.addAll(Arrays.asList(
-                        ((AString) ((AsterixConstantValue) constExpr.getValue()).getObject()).getStringValue()));
-                return new Pair<ARecordType, List<String>>(recType, returnList);
+                returnList.add(fieldName);
+                return new Pair<>(recType, returnList);
             } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
-                ILogicalExpression idxArg = funcExpr.getArguments().get(1).getValue();
-                if (idxArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                Integer fieldIndex = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
+                if (fieldIndex == null) {
                     return null;
                 }
-                ConstantExpression constExpr = (ConstantExpression) idxArg;
-                int fieldIndex = ((AInt32) ((AsterixConstantValue) constExpr.getValue()).getObject()).getIntegerValue();
-                returnList.addAll(Arrays.asList(recType.getFieldNames()[fieldIndex]));
+                returnList.add(recType.getFieldNames()[fieldIndex]);
                 IAType subType = recType.getFieldTypes()[fieldIndex];
                 if (subType.getTypeTag() == ATypeTag.RECORD) {
                     recType = (ARecordType) subType;
                 }
-                return new Pair<ARecordType, List<String>>(recType, returnList);
+                return new Pair<>(recType, returnList);
             }
 
         }

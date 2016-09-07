@@ -18,9 +18,13 @@
  */
 /*
  * Description  : Create a feed dataset that uses the feed simulator adapter.
+                  Begin ingestion and verify contents of the dataset post completion.
+ * Expected Res : Success
+ * Date         : 24th Dec 2012
+ */
 
-drop  database feeds if exists;
-create  database feeds;
+drop  dataverse feeds if exists;
+create  dataverse feeds;
 
 use feeds;
 
@@ -34,6 +38,9 @@ create type feeds.TweetType as
   timestamp : string
 }
 
-create  table Tweets(TweetType) primary key id;
-
-create  primary feed TweetFeed using file_feed ((`fs`=`localfs`),(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),(`format`=`adm`),(`type-name`=`TweetType`),(`tuple-interval`=`10`));
+create  dataset Tweets(TweetType) primary key id;
+create  primary feed TweetFeed using localfs
+((`path`=`asterix_nc1://data/twitter/obamatweets.adm`),
+(`format`=`adm`),
+(`type-name`=`TweetType`),
+(`tuple-interval`=`10`));

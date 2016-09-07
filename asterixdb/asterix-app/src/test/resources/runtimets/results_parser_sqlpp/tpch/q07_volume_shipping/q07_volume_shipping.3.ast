@@ -367,9 +367,8 @@ Groupby
   Variable [ Name=$l_year0 ]
   GROUP AS Variable [ Name=#1 ]
   (
-    l_year0:=Variable [ Name=$l_year0 ]
-    t:=Variable [ Name=$t ]
     locs:=Variable [ Name=$locs ]
+    t:=Variable [ Name=$t ]
   )
 
 Let Variable [ Name=$revenue ]

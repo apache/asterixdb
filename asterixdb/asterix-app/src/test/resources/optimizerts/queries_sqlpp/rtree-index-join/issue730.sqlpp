@@ -23,8 +23,8 @@
  * Date         : 8th May 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -49,7 +49,7 @@ create type test.TweetMessageType as
   message_text : string
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create  index twmSndLocIx  on TweetMessages (sender_location) type rtree;
 

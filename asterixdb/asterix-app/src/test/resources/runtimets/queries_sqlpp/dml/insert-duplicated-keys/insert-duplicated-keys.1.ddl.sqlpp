@@ -17,8 +17,8 @@
  * under the License.
  */
 
-drop  database STBench if exists;
-create  database STBench;
+drop  dataverse STBench if exists;
+create  dataverse STBench;
 
 use STBench;
 
@@ -33,7 +33,7 @@ create type STBench.SimpleGeoPlaceType as
   phone : string
 }
 
-create  table SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
+create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
 
 create  index btreeName  on SimpleGeoPlace (name) type btree;
 

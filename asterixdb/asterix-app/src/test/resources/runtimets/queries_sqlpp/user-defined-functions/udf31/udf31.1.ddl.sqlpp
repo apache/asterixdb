@@ -22,8 +22,8 @@
  * Expected Res : Success
  */
 
-drop database emergencyTest if exists;
-create database emergencyTest;
+drop dataverse emergencyTest if exists;
+create dataverse emergencyTest;
 use emergencyTest;
 
 create type EmergencyReport as
@@ -33,7 +33,7 @@ create type EmergencyReport as
   `message`: string
 }
 
-create table EmergencyReports(EmergencyReport)
+create dataset EmergencyReports(EmergencyReport)
 primary key id;
 
 create function mostIntenseEarthquakeNearLocation()

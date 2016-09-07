@@ -36,8 +36,8 @@ public class FeedDropStatement implements Statement {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.DROP_FEED;
+    public byte getKind() {
+        return Statement.Kind.DROP_FEED;
     }
 
     public Identifier getDataverseName() {
@@ -55,5 +55,10 @@ public class FeedDropStatement implements Statement {
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
         return visitor.visit(this, arg);
+    }
+
+    @Override
+    public byte getCategory() {
+        return Category.DDL;
     }
 }

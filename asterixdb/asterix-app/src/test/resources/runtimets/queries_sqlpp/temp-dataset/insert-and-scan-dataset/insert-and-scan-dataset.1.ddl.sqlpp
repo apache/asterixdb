@@ -23,8 +23,8 @@
  * Date            : July 11 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -34,5 +34,5 @@ create type test.myDataType as
   id : int64
 }
 
-create temporary table myData(myDataType) primary key id;
+create temporary dataset myData(myDataType) primary key id;
 

@@ -32,4 +32,4 @@ name : string?
 
 create dataset testdv.t1(testtype) primary key id;
 
-create index idx1 on testdv.t1(location: point) type rtree enforced;
+create index idx1 on testdv.t1(location: point?) type rtree enforced;

@@ -18,84 +18,49 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractBinaryStringBoolEval implements IScalarEvaluator {
+public abstract class AbstractBinaryStringBoolEval extends AbstractBinaryStringEval {
 
-    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private DataOutput dout = resultStorage.getDataOutput();
-
-    private IPointable ptr0 = new VoidPointable();
-    private IPointable ptr1 = new VoidPointable();
-    private IScalarEvaluator evalLeft;
-    private IScalarEvaluator evalRight;
-    private final FunctionIdentifier funcID;
-
-    private final UTF8StringPointable leftPtr = new UTF8StringPointable();
-    private final UTF8StringPointable rightPtr = new UTF8StringPointable();
-
+    // For outputting results.
     @SuppressWarnings({ "rawtypes" })
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractBinaryStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
-        this.evalLeft = evalLeftFactory.createScalarEvaluator(context);
-        this.evalRight = evalRightFactory.createScalarEvaluator(context);
-        this.funcID = funcID;
+        super(context, evalLeftFactory, evalRightFactory, funcID);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-        evalLeft.evaluate(tuple, ptr0);
-        evalRight.evaluate(tuple, ptr1);
-
-        byte[] bytes0 = ptr0.getByteArray();
-        int offset0 = ptr0.getStartOffset();
-        int len0 = ptr0.getLength();
-        byte[] bytes1 = ptr1.getByteArray();
-        int offset1 = ptr1.getStartOffset();
-        int len1 = ptr1.getLength();
-
-        resultStorage.reset();
-        if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new AlgebricksException(funcID.getName() + ": expects input type STRING or NULL, but got "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")!");
-        }
-
-        leftPtr.set(bytes0, offset0 + 1, len0 - 1);
-        rightPtr.set(bytes1, offset1 + 1, len1 - 1);
-
+    public void process(UTF8StringPointable leftPtr, UTF8StringPointable rightPtr, IPointable result)
+            throws IOException {
         ABoolean res = compute(leftPtr, rightPtr) ? ABoolean.TRUE : ABoolean.FALSE;
-        try {
-            boolSerde.serialize(res, dout);
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
+        boolSerde.serialize(res, dataOutput);
         result.set(resultStorage);
     }
 
-    protected abstract boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws AlgebricksException;
+    /**
+     * Computes a boolean value from two input strings.
+     *
+     * @param left
+     *            , the first input argument.
+     * @param right
+     *            , the second input argument.
+     * @return a boolean value.
+     * @throws IOException
+     */
+    protected abstract boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException;
 
 }

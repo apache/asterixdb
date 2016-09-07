@@ -32,11 +32,11 @@ public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
 
     // Every transactions needs to work with its own instance of an
     // AqlMetadataProvider.
-    public AqlIndex(Index index, String dataverse, String dataset, AqlMetadataProvider metadatProvider) {
+    public AqlIndex(Index index, String dataverse, String dataset, AqlMetadataProvider metadataProvider) {
         this.index = index;
         this.dataset = dataset;
         this.dataverse = dataverse;
-        this.metadataProvider = metadatProvider;
+        this.metadataProvider = metadataProvider;
     }
 
     // TODO: Maybe Index can directly implement IDataSourceIndex<String, AqlSourceId>
@@ -55,4 +55,7 @@ public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
         return index.getIndexName();
     }
 
+    public Index getIndex() {
+        return index;
+    }
 }

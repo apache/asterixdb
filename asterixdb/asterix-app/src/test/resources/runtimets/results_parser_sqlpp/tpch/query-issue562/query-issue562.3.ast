@@ -255,7 +255,6 @@ Groupby
   GROUP AS Variable [ Name=#1 ]
   (
     ct:=Variable [ Name=$ct ]
-    avg:=Variable [ Name=$avg ]
   )
 
 Orderby

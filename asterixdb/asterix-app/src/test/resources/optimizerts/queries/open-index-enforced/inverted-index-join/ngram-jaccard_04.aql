@@ -18,7 +18,7 @@
  */
 /*
  * Description    : Fuzzy joins two datasets, DBLP and CSX, based the similarity-jaccard function of their titles' 3-gram tokens.
- *                  DBLP and CSX both have a 3-gram enforced open index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  DBLP and CSX both have a 3-gram enforced open index on title?, and we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
@@ -45,9 +45,9 @@ create dataset DBLP(DBLPType) primary key id;
 
 create dataset CSX(CSXType) primary key id;
 
-create index ngram_index_DBLP on DBLP(title:string) type ngram(3) enforced;
+create index ngram_index_DBLP on DBLP(title:string?) type ngram(3) enforced;
 
-create index ngram_index_CSX on CSX(title:string) type ngram(3) enforced;
+create index ngram_index_CSX on CSX(title:string?) type ngram(3) enforced;
 
 write output to asterix_nc1:"rttest/inverted-index-join_ngram-jaccard_02.adm";
 

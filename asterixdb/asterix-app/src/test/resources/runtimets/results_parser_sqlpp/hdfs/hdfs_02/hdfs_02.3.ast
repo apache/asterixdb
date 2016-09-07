@@ -11,17 +11,7 @@ RecordConstructor [
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#2 ]
-          Field=token
-        ]
-        ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
-        ]
-      )
+      Variable [ Name=$token ]
     ]
   )
 ]
@@ -45,8 +35,8 @@ Groupby
   Variable [ Name=$token ]
   GROUP AS Variable [ Name=#1 ]
   (
-    token:=Variable [ Name=$token ]
     line:=Variable [ Name=$line ]
+    token:=Variable [ Name=$token ]
   )
 
 Orderby

@@ -70,13 +70,11 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     // Map of variables that could be replaced by their producing expression.
     // Populated during the top-down sweep of the plan.
     protected Map<LogicalVariable, ILogicalExpression> varAssignRhs = new HashMap<>();
-
     // Visitor for replacing variable reference expressions with their originating expression.
     protected InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
-
     // Set of FunctionIdentifiers that we should not inline.
     protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<>();
-
+    // Indicates whether the rule has been run
     protected boolean hasRun = false;
 
     @Override
@@ -120,19 +118,23 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    /* An expression will be constant at runtime if it has:
+    /**
+     * An expression will be constant at runtime if it has:
      * 1. A type
      * 2. No free variables
+     *
+     * @param op
+     * @param funcExpr
+     * @param context
+     * @return whether a function is constant
+     * @throws AlgebricksException
      */
-    public static boolean functionIsConstantAtRuntime(AbstractLogicalOperator op,
-            AbstractFunctionCallExpression funcExpr, IOptimizationContext context) throws AlgebricksException {
+    public static boolean functionIsConstantAtRuntime(AbstractFunctionCallExpression funcExpr)
+            throws AlgebricksException {
         //make sure that there are no variables in the expression
         Set<LogicalVariable> usedVariables = new HashSet<>();
         funcExpr.getUsedVariables(usedVariables);
-        if (!usedVariables.isEmpty()) {
-            return false;
-        }
-        return true;
+        return usedVariables.isEmpty();
     }
 
     protected boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -149,8 +151,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                 // Ignore functions that are either in the doNotInline set or are non-functional
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())
-                            || (!funcExpr.isFunctional() && !functionIsConstantAtRuntime(op, funcExpr, context))) {
+                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier()) || (!funcExpr.isFunctional()
+                            && !InlineVariablesRule.functionIsConstantAtRuntime(funcExpr))) {
                         continue;
                     }
                 }
@@ -237,17 +239,16 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             ILogicalExpression e = exprRef.getValue();
             switch (((AbstractLogicalExpression) e).getExpressionTag()) {
                 case VARIABLE:
-                    return transformVariable(exprRef);
+                    return transformVariableReferenceExpression(exprRef,
+                            ((VariableReferenceExpression) e).getVariableReference());
                 case FUNCTION_CALL:
-                    return transformFunction(e);
+                    return transformFunctionCallExpression((AbstractFunctionCallExpression) e);
                 default:
                     return false;
-
             }
         }
 
-        private boolean transformFunction(ILogicalExpression e) throws AlgebricksException {
-            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) e;
+        private boolean transformFunctionCallExpression(AbstractFunctionCallExpression fce) throws AlgebricksException {
             boolean modified = false;
             for (Mutable<ILogicalExpression> arg : fce.getArguments()) {
                 if (transform(arg)) {
@@ -257,8 +258,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             return modified;
         }
 
-        private boolean transformVariable(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
-            LogicalVariable var = ((VariableReferenceExpression) exprRef.getValue()).getVariableReference();
+        private boolean transformVariableReferenceExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable var)
+                throws AlgebricksException {
             // Restrict replacement to targetVar if it has been set.
             if (targetVar != null && var != targetVar) {
                 return false;

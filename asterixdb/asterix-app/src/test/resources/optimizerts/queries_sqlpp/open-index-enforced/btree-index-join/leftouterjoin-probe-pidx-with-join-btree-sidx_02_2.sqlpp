@@ -23,8 +23,8 @@
  * Date         : 8th May 2014
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -49,11 +49,11 @@ create type test.TweetMessageType as
   `message-text` : string
 }
 
-create  table TweetMessages(TweetMessageType) primary key tweetid;
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
-create  index msgCountAIx  on TweetMessages (countA:int32) type btree enforced;
+create  index msgCountAIx  on TweetMessages (countA:int32?) type btree enforced;
 
-create  index msgCountBIx  on TweetMessages (countB:int32) type btree enforced;
+create  index msgCountBIx  on TweetMessages (countB:int32?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_02.adm"
 select element {'tweetid1':t1.tweetid,'count1':t1.countA,'t2info':(

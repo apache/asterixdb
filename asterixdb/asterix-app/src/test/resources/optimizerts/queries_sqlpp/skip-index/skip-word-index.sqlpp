@@ -22,8 +22,8 @@
  * Date         : 21th December 2013
  */
 
-drop  database test if exists;
-create  database test;
+drop  dataverse test if exists;
+create  dataverse test;
 
 use test;
 
@@ -37,7 +37,7 @@ create type test.DBLPType as
   misc : string
 }
 
-create  table DBLP(DBLPType) primary key id;
+create  dataset DBLP(DBLPType) primary key id;
 
 create  index keyword_index  on DBLP (title) type keyword;
 

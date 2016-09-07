@@ -32,7 +32,7 @@ import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.input.stream.SocketServerInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.om.util.AsterixRuntimeUtil;
+import org.apache.asterix.runtime.util.RuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -64,8 +64,8 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
                         "\'sockets\' parameter not specified as part of adapter configuration");
             }
             Map<InetAddress, Set<String>> ncMap;
-            ncMap = AsterixRuntimeUtil.getNodeControllerMap();
-            List<String> ncs = AsterixRuntimeUtil.getAllNodeControllers();
+            ncMap = RuntimeUtils.getNodeControllerMap();
+            List<String> ncs = RuntimeUtils.getAllNodeControllers();
             String[] socketsArray = socketsValue.split(",");
             Random random = new Random();
             for (String socket : socketsArray) {

@@ -394,8 +394,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void setSharedObject(Object sharedObject) {
-        this.sharedObject = sharedObject;
+    public void setSharedObject(Object object) {
+        this.sharedObject = object;
     }
 
     @Override

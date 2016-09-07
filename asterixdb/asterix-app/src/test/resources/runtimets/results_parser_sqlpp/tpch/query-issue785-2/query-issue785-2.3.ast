@@ -122,10 +122,9 @@ Let Variable [ Name=$X ]
       ]
       GROUP AS Variable [ Name=#1 ]
       (
-        orders:=Variable [ Name=$orders ]
-        customer:=Variable [ Name=$customer ]
         n:=Variable [ Name=$n ]
-        t:=Variable [ Name=$t ]
+        customer:=Variable [ Name=$customer ]
+        orders:=Variable [ Name=$orders ]
       )
 
     Let Variable [ Name=$sum ]
@@ -204,7 +203,5 @@ Groupby
   GROUP AS Variable [ Name=#2 ]
   (
     x:=Variable [ Name=$x ]
-    X:=Variable [ Name=$X ]
-    t:=Variable [ Name=$t ]
   )
 

@@ -61,7 +61,7 @@ primary key id;
 create dataset FacebookMessages(FacebookMessageType)
 primary key message-id;
 
-create index fbmIdxAutId if not exists on FacebookMessages(author-id-copy:int32) enforced;
+create index fbmIdxAutId if not exists on FacebookMessages(author-id-copy:int32?) enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
 
