@@ -1,6 +1,4 @@
 {
-    "Metadata_Node": "asterix_nc1",
-    "State": "ACTIVE",
     "config": {
         "api.port": 19002,
         "cc.java.opts": "-Xmx1024m",
@@ -51,8 +49,26 @@
         "web.queryinterface.port": 19006,
         "web.secondary.port": 19005
     },
-    "partition_0": "asterix_nc1",
-    "partition_1": "asterix_nc1",
-    "partition_2": "asterix_nc2",
-    "partition_3": "asterix_nc2"
+    "metadata_node": "asterix_nc1",
+    "ncs": [
+        {
+            "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/config",
+            "node_id": "asterix_nc1",
+            "partitions": [
+                "partition_0",
+                "partition_1"
+            ],
+            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats"
+        },
+        {
+            "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/config",
+            "node_id": "asterix_nc2",
+            "partitions": [
+                "partition_2",
+                "partition_3"
+            ],
+            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/stats"
+        }
+    ],
+    "state": "ACTIVE"
 }

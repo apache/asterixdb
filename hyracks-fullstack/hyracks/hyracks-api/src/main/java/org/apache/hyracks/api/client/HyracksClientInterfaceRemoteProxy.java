@@ -131,4 +131,11 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
             throw new IPCException("CC refused to release connection after 9 seconds");
         }
     }
+
+    @Override
+    public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception {
+        HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction gjsf =
+                new HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction(nodeId, includeStats, includeConfig);
+        return (String) rpci.call(ipcHandle, gjsf);
+    }
 }

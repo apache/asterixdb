@@ -668,10 +668,17 @@ public class AsterixClusterProperties {
 
     public synchronized JSONObject getClusterStateDescription() throws JSONException {
         JSONObject stateDescription = new JSONObject();
-        stateDescription.put("State", state.name());
-        stateDescription.put("Metadata_Node", currentMetadataNode);
-        for (ClusterPartition partition : clusterPartitions.values()) {
-            stateDescription.put("partition_" + partition.getPartitionId(), partition.getActiveNodeId());
+        stateDescription.put("state", state.name());
+        stateDescription.put("metadata_node", currentMetadataNode);
+        for (Map.Entry<String, ClusterPartition[]> entry : node2PartitionsMap.entrySet()) {
+            JSONObject nodeJSON = new JSONObject();
+            nodeJSON.put("node_id", entry.getKey());
+            List<String> partitions = new ArrayList<>();
+            for (ClusterPartition part : entry.getValue()) {
+                partitions.add("partition_" + part.getPartitionId());
+            }
+            nodeJSON.put("partitions", partitions);
+            stateDescription.accumulate("ncs", nodeJSON);
         }
         return stateDescription;
     }

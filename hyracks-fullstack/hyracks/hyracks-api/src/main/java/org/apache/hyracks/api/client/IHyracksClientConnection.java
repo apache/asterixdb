@@ -188,4 +188,13 @@ public interface IHyracksClientConnection {
      */
     public void stopCluster() throws Exception;
 
+    /**
+     * Get details of specified node as JSON object
+     * @param nodeId
+     *              id the subject node
+     * @param includeStats
+     * @param includeConfig @return serialized JSON containing the node details
+     * @throws Exception
+     */
+    public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception;
 }

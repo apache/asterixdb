@@ -7315,5 +7315,15 @@
         <expected-error>HTTP/1.1 404 Not Found</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="cluster_state_3">
+        <output-dir compare="Text">cluster_state_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="cluster_state_4">
+        <output-dir compare="Text">cluster_state_4</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

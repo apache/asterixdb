@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.AbstractAsterixProperties;
 import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,13 +43,16 @@ public class ClusterAPIServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
         PrintWriter responseWriter = response.getWriter();
+        JSONObject json;
+
         try {
-            JSONObject responseObject = AsterixClusterProperties.INSTANCE.getClusterStateDescription();
-            Map<String, Object> allProperties = getAllClusterProperties();
-            responseObject.put("config", allProperties);
-            responseWriter.write(responseObject.toString(4));
+            json = getClusterStateJSON(request, "node/");
             response.setStatus(HttpServletResponse.SC_OK);
-        } catch (JSONException e) {
+            responseWriter.write(json.toString(4));
+        } catch (IllegalArgumentException e) {
+            ResultUtil.apiErrorHandler(responseWriter, e);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        } catch (Exception e) {
             ResultUtil.apiErrorHandler(responseWriter, e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
@@ -65,5 +69,27 @@ public class ClusterAPIServlet extends HttpServlet {
 
     protected List<AbstractAsterixProperties> getPropertiesInstances() {
         return AbstractAsterixProperties.getImplementations();
+    }
+
+    protected JSONObject getClusterStateJSON(HttpServletRequest request, String pathToNode)
+            throws JSONException {
+        JSONObject json;
+        json = AsterixClusterProperties.INSTANCE.getClusterStateDescription();
+        Map<String, Object> allProperties = getAllClusterProperties();
+        json.put("config", allProperties);
+
+        JSONArray ncs = json.getJSONArray("ncs");
+        final StringBuffer requestURL = request.getRequestURL();
+        if (requestURL.charAt(requestURL.length() - 1) != '/') {
+            requestURL.append('/');
+        }
+        requestURL.append(pathToNode);
+        String nodeURL = requestURL.toString().replaceAll("/[^./]+/\\.\\./", "/");
+        for (int i = 0; i < ncs.length(); i++) {
+            JSONObject nc = ncs.getJSONObject(i);
+            nc.put("configUri", nodeURL + nc.getString("node_id") + "/config");
+            nc.put("statsUri", nodeURL + nc.getString("node_id") + "/stats");
+        }
+        return json;
     }
 }

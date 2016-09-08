@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import org.apache.hyracks.control.common.work.IPCResponder;
 import org.json.JSONObject;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -27,21 +28,35 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 public class GetNodeDetailsJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final String nodeId;
+    private final boolean includeStats;
+    private final boolean includeConfig;
+    private final IPCResponder<String> callback;
     private JSONObject detail;
 
-    public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId) {
+    public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId, boolean includeStats,
+                                  boolean includeConfig, IPCResponder<String> callback) {
         this.ccs = ccs;
         this.nodeId = nodeId;
+        this.includeStats = includeStats;
+        this.includeConfig = includeConfig;
+        this.callback = callback;
+    }
+
+    public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId, boolean includeStats,
+                                  boolean includeConfig) {
+        this(ccs, nodeId, includeStats, includeConfig, null);
     }
 
     @Override
     protected void doRun() throws Exception {
         NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
-        if (ncs == null) {
-            detail = new JSONObject();
-            return;
+        if (ncs != null) {
+            detail = ncs.toDetailedJSON(includeStats, includeConfig);
         }
-        detail = ncs.toDetailedJSON();
+
+        if (callback != null) {
+            callback.setValue(detail == null ? null : detail.toString());
+        }
     }
 
     public JSONObject getDetail() {
