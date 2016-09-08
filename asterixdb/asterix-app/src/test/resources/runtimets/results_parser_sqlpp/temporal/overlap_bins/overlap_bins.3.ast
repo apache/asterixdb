@@ -36,7 +36,7 @@ RecordConstructor [
         LiteralExpr [STRING] [1990-01-01]
       ]
       FunctionCall null.year-month-duration@1[
-        LiteralExpr [STRING] [P20Y]
+        LiteralExpr [STRING] [P10Y]
       ]
     ]
   )

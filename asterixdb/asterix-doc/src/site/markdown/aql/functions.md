@@ -2310,7 +2310,7 @@ See the [Allen's Relations](allens.html).
         let $itv2 := interval(date("1984-03-17"), date("2013-08-22"))
         let $itv3 := interval(datetime("1800-01-01T23:59:48.938"), datetime("2015-07-26T13:28:30.218"))
         return { "timebins": overlap-bins($itv1, time("00:00:00"), day-time-duration("PT30M")),
-          "datebins": overlap-bins($itv2, date("1990-01-01"), year-month-duration("P20Y")),
+          "datebins": overlap-bins($itv2, date("1990-01-01"), year-month-duration("P10Y")),
           "datetimebins": overlap-bins($itv3, datetime("1900-01-01T00:00:00.000"), year-month-duration("P100Y")) }
 
    * The expected result is:
@@ -2319,9 +2319,10 @@ See the [Allen's Relations](allens.html).
               interval(time("17:30:00.000Z"), time("18:00:00.000Z")),
               interval(time("18:00:00.000Z"), time("18:30:00.000Z")),
               interval(time("18:30:00.000Z"), time("19:00:00.000Z")) ],
-          "datebins": [ interval(date("1970-01-01"), date("1990-01-01")),
-              interval(date("1990-01-01"), date("2010-01-01")),
-              interval(date("2010-01-01"), date("2030-01-01")) ],
+          "datebins": [ interval(date("1980-01-01"), date("1990-01-01")),
+              interval(date("1990-01-01"), date("2000-01-01")),
+              interval(date("2000-01-01"), date("2010-01-01")),
+              interval(date("2010-01-01"), date("2020-01-01")) ],
           "datetimebins": [ interval(datetime("1800-01-01T00:00:00.000Z"), datetime("1900-01-01T00:00:00.000Z")),
               interval(datetime("1900-01-01T00:00:00.000Z"), datetime("2000-01-01T00:00:00.000Z")),
               interval(datetime("2000-01-01T00:00:00.000Z"), datetime("2100-01-01T00:00:00.000Z")) ] }

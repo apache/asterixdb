@@ -39,12 +39,16 @@ let $dt3 := $dt1 + $dr1
 let $null6 := null + $dr1
 let $null7 := $dt1 + null
 let $c1 := $dt1 = ($dt1 - $dt3) + $dt3
+let $dt4 := $dt1 - duration("P1MT1S")
+let $dt5 := $dt1 + duration("P1MT1S")
 
 return {
   "datetime1" : $dt1,
   "datetime1secs": $dtsecs1,
   "datetime2" : $dt2,
   "datetime3" : $dt3,
+  "datetime4" : $dt4,
+  "datetime5" : $dt5,
   "unixms1" : $unixms1,
   "unixsecs1": $unixsecs1,
   "duration1" : $dr1,

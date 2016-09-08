@@ -36,6 +36,7 @@ import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.typecomputer.impl.ADateTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -95,7 +96,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
-                    private final GregorianCalendarSystem GREG_CAL = GregorianCalendarSystem.getInstance();
+                    private final GregorianCalendarSystem gregCalSys = GregorianCalendarSystem.getInstance();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
@@ -109,13 +110,17 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
 
                         ATypeTag type0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
 
-                        long intervalStart = 0, intervalEnd = 0;
+                        long intervalStart;
+                        long intervalEnd;
                         byte intervalTypeTag;
 
                         if (type0 == ATypeTag.INTERVAL) {
                             intervalStart = AIntervalSerializerDeserializer.getIntervalStart(bytes0, offset0 + 1);
                             intervalEnd = AIntervalSerializerDeserializer.getIntervalEnd(bytes0, offset0 + 1);
                             intervalTypeTag = AIntervalSerializerDeserializer.getIntervalTimeType(bytes0, offset0 + 1);
+                            if (intervalTypeTag == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                                intervalStart = intervalStart * GregorianCalendarSystem.CHRONON_OF_DAY;
+                            }
                         } else {
                             throw new AlgebricksException(getIdentifier().getName()
                                     + ": the first argument should be INTERVAL/NULL/MISSING but got " + type0);
@@ -130,7 +135,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                     + type0 + "(" + intervalTypeTag + ") for the second argument but got " + type1);
                         }
 
-                        long anchorTime = 0;
+                        long anchorTime;
                         switch (type1) {
                             case DATE:
                                 anchorTime = ADateSerializerDeserializer.getChronon(bytes1, offset1 + 1)
@@ -160,10 +165,10 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                             case YEARMONTHDURATION:
                                 yearMonth = AYearMonthDurationSerializerDeserializer.getYearMonth(bytes2, offset2 + 1);
 
-                                int yearStart = GREG_CAL.getYear(anchorTime);
-                                int monthStart = GREG_CAL.getMonthOfYear(anchorTime, yearStart);
-                                int yearToBin = GREG_CAL.getYear(intervalStart);
-                                int monthToBin = GREG_CAL.getMonthOfYear(intervalStart, yearToBin);
+                                int yearStart = gregCalSys.getYear(anchorTime);
+                                int monthStart = gregCalSys.getMonthOfYear(anchorTime, yearStart);
+                                int yearToBin = gregCalSys.getYear(intervalStart);
+                                int monthToBin = gregCalSys.getMonthOfYear(intervalStart, yearToBin);
 
                                 int totalMonths = (yearToBin - yearStart) * 12 + (monthToBin - monthStart);
 
@@ -195,7 +200,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + type2);
                         }
 
-                        long binStartChronon, binEndChronon;
+                        long binStartChronon;
+                        long binEndChronon;
                         int binOffset;
 
                         listBuilder.reset(intListType);
@@ -302,9 +308,6 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
         };
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.functions.AbstractFunctionDescriptor#getIdentifier()
-     */
     @Override
     public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.OVERLAP_BINS;

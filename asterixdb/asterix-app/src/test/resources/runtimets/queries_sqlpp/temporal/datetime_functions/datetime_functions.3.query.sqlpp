@@ -26,6 +26,8 @@ set `import-private-functions` `true`;
 , 'datetime1secs' : test.`datetime-from-unix-time-in-secs`(1356048000)
 , 'datetime2' : test.`datetime-from-date-time`(test.date('1327-12-02'), test.time('15:35:49.938-0800'))
 , 'datetime3' : (test.`datetime-from-unix-time-in-ms`(956007429) + (test.`datetime-from-date-time`(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test.`datetime-from-unix-time-in-ms`(956007429)))
+, 'datetime4' : test.`datetime-from-unix-time-in-ms`(956007429) - test.duration('P1MT1S')
+, 'datetime5' : test.`datetime-from-unix-time-in-ms`(956007429) + test.duration('P1MT1S')
 , 'unixms1' : test.`unix-time-from-datetime-in-ms`(test.`datetime-from-unix-time-in-ms`(956007429))
 , 'unixsecs1' : test.`unix-time-from-datetime-in-secs`(test.`datetime-from-unix-time-in-secs`(1356048000))
 , 'duration1' : (test.`datetime-from-date-time`(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test.`datetime-from-unix-time-in-ms`(956007429))
