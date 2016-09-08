@@ -33,13 +33,22 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
 
     private static final Logger LOGGER = Logger.getLogger(AsterixReplicationProperties.class.getName());
 
+
     private static final int REPLICATION_DATAPORT_DEFAULT = 2000;
+
+    private static final String REPLICATION_ENABLED_KEY = "replication.enabled";
+
+    private static final String REPLICATION_FACTOR_KEY = "replication.factor";
     private static final int REPLICATION_FACTOR_DEFAULT = 1;
+
+    private static final String REPLICATION_TIMEOUT_KEY = "replication.timeout";
     private static final int REPLICATION_TIME_OUT_DEFAULT = 15;
+
+    private static final String REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS_KEY =
+            "replication.max.remote.recovery.attempts";
     private static final int MAX_REMOTE_RECOVERY_ATTEMPTS = 5;
+
     private static final String NODE_IP_ADDRESS_DEFAULT = "127.0.0.1";
-    private final String NODE_NAME_PREFIX;
-    private final Cluster cluster;
 
     private static final String REPLICATION_LOG_BATCH_SIZE_KEY = "replication.log.batchsize";
     private static final int REPLICATION_LOG_BATCH_SIZE_DEFAULT = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
@@ -51,17 +60,21 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     private static final int REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT = StorageUtil.getSizeInBytes(128,
             StorageUnit.KILOBYTE);
 
+    private final String nodeNamePrefix;
+    private final Cluster cluster;
+
     public AsterixReplicationProperties(AsterixPropertiesAccessor accessor, Cluster cluster) {
         super(accessor);
         this.cluster = cluster;
 
         if (cluster != null) {
-            NODE_NAME_PREFIX = cluster.getInstanceName() + "_";
+            nodeNamePrefix = cluster.getInstanceName() + "_";
         } else {
-            NODE_NAME_PREFIX = "";
+            nodeNamePrefix = "";
         }
     }
 
+    @PropertyKey(REPLICATION_ENABLED_KEY)
     public boolean isReplicationEnabled() {
         if (cluster != null && cluster.getDataReplication() != null) {
             if (getReplicationFactor() == 1) {
@@ -184,7 +197,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     }
 
     public String getRealCluserNodeID(String nodeId) {
-        return NODE_NAME_PREFIX + nodeId;
+        return nodeNamePrefix + nodeId;
     }
 
     public Set<String> getNodeReplicasIds(String nodeId) {
@@ -194,6 +207,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
         return replicaIds;
     }
 
+    @PropertyKey(REPLICATION_FACTOR_KEY)
     public int getReplicationFactor() {
         if (cluster != null) {
             if (cluster.getDataReplication() == null || cluster.getDataReplication().getReplicationFactor() == null) {
@@ -204,6 +218,7 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
         return REPLICATION_FACTOR_DEFAULT;
     }
 
+    @PropertyKey(REPLICATION_TIMEOUT_KEY)
     public int getReplicationTimeOut() {
         if (cluster != null) {
             return cluster.getDataReplication().getReplicationTimeOut().intValue();
@@ -254,20 +269,24 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
         return clientReplicas;
     }
 
+    @PropertyKey(REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS_KEY)
     public int getMaxRemoteRecoveryAttempts() {
         return MAX_REMOTE_RECOVERY_ATTEMPTS;
     }
 
+    @PropertyKey(REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY)
     public int getLogBufferPageSize() {
         return accessor.getProperty(REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY, REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT,
                 PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
+    @PropertyKey(REPLICATION_LOG_BUFFER_NUM_PAGES_KEY)
     public int getLogBufferNumOfPages() {
         return accessor.getProperty(REPLICATION_LOG_BUFFER_NUM_PAGES_KEY, REPLICATION_LOG_BUFFER_NUM_PAGES_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(REPLICATION_LOG_BATCH_SIZE_KEY)
     public int getLogBatchSize() {
         return accessor.getProperty(REPLICATION_LOG_BATCH_SIZE_KEY, REPLICATION_LOG_BATCH_SIZE_DEFAULT,
                 PropertyInterpreters.getIntegerBytePropertyInterpreter());

@@ -29,6 +29,7 @@ import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
@@ -163,6 +164,13 @@ public abstract class AbstractExecutionIT {
                 if (ctx.getType().equals(EXTERNAL_LIBRARY_TEST_GROUP)) {
                     return true;
                 }
+            }
+        }
+        // For now we skip api tests.
+        for (TestGroup group : tcCtx.getTestGroups()) {
+            if (group != null && "api".equals(group.getName())) {
+                LOGGER.info("Skipping test: " + tcCtx.toString());
+                return true;
             }
         }
         return false;

@@ -20,12 +20,16 @@ package org.apache.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.common.config.AbstractAsterixProperties;
 import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,12 +44,26 @@ public class ClusterAPIServlet extends HttpServlet {
         PrintWriter responseWriter = response.getWriter();
         try {
             JSONObject responseObject = AsterixClusterProperties.INSTANCE.getClusterStateDescription();
-            responseWriter.write(responseObject.toString());
+            Map<String, Object> allProperties = getAllClusterProperties();
+            responseObject.put("config", allProperties);
+            responseWriter.write(responseObject.toString(4));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (JSONException e) {
             ResultUtil.apiErrorHandler(responseWriter, e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         responseWriter.flush();
+    }
+
+    protected Map<String, Object> getAllClusterProperties() {
+        Map<String, Object> allProperties = new HashMap<>();
+        for (AbstractAsterixProperties properties : getPropertiesInstances()) {
+            allProperties.putAll(properties.getProperties());
+        }
+        return allProperties;
+    }
+
+    protected List<AbstractAsterixProperties> getPropertiesInstances() {
+        return AbstractAsterixProperties.getImplementations();
     }
 }
