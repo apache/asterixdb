@@ -63,9 +63,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * <p/>
  */
 public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-    private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.CALENDAR_DURATION_FROM_DATETIME;
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+    private static final long serialVersionUID = 1L;
+    public static final FunctionIdentifier FID = AsterixBuiltinFunctions.CALENDAR_DURATION_FROM_DATETIME;
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {

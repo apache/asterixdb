@@ -36,10 +36,10 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.util.IntSerDeUtils;
+import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
-import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public abstract class AbstractFrameSorter implements IFrameSorter {
 
@@ -185,13 +185,13 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     }
 
     protected final int compare(int tp1, int tp2) throws HyracksDataException {
-        int i1 = tPointers[tp1 * 4];
-        int j1 = tPointers[tp1 * 4 + 1];
-        int v1 = tPointers[tp1 * 4 + 3];
+        int i1 = tPointers[tp1 * 4 + ID_FRAMEID];
+        int j1 = tPointers[tp1 * 4 + ID_TUPLE_START];
+        int v1 = tPointers[tp1 * 4 + ID_NORMAL_KEY];
 
-        int tp2i = tPointers[tp2 * 4];
-        int tp2j = tPointers[tp2 * 4 + 1];
-        int tp2v = tPointers[tp2 * 4 + 3];
+        int tp2i = tPointers[tp2 * 4 + ID_FRAMEID];
+        int tp2j = tPointers[tp2 * 4 + ID_TUPLE_START];
+        int tp2v = tPointers[tp2 * 4 + ID_NORMAL_KEY];
 
         if (v1 != tp2v) {
             return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;

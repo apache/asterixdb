@@ -35,10 +35,16 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
- * This buffer manager will dived the buffers into given number of partitions.
+ * This buffer manager will divide the buffers into given number of partitions.
  * The cleared partition (spilled one in the caller side) can only get no more than one frame.
  */
 public class VPartitionTupleBufferManager implements IPartitionedTupleBufferManager {
+    public static final IPartitionedMemoryConstrain NO_CONSTRAIN = new IPartitionedMemoryConstrain() {
+        @Override
+        public int frameLimit(int partitionId) {
+            return Integer.MAX_VALUE;
+        }
+    };
 
     private IDeallocatableFramePool framePool;
     private IFrameBufferManager[] partitionArray;
@@ -102,8 +108,8 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
             for (int i = 0; i < partition.getNumFrames(); ++i) {
                 framePool.deAllocateBuffer(partition.getFrame(i, tempInfo).getBuffer());
             }
+            partition.reset();
         }
-        partitionArray[partitionId].reset();
         numTuples[partitionId] = 0;
     }
 

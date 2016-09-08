@@ -36,9 +36,9 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  */
 public class VariableDeletableTupleMemoryManager implements IDeletableTupleBufferManager {
 
-    private final static Logger LOG = Logger.getLogger(VariableDeletableTupleMemoryManager.class.getName());
+    private static final Logger LOG = Logger.getLogger(VariableDeletableTupleMemoryManager.class.getName());
 
-    private final int MIN_FREE_SPACE;
+    private final int minFreeSpace;
     private final IFramePool pool;
     private final IFrameFreeSlotPolicy policy;
     private final IAppendDeletableFrameTupleAccessor accessor;
@@ -53,7 +53,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
         this.policy = new FrameFreeSlotLastFit(maxFrames);
         this.accessor = new DeletableFrameTupleAppender(recordDescriptor);
         this.frames = new ArrayList<>();
-        this.MIN_FREE_SPACE = calculateMinFreeSpace(recordDescriptor);
+        this.minFreeSpace = calculateMinFreeSpace(recordDescriptor);
         this.recordDescriptor = recordDescriptor;
         this.numTuples = 0;
         this.statsReOrg = 0;
@@ -92,7 +92,7 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
         int tid = accessor.append(fta, idx);
         assert tid >= 0;
         tuplePointer.reset(frameId, tid);
-        if (accessor.getContiguousFreeSpace() > MIN_FREE_SPACE) {
+        if (accessor.getContiguousFreeSpace() > minFreeSpace) {
             policy.pushNewFrame(frameId, accessor.getContiguousFreeSpace());
         }
         numTuples++;

@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.dataflow.std.sort;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.logging.Level;
@@ -98,16 +95,6 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
 
         public SortTaskState(JobId jobId, TaskId taskId) {
             super(jobId, taskId);
-        }
-
-        @Override
-        public void toBytes(DataOutput out) throws IOException {
-
-        }
-
-        @Override
-        public void fromBytes(DataInput in) throws IOException {
-
         }
     }
 
