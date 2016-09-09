@@ -41,7 +41,6 @@ import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.context.ICCContext;
-import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -67,6 +66,7 @@ import org.apache.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import org.apache.hyracks.control.cc.work.GetJobInfoWork;
 import org.apache.hyracks.control.cc.work.GetJobStatusWork;
 import org.apache.hyracks.control.cc.work.GetNodeControllersInfoWork;
+import org.apache.hyracks.control.cc.work.GetNodeDetailsJSONWork;
 import org.apache.hyracks.control.cc.work.GetResultPartitionLocationsWork;
 import org.apache.hyracks.control.cc.work.GetResultStatusWork;
 import org.apache.hyracks.control.cc.work.JobStartWork;
@@ -418,6 +418,8 @@ public class ClusterControllerService implements IControllerService {
                     return;
                 }
 
+                case CREATE_JOB:
+                    break;
                 case GET_JOB_STATUS: {
                     HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf =
                             (HyracksClientInterfaceFunctions.GetJobStatusFunction) fn;
@@ -457,12 +459,14 @@ public class ClusterControllerService implements IControllerService {
                     return;
                 }
 
+                case GET_DATASET_RECORD_DESCRIPTOR:
+                    break;
                 case GET_DATASET_RESULT_LOCATIONS: {
                     HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf =
                             (HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction) fn;
                     workQueue.schedule(new GetResultPartitionLocationsWork(ClusterControllerService.this,
                             gdrlf.getJobId(), gdrlf.getResultSetId(), gdrlf.getKnownRecords(),
-                            new IPCResponder<DatasetDirectoryRecord[]>(handle, mid)));
+                            new IPCResponder<>(handle, mid)));
                     return;
                 }
 
@@ -476,7 +480,7 @@ public class ClusterControllerService implements IControllerService {
 
                 case GET_NODE_CONTROLLERS_INFO: {
                     workQueue.schedule(new GetNodeControllersInfoWork(ClusterControllerService.this,
-                            new IPCResponder<Map<String, NodeControllerInfo>>(handle, mid)));
+                            new IPCResponder<>(handle, mid)));
                     return;
                 }
 
@@ -493,7 +497,7 @@ public class ClusterControllerService implements IControllerService {
                     HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf =
                             (HyracksClientInterfaceFunctions.CliDeployBinaryFunction) fn;
                     workQueue.schedule(new CliDeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs(),
-                            dbf.getDeploymentId(), new IPCResponder<DeploymentId>(handle, mid)));
+                            dbf.getDeploymentId(), new IPCResponder<>(handle, mid)));
                     return;
                 }
 
@@ -501,14 +505,21 @@ public class ClusterControllerService implements IControllerService {
                     HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction udbf =
                             (HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction) fn;
                     workQueue.schedule(new CliUnDeployBinaryWork(ClusterControllerService.this, udbf.getDeploymentId(),
-                            new IPCResponder<DeploymentId>(handle, mid)));
+                            new IPCResponder<>(handle, mid)));
                     return;
                 }
                 case CLUSTER_SHUTDOWN: {
                     workQueue.schedule(new ClusterShutdownWork(ClusterControllerService.this,
-                            new IPCResponder<Boolean>(handle, mid)));
+                            new IPCResponder<>(handle, mid)));
                     return;
                 }
+
+                case GET_NODE_DETAILS_JSON:
+                    HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction gndjf =
+                            (HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction) fn;
+                    workQueue.schedule(new GetNodeDetailsJSONWork(ClusterControllerService.this, gndjf.getNodeId(),
+                            gndjf.isIncludeStats(), gndjf.isIncludeConfig(), new IPCResponder<>(handle, mid)));
+                    return;
             }
             try {
                 handle.send(mid, null, new IllegalArgumentException("Unknown function " + fn.getFunctionId()));

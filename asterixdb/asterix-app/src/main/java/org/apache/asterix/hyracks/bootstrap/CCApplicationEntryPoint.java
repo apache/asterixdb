@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -32,6 +29,7 @@ import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.api.http.servlet.AQLAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
+import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
 import org.apache.asterix.api.http.servlet.DDLAPIServlet;
 import org.apache.asterix.api.http.servlet.FeedServlet;
@@ -72,6 +70,10 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.ServletMapping;
+
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
@@ -216,6 +218,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.SHUTDOWN);
         addServlet(context, Servlets.VERSION);
         addServlet(context, Servlets.CLUSTER_STATE);
+        addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL);
 
         return jsonAPIServer;
     }
@@ -235,8 +238,13 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return queryWebServer;
     }
 
-    protected void addServlet(ServletContextHandler context, Servlet servlet, String path) {
-        context.addServlet(new ServletHolder(servlet), path);
+    protected void addServlet(ServletContextHandler context, Servlet servlet, String... paths) {
+        final ServletHolder holder = new ServletHolder(servlet);
+        context.getServletHandler().addServlet(holder);
+        ServletMapping mapping = new ServletMapping();
+        mapping.setServletName(holder.getName());
+        mapping.setPathSpecs(paths);
+        context.getServletHandler().addServletMapping(mapping);
     }
 
     protected void addServlet(ServletContextHandler context, Servlets key) {
@@ -284,6 +292,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 return new VersionAPIServlet();
             case CLUSTER_STATE:
                 return new ClusterAPIServlet();
+            case CLUSTER_STATE_NODE_DETAIL:
+                return new ClusterNodeDetailsAPIServlet();
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }

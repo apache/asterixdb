@@ -1,0 +1,74 @@
+{
+    "config": {
+        "api.port": 19002,
+        "cc.java.opts": "-Xmx1024m",
+        "compiler.framesize": 32768,
+        "compiler.groupmemory": 163840,
+        "compiler.joinmemory": 163840,
+        "compiler.pregelix.home": "~/pregelix",
+        "compiler.sortmemory": 327680,
+        "feed.central.manager.port": 4500,
+        "feed.max.threshold.period": 5,
+        "feed.memory.available.wait.timeout": 10,
+        "feed.memory.global.budget": 67108864,
+        "feed.pending.work.threshold": 50,
+        "feed.port": 19003,
+        "log.level": "WARNING",
+        "max.wait.active.cluster": 60,
+        "nc.java.opts": "-Xmx1024m",
+        "plot.activate": false,
+        "replication.enabled": false,
+        "replication.factor": 2,
+        "replication.log.batchsize": 4096,
+        "replication.log.buffer.numpages": 8,
+        "replication.log.buffer.pagesize": 131072,
+        "replication.max.remote.recovery.attempts": 5,
+        "replication.timeout": 30,
+        "storage.buffercache.maxopenfiles": 2147483647,
+        "storage.buffercache.pagesize": 32768,
+        "storage.buffercache.size": 33554432,
+        "storage.lsm.bloomfilter.falsepositiverate": 0.01,
+        "storage.memorycomponent.globalbudget": 536870912,
+        "storage.memorycomponent.numcomponents": 2,
+        "storage.memorycomponent.numpages": 8,
+        "storage.memorycomponent.pagesize": 131072,
+        "storage.metadata.memorycomponent.numpages": 256,
+        "txn.commitprofiler.reportinterval": 5,
+        "txn.job.recovery.memorysize": 67108864,
+        "txn.lock.escalationthreshold": 1000,
+        "txn.lock.shrinktimer": 5000,
+        "txn.lock.timeout.sweepthreshold": 10000,
+        "txn.lock.timeout.waitthreshold": 60000,
+        "txn.log.buffer.numpages": 8,
+        "txn.log.buffer.pagesize": 131072,
+        "txn.log.checkpoint.history": 0,
+        "txn.log.checkpoint.lsnthreshold": 67108864,
+        "txn.log.checkpoint.pollfrequency": 120,
+        "txn.log.partitionsize": 268435456,
+        "web.port": 19001,
+        "web.queryinterface.port": 19006,
+        "web.secondary.port": 19005
+    },
+    "metadata_node": "asterix_nc1",
+    "ncs": [
+        {
+            "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/config",
+            "node_id": "asterix_nc1",
+            "partitions": [
+                "partition_0",
+                "partition_1"
+            ],
+            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats"
+        },
+        {
+            "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/config",
+            "node_id": "asterix_nc2",
+            "partitions": [
+                "partition_2",
+                "partition_3"
+            ],
+            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/stats"
+        }
+    ],
+    "state": "ACTIVE"
+}

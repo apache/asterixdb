@@ -29,6 +29,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
@@ -59,7 +61,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class TestExecutor {
@@ -71,6 +72,8 @@ public class TestExecutor {
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
     private static final long MAX_URL_LENGTH = 2000l;
+    private static final Pattern JAVA_BLOCK_COMMENT_PATTERN = Pattern.compile("/\\*.*\\*/",
+            Pattern.MULTILINE | Pattern.DOTALL);
     private static Method managixExecuteMethod = null;
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
 
@@ -87,7 +90,7 @@ public class TestExecutor {
     }
 
     public TestExecutor() {
-        this("127.0.0.1", 19002);
+        this(Inet4Address.getLoopbackAddress().getHostAddress(), 19002);
     }
 
     public void setLibrarian(ITestLibrarian librarian) {
@@ -269,26 +272,26 @@ public class TestExecutor {
 
     protected HttpResponse checkResponse(HttpResponse httpResponse) throws Exception {
         if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            // QQQ For now, we are indeed assuming we get back JSON errors.
-            // In future this may be changed depending on the requested
-            // output format sent to the servlet.
             String errorBody = EntityUtils.toString(httpResponse.getEntity());
+            String exceptionMsg;
             try {
+                // First try to parse the response for a JSON error response.
+
                 JSONObject result = new JSONObject(errorBody);
                 String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
                         result.getString("stacktrace") };
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-                String exceptionMsg = "HTTP operation failed: " + errors[0]
+                exceptionMsg = "HTTP operation failed: " + errors[0]
                         + "\nSTATUS LINE: " + httpResponse.getStatusLine()
                         + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2];
-                throw new Exception(exceptionMsg);
-            } catch (JSONException e) {
+            } catch (Exception e) {
+                // whoops, not JSON (e.g. 404) - just include the body
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorBody);
-                String exceptionMsg = "HTTP operation failed: response is not valid-JSON (see nested exception)"
+                exceptionMsg = "HTTP operation failed:"
                         + "\nSTATUS LINE: " + httpResponse.getStatusLine()
                         + "\nERROR_BODY: " + errorBody;
-                throw new Exception(exceptionMsg, e);
             }
+            throw new Exception(exceptionMsg);
         }
         return httpResponse;
     }
@@ -679,29 +682,22 @@ public class TestExecutor {
                 }
                 break;
             case "vmgx": // a managix command that will be executed on vagrant cc node
-                try {
-                    String output = executeVagrantManagix(pb, statement);
-                    if (output.contains("ERROR")) {
-                        throw new Exception(output);
-                    }
-                } catch (Exception e) {
-                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                String output = executeVagrantManagix(pb, statement);
+                if (output.contains("ERROR")) {
+                    throw new Exception(output);
                 }
                 break;
             case "cstate": // cluster state query
-                try {
-                    fmt = OutputFormat.forCompilationUnit(cUnit);
-                    resultStream = executeClusterStateQuery(fmt, getEndpoint(Servlets.CLUSTER_STATE));
-                    expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
-                    actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                    actualResultFile.getParentFile().mkdirs();
-                    writeOutputToFile(actualResultFile, resultStream);
-                    runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                            actualResultFile);
-                    queryCount.increment();
-                } catch (Exception e) {
-                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
-                }
+                fmt = OutputFormat.forCompilationUnit(cUnit);
+                String extra = stripJavaComments(statement).trim();
+                resultStream = executeClusterStateQuery(fmt, getEndpoint(Servlets.CLUSTER_STATE) + extra);
+                expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
+                actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
+                actualResultFile.getParentFile().mkdirs();
+                writeOutputToFile(actualResultFile, resultStream);
+                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                        actualResultFile);
+                queryCount.increment();
                 break;
             case "server": // (start <test server name> <port>
                            // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
@@ -809,15 +805,15 @@ public class TestExecutor {
                     executeTest(testCaseCtx, ctx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
                             expectedResultFileCtxs, testFile, actualPath);
                 } catch (Exception e) {
-                    System.err.println("testFile " + testFile.toString() + " raised an exception:");
+                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
                     boolean unExpectedFailure = false;
                     numOfErrors++;
+                    String expectedError = null;
                     if (cUnit.getExpectedError().size() < numOfErrors) {
                         unExpectedFailure = true;
                     } else {
                         // Get the expected exception
-                        String expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
-                        System.err.println("+++++\n" + expectedError + "\n+++++\n");
+                        expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
                         if (e.toString().contains(expectedError)) {
                             System.err.println("...but that was expected.");
                         } else {
@@ -827,6 +823,9 @@ public class TestExecutor {
                     if (unExpectedFailure) {
                         e.printStackTrace();
                         System.err.println("...Unexpected!");
+                        if (expectedError != null) {
+                            System.err.println("Expected to find the following in error text:\n+++++\n" + expectedError + "\n+++++");
+                        }
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
@@ -861,5 +860,9 @@ public class TestExecutor {
 
     protected String getEndpoint(Servlets servlet) {
         return "http://" + host + ":" + port + getPath(servlet);
+    }
+
+    public static String stripJavaComments(String text) {
+        return JAVA_BLOCK_COMMENT_PATTERN.matcher(text).replaceAll("");
     }
 }

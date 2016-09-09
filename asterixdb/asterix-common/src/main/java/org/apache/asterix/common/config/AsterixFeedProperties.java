@@ -18,19 +18,24 @@
  */
 package org.apache.asterix.common.config;
 
+import org.apache.hyracks.util.StorageUtil;
+
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
+
 public class AsterixFeedProperties extends AbstractAsterixProperties {
 
     private static final String FEED_CENTRAL_MANAGER_PORT_KEY = "feed.central.manager.port";
-    private static final int FEED_CENTRAL_MANAGER_PORT_DEFAULT = 4500; // port at which the Central Feed Manager listens for control messages from local Feed Managers
+    private static final int FEED_CENTRAL_MANAGER_PORT_DEFAULT = 4500;
 
     private static final String FEED_MEMORY_GLOBALBUDGET_KEY = "feed.memory.global.budget";
-    private static final long FEED_MEMORY_GLOBALBUDGET_DEFAULT = 67108864; // 64MB or 2048 frames (assuming 32768 as frame size)
+    private static final long FEED_MEMORY_GLOBALBUDGET_DEFAULT = StorageUtil.getSizeInBytes(64, MEGABYTE);
+                                                                 // i.e. 2048 frames (assuming 32768 as frame size)
 
     private static final String FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_KEY = "feed.memory.available.wait.timeout";
     private static final long FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_DEFAULT = 10; // 10 seconds
 
     private static final String FEED_PENDING_WORK_THRESHOLD_KEY = "feed.pending.work.threshold";
-    private static final int FEED_PENDING_WORK_THRESHOLD_DEFAULT = 50; // maximum length of input queue before triggering corrective action
+    private static final int FEED_PENDING_WORK_THRESHOLD_DEFAULT = 50;
 
     private static final String FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_KEY = "feed.max.threshold.period";
     private static final int FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_DEFAULT = 5;
@@ -39,26 +44,37 @@ public class AsterixFeedProperties extends AbstractAsterixProperties {
         super(accessor);
     }
 
+    @PropertyKey(FEED_MEMORY_GLOBALBUDGET_KEY)
     public long getMemoryComponentGlobalBudget() {
         return accessor.getProperty(FEED_MEMORY_GLOBALBUDGET_KEY, FEED_MEMORY_GLOBALBUDGET_DEFAULT,
                 PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
+    @PropertyKey(FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_KEY)
     public long getMemoryAvailableWaitTimeout() {
         return accessor.getProperty(FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_KEY, FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_DEFAULT,
                 PropertyInterpreters.getLongPropertyInterpreter());
     }
 
+    /**
+     * @return port at which the Central Feed Manager listens for control messages from local Feed Managers
+     */
+    @PropertyKey(FEED_CENTRAL_MANAGER_PORT_KEY)
     public int getFeedCentralManagerPort() {
         return accessor.getProperty(FEED_CENTRAL_MANAGER_PORT_KEY, FEED_CENTRAL_MANAGER_PORT_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    /**
+     * @return maximum length of input queue before triggering corrective action
+     */
+    @PropertyKey(FEED_PENDING_WORK_THRESHOLD_KEY)
     public int getPendingWorkThreshold() {
         return accessor.getProperty(FEED_PENDING_WORK_THRESHOLD_KEY, FEED_PENDING_WORK_THRESHOLD_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_KEY)
     public int getMaxSuccessiveThresholdPeriod() {
         return accessor.getProperty(FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_KEY,
                 FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_DEFAULT, PropertyInterpreters.getIntegerPropertyInterpreter());

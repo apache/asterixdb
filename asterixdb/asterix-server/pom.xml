@@ -176,7 +176,7 @@
         <dependency>
           <groupId>org.apache.asterix</groupId>
           <artifactId>asterix-opt-bom</artifactId>
-          <version>0.1-SNAPSHOT</version>
+          <version>${project.version}</version>
           <type>pom</type>
         </dependency>
       </dependencies>

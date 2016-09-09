@@ -21,33 +21,35 @@ package org.apache.asterix.common.config;
 import java.util.Map;
 
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.StorageUtil.StorageUnit;
+
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     private static final String TXN_LOG_BUFFER_NUMPAGES_KEY = "txn.log.buffer.numpages";
-    private static int TXN_LOG_BUFFER_NUMPAGES_DEFAULT = 8;
+    private static final int TXN_LOG_BUFFER_NUMPAGES_DEFAULT = 8;
 
     private static final String TXN_LOG_BUFFER_PAGESIZE_KEY = "txn.log.buffer.pagesize";
-    private static final int TXN_LOG_BUFFER_PAGESIZE_DEFAULT = (128 << 10); // 128KB
+    private static final int TXN_LOG_BUFFER_PAGESIZE_DEFAULT = StorageUtil.getSizeInBytes(128, KILOBYTE);
 
     private static final String TXN_LOG_PARTITIONSIZE_KEY = "txn.log.partitionsize";
-    private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = StorageUtil.getSizeInBytes(256L, StorageUnit.MEGABYTE);
+    private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = StorageUtil.getSizeInBytes(256L, MEGABYTE);
 
     private static final String TXN_LOG_CHECKPOINT_LSNTHRESHOLD_KEY = "txn.log.checkpoint.lsnthreshold";
-    private static final int TXN_LOG_CHECKPOINT_LSNTHRESHOLD_DEFAULT = (64 << 20); // 64M
+    private static final int TXN_LOG_CHECKPOINT_LSNTHRESHOLD_DEFAULT = StorageUtil.getSizeInBytes(64, MEGABYTE);
 
     private static final String TXN_LOG_CHECKPOINT_POLLFREQUENCY_KEY = "txn.log.checkpoint.pollfrequency";
-    private static int TXN_LOG_CHECKPOINT_POLLFREQUENCY_DEFAULT = 120; // 120s
+    private static final int TXN_LOG_CHECKPOINT_POLLFREQUENCY_DEFAULT = 120; // 120s
 
     private static final String TXN_LOG_CHECKPOINT_HISTORY_KEY = "txn.log.checkpoint.history";
-    private static int TXN_LOG_CHECKPOINT_HISTORY_DEFAULT = 0;
+    private static final int TXN_LOG_CHECKPOINT_HISTORY_DEFAULT = 0;
 
     private static final String TXN_LOCK_ESCALATIONTHRESHOLD_KEY = "txn.lock.escalationthreshold";
-    private static int TXN_LOCK_ESCALATIONTHRESHOLD_DEFAULT = 1000;
+    private static final int TXN_LOCK_ESCALATIONTHRESHOLD_DEFAULT = 1000;
 
     private static final String TXN_LOCK_SHRINKTIMER_KEY = "txn.lock.shrinktimer";
-    private static int TXN_LOCK_SHRINKTIMER_DEFAULT = 5000; // 5s
+    private static final int TXN_LOCK_SHRINKTIMER_DEFAULT = 5000; // 5s
 
     private static final String TXN_LOCK_TIMEOUT_WAITTHRESHOLD_KEY = "txn.lock.timeout.waitthreshold";
     private static final int TXN_LOCK_TIMEOUT_WAITTHRESHOLD_DEFAULT = 60000; // 60s
@@ -59,8 +61,7 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     private static final int TXN_COMMIT_PROFILER_REPORT_INTERVAL_DEFAULT = 5; // 5 seconds
 
     private static final String TXN_JOB_RECOVERY_MEMORY_SIZE_KEY = "txn.job.recovery.memorysize";
-    private static final long TXN_JOB_RECOVERY_MEMORY_SIZE_DEFAULT = StorageUtil.getSizeInBytes(64L,
-            StorageUnit.MEGABYTE);
+    private static final long TXN_JOB_RECOVERY_MEMORY_SIZE_DEFAULT = StorageUtil.getSizeInBytes(64L, MEGABYTE);
 
     public AsterixTransactionProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
@@ -74,61 +75,73 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
         return accessor.getTransactionLogDirs();
     }
 
+    @PropertyKey(TXN_LOG_BUFFER_NUMPAGES_KEY)
     public int getLogBufferNumPages() {
         return accessor.getProperty(TXN_LOG_BUFFER_NUMPAGES_KEY, TXN_LOG_BUFFER_NUMPAGES_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOG_BUFFER_PAGESIZE_KEY)
     public int getLogBufferPageSize() {
         return accessor.getProperty(TXN_LOG_BUFFER_PAGESIZE_KEY, TXN_LOG_BUFFER_PAGESIZE_DEFAULT,
                 PropertyInterpreters.getIntegerBytePropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOG_PARTITIONSIZE_KEY)
     public long getLogPartitionSize() {
         return accessor.getProperty(TXN_LOG_PARTITIONSIZE_KEY, TXN_LOG_PARTITIONSIZE_DEFAULT,
                 PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOG_CHECKPOINT_LSNTHRESHOLD_KEY)
     public int getCheckpointLSNThreshold() {
         return accessor.getProperty(TXN_LOG_CHECKPOINT_LSNTHRESHOLD_KEY, TXN_LOG_CHECKPOINT_LSNTHRESHOLD_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOG_CHECKPOINT_POLLFREQUENCY_KEY)
     public int getCheckpointPollFrequency() {
         return accessor.getProperty(TXN_LOG_CHECKPOINT_POLLFREQUENCY_KEY, TXN_LOG_CHECKPOINT_POLLFREQUENCY_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOG_CHECKPOINT_HISTORY_KEY)
     public int getCheckpointHistory() {
         return accessor.getProperty(TXN_LOG_CHECKPOINT_HISTORY_KEY, TXN_LOG_CHECKPOINT_HISTORY_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOCK_ESCALATIONTHRESHOLD_KEY)
     public int getEntityToDatasetLockEscalationThreshold() {
         return accessor.getProperty(TXN_LOCK_ESCALATIONTHRESHOLD_KEY, TXN_LOCK_ESCALATIONTHRESHOLD_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOCK_SHRINKTIMER_KEY)
     public int getLockManagerShrinkTimer() {
         return accessor.getProperty(TXN_LOCK_SHRINKTIMER_KEY, TXN_LOCK_SHRINKTIMER_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOCK_TIMEOUT_WAITTHRESHOLD_KEY)
     public int getTimeoutWaitThreshold() {
         return accessor.getProperty(TXN_LOCK_TIMEOUT_WAITTHRESHOLD_KEY, TXN_LOCK_TIMEOUT_WAITTHRESHOLD_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_KEY)
     public int getTimeoutSweepThreshold() {
         return accessor.getProperty(TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_KEY, TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_COMMIT_PROFILER_REPORT_INTERVAL_KEY)
     public int getCommitProfilerReportInterval() {
         return accessor.getProperty(TXN_COMMIT_PROFILER_REPORT_INTERVAL_KEY,
                 TXN_COMMIT_PROFILER_REPORT_INTERVAL_DEFAULT, PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
+    @PropertyKey(TXN_JOB_RECOVERY_MEMORY_SIZE_KEY)
     public long getJobRecoveryMemorySize() {
         return accessor.getProperty(TXN_JOB_RECOVERY_MEMORY_SIZE_KEY, TXN_JOB_RECOVERY_MEMORY_SIZE_DEFAULT,
                 PropertyInterpreters.getLongBytePropertyInterpreter());

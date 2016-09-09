@@ -53,6 +53,32 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [datetime4]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+      -
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1MT1S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime5]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+      +
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1MT1S]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [unixms1]
     :
     FunctionCall test.unix-time-from-datetime-in-ms@1[

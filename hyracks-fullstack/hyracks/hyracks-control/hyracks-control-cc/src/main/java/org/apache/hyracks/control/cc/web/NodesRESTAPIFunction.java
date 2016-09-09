@@ -43,7 +43,7 @@ public class NodesRESTAPIFunction implements IJSONOutputFunction {
                     result.put("result", gnse.getSummaries());
                 } else {
                     String nodeId = arguments[0];
-                    GetNodeDetailsJSONWork gnde = new GetNodeDetailsJSONWork(ccs, nodeId);
+                    GetNodeDetailsJSONWork gnde = new GetNodeDetailsJSONWork(ccs, nodeId, true, true);
                     ccs.getWorkQueue().scheduleAndSync(gnde);
                     result.put("result", gnde.getDetail());
                 }

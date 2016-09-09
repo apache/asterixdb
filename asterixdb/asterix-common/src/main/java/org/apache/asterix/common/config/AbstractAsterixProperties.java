@@ -18,10 +18,49 @@
  */
 package org.apache.asterix.common.config;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public abstract class AbstractAsterixProperties {
+    private static final Logger LOGGER = Logger.getLogger(AbstractAsterixProperties.class.getName());
+    private static final List<AbstractAsterixProperties> IMPLS = Collections.synchronizedList(new ArrayList<>());
+
     protected final AsterixPropertiesAccessor accessor;
 
     public AbstractAsterixProperties(AsterixPropertiesAccessor accessor) {
         this.accessor = accessor;
+        IMPLS.add(this);
+    }
+
+    public Map<String, Object> getProperties() {
+        Map<String, Object> properties = new HashMap<>();
+        for (Method m : getClass().getMethods()) {
+            PropertyKey key = m.getAnnotation(PropertyKey.class);
+            if (key != null) {
+                try {
+                    properties.put(key.value(), m.invoke(this));
+                } catch (Exception e) {
+                    LOGGER.log(Level.INFO, "Error accessing property: " + key.value(), e);
+                }
+            }
+        }
+        return properties;
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface PropertyKey {
+        String value();
+    }
+
+    public static List<AbstractAsterixProperties> getImplementations() {
+        return Collections.unmodifiableList(IMPLS);
     }
 }

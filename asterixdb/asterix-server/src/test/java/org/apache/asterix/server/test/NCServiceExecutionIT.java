@@ -164,9 +164,11 @@ public class NCServiceExecutionIT {
     }
 
     private static boolean skip(TestCaseContext tcCtx) {
-        // For now we skip feeds tests and external-library tests.
+        // For now we skip feeds tests, external-library, and api tests.
         for (TestGroup group : tcCtx.getTestGroups()) {
-            if (group.getName().startsWith("external-") || group.getName().equals("feeds")) {
+            if (group.getName().startsWith("external-")
+                    || group.getName().equals("feeds")
+                    || group.getName().equals("api")) {
                 LOGGER.info("Skipping test: " + tcCtx.toString());
                 return true;
             }

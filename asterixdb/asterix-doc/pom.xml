@@ -44,6 +44,28 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>concat</id>
+            <phase>pre-site</phase>
+            <configuration>
+              <target>
+                <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/manual.md">
+                  <filelist dir="${project.basedir}/src/main/markdown/sqlpp"
+                         files="0_toc.md,1_intro.md,2_expr.md,3_query.md,4_ddl.md"/>
+                </concat>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <version>3.4</version>
         <configuration>
