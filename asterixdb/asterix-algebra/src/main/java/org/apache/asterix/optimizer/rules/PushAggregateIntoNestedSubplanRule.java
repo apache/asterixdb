@@ -54,7 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
+public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -451,7 +451,7 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                             }
                             opRef1InSubplan = opRef2InSubplan;
                             if (opRef1InSubplan.getValue().getInputs().size() == 0) {
-                                throw new IllegalStateException("PushAggregateIntoGroupbyRule: could not find UNNEST.");
+                                throw new IllegalStateException("PushAggregateIntoNestedSubplanRule: could not find UNNEST.");
                             }
                         }
                     }
