@@ -79,7 +79,7 @@ public class OperatorManipulationUtil {
     }
 
     public static boolean setOperatorMode(AbstractLogicalOperator op) {
-        boolean change = false;
+        AbstractLogicalOperator.ExecutionMode oldMode = op.getExecutionMode();
         switch (op.getOperatorTag()) {
             case DATASOURCESCAN: {
                 op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
@@ -93,7 +93,6 @@ public class OperatorManipulationUtil {
                     child.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
                     currentOp = child;
                 }
-                change = true;
                 break;
             }
             case NESTEDTUPLESOURCE: {
@@ -102,7 +101,6 @@ public class OperatorManipulationUtil {
                         .getInputs().get(0).getValue();
                 if (prevOp.getExecutionMode() != AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) {
                     nts.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
-                    change = true;
                 }
                 break;
             }
@@ -112,7 +110,6 @@ public class OperatorManipulationUtil {
                     LimitOperator opLim = (LimitOperator) op;
                     if (opLim.isTopmostLimitOp()) {
                         opLim.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
-                        change = true;
                         forceUnpartitioned = true;
                     }
                 }
@@ -120,7 +117,6 @@ public class OperatorManipulationUtil {
                     AggregateOperator aggOp = (AggregateOperator) op;
                     if (aggOp.isGlobal()) {
                         op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
-                        change = true;
                         forceUnpartitioned = true;
                     }
                 }
@@ -134,13 +130,11 @@ public class OperatorManipulationUtil {
                                 break;
                             }
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-                            change = true;
                             exit = true;
                             break;
                         }
                         case LOCAL: {
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
-                            change = true;
                             break;
                         }
                     }
@@ -151,7 +145,7 @@ public class OperatorManipulationUtil {
                 break;
             }
         }
-        return change;
+        return oldMode != op.getExecutionMode();
     }
 
     public static void substituteVarRec(AbstractLogicalOperator op, LogicalVariable v1, LogicalVariable v2,

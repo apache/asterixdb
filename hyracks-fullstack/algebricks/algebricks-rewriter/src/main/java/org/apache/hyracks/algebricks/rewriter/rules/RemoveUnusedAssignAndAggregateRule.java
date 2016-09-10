@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -47,7 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * Removes unused variables from Assign, Unnest, Aggregate, and UnionAll operators.
+ * Removes unused variables from Assign, Unnest, Aggregate, UnionAll, and Group-by operators.
  */
 public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule {
 
@@ -183,9 +184,18 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         while (iter.hasNext()) {
             Pair<LogicalVariable, Mutable<ILogicalExpression>> varMapping = iter.next();
             LogicalVariable decorVar = varMapping.first;
-            if (decorVar != null && toRemove.contains(decorVar)) {
+            // A decor var mapping can have a variable reference expression without a new variable definition,
+            // which is for rebinding the referred variable.
+            VariableReferenceExpression varExpr = (VariableReferenceExpression) varMapping.second.getValue();
+            LogicalVariable decorReferredVar = varExpr.getVariableReference();
+            boolean removeReBoundDecorVar = toRemove.contains(decorReferredVar);
+            if ((decorVar != null && toRemove.contains(decorVar)) || removeReBoundDecorVar) {
                 iter.remove();
                 modified = true;
+                if (removeReBoundDecorVar) {
+                    // Do not need to remove that in the children pipeline.
+                    toRemove.remove(decorReferredVar);
+                }
             }
         }
         return modified;
@@ -225,6 +235,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             }
         }
         boolean removeUsedVars = true;
+        Set<LogicalVariable> reBoundDecorVars = new HashSet<>();
         switch (op.getOperatorTag()) {
             case ASSIGN:
                 AssignOperator assign = (AssignOperator) op;
@@ -255,6 +266,14 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                     LogicalVariable decorVar = decorMapping.first;
                     if (decorVar != null) {
                         toRemove.add(decorVar);
+                    } else {
+                        // A decor var mapping can have a variable reference expression without a new variable
+                        // definition, which is for rebinding the referred variable.
+                        VariableReferenceExpression varExpr = (VariableReferenceExpression) decorMapping.second
+                                .getValue();
+                        LogicalVariable reboundDecorVar = varExpr.getVariableReference();
+                        toRemove.add(reboundDecorVar);
+                        reBoundDecorVars.add(reboundDecorVar);
                     }
                 }
                 break;
@@ -265,6 +284,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             List<LogicalVariable> used = new LinkedList<LogicalVariable>();
             VariableUtilities.getUsedVariables(op, used);
             toRemove.removeAll(used);
+            toRemove.addAll(reBoundDecorVars);
         }
     }
 

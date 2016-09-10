@@ -40,30 +40,7 @@ public class SetExecutionModeRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        boolean changed = OperatorManipulationUtil.setOperatorMode(op);
-        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.UNPARTITIONED
-                || op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.LOCAL) {
-            return changed;
-        }
-        switch (op.getOperatorTag()) {
-        // case DISTINCT:
-        // case AGGREGATE:
-        // case GROUP:
-        // case ORDER:
-        // case INNERJOIN:
-        // case LEFTOUTERJOIN: {
-        // op.setExecutionMode(ExecutionMode.GLOBAL);
-        // return true;
-        // }
-
-            case PARTITIONINGSPLIT: {
-                throw new NotImplementedException();
-            }
-            default: {
-                return changed;
-            }
-        }
-
+        return OperatorManipulationUtil.setOperatorMode(op);
     }
 
     @Override
