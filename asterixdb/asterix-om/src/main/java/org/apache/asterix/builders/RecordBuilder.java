@@ -157,7 +157,7 @@ public class RecordBuilder implements IARecordBuilder {
                 // the null bit is 1, which means the field is not a null,
                 // the missing bit is 0, means the field is missing (by default).
                 Arrays.fill(nullBitMap, 0, nullBitMapSize, (byte) 0xAA);
-                headerSize += nullBitMap.length;
+                headerSize += nullBitMapSize;
             }
         }
     }
