@@ -104,7 +104,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 opToCandidateInputs.clear();
                 clusterMap.clear();
                 clusterWaitForMap.clear();
-                lastUsedClusterId = 0;
+                lastUsedClusterId = 0; // Resets lastUsedClusterId to 0.
             } while (changed);
             roots.clear();
         }
@@ -404,7 +404,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     private boolean[] computeMaterilizationFlags(List<Mutable<ILogicalOperator>> group) {
-        lastUsedClusterId = 0;
         for (Mutable<ILogicalOperator> root : roots) {
             computeClusters(null, root, new MutableInt(++lastUsedClusterId));
         }
@@ -502,6 +501,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                             bs.set(prevClusterId.getValue());
                         }
                     }
+                    clusterWaitForMap.remove(currentClusterId.getValue());
                     currentClusterId.setValue(prevClusterId.getValue());
                 }
             }

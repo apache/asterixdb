@@ -5935,6 +5935,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1596</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1602">
+        <output-dir compare="Text">query-ASTERIXDB-1602</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="tpch">
     <test-case FilePath="tpch">
