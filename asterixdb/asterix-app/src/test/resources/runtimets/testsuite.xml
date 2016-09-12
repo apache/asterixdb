@@ -21,6 +21,7 @@
              <!ENTITY ComparisonQueries SYSTEM "queries/comparison/ComparisonQueries.xml">
              <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
              <!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
+             <!ENTITY APIQueries SYSTEM "queries/api/APIQueries.xml">
              ]>
 
 <test-suite
@@ -28,6 +29,7 @@
              ResultOffsetPath="results"
              QueryOffsetPath="queries"
              QueryFileExtension=".aql">
+  &APIQueries;
   <test-group name="external-library">
     <test-case FilePath="external-library">
       <compilation-unit name="typed_adapter">
@@ -1251,9 +1253,7 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="comparison">
-    &ComparisonQueries;
-  </test-group>
+  &ComparisonQueries;
   <test-group name="constructor">
     <test-case FilePath="constructor">
       <compilation-unit name="binary_01">
@@ -4815,12 +4815,8 @@
       </compilation-unit>
     </test-case>-->
   </test-group>
-  <test-group name="records">
-    &RecordsQueries;
-  </test-group>
-  <test-group name="deep-equal">
-    &DeepEqualQueries;
-  </test-group>
+  &RecordsQueries;
+  &DeepEqualQueries;
   <test-group name="scan">
     <test-case FilePath="scan">
       <compilation-unit name="10">
@@ -7312,29 +7308,6 @@
     <test-case FilePath="temp-dataset">
       <compilation-unit name="temp_primary_plus_ngram_flush">
         <output-dir compare="Text">temp_primary_plus_ngram_flush</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="api">
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_1">
-        <output-dir compare="Text">cluster_state_1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_2">
-        <output-dir compare="Text">cluster_state_2</output-dir>
-        <expected-error>HTTP/1.1 404 Not Found</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_3">
-        <output-dir compare="Text">cluster_state_3</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_4">
-        <output-dir compare="Text">cluster_state_4</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

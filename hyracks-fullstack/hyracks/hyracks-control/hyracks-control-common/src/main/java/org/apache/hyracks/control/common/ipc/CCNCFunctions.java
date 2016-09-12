@@ -101,6 +101,9 @@ public class CCNCFunctions {
         STATE_DUMP_REQUEST,
         STATE_DUMP_RESPONSE,
 
+        THREAD_DUMP_REQUEST,
+        THREAD_DUMP_RESPONSE,
+
         OTHER
     }
 
@@ -892,6 +895,54 @@ public class CCNCFunctions {
 
         public Map<String, NodeControllerInfo> getNodeControllerInfos() {
             return ncInfos;
+        }
+    }
+
+    public static class ThreadDumpRequestFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private final String requestId;
+
+        public ThreadDumpRequestFunction(String requestId) {
+            this.requestId = requestId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.THREAD_DUMP_REQUEST;
+        }
+
+        public String getRequestId() {
+            return requestId;
+        }
+    }
+
+    public static class ThreadDumpResponseFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private final String nodeId;
+        private final String requestId;
+        private final String threadDumpJSON;
+
+        public ThreadDumpResponseFunction(String nodeId, String requestId, String threadDumpJSON) {
+            this.nodeId = nodeId;
+            this.requestId = requestId;
+            this.threadDumpJSON = threadDumpJSON;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.THREAD_DUMP_RESPONSE;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        public String getRequestId() {
+            return requestId;
+        }
+
+        public String getThreadDumpJSON() {
+            return threadDumpJSON;
         }
     }
 

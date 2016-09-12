@@ -57,4 +57,6 @@ public interface IHyracksClientInterface {
     public void stopCluster() throws Exception;
 
     public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception;
+
+    public String getThreadDump(String node) throws Exception;
 }

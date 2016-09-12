@@ -197,4 +197,9 @@ public final class HyracksConnection implements IHyracksClientConnection {
     public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception {
         return hci.getNodeDetailsJSON(nodeId, includeStats, includeConfig);
     }
+
+    @Override
+    public String getThreadDump(String node) throws Exception {
+        return hci.getThreadDump(node);
+    }
 }

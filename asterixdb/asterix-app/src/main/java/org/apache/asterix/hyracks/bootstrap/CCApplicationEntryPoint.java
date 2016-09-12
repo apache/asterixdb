@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -29,6 +32,7 @@ import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.api.http.servlet.AQLAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
+import org.apache.asterix.api.http.servlet.ClusterCCDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
 import org.apache.asterix.api.http.servlet.DDLAPIServlet;
@@ -71,9 +75,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
@@ -219,6 +220,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.VERSION);
         addServlet(context, Servlets.CLUSTER_STATE);
         addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL);
+        addServlet(context, Servlets.CLUSTER_STATE_CC_DETAIL);
 
         return jsonAPIServer;
     }
@@ -294,6 +296,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 return new ClusterAPIServlet();
             case CLUSTER_STATE_NODE_DETAIL:
                 return new ClusterNodeDetailsAPIServlet();
+            case CLUSTER_STATE_CC_DETAIL:
+                return new ClusterCCDetailsAPIServlet();
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }

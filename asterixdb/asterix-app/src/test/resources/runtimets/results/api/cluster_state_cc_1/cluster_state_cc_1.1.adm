@@ -1,0 +1,5 @@
+{
+    "configUri": "http://127.0.0.1:19002/admin/cluster/cc/config",
+    "statsUri": "http://127.0.0.1:19002/admin/cluster/cc/stats",
+    "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/cc/threaddump"
+}

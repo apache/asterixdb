@@ -54,4 +54,6 @@ public interface INodeController {
     public void shutdown() throws Exception;
 
     public void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
+
+    public void takeThreadDump(String requestId) throws Exception;
 }

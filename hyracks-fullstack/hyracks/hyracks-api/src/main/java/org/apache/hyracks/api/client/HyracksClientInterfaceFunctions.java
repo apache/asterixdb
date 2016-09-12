@@ -46,7 +46,8 @@ public class HyracksClientInterfaceFunctions {
         CLI_DEPLOY_BINARY,
         CLI_UNDEPLOY_BINARY,
         CLUSTER_SHUTDOWN,
-        GET_NODE_DETAILS_JSON
+        GET_NODE_DETAILS_JSON,
+        THREAD_DUMP
     }
 
     public abstract static class Function implements Serializable {
@@ -325,4 +326,20 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
+    public static class ThreadDumpFunction extends Function {
+        private final String node;
+
+        public ThreadDumpFunction(String node) {
+            this.node = node;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.THREAD_DUMP;
+        }
+
+        public String getNode() {
+            return node;
+        }
+    }
 }

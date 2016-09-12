@@ -88,6 +88,7 @@ import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import org.apache.hyracks.control.nc.work.ShutdownWork;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
+import org.apache.hyracks.control.nc.work.NodeThreadDumpWork;
 import org.apache.hyracks.control.nc.work.UnDeployBinaryWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
@@ -416,6 +417,10 @@ public class NodeControllerService implements IControllerService {
         return queue;
     }
 
+    public ThreadMXBean getThreadMXBean() {
+        return threadMXBean;
+    }
+
     private class HeartbeatTask extends TimerTask {
         private IClusterController cc;
 
@@ -509,72 +514,71 @@ public class NodeControllerService implements IControllerService {
                 Exception exception) {
             CCNCFunctions.Function fn = (CCNCFunctions.Function) payload;
             switch (fn.getFunctionId()) {
-                case SEND_APPLICATION_MESSAGE: {
-                    CCNCFunctions.SendApplicationMessageFunction amf = (CCNCFunctions.SendApplicationMessageFunction) fn;
+                case SEND_APPLICATION_MESSAGE:
+                    CCNCFunctions.SendApplicationMessageFunction amf =
+                            (CCNCFunctions.SendApplicationMessageFunction) fn;
                     queue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(),
                             amf.getDeploymentId(), amf.getNodeId()));
                     return;
-                }
-                case START_TASKS: {
+
+                case START_TASKS:
                     CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
                     queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getDeploymentId(), stf.getJobId(),
                             stf.getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags()));
                     return;
-                }
 
-                case ABORT_TASKS: {
+                case ABORT_TASKS:
                     CCNCFunctions.AbortTasksFunction atf = (CCNCFunctions.AbortTasksFunction) fn;
                     queue.schedule(new AbortTasksWork(NodeControllerService.this, atf.getJobId(), atf.getTasks()));
                     return;
-                }
 
-                case CLEANUP_JOBLET: {
+                case CLEANUP_JOBLET:
                     CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
                     queue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(), cjf.getStatus()));
                     return;
-                }
 
-                case REPORT_PARTITION_AVAILABILITY: {
-                    CCNCFunctions.ReportPartitionAvailabilityFunction rpaf = (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
+                case REPORT_PARTITION_AVAILABILITY:
+                    CCNCFunctions.ReportPartitionAvailabilityFunction rpaf =
+                            (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
                     queue.schedule(new ReportPartitionAvailabilityWork(NodeControllerService.this,
                             rpaf.getPartitionId(), rpaf.getNetworkAddress()));
                     return;
-                }
 
-                case NODE_REGISTRATION_RESULT: {
+                case NODE_REGISTRATION_RESULT:
                     CCNCFunctions.NodeRegistrationResult nrrf = (CCNCFunctions.NodeRegistrationResult) fn;
                     setNodeRegistrationResult(nrrf.getNodeParameters(), nrrf.getException());
                     return;
-                }
 
-                case GET_NODE_CONTROLLERS_INFO_RESPONSE: {
-                    CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf = (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
+                case GET_NODE_CONTROLLERS_INFO_RESPONSE:
+                    CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf =
+                            (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
                     setNodeControllersInfo(gncirf.getNodeControllerInfos());
                     return;
-                }
 
-                case DEPLOY_BINARY: {
-                    CCNCFunctions.DeployBinaryFunction ndbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                    queue.schedule(new DeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId(),
-                            ndbf.getBinaryURLs()));
+                case DEPLOY_BINARY:
+                    CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
+                    queue.schedule(new DeployBinaryWork(NodeControllerService.this, dbf.getDeploymentId(),
+                            dbf.getBinaryURLs()));
                     return;
-                }
 
-                case UNDEPLOY_BINARY: {
+                case UNDEPLOY_BINARY:
                     CCNCFunctions.UnDeployBinaryFunction ndbf = (CCNCFunctions.UnDeployBinaryFunction) fn;
                     queue.schedule(new UnDeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId()));
                     return;
-                }
 
-                case STATE_DUMP_REQUEST: {
+                case STATE_DUMP_REQUEST:
                     final CCNCFunctions.StateDumpRequestFunction dsrf = (StateDumpRequestFunction) fn;
                     queue.schedule(new StateDumpWork(NodeControllerService.this, dsrf.getStateDumpId()));
                     return;
-                }
-                case SHUTDOWN_REQUEST: {
+
+                case SHUTDOWN_REQUEST:
                     queue.schedule(new ShutdownWork(NodeControllerService.this));
                     return;
-                }
+
+                case THREAD_DUMP_REQUEST:
+                    final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
+                    queue.schedule(new NodeThreadDumpWork(NodeControllerService.this, tdrf.getRequestId()));
+                    return;
             }
             throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
 
@@ -594,7 +598,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     /**
-     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
+     * Shutdown hook that invokes {@link NodeControllerService#stop() stop} method.
      */
     private static class JVMShutdownHook extends Thread {
 

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -34,13 +36,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-
 public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void getUnsafe(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter responseWriter = response.getWriter();
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
@@ -49,7 +49,7 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         try {
             if (request.getPathInfo() == null) {
                 json = new JSONObject();
-                json.put("ncs", getClusterStateJSON(request, "").getJSONArray("ncs"));
+                json.put("ncs", getClusterStateJSON(request, "../").getJSONArray("ncs"));
             } else {
                 json = processNode(request, hcc);
             }
@@ -68,11 +68,15 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
 
     private JSONObject processNode(HttpServletRequest request, IHyracksClientConnection hcc)
             throws Exception {
-        String[] parts = request.getPathInfo().substring(1).replaceAll("/+", "/").split("/");
+        String pathInfo = request.getPathInfo();
+        if (pathInfo.endsWith("/")) {
+            throw new IllegalArgumentException();
+        }
+        String[] parts = pathInfo.substring(1).split("/");
         final String node = parts[0];
 
         if (parts.length == 1) {
-            JSONArray ncs = getClusterStateJSON(request, "../").getJSONArray("ncs");
+            JSONArray ncs = getClusterStateJSON(request, "../../").getJSONArray("ncs");
             for (int i = 0; i < ncs.length(); i++) {
                 JSONObject json = ncs.getJSONObject(i);
                 if (node.equals(json.getString("node_id"))) {
@@ -90,9 +94,14 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
                 case "config":
                     json = processNodeConfig(hcc, node);
                     break;
+
                 case "stats":
                     json = processNodeStats(hcc, node);
                     break;
+
+                case "threaddump":
+                    return processNodeThreadDump(hcc, node);
+
                 default:
                     throw new IllegalArgumentException();
             }
@@ -119,10 +128,6 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
     }
 
     private JSONObject processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
-        if ("cc".equals(node)) {
-            return new JSONObject();
-        }
-
         final String details = hcc.getNodeDetailsJSON(node, true, false);
         if (details == null) {
             throw new IllegalArgumentException();
@@ -136,28 +141,55 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
             keys.add((String) iter.next());
         }
 
-        int gcNames = json.getJSONArray("gc-names").length();
+        final JSONArray gcNames = json.getJSONArray("gc-names");
+        final JSONArray gcCollectionTimes = json.getJSONArray("gc-collection-times");
+        final JSONArray gcCollectionCounts = json.getJSONArray("gc-collection-counts");
+
         for (String key : keys) {
-            if (key.startsWith("gc-collection-")) {
-                final JSONArray gcArray = json.getJSONArray(key);
-                for (int i = 0; i < gcNames; i++) {
-                    gcArray.put(i, gcArray.getJSONArray(i).get(index));
+            if (key.startsWith("gc-")) {
+                json.remove(key);
+            } else if (json.get(key) instanceof JSONArray) {
+                final JSONArray valueArray = json.getJSONArray(key);
+                // fixup an index of -1 to the final element in the array (i.e. RRD_SIZE)
+                if (index == -1) {
+                    index = valueArray.length() - 1;
                 }
-            } else if (!"node-id".equals(key) && !"gc-names".equals(key)) {
-                json.put(key, json.getJSONArray(key).get(index));
+                final Object value = valueArray.get(index);
+                json.remove(key);
+                json.put(key.replaceAll("s$",""), value);
             }
         }
+        List<JSONObject> gcs = new ArrayList<>();
+
+        for (int i = 0; i < gcNames.length(); i++) {
+            JSONObject gc = new JSONObject();
+            gc.put("name", gcNames.get(i));
+            gc.put("collection-time", ((JSONArray)gcCollectionTimes.get(i)).get(index));
+            gc.put("collection-count", ((JSONArray)gcCollectionCounts.get(i)).get(index));
+            gcs.add(gc);
+        }
+        json.put("gcs", gcs);
+
         return json;
     }
 
     private JSONObject processNodeConfig(IHyracksClientConnection hcc, String node) throws Exception {
-        if ("cc".equals(node)) {
-            return new JSONObject();
-        }
         String config = hcc.getNodeDetailsJSON(node, false, true);
         if (config == null) {
             throw new IllegalArgumentException();
         }
         return new JSONObject(config);
     }
+
+    private JSONObject processNodeThreadDump(IHyracksClientConnection hcc, String node) throws Exception {
+        if ("cc".equals(node)) {
+            return new JSONObject();
+        }
+        String dump = hcc.getThreadDump(node);
+        if (dump == null) {
+            throw new IllegalArgumentException();
+        }
+        return new JSONObject(dump);
+    }
+
 }

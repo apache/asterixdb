@@ -19,7 +19,7 @@
 package org.apache.hyracks.control.cc;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,6 @@ import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -275,7 +274,7 @@ public class NodeControllerState {
         return messagingPort;
     }
 
-    public JSONObject toSummaryJSON() throws JSONException {
+    public synchronized JSONObject toSummaryJSON() throws JSONException {
         JSONObject o = new JSONObject();
         o.put("node-id", ncConfig.nodeId);
         o.put("heap-used", heapUsedSize[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
@@ -288,6 +287,7 @@ public class NodeControllerState {
         JSONObject o = new JSONObject();
 
         o.put("node-id", ncConfig.nodeId);
+
         if (includeConfig) {
             o.put("os-name", osName);
             o.put("arch", arch);
@@ -296,14 +296,15 @@ public class NodeControllerState {
             o.put("vm-name", vmName);
             o.put("vm-version", vmVersion);
             o.put("vm-vendor", vmVendor);
-            o.put("classpath", new JSONArray(Arrays.asList(classpath.split(File.pathSeparator))));
-            o.put("library-path", new JSONArray(Arrays.asList(libraryPath.split(File.pathSeparator))));
-            o.put("boot-classpath", new JSONArray(Arrays.asList(bootClasspath.split(File.pathSeparator))));
-            o.put("input-arguments", new JSONArray(inputArguments));
-            o.put("system-properties", new JSONObject(systemProperties));
+            o.put("classpath", classpath.split(File.pathSeparator));
+            o.put("library-path", libraryPath.split(File.pathSeparator));
+            o.put("boot-classpath", bootClasspath.split(File.pathSeparator));
+            o.put("input-arguments", inputArguments);
+            o.put("system-properties", systemProperties);
             o.put("pid", pid);
         }
         if (includeStats) {
+            o.put("date", new Date());
             o.put("rrd-ptr", rrdPtr);
             o.put("heartbeat-times", hbTime);
             o.put("heap-init-sizes", heapInitSize);
@@ -338,4 +339,5 @@ public class NodeControllerState {
 
         return o;
     }
+
 }

@@ -116,24 +116,27 @@ public class ClusterControllerRemoteProxy implements IClusterController {
         ipcHandle.send(-1, fn, null);
     }
 
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, boolean emptyResult, int partition,
-            int nPartitions, NetworkAddress networkAddress) throws Exception {
-        CCNCFunctions.RegisterResultPartitionLocationFunction fn = new CCNCFunctions.RegisterResultPartitionLocationFunction(
-                jobId, rsId, orderedResult, emptyResult, partition, nPartitions, networkAddress);
+    @Override
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
+                                                boolean emptyResult, int partition, int nPartitions,
+                                                NetworkAddress networkAddress) throws Exception {
+        CCNCFunctions.RegisterResultPartitionLocationFunction fn =
+                new CCNCFunctions.RegisterResultPartitionLocationFunction(jobId, rsId, orderedResult, emptyResult,
+                        partition, nPartitions, networkAddress);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
-        CCNCFunctions.ReportResultPartitionWriteCompletionFunction fn = new CCNCFunctions.ReportResultPartitionWriteCompletionFunction(
-                jobId, rsId, partition);
+        CCNCFunctions.ReportResultPartitionWriteCompletionFunction fn =
+                new CCNCFunctions.ReportResultPartitionWriteCompletionFunction(jobId, rsId, partition);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception {
-        CCNCFunctions.ReportResultPartitionFailureFunction fn = new CCNCFunctions.ReportResultPartitionFailureFunction(
-                jobId, rsId, partition);
+        CCNCFunctions.ReportResultPartitionFailureFunction fn =
+                new CCNCFunctions.ReportResultPartitionFailureFunction(jobId, rsId, partition);
         ipcHandle.send(-1, fn, null);
     }
 
@@ -144,14 +147,20 @@ public class ClusterControllerRemoteProxy implements IClusterController {
 
     @Override
     public void notifyStateDump(String nodeId, String stateDumpId, String state) throws Exception {
-        CCNCFunctions.StateDumpResponseFunction fn = new CCNCFunctions.StateDumpResponseFunction(nodeId, stateDumpId,
-                state);
+        CCNCFunctions.StateDumpResponseFunction fn =
+                new CCNCFunctions.StateDumpResponseFunction(nodeId, stateDumpId, state);
         ipcHandle.send(-1, fn, null);
     }
     @Override
     public void notifyShutdown(String nodeId) throws Exception{
         CCNCFunctions.ShutdownResponseFunction sdrf = new CCNCFunctions.ShutdownResponseFunction(nodeId);
-        ipcHandle.send(-1,sdrf,null);
+        ipcHandle.send(-1, sdrf, null);
     }
 
+    @Override
+    public void notifyThreadDump(String nodeId, String requestId, String threadDumpJSON) throws Exception {
+        CCNCFunctions.ThreadDumpResponseFunction tdrf =
+                new CCNCFunctions.ThreadDumpResponseFunction(nodeId, requestId, threadDumpJSON);
+        ipcHandle.send(-1, tdrf, null);
+    }
 }

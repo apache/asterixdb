@@ -101,4 +101,10 @@ public class NodeControllerRemoteProxy implements INodeController {
                 deploymentId, nodeId);
         ipcHandle.send(-1, fn, null);
     }
+
+    @Override
+    public void takeThreadDump(String requestId) throws Exception {
+        CCNCFunctions.ThreadDumpRequestFunction fn = new CCNCFunctions.ThreadDumpRequestFunction(requestId);
+        ipcHandle.send(-1, fn, null);
+    }
 }

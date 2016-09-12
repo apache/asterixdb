@@ -1,4 +1,9 @@
 {
+    "cc": {
+        "configUri": "http://127.0.0.1:19002/admin/cluster/cc/config",
+        "statsUri": "http://127.0.0.1:19002/admin/cluster/cc/stats",
+        "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/cc/threaddump"
+    },
     "config": {
         "api.port": 19002,
         "cc.java.opts": "-Xmx1024m",
@@ -58,7 +63,8 @@
                 "partition_0",
                 "partition_1"
             ],
-            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats"
+            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats",
+            "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/threaddump"
         },
         {
             "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/config",
@@ -67,7 +73,8 @@
                 "partition_2",
                 "partition_3"
             ],
-            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/stats"
+            "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/stats",
+            "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/threaddump"
         }
     ],
     "state": "ACTIVE"

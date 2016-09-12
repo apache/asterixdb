@@ -197,4 +197,9 @@ public interface IHyracksClientConnection {
      * @throws Exception
      */
     public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception;
+
+    /**
+     * Gets thread dump from the specified node as a serialized JSON string
+     */
+    public String getThreadDump(String node) throws Exception;
 }

@@ -138,4 +138,12 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
                 new HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction(nodeId, includeStats, includeConfig);
         return (String) rpci.call(ipcHandle, gjsf);
     }
+
+    @Override
+    public String getThreadDump(String node) throws Exception {
+        HyracksClientInterfaceFunctions.ThreadDumpFunction tdf =
+                new HyracksClientInterfaceFunctions.ThreadDumpFunction(node);
+        return (String)rpci.call(ipcHandle, tdf);
+
+    }
 }

@@ -1,209 +1,229 @@
-    <test-case FilePath="comparison">
-      <compilation-unit name="year_month_duration_order">
-        <output-dir compare="Text">year_month_duration_order</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="datetime_order">
-        <output-dir compare="Text">datetime_order</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="datetime_range">
-        <output-dir compare="Text">datetime_range</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="datetime_tzeq">
-        <output-dir compare="Text">datetime_tzeq</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="interval_order">
-        <output-dir compare="Text">interval_order</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="time_order">
-        <output-dir compare="Text">time_order</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="date_order">
-        <output-dir compare="Text">date_order</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="double">
-        <output-dir compare="Text">double</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="double_gte_01">
-        <output-dir compare="Text">double_gte_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="double_null">
-        <output-dir compare="Text">double_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="eq_01">
-        <output-dir compare="Text">eq_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="float">
-        <output-dir compare="Text">float</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="float_null">
-        <output-dir compare="Text">float_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="gt_01">
-        <output-dir compare="Text">gt_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="gte_01">
-        <output-dir compare="Text">gte_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int16">
-        <output-dir compare="Text">int16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int16_null">
-        <output-dir compare="Text">int16_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int32">
-        <output-dir compare="Text">int32</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int32_null">
-        <output-dir compare="Text">int32_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int64">
-        <output-dir compare="Text">int64</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int64_null">
-        <output-dir compare="Text">int64_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int8">
-        <output-dir compare="Text">int8</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="int8_null">
-        <output-dir compare="Text">int8_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="lt_01">
-        <output-dir compare="Text">lt_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="lte_01">
-        <output-dir compare="Text">lte_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="neq_01">
-        <output-dir compare="Text">neq_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <!--
-    <test-case FilePath="comparison">
-      <compilation-unit name="numeric-comparison_01">
-        <output-dir compare="Text">numeric-comparison_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <test-case FilePath="comparison">
-      <compilation-unit name="string">
-        <output-dir compare="Text">string</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="string_null">
-        <output-dir compare="Text">string_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_equality">
-        <output-dir compare="Text">issue363_equality</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_duration">
-        <output-dir compare="Text">issue363_inequality_duration</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_interval">
-        <output-dir compare="Text">issue363_inequality_interval</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_point">
-        <output-dir compare="Text">issue363_inequality_point</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_line">
-        <output-dir compare="Text">issue363_inequality_line</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_polygon">
-        <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_rectangle">
-        <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="issue363_inequality_circle">
-        <output-dir compare="Text">issue363_inequality_circle</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="binary">
-        <output-dir compare="Text">binary</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="binary_null">
-        <output-dir compare="Text">binary_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison">
-      <compilation-unit name="uuid_1">
-        <output-dir compare="Text">uuid_1</output-dir>
-      </compilation-unit>
-    </test-case>
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<test-group name="comparison">
+  <test-case FilePath="comparison">
+    <compilation-unit name="year_month_duration_order">
+      <output-dir compare="Text">year_month_duration_order</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="datetime_order">
+      <output-dir compare="Text">datetime_order</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="datetime_range">
+      <output-dir compare="Text">datetime_range</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="datetime_tzeq">
+      <output-dir compare="Text">datetime_tzeq</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="interval_order">
+      <output-dir compare="Text">interval_order</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="time_order">
+      <output-dir compare="Text">time_order</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="date_order">
+      <output-dir compare="Text">date_order</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="double">
+      <output-dir compare="Text">double</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="double_gte_01">
+      <output-dir compare="Text">double_gte_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="double_null">
+      <output-dir compare="Text">double_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="eq_01">
+      <output-dir compare="Text">eq_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="float">
+      <output-dir compare="Text">float</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="float_null">
+      <output-dir compare="Text">float_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="gt_01">
+      <output-dir compare="Text">gt_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="gte_01">
+      <output-dir compare="Text">gte_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int16">
+      <output-dir compare="Text">int16</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int16_null">
+      <output-dir compare="Text">int16_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int32">
+      <output-dir compare="Text">int32</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int32_null">
+      <output-dir compare="Text">int32_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int64">
+      <output-dir compare="Text">int64</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int64_null">
+      <output-dir compare="Text">int64_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int8">
+      <output-dir compare="Text">int8</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="int8_null">
+      <output-dir compare="Text">int8_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="lt_01">
+      <output-dir compare="Text">lt_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="lte_01">
+      <output-dir compare="Text">lte_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="neq_01">
+      <output-dir compare="Text">neq_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  <!--
+  <test-case FilePath="comparison">
+    <compilation-unit name="numeric-comparison_01">
+      <output-dir compare="Text">numeric-comparison_01</output-dir>
+    </compilation-unit>
+  </test-case>
+  -->
+  <test-case FilePath="comparison">
+    <compilation-unit name="string">
+      <output-dir compare="Text">string</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="string_null">
+      <output-dir compare="Text">string_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_equality">
+      <output-dir compare="Text">issue363_equality</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_duration">
+      <output-dir compare="Text">issue363_inequality_duration</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_interval">
+      <output-dir compare="Text">issue363_inequality_interval</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_point">
+      <output-dir compare="Text">issue363_inequality_point</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_line">
+      <output-dir compare="Text">issue363_inequality_line</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_polygon">
+      <output-dir compare="Text">issue363_inequality_polygon</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_rectangle">
+      <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="issue363_inequality_circle">
+      <output-dir compare="Text">issue363_inequality_circle</output-dir>
+      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="binary">
+      <output-dir compare="Text">binary</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="binary_null">
+      <output-dir compare="Text">binary_null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
+    <compilation-unit name="uuid_1">
+      <output-dir compare="Text">uuid_1</output-dir>
+    </compilation-unit>
+  </test-case>
+</test-group>
