@@ -21,7 +21,6 @@ package org.apache.asterix.common.messaging.api;
 import org.apache.hyracks.api.messages.IMessageBroker;
 
 public interface ICCMessageBroker extends IMessageBroker {
-    public static final long NO_CALLBACK_MESSAGE_ID = -1;
 
     /**
      * Sends the passed message to the specified {@code nodeId}

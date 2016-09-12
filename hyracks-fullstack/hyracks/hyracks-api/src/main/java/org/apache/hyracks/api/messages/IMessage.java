@@ -20,9 +20,6 @@ package org.apache.hyracks.api.messages;
 
 import java.io.Serializable;
 
-/**
- * @author rico
- */
 public interface IMessage extends Serializable {
 
 }

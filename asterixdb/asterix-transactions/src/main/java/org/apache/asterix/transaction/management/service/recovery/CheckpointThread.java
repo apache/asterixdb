@@ -18,21 +18,25 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
+import java.io.IOError;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
 public class CheckpointThread extends Thread {
 
+    private static final Logger LOGGER = Logger.getLogger(CheckpointThread.class.getName());
     private long lsnThreshold;
     private long checkpointTermInSecs;
 
     private final ILogManager logManager;
     private final IRecoveryManager recoveryMgr;
 
-    public CheckpointThread(IRecoveryManager recoveryMgr, IIndexLifecycleManager indexLifecycleManager, ILogManager logManager,
+    public CheckpointThread(IRecoveryManager recoveryMgr, ILogManager logManager,
             long lsnThreshold, long checkpointTermInSecs) {
         this.recoveryMgr = recoveryMgr;
         this.logManager = logManager;
@@ -45,24 +49,25 @@ public class CheckpointThread extends Thread {
 
         Thread.currentThread().setName("Checkpoint Thread");
 
-        long currentCheckpointAttemptMinLSN = -1;
+        long currentCheckpointAttemptMinLSN;
         long lastCheckpointLSN = -1;
-        long currentLogLSN = 0;
-        long targetCheckpointLSN = 0;
+        long currentLogLSN;
+        long targetCheckpointLSN;
         while (true) {
             try {
                 sleep(checkpointTermInSecs * 1000);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 //ignore
             }
 
-
-            if(lastCheckpointLSN == -1)
-            {
+            if (lastCheckpointLSN == -1) {
                 try {
-                    //Since the system just started up after sharp checkpoint, last checkpoint LSN is considered as the min LSN of the current log partition
+                    //Since the system just started up after sharp checkpoint,
+                    //last checkpoint LSN is considered as the min LSN of the current log partition
                     lastCheckpointLSN = logManager.getReadableSmallestLSN();
                 } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error getting smallest readable LSN", e);
                     lastCheckpointLSN = 0;
                 }
             }
@@ -82,13 +87,12 @@ public class CheckpointThread extends Thread {
                     currentCheckpointAttemptMinLSN = recoveryMgr.checkpoint(false, targetCheckpointLSN);
 
                     //checkpoint was completed at target LSN or above
-                    if(currentCheckpointAttemptMinLSN >= targetCheckpointLSN)
-                    {
+                    if (currentCheckpointAttemptMinLSN >= targetCheckpointLSN) {
                         lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
 
                 } catch (ACIDException | HyracksDataException e) {
-                    throw new Error("failed to checkpoint", e);
+                    throw new IOError(e);
                 }
             }
         }

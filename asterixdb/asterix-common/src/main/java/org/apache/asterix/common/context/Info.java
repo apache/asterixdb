@@ -16,23 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.common.api;
+package org.apache.asterix.common.context;
 
-import java.util.List;
+public abstract class Info {
+    private int referenceCount;
+    private boolean isOpen;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.IResourceMemoryManager;
+    public Info() {
+        referenceCount = 0;
+        isOpen = false;
+    }
 
-public interface IIndexLifecycleManager extends IResourceMemoryManager {
-    public List<IIndex> getOpenIndexes();
+    public void touch() {
+        ++referenceCount;
+    }
 
-    public void register(String resourcePath, IIndex index) throws HyracksDataException;
+    public void untouch() {
+        --referenceCount;
+    }
 
-    public void open(String resourcePath) throws HyracksDataException;
+    public int getReferenceCount() {
+        return referenceCount;
+    }
 
-    public void close(String resourcePath) throws HyracksDataException;
+    public void setReferenceCount(int referenceCount) {
+        this.referenceCount = referenceCount;
+    }
 
-    public IIndex getIndex(String resourcePath) throws HyracksDataException;
+    public boolean isOpen() {
+        return isOpen;
+    }
 
-    public void unregister(String resourcePath) throws HyracksDataException;
+    public void setOpen(boolean isOpen) {
+        this.isOpen = isOpen;
+    }
 }

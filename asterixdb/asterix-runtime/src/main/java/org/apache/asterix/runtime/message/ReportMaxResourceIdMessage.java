@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
@@ -32,7 +32,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReportMaxResourceIdMessage extends AbstractApplicationMessage {
+public class ReportMaxResourceIdMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ReportMaxResourceIdMessage.class.getName());
     private final long maxResourceId;
@@ -62,7 +62,7 @@ public class ReportMaxResourceIdMessage extends AbstractApplicationMessage {
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
         ReportMaxResourceIdMessage maxResourceIdMsg = new ReportMaxResourceIdMessage(ncs.getId(), maxResourceId);
         try {
-            ((INCMessageBroker) ncs.getApplicationContext().getMessageBroker()).sendMessageToCC(maxResourceIdMsg, null);
+            ((INCMessageBroker) ncs.getApplicationContext().getMessageBroker()).sendMessageToCC(maxResourceIdMsg);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unable to report max local resource id", e);
             throw ExceptionUtils.convertToHyracksDataException(e);
@@ -70,7 +70,7 @@ public class ReportMaxResourceIdMessage extends AbstractApplicationMessage {
     }
 
     @Override
-    public String type() {
-        return "REPORT_MAX_RESOURCE_ID_RESPONSE";
+    public String toString() {
+        return ReportMaxResourceIdMessage.class.getSimpleName();
     }
 }

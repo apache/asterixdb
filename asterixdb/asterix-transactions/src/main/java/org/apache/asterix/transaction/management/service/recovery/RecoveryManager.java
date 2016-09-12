@@ -367,7 +367,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                 String resourceAbsolutePath =
                                         partitionIODevicePath + File.separator + localResource.getResourceName();
                                 localResource.setResourcePath(resourceAbsolutePath);
-                                index = (ILSMIndex) datasetLifecycleManager.getIndex(resourceAbsolutePath);
+                                index = (ILSMIndex) datasetLifecycleManager.get(resourceAbsolutePath);
                                 if (index == null) {
                                     //#. create index instance and register to indexLifeCycleManager
                                     localResourceMetadata = (ILocalResourceMetadata) localResource.getResourceObject();
@@ -568,7 +568,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public long getLocalMinFirstLSN() throws HyracksDataException {
         IDatasetLifecycleManager datasetLifecycleManager =
                 txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
-        List<IIndex> openIndexList = datasetLifecycleManager.getOpenIndexes();
+        List<IIndex> openIndexList = datasetLifecycleManager.getOpenResources();
         long firstLSN;
         //the min first lsn can only be the current append or smaller
         long minFirstLSN = logMgr.getAppendLSN();

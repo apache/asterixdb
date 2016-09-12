@@ -18,11 +18,14 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.runtime.transaction.GlobalResourceIdFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ResourceIdRequestResponseMessage extends AbstractApplicationMessage {
+public class ResourceIdRequestResponseMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
 
     private long resourceId;
@@ -45,13 +48,15 @@ public class ResourceIdRequestResponseMessage extends AbstractApplicationMessage
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
-        // Do nothing. for this message, the callback handles it, we probably should get rid of callbacks and
-        // instead, use the handle in the response to perform callback action
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
+        NodeControllerService ncs = (NodeControllerService) cs;
+        IAsterixAppRuntimeContext asterixNcAppRuntimeCtx =
+                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        ((GlobalResourceIdFactory) asterixNcAppRuntimeCtx.getResourceIdFactory()).addNewIds(this);
     }
 
     @Override
-    public String type() {
-        return "RESOURCE_ID_RESPONSE";
+    public String toString() {
+        return ResourceIdRequestResponseMessage.class.getSimpleName();
     }
 }

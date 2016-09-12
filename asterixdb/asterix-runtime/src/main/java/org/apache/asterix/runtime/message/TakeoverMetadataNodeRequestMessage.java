@@ -23,13 +23,13 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class TakeoverMetadataNodeRequestMessage extends AbstractApplicationMessage {
+public class TakeoverMetadataNodeRequestMessage implements IApplicationMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TakeoverMetadataNodeRequestMessage.class.getName());
@@ -51,7 +51,7 @@ public class TakeoverMetadataNodeRequestMessage extends AbstractApplicationMessa
             TakeoverMetadataNodeResponseMessage reponse = new TakeoverMetadataNodeResponseMessage(
                     appContext.getTransactionSubsystem().getId());
             try {
-                broker.sendMessageToCC(reponse, null);
+                broker.sendMessageToCC(reponse);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
                 hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
@@ -63,7 +63,7 @@ public class TakeoverMetadataNodeRequestMessage extends AbstractApplicationMessa
     }
 
     @Override
-    public String type() {
-        return "TAKEOVER_METADATA_NODE_REQUEST";
+    public String toString() {
+        return TakeoverMetadataNodeRequestMessage.class.getSimpleName();
     }
 }

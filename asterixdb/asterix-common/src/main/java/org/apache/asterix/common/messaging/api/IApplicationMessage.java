@@ -22,31 +22,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.service.IControllerService;
 
+@FunctionalInterface
 public interface IApplicationMessage extends IMessage {
-
-    /**
-     * Sets a unique message id that identifies this message within an NC.
-     * This id is set by {@link INCMessageBroker#sendMessageToCC(IApplicationMessage, IApplicationMessageCallback)}
-     * when the callback is not null to notify the sender when the response to that message is received.
-     *
-     * @param messageId
-     */
-    public void setId(long messageId);
-
-    /**
-     * @return The unique message id if it has been set, otherwise 0.
-     */
-    public long getId();
 
     /**
      * handle the message upon delivery
      */
-    public void handle(IControllerService cs) throws HyracksDataException;
-
-    /**
-     * get a string representation for the message type
-     *
-     * @return
-     */
-    public String type();
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException;
 }

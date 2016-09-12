@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class TakeoverPartitionsResponseMessage extends AbstractApplicationMessage {
+public class TakeoverPartitionsResponseMessage implements IApplicationMessage {
 
     private static final long serialVersionUID = 1L;
     private final Integer[] partitions;
@@ -54,7 +54,7 @@ public class TakeoverPartitionsResponseMessage extends AbstractApplicationMessag
     }
 
     @Override
-    public String type() {
-        return "TAKEOVER_PARTITIONS_RESPONSE";
+    public String toString() {
+        return TakeoverPartitionsResponseMessage.class.getSimpleName();
     }
 }

@@ -41,7 +41,8 @@ public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Plan ID: " + planId);
+        sb.append(CompleteFailbackResponseMessage.class.getSimpleName());
+        sb.append(" Plan ID: " + planId);
         sb.append(" Partitions: " + partitions);
         return sb.toString();
     }
@@ -49,10 +50,5 @@ public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage
     @Override
     public void handle(IControllerService cs) throws HyracksDataException {
         AsterixClusterProperties.INSTANCE.processCompleteFailbackResponse(this);
-    }
-
-    @Override
-    public String type() {
-        return "COMPLETE_FAILBACK_RESPONSE";
     }
 }

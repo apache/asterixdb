@@ -16,15 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.messaging.api;
+package org.apache.asterix.common.context;
 
-public interface IApplicationMessageCallback {
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
-    /**
-     * Notifies the message sender when the response has been received.
-     *
-     * @param message
-     *            The response message
-     */
-    public void deliverMessageResponse(IApplicationMessage message);
+public class IndexInfo extends Info {
+    private final ILSMIndex index;
+    private final long resourceId;
+    private final int datasetId;
+
+    public IndexInfo(ILSMIndex index, int datasetId, long resourceId) {
+        this.index = index;
+        this.datasetId = datasetId;
+        this.resourceId = resourceId;
+    }
+
+    public ILSMIndex getIndex() {
+        return index;
+    }
+
+    public long getResourceId() {
+        return resourceId;
+    }
+
+    public int getDatasetId() {
+        return datasetId;
+    }
 }

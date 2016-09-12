@@ -23,5 +23,5 @@ import java.io.Serializable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public interface IIndexLifecycleManagerProvider extends Serializable {
-    public IIndexLifecycleManager getLifecycleManager(IHyracksTaskContext ctx);
+    public IResourceLifecycleManager<IIndex> getLifecycleManager(IHyracksTaskContext ctx);
 }

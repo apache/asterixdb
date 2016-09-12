@@ -81,8 +81,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.recoveryManager = new RecoveryManager(this);
 
         if (asterixAppRuntimeContextProvider != null) {
-            this.checkpointThread = new CheckpointThread(recoveryManager,
-                    asterixAppRuntimeContextProvider.getDatasetLifecycleManager(), logManager,
+            this.checkpointThread = new CheckpointThread(recoveryManager, logManager,
                     this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
             this.checkpointThread.start();
         } else {
@@ -95,22 +94,27 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         }
     }
 
+    @Override
     public ILogManager getLogManager() {
         return logManager;
     }
 
+    @Override
     public ILockManager getLockManager() {
         return lockManager;
     }
 
+    @Override
     public ITransactionManager getTransactionManager() {
         return transactionManager;
     }
 
+    @Override
     public IRecoveryManager getRecoveryManager() {
         return recoveryManager;
     }
 
+    @Override
     public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
         return asterixAppRuntimeContextProvider;
     }
@@ -119,6 +123,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         return txnProperties;
     }
 
+    @Override
     public String getId() {
         return id;
     }

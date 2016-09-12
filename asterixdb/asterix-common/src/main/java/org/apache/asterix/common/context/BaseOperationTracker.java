@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.context;
 
-import org.apache.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;

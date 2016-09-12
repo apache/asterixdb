@@ -20,19 +20,14 @@ package org.apache.asterix.messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
-import org.apache.asterix.common.messaging.api.IApplicationMessageCallback;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -44,8 +39,6 @@ public class NCMessageBroker implements INCMessageBroker {
     private static final Logger LOGGER = Logger.getLogger(NCMessageBroker.class.getName());
 
     private final NodeControllerService ncs;
-    private final AtomicLong messageId = new AtomicLong(0);
-    private final Map<Long, IApplicationMessageCallback> callbacks;
     private final IAsterixAppRuntimeContext appContext;
     private final LinkedBlockingQueue<IApplicationMessage> receivedMsgsQ;
     private final ConcurrentFramePool messagingFramePool;
@@ -54,7 +47,6 @@ public class NCMessageBroker implements INCMessageBroker {
     public NCMessageBroker(NodeControllerService ncs, MessagingProperties messagingProperties) {
         this.ncs = ncs;
         appContext = (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        callbacks = new ConcurrentHashMap<>();
         maxMsgSize = messagingProperties.getFrameSize();
         int messagingMemoryBudget = messagingProperties.getFrameSize() * messagingProperties.getFrameCount();
         messagingFramePool = new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget,
@@ -65,27 +57,15 @@ public class NCMessageBroker implements INCMessageBroker {
     }
 
     @Override
-    public void sendMessageToCC(IApplicationMessage message, IApplicationMessageCallback callback) throws Exception {
-        registerMsgCallback(message, callback);
-        try {
-            ncs.sendApplicationMessageToCC(JavaSerializationUtils.serialize(message), null);
-        } catch (Exception e) {
-            handleMsgDeliveryFailure(message);
-            throw e;
-        }
+    public void sendMessageToCC(IApplicationMessage message) throws Exception {
+        ncs.sendApplicationMessageToCC(JavaSerializationUtils.serialize(message), null);
     }
 
     @Override
-    public void sendMessageToNC(String nodeId, IApplicationMessage message, IApplicationMessageCallback callback)
+    public void sendMessageToNC(String nodeId, IApplicationMessage message)
             throws Exception {
-        registerMsgCallback(message, callback);
-        try {
-            IChannelControlBlock messagingChannel = ncs.getMessagingNetworkManager().getMessagingChannel(nodeId);
-            sendMessageToChannel(messagingChannel, message);
-        } catch (Exception e) {
-            handleMsgDeliveryFailure(message);
-            throw e;
-        }
+        IChannelControlBlock messagingChannel = ncs.getMessagingNetworkManager().getMessagingChannel(nodeId);
+        sendMessageToChannel(messagingChannel, message);
     }
 
     @Override
@@ -95,32 +75,15 @@ public class NCMessageBroker implements INCMessageBroker {
 
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
-        AbstractApplicationMessage absMessage = (AbstractApplicationMessage) message;
+        IApplicationMessage absMessage = (IApplicationMessage) message;
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Received message: " + absMessage.type());
-        }
-        //if the received message is a response to a sent message, deliver it to the sender
-        IApplicationMessageCallback callback = callbacks.remove(absMessage.getId());
-        if (callback != null) {
-            callback.deliverMessageResponse(absMessage);
+            LOGGER.info("Received message: " + absMessage);
         }
         absMessage.handle(ncs);
     }
 
     public ConcurrentFramePool getMessagingFramePool() {
         return messagingFramePool;
-    }
-
-    private void registerMsgCallback(IApplicationMessage message, IApplicationMessageCallback callback) {
-        if (callback != null) {
-            long uniqueMessageId = messageId.incrementAndGet();
-            message.setId(uniqueMessageId);
-            callbacks.put(uniqueMessageId, callback);
-        }
-    }
-
-    private void handleMsgDeliveryFailure(IApplicationMessage message) {
-        callbacks.remove(message.getId());
     }
 
     private void sendMessageToChannel(IChannelControlBlock ccb, IApplicationMessage msg) throws IOException {
@@ -161,8 +124,8 @@ public class NCMessageBroker implements INCMessageBroker {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.WARNING) && msg != null) {
-                        LOGGER.log(Level.WARNING, "Could not process message with id: " + msg.getId() + " and type: "
-                                + msg.type(), e);
+                        LOGGER.log(Level.WARNING, "Could not process message : "
+                                + msg, e);
                     } else {
                         if (LOGGER.isLoggable(Level.WARNING)) {
                             LOGGER.log(Level.WARNING, "Could not process message", e);

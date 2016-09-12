@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class TakeoverMetadataNodeResponseMessage extends AbstractApplicationMessage {
+public class TakeoverMetadataNodeResponseMessage implements IApplicationMessage {
 
     private static final long serialVersionUID = 1L;
     private final String nodeId;
@@ -42,7 +42,7 @@ public class TakeoverMetadataNodeResponseMessage extends AbstractApplicationMess
     }
 
     @Override
-    public String type() {
-        return "TAKEOVER_METADATA_NODE_RESPONSE";
+    public String toString() {
+        return TakeoverMetadataNodeResponseMessage.class.getSimpleName();
     }
 }

@@ -411,7 +411,7 @@ public class AsterixClusterProperties {
                 for (Integer partitionId : request.getPartitions()) {
                     nodePartitions.add(clusterPartitions.get(partitionId));
                 }
-                failedTakeoverRequests.add(request.getId());
+                failedTakeoverRequests.add(request.getRequestId());
             }
         }
 

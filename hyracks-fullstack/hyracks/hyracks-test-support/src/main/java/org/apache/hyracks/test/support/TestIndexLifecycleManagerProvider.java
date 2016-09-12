@@ -19,16 +19,17 @@
 package org.apache.hyracks.test.support;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 
 public class TestIndexLifecycleManagerProvider implements IIndexLifecycleManagerProvider {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IIndexLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
-        return TestStorageManagerComponentHolder.getIndexLifecycleManager(ctx);
+    public IResourceLifecycleManager<IIndex> getLifecycleManager(IHyracksTaskContext ctx) {
+        return TestStorageManagerComponentHolder.getIndexLifecycleManager();
     }
 
 }

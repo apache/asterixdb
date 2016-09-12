@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.message;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -28,7 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReplicaEventMessage extends AbstractApplicationMessage {
+public class ReplicaEventMessage implements IApplicationMessage {
 
     private static final long serialVersionUID = 1L;
     private final String nodeId;
@@ -66,7 +66,7 @@ public class ReplicaEventMessage extends AbstractApplicationMessage {
     }
 
     @Override
-    public String type() {
-        return "REPLICA_EVENT";
+    public String toString() {
+        return ReplicaEventMessage.class.getSimpleName();
     }
 }

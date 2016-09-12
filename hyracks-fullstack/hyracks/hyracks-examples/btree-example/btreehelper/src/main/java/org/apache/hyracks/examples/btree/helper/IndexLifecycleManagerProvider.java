@@ -19,14 +19,14 @@
 package org.apache.hyracks.examples.btree.helper;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 
 public enum IndexLifecycleManagerProvider implements IIndexLifecycleManagerProvider {
     INSTANCE;
 
     @Override
-    public IIndexLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
+    public IResourceLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
         return RuntimeContext.get(ctx).getIndexLifecycleManager();
     }
 

@@ -86,8 +86,6 @@ public interface IAsterixAppRuntimeContext {
 
     public ILibraryManager getLibraryManager();
 
-    public void initializeResourceIdFactory() throws HyracksDataException;
-
     /**
      * Exports the metadata node to the metadata RMI port.
      *

@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 
-public abstract class AbstractFailbackPlanMessage extends AbstractApplicationMessage {
+public abstract class AbstractFailbackPlanMessage implements IApplicationMessage {
 
     private static final long serialVersionUID = 1L;
     protected final long planId;

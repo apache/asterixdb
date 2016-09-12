@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.message;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.ExceptionUtils;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
@@ -29,7 +29,7 @@ import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class ResourceIdRequestMessage extends AbstractApplicationMessage {
+public class ResourceIdRequestMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
     private final String src;
 
@@ -43,7 +43,6 @@ public class ResourceIdRequestMessage extends AbstractApplicationMessage {
             ICCMessageBroker broker =
                     (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext().getMessageBroker();
             ResourceIdRequestResponseMessage reponse = new ResourceIdRequestResponseMessage();
-            reponse.setId(id);
             if (!AsterixClusterProperties.INSTANCE.isClusterActive()) {
                 reponse.setResourceId(-1);
                 reponse.setException(new Exception("Cannot generate global resource id when cluster is not active."));
@@ -66,7 +65,6 @@ public class ResourceIdRequestMessage extends AbstractApplicationMessage {
             throws Exception {
         Set<String> getParticipantNodes = AsterixClusterProperties.INSTANCE.getParticipantNodes();
         ReportMaxResourceIdRequestMessage msg = new ReportMaxResourceIdRequestMessage();
-        msg.setId(ICCMessageBroker.NO_CALLBACK_MESSAGE_ID);
         for (String nodeId : getParticipantNodes) {
             if (!resourceIdManager.reported(nodeId)) {
                 broker.sendApplicationMessageToNC(msg, nodeId);
@@ -75,7 +73,7 @@ public class ResourceIdRequestMessage extends AbstractApplicationMessage {
     }
 
     @Override
-    public String type() {
-        return "RESOURCE_ID_REQUEST";
+    public String toString() {
+        return ReportMaxResourceIdRequestMessage.class.getSimpleName();
     }
 }

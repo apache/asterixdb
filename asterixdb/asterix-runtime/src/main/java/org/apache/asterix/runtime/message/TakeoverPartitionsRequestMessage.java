@@ -25,14 +25,14 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage {
+public class TakeoverPartitionsRequestMessage implements IApplicationMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TakeoverPartitionsRequestMessage.class.getName());
@@ -61,7 +61,8 @@ public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Request ID: " + requestId);
+        sb.append(TakeoverPartitionsRequestMessage.class.getSimpleName());
+        sb.append(" Request ID: " + requestId);
         sb.append(" Node ID: " + nodeId);
         sb.append(" Partitions: ");
         for (Integer partitionId : partitions) {
@@ -92,7 +93,7 @@ public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage
                 TakeoverPartitionsResponseMessage reponse = new TakeoverPartitionsResponseMessage(requestId,
                         appContext.getTransactionSubsystem().getId(), partitions);
                 try {
-                    broker.sendMessageToCC(reponse, null);
+                    broker.sendMessageToCC(reponse);
                 } catch (Exception e) {
                     LOGGER.log(Level.SEVERE, "Failure taking over partitions", e);
                     hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
@@ -102,10 +103,5 @@ public class TakeoverPartitionsRequestMessage extends AbstractApplicationMessage
                 throw hde;
             }
         }
-    }
-
-    @Override
-    public String type() {
-        return "TAKEOVER_PARTITIONS_REQUEST";
     }
 }

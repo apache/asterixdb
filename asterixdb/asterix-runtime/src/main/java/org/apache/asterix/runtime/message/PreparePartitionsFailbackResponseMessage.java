@@ -44,7 +44,7 @@ public class PreparePartitionsFailbackResponseMessage extends AbstractFailbackPl
     }
 
     @Override
-    public String type() {
-        return "PREPARE_PARTITIONS_FAILBACK_RESPONSE";
+    public String toString() {
+        return PreparePartitionsFailbackResponseMessage.class.getSimpleName() + " " + partitions.toString();
     }
 }
