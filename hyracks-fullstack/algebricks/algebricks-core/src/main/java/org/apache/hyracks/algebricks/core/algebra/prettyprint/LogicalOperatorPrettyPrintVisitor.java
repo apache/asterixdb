@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
@@ -63,7 +64,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -150,7 +150,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
 
     @Override
     public Void visitInnerJoinOperator(InnerJoinOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("join (").append(op.getCondition().getValue().accept(exprVisitor, indent)).append(")");
+        addIndent(indent).append("join (").append(op.getCondition().getValue().accept(exprVisitor, indent)).
+        append(")");
         return null;
     }
 
@@ -381,9 +382,10 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         pprintExprList(op.getPrimaryKeyExpressions(), indent);
         if (op.getOperation() == Kind.UPSERT) {
             buffer.append(
-                    " out: ([record-before-upsert:" + op.getPrevRecordVar()
-                            + ((op.getPrevAdditionalNonFilteringVars() != null)
-                                    ? (", additional-before-upsert: " + op.getPrevAdditionalNonFilteringVars()) : "")
+                    " out: ([record-before-upsert:" + op.getBeforeOpRecordVar()
+                            + ((op.getBeforeOpAdditionalNonFilteringVars() != null)
+                                    ? (", additional-before-upsert: " + op.getBeforeOpAdditionalNonFilteringVars())
+                                    : "")
                             + "]) ");
         }
         if (op.isBulkload()) {

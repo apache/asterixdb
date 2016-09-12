@@ -19,28 +19,22 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 /**
  * The type computer for the cast-list function
- *
- * @author yingyib
  */
-public class CastTypeComputer implements IResultTypeComputer {
+public class CastTypeComputer extends AbstractResultTypeComputer {
 
     public static final CastTypeComputer INSTANCE = new CastTypeComputer();
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expression;
-        return TypeCastUtils.getRequiredType(funcExpr);
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        return TypeCastUtils.getRequiredType((AbstractFunctionCallExpression) expr);
     }
 }
