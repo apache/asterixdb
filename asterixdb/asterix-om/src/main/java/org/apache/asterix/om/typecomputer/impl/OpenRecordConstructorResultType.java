@@ -28,6 +28,8 @@ import java.util.Set;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
 import org.apache.asterix.om.util.ConstantExpressionUtil;
@@ -71,6 +73,10 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
             String fieldName = ConstantExpressionUtil.getStringConstant(e1);
             if (fieldName != null && t2 != null && TypeHelper.isClosed(t2)) {
                 namesList.add(fieldName);
+                if (t2.getTypeTag() == ATypeTag.UNION) {
+                    AUnionType unionType = (AUnionType) t2;
+                    t2 = AUnionType.createUnknownableType(unionType.getActualType());
+                }
                 typesList.add(t2);
             } else {
                 if (canProvideAdditionFieldInfo && fieldName != null) {

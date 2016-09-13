@@ -8117,5 +8117,10 @@
         <output-dir compare="Text">query-ASTERIXDB-1354-2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="query-ASTERIXDB-1629">
+        <output-dir compare="Text">query-ASTERIXDB-1629</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
