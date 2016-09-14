@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.dataflow.std.sort.util;
 
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.FrameHelper;
@@ -42,7 +43,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
     private int tupleCount;
     private int freeDataEndOffset;
     private int deletedSpace;
-    private byte[] array;   // to speed up the array visit a little
+    private byte[] array; // to speed up the array visit a little
 
     public DeletableFrameTupleAppender(RecordDescriptor recordDescriptor) {
         this.recordDescriptor = recordDescriptor;
@@ -146,7 +147,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
             endOffset = getTupleEndOffset(i);
             if (endOffset >= 0) {
                 int length = endOffset - startOffset;
-                assert ( length >= 0);
+                assert length >= 0;
                 if (freeDataEndOffset != startOffset) {
                     System.arraycopy(array, startOffset, array, freeDataEndOffset, length);
                 }
@@ -162,7 +163,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
     private void reclaimDeletedEnding() {
         for (int i = tupleCount - 1; i >= 0; i--) {
             int endOffset = getTupleEndOffset(i);
-            if (endOffset < 0) {
+            if (endOffset <= 0) {
                 tupleCount--;
             } else {
                 break;
@@ -240,9 +241,28 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
         return tupleCount;
     }
 
+    private int getLiveTupleCount() {
+        int live = 0;
+        for (int i = tupleCount - 1; i >= 0; i--) {
+            int endOffset = getTupleEndOffset(i);
+            if (endOffset > 0) {
+                live++;
+            }
+        }
+        return live;
+    }
+
     @Override
     public ByteBuffer getBuffer() {
         return buffer;
+    }
+
+    @Override
+    public void printStats(PrintStream ps) {
+        if (getLiveTupleCount() == 0) {
+            ps.print("");
+        }
+        ps.printf("(%d, %d)", getLiveTupleCount(), getPhysicalTupleCount());
     }
 
 }

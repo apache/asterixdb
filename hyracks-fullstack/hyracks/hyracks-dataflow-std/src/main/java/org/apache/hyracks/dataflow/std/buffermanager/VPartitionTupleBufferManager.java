@@ -110,8 +110,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     public void clearPartition(int partitionId) throws HyracksDataException {
         IFrameBufferManager partition = partitionArray[partitionId];
         if (partition != null) {
-            for (int i = 0; i < partition.getNumFrames(); ++i) {
+            partition.resetIterator();
+            int i = partition.next();
+            while (partition.exists()) {
                 framePool.deAllocateBuffer(partition.getFrame(i, tempInfo).getBuffer());
+                i = partition.next();
             }
             partition.reset();
         }
@@ -221,11 +224,13 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
 
     static class PartitionFrameBufferManager implements IFrameBufferManager {
 
+        int size = 0;
         ArrayList<ByteBuffer> buffers = new ArrayList<>();
 
         @Override
         public void reset() throws HyracksDataException {
             buffers.clear();
+            size = 0;
         }
 
         @Override
@@ -236,18 +241,62 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
 
         @Override
         public int getNumFrames() {
-            return buffers.size();
+            return size;
         }
 
         @Override
         public int insertFrame(ByteBuffer frame) throws HyracksDataException {
-            buffers.add(frame);
-            return buffers.size() - 1;
+            int index = -1;
+            if (buffers.size() == size) {
+                buffers.add(frame);
+                index = buffers.size() - 1;
+            } else {
+                for (int i = 0; i < buffers.size(); ++i) {
+                    if (buffers.get(i) == null) {
+                        buffers.set(i, frame);
+                        index = i;
+                        break;
+                    }
+                }
+            }
+            if (index == -1) {
+                throw new HyracksDataException("Did not insert frame.");
+            }
+            size++;
+            return index;
+        }
+
+        @Override
+        public void removeFrame(int frameIndex) {
+            buffers.set(frameIndex, null);
+            size--;
         }
 
         @Override
         public void close() {
             buffers = null;
+        }
+
+        int iterator = -1;
+
+        @Override
+        public int next() {
+            while (++iterator < buffers.size()) {
+                if (buffers.get(iterator) != null) {
+                    break;
+                }
+            }
+            return iterator;
+        }
+
+        @Override
+        public boolean exists() {
+            return iterator < buffers.size() && buffers.get(iterator) != null;
+        }
+
+        @Override
+        public void resetIterator() {
+            iterator = -1;
         }
 
     }

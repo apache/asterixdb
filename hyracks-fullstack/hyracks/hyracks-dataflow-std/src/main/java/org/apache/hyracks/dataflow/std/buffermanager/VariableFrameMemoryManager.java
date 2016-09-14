@@ -104,10 +104,33 @@ public class VariableFrameMemoryManager implements IFrameBufferManager {
     }
 
     @Override
+    public void removeFrame(int frameIndex)  {
+        logicalFrameStartSizes.remove(frameIndex);
+    }
+
+    @Override
     public void close() {
         physicalFrameOffsets.clear();
         logicalFrameStartSizes.clear();
         freeSlotPolicy.reset();
         framePool.close();
+    }
+
+    @Override
+    public int next() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public boolean exists() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void resetIterator() {
+        // TODO Auto-generated method stub
+
     }
 }

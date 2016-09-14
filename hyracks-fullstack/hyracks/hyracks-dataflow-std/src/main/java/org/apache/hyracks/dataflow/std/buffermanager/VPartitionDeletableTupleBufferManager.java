@@ -34,7 +34,7 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBufferManager
         implements IPartitionedDeletableTupleBufferManager {
 
-    private static int[] minFreeSpace;
+    private final int[] minFreeSpace;
     private final IAppendDeletableFrameTupleAccessor[] accessor;
     private final IFrameFreeSlotPolicy[] policy;
 
@@ -85,8 +85,11 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
     public void clearPartition(int partitionId) throws HyracksDataException {
         IFrameBufferManager partition = partitionArray[partitionId];
         if (partition != null) {
-            for (int i = 0; i < partition.getNumFrames(); ++i) {
+            partition.resetIterator();
+            int i = partition.next();
+            while (partition.exists()) {
                 accessor[partitionId].clear(partition.getFrame(i, tempInfo).getBuffer());
+                i = partition.next();
             }
         }
         policy[partitionId].reset();
@@ -94,22 +97,36 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
     }
 
     private void reOrganizeFrames(int partition) {
+        System.err.printf("reOrganizeFrames -- %d:[", partition);
         policy[partition].reset();
-        for (int i = 0; i < partitionArray[partition].getNumFrames(); i++) {
-            partitionArray[partition].getFrame(i, tempInfo);
+        partitionArray[partition].resetIterator();
+        int f = partitionArray[partition].next();
+        while (partitionArray[partition].exists()) {
+            partitionArray[partition].getFrame(f, tempInfo);
             accessor[partition].reset(tempInfo.getBuffer());
             accessor[partition].reOrganizeBuffer();
-            policy[partition].pushNewFrame(i, accessor[partition].getContiguousFreeSpace());
+            if (accessor[partition].getTupleCount() == 0) {
+                partitionArray[partition].removeFrame(f);
+                framePool.deAllocateBuffer(tempInfo.getBuffer());
+            } else {
+                policy[partition].pushNewFrame(f, accessor[partition].getContiguousFreeSpace());
+                accessor[partition].printStats(System.err);
+            }
+            f = partitionArray[partition].next();
         }
+        System.err.println("] ");
     }
 
     private boolean canBeInsertedAfterCleanUpFragmentation(int partition, int requiredFreeSpace) {
-        for (int i = 0; i < partitionArray[partition].getNumFrames(); i++) {
+        partitionArray[partition].resetIterator();
+        int i = partitionArray[partition].next();
+        while (partitionArray[partition].exists()) {
             partitionArray[partition].getFrame(i, tempInfo);
             accessor[partition].reset(tempInfo.getBuffer());
             if (accessor[partition].getTotalFreeSpace() >= requiredFreeSpace) {
                 return true;
             }
+            i = partitionArray[partition].next();
         }
         return false;
     }
@@ -133,6 +150,27 @@ public class VPartitionDeletableTupleBufferManager extends VPartitionTupleBuffer
     private static int calculateMinFreeSpace(RecordDescriptor recordDescriptor) {
         // + 4 for the tuple offset
         return recordDescriptor.getFieldCount() * 4 + 4;
+    }
+
+    public void printStats(String message) {
+        System.err.print(String.format("%1$-" + 15 + "s", message) + " --");
+
+        for (int p = 0; p < partitionArray.length; ++p) {
+            System.err.printf("%d:[", p);
+            IFrameBufferManager partition = partitionArray[p];
+            if (partition != null) {
+                partitionArray[p].resetIterator();
+                int f = partitionArray[p].next();
+                while (partitionArray[p].exists()) {
+                    partitionArray[p].getFrame(f, tempInfo);
+                    accessor[p].reset(tempInfo.getBuffer());
+                    accessor[p].printStats(System.err);
+                    f = partitionArray[p].next();
+                }
+            }
+            System.err.printf("] ");
+        }
+        System.err.println();
     }
 
     @Override

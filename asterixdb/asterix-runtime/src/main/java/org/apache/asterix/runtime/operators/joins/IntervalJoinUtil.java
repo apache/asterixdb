@@ -48,6 +48,7 @@ public class IntervalJoinUtil {
     }
 
     public static long getIntervalStart(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
+        int length = accessor.getTupleLength(tupleId);
         int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
                 + accessor.getFieldStartOffset(tupleId, fieldId) + 1;
         long intervalStart = AIntervalSerializerDeserializer.getIntervalStart(accessor.getBuffer().array(), start);

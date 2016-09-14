@@ -36,7 +36,8 @@ public interface IFrameBufferManager {
 
     /**
      * @param frameIndex
-     * @param bufferInfo the given object need to be reset
+     * @param bufferInfo
+     *            the given object need to be reset
      * @return the filled bufferInfo to facilitate the chain access
      */
     BufferInfo getFrame(int frameIndex, BufferInfo bufferInfo);
@@ -49,11 +50,30 @@ public interface IFrameBufferManager {
     /**
      * Writes the whole frame into the buffer.
      *
-     * @param frame source frame
+     * @param frame
+     *            source frame
      * @return the id of the inserted frame. return -1 if it failed to insert
      */
     int insertFrame(ByteBuffer frame) throws HyracksDataException;
 
+    /**
+     * Removes the frame from the buffer manager
+     *
+     * @param frameIndex
+     */
+    void removeFrame(int frameIndex);
+
     void close();
+
+    /**
+     * Create a iterator for frames.
+     *
+     * Allows the reuse of frame ids.
+     */
+    int next();
+
+    boolean exists();
+
+    void resetIterator();
 
 }

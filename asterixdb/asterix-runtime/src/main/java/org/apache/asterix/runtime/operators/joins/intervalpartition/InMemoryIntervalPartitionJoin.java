@@ -69,7 +69,9 @@ public class InMemoryIntervalPartitionJoin {
     public void join(IFrameTupleAccessor accessorProbe, int probeTupleIndex, IFrameWriter writer)
             throws HyracksDataException {
         if (fbm.getNumFrames() != 0) {
-            for (int frameIndex = 0; frameIndex < fbm.getNumFrames(); ++frameIndex) {
+            fbm.resetIterator();
+            int frameIndex = fbm.next();
+            while (fbm.exists()) {
                 fbm.getFrame(frameIndex, bufferInfo);
                 accessorBuild.reset(bufferInfo.getBuffer());
                 for (int buildTupleIndex = 0; buildTupleIndex < accessorBuild.getTupleCount(); ++buildTupleIndex) {
@@ -79,6 +81,7 @@ public class InMemoryIntervalPartitionJoin {
                     }
                     joinComparisonCount++;
                 }
+                frameIndex = fbm.next();
             }
         }
     }

@@ -145,6 +145,7 @@ public class RunFileStream {
                     loadNextBuffer(accessor);
                 }
             }
+            runFileReader.close();
         }
 
         // Flush buffer.
