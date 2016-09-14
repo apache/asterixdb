@@ -1,0 +1,10 @@
+/"date": ".*"/
+/"threads": \[/
+/"id": [0-9]+/
+/"lock_name": ".*"/
+/"name": ".*"/
+/"stack": \[/
+/"java.lang.Thread.run\(Thread.java:[0-9]+\)"/
+/"state": "TIMED_WAITING"/
+/"state": "RUNNABLE"/
+/"state": "WAITING"/

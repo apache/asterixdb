@@ -1,0 +1,27 @@
+\{
+    "date": ".*",
+    "gcs": \[
+        \{
+            "collection-count": .*,
+            "collection-time": .*,
+            "name": ".*"
+        \},
+        \{
+            "collection-count": .*,
+            "collection-time": .*,
+            "name": ".*"
+        \}
+    \],
+    "heap_committed_size": [0-9]*,
+    "heap_init_size": [0-9]*,
+    "heap_max_size": [0-9]*,
+    "heap_used_size": [0-9]*,
+    "nonheap_committed_size": [0-9]*,
+    "nonheap_init_size": [0-9]*,
+    "nonheap_max_size": -?[0-9]*,
+    "nonheap_used_size": [0-9]*,
+    "peak_thread_count": [0-9]*,
+    "started_thread_count": [0-9]*,
+    "system_load_average": [0-9\.]*,
+    "thread_count": [0-9]*
+\}
