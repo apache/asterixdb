@@ -18,11 +18,6 @@
  */
 package org.apache.hyracks.control.nc.service;
 
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.hyracks.control.common.controllers.IniUtils;
-import org.ini4j.Ini;
-import org.kohsuke.args4j.CmdLineParser;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.hyracks.control.common.controllers.IniUtils;
+import org.ini4j.Ini;
+import org.kohsuke.args4j.CmdLineParser;
 
 /**
  * Stand-alone process which listens for configuration information from the
@@ -164,7 +164,13 @@ public class NCService {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NCDriver exited with return value " + retval);
             }
-            return (retval == 0);
+            if (retval == 99) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Terminating NCService based on return value from NCDriver");
+                }
+                System.exit(0);
+            }
+            return retval == 0;
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, "Configuration from CC broken", e);

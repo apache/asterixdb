@@ -289,10 +289,19 @@ public class HyracksClientInterfaceFunctions {
 
     public static class ClusterShutdownFunction extends Function {
         private static final long serialVersionUID = 1L;
+        private final boolean terminateNCService;
+
+        public ClusterShutdownFunction(boolean terminateNCService) {
+            this.terminateNCService = terminateNCService;
+        }
 
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.CLUSTER_SHUTDOWN;
+        }
+
+        public boolean isTerminateNCService() {
+            return terminateNCService;
         }
     }
 

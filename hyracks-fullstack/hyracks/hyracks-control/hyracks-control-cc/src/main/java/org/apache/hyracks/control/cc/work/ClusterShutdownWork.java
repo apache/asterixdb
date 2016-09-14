@@ -33,13 +33,16 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class ClusterShutdownWork extends SynchronizableWork {
+    private static final Logger LOGGER = Logger.getLogger(ClusterShutdownWork.class.getName());
 
-    private ClusterControllerService ccs;
-    private IResultCallback<Boolean> callback;
-    private static Logger LOGGER = Logger.getLogger(ClusterShutdownWork.class.getName());
+    private final ClusterControllerService ccs;
+    private final boolean terminateNCService;
+    private final IResultCallback<Boolean> callback;
 
-    public ClusterShutdownWork(ClusterControllerService ncs, IResultCallback<Boolean> callback) {
+    public ClusterShutdownWork(ClusterControllerService ncs, boolean terminateNCService,
+                               IResultCallback<Boolean> callback) {
         this.ccs = ncs;
+        this.terminateNCService = terminateNCService;
         this.callback = callback;
     }
 
@@ -106,7 +109,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
 
     protected void shutdownNode(String key, NodeControllerState ncState) {
         try {
-            ncState.getNodeController().shutdown();
+            ncState.getNodeController().shutdown(terminateNCService);
         } catch (Exception e) {
             LOGGER.log(
                     Level.INFO, "Exception shutting down NC " + key + " (possibly dead?), continuing shutdown...", e);

@@ -43,13 +43,12 @@ INSTALLDIR=$(cd $CLUSTERDIR/../..; echo $PWD)
 
 if $INSTALLDIR/bin/${HELPER_COMMAND} get_cluster_state -quiet;
 then
-  $INSTALLDIR/bin/${HELPER_COMMAND} shutdown_cluster
+  $INSTALLDIR/bin/${HELPER_COMMAND} shutdown_cluster_all
 else
-  echo "WARNING: sample cluster does not appear to be running, will attempt to kill any running NCServices and"
-  echo "         wait for CCDriver to terminate if running."
+  echo "WARNING: sample cluster does not appear to be running, will attempt to wait for"
+  echo "         CCDriver to terminate if running."
 fi
 
-$JAVA_HOME/bin/jps | awk '/NCService/ { print $1 }' | xargs kill 2>/dev/null
 first=1
 while [ -n "$($JAVA_HOME/bin/jps | awk '/CCDriver/')" ]; do
   if [ $first ]; then

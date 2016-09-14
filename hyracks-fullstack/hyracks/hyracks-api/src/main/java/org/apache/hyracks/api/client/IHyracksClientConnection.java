@@ -185,8 +185,9 @@ public interface IHyracksClientConnection {
 
     /**
      * Shuts down all NCs and then the CC.
+     * @param terminateNCService
      */
-    public void stopCluster() throws Exception;
+    public void stopCluster(boolean terminateNCService) throws Exception;
 
     /**
      * Get details of specified node as JSON object

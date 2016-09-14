@@ -30,7 +30,8 @@ public abstract class ClientCommand {
     public enum Command {
         GET_CLUSTER_STATE("Get state of cluster (errorcode 0 = UP, non-zero = DOWN)"),
         WAIT_FOR_CLUSTER("Wait for cluster to be ready (errorcode 0 = UP, non-zero = UNKNOWN)"),
-        SHUTDOWN_CLUSTER("Instructs the cluster to shut down"),;
+        SHUTDOWN_CLUSTER("Instructs the cluster to shut down, leaving NCService processes intact"),
+        SHUTDOWN_CLUSTER_ALL("Instructs the cluster to shut down, including NCService processes");
 
         private final String usage;
         private static final Map<String, Command> nameMap = new HashMap<>();

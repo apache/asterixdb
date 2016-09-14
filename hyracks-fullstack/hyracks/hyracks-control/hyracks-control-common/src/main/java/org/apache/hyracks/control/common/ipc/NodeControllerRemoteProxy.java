@@ -90,8 +90,8 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
-    public void shutdown() throws Exception {
-        CCNCFunctions.ShutdownRequestFunction sdrf = new CCNCFunctions.ShutdownRequestFunction();
+    public void shutdown(boolean terminateNCService) throws Exception {
+        CCNCFunctions.ShutdownRequestFunction sdrf = new CCNCFunctions.ShutdownRequestFunction(terminateNCService);
         ipcHandle.send(-1, sdrf, null);
     }
 

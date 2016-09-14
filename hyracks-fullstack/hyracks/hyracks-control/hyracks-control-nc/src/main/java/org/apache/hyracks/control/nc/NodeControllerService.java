@@ -572,7 +572,8 @@ public class NodeControllerService implements IControllerService {
                     return;
 
                 case SHUTDOWN_REQUEST:
-                    queue.schedule(new ShutdownWork(NodeControllerService.this));
+                    final CCNCFunctions.ShutdownRequestFunction sdrf = (CCNCFunctions.ShutdownRequestFunction) fn;
+                    queue.schedule(new ShutdownWork(NodeControllerService.this, sdrf.isTerminateNCService()));
                     return;
 
                 case THREAD_DUMP_REQUEST:

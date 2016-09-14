@@ -1158,9 +1158,19 @@ public class CCNCFunctions {
     public static class ShutdownRequestFunction extends Function {
         private static final long serialVersionUID = 1L;
 
+        private final boolean terminateNCService;
+
+        public ShutdownRequestFunction(boolean terminateNCService) {
+            this.terminateNCService = terminateNCService;
+        }
+
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.SHUTDOWN_REQUEST;
+        }
+
+        public boolean isTerminateNCService() {
+            return terminateNCService;
         }
     }
 

@@ -19,49 +19,49 @@
 
 package org.apache.hyracks.control.nc.work;
 
-import java.net.URL;
-import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.control.common.base.IClusterController;
-import org.apache.hyracks.control.common.deployment.DeploymentStatus;
-import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ShutdownWork extends AbstractWork {
-
-    private final NodeControllerService ncs;
     private static Logger LOGGER = Logger.getLogger(ShutdownWork.class.getName());
+    private final NodeControllerService ncs;
+    private final boolean terminateNCService;
 
-    public ShutdownWork(NodeControllerService ncs) {
+    public ShutdownWork(NodeControllerService ncs, boolean terminateNCService) {
         this.ncs = ncs;
+        this.terminateNCService = terminateNCService;
     }
 
     @Override
     public void run() {
+        IClusterController ccs = ncs.getClusterController();
         try {
-            IClusterController ccs = ncs.getClusterController();
             ccs.notifyShutdown(ncs.getId());
-            LOGGER.info("JVM Exiting.. Bye!");
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception notifying CC of shutdown acknowledgment", e);
+            throw new RuntimeException(e);
+        }
+
+        LOGGER.info("JVM Exiting.. Bye!");
             //run the shutdown in a new thread, so we don't block this last work task
-            Thread t = new Thread() {
+            Thread t = new Thread("NC " + ncs.getId() + " Shutdown") {
+                @Override
                 public void run() {
                     try {
                         ncs.stop();
                     } catch (Exception e) {
-                        LOGGER.severe(e.getMessage());
+                        LOGGER.log(Level.SEVERE, "Exception stopping node controller service", e);
                     } finally {
                         Runtime rt = Runtime.getRuntime();
-                        rt.exit(0);
+                        rt.exit(terminateNCService ? 99 : 0);
                     }
                 }
             };
             t.start();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

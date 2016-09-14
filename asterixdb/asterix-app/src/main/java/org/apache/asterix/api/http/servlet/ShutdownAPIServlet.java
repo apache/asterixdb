@@ -45,9 +45,10 @@ public class ShutdownAPIServlet extends HttpServlet {
 
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
+        boolean terminateNCServices = "true".equalsIgnoreCase(request.getParameter("all"));
         Thread t = new Thread(() -> {
             try {
-                hcc.stopCluster();
+                hcc.stopCluster(terminateNCServices);
             } catch (Exception e) {
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Exception stopping cluster", e);
             }

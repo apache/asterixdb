@@ -516,8 +516,10 @@ public class ClusterControllerService implements IControllerService {
                     return;
                 }
                 case CLUSTER_SHUTDOWN: {
+                    HyracksClientInterfaceFunctions.ClusterShutdownFunction csf =
+                            (HyracksClientInterfaceFunctions.ClusterShutdownFunction) fn;
                     workQueue.schedule(new ClusterShutdownWork(ClusterControllerService.this,
-                            new IPCResponder<>(handle, mid)));
+                            csf.isTerminateNCService(), new IPCResponder<>(handle, mid)));
                     return;
                 }
 

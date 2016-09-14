@@ -189,8 +189,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public void stopCluster() throws Exception{
-        hci.stopCluster();
+    public void stopCluster(boolean terminateNCService) throws Exception {
+        hci.stopCluster(terminateNCService);
     }
 
     @Override
