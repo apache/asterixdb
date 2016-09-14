@@ -169,11 +169,11 @@ public class ATypeHierarchy {
     }
 
     public static boolean isCompatible(ATypeTag type1, ATypeTag type2) {
-        return canPromote(type1, type2) | canPromote(type2, type1);
-    }
-
-    public static boolean isDemoteCompatible(ATypeTag type1, ATypeTag type2) {
-        return canDemote(type1, type2) | canDemote(type2, type1);
+        // The type tag ANY is only used at compile time to represent all possibilities.
+        // There is no runtime data model instance that has a type tag ANY.
+        // If we encounter type tag ANY, we should let it pass at compile time and defer erring to the runtime.
+        // Therefore, "type1 == ATypeTag.ANY || type2 == ATypeTag.ANY" works for both compiler and runtime.
+        return type1 == ATypeTag.ANY || type2 == ATypeTag.ANY || canPromote(type1, type2) || canPromote(type2, type1);
     }
 
     // Get an AsterixConstantValue from a source Object

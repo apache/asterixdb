@@ -39,9 +39,7 @@ public class TypeCastUtils {
             opaqueParameters = new Object[2];
             opaqueParameters[0] = requiredType;
             opaqueParameters[1] = inputType;
-            if (TypeComputeUtils.getActualType(inputType).getTypeTag() != ATypeTag.ANY
-                    && TypeComputeUtils.getActualType(requiredType).getTypeTag() != ATypeTag.ANY
-                    && !ATypeHierarchy.isCompatible(requiredType.getTypeTag(),
+            if (!ATypeHierarchy.isCompatible(requiredType.getTypeTag(),
                             TypeComputeUtils.getActualType(inputType).getTypeTag())) {
                 throw new AlgebricksException(inputType + " can't be casted to " + requiredType);
             }
