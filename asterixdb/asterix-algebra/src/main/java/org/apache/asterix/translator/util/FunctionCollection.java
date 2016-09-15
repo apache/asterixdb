@@ -592,7 +592,6 @@ public class FunctionCollection {
         // Record functions.
         functionsToInjectUnkownHandling.add(GetRecordFieldsDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(GetRecordFieldValueDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(FieldAccessByNameDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(DeepEqualityDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(RecordMergeDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(RecordAddFieldsDescriptor.FACTORY);
