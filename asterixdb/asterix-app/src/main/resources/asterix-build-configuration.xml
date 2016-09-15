@@ -47,7 +47,7 @@
 
   <property>
     <name>log.level</name>
-    <value>WARNING</value>
+    <value>INFO</value>
     <description>Log level for running tests/build</description>
   </property>
   <property>

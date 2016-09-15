@@ -75,8 +75,8 @@ public class ResultStateSweeper implements Runnable {
                 datasetManager.deinitState(jobId);
             }
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Result state cleanup instance successfully completed.");
+        if (LOGGER.isLoggable(Level.FINER)) {
+            LOGGER.finer("Result state cleanup instance successfully completed.");
         }
     }
 }

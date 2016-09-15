@@ -18,7 +18,7 @@
         "feed.memory.global.budget": 67108864,
         "feed.pending.work.threshold": 50,
         "feed.port": 19003,
-        "log.level": "WARNING",
+        "log.level": "INFO",
         "max.wait.active.cluster": 60,
         "nc.java.opts": "-Xmx1024m",
         "plot.activate": false,
