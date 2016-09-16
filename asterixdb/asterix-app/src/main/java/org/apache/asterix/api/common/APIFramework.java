@@ -317,7 +317,8 @@ public class APIFramework {
         builder.setMissingWriterFactory(format.getMissingWriterFactory());
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
-        switch (conf.fmt()) {
+        final SessionConfig.OutputFormat outputFormat = conf.fmt();
+        switch (outputFormat) {
             case LOSSLESS_JSON:
                 builder.setPrinterProvider(format.getLosslessJSONPrinterFactoryProvider());
                 break;
@@ -331,7 +332,7 @@ public class APIFramework {
                 builder.setPrinterProvider(format.getCleanJSONPrinterFactoryProvider());
                 break;
             default:
-                throw new RuntimeException("Unexpected OutputFormat!");
+                throw new AlgebricksException("Unexpected OutputFormat: " + outputFormat);
         }
 
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());

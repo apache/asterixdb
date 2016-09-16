@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.deployment;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -33,7 +34,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-
 import org.apache.hyracks.api.application.IApplicationContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -119,8 +119,8 @@ public class DeploymentUtils {
             throws HyracksException {
         try {
             IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
-            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
-                    .getJobSerializerDeserializer(deploymentId);
+            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null
+                    : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
             Object obj = jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
             return obj;
         } catch (Exception e) {
@@ -141,12 +141,10 @@ public class DeploymentUtils {
             throws HyracksException {
         try {
             IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
-            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
-                    .getJobSerializerDeserializer(deploymentId);
-            Class<?> cl = jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe
-                    .loadClass(className);
-            return cl;
-        } catch (Exception e) {
+            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null
+                    : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
+            return jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe.loadClass(className);
+        } catch (ClassNotFoundException | IOException e) {
             throw new HyracksException(e);
         }
     }
@@ -161,15 +159,10 @@ public class DeploymentUtils {
      */
     public static ClassLoader getClassLoader(DeploymentId deploymentId, IApplicationContext appCtx)
             throws HyracksException {
-        try {
-            IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
-            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
-                    .getJobSerializerDeserializer(deploymentId);
-            ClassLoader cl = jobSerDe == null ? DeploymentUtils.class.getClassLoader() : jobSerDe.getClassLoader();
-            return cl;
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
+        IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
+        IJobSerializerDeserializer jobSerDe = deploymentId == null ? null
+                : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
+        return jobSerDe == null ? DeploymentUtils.class.getClassLoader() : jobSerDe.getClassLoader();
     }
 
     /**

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.experiment.builder;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,8 +27,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import org.apache.commons.lang3.StringUtils;
 
 import org.apache.asterix.experiment.action.base.AbstractAction;
 import org.apache.asterix.experiment.action.base.ParallelActionSet;
@@ -40,6 +39,7 @@ import org.apache.asterix.experiment.action.derived.TimedAction;
 import org.apache.asterix.experiment.client.LSMExperimentConstants;
 import org.apache.asterix.experiment.client.LSMExperimentSetRunner.LSMExperimentSetRunnerConfig;
 import org.apache.asterix.experiment.client.OrchestratorServer;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractExperiment8Builder extends AbstractLSMBaseExperimentBuilder {
 
@@ -65,7 +65,7 @@ public abstract class AbstractExperiment8Builder extends AbstractLSMBaseExperime
     private final String rangeQueryTemplate;
 
     public AbstractExperiment8Builder(String name, LSMExperimentSetRunnerConfig config, String clusterConfigFileName,
-            String ingestFileName, String dgenFileName) {
+            String ingestFileName, String dgenFileName) throws IOException {
         super(name, config, clusterConfigFileName, ingestFileName, dgenFileName, null);
         nIntervals = config.getNIntervals();
         orchHost = config.getOrchestratorHost();
@@ -145,25 +145,17 @@ public abstract class AbstractExperiment8Builder extends AbstractLSMBaseExperime
         });
     }
 
-    private String getRangeQueryTemplate() {
-        try {
-            Path aqlTemplateFilePath = localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_q2.aql");
-            return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(aqlTemplateFilePath))).toString();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private String getRangeQueryTemplate() throws IOException {
+        Path aqlTemplateFilePath = localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_q2.aql");
+        return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(aqlTemplateFilePath))).toString();
     }
 
-    private String getPointQueryTemplate() {
-        try {
-            Path aqlTemplateFilePath = localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_q1.aql");
-            return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(aqlTemplateFilePath))).toString();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private String getPointQueryTemplate() throws IOException {
+        Path aqlTemplateFilePath = localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_q1.aql");
+        return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(aqlTemplateFilePath))).toString();
     }
 
-    protected String getPointLookUpAQL(int round) throws Exception {
+    protected String getPointLookUpAQL(int round) {
         ByteBuffer bb = ByteBuffer.allocate(8);
         bb.put((byte) 0);
         bb.put((byte) randGen.nextInt(N_PARTITIONS));
@@ -174,7 +166,7 @@ public abstract class AbstractExperiment8Builder extends AbstractLSMBaseExperime
         return pointQueryTemplate.replaceAll("\\$KEY\\$", Long.toString(key));
     }
 
-    protected String getRangeAQL(int round) throws Exception {
+    protected String getRangeAQL(int round) {
         long numKeys = (((1 + round) * dataInterval) / 1000) * N_PARTITIONS;
         long rangeSize = (long) ((EXPECTED_RANGE_CARDINALITY / (double) numKeys) * DOMAIN_SIZE);
         int lowKey = randGen.nextInt();

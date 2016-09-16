@@ -19,6 +19,7 @@
 
 package org.apache.asterix.experiment.builder;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,8 +27,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import org.apache.commons.lang3.StringUtils;
 
 import org.apache.asterix.experiment.action.base.AbstractAction;
 import org.apache.asterix.experiment.action.base.IAction;
@@ -43,6 +42,7 @@ import org.apache.asterix.experiment.client.LSMExperimentConstants;
 import org.apache.asterix.experiment.client.LSMExperimentSetRunner.LSMExperimentSetRunnerConfig;
 import org.apache.asterix.experiment.client.OrchestratorServer7;
 import org.apache.asterix.experiment.client.OrchestratorServer7.IProtocolActionBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractExperiment7Builder extends AbstractLSMBaseExperimentBuilder {
 
@@ -129,31 +129,25 @@ public abstract class AbstractExperiment7Builder extends AbstractLSMBaseExperime
 
         private final String rangeQueryTemplate;
 
-        public ProtocolActionBuilder() {
+        public ProtocolActionBuilder() throws IOException {
             this.rangeQueryTemplate = getRangeQueryTemplate();
         }
 
-        private String getRangeQueryTemplate() {
-            try {
-                Path aqlTemplateFilePath = localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve(
-                        "8_q2.aql");
-                return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(aqlTemplateFilePath)))
-                        .toString();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        private String getRangeQueryTemplate() throws IOException {
+            Path aqlTemplateFilePath = localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_q2.aql");
+            return StandardCharsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(aqlTemplateFilePath))).toString();
         }
 
         @Override
-        public IAction buildQueryAction(long cardinality, boolean finalRound) throws Exception {
+        public IAction buildQueryAction(long cardinality, boolean finalRound) throws IOException {
             SequentialActionList protoAction = new SequentialActionList();
-            IAction rangeQueryAction = new TimedAction(new RunAQLStringAction(httpClient, restHost, restPort,
-                    getRangeAQL(cardinality, finalRound)));
+            IAction rangeQueryAction = new TimedAction(
+                    new RunAQLStringAction(httpClient, restHost, restPort, getRangeAQL(cardinality, finalRound)));
             protoAction.add(rangeQueryAction);
             return protoAction;
         }
 
-        private String getRangeAQL(long cardinaliry, boolean finalRound) throws Exception {
+        private String getRangeAQL(long cardinaliry, boolean finalRound) throws IOException {
             long round = QUERY_BEGIN_ROUND;
             if (finalRound) {
                 ++round;
@@ -171,7 +165,7 @@ public abstract class AbstractExperiment7Builder extends AbstractLSMBaseExperime
         }
 
         @Override
-        public IAction buildIOWaitAction() throws Exception {
+        public IAction buildIOWaitAction() throws IOException {
             SequentialActionList ioAction = new SequentialActionList();
             ioAction.add(new SleepAction(10000));
             ioAction.add(new RunRESTIOWaitAction(httpClient, restHost, restPort));
@@ -180,9 +174,9 @@ public abstract class AbstractExperiment7Builder extends AbstractLSMBaseExperime
         }
 
         @Override
-        public IAction buildCompactAction() throws Exception {
-            return (new RunAQLFileAction(httpClient, restHost, restPort, localExperimentRoot.resolve(
-                    LSMExperimentConstants.AQL_DIR).resolve("8_compact.aql")));
+        public IAction buildCompactAction() throws IOException {
+            return new RunAQLFileAction(httpClient, restHost, restPort,
+                    localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_compact.aql"));
         }
     }
 

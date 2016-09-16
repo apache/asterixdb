@@ -62,13 +62,7 @@ public class FilesIndexDescription {
             AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true) };
 
     public FilesIndexDescription() {
-        ARecordType type;
-        try {
-            type = new ARecordType("ExternalFileRecordType", payloadFieldNames, payloadFieldTypes, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        ARecordType type = new ARecordType("ExternalFileRecordType", payloadFieldNames, payloadFieldTypes, true);
         EXTERNAL_FILE_RECORD_TYPE = type;
         EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_KEY_INDEX] = AqlTypeTraitProvider.INSTANCE
                 .getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE);

@@ -80,7 +80,7 @@ public class ListItemBinaryHashFunctionFactory implements IBinaryHashFunctionFac
                                 resetTaggedBytes(bytes, offset, length);
                                 return genericBinaryHash.hash(taggedBytes.getByteArray(), 0, length + 1);
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw new HyracksDataException(e);
                             }
                         } else {
                             return genericBinaryHash.hash(bytes, offset, length);

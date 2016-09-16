@@ -19,6 +19,8 @@
 
 package org.apache.asterix.experiment.builder;
 
+import java.io.IOException;
+
 import org.apache.asterix.experiment.action.base.SequentialActionList;
 import org.apache.asterix.experiment.action.derived.RunAQLFileAction;
 import org.apache.asterix.experiment.client.LSMExperimentConstants;
@@ -26,13 +28,13 @@ import org.apache.asterix.experiment.client.LSMExperimentSetRunner.LSMExperiment
 
 public class Experiment8DBuilder extends AbstractExperiment8Builder {
 
-    public Experiment8DBuilder(LSMExperimentSetRunnerConfig config) {
+    public Experiment8DBuilder(LSMExperimentSetRunnerConfig config) throws IOException {
         super("8D", config, "8node.xml", "base_8_ingest.aql", "8.dgen");
     }
 
     @Override
     protected void doBuildDDL(SequentialActionList seq) {
-        seq.add(new RunAQLFileAction(httpClient, restHost, restPort, localExperimentRoot.resolve(
-                LSMExperimentConstants.AQL_DIR).resolve("8_d.aql")));
+        seq.add(new RunAQLFileAction(httpClient, restHost, restPort,
+                localExperimentRoot.resolve(LSMExperimentConstants.AQL_DIR).resolve("8_d.aql")));
     }
 }

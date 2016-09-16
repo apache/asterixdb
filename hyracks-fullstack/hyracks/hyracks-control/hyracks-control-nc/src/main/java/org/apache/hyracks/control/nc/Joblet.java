@@ -234,7 +234,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         if (appCtx.getMemoryManager().allocate(bytes)) {
             memoryAllocation.addAndGet(bytes);
             return frameManager.allocateFrame(bytes);
-       }
+        }
         throw new HyracksDataException("Unable to allocate frame: Not enough memory");
     }
 
@@ -326,20 +326,12 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     @Override
-    public Class<?> loadClass(String className) {
-        try {
-            return DeploymentUtils.loadClass(className, deploymentId, appCtx);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public Class<?> loadClass(String className) throws HyracksException {
+        return DeploymentUtils.loadClass(className, deploymentId, appCtx);
     }
 
     @Override
-    public ClassLoader getClassLoader() {
-        try {
-            return DeploymentUtils.getClassLoader(deploymentId, appCtx);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public ClassLoader getClassLoader() throws HyracksException {
+        return DeploymentUtils.getClassLoader(deploymentId, appCtx);
     }
 }

@@ -159,7 +159,7 @@ public class AsterixEventServiceClient {
                     break;
                 }
             } else {
-                throw new RuntimeException(report.getException().getMessage());
+                throw report.getException();
             }
         }
     }
