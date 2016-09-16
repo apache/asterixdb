@@ -49,8 +49,8 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -341,8 +341,8 @@ public class QueryServiceServlet extends HttpServlet {
         pw.print("\": [{ \n");
         printField(pw, ErrorField.CODE.str(), "1");
         final String msg = rootCause.getMessage();
-        printField(pw, ErrorField.MSG.str(),
-                JSONUtil.escape(rootCause.getClass().getName() + ": " + (msg != null ? msg : "")), addStack);
+        printField(pw, ErrorField.MSG.str(), JSONUtil.escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
+                addStack);
         if (addStack) {
             StringWriter sw = new StringWriter();
             PrintWriter stackWriter = new PrintWriter(sw);
@@ -424,8 +424,8 @@ public class QueryServiceServlet extends HttpServlet {
             IParser parser = compilationProvider.getParserFactory().createParser(query);
             List<Statement> aqlStatements = parser.parse();
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator =
-                    statementExecutorFactory.create(aqlStatements, sessionConfig, compilationProvider);
+            IStatementExecutor translator = statementExecutorFactory.create(aqlStatements, sessionConfig,
+                    compilationProvider);
             execStart = System.nanoTime();
             translator.compileAndExecute(hcc, hds, QueryTranslator.ResultDelivery.SYNC, stats);
             execEnd = System.nanoTime();
