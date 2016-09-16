@@ -1077,6 +1077,11 @@
         <output-dir compare="Text">neq_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="neq_02">
+        <output-dir compare="Text">neq_01</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
         <test-case FilePath="comparison">
           <compilation-unit name="numeric-comparison_01">

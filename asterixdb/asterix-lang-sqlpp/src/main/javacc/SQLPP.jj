@@ -1761,7 +1761,7 @@ Expression RelExpr()throws ParseException:
     }
 
     (
-      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> |<SIMILAR> | (<NOT> { not = true; })? (<LIKE>|<IN>))
+      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? (<LIKE>|<IN>))
         {
           String mhint = getHint(token);
           if (mhint != null) {
@@ -1772,7 +1772,10 @@ Expression RelExpr()throws ParseException:
             }
           }
           String operator = token.image.toLowerCase();
-          if(not){
+          if (operator.equals("<>")){
+              operator = "!=";
+          }
+          if (not) {
             operator = "not_" + operator;
           }
           if (op == null) {
@@ -3130,6 +3133,7 @@ TOKEN :
   | <GE : ">=">
   | <EQ : "=">
   | <NE : "!=">
+  | <LG : "<>">
   | <SIMILAR : "~=">
 }
 
