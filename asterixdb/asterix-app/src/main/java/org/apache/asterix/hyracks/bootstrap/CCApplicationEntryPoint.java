@@ -53,6 +53,7 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.event.service.ILookupService;
@@ -63,7 +64,6 @@ import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManager;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
@@ -324,7 +324,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         ILookupService zookeeperService = ClusterManager.getLookupService();
         if (zookeeperService != null) {
             // Our asterix app runtimes tests don't use zookeeper
-            zookeeperService.reportClusterState(AsterixClusterProperties.INSTANCE.getCluster().getInstanceName(),
+            zookeeperService.reportClusterState(ClusterProperties.INSTANCE.getCluster().getInstanceName(),
                     ClusterState.ACTIVE);
         }
     }

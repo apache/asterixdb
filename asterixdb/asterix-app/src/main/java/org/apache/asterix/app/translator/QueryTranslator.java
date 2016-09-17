@@ -55,6 +55,7 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -160,7 +161,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.CompiledStatements.CompiledConnectFeedStatement;
@@ -3030,8 +3030,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             String fromDatasetName, String toDataverseName, String toDatasetName) {
         // Constructs AsterixDB parameters, e.g., URL, source dataset and sink dataset.
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.INSTANCE.getExternalProperties();
-        AsterixClusterProperties clusterProperties = AsterixClusterProperties.INSTANCE;
-        String clientIP = clusterProperties.getCluster().getMasterNode().getClientIp();
+        String clientIP = ClusterProperties.INSTANCE.getCluster().getMasterNode().getClientIp();
         StringBuilder asterixdbParameterBuilder = new StringBuilder();
         asterixdbParameterBuilder.append(
                 "pregelix.asterixdb.url=" + "http://" + clientIP + ":" + externalProperties.getAPIServerPort() + ",");

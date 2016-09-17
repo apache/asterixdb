@@ -25,9 +25,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.StoragePathUtil;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
@@ -75,7 +76,7 @@ public class FeedUtils {
     public static FileSplit splitsForAdapter(String dataverseName, String feedName, String nodeName,
             ClusterPartition partition) {
         File relPathFile = new File(prepareDataverseFeedName(dataverseName, feedName));
-        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         String storagePartitionPath =
                 StoragePathUtil.prepareStoragePartitionPath(storageDirName, partition.getPartitionId());
         // Note: feed adapter instances in a single node share the feed logger
@@ -93,7 +94,7 @@ public class FeedUtils {
         List<FileSplit> splits = new ArrayList<>();
         for (String nd : locations) {
             splits.add(splitsForAdapter(dataverseName, feedName, nd,
-                    AsterixClusterProperties.INSTANCE.getNodePartitions(nd)[0]));
+                    ClusterStateManager.INSTANCE.getNodePartitions(nd)[0]));
         }
         return splits.toArray(new FileSplit[] {});
     }

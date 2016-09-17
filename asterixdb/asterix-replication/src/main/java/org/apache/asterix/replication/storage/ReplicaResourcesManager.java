@@ -39,11 +39,11 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
@@ -245,7 +245,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
      */
     public Set<File> getPartitionIndexes(int partition) {
         Set<File> partitionIndexes = new HashSet<File>();
-        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         String partitionStoragePath = localRepository.getPartitionPath(partition)
                 + StoragePathUtil.prepareStoragePartitionPath(storageDirName, partition);
         File partitionRoot = new File(partitionStoragePath);

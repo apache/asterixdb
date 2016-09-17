@@ -92,7 +92,7 @@ import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.AsterixLSMInvertedIndexUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.operators.AsterixLSMTreeUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
@@ -951,7 +951,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName())
                 .getNodeNames();
         for (String nd : nodeGroup) {
-            numPartitions += AsterixClusterProperties.INSTANCE.getNodePartitionsCount(nd);
+            numPartitions += ClusterStateManager.INSTANCE.getNodePartitionsCount(nd);
         }
         numElementsHint = numElementsHint / numPartitions;
         return numElementsHint;
@@ -1027,7 +1027,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
-        return AsterixClusterProperties.INSTANCE.getClusterLocations();
+        return ClusterStateManager.INSTANCE.getClusterLocations();
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForFilesIndex(

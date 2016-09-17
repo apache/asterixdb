@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.util;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,13 +31,10 @@ import java.util.SortedMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -62,20 +58,17 @@ import org.json.JSONObject;
  * A holder class for properties related to the Asterix cluster.
  */
 
-public class AsterixClusterProperties {
+public class ClusterStateManager {
     /*
      * TODO: currently after instance restarts we require all nodes to join again,
      * otherwise the cluster wont be ACTIVE. we may overcome this by storing the cluster state before the instance
      * shutdown and using it on startup to identify the nodes that are expected the join.
      */
 
-    private static final Logger LOGGER = Logger.getLogger(AsterixClusterProperties.class.getName());
-    public static final AsterixClusterProperties INSTANCE = new AsterixClusterProperties();
-    public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
-
+    private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
+    public static final ClusterStateManager INSTANCE = new ClusterStateManager();
     private static final String CLUSTER_NET_IP_ADDRESS_KEY = "cluster-net-ip-address";
     private static final String IO_DEVICES = "iodevices";
-    private static final String DEFAULT_STORAGE_DIR_NAME = "storage";
     private Map<String, Map<String, String>> activeNcConfiguration = new HashMap<>();
 
     private final Cluster cluster;
@@ -98,27 +91,16 @@ public class AsterixClusterProperties {
     private LinkedList<NodeFailbackPlan> pendingProcessingFailbackPlans;
     private Map<Long, NodeFailbackPlan> planId2FailbackPlanMap;
 
-    private AsterixClusterProperties() {
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
-        if (is != null) {
-            try {
-                JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
-                Unmarshaller unmarshaller = ctx.createUnmarshaller();
-                cluster = (Cluster) unmarshaller.unmarshal(is);
-            } catch (JAXBException e) {
-                throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE, e);
-            }
-        } else {
-            cluster = null;
-        }
+    private ClusterStateManager() {
+        cluster = ClusterProperties.INSTANCE.getCluster();
         // if this is the CC process
         if (AsterixAppContextInfo.INSTANCE.initialized()
                 && AsterixAppContextInfo.INSTANCE.getCCApplicationContext() != null) {
             node2PartitionsMap = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodePartitions();
             clusterPartitions = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getClusterPartitions();
             currentMetadataNode = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
-            replicationEnabled = isReplicationEnabled();
-            autoFailover = isAutoFailoverEnabled();
+            replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
+            autoFailover = ClusterProperties.INSTANCE.isAutoFailoverEnabled();
             if (autoFailover) {
                 pendingTakeoverRequests = new HashMap<>();
                 pendingProcessingFailbackPlans = new LinkedList<>();
@@ -246,10 +228,6 @@ public class AsterixClusterProperties {
         return state;
     }
 
-    public Cluster getCluster() {
-        return cluster;
-    }
-
     public synchronized Node getAvailableSubstitutionNode() {
         List<Node> subNodes = cluster.getSubstituteNodes() == null ? null : cluster.getSubstituteNodes().getNode();
         return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
@@ -320,19 +298,10 @@ public class AsterixClusterProperties {
         return partitons.toArray(new ClusterPartition[] {});
     }
 
-    public String getStorageDirectoryName() {
-        if (cluster != null) {
-            return cluster.getStore();
-        }
-        // virtual cluster without cluster config file
-        return DEFAULT_STORAGE_DIR_NAME;
-    }
-
     private synchronized void requestPartitionsTakeover(String failedNodeId) {
         //replica -> list of partitions to takeover
         Map<String, List<Integer>> partitionRecoveryPlan = new HashMap<>();
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE
-                .getReplicationProperties();
+        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE.getReplicationProperties();
 
         //collect the partitions of the failed NC
         List<ClusterPartition> lostPartitions = getNodeAssignedPartitions(failedNodeId);
@@ -357,8 +326,8 @@ public class AsterixClusterProperties {
             } else {
                 LOGGER.info("Partitions to recover: " + lostPartitions);
             }
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
-                    .getCCApplicationContext().getMessageBroker();
+            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+                    .getMessageBroker();
             //For each replica, send a request to takeover the assigned partitions
             for (Entry<String, List<Integer>> entry : partitionRecoveryPlan.entrySet()) {
                 String replica = entry.getKey();
@@ -428,8 +397,8 @@ public class AsterixClusterProperties {
                 .getMetadataPartition();
         //request the metadataPartition node to register itself as the metadata node
         TakeoverMetadataNodeRequestMessage takeoverRequest = new TakeoverMetadataNodeRequestMessage();
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
-                .getCCApplicationContext().getMessageBroker();
+        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+                .getMessageBroker();
         try {
             messageBroker.sendApplicationMessageToNC(takeoverRequest, metadataPartiton.getActiveNodeId());
         } catch (Exception e) {
@@ -467,8 +436,7 @@ public class AsterixClusterProperties {
         planId2FailbackPlanMap.put(plan.getPlanId(), plan);
 
         //get all partitions this node requires to resync
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE
-                .getReplicationProperties();
+        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE.getReplicationProperties();
         Set<String> nodeReplicas = replicationProperties.getNodeReplicationClients(failingBackNodeId);
         for (String replicaId : nodeReplicas) {
             ClusterPartition[] nodePartitions = node2PartitionsMap.get(replicaId);
@@ -574,8 +542,8 @@ public class AsterixClusterProperties {
             CompleteFailbackRequestMessage request = plan.getCompleteFailbackRequestMessage();
 
             //send complete resync and takeover partitions to the failing back node
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
-                    .getCCApplicationContext().getMessageBroker();
+            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+                    .getMessageBroker();
             try {
                 messageBroker.sendApplicationMessageToNC(request, request.getNodeId());
             } catch (Exception e) {
@@ -605,8 +573,7 @@ public class AsterixClusterProperties {
     }
 
     private synchronized void notifyImpactedReplicas(String nodeId, ClusterEventType event) {
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE
-                .getReplicationProperties();
+        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE.getReplicationProperties();
         Set<String> remoteReplicas = replicationProperties.getRemoteReplicasIds(nodeId);
         String nodeIdAddress = "";
         //in case the node joined with a new IP address, we need to send it to the other replicas
@@ -615,8 +582,8 @@ public class AsterixClusterProperties {
         }
 
         ReplicaEventMessage msg = new ReplicaEventMessage(nodeId, nodeIdAddress, event);
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
-                .getCCApplicationContext().getMessageBroker();
+        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+                .getMessageBroker();
         for (String replica : remoteReplicas) {
             //if the remote replica is alive, send the event
             if (activeNcConfiguration.containsKey(replica)) {
@@ -653,17 +620,6 @@ public class AsterixClusterProperties {
 
     public synchronized boolean isMetadataNodeActive() {
         return metadataNodeActive;
-    }
-
-    public boolean isReplicationEnabled() {
-        if (cluster != null && cluster.getDataReplication() != null) {
-            return cluster.getDataReplication().isEnabled();
-        }
-        return false;
-    }
-
-    public boolean isAutoFailoverEnabled() {
-        return isReplicationEnabled() && cluster.getDataReplication().isAutoFailover();
     }
 
     public synchronized JSONObject getClusterStateDescription() throws JSONException {

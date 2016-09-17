@@ -31,6 +31,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.management.AsterixEventServiceClient;
 import org.apache.asterix.event.model.AsterixInstance;
@@ -46,7 +47,6 @@ import org.apache.asterix.event.util.PatternCreator;
 import org.apache.asterix.installer.schema.conf.Configuration;
 import org.apache.asterix.metadata.api.IClusterManager;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
 
 public class ClusterManager implements IClusterManager {
 
@@ -61,7 +61,7 @@ public class ClusterManager implements IClusterManager {
     private static final Set<IClusterEventsSubscriber> eventSubscribers = new HashSet<IClusterEventsSubscriber>();
 
     private ClusterManager() {
-        Cluster asterixCluster = AsterixClusterProperties.INSTANCE.getCluster();
+        Cluster asterixCluster = ClusterProperties.INSTANCE.getCluster();
         String eventHome = asterixCluster == null ? null
                 : asterixCluster.getWorkingDir() == null ? null : asterixCluster.getWorkingDir().getDir();
 
@@ -75,8 +75,7 @@ public class ClusterManager implements IClusterManager {
                 Unmarshaller unmarshaller = configCtx.createUnmarshaller();
                 configuration = (Configuration) unmarshaller.unmarshal(configFile);
                 AsterixEventService.initialize(configuration, asterixDir, eventHome);
-                client = AsterixEventService
-                        .getAsterixEventServiceClient(AsterixClusterProperties.INSTANCE.getCluster());
+                client = AsterixEventService.getAsterixEventServiceClient(ClusterProperties.INSTANCE.getCluster());
 
                 lookupService = ServiceProvider.INSTANCE.getLookupService();
                 if (!lookupService.isRunning(configuration)) {
@@ -99,11 +98,11 @@ public class ClusterManager implements IClusterManager {
     @Override
     public void addNode(Node node) throws AsterixException {
         try {
-            Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+            Cluster cluster = ClusterProperties.INSTANCE.getCluster();
             List<Pattern> pattern = new ArrayList<Pattern>();
             String asterixInstanceName = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getInstanceName();
             Patterns prepareNode = PatternCreator.INSTANCE.createPrepareNodePattern(asterixInstanceName,
-                    AsterixClusterProperties.INSTANCE.getCluster(), node);
+                    ClusterProperties.INSTANCE.getCluster(), node);
             cluster.getNode().add(node);
             client.submit(prepareNode);
 

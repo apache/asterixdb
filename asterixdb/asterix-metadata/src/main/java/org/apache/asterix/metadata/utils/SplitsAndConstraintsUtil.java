@@ -23,12 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -44,11 +45,11 @@ public class SplitsAndConstraintsUtil {
         File relPathFile = new File(dataverseName);
         List<FileSplit> splits = new ArrayList<>();
         // get all partitions
-        ClusterPartition[] clusterPartition = AsterixClusterProperties.INSTANCE.getClusterPartitons();
-        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        ClusterPartition[] clusterPartition = ClusterStateManager.INSTANCE.getClusterPartitons();
+        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         for (int j = 0; j < clusterPartition.length; j++) {
             int nodePartitions =
-                    AsterixClusterProperties.INSTANCE.getNodePartitionsCount(clusterPartition[j].getNodeId());
+                    ClusterStateManager.INSTANCE.getNodePartitionsCount(clusterPartition[j].getNodeId());
             for (int i = 0; i < nodePartitions; i++) {
                 File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
                         clusterPartition[i].getPartitionId()) + File.separator + relPathFile);
@@ -70,11 +71,11 @@ public class SplitsAndConstraintsUtil {
                 throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
             }
 
-            String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+            String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
             List<FileSplit> splits = new ArrayList<>();
             for (String nd : nodeGroup) {
-                int numPartitions = AsterixClusterProperties.INSTANCE.getNodePartitionsCount(nd);
-                ClusterPartition[] nodePartitions = AsterixClusterProperties.INSTANCE.getNodePartitions(nd);
+                int numPartitions = ClusterStateManager.INSTANCE.getNodePartitionsCount(nd);
+                ClusterPartition[] nodePartitions = ClusterStateManager.INSTANCE.getNodePartitions(nd);
                 // currently this case is never executed since the metadata group doesn't exists
                 if (dataset.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
                     numPartitions = 1;
@@ -110,8 +111,8 @@ public class SplitsAndConstraintsUtil {
             List<FileSplit> splits = new ArrayList<>();
             for (String nodeId : nodeGroup) {
                 // get node partitions
-                ClusterPartition[] nodePartitions = AsterixClusterProperties.INSTANCE.getNodePartitions(nodeId);
-                String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+                ClusterPartition[] nodePartitions = ClusterStateManager.INSTANCE.getNodePartitions(nodeId);
+                String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
                 int firstPartition = 0;
                 if (create) {
                     // Only the first partition when create
@@ -146,7 +147,7 @@ public class SplitsAndConstraintsUtil {
     }
 
     public static String getIndexPath(String partitionPath, int partition, String dataverse, String fullIndexName) {
-        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         return partitionPath + StoragePathUtil.prepareStoragePartitionPath(storageDirName, partition) + File.separator
                 + StoragePathUtil.prepareDataverseIndexName(dataverse, fullIndexName);
     }

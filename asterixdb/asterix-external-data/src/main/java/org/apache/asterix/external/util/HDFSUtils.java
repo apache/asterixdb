@@ -30,7 +30,7 @@ import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -205,7 +205,7 @@ public class HDFSUtils {
             ArrayList<String> locs = new ArrayList<>();
             Map<String, String[]> stores = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getStores();
             for (String node : stores.keySet()) {
-                int numIODevices = AsterixClusterProperties.INSTANCE.getIODevices(node).length;
+                int numIODevices = ClusterStateManager.INSTANCE.getIODevices(node).length;
                 for (int k = 0; k < numIODevices; k++) {
                     locs.add(node);
                 }

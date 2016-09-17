@@ -36,7 +36,7 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -116,7 +116,7 @@ public class MetadataManagerUtil {
         NodeGroup nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroupName);
         List<String> partitions = new ArrayList<>();
         for (String location : nodeGroup.getNodeNames()) {
-            int numPartitions = AsterixClusterProperties.INSTANCE.getNodePartitionsCount(location);
+            int numPartitions = ClusterStateManager.INSTANCE.getNodePartitionsCount(location);
             for (int i = 0; i < numPartitions; i++) {
                 partitions.add(location);
             }

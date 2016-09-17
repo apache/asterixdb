@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
@@ -72,7 +73,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
                     .getAppContext()).getReplicationProperties();
         }
 
-        if (asterixReplicationProperties != null && asterixReplicationProperties.isReplicationEnabled()) {
+        if (asterixReplicationProperties != null && ClusterProperties.INSTANCE.isReplicationEnabled()) {
             this.logManager = new LogManagerWithReplication(this);
         } else {
             this.logManager = new LogManager(this);

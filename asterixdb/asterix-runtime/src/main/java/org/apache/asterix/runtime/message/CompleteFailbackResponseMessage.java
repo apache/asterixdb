@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.message;
 
 import java.util.Set;
 
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
@@ -49,6 +49,6 @@ public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException {
-        AsterixClusterProperties.INSTANCE.processCompleteFailbackResponse(this);
+        ClusterStateManager.INSTANCE.processCompleteFailbackResponse(this);
     }
 }

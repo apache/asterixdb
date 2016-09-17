@@ -41,7 +41,7 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -60,8 +60,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
 
     @Override
     public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds) {
-        setState(AsterixClusterProperties.INSTANCE.getState());
-        AsterixClusterProperties.INSTANCE.setGlobalRecoveryCompleted(false);
+        setState(ClusterStateManager.INSTANCE.getState());
+        ClusterStateManager.INSTANCE.setGlobalRecoveryCompleted(false);
         return Collections.emptySet();
     }
 
@@ -90,7 +90,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
     @Override
     public void startGlobalRecovery() {
         // perform global recovery if state changed to active
-        final ClusterState newState = AsterixClusterProperties.INSTANCE.getState();
+        final ClusterState newState = ClusterStateManager.INSTANCE.getState();
         boolean needToRecover = !newState.equals(state) && (newState == ClusterState.ACTIVE);
         if (needToRecover) {
             Thread recoveryThread = new Thread(new Runnable() {
@@ -211,7 +211,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                             throw new IllegalStateException(e1);
                         }
                     }
-                    AsterixClusterProperties.INSTANCE.setGlobalRecoveryCompleted(true);
+                    ClusterStateManager.INSTANCE.setGlobalRecoveryCompleted(true);
                     LOGGER.info("Global Recovery Completed");
                 }
             }, "RecoveryThread");

@@ -33,11 +33,11 @@ import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
@@ -46,7 +46,7 @@ import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
 import org.apache.asterix.runtime.message.ReportMaxResourceIdMessage;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
@@ -127,8 +127,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 (NCMessageBroker) messageBroker, messagingProperties);
         ncApplicationContext.setMessagingChannelInterfaceFactory(interfaceFactory);
 
-        boolean replicationEnabled = AsterixClusterProperties.INSTANCE.isReplicationEnabled();
-        boolean autoFailover = AsterixClusterProperties.INSTANCE.isAutoFailoverEnabled();
+        boolean replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
+        boolean autoFailover = ClusterProperties.INSTANCE.isAutoFailoverEnabled();
         if (initialRun) {
             LOGGER.info("System is being initialized. (first run)");
         } else {
@@ -225,7 +225,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             PersistentLocalResourceRepository localResourceRepository =
                     (PersistentLocalResourceRepository) runtimeContext
                             .getLocalResourceRepository();
-            localResourceRepository.initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
+            localResourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
@@ -274,7 +274,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         runtimeContext.getIOManager().deleteWorkspaceFiles();
 
         //Reclaim storage for temporary datasets.
-        String storageDirName = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         String[] ioDevices = ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
                 .getStorageMountingPoints();
         for (String ioDevice : ioDevices) {
@@ -293,7 +293,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
             metadataProperties.getNodeNames().add(nodeId);
-            Cluster cluster = AsterixClusterProperties.INSTANCE.getCluster();
+            Cluster cluster = ClusterProperties.INSTANCE.getCluster();
             if (cluster == null) {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
@@ -310,7 +310,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             for (Node node : nodes) {
                 String ncId = asterixInstanceName + "_" + node.getId();
                 if (ncId.equalsIgnoreCase(nodeId)) {
-                    String storeDir = AsterixClusterProperties.INSTANCE.getStorageDirectoryName();
+                    String storeDir = ClusterProperties.INSTANCE.getStorageDirectoryName();
                     String nodeIoDevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
                     String[] ioDevicePaths = nodeIoDevices.trim().split(",");
                     for (int i = 0; i < ioDevicePaths.length; i++) {

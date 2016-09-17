@@ -38,7 +38,7 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -53,12 +53,12 @@ public abstract class AbstractLangTranslator {
 
     public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
 
-        if (!(AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)
-                && AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted())) {
+        if (!(ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)
+                && ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted())) {
             int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
-                while (!AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)
+                while (!ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)
                         && waitCycleCount < maxWaitCycles) {
                     Thread.sleep(1000);
                     waitCycleCount++;
@@ -68,7 +68,7 @@ public abstract class AbstractLangTranslator {
                     LOGGER.warning("Thread interrupted while waiting for cluster to be " + ClusterState.ACTIVE);
                 }
             }
-            if (!AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)) {
+            if (!ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)) {
                 throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE + " state."
                         + "\n One or more Node Controllers have left or haven't joined yet.\n");
             } else {
@@ -78,16 +78,16 @@ public abstract class AbstractLangTranslator {
             }
         }
 
-        if (AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.UNUSABLE)) {
+        if (ClusterStateManager.INSTANCE.getState().equals(ClusterState.UNUSABLE)) {
             throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE + " state."
                     + "\n One or more Node Controllers have left.\n");
         }
 
-        if (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()) {
+        if (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()) {
             int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
-                while (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()
+                while (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()
                         && waitCycleCount < maxWaitCycles) {
                     Thread.sleep(1000);
                     waitCycleCount++;
@@ -97,7 +97,7 @@ public abstract class AbstractLangTranslator {
                     LOGGER.warning("Thread interrupted while waiting for cluster to complete global recovery ");
                 }
             }
-            if (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()) {
+            if (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()) {
                 throw new AsterixException(" Asterix Cluster Global recovery is not yet complete and The system is in "
                         + ClusterState.ACTIVE + " state");
             }

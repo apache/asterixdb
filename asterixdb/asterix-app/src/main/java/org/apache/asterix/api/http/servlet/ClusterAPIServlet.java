@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.AbstractAsterixProperties;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -90,7 +90,7 @@ public class ClusterAPIServlet extends HttpServlet {
     protected JSONObject getClusterStateJSON(HttpServletRequest request, String pathToNode)
             throws JSONException {
         JSONObject json;
-        json = AsterixClusterProperties.INSTANCE.getClusterStateDescription();
+        json = ClusterStateManager.INSTANCE.getClusterStateDescription();
         Map<String, Object> allProperties = getAllClusterProperties();
         json.put("config", allProperties);
 

@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONObject;
 
@@ -61,7 +61,7 @@ public class ShutdownAPIServlet extends HttpServlet {
         try {
             jsonObject.put("status", "SHUTTING_DOWN");
             jsonObject.put("date", new Date());
-            jsonObject.put("cluster", AsterixClusterProperties.INSTANCE.getClusterStateDescription());
+            jsonObject.put("cluster", ClusterStateManager.INSTANCE.getClusterStateDescription());
 
             final PrintWriter writer = response.getWriter();
             writer.print(jsonObject.toString(4));

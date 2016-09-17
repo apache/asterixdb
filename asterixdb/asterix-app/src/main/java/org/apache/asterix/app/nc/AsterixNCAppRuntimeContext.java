@@ -44,6 +44,7 @@ import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.context.AsterixFileMapManager;
@@ -71,7 +72,6 @@ import org.apache.asterix.replication.management.ReplicationManager;
 import org.apache.asterix.replication.recovery.RemoteRecoveryManager;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.runtime.transaction.GlobalResourceIdFactoryProvider;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -161,8 +161,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         feedProperties = new AsterixFeedProperties(propertiesAccessor);
         buildProperties = new AsterixBuildProperties(propertiesAccessor);
-        replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
-                AsterixClusterProperties.INSTANCE.getCluster());
+        replicationProperties = new AsterixReplicationProperties(propertiesAccessor);
         messagingProperties = new MessagingProperties(propertiesAccessor);
         this.metadataRmiPort = metadataRmiPort;
         libraryManager = new ExternalLibraryManager();
@@ -220,7 +219,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         activeManager = new ActiveManager(ncApplicationContext.getNodeId(),
                 feedProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize());
 
-        if (replicationProperties.isReplicationEnabled()) {
+        if (ClusterProperties.INSTANCE.isReplicationEnabled()) {
             String nodeId = ncApplicationContext.getNodeId();
 
             replicaResourcesManager = new ReplicaResourcesManager(localResourceRepository, metadataProperties);

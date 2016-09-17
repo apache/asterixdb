@@ -30,7 +30,7 @@ import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.ClusterManager;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 
 public class ClusterWorkExecutor implements Runnable {
 
@@ -68,7 +68,7 @@ public class ClusterWorkExecutor implements Runnable {
 
                 Set<Node> addedNodes = new HashSet<Node>();
                 for (int i = 0; i < nodesToAdd; i++) {
-                    Node node = AsterixClusterProperties.INSTANCE.getAvailableSubstitutionNode();
+                    Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
                     if (node != null) {
                         try {
                             ClusterManager.INSTANCE.addNode(node);
