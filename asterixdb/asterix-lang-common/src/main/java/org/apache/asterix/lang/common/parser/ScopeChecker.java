@@ -29,6 +29,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
 public class ScopeChecker {
 
+    protected static String quot = "\"";
+
+    protected String eol = System.getProperty("line.separator", "\n");
+
     protected Counter varCounter = new Counter(-1);
 
     protected Stack<Scope> scopeStack = new Stack<Scope>();
@@ -57,7 +61,6 @@ public class ScopeChecker {
     /**
      * Create a new scope, using the top scope in scopeStack as parent scope
      *
-     * @param scopeStack
      * @return new scope
      */
     public final Scope createNewScope() {
@@ -70,7 +73,6 @@ public class ScopeChecker {
     /**
      * Extend the current scope
      *
-     * @param scopeStack
      * @return
      */
     public final Scope extendCurrentScope() {
@@ -172,7 +174,88 @@ public class ScopeChecker {
         return false;
     }
 
-    public static final String removeQuotesAndEscapes(String s) {
+    protected int appendExpected(StringBuilder expected, int[][] expectedTokenSequences, String[] tokenImage) {
+        int maxSize = 0;
+        for (int i = 0; i < expectedTokenSequences.length; i++) {
+            if (maxSize < expectedTokenSequences[i].length) {
+                maxSize = expectedTokenSequences[i].length;
+            }
+            for (int j = 0; j < expectedTokenSequences[i].length; j++) {
+                append(expected, fixQuotes(tokenImage[expectedTokenSequences[i][j]]));
+                append(expected, " ");
+            }
+            if (expectedTokenSequences[i][expectedTokenSequences[i].length - 1] != 0) {
+                append(expected, "...");
+            }
+            append(expected, eol);
+            append(expected, "    ");
+        }
+        return maxSize;
+    }
+
+    private void append(StringBuilder expected, String str) {
+        if (expected != null) {
+            expected.append(str);
+        }
+    }
+
+    protected String fixQuotes(String token) {
+        final int last = token.length() - 1;
+        if (token.charAt(0) == '"' && token.charAt(last) == '"') {
+            return "'" + token.substring(1, last) + "'";
+        } else {
+            return token;
+        }
+    }
+
+    protected static String addEscapes(String str) {
+        StringBuilder escaped = new StringBuilder();
+        for (int i = 0; i < str.length(); i++) {
+            appendChar(escaped, str.charAt(i));
+        }
+        return escaped.toString();
+    }
+
+    private static void appendChar(StringBuilder escaped, char c) {
+        char ch;
+        switch (c) {
+            case 0:
+                return;
+            case '\b':
+                escaped.append("\\b");
+                return;
+            case '\t':
+                escaped.append("\\t");
+                return;
+            case '\n':
+                escaped.append("\\n");
+                return;
+            case '\f':
+                escaped.append("\\f");
+                return;
+            case '\r':
+                escaped.append("\\r");
+                return;
+            case '\"':
+                escaped.append("\\\"");
+                return;
+            case '\'':
+                escaped.append("\\\'");
+                return;
+            case '\\':
+                escaped.append("\\\\");
+                return;
+            default:
+                if ((ch = c) < 0x20 || ch > 0x7e) {
+                    String s = "0000" + Integer.toString(ch, 16);
+                    escaped.append("\\u").append(s.substring(s.length() - 4, s.length()));
+                } else {
+                    escaped.append(ch);
+                }
+        }
+    }
+
+    public static String removeQuotesAndEscapes(String s) {
         char q = s.charAt(0); // simple or double quote
         String stripped = s.substring(1, s.length() - 1);
         int pos = stripped.indexOf('\\');
@@ -220,7 +303,11 @@ public class ScopeChecker {
         return res.toString();
     }
 
-    public String extractFragment(int beginLine, int beginColumn, int endLine, int endColumn) {
+    protected String getLine(int line) {
+        return inputLines[line - 1];
+    }
+
+    protected String extractFragment(int beginLine, int beginColumn, int endLine, int endColumn) {
         StringBuilder extract = new StringBuilder();
         if (beginLine == endLine) {
             // special case that we need to handle separately

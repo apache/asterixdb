@@ -151,8 +151,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-
-
 class SQLPPParser extends ScopeChecker implements IParser {
 
     // optimizer hints
@@ -178,6 +176,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     // data generator hints
     private static final String DGEN_HINT = "dgen";
+
+    // error configuration
+    protected static final boolean REPORT_EXPECTED_TOKENS = false;
 
     private static class IndexParams {
       public IndexType type;
@@ -251,7 +252,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
       return rfdg;
     }
 
-    public SQLPPParser(String s){
+    public SQLPPParser(String s) {
         this(new StringReader(s));
         super.setInput(s);
     }
@@ -272,9 +273,47 @@ class SQLPPParser extends ScopeChecker implements IParser {
             // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
             throw new AsterixException(new ParseException(e.getMessage()));
         } catch (ParseException e) {
-            throw new AsterixException(e.getMessage());
+            throw new AsterixException("Syntax error: " + getMessage(e));
         }
     }
+
+    protected String getMessage(ParseException pe) {
+        Token currentToken = pe.currentToken;
+        if (currentToken == null) {
+            return pe.getMessage();
+        }
+        int[][] expectedTokenSequences = pe.expectedTokenSequences;
+        String[] tokenImage = pe.tokenImage;
+        String sep = REPORT_EXPECTED_TOKENS ? eol : " ";
+        StringBuilder expected = REPORT_EXPECTED_TOKENS ? new StringBuilder() : null;
+        int maxSize = appendExpected(expected, expectedTokenSequences, tokenImage);
+        Token tok = currentToken.next;
+        int line = tok.beginLine;
+        String message = "In line " + line + " >>" + getLine(line) + "<<" + sep + "Encountered ";
+        for (int i = 0; i < maxSize; i++) {
+            if (i != 0) {
+                message += " ";
+            }
+            if (tok.kind == 0) {
+                message += fixQuotes(tokenImage[0]);
+                break;
+            }
+            message += fixQuotes(tokenImage[tok.kind]) + " ";
+            message += quot + addEscapes(tok.image) + quot;
+            tok = tok.next;
+        }
+        message += " at column " + currentToken.next.beginColumn + "." + sep;
+        if (REPORT_EXPECTED_TOKENS) {
+            if (expectedTokenSequences.length == 1) {
+                message += "Was expecting:" + sep + "    ";
+            } else {
+                message += "Was expecting one of:" + sep + "    ";
+            }
+            message += expected.toString();
+        }
+        return message;
+    }
+
 }
 
 PARSER_END(SQLPPParser)
