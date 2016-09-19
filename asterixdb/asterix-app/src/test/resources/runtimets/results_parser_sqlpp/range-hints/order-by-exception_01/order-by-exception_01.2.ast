@@ -1,2 +1,0 @@
-DataverseUse TinySocial
-DatasetDecl TwitterUsers(TwitterUserType) partitioned by [[screen_name]]

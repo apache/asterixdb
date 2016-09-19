@@ -333,7 +333,11 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
 
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws AsterixException {
-        out.print(t.getIdent());
+        if (t.getIdent().first != null && t.getIdent().first.getValue() != null) {
+            out.print(t.getIdent().first.getValue());
+            out.print('.');
+        }
+        out.print(t.getIdent().second.getValue());
         return null;
     }
 

@@ -49,7 +49,7 @@ public abstract class AbstractExecutionIT {
 
     protected static final Logger LOGGER = Logger.getLogger(AbstractExecutionIT.class.getName());
 
-    protected static final String PATH_ACTUAL = "ittest" + File.separator;
+    protected static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     protected static final String PATH_BASE = StringUtils
             .join(new String[] { "..", "asterix-app", "src", "test", "resources", "runtimets" }, File.separator);
 
@@ -58,6 +58,8 @@ public abstract class AbstractExecutionIT {
     protected static final TestExecutor testExecutor = new TestExecutor();
 
     private static final String EXTERNAL_LIBRARY_TEST_GROUP = "lib";
+
+    private static final List<String> badTestCases = new ArrayList<>();
 
     private static String reportPath =
             new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
@@ -88,15 +90,14 @@ public abstract class AbstractExecutionIT {
         AsterixLifecycleIT.setUp();
 
         File externalTestsJar = new File(StringUtils.join(
-                new String[] { "..", "asterix-external-data", "target" } , File.separator)).listFiles(
-                (dir, name) -> name.matches("asterix-external-data-.*-tests.jar"))[0];
+                new String[] { "..", "asterix-external-data", "target" }, File.separator)).listFiles(
+                        (dir, name) -> name.matches("asterix-external-data-.*-tests.jar"))[0];
 
         FileUtils.copyFile(externalTestsJar, new File(
                 AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/asterix/repo/",
                 externalTestsJar.getName()));
 
         AsterixLifecycleIT.restartInstance();
-
 
         FileUtils.copyDirectoryStructure(
                 new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
@@ -115,7 +116,7 @@ public abstract class AbstractExecutionIT {
         System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
 
-        reportPath = new File(StringUtils.join(new String[]{"target", "failsafe-reports"}, File.separator))
+        reportPath = new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator))
                 .getAbsolutePath();
     }
 
@@ -127,8 +128,13 @@ public abstract class AbstractExecutionIT {
             outdir.delete();
         }
         AsterixLifecycleIT.tearDown();
-
         HDFSCluster.getInstance().cleanup();
+        if (!badTestCases.isEmpty()) {
+            System.out.println("The following test cases left some data");
+            for (String testCase : badTestCases) {
+                System.out.println(testCase);
+            }
+        }
     }
 
     @Parameters
@@ -153,6 +159,7 @@ public abstract class AbstractExecutionIT {
             return;
         }
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
+        testExecutor.cleanup(tcCtx.toString(), badTestCases);
     }
 
     protected boolean skip() {

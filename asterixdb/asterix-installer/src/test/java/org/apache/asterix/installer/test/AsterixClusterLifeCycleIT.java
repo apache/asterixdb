@@ -44,7 +44,7 @@ public class AsterixClusterLifeCycleIT {
             .join(new String[] { "src", "test", "resources", "integrationts", "lifecycle" }, File.separator);
     private static final String CLUSTER_BASE = StringUtils
             .join(new String[] { "src", "test", "resources", "clusterts" }, File.separator);
-    private static final String PATH_ACTUAL = "ittest" + File.separator;
+    private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     private static String managixFolderName;
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterLifeCycleIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;

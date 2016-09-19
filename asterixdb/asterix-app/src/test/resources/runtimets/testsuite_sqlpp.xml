@@ -7190,7 +7190,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Cannot find dataset y because there is no dataverse declared, nor an alias with name y</expected-error>
+        <expected-error>Cannot find dataset y in dataverse Default nor an alias with name y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -7704,6 +7704,11 @@
     </test-case>
   </test-group>
   <test-group name="types">
+    <test-case FilePath="types">
+      <compilation-unit name="any-object">
+        <output-dir compare="Text">any-object</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>

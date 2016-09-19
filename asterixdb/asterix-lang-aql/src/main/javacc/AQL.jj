@@ -1291,16 +1291,16 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 
 TypeReferenceExpression TypeReference() throws ParseException:
 {
-  String id = null;
+  Pair<Identifier,Identifier> id = null;
 }
 {
- id = Identifier()
+ id = QualifiedName()
    {
-     if (id.equalsIgnoreCase("int")) {
-        id = "int64";
+     if (id.first == null && id.second.getValue().equalsIgnoreCase("int")) {
+        id.second.setValue("int64");
      }
 
-     return new TypeReferenceExpression(new Identifier(id));
+     return new TypeReferenceExpression(id);
    }
 }
 

@@ -44,7 +44,6 @@ import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
-import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
 import org.apache.asterix.runtime.message.ReportMaxResourceIdMessage;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
@@ -190,11 +189,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Stopping Asterix node controller: " + nodeId);
             }
-
-            if (isMetadataNode) {
-                MetadataBootstrap.stopUniverse();
-            }
-
             //Clean any temporary files
             performLocalCleanUp();
 

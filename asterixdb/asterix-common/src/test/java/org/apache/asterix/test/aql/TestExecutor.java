@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
+import org.apache.asterix.test.base.ComparisonException;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -52,6 +53,7 @@ import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -121,16 +123,15 @@ public class TestExecutor {
         BufferedReader readerActual = new BufferedReader(
                 new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
         boolean regex = false;
-        if (actualFile.toString().endsWith(".regex")) {
-            runScriptAndCompareWithResultRegex(scriptFile, expectedFile, actualFile);
-            return;
-        } else if (actualFile.toString().endsWith(".regexadm")) {
-            regex = true;
-        }
-
-        String lineExpected, lineActual;
-        int num = 1;
         try {
+            if (actualFile.toString().endsWith(".regex")) {
+                runScriptAndCompareWithResultRegex(scriptFile, expectedFile, actualFile);
+                return;
+            } else if (actualFile.toString().endsWith(".regexadm")) {
+                regex = true;
+            }
+            String lineExpected, lineActual;
+            int num = 1;
             while ((lineExpected = readerExpected.readLine()) != null) {
                 lineActual = readerActual.readLine();
                 // Assert.assertEquals(lineExpected, lineActual);
@@ -138,7 +139,7 @@ public class TestExecutor {
                     if (lineExpected.isEmpty()) {
                         continue;
                     }
-                    throw new Exception(
+                    throw new ComparisonException(
                             "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> ");
                 }
 
@@ -146,19 +147,21 @@ public class TestExecutor {
                 String[] lineSplitsExpected = lineExpected.split("Time");
                 String[] lineSplitsActual = lineActual.split("Time");
                 if (lineSplitsExpected.length != lineSplitsActual.length) {
-                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
-                            + "\n> " + lineActual);
+                    throw new ComparisonException(
+                            "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
+                                    + "\n> " + lineActual);
                 }
                 if (!equalStrings(lineSplitsExpected[0], lineSplitsActual[0], regex)) {
-                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
-                            + "\n> " + lineActual);
+                    throw new ComparisonException(
+                            "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
+                                    + "\n> " + lineActual);
                 }
 
                 for (int i = 1; i < lineSplitsExpected.length; i++) {
                     String[] splitsByCommaExpected = lineSplitsExpected[i].split(",");
                     String[] splitsByCommaActual = lineSplitsActual[i].split(",");
                     if (splitsByCommaExpected.length != splitsByCommaActual.length) {
-                        throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< "
+                        throw new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\n< "
                                 + lineExpected + "\n> " + lineActual);
                     }
                     for (int j = 1; j < splitsByCommaExpected.length; j++) {
@@ -168,8 +171,9 @@ public class TestExecutor {
                             continue;
                         }
                         if (!equalStrings(splitsByCommaExpected[j], splitsByCommaActual[j], regex)) {
-                            throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< "
-                                    + lineExpected + "\n> " + lineActual);
+                            throw new ComparisonException(
+                                    "Result for " + scriptFile + " changed at line " + num + ":\n< "
+                                            + lineExpected + "\n> " + lineActual);
                         }
                     }
                 }
@@ -178,7 +182,8 @@ public class TestExecutor {
             }
             lineActual = readerActual.readLine();
             if (lineActual != null) {
-                throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
+                throw new ComparisonException(
+                        "Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
             }
         } catch (Exception e) {
             System.err.println("Actual results file: " + actualFile.toString());
@@ -223,8 +228,8 @@ public class TestExecutor {
                             if (expectedBagElements.size() != actualBagElements.size()) {
                                 return false;
                             }
-                            int [] expectedHits = new int [expectedBagElements.size()];
-                            int [] actualHits = new int [actualBagElements.size()];
+                            int[] expectedHits = new int[expectedBagElements.size()];
+                            int[] actualHits = new int[actualBagElements.size()];
                             int k = 0;
                             for (String expectedElement : expectedBagElements) {
                                 int l = 0;
@@ -289,9 +294,8 @@ public class TestExecutor {
         int num = 1;
         try (BufferedReader readerExpected = new BufferedReader(
                 new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-             BufferedReader readerActual = new BufferedReader(
-                new InputStreamReader(new FileInputStream(actualFile), "UTF-8")))
-        {
+                BufferedReader readerActual = new BufferedReader(
+                        new InputStreamReader(new FileInputStream(actualFile), "UTF-8"))) {
             StringBuilder actual = new StringBuilder();
             while ((lineActual = readerActual.readLine()) != null) {
                 actual.append(lineActual).append('\n');
@@ -330,7 +334,6 @@ public class TestExecutor {
         }
 
     }
-
 
     // For tests where you simply want the byte-for-byte output.
     private static void writeOutputToFile(File actualFile, InputStream resultStream) throws Exception {
@@ -919,7 +922,8 @@ public class TestExecutor {
                         e.printStackTrace();
                         System.err.println("...Unexpected!");
                         if (expectedError != null) {
-                            System.err.println("Expected to find the following in error text:\n+++++\n" + expectedError + "\n+++++");
+                            System.err.println("Expected to find the following in error text:\n+++++\n" + expectedError
+                                    + "\n+++++");
                         }
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
@@ -959,5 +963,41 @@ public class TestExecutor {
 
     public static String stripJavaComments(String text) {
         return JAVA_BLOCK_COMMENT_PATTERN.matcher(text).replaceAll("");
+    }
+
+    public void cleanup(String testCase, List<String> badtestcases) throws Exception {
+        try {
+            ArrayList<String> toBeDropped = new ArrayList<>();
+            InputStream resultStream = null;
+            OutputFormat fmt = OutputFormat.ADM;
+            resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;", fmt,
+                    getEndpoint(Servlets.QUERY_SERVICE), new ArrayList<>());
+            resultStream = ResultExtractor.extract(resultStream);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream));
+            String dataverse = reader.readLine();
+            while (dataverse != null) {
+                JSONObject json = new JSONObject(dataverse);
+                String dvName = json.getString("DataverseName");
+                if (!dvName.equals("Metadata") && !dvName.equals("Default")) {
+                    toBeDropped.add(dvName);
+                }
+                dataverse = reader.readLine();
+            }
+            if (!toBeDropped.isEmpty()) {
+                badtestcases.add(testCase);
+                LOGGER.warning(
+                        "Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
+                StringBuilder dropStatement = new StringBuilder();
+                for (String dv : toBeDropped) {
+                    dropStatement.append("drop dataverse ");
+                    dropStatement.append(dv);
+                    dropStatement.append(";\n");
+                }
+                resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE));
+                ResultExtractor.extract(resultStream);
+            }
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
     }
 }

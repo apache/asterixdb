@@ -38,11 +38,12 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
 @RunWith(Parameterized.class)
 public class RecoveryIT {
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
-    private static final String PATH_ACTUAL = "rttest/";
+    private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
     private static final String PATH_BASE = "src/test/resources/transactionts/";
     private static final String HDFS_BASE = "../asterix-app/";
     private TestCaseContext tcCtx;

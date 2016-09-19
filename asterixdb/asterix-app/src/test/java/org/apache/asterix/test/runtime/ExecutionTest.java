@@ -45,11 +45,12 @@ public class ExecutionTest {
 
     protected static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
 
-    protected static final String PATH_ACTUAL = "rttest" + File.separator;
+    protected static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
     protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
             File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
+    protected static final List<String> badTestCases = new ArrayList<>();
     protected static AsterixTransactionProperties txnProperties;
     protected static final TestExecutor testExecutor = new TestExecutor();
     private static final boolean cleanupOnStart = true;
@@ -81,6 +82,12 @@ public class ExecutionTest {
         // remove library directory
         TestLibrarian.removeLibraryDir();
         ExecutionTestUtil.tearDown(cleanupOnStop);
+        if (!badTestCases.isEmpty()) {
+            System.out.println("The following test cases left some data");
+            for (String testCase : badTestCases) {
+                System.out.println(testCase);
+            }
+        }
     }
 
     @Parameters(name = "ExecutionTest {index}: {0}")
@@ -117,6 +124,12 @@ public class ExecutionTest {
                 }
                 librarian.cleanup();
                 testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
+                try {
+                    testExecutor.cleanup(tcCtx.toString(), badTestCases);
+                } catch (Throwable th) {
+                    th.printStackTrace();
+                    throw th;
+                }
             }
         } finally {
             System.err.flush();

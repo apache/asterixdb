@@ -48,6 +48,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.base.ComparisonException;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
@@ -74,8 +75,9 @@ public class ParserTestExecutor extends TestExecutor {
             for (TestFileContext ctx : testFileCtxs) {
                 File testFile = ctx.getFile();
                 try {
-                    if (queryCount >= expectedResultFileCtxs.size()) {
-                        throw new IllegalStateException("no result file for " + testFile.toString() + "; queryCount: "
+                    if (queryCount >= expectedResultFileCtxs.size()
+                            && !cUnit.getOutputDir().getValue().equals("none")) {
+                        throw new ComparisonException("no result file for " + testFile.toString() + "; queryCount: "
                                 + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
                     }
 
@@ -98,6 +100,10 @@ public class ParserTestExecutor extends TestExecutor {
                         }
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     } else {
+                        // must compare with the expected failure message
+                        if (e instanceof ComparisonException) {
+                            throw e;
+                        }
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                 + " failed as expected: " + e.getMessage());
                         System.err.println("...but that was expected.");
@@ -105,7 +111,6 @@ public class ParserTestExecutor extends TestExecutor {
                 }
             }
         }
-
     }
 
     // Tests the SQL++ parser.

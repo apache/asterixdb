@@ -126,4 +126,14 @@ public interface IStatementExecutor {
             ICompiledDmlStatement dmlStatement)
             throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException;
 
+    /**
+     * returns the active dataverse for an entity or a statement
+     *
+     * @param dataverse:
+     *            the entity or statement dataverse
+     * @return
+     *         returns the passed dataverse if not null, the active dataverse otherwise
+     */
+    String getActiveDataverseName(String dataverse);
+
 }

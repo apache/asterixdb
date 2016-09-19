@@ -133,6 +133,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -235,6 +236,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         this.declaredFunctions = getDeclaredFunctions(aqlStatements);
         this.apiFramework = new APIFramework(compliationProvider, ccExtensionManager);
         this.rewriterFactory = compliationProvider.getRewriterFactory();
+        activeDefaultDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
     }
 
     protected List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
@@ -1146,7 +1148,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockManager.INSTANCE.createTypeBegin(dataverseName, dataverseName + "." + typeName);
         try {
-
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
                 throw new AlgebricksException("Unknown dataverse " + dataverseName);
@@ -1180,6 +1181,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc) throws Exception {
         DataverseDropStatement stmtDelete = (DataverseDropStatement) stmt;
         String dataverseName = stmtDelete.getDataverseName().getValue();
+        if (dataverseName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)) {
+            throw new HyracksDataException(
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME + " dataverse can't be dropped");
+        }
 
         ProgressState progress = ProgressState.NO_PROGRESS;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -3088,14 +3093,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return cmds;
     }
 
-    protected String getActiveDataverseName(String dataverse) throws AlgebricksException {
-        if (dataverse != null) {
-            return dataverse;
-        }
-        if (activeDefaultDataverse != null) {
-            return activeDefaultDataverse.getDataverseName();
-        }
-        throw new AlgebricksException("dataverse not specified");
+    @Override
+    public String getActiveDataverseName(String dataverse) {
+        return (dataverse != null) ? dataverse : activeDefaultDataverse.getDataverseName();
     }
 
     protected String getActiveDataverse(Identifier dataverse) throws AlgebricksException {

@@ -414,7 +414,11 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
 
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws AsterixException {
-        out.print(normalize(t.getIdent().getValue()));
+        if (t.getIdent().first != null && t.getIdent().first.getValue() != null) {
+            out.print(normalize(t.getIdent().first.getValue()));
+            out.print('.');
+        }
+        out.print(normalize(t.getIdent().second.getValue()));
         return null;
     }
 

@@ -34,11 +34,11 @@ import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -51,19 +51,23 @@ import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class TypeTranslator {
+    private static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
+
+    private TypeTranslator() {
+    }
 
     public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeExpression typeExpr,
-            String typeName, String typeDataverse) throws AlgebricksException, MetadataException {
-        Map<TypeSignature, IAType> typeMap = new HashMap<TypeSignature, IAType>();
+            String typeName, String typeDataverse) throws AlgebricksException {
+        Map<TypeSignature, IAType> typeMap = new HashMap<>();
         return computeTypes(mdTxnCtx, typeExpr, typeName, typeDataverse, typeMap);
     }
 
     public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeExpression typeExpr,
             String typeName, String typeDataverse, Map<TypeSignature, IAType> typeMap)
-            throws AlgebricksException, MetadataException {
-        Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes = new HashMap<String, Map<ARecordType, List<Integer>>>();
-        Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes = new HashMap<TypeSignature, List<AbstractCollectionType>>();
-        Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences = new HashMap<TypeSignature, List<TypeSignature>>();
+            throws AlgebricksException {
+        Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes = new HashMap<>();
+        Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes = new HashMap<>();
+        Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences = new HashMap<>();
         firstPass(typeExpr, typeName, typeMap, incompleteFieldTypes, incompleteItemTypes,
                 incompleteTopLevelTypeReferences, typeDataverse);
         secondPass(mdTxnCtx, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
@@ -76,8 +80,6 @@ public class TypeTranslator {
         }
         return typeMap;
     }
-
-    private static Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
     private static void firstPass(TypeExpression typeExpr, String typeName, Map<TypeSignature, IAType> typeMap,
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes,
@@ -93,11 +95,13 @@ public class TypeTranslator {
             switch (typeExpr.getTypeKind()) {
                 case TYPEREFERENCE: {
                     TypeReferenceExpression tre = (TypeReferenceExpression) typeExpr;
-                    IAType t = solveTypeReference(new TypeSignature(typeDataverse, tre.getIdent().getValue()), typeMap);
+                    IAType t = solveTypeReference(new TypeSignature(
+                            tre.getIdent().first == null ? typeDataverse : tre.getIdent().first.getValue(),
+                            tre.getIdent().second.getValue()), typeMap);
                     if (t != null) {
                         typeMap.put(typeSignature, t);
                     } else {
-                        addIncompleteTopLevelTypeReference(typeName, tre, incompleteTopLevelTypeReferences,
+                        addIncompleteTopLevelTypeReference(tre, incompleteTopLevelTypeReferences,
                                 typeDataverse);
                     }
                     break;
@@ -136,11 +140,10 @@ public class TypeTranslator {
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes,
             Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
             Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences, String typeDataverse)
-            throws AlgebricksException, MetadataException {
+            throws AlgebricksException {
         // solve remaining top level references
-
         for (TypeSignature typeSignature : incompleteTopLevelTypeReferences.keySet()) {
-            IAType t;// = typeMap.get(trefName);
+            IAType t;
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getNamespace(),
                     typeSignature.getName());
             if (dt == null) {
@@ -154,8 +157,12 @@ public class TypeTranslator {
         }
         // solve remaining field type references
         for (String trefName : incompleteFieldTypes.keySet()) {
-            IAType t;// = typeMap.get(trefName);
+            IAType t;
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeDataverse, trefName);
+            if (dt == null) {
+                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                        trefName);
+            }
             if (dt == null) {
                 throw new AlgebricksException("Could not resolve type " + trefName);
             } else {
@@ -178,8 +185,8 @@ public class TypeTranslator {
 
         // solve remaining item type references
         for (TypeSignature typeSignature : incompleteItemTypes.keySet()) {
-            IAType t;// = typeMap.get(trefName);
-            Datatype dt = null;
+            IAType t;
+            Datatype dt;
             if (MetadataManager.INSTANCE != null) {
                 dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getNamespace(),
                         typeSignature.getName());
@@ -247,7 +254,9 @@ public class TypeTranslator {
             }
             case TYPEREFERENCE: {
                 TypeReferenceExpression tre = (TypeReferenceExpression) tExpr;
-                TypeSignature signature = new TypeSignature(defaultDataverse, tre.getIdent().getValue());
+                TypeSignature signature = new TypeSignature(
+                        tre.getIdent().first == null ? defaultDataverse : tre.getIdent().first.getValue(),
+                        tre.getIdent().second.getValue());
                 IAType tref = solveTypeReference(signature, typeMap);
                 if (tref != null) {
                     act.setItemType(tref);
@@ -265,11 +274,12 @@ public class TypeTranslator {
     private static void addIncompleteCollectionTypeReference(AbstractCollectionType collType,
             TypeReferenceExpression tre, Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
             String defaultDataverse) {
-        String typeName = tre.getIdent().getValue();
-        TypeSignature typeSignature = new TypeSignature(defaultDataverse, typeName);
+        String typeName = tre.getIdent().second.getValue();
+        TypeSignature typeSignature = new TypeSignature(
+                tre.getIdent().first == null ? defaultDataverse : tre.getIdent().first.getValue(), typeName);
         List<AbstractCollectionType> typeList = incompleteItemTypes.get(typeSignature);
         if (typeList == null) {
-            typeList = new LinkedList<AbstractCollectionType>();
+            typeList = new LinkedList<>();
             incompleteItemTypes.put(typeSignature, typeList);
         }
         typeList.add(collType);
@@ -277,28 +287,31 @@ public class TypeTranslator {
 
     private static void addIncompleteFieldTypeReference(ARecordType recType, int fldPosition,
             TypeReferenceExpression tre, Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes) {
-        String typeName = tre.getIdent().getValue();
+        String typeName = tre.getIdent().second.getValue();
         Map<ARecordType, List<Integer>> refMap = incompleteFieldTypes.get(typeName);
         if (refMap == null) {
-            refMap = new HashMap<ARecordType, List<Integer>>();
+            refMap = new HashMap<>();
             incompleteFieldTypes.put(typeName, refMap);
         }
         List<Integer> typeList = refMap.get(recType);
         if (typeList == null) {
-            typeList = new ArrayList<Integer>();
+            typeList = new ArrayList<>();
             refMap.put(recType, typeList);
         }
         typeList.add(fldPosition);
     }
 
-    private static void addIncompleteTopLevelTypeReference(String tdeclName, TypeReferenceExpression tre,
+    private static void addIncompleteTopLevelTypeReference(TypeReferenceExpression tre,
             Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences, String defaultDataverse) {
-        String name = tre.getIdent().getValue();
-        TypeSignature typeSignature = new TypeSignature(defaultDataverse, name);
+        String name = tre.getIdent().second.getValue();
+        TypeSignature typeSignature = new TypeSignature(
+                tre.getIdent().first == null ? defaultDataverse : tre.getIdent().first.getValue(), name);
         List<TypeSignature> refList = incompleteTopLevelTypeReferences.get(name);
         if (refList == null) {
-            refList = new LinkedList<TypeSignature>();
-            incompleteTopLevelTypeReferences.put(new TypeSignature(defaultDataverse, tre.getIdent().getValue()),
+            refList = new LinkedList<>();
+            incompleteTopLevelTypeReferences.put(
+                    new TypeSignature(tre.getIdent().first == null ? defaultDataverse : tre.getIdent().first.getValue(),
+                            tre.getIdent().second.getValue()),
                     refList);
         }
         refList.add(typeSignature);
@@ -340,7 +353,9 @@ public class TypeTranslator {
             switch (texpr.getTypeKind()) {
                 case TYPEREFERENCE: {
                     TypeReferenceExpression tre = (TypeReferenceExpression) texpr;
-                    TypeSignature signature = new TypeSignature(defaultDataverse, tre.getIdent().getValue());
+                    TypeSignature signature = new TypeSignature(
+                            tre.getIdent().first == null ? defaultDataverse : tre.getIdent().first.getValue(),
+                            tre.getIdent().second.getValue());
                     IAType tref = solveTypeReference(signature, typeMap);
                     if (tref != null) {
                         if (!rtd.getOptionableFields().get(j)) { // not nullable

@@ -42,7 +42,7 @@ public class RuntimeParserTest {
 
     protected static final Logger LOGGER = Logger.getLogger(RuntimeParserTest.class.getName());
 
-    protected static final String PATH_ACTUAL = "runtime_parserts" + File.separator;
+    protected static final String PATH_ACTUAL = "target" + File.separator + "runtime_parserts" + File.separator;
     protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
             File.separator);
 

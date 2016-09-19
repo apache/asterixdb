@@ -44,7 +44,7 @@ public class DmlRecoveryIT {
     // variable to indicate whether this test will be executed
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
-    private static final String PATH_ACTUAL = "rttest/";
+    private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
 
     private static final String TESTSUITE_PATH_BASE = "../asterix-app/src/test/resources/runtimets/";
 
@@ -114,8 +114,9 @@ public class DmlRecoveryIT {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(TESTSUITE_PATH_BASE))) {
-            if (ctx.getTestCase().getFilePath().equals("dml"))
+            if (ctx.getTestCase().getFilePath().equals("dml")) {
                 testArgs.add(new Object[] { ctx });
+            }
         }
         return testArgs;
     }

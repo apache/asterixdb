@@ -46,7 +46,7 @@ public class AsterixLifecycleIT {
     private static final int NUM_NC = 2;
     private static final CommandHandler cmdHandler = new CommandHandler();
     private static final String PATH_BASE = "src/test/resources/integrationts/lifecycle";
-    private static final String PATH_ACTUAL = "ittest/";
+    private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     private static final Logger LOGGER = Logger.getLogger(AsterixLifecycleIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
     private final TestExecutor testExecutor = new TestExecutor();
