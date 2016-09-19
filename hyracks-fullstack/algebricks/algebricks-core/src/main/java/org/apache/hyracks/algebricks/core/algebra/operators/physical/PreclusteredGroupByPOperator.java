@@ -20,17 +20,12 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -70,18 +65,7 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
             throws AlgebricksException {
         int keys[] = JobGenHelper.variablesToFieldIndexes(columnList, inputSchemas[0]);
         GroupByOperator gby = (GroupByOperator) op;
-        int numFds = gby.getDecorList().size();
-        int fdColumns[] = new int[numFds];
-        int j = 0;
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
-            ILogicalExpression expr = p.second.getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                throw new AlgebricksException("pre-sorted group-by expects variable references.");
-            }
-            VariableReferenceExpression v = (VariableReferenceExpression) expr;
-            LogicalVariable decor = v.getVariableReference();
-            fdColumns[j++] = inputSchemas[0].findVariable(decor);
-        }
+        int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
         // compile subplans and set the gby op. schema accordingly
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);
         IAggregatorDescriptorFactory aggregatorFactory;
