@@ -852,94 +852,46 @@ class LangExpressionToPlanTranslator
             groupVarAssignOp.getInputs().add(topOp);
             topOp = new MutableObject<>(groupVarAssignOp);
         }
-        if (gc.isGroupAll()) {
-            List<LogicalVariable> aggVars = new ArrayList<>();
-            List<Mutable<ILogicalExpression>> aggFuncs = new ArrayList<>();
-            // A global aggregation can still have a decoration variable list which are used for propagate
-            // outer-scope variables. Example query:
-            // asterixdb/asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/global-aggregate/q09
-            for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
-                VariableExpr vexpr = ve.getVar();
-                LogicalVariable decorVar = vexpr == null ? context.newVar() : context.newVar(vexpr);
-                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
-                topOp = eo.second;
-                List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>();
-                flArgs.add(new MutableObject<>(eo.first));
-                // Calls the first-element aggregate function on a decoration variable to make sure the value
-                // is propagated through a global aggregation.
-                AggregateFunctionCallExpression firstElementAgg = AsterixBuiltinFunctions
-                        .makeAggregateFunctionExpression(AsterixBuiltinFunctions.FIRST_ELEMENT, flArgs);
-                aggVars.add(decorVar);
-                aggFuncs.add(new MutableObject<>(firstElementAgg));
-            }
-            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
-                Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(
-                        entry.getKey(), topOp);
-                topOp = listifyInput.second;
-                List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>();
-                flArgs.add(new MutableObject<>(listifyInput.first));
-                AggregateFunctionCallExpression fListify = AsterixBuiltinFunctions
-                        .makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, flArgs);
-                LogicalVariable aggVar = context.newVar();
-                aggVars.add(aggVar);
-                aggFuncs.add(new MutableObject<>(fListify));
-                // Hide the variable that was part of the "with", replacing it with
-                // the one bound by the aggregation op.
-                context.setVar(entry.getValue(), aggVar);
-            }
-            AggregateOperator aggOp = new AggregateOperator(aggVars, aggFuncs);
-            aggOp.getInputs().add(topOp);
-            return new Pair<>(aggOp, null);
-        } else {
-            GroupByOperator gOp = new GroupByOperator();
-            for (GbyVariableExpressionPair ve : gc.getGbyPairList()) {
-                LogicalVariable v;
-                VariableExpr vexpr = ve.getVar();
-                if (vexpr != null) {
-                    v = context.newVar(vexpr);
-                } else {
-                    v = context.newVar();
-                }
-                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
-                gOp.addGbyExpression(v, eo.first);
-                topOp = eo.second;
-            }
-            for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
-                LogicalVariable v;
-                VariableExpr vexpr = ve.getVar();
-                if (vexpr != null) {
-                    v = context.newVar(vexpr);
-                } else {
-                    v = context.newVar();
-                }
-                Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
-                gOp.addDecorExpression(v, eo.first);
-                topOp = eo.second;
-            }
 
-            gOp.getInputs().add(topOp);
-            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
-                Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(
-                        entry.getKey(), new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
-                List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>(1);
-                flArgs.add(new MutableObject<>(listifyInput.first));
-                AggregateFunctionCallExpression fListify = AsterixBuiltinFunctions
-                        .makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, flArgs);
-                LogicalVariable aggVar = context.newVar();
-                AggregateOperator agg = new AggregateOperator(mkSingletonArrayList(aggVar),
-                        mkSingletonArrayList(new MutableObject<>(fListify)));
-
-                agg.getInputs().add(listifyInput.second);
-                ILogicalPlan plan = new ALogicalPlanImpl(new MutableObject<>(agg));
-                gOp.getNestedPlans().add(plan);
-                // Hide the variable that was part of the "with", replacing it with
-                // the one bound by the aggregation op.
-                context.setVar(entry.getValue(), aggVar);
-            }
-            gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
-            return new Pair<>(gOp, null);
+        GroupByOperator gOp = new GroupByOperator();
+        for (GbyVariableExpressionPair ve : gc.getGbyPairList()) {
+            VariableExpr vexpr = ve.getVar();
+            LogicalVariable v = vexpr == null ? context.newVar() : context.newVar(vexpr);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
+            gOp.addGbyExpression(v, eo.first);
+            topOp = eo.second;
+        }
+        for (GbyVariableExpressionPair ve : gc.getDecorPairList()) {
+            VariableExpr vexpr = ve.getVar();
+            LogicalVariable v = vexpr == null ? context.newVar() : context.newVar(vexpr);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(ve.getExpr(), topOp);
+            gOp.addDecorExpression(v, eo.first);
+            topOp = eo.second;
         }
 
+        gOp.getInputs().add(topOp);
+        for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(
+                        entry.getKey(), new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
+                List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>(1);
+            flArgs.add(new MutableObject<>(listifyInput.first));
+            AggregateFunctionCallExpression fListify = AsterixBuiltinFunctions
+                        .makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, flArgs);
+            LogicalVariable aggVar = context.newVar();
+            AggregateOperator agg = new AggregateOperator(mkSingletonArrayList(aggVar),
+                        mkSingletonArrayList(new MutableObject<>(fListify)));
+
+            agg.getInputs().add(listifyInput.second);
+
+            ILogicalPlan plan = new ALogicalPlanImpl(new MutableObject<>(agg));
+            gOp.getNestedPlans().add(plan);
+            // Hide the variable that was part of the "with", replacing it with
+            // the one bound by the aggregation op.
+            context.setVar(entry.getValue(), aggVar);
+        }
+        gOp.setGroupAll(gc.isGroupAll());
+        gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
+        return new Pair<>(gOp, null);
     }
 
     @Override

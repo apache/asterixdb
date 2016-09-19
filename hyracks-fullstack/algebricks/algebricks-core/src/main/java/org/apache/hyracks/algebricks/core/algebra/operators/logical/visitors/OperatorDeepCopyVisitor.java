@@ -52,7 +52,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -67,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -108,7 +108,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : op.getDecorList()) {
             decoList.add(new Pair<>(pair.first, deepCopyExpressionRef(pair.second)));
         }
-        GroupByOperator gbyOp = new GroupByOperator(groupByList, decoList, newSubplans);
+        GroupByOperator gbyOp = new GroupByOperator(groupByList, decoList, newSubplans, op.isGroupAll());
         for (ILogicalPlan plan : op.getNestedPlans()) {
             newSubplans.add(OperatorManipulationUtil.deepCopy(plan, gbyOp));
         }

@@ -187,7 +187,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                         }
                     }
                     if (topLevelOp) {
-                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
+                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll()));
                     } else {
                         op.setPhysicalOperator(new MicroPreclusteredGroupByPOperator(columnList));
                     }

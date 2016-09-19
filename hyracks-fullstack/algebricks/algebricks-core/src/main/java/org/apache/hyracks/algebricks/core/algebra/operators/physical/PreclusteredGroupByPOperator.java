@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
@@ -48,8 +47,11 @@ import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOpera
 
 public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOperator {
 
-    public PreclusteredGroupByPOperator(List<LogicalVariable> columnList) {
+    private final boolean groupAll;
+
+    public PreclusteredGroupByPOperator(List<LogicalVariable> columnList, boolean groupAll) {
         super(columnList);
+        this.groupAll = groupAll;
     }
 
     @Override
@@ -84,7 +86,8 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);
         IAggregatorDescriptorFactory aggregatorFactory;
 
-        if (((AbstractLogicalOperator) (gby.getNestedPlans().get(0).getRoots().get(0).getValue())).getOperatorTag() == LogicalOperatorTag.RUNNINGAGGREGATE) {
+        if (gby.getNestedPlans().get(0).getRoots().get(0).getValue()
+                .getOperatorTag() == LogicalOperatorTag.RUNNINGAGGREGATE) {
             aggregatorFactory = new NestedPlansRunningAggregatorFactory(subplans, keys, fdColumns);
         } else {
             aggregatorFactory = new NestedPlansAccumulatingAggregatorFactory(subplans, keys, fdColumns);
@@ -97,12 +100,17 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
                 context);
 
         PreclusteredGroupOperatorDescriptor opDesc = new PreclusteredGroupOperatorDescriptor(spec, keys,
-                comparatorFactories, aggregatorFactory, recordDescriptor);
+                comparatorFactories, aggregatorFactory, recordDescriptor, groupAll);
 
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
+    }
+
+    @Override
+    public String toString() {
+        return getOperatorTag().toString() + (groupAll ? "(ALL)" : "") + columnList;
     }
 
 }

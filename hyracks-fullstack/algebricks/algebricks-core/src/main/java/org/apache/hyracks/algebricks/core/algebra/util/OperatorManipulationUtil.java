@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
@@ -116,6 +117,13 @@ public class OperatorManipulationUtil {
                 if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
                     AggregateOperator aggOp = (AggregateOperator) op;
                     if (aggOp.isGlobal()) {
+                        op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
+                        forceUnpartitioned = true;
+                    }
+                }
+                if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
+                    GroupByOperator gbyOp = (GroupByOperator) op;
+                    if (gbyOp.isGroupAll() && gbyOp.isGlobal()) {
                         op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
                         forceUnpartitioned = true;
                     }

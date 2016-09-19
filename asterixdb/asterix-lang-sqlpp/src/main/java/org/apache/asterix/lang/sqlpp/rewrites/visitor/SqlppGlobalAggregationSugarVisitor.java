@@ -49,7 +49,6 @@ public class SqlppGlobalAggregationSugarVisitor extends AbstractSqlppSimpleExpre
             if (addImplicitGby) {
                 // Adds an implicit group-by clause for SQL-92 global aggregate.
                 List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
-                gbyPairList.add(new GbyVariableExpressionPair(null, new LiteralExpr(new IntegerLiteral(1))));
                 List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
                 GroupbyClause gbyClause = new GroupbyClause(gbyPairList, decorPairList, new HashMap<>(), null, null,
                         false, true);

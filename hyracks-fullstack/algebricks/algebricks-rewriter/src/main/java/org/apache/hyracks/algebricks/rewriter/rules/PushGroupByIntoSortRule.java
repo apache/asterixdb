@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -101,10 +100,11 @@ public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
                         }
 
                         //replace preclustered gby with sort gby
-                        op.setPhysicalOperator(new SortGroupByPOperator(groupByOperator.getGroupByList(), context
-                                .getPhysicalOptimizationConfig().getMaxFramesExternalGroupBy(), sortPhysicalOperator
-                                .getSortColumns()));
-
+                        if (!groupByOperator.isGroupAll()) {
+                            op.setPhysicalOperator(new SortGroupByPOperator(groupByOperator.getGroupByList(),
+                                    context.getPhysicalOptimizationConfig().getMaxFramesExternalGroupBy(),
+                                    sortPhysicalOperator.getSortColumns()));
+                        }
                         // remove the stable sort operator
                         op.getInputs().clear();
                         op.getInputs().addAll(op2.getInputs());

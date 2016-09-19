@@ -328,7 +328,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                 op.getDecorList());
         List<ILogicalPlan> nestedPlansCopy = new ArrayList<ILogicalPlan>();
 
-        GroupByOperator opCopy = new GroupByOperator(groupByListCopy, decorListCopy, nestedPlansCopy);
+        GroupByOperator opCopy = new GroupByOperator(groupByListCopy, decorListCopy, nestedPlansCopy, op.isGroupAll());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;

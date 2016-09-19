@@ -108,10 +108,11 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
                 byte[] data = tb.getByteArray();
                 int[] fieldEnds = tb.getFieldEndOffsets();
                 int start = 0;
-                int offset = 0;
+                int offset;
                 for (int i = 0; i < fieldEnds.length; i++) {
-                    if (i > 0)
+                    if (i > 0) {
                         start = fieldEnds[i - 1];
+                    }
                     offset = fieldEnds[i] - start;
                     tupleBuilder.addField(data, start, offset);
                 }

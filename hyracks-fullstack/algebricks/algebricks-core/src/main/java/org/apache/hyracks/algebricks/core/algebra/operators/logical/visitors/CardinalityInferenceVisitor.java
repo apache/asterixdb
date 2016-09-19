@@ -107,6 +107,9 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
+        if (op.isGroupAll()) {
+            return ONE;
+        }
         ILogicalOperator inputOp = op.getInputs().get(0).getValue();
         long inputCardinality = inputOp.accept(this, arg);
         List<LogicalVariable> gbyVar = op.getGbyVarList();
