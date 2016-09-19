@@ -24,7 +24,8 @@ if NOT DEFINED JAVA_HOME (
 )
 
 REM ensure JAVA_HOME has no spaces nor quotes, since appassembler can't handle them
-for %%I in (%JAVA_HOME%) do (
+set JAVA_HOME=%JAVA_HOME:"=%
+for %%I in ("%JAVA_HOME%") do (
   set JAVA_HOME=%%~sI
 )
 
