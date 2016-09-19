@@ -1,4 +1,4 @@
-# <a id="Introduction">1. Introduction</a><font size="4"/>
+# <a id="Introduction">1. Introduction</a><font size="3"/>
 
 This document is intended as a reference guide to the full syntax and semantics of the SQL++ Query Language, a SQL-inspired language for working with semistructured data. SQL++ has much in common with SQL, but there are also differences due to the data model that the language is designed to serve. (SQL was designed in the 1970's for interacting with the flat, schema-ified world of relational databases, while SQL++ is designed for the nested, schema-less/schema-optional world of modern NoSQL systems.) In particular, SQL++ in the context of Apache AsterixDB is intended for working with the Asterix Data Model (ADM), which is a data model aimed at a superset of JSON with an enriched and flexible type system.
 
