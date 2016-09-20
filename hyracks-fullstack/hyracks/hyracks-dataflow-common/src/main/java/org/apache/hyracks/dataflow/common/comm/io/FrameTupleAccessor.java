@@ -35,7 +35,8 @@ import org.apache.hyracks.util.IntSerDeUtils;
 /**
  * FrameTupleCursor is used to navigate over tuples in a Frame. A frame is
  * formatted with tuple data concatenated starting at offset 1, one tuple after
- * another. The first byte is used to notify how big the frame is, so the maximum frame size is 255 * initialFrameSetting.
+ * another. The first byte is used to notify how big the frame is,
+ * so the maximum frame size is 255 * initialFrameSetting.
  * Offset FS - 4 holds an int indicating the number of tuples (N) in
  * the frame. FS - ((i + 1) * 4) for i from 0 to N - 1 holds an int indicating
  * the offset of the (i + 1)^th tuple. Every tuple is organized as a sequence of
@@ -184,6 +185,7 @@ public class FrameTupleAccessor implements IFrameTupleAccessor {
             prettyPrint(i, bbis, dis, sb, recordFields);
         }
         System.err.println(sb.toString());
+        bbis.close();
     }
 
     public void prettyPrint(int tIdx, int[] recordFields) throws IOException {
@@ -192,6 +194,7 @@ public class FrameTupleAccessor implements IFrameTupleAccessor {
         StringBuilder sb = new StringBuilder();
         prettyPrint(tIdx, bbis, dis, sb, recordFields);
         System.err.println(sb.toString());
+        bbis.close();
     }
 
     public void prettyPrint(ITupleReference tuple, int fieldsIdx, int descIdx) throws HyracksDataException {
