@@ -17,5 +17,4 @@
  * under the License.
  */
 
-
-{'result1':(hex('AA') > null),'result2':(null >= hex('AA')),'result3':(hex('AA') < null),'result4':(null <= hex('AA')),'result5':(hex('AA') = null),'result6':(null != hex('AA'))};
+test.length("test");

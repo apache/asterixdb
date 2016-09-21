@@ -17,5 +17,12 @@
  * under the License.
  */
 
+drop  dataverse test if exists;
+create  dataverse test;
 
-{'result1':(hex('AA') > null),'result2':(null >= hex('AA')),'result3':(hex('AA') < null),'result4':(null <= hex('AA')),'result5':(hex('AA') = null),'result6':(null != hex('AA'))};
+use test;
+
+create function length(foo){
+   1
+}
+

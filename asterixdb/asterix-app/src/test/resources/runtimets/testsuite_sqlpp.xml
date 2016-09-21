@@ -7002,6 +7002,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-ASTERIXDB-1652">
+        <expected-error>In function call "test.length(...)", the dataverse "test" cannot be found!</expected-error>
+        <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-ASTERIXDB-1652-2">
+        <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue218-2">
         <output-dir compare="Text">query-issue218-2</output-dir>
       </compilation-unit>
