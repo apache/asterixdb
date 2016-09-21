@@ -22,6 +22,7 @@ import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -65,6 +66,8 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
                 }
                 throw new AlgebricksException("Expecting collection type. Found " + t);
             }
+            case ANY:
+                return BuiltinType.ANY;
             default: {
                 throw new AlgebricksException("Expecting collection type. Found " + t);
             }

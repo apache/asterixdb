@@ -37,6 +37,6 @@ public class NullableDoubleTypeComputer implements IResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        return AUnionType.createMissableType(BuiltinType.ADOUBLE, "OptionalDouble");
+        return AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble");
     }
 }

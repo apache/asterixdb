@@ -20,26 +20,34 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
-import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class FlowRecordResultTypeComputer implements IResultTypeComputer {
+/**
+ * This class is the type computer for check-unknown function.
+ * If the input type is not a union, we just return it.
+ * If the input type is a union, we return the actual, non-null/non-missing type.
+ */
+public class NotUnknownTypeComputer implements IResultTypeComputer {
 
-    public static final FlowRecordResultTypeComputer INSTANCE = new FlowRecordResultTypeComputer();
+    public static final NotUnknownTypeComputer INSTANCE = new NotUnknownTypeComputer();
 
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        ScalarFunctionCallExpression funcExpr = (ScalarFunctionCallExpression) expression;
-        IAType type = TypeCastUtils.getRequiredType(funcExpr);
-        if (type == null) {
-            type = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
+        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
+        IAType type = (IAType) env.getType(f.getArguments().get(0).getValue());
+        if (type.getTypeTag() != ATypeTag.UNION) {
+            // directly return the input type if it is not a union
+            return type;
         }
-        return type;
+        AUnionType unionType = (AUnionType) type;
+        return unionType.getActualType();
     }
 }
