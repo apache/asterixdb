@@ -18,16 +18,18 @@
  */
 package org.apache.asterix.server.test;
 
+import static org.apache.asterix.test.common.TestHelper.joinPath;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.Collections;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.commons.io.FileUtils;
@@ -35,10 +37,10 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.junit.runners.MethodSorters;
-
-import static org.apache.asterix.test.common.TestHelper.joinPath;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SampleLocalClusterIT {
@@ -54,7 +56,8 @@ public class SampleLocalClusterIT {
 
     private static final String LOCAL_SAMPLES_DIR = joinPath(OUTPUT_DIR, "samples", "local");
 
-    private static final Logger LOGGER = Logger.getLogger(SampleLocalClusterIT.class.getName());
+    @Rule
+    public TestRule watcher = new TestMethodTracer();
 
     @BeforeClass
     public static void setUp() throws Exception {

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -60,7 +60,7 @@ public class DmlRecoveryIT {
     private final TestExecutor testExecutor = new TestExecutor();
 
     @Rule
-    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(managixHomePath, reportPath);
+    public TestRule retainLogs = new RetainLogsRule(managixHomePath, reportPath);
 
     @BeforeClass
     public static void setUp() throws Exception {
