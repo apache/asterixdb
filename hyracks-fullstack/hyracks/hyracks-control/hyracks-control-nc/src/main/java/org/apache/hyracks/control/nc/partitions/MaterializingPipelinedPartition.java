@@ -62,6 +62,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     protected boolean flushRequest;
 
+    private Level openCloseLevel = Level.FINE;
+
     public MaterializingPipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
             TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
@@ -159,8 +161,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     @Override
     public void open() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("open(" + pid + " by " + taId);
+        if (LOGGER.isLoggable(openCloseLevel)) {
+            LOGGER.log(openCloseLevel, "open(" + pid + " by " + taId);
         }
         size = 0;
         eos = false;
@@ -191,8 +193,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     @Override
     public void close() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("close(" + pid + " by " + taId);
+        if (LOGGER.isLoggable(openCloseLevel)) {
+            LOGGER.log(openCloseLevel, "close(" + pid + " by " + taId);
         }
         synchronized (this) {
             eos = true;

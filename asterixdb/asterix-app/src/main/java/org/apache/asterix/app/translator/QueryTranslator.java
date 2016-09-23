@@ -2558,7 +2558,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 sessionConfig.out().flush();
                 return;
             } else if (sessionConfig.isExecuteQuery() && compiled != null) {
-                GlobalConfig.ASTERIX_LOGGER.info(compiled.toJSON().toString(1));
+                if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINE)) {
+                    GlobalConfig.ASTERIX_LOGGER.fine(compiled.toJSON().toString(1));
+                }
                 JobId jobId = JobUtils.runJob(hcc, compiled, false);
 
                 JSONObject response = new JSONObject();

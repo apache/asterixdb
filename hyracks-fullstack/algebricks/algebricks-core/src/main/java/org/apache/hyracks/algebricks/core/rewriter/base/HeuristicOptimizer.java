@@ -82,7 +82,7 @@ public class HeuristicOptimizer {
         runOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizations(plan, physicalRewrites);
-        logPlanAt("Optimized Plan", Level.INFO);
+        logPlanAt("Optimized Plan", Level.FINE);
     }
 
     private void logPlanAt(String name, Level lvl) throws AlgebricksException {
