@@ -61,22 +61,17 @@ As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM) 
         create dataverse feeds;
         use dataverse feeds;
 
-        create type TwitterUser if not exists as open{
-            screen_name: string,
-            language: string,
-            friends_count: int32,
-            status_count: int32,
-            name: string,
-            followers_count: int32
+        create type TwitterUser as closed {
+                screen_name: string,
+                lang: string,
+                friends_count: int32,
+                statuses_count: int32
         };
-        create type Tweet if not exists as open{
-            id: string,
-            user: TwitterUser,
-            latitude:double,
-            longitude:double,
-            created_at:string,
-            message_text:string
-        };
+
+        create type Tweet as open {
+          id: int64,
+          user: TwitterUser
+        }
 
         create dataset Tweets (Tweet)
         primary key id;
@@ -103,6 +98,7 @@ Given below is an example AQL statement that creates a feed called "TwitterFeed"
 
         create feed TwitterFeed if not exists using "push_twitter"
         (("type-name"="Tweet"),
+         ("format"="twitter-status"),
          ("consumer.key"="************"),
          ("consumer.secret"="**************"),
          ("access.token"="**********"),
@@ -185,6 +181,7 @@ Next, we define an RSS feed using our built-in adaptor "rss_feed".
         create feed my_feed using
         rss_feed (
            ("type-name"="Rss"),
+           ("format"="rss"),
            ("url"="http://rss.cnn.com/rss/edition.rss")
         );
 
