@@ -60,10 +60,13 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class TestExecutor {
@@ -347,9 +350,7 @@ public class TestExecutor {
     }
 
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
-        HttpClient client = HttpClients.custom()
-                .setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE)
-                .build();
+        HttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
         try {
             return client.execute(method);
         } catch (Exception e) {
@@ -395,13 +396,14 @@ public class TestExecutor {
     }
 
     public InputStream executeQueryService(String str, String url) throws Exception {
-        return executeQueryService(str, OutputFormat.CLEAN_JSON, url, new ArrayList<>());
+        return executeQueryService(str, OutputFormat.CLEAN_JSON, url, new ArrayList<>(), false);
     }
 
     public InputStream executeQueryService(String str, OutputFormat fmt, String url,
-            List<CompilationUnit.Parameter> params) throws Exception {
+            List<CompilationUnit.Parameter> params, boolean jsonEncoded) throws Exception {
         setFormatParam(params, fmt);
-        HttpUriRequest method = constructPostMethod(str, url, "statement", true, params);
+        HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, url, "statement", params)
+                : constructPostMethodUrl(str, url, "statement", params);
         // Set accepted output response type
         method.setHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
         HttpResponse response = executeHttpRequest(method);
@@ -409,19 +411,16 @@ public class TestExecutor {
     }
 
     protected void setFormatParam(List<CompilationUnit.Parameter> params, OutputFormat fmt) {
-        boolean formatSet = false;
         for (CompilationUnit.Parameter param : params) {
             if ("format".equals(param.getName())) {
                 param.setValue(fmt.mimeType());
-                formatSet = true;
+                return;
             }
         }
-        if (!formatSet) {
-            CompilationUnit.Parameter formatParam = new CompilationUnit.Parameter();
-            formatParam.setName("format");
-            formatParam.setValue(fmt.mimeType());
-            params.add(formatParam);
-        }
+        CompilationUnit.Parameter formatParam = new CompilationUnit.Parameter();
+        formatParam.setName("format");
+        formatParam.setValue(fmt.mimeType());
+        params.add(formatParam);
     }
 
     private HttpUriRequest constructHttpMethod(String statement, String endpoint, String stmtParam,
@@ -431,7 +430,8 @@ public class TestExecutor {
             return constructGetMethod(statement, endpoint, stmtParam, otherParams);
         } else {
             // Use POST for bigger ones to avoid 413 FULL_HEAD
-            return constructPostMethod(statement, endpoint, stmtParam, postStmtAsParam, otherParams);
+            String stmtParamName = (postStmtAsParam ? stmtParam : null);
+            return constructPostMethodUrl(statement, endpoint, stmtParamName, otherParams);
         }
     }
 
@@ -445,10 +445,10 @@ public class TestExecutor {
         return builder.build();
     }
 
-    protected HttpUriRequest constructPostMethod(String statement, String endpoint, String stmtParam,
-            boolean postStmtAsParam, List<CompilationUnit.Parameter> otherParams) {
+    protected HttpUriRequest constructPostMethodUrl(String statement, String endpoint, String stmtParam,
+            List<CompilationUnit.Parameter> otherParams) {
         RequestBuilder builder = RequestBuilder.post(endpoint);
-        if (postStmtAsParam) {
+        if (stmtParam != null) {
             for (CompilationUnit.Parameter param : otherParams) {
                 builder.addParameter(param.getName(), param.getValue());
             }
@@ -457,6 +457,26 @@ public class TestExecutor {
             // this seems pretty bad - we should probably fix the API and not the client
             builder.setEntity(new StringEntity(statement, StandardCharsets.UTF_8));
         }
+        builder.setCharset(StandardCharsets.UTF_8);
+        return builder.build();
+    }
+
+    protected HttpUriRequest constructPostMethodJson(String statement, String endpoint, String stmtParam,
+            List<CompilationUnit.Parameter> otherParams) {
+        if (stmtParam == null) {
+            throw new NullPointerException("Statement parameter required.");
+        }
+        RequestBuilder builder = RequestBuilder.post(endpoint);
+        JSONObject content = new JSONObject();
+        try {
+            content.put(stmtParam, statement);
+            for (CompilationUnit.Parameter param : otherParams) {
+                content.put(param.getName(), param.getValue());
+            }
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("Request object construction failed.", e);
+        }
+        builder.setEntity(new StringEntity(content.toString(), ContentType.APPLICATION_JSON));
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
     }
@@ -485,9 +505,7 @@ public class TestExecutor {
         // Create a method instance.
         HttpUriRequest request = RequestBuilder.post(url)
                 .addParameter("mode", defer ? "asynchronous-deferred" : "asynchronous")
-                .setEntity(new StringEntity(str, StandardCharsets.UTF_8))
-                .setHeader("Accept", fmt.mimeType())
-                .build();
+                .setEntity(new StringEntity(str, StandardCharsets.UTF_8)).setHeader("Accept", fmt.mimeType()).build();
 
         HttpResponse response = executeAndCheckHttpRequest(request);
         InputStream resultStream = response.getEntity().getContent();
@@ -664,7 +682,7 @@ public class TestExecutor {
                 } else {
                     if (ctx.getType().equalsIgnoreCase("query")) {
                         resultStream = executeQueryService(statement, fmt, getEndpoint(Servlets.QUERY_SERVICE),
-                                cUnit.getParameter());
+                                cUnit.getParameter(), true);
                         resultStream = ResultExtractor.extract(resultStream);
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
                         resultStream = executeAnyAQLAsync(statement, false, fmt, getEndpoint(Servlets.SQLPP));
@@ -968,20 +986,18 @@ public class TestExecutor {
     public void cleanup(String testCase, List<String> badtestcases) throws Exception {
         try {
             ArrayList<String> toBeDropped = new ArrayList<>();
-            InputStream resultStream = null;
-            OutputFormat fmt = OutputFormat.ADM;
-            resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;", fmt,
-                    getEndpoint(Servlets.QUERY_SERVICE), new ArrayList<>());
+            InputStream resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;",
+                    getEndpoint(Servlets.QUERY_SERVICE));
             resultStream = ResultExtractor.extract(resultStream);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream));
-            String dataverse = reader.readLine();
-            while (dataverse != null) {
-                JSONObject json = new JSONObject(dataverse);
+            StringWriter sw = new StringWriter();
+            IOUtils.copy(resultStream, sw, StandardCharsets.UTF_8.name());
+            JSONArray result = new JSONArray(sw.toString());
+            for (int i = 0; i < result.length(); ++i) {
+                JSONObject json = result.getJSONObject(i);
                 String dvName = json.getString("DataverseName");
                 if (!dvName.equals("Metadata") && !dvName.equals("Default")) {
                     toBeDropped.add(dvName);
                 }
-                dataverse = reader.readLine();
             }
             if (!toBeDropped.isEmpty()) {
                 badtestcases.add(testCase);
@@ -998,6 +1014,7 @@ public class TestExecutor {
             }
         } catch (Throwable th) {
             th.printStackTrace();
+            throw th;
         }
     }
 }
