@@ -779,15 +779,15 @@ a list-valued query expression's result; this is needed above, even though the r
 element, to "de-listify" the list and obtain the desired scalar for the comparison.
 
 ## <a id="Let_clauses">LET clauses</a>
-Similar to `WITH` clauses, `LET` clauses can be useful when a (complex) expression is used several times in a query, such that the query can be more concise. The next query shows an example.
+Similar to `WITH` clauses, `LET` clauses can be useful when a (complex) expression is used several times within a query, allowing it to be written once to make the query more concise. The next query shows an example.
 
 ##### Example
 
     SELECT u.name AS uname, messages AS messages
     FROM GleambookUsers u
-    LET messages = ( SELECT VALUE m
-                   FROM GleambookMessages m
-                   WHERE m.authorId = u.id )
+    LET messages = (SELECT VALUE m
+                    FROM GleambookMessages m
+                    WHERE m.authorId = u.id)
     WHERE EXISTS messages;
 
 This query lists `GleambookUsers` that have posted `GleambookMessages` and shows all authored messages for each listed user. It returns:
@@ -807,17 +807,17 @@ This query is equivalent to the following query that does not use the `LET` clau
     WHERE EXISTS ( SELECT VALUE m
                    FROM GleambookMessages m
                    WHERE m.authorId = u.id
-    );
+                 );
 
 ## <a id="Union_all">UNION ALL</a>
-UNION ALL can be used to combine two input streams into one. Similar to SQL, there is no ordering guarantee on the output stream. However, different from SQL, SQL++ does not inspect what the data looks like on each input stream and allows heterogenity on the output stream and does not enforce schema change on any input streams. The following query is an example:
+UNION ALL can be used to combine two input streams into one. As in SQL, there is no ordering guarantee on the contents of the output stream. However, unlike SQL, SQL++ does not constrain what the data looks like on the input streams; in particular, it allows heterogenity on the input and output streams. The following odd but legal query is an example:
 
 ##### Example
 
     SELECT u.name AS uname
     FROM GleambookUsers u
     WHERE u.id = 2
-    UNION ALL
+      UNION ALL
     SELECT VALUE m.message
     FROM GleambookMessages m
     WHERE authorId=2;
@@ -864,18 +864,18 @@ The following matrix is a quick "key differences cheat sheet" for SQL++ and SQL-
 
 | Feature |  SQL++ | SQL-92 |
 |----------|--------|--------|
-| SELECT * | Returns nested records. | Returns flattened concatenated records. |
-| Subquery | Returns a collection.  | The returned collection of records is cast into a scalar value if the subquery appears in a SELECT list or on one side of a comparison or as input to a function. |
-| Left outer join |  Fills in `MISSING` for non-matches.  |   Fills in `NULL`(s) for non-matches.    |
-| Union All       | Allows heterogenous input and does not enforce schema changes on data. | Different input streams have to follow equivalent structural types and output field names for non-first input streams have to be be changed to be the same as that of the first input stream.
-| String literal | Double quotes or single quotes. | Single quotes only. |
-| Delimited identifiers | Backticks. | Double quotes. |
+| SELECT * | Returns nested records | Returns flattened concatenated records |
+| Subquery | Returns a collection  | The returned collection is cast into a scalar value if the subquery appears in a SELECT list or on one side of a comparison or as input to a function |
+| LEFT OUTER JOIN |  Fills in `MISSING` for non-matches  |   Fills in `NULL`(s) for non-matches    |
+| UNION ALL       | Allows heterogenous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream
+| String literal | Double quotes or single quotes | Single quotes only |
+| Delimited identifiers | Backticks | Double quotes |
 
-For things beyond the cheat sheet, SQL++ is SQL-92 compliant.
+For things beyond this cheat sheet, SQL++ is SQL-92 compliant.
 Morever, SQL++ offers the following additional features beyond SQL-92 (hence the "++" in its name):
 
   * Fully composable and functional: A subquery can iterate over any intermediate collection and can appear anywhere in a query.
-  * Schema-free: The query language does not assume the existence of a fixed schema for any data it processes.
+  * Schema-free: The query language does not assume the existence of a static schema for any data that it processes.
   * Correlated FROM terms: A right-side FROM term expression can refer to variables defined by FROM terms on its left.
   * Powerful GROUP BY: In addition to a set of aggregate functions as in standard SQL, the groups created by the `GROUP BY` clause are directly usable in nested queries and/or to obtain nested results.
   * Generalized SELECT clause: A SELECT clause can return any type of collection, while in SQL-92, a `SELECT` clause has to return a (homogeneous) collection of records.
