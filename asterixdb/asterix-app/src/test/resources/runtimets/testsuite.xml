@@ -2656,6 +2656,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-aqlplus_5">
+        <output-dir compare="Text">dblp-csx-aqlplus_5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-csx-dblp-aqlplus_1">
         <output-dir compare="Text">dblp-csx-dblp-aqlplus_1</output-dir>
       </compilation-unit>
