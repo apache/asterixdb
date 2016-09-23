@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : test sub type duration (year-month-duration and day-time-duration) constructors
+ * Description  : test sub type duration (year_month_duration and day_time_duration) constructors
  * Expected Res : Success
  * Date         : 7 May 2013
  * issue        : 363
@@ -26,4 +26,4 @@
 use test;
 
 
-{'duration1':test.`year-month-duration`('P30Y10M'),'duration2':test.`day-time-duration`('P25DT13H12M50S'),'duration3':test.`day-time-duration`('PT13H12M50S'),'duration4':test.`year-month-duration`('P30Y'),'duration5':test.`day-time-duration`('PT13H'),'duration6':test.`year-month-duration`('-P30Y10M'),'duration7':test.`day-time-duration`('-P25DT13H12M50S'),'duration8':test.`day-time-duration`('-PT13H50S'),'duration9':test.`day-time-duration`('P120D'),'duration10':test.`year-month-duration`('-P28M'),'duration11':test.`day-time-duration`('PT29M90.937S'),'duration12':test.`year-month-duration`('P300Y15M')};
+{'duration1':test.`year_month_duration`('P30Y10M'),'duration2':test.`day_time_duration`('P25DT13H12M50S'),'duration3':test.`day_time_duration`('PT13H12M50S'),'duration4':test.`year_month_duration`('P30Y'),'duration5':test.`day_time_duration`('PT13H'),'duration6':test.`year_month_duration`('-P30Y10M'),'duration7':test.`day_time_duration`('-P25DT13H12M50S'),'duration8':test.`day_time_duration`('-PT13H50S'),'duration9':test.`day_time_duration`('P120D'),'duration10':test.`year_month_duration`('-P28M'),'duration11':test.`day_time_duration`('PT29M90.937S'),'duration12':test.`year_month_duration`('P300Y15M')};

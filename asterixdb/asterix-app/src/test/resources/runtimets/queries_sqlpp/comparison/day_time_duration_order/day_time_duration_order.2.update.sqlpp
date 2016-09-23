@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   Check comparison and order-by for day-time-duration
+ * Description      :   Check comparison and order-by for day_time_duration
  * Expected Result  :   Success
  * Date             :   May 18, 2013
  */

@@ -30,7 +30,7 @@ use test;
 
 create type test.TestType as
  closed {
-  id : int32,
+  id : integer,
   val : double
 }
 

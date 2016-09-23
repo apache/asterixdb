@@ -27,5 +27,5 @@ with  nestedRec as c.lastorder,
       c2 as {{c.cid,nestedRec.oid}},
       c3 as [c.lastorder,nestedRec],
       c4 as {{c.lastorder,nestedRec}}
-where (c.cid >= test.int32('3'))
+where (c.cid >= test.integer('3'))
 ;

@@ -34,9 +34,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,21 +56,21 @@ import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeed.FeedType;
 import org.apache.asterix.external.feed.api.IFeedJoint;
-import org.apache.asterix.external.feed.api.IFeedJoint.FeedJointType;
 import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber;
+import org.apache.asterix.external.feed.api.IFeed.FeedType;
+import org.apache.asterix.external.feed.api.IFeedJoint.FeedJointType;
 import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
@@ -78,9 +78,9 @@ import org.apache.asterix.external.feed.management.FeedEventsListener;
 import org.apache.asterix.external.feed.management.FeedJointKey;
 import org.apache.asterix.external.feed.management.FeedLifecycleEventSubscriber;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.external.feed.watch.FeedConnectJobInfo;
 import org.apache.asterix.external.feed.watch.FeedIntakeInfo;
+import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.file.DatasetOperations;
@@ -137,6 +137,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -164,6 +165,8 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
+import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.TypeTranslator;
 import org.apache.asterix.translator.CompiledStatements.CompiledConnectFeedStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
@@ -175,8 +178,6 @@ import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStat
 import org.apache.asterix.translator.CompiledStatements.CompiledSubscribeFeedStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
-import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.TypeTranslator;
 import org.apache.asterix.translator.util.ValidateUtil;
 import org.apache.asterix.util.FlushDatasetUtils;
 import org.apache.asterix.util.JobUtils;
@@ -1158,7 +1159,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new AlgebricksException("A datatype with this name " + typeName + " already exists.");
                 }
             } else {
-                if (builtinTypeMap.get(typeName) != null) {
+                if (BuiltinTypeMap.getBuiltinType(typeName) != null) {
                     throw new AlgebricksException("Cannot redefine builtin type " + typeName + ".");
                 } else {
                     Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(mdTxnCtx,

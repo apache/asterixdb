@@ -25,11 +25,11 @@ USE tpch;
 
 
 CREATE TYPE LineItemType AS {
-  l_linenumber : int32
+  l_linenumber : integer
 }
 
 CREATE TYPE OrderType AS {
-  o_orderkey : int32
+  o_orderkey : integer
 }
 
 CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_linenumber;

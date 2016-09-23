@@ -33,10 +33,8 @@ import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
-import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -48,8 +46,6 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 public abstract class AbstractLangTranslator {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractLangTranslator.class.getName());
-
-    protected static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
     public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
 

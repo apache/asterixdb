@@ -21,9 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 import java.io.File;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,9 +32,9 @@ import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -53,7 +51,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.api.IMetadataIndex;
-import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -62,13 +60,12 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
-import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
@@ -237,14 +234,6 @@ public class MetadataBootstrap {
         }
     }
 
-    private static void getBuiltinTypes(List<IAType> types) {
-        Collection<BuiltinType> builtinTypes = AsterixBuiltinTypeMap.getBuiltinTypes().values();
-        Iterator<BuiltinType> iter = builtinTypes.iterator();
-        while (iter.hasNext()) {
-            types.add(iter.next());
-        }
-    }
-
     private static void getMetadataTypes(ArrayList<IAType> types) {
         for (int i = 0; i < PRIMARY_INDEXES.length; i++) {
             types.add(PRIMARY_INDEXES[i].getPayloadRecordType());
@@ -253,7 +242,7 @@ public class MetadataBootstrap {
 
     private static void insertMetadataDatatypes(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         ArrayList<IAType> types = new ArrayList<>();
-        getBuiltinTypes(types);
+        types.addAll(BuiltinTypeMap.getAllBuiltinTypes());
         getMetadataTypes(types);
         for (int i = 0; i < types.size(); i++) {
             MetadataManager.INSTANCE.addDatatype(mdTxnCtx,

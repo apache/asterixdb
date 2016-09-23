@@ -29,18 +29,18 @@ create  dataverse test;
 
 create type test.Emp as
 {
-  id : int32,
+  id : integer,
   lname : string,
-  age : int32,
+  age : integer,
   dept : string
 }
 
 create type test.EmpClosed as
  closed {
-  id : int32,
+  id : integer,
   fname : string,
   lname : string,
-  age : int32,
+  age : integer,
   dept : string
 }
 

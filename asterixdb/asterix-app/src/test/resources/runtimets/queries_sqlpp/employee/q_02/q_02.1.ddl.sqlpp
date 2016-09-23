@@ -25,15 +25,15 @@ use test;
 
 create type test.EmpType as
 {
-  id : int64,
+  id : bigint,
   name : string,
   address : {
-      number : int64,
+      number : bigint,
       street : string,
       city : string
   }
 ,
-  age : int64?,
+  age : bigint?,
   interests : {{string}}?,
   children : [string]?
 }

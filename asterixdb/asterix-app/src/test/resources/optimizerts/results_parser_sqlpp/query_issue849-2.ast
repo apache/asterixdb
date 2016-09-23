@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl sType [
   closed RecordType {
-    b : int32
+    b : integer
   }
 ]
 DatasetDecl s(sType) partitioned by [[b]]

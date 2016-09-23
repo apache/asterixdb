@@ -31,9 +31,9 @@ use test;
 
 create type test.Emp as
  closed {
-  id : int32,
+  id : integer,
   name : string,
-  age : int8?,
+  age : tinyint?,
   dept : string?,
   sex : string,
   dob : date?

@@ -30,14 +30,14 @@ use test;
 
 create type test.OrderType as
  closed {
-  o_orderkey : int64,
-  o_custkey : int64,
+  o_orderkey : bigint,
+  o_custkey : bigint,
   o_orderstatus : string,
   o_totalprice : double,
   o_orderdate : string,
   o_orderpriority : string,
   o_clerk : string,
-  o_shippriority : int64,
+  o_shippriority : bigint,
   o_comment : string
 }
 

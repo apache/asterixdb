@@ -3,16 +3,16 @@ TypeDecl TwitterUserType [
   open RecordType {
     screen-name : string,
     lang : string,
-    friends_count : int64,
-    statuses_count : int64,
+    friends_count : bigint,
+    statuses_count : bigint,
     name : string,
-    followers_count : int64
+    followers_count : bigint
   }
 ]
 TypeDecl TweetMessageType [
   closed RecordType {
     user : TwitterUserType,
-    tweetid : int64,
+    tweetid : bigint,
     sender-location : point?,
     send-time : datetime,
     referred-topics : UnorderedList <string>

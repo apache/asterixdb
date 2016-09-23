@@ -21,5 +21,5 @@ drop dataverse test if exists;
 create dataverse test;
 use test;
 
-create type kv1 as { id: int32, val: AnyObject };
-create type kv2 as { id: int32, val: Metadata.AnyObject };
+create type kv1 as { id: integer, val: AnyObject };
+create type kv2 as { id: integer, val: Metadata.AnyObject };

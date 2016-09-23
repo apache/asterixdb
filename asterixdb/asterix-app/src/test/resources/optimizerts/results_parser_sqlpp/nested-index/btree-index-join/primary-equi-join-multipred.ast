@@ -1,19 +1,19 @@
 DataverseUse test
 TypeDecl AddressType [
   closed RecordType {
-    number : int32,
+    number : integer,
     street : string,
     city : string
   }
 ]
 TypeDecl CustomerTypetmp [
   closed RecordType {
-    cid : int32,
+    cid : integer,
     name : string,
-    age : int32?,
+    age : integer?,
     address : AddressType?,
     lastorder :       open RecordType {
-        oid : int32,
+        oid : integer,
         total : float
       }
 
@@ -21,8 +21,8 @@ TypeDecl CustomerTypetmp [
 ]
 TypeDecl OrderTypetmp [
   closed RecordType {
-    oid : int32,
-    cid : int32,
+    oid : integer,
+    cid : integer,
     orderstatus : string,
     orderpriority : string,
     clerk : string,

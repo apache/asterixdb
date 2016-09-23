@@ -18,10 +18,10 @@
  */
 /*
  * Test case name : primitive-02.aql
- * Description    : Test primitive integer type int16 constructor function with boundary values
+ * Description    : Test primitive integer type smallint constructor function with boundary values
  * Success        : Yes
  * Date           : May 7th 2012
  *
  */
 
-{'$a':int16('-32767'),'$b':int16('32767'),'$c':int16('0'),'$d':int16('1'),'$e':int16('-1'),'$f':int16('16383'),'$g':int16('-16383')};
+{'$a':smallint('-32767'),'$b':smallint('32767'),'$c':smallint('0'),'$d':smallint('1'),'$e':smallint('-1'),'$f':smallint('16383'),'$g':smallint('-16383')};

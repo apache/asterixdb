@@ -36,7 +36,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
-import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AOrderedList;
@@ -106,7 +106,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         String datatypeName =
                 ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX))
                         .getStringValue();
-        IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(datatypeName);
+        IAType type = BuiltinTypeMap.getBuiltinType(datatypeName);
         if (type == null) {
             // Derived Type
             ARecord derivedTypeRecord =
@@ -142,7 +142,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         boolean isNullable = ((ABoolean) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean()
                                         .booleanValue();
-                        fieldTypes[fieldId] = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                        fieldTypes[fieldId] = BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
                                 dataverseName, fieldTypeName, isNullable);
                         fieldId++;
                     }
@@ -154,7 +154,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName,
-                            new AUnorderedListType(AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                            new AUnorderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
                                     dataverseName, unorderedlistTypeName, false), datatypeName),
                             isAnonymous);
                 }
@@ -163,7 +163,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName,
-                            new AOrderedListType(AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                            new AOrderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
                                     dataverseName, orderedlistTypeName, false), datatypeName),
                             isAnonymous);
                 }

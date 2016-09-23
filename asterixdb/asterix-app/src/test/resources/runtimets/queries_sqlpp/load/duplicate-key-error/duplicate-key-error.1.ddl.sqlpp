@@ -30,7 +30,7 @@ use test;
 
 create type test.Schema as
  closed {
-  id : int32
+  id : integer
 }
 
 create  dataset mydataset(Schema) primary key id;

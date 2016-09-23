@@ -10,7 +10,7 @@ TypeDecl testtype02 [
     name : string,
     sex : string,
     dept : string,
-    salary : int32,
+    salary : integer,
     interests : UnorderedList <string>
 ?
   }

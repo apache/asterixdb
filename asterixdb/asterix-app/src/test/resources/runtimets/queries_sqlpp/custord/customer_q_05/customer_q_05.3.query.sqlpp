@@ -23,5 +23,5 @@ use test;
 select element {'custname':c.name,'age':c.age,'MathAge':rec}
 from  Customers as c
 with  rec as {'age':c.age,'age+5':(c.age + 5),'age-5':(c.age - 5),'age*5':(c.age * 5),'age/5':(c.age / 5),'-age':-c.age}
-where (c.cid >= test.int32('3'))
+where (c.cid >= test.integer('3'))
 ;

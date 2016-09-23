@@ -1,9 +1,9 @@
 DataverseUse test
 TypeDecl Employee [
   closed RecordType {
-    id : int32,
+    id : integer,
     name : string,
-    salary : int32
+    salary : integer
   }
 ]
 DatasetDecl Office(Employee) partitioned by [[id]]

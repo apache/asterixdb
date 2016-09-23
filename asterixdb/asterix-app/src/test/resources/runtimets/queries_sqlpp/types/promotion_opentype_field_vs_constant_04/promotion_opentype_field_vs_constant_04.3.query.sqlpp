@@ -26,6 +26,6 @@ use test;
 
 select element {'emp.id':emp.id,'emp.supvrid':emp.supvrid}
 from  empDataset as emp
-where (emp.supvrid = test.int64('1'))
+where (emp.supvrid = test.bigint('1'))
 order by emp.id,emp.supvrid
 ;

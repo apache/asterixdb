@@ -1,7 +1,7 @@
 TypeDecl TestType [
   open RecordType {
-    key1 : int32,
-    key2 : int32,
+    key1 : integer,
+    key2 : integer,
     fname : string,
     lname : string
   }

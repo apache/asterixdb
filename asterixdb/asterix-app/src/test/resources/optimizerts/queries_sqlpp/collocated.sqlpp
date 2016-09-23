@@ -25,16 +25,16 @@ use colocated;
 
 create type colocated.UserType as
 {
-  uid : int32,
+  uid : integer,
   name : string,
-  lottery_numbers : {{int32}}
+  lottery_numbers : {{integer}}
 }
 
 create type colocated.VisitorType as
 {
-  vid : int32,
+  vid : integer,
   name : string,
-  lottery_numbers : {{int32}}
+  lottery_numbers : {{integer}}
 }
 
 create  dataset Users(UserType) primary key uid;

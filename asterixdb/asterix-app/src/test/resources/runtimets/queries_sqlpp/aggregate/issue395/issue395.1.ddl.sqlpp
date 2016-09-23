@@ -25,7 +25,7 @@ use test;
 
 create type test.Emp as
 {
-  id : int32,
+  id : integer,
   name : string?
 }
 

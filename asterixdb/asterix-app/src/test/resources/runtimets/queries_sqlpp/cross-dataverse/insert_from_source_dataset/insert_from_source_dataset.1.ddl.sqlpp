@@ -30,7 +30,7 @@ use test;
 
 create type test.testtype as
 {
-  id : int32,
+  id : integer,
   name : string
 }
 

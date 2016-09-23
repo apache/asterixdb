@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.floor(test.int8('-20')),'f1':test.floor(test.int16('-23')),'f2':test.floor(test.int32('-29')),'f3':test.floor(test.int64('-21')),'f4':test.floor(test.int8('20')),'f5':test.floor(test.int16('22')),'f6':test.floor(test.int32('23')),'f7':test.floor(test.int64('27'))};
+{'f0':test.floor(test.tinyint('-20')),'f1':test.floor(test.smallint('-23')),'f2':test.floor(test.integer('-29')),'f3':test.floor(test.bigint('-21')),'f4':test.floor(test.tinyint('20')),'f5':test.floor(test.smallint('22')),'f6':test.floor(test.integer('23')),'f7':test.floor(test.bigint('27'))};

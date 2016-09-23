@@ -34,7 +34,7 @@ create type test.TestType1 as
 {
   fname : string,
   lname : string,
-  id : int64
+  id : bigint
 }
 
 create  dataset testds1(TestType1) primary key id;

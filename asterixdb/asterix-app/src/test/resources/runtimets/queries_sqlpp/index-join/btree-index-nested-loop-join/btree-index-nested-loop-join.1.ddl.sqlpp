@@ -31,27 +31,27 @@ create type test.TwitterUserType as
 {
   `screen-name` : string,
   lang : string,
-  friends_count : int32,
-  statuses_count : int32,
+  friends_count : integer,
+  statuses_count : integer,
   name : string,
-  followers_count : int32
+  followers_count : integer
 }
 
 create type test.TweetMessageType as
 {
-  tweetid : int64,
+  tweetid : bigint,
   user : string,
   `sender-location` : point,
   `send-time` : datetime,
-  `forward-from` : int64,
-  `retweet-from` : int64,
+  `forward-from` : bigint,
+  `retweet-from` : bigint,
   `referred-topics` : {{string}},
   `message-text` : string
 }
 
 create type test.ResultType as
 {
-  vertexid : int64,
+  vertexid : bigint,
   rank : double
 }
 

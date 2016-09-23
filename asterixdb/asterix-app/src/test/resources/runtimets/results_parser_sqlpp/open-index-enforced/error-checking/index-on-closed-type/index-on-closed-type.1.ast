@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl testType [
   closed RecordType {
-    id : int32
+    id : integer
   }
 ]
 DatasetDecl testDS(testType) partitioned by [[id]]

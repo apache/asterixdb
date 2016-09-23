@@ -32,7 +32,7 @@ use emergencyTest;
 
 create type emergencyTest.CHPReport as
 {
-  id : int64,
+  id : bigint,
   timestamp : datetime,
   title : string,
   message : string
@@ -42,5 +42,5 @@ create  dataset CHPReports(CHPReport) primary key timestamp;
 
 select element emergency.message
 from  CHPReports as emergency
-where ((emergency.timestamp >= (emergencyTest.`current-datetime`() - emergencyTest.`day-time-duration`('PT10H'))) and (emergency.title = 'ghost'))
+where ((emergency.timestamp >= (emergencyTest.`current-datetime`() - emergencyTest.`day_time_duration`('PT10H'))) and (emergency.title = 'ghost'))
 ;

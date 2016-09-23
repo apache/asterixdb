@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl TempType [
   open RecordType {
-    id : int64,
+    id : bigint,
     date : date,
     time : time,
     datetime : datetime,

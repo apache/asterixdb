@@ -3,8 +3,8 @@ TypeDecl TwitterUserType [
   open RecordType {
     screen-name : string,
     lang : string,
-    friends_count : int64,
-    statuses_count : int64
+    friends_count : bigint,
+    statuses_count : bigint
   }
 ]
 TypeDecl TweetMessageType [
@@ -27,11 +27,11 @@ TypeDecl EmploymentType [
 ]
 TypeDecl FacebookUserType [
   closed RecordType {
-    id : int64,
+    id : bigint,
     alias : string,
     name : string,
     user-since : datetime,
-    friend-ids : UnorderedList <int64>
+    friend-ids : UnorderedList <bigint>
 ,
     employment : OrderedList [EmploymentType]
 
@@ -39,9 +39,9 @@ TypeDecl FacebookUserType [
 ]
 TypeDecl FacebookMessageType [
   closed RecordType {
-    message-id : int64,
-    author-id : int64,
-    in-response-to : int64?,
+    message-id : bigint,
+    author-id : bigint,
+    in-response-to : bigint?,
     sender-location : point?,
     message : string
   }
@@ -50,8 +50,8 @@ TypeDecl TwitterUserAlternateType [
   open RecordType {
     screen-name : string,
     lang : string,
-    friends_count : int64,
-    statuses_count : int64
+    friends_count : bigint,
+    statuses_count : bigint
   }
 ]
 TypeDecl TweetMessageAlternateType [
@@ -71,7 +71,7 @@ TypeDecl EmploymentAlternateType [
 ]
 TypeDecl FacebookUserAlternateType [
   closed RecordType {
-    id : int64,
+    id : bigint,
     alias : string,
     name : string,
     user-since : datetime
@@ -79,9 +79,9 @@ TypeDecl FacebookUserAlternateType [
 ]
 TypeDecl FacebookMessageAlternateType [
   closed RecordType {
-    message-id : int64,
-    author-id : int64,
-    in-response-to : int64?,
+    message-id : bigint,
+    author-id : bigint,
+    in-response-to : bigint?,
     sender-location : point?,
     message : string
   }

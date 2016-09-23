@@ -18,4 +18,4 @@
  */
 
 
-{'result1':(int8('+1') * int8('+1')),'result2':(int8('+1') * int16('2')),'result3':(int8('+1') * int32('+3')),'result4':(int8('+1') * int64('-4')),'result5':(int8('+1') * float('-5.5f')),'result6':(int8('+1') * double('-6.5d')),'result7':(double('-6.5d') * null), 'result8':double('-6.5d') * missing};
+{'result1':(tinyint('+1') * tinyint('+1')),'result2':(tinyint('+1') * smallint('2')),'result3':(tinyint('+1') * integer('+3')),'result4':(tinyint('+1') * bigint('-4')),'result5':(tinyint('+1') * float('-5.5f')),'result6':(tinyint('+1') * double('-6.5d')),'result7':(double('-6.5d') * null), 'result8':double('-6.5d') * missing};

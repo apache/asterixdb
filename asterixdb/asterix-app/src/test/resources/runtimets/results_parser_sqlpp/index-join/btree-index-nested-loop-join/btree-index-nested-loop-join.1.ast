@@ -3,20 +3,20 @@ TypeDecl TwitterUserType [
   open RecordType {
     screen-name : string,
     lang : string,
-    friends_count : int32,
-    statuses_count : int32,
+    friends_count : integer,
+    statuses_count : integer,
     name : string,
-    followers_count : int32
+    followers_count : integer
   }
 ]
 TypeDecl TweetMessageType [
   open RecordType {
-    tweetid : int64,
+    tweetid : bigint,
     user : string,
     sender-location : point,
     send-time : datetime,
-    forward-from : int64,
-    retweet-from : int64,
+    forward-from : bigint,
+    retweet-from : bigint,
     referred-topics : UnorderedList <string>
 ,
     message-text : string
@@ -24,7 +24,7 @@ TypeDecl TweetMessageType [
 ]
 TypeDecl ResultType [
   open RecordType {
-    vertexid : int64,
+    vertexid : bigint,
     rank : double
   }
 ]

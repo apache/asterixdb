@@ -20,9 +20,9 @@
 {
   "a": sign(120.0),
   "b": sign(-90.5f),
-  "c": sign(int32("90")),
-  "d": sign(int16("0")),
-  "e": sign(int8("-45")),
+  "c": sign(integer("90")),
+  "d": sign(smallint("0")),
+  "e": sign(tinyint("-45")),
   "f": sign(1),
   "g": sign(null),
   "h": sign(missing)

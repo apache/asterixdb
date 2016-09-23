@@ -18,4 +18,4 @@
  */
 
 
-{'result1':(int16('3') > null),'result2':(null >= int16('3')),'result3':(int16('3') < null),'result4':(null <= int16('3')),'result5':(int16('3') = null),'result6':(null != int16('3'))};
+{'result1':(smallint('3') > null),'result2':(null >= smallint('3')),'result3':(smallint('3') < null),'result4':(null <= smallint('3')),'result5':(smallint('3') = null),'result6':(null != smallint('3'))};

@@ -1,8 +1,8 @@
 DataverseUse fooverse
 TypeDecl FooType [
   open RecordType {
-    id : int64,
-    numbers : OrderedList [int64]
+    id : bigint,
+    numbers : OrderedList [bigint]
 
   }
 ]

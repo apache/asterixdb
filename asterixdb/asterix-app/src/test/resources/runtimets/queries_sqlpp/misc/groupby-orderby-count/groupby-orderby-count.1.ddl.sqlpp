@@ -25,8 +25,8 @@ use twitter;
 
 create type twitter.Tweet as
 {
-  id : int64,
-  tweetid : int64,
+  id : bigint,
+  tweetid : bigint,
   loc : point,
   time : datetime,
   text : string

@@ -11,11 +11,11 @@ TypeDecl TweetMessageType [
 ]
 TypeDecl FacebookUserType [
   open RecordType {
-    id : int64
+    id : bigint
   }
 ]
 TypeDecl FacebookMessageType [
   open RecordType {
-    message-id : int64
+    message-id : bigint
   }
 ]

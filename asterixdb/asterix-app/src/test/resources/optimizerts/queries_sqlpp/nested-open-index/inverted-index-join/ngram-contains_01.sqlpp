@@ -30,14 +30,14 @@ use test;
 
 create type test.DBLPType as
 {
-  id : int32,
+  id : integer,
   dblpid : string,
   misc : string
 }
 
 create type test.CSXType as
  closed {
-  id : int32,
+  id : integer,
   csxid : string,
   title : string,
   authors : string,

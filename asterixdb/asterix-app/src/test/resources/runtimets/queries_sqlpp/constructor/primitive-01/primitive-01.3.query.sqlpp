@@ -18,10 +18,10 @@
  */
 /*
  * Test case name : primitive-01.aql
- * Description    : Test primitive integer type int8 constructor function with boundary values
+ * Description    : Test primitive integer type tinyint constructor function with boundary values
  * Success        : Yes
  * Date           : May 7th 2012
  *
  */
 
-{'$a':int8('-127'),'$b':int8('127'),'$c':int8('0'),'$d':int8('1'),'$e':int8('-1')};
+{'$a':tinyint('-127'),'$b':tinyint('127'),'$c':tinyint('0'),'$d':tinyint('1'),'$e':tinyint('-1')};

@@ -27,10 +27,10 @@ create type TinySocial.TwitterUserType as
 {
   `screen-name` : string,
   lang : string,
-  friends_count : int64,
-  statuses_count : int64,
+  friends_count : bigint,
+  statuses_count : bigint,
   name : string,
-  followers_count : int64
+  followers_count : bigint
 }
 
 create type TinySocial.TweetMessageType as
@@ -52,19 +52,19 @@ create type TinySocial.EmploymentType as
 
 create type TinySocial.FacebookUserType as
  closed {
-  id : int64,
+  id : bigint,
   alias : string,
   name : string,
   `user-since` : datetime,
-  `friend-ids` : {{int64}},
+  `friend-ids` : {{bigint}},
   employment : [EmploymentType]
 }
 
 create type TinySocial.FacebookMessageType as
  closed {
-  `message-id` : int64,
-  `author-id` : int64,
-  `in-response-to` : int64?,
+  `message-id` : bigint,
+  `author-id` : bigint,
+  `in-response-to` : bigint?,
   `sender-location` : point?,
   message : string
 }

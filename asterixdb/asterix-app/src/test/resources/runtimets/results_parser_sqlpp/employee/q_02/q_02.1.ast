@@ -1,15 +1,15 @@
 DataverseUse test
 TypeDecl EmpType [
   open RecordType {
-    id : int64,
+    id : bigint,
     name : string,
     address :       open RecordType {
-        number : int64,
+        number : bigint,
         street : string,
         city : string
       }
 ,
-    age : int64?,
+    age : bigint?,
     interests : UnorderedList <string>
 ?,
     children : OrderedList [string]

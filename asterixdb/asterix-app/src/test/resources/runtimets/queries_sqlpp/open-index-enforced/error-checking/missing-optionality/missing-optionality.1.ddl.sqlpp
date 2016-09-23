@@ -21,7 +21,7 @@ create dataverse test;
 use test;
 
 create type testType as open {
-   `id`: int32
+   `id`: integer
 }
 
 create dataset testDS(testType) primary key id;

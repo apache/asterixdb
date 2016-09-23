@@ -25,11 +25,11 @@ use tpch;
 
 create type tpch.LineItemType as
  closed {
-  l_orderkey : int64,
-  l_partkey : int64,
-  l_suppkey : int64,
-  l_linenumber : int64,
-  l_quantity : int64,
+  l_orderkey : bigint,
+  l_partkey : bigint,
+  l_suppkey : bigint,
+  l_linenumber : bigint,
+  l_quantity : bigint,
   l_extendedprice : double,
   l_discount : double,
   l_tax : double,
@@ -45,23 +45,23 @@ create type tpch.LineItemType as
 
 create type tpch.OrderType as
  closed {
-  o_orderkey : int64,
-  o_custkey : int64,
+  o_orderkey : bigint,
+  o_custkey : bigint,
   o_orderstatus : string,
   o_totalprice : double,
   o_orderdate : string,
   o_orderpriority : string,
   o_clerk : string,
-  o_shippriority : int64,
+  o_shippriority : bigint,
   o_comment : string
 }
 
 create type tpch.CustomerType as
  closed {
-  c_custkey : int64,
+  c_custkey : bigint,
   c_name : string,
   c_address : string,
-  c_nationkey : int64,
+  c_nationkey : bigint,
   c_phone : string,
   c_acctbal : double,
   c_mktsegment : string,
@@ -70,10 +70,10 @@ create type tpch.CustomerType as
 
 create type tpch.SupplierType as
  closed {
-  s_suppkey : int64,
+  s_suppkey : bigint,
   s_name : string,
   s_address : string,
-  s_nationkey : int64,
+  s_nationkey : bigint,
   s_phone : string,
   s_acctbal : double,
   s_comment : string
@@ -81,27 +81,27 @@ create type tpch.SupplierType as
 
 create type tpch.NationType as
  closed {
-  n_nationkey : int64,
+  n_nationkey : bigint,
   n_name : string,
-  n_regionkey : int64,
+  n_regionkey : bigint,
   n_comment : string
 }
 
 create type tpch.RegionType as
  closed {
-  r_regionkey : int64,
+  r_regionkey : bigint,
   r_name : string,
   r_comment : string
 }
 
 create type tpch.PartType as
  closed {
-  p_partkey : int64,
+  p_partkey : bigint,
   p_name : string,
   p_mfgr : string,
   p_brand : string,
   p_type : string,
-  p_size : int64,
+  p_size : bigint,
   p_container : string,
   p_retailprice : double,
   p_comment : string
@@ -109,9 +109,9 @@ create type tpch.PartType as
 
 create type tpch.PartSuppType as
  closed {
-  ps_partkey : int64,
-  ps_suppkey : int64,
-  ps_availqty : int64,
+  ps_partkey : bigint,
+  ps_suppkey : bigint,
+  ps_availqty : bigint,
   ps_supplycost : double,
   ps_comment : string
 }

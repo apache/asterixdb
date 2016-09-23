@@ -33,10 +33,10 @@ use test;
 
 create type test.Schema as
 {
-  id_8 : int8,
-  id_16 : int16,
-  id_32 : int32,
-  id_64 : int64,
+  id_8 : tinyint,
+  id_16 : smallint,
+  id_32 : integer,
+  id_64 : bigint,
   fp : float,
   name : string,
   dt : date,

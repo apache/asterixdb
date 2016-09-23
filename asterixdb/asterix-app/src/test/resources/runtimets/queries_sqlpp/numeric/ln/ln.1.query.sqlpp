@@ -21,9 +21,9 @@
 {
   "a": ln(120.0),
   "b": ln(90.5f),
-  "c": ln(int32("90")),
-  "d": ln(int16("0")),
-  "e": ln(int8("-45")),
+  "c": ln(integer("90")),
+  "d": ln(smallint("0")),
+  "e": ln(tinyint("-45")),
   "f": ln(1),
   "g": ln(null),
   "h": ln(missing)

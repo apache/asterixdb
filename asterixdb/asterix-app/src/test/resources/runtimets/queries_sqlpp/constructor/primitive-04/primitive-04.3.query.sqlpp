@@ -18,10 +18,10 @@
  */
 /*
  * Test case name : primitive-04.aql
- * Description    : Test primitive integer type int64 constructor functions with boundary values
+ * Description    : Test primitive integer type bigint constructor functions with boundary values
  * Success        : Yes
  * Date           : May 7th 2012
  *
  */
 
-{'$a':int64('9222872036854775809'),'$b':int64('-9222872036854775809'),'$c':int64('0'),'$d':int64('1'),'$e':int64('-1'),'$f':int64('4611436018427387904'),'$g':int64('-4611436018427387904')};
+{'$a':bigint('9222872036854775809'),'$b':bigint('-9222872036854775809'),'$c':bigint('0'),'$d':bigint('1'),'$e':bigint('-1'),'$f':bigint('4611436018427387904'),'$g':bigint('-4611436018427387904')};

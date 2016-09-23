@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{'result1':(int32('3') > missing),'result2':(missing >= int32('3')),'result3':(int32('3') < missing),'result4':(missing <= int32('3')),'result5':(int32('3') = missing),'result6':(missing != int32('3'))};
+{'result1':(integer('3') > missing),'result2':(missing >= integer('3')),'result3':(integer('3') < missing),'result4':(missing <= integer('3')),'result5':(integer('3') = missing),'result6':(missing != integer('3'))};

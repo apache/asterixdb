@@ -20,4 +20,4 @@
 use test;
 
 
-{'int8':test.int8('+80i8'),'int16':test.int16('160'),'int32':test.int32('+320i32'),'int64':test.int64('640'),'int8_2':test.int8('-80'),'int16_2':test.int16('-160i16'),'int32_2':test.int32('-320'),'int64_2':test.int64('-640i64'),'int64_min':test.int64('-9223372036854775808')};
+{'int8':test.tinyint('+80i8'),'int16':test.smallint('160'),'int32':test.integer('+320i32'),'int64':test.bigint('640'),'int8_2':test.tinyint('-80'),'int16_2':test.smallint('-160i16'),'int32_2':test.integer('-320'),'int64_2':test.bigint('-640i64'),'int64_min':test.bigint('-9223372036854775808')};

@@ -36,8 +36,8 @@ create type testdvt.testtype as
   datetimeField : datetime?,
   durationField : duration?,
   intervalField : interval?,
-  yearMonthDurationField : `year-month-duration`?,
-  dayTimeDurationField : `day-time-duration`?
+  yearMonthDurationField : `year_month_duration`?,
+  dayTimeDurationField : `day_time_duration`?
 }
 
 create external  dataset testds(testtype) using localfs((`path`=`asterix_nc1://data/temporal/temporalData.json`),(`format`=`adm`));

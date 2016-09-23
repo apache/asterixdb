@@ -1,17 +1,17 @@
 DataverseUse test
 TypeDecl Emp [
   closed RecordType {
-    id : int64,
+    id : bigint,
     fname : string,
     lname : string,
-    age : int64,
+    age : bigint,
     dept : string
   }
 ]
 TypeDecl EmpOpen [
   open RecordType {
-    id : int64,
-    age : int64,
+    id : bigint,
+    age : bigint,
     dept : string
   }
 ]

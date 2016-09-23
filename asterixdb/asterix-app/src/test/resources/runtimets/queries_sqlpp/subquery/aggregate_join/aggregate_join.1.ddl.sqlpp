@@ -25,7 +25,7 @@ drop dataset samptable if exists;
 drop type samptabletype if exists;
 
 create type samptabletype as closed {
-  id: int8
+  id: tinyint
 };
 
 create dataset samptable(samptabletype) primary key id;

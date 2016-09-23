@@ -33,22 +33,22 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int32,
-  `statuses-count` : int32,
+  `friends-count` : integer,
+  `statuses-count` : integer,
   name : string,
-  `followers-count` : int32
+  `followers-count` : integer
 }
 
 create type test.TweetMessageType as
  closed {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string,
-  countA : int32,
-  countB : int32
+  countA : integer,
+  countB : integer
 }
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
@@ -74,6 +74,6 @@ select element {'tweet':{'id':t1.tweetid,'topics':t1.`message-text`},'similar-tw
         order by t2.tweetid
     )}
 from  TweetMessages as t1
-where (t1.tweetid > test.int64('240'))
+where (t1.tweetid > test.bigint('240'))
 order by t1.tweetid
 ;

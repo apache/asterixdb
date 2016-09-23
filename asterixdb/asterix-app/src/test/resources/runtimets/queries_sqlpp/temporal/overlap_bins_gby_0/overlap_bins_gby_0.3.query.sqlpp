@@ -28,7 +28,7 @@ select element {'tbin':gen0.bin,'interval':itv,'overlap':test.`get-overlapping-i
 from
     ( select element {'bin':bin,'i':i}
       from (select element i from tsdata as i order by i.time) as i,
-            test.`overlap-bins`(test.`interval-start-from-time`(i.time,i.duration),test.time('00:00:00'),test.`day-time-duration`('PT1H30M')) as j
+            test.`overlap-bins`(test.`interval-start-from-time`(i.time,i.duration),test.time('00:00:00'),test.`day_time_duration`('PT1H30M')) as j
       group by j as bin
       order by `get-interval-start`(bin)
     ) as gen0,

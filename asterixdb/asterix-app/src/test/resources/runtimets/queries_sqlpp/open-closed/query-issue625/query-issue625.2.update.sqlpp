@@ -28,6 +28,6 @@ use fooverse;
 
 insert into Foo
 {'id':1,'numbers':(
-    select element fooverse.int32(x)
+    select element fooverse.integer(x)
     from  ['1','2','3'] as x
 )};

@@ -1,12 +1,12 @@
 DataverseUse TestVerse
 TypeDecl Int64TestType [
   open RecordType {
-    myint64 : int64,
-    myoptint64 : int64?,
-    myint32 : int32,
-    myoptint32 : int32?,
-    myint16 : int16,
-    myoptint16 : int16?,
+    myint64 : bigint,
+    myoptint64 : bigint?,
+    myint32 : integer,
+    myoptint32 : integer?,
+    myint16 : smallint,
+    myoptint16 : smallint?,
     mydouble : double,
     myoptdouble : double?,
     myfloat : float,

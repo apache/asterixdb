@@ -32,13 +32,13 @@ create type SocialNetworkData.EmploymentType as
 
 create type SocialNetworkData.FacebookUserType as
  closed {
-  id : int64,
-  `id-copy` : int64,
+  id : bigint,
+  `id-copy` : bigint,
   alias : string,
   name : string,
   `user-since` : datetime,
   `user-since-copy` : datetime,
-  `friend-ids` : {{int64}},
+  `friend-ids` : {{bigint}},
   employment : [EmploymentType]
 }
 

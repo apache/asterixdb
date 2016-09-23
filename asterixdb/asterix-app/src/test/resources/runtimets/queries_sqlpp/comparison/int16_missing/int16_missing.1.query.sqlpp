@@ -18,4 +18,4 @@
  */
 
 
-{'result1':(int16('3') > missing),'result2':(missing >= int16('3')),'result3':(int16('3') < missing),'result4':(missing <= int16('3')),'result5':(int16('3') = missing),'result6':(missing != int16('3'))};
+{'result1':(smallint('3') > missing),'result2':(missing >= smallint('3')),'result3':(smallint('3') < missing),'result4':(missing <= smallint('3')),'result5':(smallint('3') = missing),'result6':(missing != smallint('3'))};

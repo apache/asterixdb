@@ -30,13 +30,13 @@ import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
-import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -45,13 +45,11 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.AbstractComplexType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class TypeTranslator {
-    private static final Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
     private TypeTranslator() {
     }
@@ -87,7 +85,7 @@ public class TypeTranslator {
             Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences, String typeDataverse)
             throws AlgebricksException {
 
-        if (builtinTypeMap.get(typeName) != null) {
+        if (BuiltinTypeMap.getBuiltinType(typeName) != null) {
             throw new AlgebricksException("Cannot redefine builtin type " + typeName + " .");
         }
         TypeSignature typeSignature = new TypeSignature(typeDataverse, typeName);
@@ -318,7 +316,7 @@ public class TypeTranslator {
     }
 
     private static IAType solveTypeReference(TypeSignature typeSignature, Map<TypeSignature, IAType> typeMap) {
-        IAType builtin = builtinTypeMap.get(typeSignature.getName());
+        IAType builtin = BuiltinTypeMap.getBuiltinType(typeSignature.getName());
         if (builtin != null) {
             return builtin;
         } else {

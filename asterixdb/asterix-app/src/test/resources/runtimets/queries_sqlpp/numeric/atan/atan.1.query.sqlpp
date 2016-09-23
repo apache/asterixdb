@@ -21,9 +21,9 @@
   "a": atan(10.0),
   "b": atan(0.5f),
   "c": atan(100),
-  "d": atan(int32("0")),
-  "e": atan(int8("-1")),
-  "f": atan(int16("1")),
+  "d": atan(integer("0")),
+  "e": atan(tinyint("-1")),
+  "f": atan(smallint("1")),
   "g": atan(null),
   "h": atan(missing)
 };

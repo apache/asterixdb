@@ -1,8 +1,8 @@
 DataverseUse orders-aggreg
 TypeDecl OrderType [
   closed RecordType {
-    oid : int32,
-    cid : int32,
+    oid : integer,
+    cid : integer,
     orderstatus : string,
     orderpriority : string,
     clerk : string,

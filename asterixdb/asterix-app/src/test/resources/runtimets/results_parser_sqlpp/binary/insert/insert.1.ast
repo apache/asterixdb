@@ -1,12 +1,12 @@
 DataverseUse test
 TypeDecl UserTypeOpen [
   open RecordType {
-    id : int64
+    id : bigint
   }
 ]
 TypeDecl UserTypeClose [
   closed RecordType {
-    id : int64,
+    id : bigint,
     name : string,
     md5 : binary
   }

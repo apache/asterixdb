@@ -25,7 +25,7 @@ use fuzzyjoin;
 
 create type fuzzyjoin.DBLPType as
  closed {
-  id : int64,
+  id : bigint,
   dblpid : string,
   title : string,
   authors : string,
@@ -34,8 +34,8 @@ create type fuzzyjoin.DBLPType as
 
 create type fuzzyjoin.TOKENSRANKEDADMType as
  closed {
-  token : int64,
-  rank : int64
+  token : bigint,
+  rank : bigint
 }
 
 create  dataset DBLP(DBLPType) primary key id;

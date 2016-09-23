@@ -1,19 +1,19 @@
 DataverseUse demo0927
 TypeDecl AddressType [
   closed RecordType {
-    number : int32,
+    number : integer,
     street : string,
     city : string
   }
 ]
 TypeDecl CustomerType [
   closed RecordType {
-    cid : int32,
+    cid : integer,
     name : string,
-    age : int32?,
+    age : integer?,
     address : AddressType?,
     lastorder :       open RecordType {
-        oid : int32,
+        oid : integer,
         total : float
       }
 

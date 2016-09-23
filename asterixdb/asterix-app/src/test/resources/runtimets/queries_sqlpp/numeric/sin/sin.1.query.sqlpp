@@ -20,9 +20,9 @@
 {
   "a": sin(120.0),
   "b": sin(90.5f),
-  "c": sin(int32("90")),
-  "d": sin(int16("0")),
-  "e": sin(int8("-45")),
+  "c": sin(integer("90")),
+  "d": sin(smallint("0")),
+  "e": sin(tinyint("-45")),
   "f": sin(1),
   "g": sin(null),
   "h": sin(missing)

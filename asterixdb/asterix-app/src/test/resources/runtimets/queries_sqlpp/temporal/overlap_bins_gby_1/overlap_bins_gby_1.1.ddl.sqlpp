@@ -29,9 +29,9 @@ use test;
 
 create type test.Schema as
  closed {
-  id : int32,
+  id : integer,
   time : time,
-  duration : `day-time-duration`
+  duration : `day_time_duration`
 }
 
 create  dataset tsdata(Schema) primary key id;

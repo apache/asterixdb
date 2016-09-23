@@ -21,9 +21,9 @@
   "a": acos(10.0),
   "b": acos(0.5f),
   "c": acos(100),
-  "d": acos(int32("0")),
-  "e": acos(int8("-1")),
-  "f": acos(int16("1")),
+  "d": acos(integer("0")),
+  "e": acos(tinyint("-1")),
+  "f": acos(smallint("1")),
   "g": acos(null),
   "h": acos(missing)
 };

@@ -25,20 +25,20 @@ create  dataverse test2;
 
 create type test1.AddressType as
 {
-  number : int64,
+  number : bigint,
   street : string,
   city : string
 }
 
 create type test1.CustomerType as
  closed {
-  cid : int64,
+  cid : bigint,
   name : string,
-  cashBack : int64,
-  age : int64?,
+  cashBack : bigint,
+  age : bigint?,
   address : AddressType?,
   lastorder : {
-      oid : int64,
+      oid : bigint,
       total : float
   }
 
@@ -46,20 +46,20 @@ create type test1.CustomerType as
 
 create type test2.AddressType as
 {
-  number : int64,
+  number : bigint,
   street : string,
   city : string
 }
 
 create type test2.CustomerType as
  closed {
-  cid : int64,
+  cid : bigint,
   name : string,
-  cashBack : int64,
-  age : int64?,
+  cashBack : bigint,
+  age : bigint?,
   address : AddressType?,
   lastorder : {
-      oid : int64,
+      oid : bigint,
       total : float
   }
 

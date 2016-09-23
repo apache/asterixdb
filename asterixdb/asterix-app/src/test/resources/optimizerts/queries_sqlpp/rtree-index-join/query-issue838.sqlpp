@@ -31,14 +31,14 @@ use twitter;
 
 create type twitter.TweetMessageType as
  closed {
-  tweetid : int64,
+  tweetid : bigint,
   `sender-location` : point,
   text : string
 }
 
 create type twitter.TweetHistorySubscription as
 {
-  `subscription-id` : int32,
+  `subscription-id` : integer,
   location : point
 }
 

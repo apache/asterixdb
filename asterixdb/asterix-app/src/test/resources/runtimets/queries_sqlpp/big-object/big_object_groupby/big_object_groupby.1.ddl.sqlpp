@@ -30,10 +30,10 @@ use test;
 
 create type test.LineType as
  closed {
-  l_orderkey : int32,
-  l_partkey : int32,
-  l_suppkey : int32,
-  l_linenumber : int32,
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
   l_quantity : double,
   l_extendedprice : double,
   l_discount : double,
@@ -50,23 +50,23 @@ create type test.LineType as
 
 create type test.OrderType as
  closed {
-  o_orderkey : int32,
-  o_custkey : int32,
+  o_orderkey : integer,
+  o_custkey : integer,
   o_orderstatus : string,
   o_totalprice : double,
   o_orderdate : string,
   o_orderpriority : string,
   o_clerk : string,
-  o_shippriority : int32,
+  o_shippriority : integer,
   o_comment : string
 }
 
 create type test.CustomerType as
  closed {
-  c_custkey : int32,
+  c_custkey : integer,
   c_name : string,
   c_address : string,
-  c_nationkey : int32,
+  c_nationkey : integer,
   c_phone : string,
   c_acctbal : double,
   c_mktsegment : string,

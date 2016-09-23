@@ -24,8 +24,8 @@
  */
 
 { 'duration':(duration('P3Y6M3DT9H5M2.348S') = duration('P3Y6M3DT9H5M2.348S')),
-  'year-month-duration':(`year-month-duration`('P3Y6M') = `year-month-duration`('P3Y6M')),
-  'day-time-duration':(`day-time-duration`('P3DT9H5M2.348S') = `day-time-duration`('P3DT9H5M2.348S')),
+  'year-month-duration':(`year_month_duration`('P3Y6M') = `year_month_duration`('P3Y6M')),
+  'day-time-duration':(`day_time_duration`('P3DT9H5M2.348S') = `day_time_duration`('P3DT9H5M2.348S')),
   'point':(point('47.44,80.65') = point('47.44,80.65')),
   'line':(line('10.1234,11.1e-1 +10.2E-2,-11.22') = line('10.1234,11.1e-1 +10.2E-2,-11.22')),
   'polygon':(polygon('-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75') = polygon('-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75')),
@@ -33,8 +33,8 @@
   'rectangle':(rectangle('0.1234,-1.00e-10 5.5487,0.48765') = rectangle('0.1234,-1.00e-10 5.5487,0.48765')),
   'interval':(interval(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700')) = interval(datetime('-1987-11-19T02:43:57.938+08:00'),datetime('19991112T124935948-0700'))),
   'duration2':(duration('P3Y6M3DT9H5M2.348S') != duration('P4Y6M3DT9H5M2.348S')),
-  'year-month-duration2':(`year-month-duration`('P3Y6M') != `year-month-duration`('P3Y7M')),
-  'day-time-duration2':(`day-time-duration`('P3DT9H5M2.348S') != `day-time-duration`('P3DT1H5M2.348S')),
+  'year-month-duration2':(`year_month_duration`('P3Y6M') != `year_month_duration`('P3Y7M')),
+  'day-time-duration2':(`day_time_duration`('P3DT9H5M2.348S') != `day_time_duration`('P3DT1H5M2.348S')),
   'point2':(point('47.44,80.65') != point('47.4444,80.65')),
   'line2':(line('10.1234,11.1e-1 +10.2E-2,-11.22') != line('10.5678,11.1e-1 +10.2E-2,-11.22')),
   'polygon2':(polygon('-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75') != polygon('-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75')),

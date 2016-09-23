@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{'result1':(int64('-4') - int8('+1')),'result2':(int64('-4') - int16('2')),'result3':(int64('-4') - int32('+3')),'result4':(int64('-4') - int64('-4')),'result5':(int64('-4') - float('-5.5f')),'result6':(int64('-4') - double('-6.5d')),'result7':(double('-6.5d') - null), 'result8':double('-6.5d') - [1][1]};
+{'result1':(bigint('-4') - tinyint('+1')),'result2':(bigint('-4') - smallint('2')),'result3':(bigint('-4') - integer('+3')),'result4':(bigint('-4') - bigint('-4')),'result5':(bigint('-4') - float('-5.5f')),'result6':(bigint('-4') - double('-6.5d')),'result7':(double('-6.5d') - null), 'result8':double('-6.5d') - [1][1]};

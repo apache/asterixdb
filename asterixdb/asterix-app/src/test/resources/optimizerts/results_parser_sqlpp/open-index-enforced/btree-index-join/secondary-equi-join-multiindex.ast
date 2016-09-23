@@ -8,13 +8,13 @@ TypeDecl EmploymentType [
 ]
 TypeDecl FacebookUserType [
   closed RecordType {
-    id : int32,
-    id-copy : int32,
+    id : integer,
+    id-copy : integer,
     alias : string,
     name : string,
     user-since : datetime,
     user-since-copy : datetime,
-    friend-ids : UnorderedList <int32>
+    friend-ids : UnorderedList <integer>
 ,
     employment : OrderedList [EmploymentType]
 
@@ -22,10 +22,10 @@ TypeDecl FacebookUserType [
 ]
 TypeDecl FacebookMessageType [
   open RecordType {
-    message-id : int32,
-    message-id-copy : int32,
-    author-id : int32,
-    in-response-to : int32?,
+    message-id : integer,
+    message-id-copy : integer,
+    author-id : integer,
+    in-response-to : integer?,
     sender-location : point?,
     message : string
   }

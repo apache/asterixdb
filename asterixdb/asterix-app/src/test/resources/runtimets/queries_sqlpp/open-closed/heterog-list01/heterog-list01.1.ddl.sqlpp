@@ -32,13 +32,13 @@ use test;
 
 create type test.BatterType as
 {
-  id : int64,
+  id : bigint,
   descrpt : string
 }
 
 create type test.TestType as
  closed {
-  id : int64,
+  id : bigint,
   description : string,
   name : string,
   batters : {{BatterType}}

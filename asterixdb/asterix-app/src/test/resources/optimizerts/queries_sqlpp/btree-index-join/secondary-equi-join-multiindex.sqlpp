@@ -40,23 +40,23 @@ create type test.EmploymentType as
 
 create type test.FacebookUserType as
  closed {
-  id : int32,
-  `id-copy` : int32,
+  id : integer,
+  `id-copy` : integer,
   alias : string,
   name : string,
   `user-since` : datetime,
   `user-since-copy` : datetime,
-  `friend-ids` : {{int32}},
+  `friend-ids` : {{integer}},
   employment : [EmploymentType]
 }
 
 create type test.FacebookMessageType as
  closed {
-  `message-id` : int32,
-  `message-id-copy` : int32,
-  `author-id` : int32,
-  `author-id-copy` : int32,
-  `in-response-to` : int32?,
+  `message-id` : integer,
+  `message-id-copy` : integer,
+  `author-id` : integer,
+  `author-id-copy` : integer,
+  `in-response-to` : integer?,
   `sender-location` : point?,
   message : string
 }

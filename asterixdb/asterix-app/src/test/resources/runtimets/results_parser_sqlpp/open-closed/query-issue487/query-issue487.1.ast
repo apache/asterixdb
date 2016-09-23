@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl EmpType [
   open RecordType {
-    id : int32,
+    id : integer,
     name : string
   }
 ]

@@ -18,4 +18,4 @@
  */
 
 
-{'result1':(double('-6.5d') + int8('+1')),'result2':(double('-6.5d') + int16('2')),'result3':(double('-6.5d') + int32('+3')),'result4':(double('-6.5d') + int64('-4')),'result5':(double('-6.5d') + float('-5.5f')),'result6':(double('-6.5d') + double('-6.5d')),'result7':(double('-6.5d') + null), 'result8':double('-6.5d') + [1.0][-1]};
+{'result1':(double('-6.5d') + tinyint('+1')),'result2':(double('-6.5d') + smallint('2')),'result3':(double('-6.5d') + integer('+3')),'result4':(double('-6.5d') + bigint('-4')),'result5':(double('-6.5d') + float('-5.5f')),'result6':(double('-6.5d') + double('-6.5d')),'result7':(double('-6.5d') + null), 'result8':double('-6.5d') + [1.0][-1]};

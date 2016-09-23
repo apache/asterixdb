@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   Check comparison and order-by for day-time-duration
+ * Description      :   Check comparison and order-by for day_time_duration
  * Expected Result  :   Success
  * Date             :   May 18, 2013
  */
@@ -25,10 +25,10 @@
 use test;
 
 
-with  dr1 as test.`day-time-duration`('P439D'),
-      dr2 as test.`day-time-duration`('-PT328M'),
-      dr3 as test.`day-time-duration`('-P48DT12M43.932S'),
-      dr4 as test.`day-time-duration`('P12H')
+with  dr1 as test.`day_time_duration`('P439D'),
+      dr2 as test.`day_time_duration`('-PT328M'),
+      dr3 as test.`day_time_duration`('-P48DT12M43.932S'),
+      dr4 as test.`day_time_duration`('P12H')
 select element dr
 from  [dr1,dr2,dr3,dr4] as dr
 order by dr

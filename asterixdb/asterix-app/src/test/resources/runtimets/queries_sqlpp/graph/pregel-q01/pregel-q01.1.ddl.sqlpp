@@ -27,22 +27,22 @@ create type Pregelix.TwitterUserType as
 {
   `screen-name` : string,
   lang : string,
-  friends_count : int32,
-  statuses_count : int32,
+  friends_count : integer,
+  statuses_count : integer,
   name : string,
-  followers_count : int32
+  followers_count : integer
 }
 
 create type Pregelix.TweetMessageType as
 {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point?,
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string,
-  `retweeted-from` : int64,
-  `forwarded-from` : int64
+  `retweeted-from` : bigint,
+  `forwarded-from` : bigint
 }
 
 create  dataset TwitterMsgs(TweetMessageType) primary key tweetid;
@@ -51,13 +51,13 @@ create  dataset TwitterUsers(TwitterUserType) primary key `screen-name`;
 
 create type Pregelix.TMEdge as
 {
-  tweetid : int64,
+  tweetid : bigint,
   `value` : float?
 }
 
 create type Pregelix.TMGraph as
 {
-  tweetid : int64,
+  tweetid : bigint,
   `rank-value` : double?,
   `populated-by` : {{TMEdge}}
 }

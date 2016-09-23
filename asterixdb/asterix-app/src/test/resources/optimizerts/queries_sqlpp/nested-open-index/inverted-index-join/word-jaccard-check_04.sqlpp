@@ -30,7 +30,7 @@ use test;
 
 create type test.DBLPTypetmp as
 {
-  id : int32,
+  id : integer,
   dblpid : string,
   authors : string,
   misc : string
@@ -38,7 +38,7 @@ create type test.DBLPTypetmp as
 
 create type test.CSXTypetmp as
 {
-  id : int32,
+  id : integer,
   dblpid : string,
   authors : string,
   misc : string

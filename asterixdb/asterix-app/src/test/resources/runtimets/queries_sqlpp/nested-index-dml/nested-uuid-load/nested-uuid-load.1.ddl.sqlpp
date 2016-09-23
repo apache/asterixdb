@@ -35,16 +35,16 @@ create type twitter.TwitterUserType as
   userid : uuid,
   `screen-name` : string,
   lang : string,
-  friends_count : int64,
-  statuses_count : int64,
+  friends_count : bigint,
+  statuses_count : bigint,
   name : string,
-  followers_count : int64
+  followers_count : bigint
 }
 
 create type twitter.TweetMessageType as
  closed {
   user : TwitterUserType,
-  tweetid : int64,
+  tweetid : bigint,
   `sender-location` : point?,
   `send-time` : datetime,
   `referred-topics` : {{string}},

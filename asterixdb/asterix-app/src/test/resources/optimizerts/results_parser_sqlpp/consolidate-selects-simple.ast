@@ -1,10 +1,10 @@
 DataverseUse test
 TypeDecl CustomerType [
   closed RecordType {
-    c_custkey : int32,
+    c_custkey : integer,
     c_name : string,
     c_address : string,
-    c_nationkey : int32,
+    c_nationkey : integer,
     c_phone : string,
     c_acctbal : double,
     c_mktsegment : string,

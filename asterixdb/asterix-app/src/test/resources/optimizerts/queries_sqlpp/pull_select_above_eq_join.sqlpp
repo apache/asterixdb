@@ -25,18 +25,18 @@ use `pull-select-above-eq-join`;
 
 create type `pull-select-above-eq-join`.UserType as
 {
-  uid : int32,
+  uid : integer,
   name : string,
   city : string,
-  lottery_numbers : {{int32}}
+  lottery_numbers : {{integer}}
 }
 
 create type `pull-select-above-eq-join`.VisitorType as
 {
-  vid : int32,
+  vid : integer,
   name : string,
   city : string,
-  lottery_numbers : {{int32}}
+  lottery_numbers : {{integer}}
 }
 
 create  nodegroup group1 if not exists  on

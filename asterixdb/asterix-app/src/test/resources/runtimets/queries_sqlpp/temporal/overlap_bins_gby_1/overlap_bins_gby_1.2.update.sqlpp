@@ -25,24 +25,24 @@ use test;
 
 
 insert into tsdata
-select element {'id':1,'time':test.time('23:49:23.938'),'duration':test.`day-time-duration`('PT5M')};
+select element {'id':1,'time':test.time('23:49:23.938'),'duration':test.`day_time_duration`('PT5M')};
 insert into tsdata
-select element {'id':2,'time':test.time('00:27:13.432'),'duration':test.`day-time-duration`('PT1H')};
+select element {'id':2,'time':test.time('00:27:13.432'),'duration':test.`day_time_duration`('PT1H')};
 insert into tsdata
-select element {'id':3,'time':test.time('18:00:00'),'duration':test.`day-time-duration`('PT2H')};
+select element {'id':3,'time':test.time('18:00:00'),'duration':test.`day_time_duration`('PT2H')};
 insert into tsdata
-select element {'id':4,'time':test.time('234933938'),'duration':test.`day-time-duration`('PT30S')};
+select element {'id':4,'time':test.time('234933938'),'duration':test.`day_time_duration`('PT30S')};
 insert into tsdata
-select element {'id':5,'time':test.time('23:58:17.038'),'duration':test.`day-time-duration`('PT39.382S')};
+select element {'id':5,'time':test.time('23:58:17.038'),'duration':test.`day_time_duration`('PT39.382S')};
 insert into tsdata
-select element {'id':6,'time':test.time('23:30:00'),'duration':test.`day-time-duration`('PT2M')};
+select element {'id':6,'time':test.time('23:30:00'),'duration':test.`day_time_duration`('PT2M')};
 insert into tsdata
-select element {'id':7,'time':test.time('23:22:38'),'duration':test.`day-time-duration`('PT20M')};
+select element {'id':7,'time':test.time('23:22:38'),'duration':test.`day_time_duration`('PT20M')};
 insert into tsdata
-select element {'id':8,'time':test.time('17:28:13.900'),'duration':test.`day-time-duration`('PT19S')};
+select element {'id':8,'time':test.time('17:28:13.900'),'duration':test.`day_time_duration`('PT19S')};
 insert into tsdata
-select element {'id':9,'time':test.time('07:49:23.938'),'duration':test.`day-time-duration`('PT3H')};
+select element {'id':9,'time':test.time('07:49:23.938'),'duration':test.`day_time_duration`('PT3H')};
 insert into tsdata
-select element {'id':10,'time':test.time('09:35:28.039'),'duration':test.`day-time-duration`('PT10H50M')};
+select element {'id':10,'time':test.time('09:35:28.039'),'duration':test.`day_time_duration`('PT10H50M')};
 insert into tsdata
-select element {'id':11,'time':test.time('12:49:23.938'),'duration':test.`day-time-duration`('PT3H')};
+select element {'id':11,'time':test.time('12:49:23.938'),'duration':test.`day_time_duration`('PT3H')};

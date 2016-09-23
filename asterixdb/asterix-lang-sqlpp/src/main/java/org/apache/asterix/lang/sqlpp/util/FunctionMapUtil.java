@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionMapUtil {
 
-    private final static String CORE_AGGREGATE_PREFIX = "coll_";
+    private final static String CORE_AGGREGATE_PREFIX = "array_";
     private final static String SQL_PREFIX = "sql-";
 
     // Maps from a SQL function name to an AQL function name (i.e., AsterixDB internal name).
@@ -49,10 +49,12 @@ public class FunctionMapUtil {
         FUNCTION_NAME_MAP.put("upper", "uppercase"); //SQL: upper, AQL: uppercase
         FUNCTION_NAME_MAP.put("title", "initcap"); //SQL: title, SQL/AQL: initcap
         FUNCTION_NAME_MAP.put("regexp_contains", "matches"); //SQL: regexp_contains, AQL: matches
-        FUNCTION_NAME_MAP.put("regexp_like", "regexp-like"); //SQL: regexp_like, AQL: regexp-like
-        FUNCTION_NAME_MAP.put("regexp_position", "regexp-position"); //SQL: regexp_position, AQL: regexp-position
         FUNCTION_NAME_MAP.put("regexp_replace", "replace"); //SQL: regexp_replace, AQL: replace
         FUNCTION_NAME_MAP.put("power", "caret"); //SQL: pow, AQL: caret
+        FUNCTION_NAME_MAP.put("tinyint", "int8"); //SQL: tinyint, AQL: int8
+        FUNCTION_NAME_MAP.put("smallint", "int16"); //SQL: smallint, AQL: int16
+        FUNCTION_NAME_MAP.put("integer", "int32"); //SQL: integer, AQL: int32
+        FUNCTION_NAME_MAP.put("bigint", "int64"); //SQL: bigint, AQL: int64
     }
 
     // Maps from a variable-arg SQL function names to an internal list-arg function name.
@@ -186,6 +188,6 @@ public class FunctionMapUtil {
         if (mappedName != null) {
             return mappedName;
         }
-        return lowerCaseName;
+        return lowerCaseName.replace('_', '-');
     }
 }

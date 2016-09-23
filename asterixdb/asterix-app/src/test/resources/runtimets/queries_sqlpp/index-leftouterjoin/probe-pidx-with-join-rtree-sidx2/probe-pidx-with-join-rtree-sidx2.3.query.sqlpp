@@ -34,6 +34,6 @@ select element {'tweetid1':t1.tweetid,'loc1':t1.`sender-location`,'nearby-messag
     )}
 from  TweetMessages as t1
 with  n as test.`create-circle`(t1.`sender-location`,0.5)
-where (t1.tweetid < test.int64('10'))
+where (t1.tweetid < test.bigint('10'))
 order by t1.tweetid
 ;

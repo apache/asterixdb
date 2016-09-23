@@ -31,12 +31,12 @@ use test;
 
 create type test.testtype1 as
 {
-  id : int64
+  id : bigint
 }
 
 create type test.testtype2 as
 {
-  id : int64
+  id : bigint
 }
 
 create  dataset t1(testtype1) primary key id;

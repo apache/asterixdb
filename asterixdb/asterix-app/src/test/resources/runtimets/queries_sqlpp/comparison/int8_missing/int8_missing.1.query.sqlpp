@@ -18,4 +18,4 @@
  */
 
 
-{'result1':(int8('3') > missing),'result2':(missing >= int8('3')),'result3':(int8('3') < missing),'result4':(missing <= int8('3')),'result5':(int8('3') = missing),'result6':(missing != int8('3'))};
+{'result1':(tinyint('3') > missing),'result2':(missing >= tinyint('3')),'result3':(tinyint('3') < missing),'result4':(missing <= tinyint('3')),'result5':(tinyint('3') = missing),'result6':(missing != tinyint('3'))};

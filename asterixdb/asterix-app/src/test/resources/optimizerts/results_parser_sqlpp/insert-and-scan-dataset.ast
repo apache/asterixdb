@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl myDataType [
   open RecordType {
-    id : int32
+    id : integer
   }
 ]
 DatasetDecl myData(myDataType) partitioned by [[id]]

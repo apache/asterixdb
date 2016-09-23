@@ -30,9 +30,9 @@ use test;
 
 create type test.Employee as
  closed {
-  id : int32,
+  id : integer,
   name : string,
-  salary : int32
+  salary : integer
 }
 
 create  dataset Office(Employee) primary key id;

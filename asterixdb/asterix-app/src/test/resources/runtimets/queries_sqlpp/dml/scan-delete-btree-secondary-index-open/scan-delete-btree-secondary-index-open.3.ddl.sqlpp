@@ -20,5 +20,5 @@
 use test;
 
 
-create  index age_index  on CustomersOpen (age:int32?) type btree enforced;
+create  index age_index  on CustomersOpen (age:integer?) type btree enforced;
 

@@ -24,11 +24,11 @@ create dataverse test;
 use test;
 
 create type FooType as {
-  fid: int32
+  fid: integer
 }
 
 create type BarType as {
-  bid: int32
+  bid: integer
 }
 
 create dataset Foo(FooType) primary key fid;

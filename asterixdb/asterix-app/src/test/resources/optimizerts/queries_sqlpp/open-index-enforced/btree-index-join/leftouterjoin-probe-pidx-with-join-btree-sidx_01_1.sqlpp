@@ -33,26 +33,26 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int32,
-  `statuses-count` : int32,
+  `friends-count` : integer,
+  `statuses-count` : integer,
   name : string,
-  `followers-count` : int32
+  `followers-count` : integer
 }
 
 create type test.TweetMessageType as
 {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string,
-  countA : int32
+  countA : integer
 }
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
-create  index msgCountBIx  on TweetMessages (countB:int32?) type btree enforced;
+create  index msgCountBIx  on TweetMessages (countB:integer?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
 select element {'tweetid1':t1.tweetid,'count1':t1.countA,'t2info':(
@@ -62,6 +62,6 @@ select element {'tweetid1':t1.tweetid,'count1':t1.countA,'t2info':(
         order by t2.tweetid
     )}
 from  TweetMessages as t1
-where (t1.tweetid < test.int64('10'))
+where (t1.tweetid < test.bigint('10'))
 order by t1.tweetid
 ;

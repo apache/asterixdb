@@ -1,9 +1,9 @@
 DataverseUse test
 TypeDecl UserType [
   open RecordType {
-    uid : int64,
+    uid : bigint,
     name : string,
-    lottery_numbers : OrderedList [int64]
+    lottery_numbers : OrderedList [bigint]
 ,
     interests : UnorderedList <string>
 
@@ -11,9 +11,9 @@ TypeDecl UserType [
 ]
 TypeDecl VisitorType [
   open RecordType {
-    vid : int64,
+    vid : bigint,
     name : string,
-    lottery_numbers : OrderedList [int64]
+    lottery_numbers : OrderedList [bigint]
 ,
     interests : UnorderedList <string>
 

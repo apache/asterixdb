@@ -20,9 +20,9 @@
 {
   "a": exp(120.0),
   "b": exp(90.5f),
-  "c": exp(int32("90")),
-  "d": exp(int16("0")),
-  "e": exp(int8("-45")),
+  "c": exp(integer("90")),
+  "d": exp(smallint("0")),
+  "e": exp(tinyint("-45")),
   "f": exp(1),
   "g": exp(null),
   "h": exp(missing)

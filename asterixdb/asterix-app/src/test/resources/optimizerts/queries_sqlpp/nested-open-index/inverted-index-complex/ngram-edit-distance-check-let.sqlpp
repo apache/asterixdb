@@ -31,7 +31,7 @@ use test;
 
 create type test.DBLPTypetmp as
 {
-  id : int32,
+  id : integer,
   dblpid : string,
   title : string,
   misc : string

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   Add numeric values with a null value, sql-coll_sum() aggregate function must return null.
+ * Description      :   Add numeric values with a null value, sql-array_sum() aggregate function must return null.
  * Expected result  :   Success
  * Date             :   July 20th 2012
  */
@@ -30,8 +30,8 @@ use test;
 
 create type test.TestType as
 {
-  id : int64,
-  sal : int64?
+  id : bigint,
+  sal : bigint?
 }
 
 create  dataset tdst(TestType) primary key id;

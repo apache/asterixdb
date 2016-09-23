@@ -41,7 +41,7 @@ create type testdv2.testtype02 as
   name : string,
   sex : string,
   dept : string,
-  salary : int32,
+  salary : integer,
   interests : {{string}}
 }
 

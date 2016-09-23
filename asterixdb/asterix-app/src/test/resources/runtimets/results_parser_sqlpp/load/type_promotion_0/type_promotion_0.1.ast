@@ -1,28 +1,28 @@
 DataverseUse TestDataverse
 TypeDecl TestType [
   open RecordType {
-    id : int64,
-    int8 : int8,
-    int16 : int16,
-    int32 : int32,
-    int64 : int64,
+    id : bigint,
+    int8 : tinyint,
+    int16 : smallint,
+    int32 : integer,
+    int64 : bigint,
     float : float,
     double : double,
-    int8_u : UnorderedList <int8>
+    int8_u : UnorderedList <tinyint>
 ?,
-    int8_o : OrderedList [int8]
+    int8_o : OrderedList [tinyint]
 ?,
-    int16_u : UnorderedList <int16>
+    int16_u : UnorderedList <smallint>
 ?,
-    int16_o : OrderedList [int16]
+    int16_o : OrderedList [smallint]
 ?,
-    int32_u : UnorderedList <int32>
+    int32_u : UnorderedList <integer>
 ?,
-    int32_o : OrderedList [int32]
+    int32_o : OrderedList [integer]
 ?,
-    int64_u : UnorderedList <int64>
+    int64_u : UnorderedList <bigint>
 ?,
-    int64_o : OrderedList [int64]
+    int64_o : OrderedList [bigint]
 ?,
     float_u : UnorderedList <float>
 ?,

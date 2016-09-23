@@ -18,10 +18,10 @@
  */
 /*
  * Test case name : primitive-03.aql
- * Description    : Test primitive integer type int32 constructor function with boundary values
+ * Description    : Test primitive integer type integer constructor function with boundary values
  * Success        : Yes
  * Date           : May 7th 2012
  *
  */
 
-{'$a':int32('-2147483647'),'$b':int32('2147483647'),'$c':int32('0'),'$d':int32('1'),'$e':int32('-1'),'$f':int32('1073741828'),'$g':int32('-1073741828')};
+{'$a':integer('-2147483647'),'$b':integer('2147483647'),'$c':integer('0'),'$d':integer('1'),'$e':integer('-1'),'$f':integer('1073741828'),'$g':integer('-1073741828')};

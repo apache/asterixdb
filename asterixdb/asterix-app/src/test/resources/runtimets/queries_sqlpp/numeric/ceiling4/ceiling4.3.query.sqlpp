@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.ceiling(test.int8('-20')),'f1':test.ceiling(-1.11),'f2':test.ceiling(12.9),'f3':test.ceiling(1.11)};
+{'f0':test.ceiling(test.tinyint('-20')),'f1':test.ceiling(-1.11),'f2':test.ceiling(12.9),'f3':test.ceiling(1.11)};

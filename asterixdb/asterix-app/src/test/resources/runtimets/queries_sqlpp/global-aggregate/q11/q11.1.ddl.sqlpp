@@ -24,7 +24,7 @@ use TinySocial;
 
 create type TinySocial.FacebookUserType as
  open {
-  id : int64
+  id : bigint
 }
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;

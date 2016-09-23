@@ -22,11 +22,11 @@ create dataverse test;
 use test;
 
 create type LineItemType as closed {
-  l_orderkey: int32,
-  l_partkey: int32,
-  l_suppkey: int32,
-  l_linenumber: int32,
-  l_quantity: int32,
+  l_orderkey: integer,
+  l_partkey: integer,
+  l_suppkey: integer,
+  l_linenumber: integer,
+  l_quantity: integer,
   l_extendedprice: double,
   l_discount: double,
   l_tax: double,

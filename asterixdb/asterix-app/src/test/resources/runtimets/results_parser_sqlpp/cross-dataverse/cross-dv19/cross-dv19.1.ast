@@ -1,6 +1,6 @@
 TypeDecl testtype [
   open RecordType {
-    id : int32,
+    id : integer,
     name : string,
     loc : point,
     time : datetime
@@ -8,7 +8,7 @@ TypeDecl testtype [
 ]
 TypeDecl testtype [
   open RecordType {
-    id : int32,
+    id : integer,
     name : string?,
     loc : point,
     time : datetime
@@ -16,8 +16,8 @@ TypeDecl testtype [
 ]
 TypeDecl Tweet [
   open RecordType {
-    id : int32,
-    tweetid : int64,
+    id : integer,
+    tweetid : bigint,
     loc : point,
     time : datetime,
     text : string

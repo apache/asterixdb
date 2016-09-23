@@ -33,7 +33,7 @@ create type test.AddressType as
 
 create type test.EventType as
  closed {
-  event_id : int64,
+  event_id : bigint,
   name : string,
   location : AddressType?,
   organizers : {{{
@@ -41,7 +41,7 @@ create type test.EventType as
       }
 }},
   sponsoring_sigs : [{
-          sig_id : int64,
+          sig_id : bigint,
           chapter_name : string
       }
 ],

@@ -38,7 +38,7 @@ create type test.UserType as
   interests : {{string}},
   address : AddressType,
   member_of : {{{
-          sig_id : int64,
+          sig_id : bigint,
           chapter_name : string,
           member_since : date
       }

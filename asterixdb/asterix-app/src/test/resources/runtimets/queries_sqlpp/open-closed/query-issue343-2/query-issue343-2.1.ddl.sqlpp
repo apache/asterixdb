@@ -31,14 +31,14 @@ use test;
 
 create type test.AddressType as
 {
-  number : int64,
+  number : bigint,
   street : string,
   city : string
 }
 
 create type test.AllType as
 {
-  id : int64,
+  id : bigint,
   name : string,
   age : float,
   salary : double,
@@ -59,7 +59,7 @@ create type test.AllType as
 
 create type test.MyListType as
 {
-  id : int64,
+  id : bigint,
   mylist : [string]
 }
 

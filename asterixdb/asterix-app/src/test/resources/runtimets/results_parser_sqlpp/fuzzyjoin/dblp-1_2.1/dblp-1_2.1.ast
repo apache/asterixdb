@@ -1,7 +1,7 @@
 DataverseUse fuzzyjoin
 TypeDecl DBLPType [
   open RecordType {
-    id : int32,
+    id : integer,
     dblpid : string,
     title : string,
     authors : string,

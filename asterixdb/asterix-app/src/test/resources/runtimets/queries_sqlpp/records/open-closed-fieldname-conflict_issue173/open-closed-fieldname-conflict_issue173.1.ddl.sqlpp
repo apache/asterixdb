@@ -30,7 +30,7 @@ use test;
 
 create type test.opentype as
 {
-  id : int32,
+  id : integer,
   fname : string
 }
 

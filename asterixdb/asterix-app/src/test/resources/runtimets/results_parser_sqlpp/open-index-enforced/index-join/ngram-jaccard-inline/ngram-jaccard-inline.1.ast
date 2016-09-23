@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl DBLPType [
   closed RecordType {
-    id : int64,
+    id : bigint,
     dblpid : string,
     title : string,
     authors : string,
@@ -10,7 +10,7 @@ TypeDecl DBLPType [
 ]
 TypeDecl DBLPOpenType [
   open RecordType {
-    id : int64,
+    id : bigint,
     dblpid : string,
     authors : string,
     misc : string
@@ -18,7 +18,7 @@ TypeDecl DBLPOpenType [
 ]
 TypeDecl CSXType [
   closed RecordType {
-    id : int64,
+    id : bigint,
     csxid : string,
     title : string,
     authors : string,

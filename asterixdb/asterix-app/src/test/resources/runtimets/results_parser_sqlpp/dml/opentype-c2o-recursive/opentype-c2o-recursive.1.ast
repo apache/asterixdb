@@ -8,7 +8,7 @@ TypeDecl AddressType [
 TypeDecl Dept [
   open RecordType {
     name : string,
-    id : int64
+    id : bigint
   }
 ]
 TypeDecl testtype [

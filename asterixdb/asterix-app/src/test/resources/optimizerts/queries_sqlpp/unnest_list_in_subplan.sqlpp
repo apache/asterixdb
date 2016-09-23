@@ -25,7 +25,7 @@ use fuzzyjoin;
 
 create type fuzzyjoin.DBLPType as
  closed {
-  id : int32,
+  id : integer,
   dblpid : string,
   title : string,
   authors : string,
@@ -34,8 +34,8 @@ create type fuzzyjoin.DBLPType as
 
 create type fuzzyjoin.TOKENSRANKEDADMType as
  closed {
-  token : int32,
-  rank : int32
+  token : integer,
+  rank : integer
 }
 
 create  nodegroup group1 if not exists  on

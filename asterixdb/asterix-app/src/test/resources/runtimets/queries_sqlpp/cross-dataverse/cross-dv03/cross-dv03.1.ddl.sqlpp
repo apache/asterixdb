@@ -35,18 +35,18 @@ create  dataverse teacher;
 
 create type student.stdType as
 {
-  id : int64,
+  id : bigint,
   name : string,
-  age : int64,
+  age : bigint,
   sex : string,
   dept : string
 }
 
 create type teacher.tchrType as
 {
-  id : int64,
+  id : bigint,
   name : string,
-  age : int64,
+  age : bigint,
   sex : string,
   dept : string
 }

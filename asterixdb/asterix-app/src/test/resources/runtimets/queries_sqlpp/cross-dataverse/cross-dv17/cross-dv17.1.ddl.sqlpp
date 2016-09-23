@@ -31,11 +31,11 @@ create dataverse test;
 create dataverse fest;
 
 create type test.testtype as open {
-id : int32
+id : integer
 }
 
 create type fest.testtype as open {
-id : int32
+id : integer
 }
 
 create dataset test.t1(testtype) primary key id;

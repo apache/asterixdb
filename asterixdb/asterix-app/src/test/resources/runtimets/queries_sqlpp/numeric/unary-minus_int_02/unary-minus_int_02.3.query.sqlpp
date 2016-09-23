@@ -20,4 +20,4 @@
 use test;
 
 
-{'int8':-test.int8('+80'),'int16':-test.int16('160'),'int32':-test.int32('+320'),'int64':-test.int64('-640')};
+{'int8':-test.tinyint('+80'),'int16':-test.smallint('160'),'int32':-test.integer('+320'),'int64':-test.bigint('-640')};

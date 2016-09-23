@@ -25,7 +25,7 @@ use test;
 
 create type test.testType as
 {
-  id : int32,
+  id : integer,
   `value` : string
 }
 

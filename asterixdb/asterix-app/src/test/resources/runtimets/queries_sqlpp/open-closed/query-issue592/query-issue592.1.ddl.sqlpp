@@ -31,12 +31,12 @@ use fooverse;
 
 create type fooverse.bartype as
 {
-  baz : int64
+  baz : bigint
 }
 
 create type fooverse.footype as
 {
-  id : int64,
+  id : bigint,
   bars : [bartype]?
 }
 

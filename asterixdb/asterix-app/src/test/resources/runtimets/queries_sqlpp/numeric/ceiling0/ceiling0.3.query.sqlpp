@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.ceiling(test.int8('-0')),'f1':test.ceiling(test.int16('-0')),'f2':test.ceiling(test.int32('-0')),'f3':test.ceiling(test.int64('-0')),'f4':test.ceiling(test.int8('0')),'f5':test.ceiling(test.int16('0')),'f6':test.ceiling(test.int32('0')),'f7':test.ceiling(test.int64('0'))};
+{'f0':test.ceiling(test.tinyint('-0')),'f1':test.ceiling(test.smallint('-0')),'f2':test.ceiling(test.integer('-0')),'f3':test.ceiling(test.bigint('-0')),'f4':test.ceiling(test.tinyint('0')),'f5':test.ceiling(test.smallint('0')),'f6':test.ceiling(test.integer('0')),'f7':test.ceiling(test.bigint('0'))};
