@@ -1,0 +1,5 @@
+{
+  "NaN": sqrt(-1),
+  "Infinity": exp(1000),
+  "-Infinity": -exp(1000)
+};

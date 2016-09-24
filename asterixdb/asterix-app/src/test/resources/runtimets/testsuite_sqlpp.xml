@@ -4387,6 +4387,11 @@
         <output-dir compare="Text">sign</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="non-finite">
+        <output-dir compare="Clean-JSON">non-finite</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-closed">
     <!--
