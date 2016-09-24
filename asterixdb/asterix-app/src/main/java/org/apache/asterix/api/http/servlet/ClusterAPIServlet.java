@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.AbstractAsterixProperties;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.json.JSONArray;
@@ -65,12 +64,11 @@ public class ClusterAPIServlet extends HttpServlet {
             json = getClusterStateJSON(request, "");
             response.setStatus(HttpServletResponse.SC_OK);
             responseWriter.write(json.toString(4));
-        } catch (IllegalArgumentException e) {
-            ResultUtil.apiErrorHandler(responseWriter, e);
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         } catch (Exception e) {
-            ResultUtil.apiErrorHandler(responseWriter, e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            LOGGER.log(Level.INFO, "exception thrown for " + request, e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.toString());
         }
         responseWriter.flush();
     }

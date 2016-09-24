@@ -25,12 +25,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.app.result.ResultUtil;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +40,7 @@ import org.json.JSONObject;
 
 public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(ClusterNodeDetailsAPIServlet.class.getName());
 
     @Override
     protected void getUnsafe(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -57,11 +60,13 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
             response.setContentType("application/json");
             response.setCharacterEncoding("utf-8");
             responseWriter.write(json.toString(4));
-        } catch (IllegalArgumentException e) { //NOSONAR - exception not logged or rethrown
+        } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
-            ResultUtil.apiErrorHandler(responseWriter, e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            LOGGER.log(Level.INFO, "exception thrown for " + request, e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.toString());
         }
         responseWriter.flush();
     }
@@ -187,7 +192,10 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         }
         String dump = hcc.getThreadDump(node);
         if (dump == null) {
-            throw new IllegalArgumentException();
+            // check to see if this is a node that is simply down
+            throw ClusterStateManager.INSTANCE.getNodePartitions(node) != null
+                    ? new IllegalStateException()
+                    : new IllegalArgumentException();
         }
         return new JSONObject(dump);
     }

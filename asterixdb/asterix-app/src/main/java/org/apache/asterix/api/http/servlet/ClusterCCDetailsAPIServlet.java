@@ -22,17 +22,19 @@ import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNE
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONObject;
 
 public class ClusterCCDetailsAPIServlet extends ClusterAPIServlet {
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(ClusterCCDetailsAPIServlet.class.getName());
 
     @Override
     protected void getUnsafe(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -51,11 +53,11 @@ public class ClusterCCDetailsAPIServlet extends ClusterAPIServlet {
             response.setContentType("application/json");
             response.setCharacterEncoding("utf-8");
             responseWriter.write(json.toString(4));
-        } catch (IllegalArgumentException e) { //NOSONAR - exception not logged or rethrown
+        } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
-            ResultUtil.apiErrorHandler(responseWriter, e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            LOGGER.log(Level.INFO, "exception thrown for " + request, e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.toString());
         }
         responseWriter.flush();
     }

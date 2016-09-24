@@ -52,7 +52,11 @@ public class GetThreadDumpWork extends ThreadDumpWork {
                 callback.setValue(null);
             } else {
                 ccs.addThreadDumpRun(run.getRequestId(), run);
-                ncState.getNodeController().takeThreadDump(run.getRequestId());
+                try {
+                    ncState.getNodeController().takeThreadDump(run.getRequestId());
+                } catch (Exception e) {
+                    callback.setException(e);
+                }
             }
         }
     }
