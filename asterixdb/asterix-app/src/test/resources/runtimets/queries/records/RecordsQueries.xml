@@ -176,4 +176,9 @@
       <output-dir compare="Text">highly-nested-open</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="records">
+    <compilation-unit name="closed-nullable-fields_issue1616">
+      <output-dir compare="Text">closed-nullable-fields_issue1616</output-dir>
+    </compilation-unit>
+  </test-case>
 </test-group>

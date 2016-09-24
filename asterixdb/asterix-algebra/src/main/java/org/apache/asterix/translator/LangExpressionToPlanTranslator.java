@@ -37,6 +37,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.lang.aql.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -81,9 +82,9 @@ import org.apache.asterix.metadata.declared.ResultSetDataSink;
 import org.apache.asterix.metadata.declared.ResultSetSinkId;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.AInt64;
@@ -451,8 +452,10 @@ class LangExpressionToPlanTranslator
         List<LogicalVariable> metaAndKeysVars = null;
         List<Mutable<ILogicalExpression>> metaAndKeysExprs = null;
         List<Mutable<ILogicalExpression>> metaExpSingletonList = null;
-        boolean isChangeFeed = FeedMetadataUtil.isChangeFeed(metadataProvider, sfs.getDataverseName(),
-                sfs.getFeedName());
+        Feed feed = metadataProvider.findFeed(sfs.getDataverseName(), sfs.getFeedName());
+        boolean isChangeFeed = ExternalDataUtils.isChangeFeed(feed.getAdapterConfiguration());
+        boolean isUpsertFeed = ExternalDataUtils.isUpsertFeed(feed.getAdapterConfiguration());
+
         if (targetDatasource.getDataset().hasMetaPart() || isChangeFeed) {
             metaAndKeysVars = new ArrayList<>();
             metaAndKeysExprs = new ArrayList<>();
@@ -509,8 +512,14 @@ class LangExpressionToPlanTranslator
                 feedModificationOp.getInputs().add(assign.getInputs().get(0));
             }
         } else {
+            final InsertDeleteUpsertOperator.Kind opKind = isUpsertFeed ? InsertDeleteUpsertOperator.Kind.UPSERT
+                    : InsertDeleteUpsertOperator.Kind.INSERT;
             feedModificationOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
-                    metaExpSingletonList, InsertDeleteUpsertOperator.Kind.INSERT, false);
+                    metaExpSingletonList, opKind, false);
+            if (isUpsertFeed) {
+                feedModificationOp.setPrevRecordVar(context.newVar());
+                feedModificationOp.setPrevRecordType(targetDatasource.getItemType());
+            }
             feedModificationOp.getInputs().add(new MutableObject<>(assign));
         }
         if (targetDatasource.getDataset().hasMetaPart() || isChangeFeed) {

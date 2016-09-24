@@ -93,6 +93,8 @@ public class ExternalDataConstants {
     public static final String KEY_VALUE_FORMAT = "value-format";
     // a boolean indicating whether the feed is a change feed
     public static final String KEY_IS_CHANGE_FEED = "change-feed";
+    // a boolean indicating whether the feed use upsert
+    public static final String KEY_IS_UPSERT_FEED = "upsert-feed";
     // an integer representing the number of keys in a change feed
     public static final String KEY_KEY_SIZE = "key-size";
     // a boolean indicating whether the feed produces records with metadata
