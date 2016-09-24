@@ -18,7 +18,7 @@
  */
 use SocialNetworkData;
 
-select element coll_avg((
+select element array_avg((
 select element `string-length`(g.message)
 from GleambookMessages as g
 where g.send_time > datetime('2001-05-10T12:16:12') and
