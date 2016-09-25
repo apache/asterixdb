@@ -45,7 +45,6 @@ You will use the AsterixDB web interface to do this, and for SQL++ you will need
 Once you have reached the end of this tutorial, you will be fully armed and dangerous, with all the basic AsterixDB knowledge
 that you'll need to start down the path of modeling, storing, and querying your own semistructured data.
 
-----
 ## ADM: Modeling Semistructed Data in AsterixDB ##
 In this section you will learn all about modeling Big Data using
 ADM, the data model of the AsterixDB BDMS.
@@ -247,7 +246,6 @@ record as the query's result like _SELECT_ does; here, the returned value is an 
 the dataset being queried (e.g., _SELECT VALUE ds_ in the first statement returns the entire
 record from the metadata dataset containing the descriptions of all datasets.
 
-----
 ## Loading Data Into AsterixDB ##
 Okay, so far so good---AsterixDB is now ready for data, so let's give it some data to store.
 Our next task will be to load some sample data into the four datasets that we just defined.
@@ -339,7 +337,6 @@ input path specification.)
         LOAD DATASET ChirpMessages USING localfs
             (("path"="<Host Name>://<Absolute File Path>/chm.adm"),("format"="adm"));
 
-----
 ## SQL++: Querying Your AsterixDB Data ##
 Congratulations! You now have sample social data stored (and indexed) in AsterixDB.
 (You are part of an elite and adventurous group of individuals. :-))
