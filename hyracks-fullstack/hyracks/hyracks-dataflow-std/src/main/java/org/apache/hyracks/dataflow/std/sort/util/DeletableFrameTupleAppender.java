@@ -181,6 +181,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
         this.array = buffer.array();
         setIndexCount(0);
         setDeletedSpace(0);
+        setNextIndex(0);
         setTupleAppend(0);
         resetCounts();
     }

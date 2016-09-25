@@ -37,15 +37,19 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * @see org.apache.hyracks.dataflow.std.sort.util.DeletableFrameTupleAppender
+ */
 public class DeletableFrameTupleAppenderTest {
+    private static final int META_DATA_SIZE = 4 + 4 + 4 + 4;
+    private static final int SLOT_SIZE = 4 + 4;
+    private static final char TEST_CH = 'x';
+
     DeletableFrameTupleAppender appender;
-    ISerializerDeserializer[] fields = new ISerializerDeserializer[] {
-            IntegerSerializerDeserializer.INSTANCE,
-            new UTF8StringSerializerDeserializer(),
-    };
+    ISerializerDeserializer[] fields = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), };
     RecordDescriptor recordDescriptor = new RecordDescriptor(fields);
     ArrayTupleBuilder builder = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
-    static final char TEST_CH = 'x';
 
     int cap = 256;
 
@@ -60,26 +64,42 @@ public class DeletableFrameTupleAppenderTest {
         appender.clear(buffer);
         assertTrue(appender.getBuffer() == buffer);
         assertTrue(appender.getTupleCount() == 0);
-        assertTrue(appender.getContiguousFreeSpace() == cap - 4 - 4);
+        assertTrue(appender.getTotalFreeSpace() == cap - META_DATA_SIZE);
+        assertTrue(appender.getContiguousFreeSpace() == cap - META_DATA_SIZE);
     }
 
     ByteBuffer makeAFrame(int capacity, int count, int deletedBytes) throws HyracksDataException {
         ByteBuffer buffer = ByteBuffer.allocate(capacity);
         int metaOffset = capacity - 4;
-        buffer.putInt(metaOffset, deletedBytes);
-        metaOffset -= 4;
         buffer.putInt(metaOffset, count);
         metaOffset -= 4;
+        buffer.putInt(metaOffset, deletedBytes);
+        // next index
+        metaOffset -= 4;
+        buffer.putInt(metaOffset, count);
+        // append slot
+        metaOffset -= 4;
+        int appendOffset = metaOffset;
+        buffer.putInt(metaOffset, 0);
+        metaOffset -= 4;
+
+        int start = 0;
         for (int i = 0; i < count; i++, metaOffset -= 4) {
             makeARecord(builder, i);
             for (int x = 0; x < builder.getFieldEndOffsets().length; x++) {
                 buffer.putInt(builder.getFieldEndOffsets()[x]);
             }
             buffer.put(builder.getByteArray(), 0, builder.getSize());
-            assert (metaOffset > buffer.position());
+
+            // Add slot information
+            buffer.putInt(metaOffset, start);
+            metaOffset -= 4;
             buffer.putInt(metaOffset, buffer.position());
 
+            start = buffer.position();
+            assert (metaOffset > buffer.position());
         }
+        buffer.putInt(appendOffset, start);
         return buffer;
     }
 
@@ -110,16 +130,16 @@ public class DeletableFrameTupleAppenderTest {
         appender.reset(buffer);
         assertTrue(appender.getBuffer() == buffer);
         assertTrue(appender.getTupleCount() == 0);
-        assertTrue(appender.getContiguousFreeSpace() == cap - 4 - 4);
+        assertTrue(appender.getContiguousFreeSpace() == cap - META_DATA_SIZE);
 
-        int count = 10;
+        int count = 8;
         int deleted = 7;
         buffer = makeAFrame(cap, count, deleted);
         int pos = buffer.position();
         appender.reset(buffer);
         assertTrue(appender.getBuffer() == buffer);
         assertTrue(appender.getTupleCount() == count);
-        assertTrue(appender.getContiguousFreeSpace() == cap - 4 - 4 - count * 4 - pos);
+        assertTrue(appender.getContiguousFreeSpace() == cap - META_DATA_SIZE - count * SLOT_SIZE - pos);
         assertTrue(appender.getTotalFreeSpace() == appender.getContiguousFreeSpace() + deleted);
 
         int dataOffset = 0;
@@ -130,7 +150,7 @@ public class DeletableFrameTupleAppenderTest {
 
     @Test
     public void testAppend() throws Exception {
-        int count = 10;
+        int count = 8;
         ByteBuffer bufferRead = makeAFrame(cap, count, 0);
         DeletableFrameTupleAppender accessor = new DeletableFrameTupleAppender(recordDescriptor);
         accessor.reset(bufferRead);
@@ -146,7 +166,7 @@ public class DeletableFrameTupleAppenderTest {
 
     @Test
     public void testDelete() throws Exception {
-        int count = 10;
+        int count = 8;
         int deleteSpace = 0;
         ByteBuffer buffer = makeAFrame(cap, count, deleteSpace);
         appender.reset(buffer);
@@ -165,7 +185,7 @@ public class DeletableFrameTupleAppenderTest {
     public void testResetAfterDelete() throws Exception {
         testDelete();
         appender.reset(appender.getBuffer());
-        assertEquals(cap - appender.getTupleCount() * 4 - 4 - 4, appender.getTotalFreeSpace());
+        assertEquals(cap - appender.getTupleCount() * SLOT_SIZE - META_DATA_SIZE, appender.getTotalFreeSpace());
 
     }
 
@@ -187,7 +207,7 @@ public class DeletableFrameTupleAppenderTest {
     @Test
     public void testAppendAndDelete() throws Exception {
         int cap = 1024;
-        int count = 10;
+        int count = 8;
         int deleteSpace = 0;
         ByteBuffer buffer = makeAFrame(cap, count, deleteSpace);
         int dataOffset = buffer.position();
@@ -221,7 +241,7 @@ public class DeletableFrameTupleAppenderTest {
 
     @Test
     public void testReOrganizeBuffer() throws Exception {
-        int count = 10;
+        int count = 8;
         testDelete();
         appender.reOrganizeBuffer();
         ByteBuffer bufferRead = makeAFrame(cap, count, 0);

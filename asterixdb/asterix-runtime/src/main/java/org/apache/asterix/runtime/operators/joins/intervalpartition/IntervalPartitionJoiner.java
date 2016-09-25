@@ -100,6 +100,8 @@ public class IntervalPartitionJoiner {
     private long spillCount = 0;
     private long spillReadCount = 0;
     private long spillWriteCount = 0;
+    private long buildSize;
+    private int tmp = -1;
 
     public IntervalPartitionJoiner(IHyracksTaskContext ctx, int memForJoin, int k, int numOfPartitions,
             String buildRelName, String probeRelName, IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd,
@@ -129,6 +131,8 @@ public class IntervalPartitionJoiner {
     public void initBuild() throws HyracksDataException {
         buildBufferManager = new VPartitionTupleBufferManager(ctx, getPartitionMemoryConstrain(), numOfPartitions,
                 memForJoin * ctx.getInitialFrameSize());
+        System.err.println("k: " + k);
+        buildSize = 0;
     }
 
     private IPartitionedMemoryConstrain getPartitionMemoryConstrain() {
@@ -139,14 +143,23 @@ public class IntervalPartitionJoiner {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
 
+        int pid;
         for (int i = 0; i < tupleCount; ++i) {
-            int pid = buildHpc.partition(accessorBuild, i, k);
+            pid = buildHpc.partition(accessorBuild, i, k);
+
+            if (tmp != pid) {
+                System.err.println("buildSize: " + buildSize + " pid: " + pid + " k: " + k + " pair: " + IntervalPartitionUtil.getIntervalPartition(pid, k));
+                tmp = pid;
+            }
             processTuple(i, pid);
             ipjd.buildIncrementCount(pid);
+            buildSize++;
         }
     }
 
     public void closeBuild() throws HyracksDataException {
+        System.err.println("buildSize: " + buildSize);
+
         int inMemoryPartitions = 0;
         int totalBuildPartitions = 0;
         flushAndClearBuildSpilledPartition();

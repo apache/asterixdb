@@ -160,6 +160,8 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                             BUILD_REL, PROBE_REL, imjc, buildRd, probeRd, buildHpc, probeHpc);
 
                     state.ipj.initBuild();
+                    LOGGER.setLevel(Level.FINE);
+                    System.out.println("IntervalPartitionJoinOperatorDescriptor: Logging level is: " + LOGGER.getLevel());
                     if (LOGGER.isLoggable(Level.FINE)) {
                         LOGGER.fine("IntervalPartitionJoin is starting the build phase with " + state.k
                                 + " granules repesenting " + state.intervalPartitions + " interval partitions using "
