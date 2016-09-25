@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -102,12 +103,13 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
     private int deletedSpace;
     private int nextIndex;
     private byte[] array; // to speed up the array visit a little
+    private IntegerPairPool ipp = new IntegerPairPool();
 
-    private final PriorityQueue<Pair<Integer, Integer>> reorganizeQueue;
+    private final PriorityQueue<IntegerPair> reorganizeQueue;
 
     public DeletableFrameTupleAppender(RecordDescriptor recordDescriptor) {
         this.recordDescriptor = recordDescriptor;
-        reorganizeQueue = new PriorityQueue<>(16, INDEX_OFFSET_ASC_COMPARATOR);
+        reorganizeQueue = new PriorityQueue<>(16, IntegerPair.RIGHT_ASC_COMPARATOR);
     }
 
     private int getIndexCount() {
@@ -251,19 +253,23 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
         reclaimDeletedEnding();
 
         // Build reorganize queue
+        IntegerPair ip;
         int endOffset;
         int startOffset;
         for (int i = 0; i < indexCount; i++) {
             endOffset = getTupleEndOffset(i);
             if (endOffset > 0) {
-                reorganizeQueue.add(new ImmutablePair<Integer, Integer>(i, getTupleStartOffset(i)));
+                ip = ipp.takeOne();
+                ip.reset(i, getTupleStartOffset(i));
+                reorganizeQueue.add(ip);
             }
         }
 
         int index;
         tupleAppend = 0;
         while (!reorganizeQueue.isEmpty()) {
-            index = reorganizeQueue.remove().getKey();
+            ip = reorganizeQueue.remove();
+            index = ip.getLeft();
             startOffset = getTupleStartOffset(index);
             endOffset = getTupleEndOffset(index);
             if (endOffset >= 0) {
@@ -275,6 +281,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
                 setTupleOffsets(index, tupleAppend, length);
                 tupleAppend += length;
             }
+            ipp.giveBack(ip);
         }
         setTupleAppend(tupleAppend);
         deletedSpace = 0;
