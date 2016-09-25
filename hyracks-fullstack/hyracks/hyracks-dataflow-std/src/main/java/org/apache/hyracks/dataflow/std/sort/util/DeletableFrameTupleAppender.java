@@ -343,8 +343,11 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
     @Override
     public int getTupleLength(int tupleIndex) {
         int endOffset = getTupleEndOffset(tupleIndex);
-        assert endOffset > 0;
-        return endOffset - getTupleStartOffset(tupleIndex);
+        if (endOffset > 0) {
+            return endOffset - getTupleStartOffset(tupleIndex);
+        } else {
+            return endOffset + getTupleStartOffset(tupleIndex);
+        }
     }
 
     private void setTupleOffsets(int tupleIndex, int start, int length) {
