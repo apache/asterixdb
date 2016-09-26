@@ -2,9 +2,16 @@
     "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/config",
     "node_id": "asterix_nc1",
     "partitions": [
-        "partition_0",
-        "partition_1"
+        {
+            "active": true,
+            "partition_id": "partition_0"
+        },
+        {
+            "active": true,
+            "partition_id": "partition_1"
+        }
     ],
+    "state": "ACTIVE",
     "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats",
     "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/threaddump"
 }

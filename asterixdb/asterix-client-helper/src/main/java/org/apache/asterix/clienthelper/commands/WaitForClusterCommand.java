@@ -19,10 +19,15 @@
 package org.apache.asterix.clienthelper.commands;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.clienthelper.Args;
+import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class WaitForClusterCommand extends RemoteCommand {
 
@@ -38,23 +43,41 @@ public class WaitForClusterCommand extends RemoteCommand {
                 + "for cluster " + hostPort + " to be available.");
 
         long startTime = System.currentTimeMillis();
+        boolean first = true;
+        String lastState = null;
         while (true) {
-            if (tryGet(args.getClusterStatePath()) == HttpServletResponse.SC_OK) {
-                log("Cluster started.");
-                return 0;
+            if (!first) {
+                if (args.getTimeoutSecs() >= 0
+                        && (startTime + (args.getTimeoutSecs() * 1000) < System.currentTimeMillis())) {
+                    break;
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    return 22;
+                }
             }
-            if (args.getTimeoutSecs() >= 0
-                    && (startTime + (args.getTimeoutSecs() * 1000) < System.currentTimeMillis())) {
-                break;
-            }
+            first = false;
+
+            HttpURLConnection conn;
             try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return 22;
+                conn = openConnection(args.getClusterStatePath(), Method.GET);
+                if (conn.getResponseCode() == HttpServletResponse.SC_OK) {
+                    String result = IOUtils.toString(conn.getInputStream(), StandardCharsets.UTF_8.name());
+                    JSONObject json = new JSONObject(result);
+                    lastState = json.getString("state");
+                    if ("ACTIVE".equals(lastState)) {
+                        log("Cluster started and is ACTIVE.");
+                        return 0;
+                    }
+                }
+            } catch (JSONException |IOException e) { //NOSONAR - log or rethrow exception
+                // ignore exception, try again
             }
         }
         log("Cluster " + hostPort + " was not available before timeout of " + args.getTimeoutSecs()
-                + " seconds was exhausted.");
+                + " seconds was exhausted" + (lastState != null ? " (state: " + lastState + ")" : "")
+                + "; check logs for more information");
         return 1;
     }
 }

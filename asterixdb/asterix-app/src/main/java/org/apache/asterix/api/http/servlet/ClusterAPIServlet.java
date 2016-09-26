@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -44,6 +45,10 @@ public class ClusterAPIServlet extends HttpServlet {
     public static final String CONFIG_URI_KEY = "configUri";
     public static final String STATS_URI_KEY = "statsUri";
     public static final String THREAD_DUMP_URI_KEY = "threadDumpUri";
+    public static final String SHUTDOWN_URI_KEY = "shutdownUri";
+    public static final String FULL_SHUTDOWN_URI_KEY = "fullShutdownUri";
+    public static final String VERSION_URI_KEY = "versionUri";
+    public static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
 
     @Override
     public final void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -93,17 +98,13 @@ public class ClusterAPIServlet extends HttpServlet {
         json.put("config", allProperties);
 
         JSONArray ncs = json.getJSONArray("ncs");
-        final StringBuffer requestURL = request.getRequestURL();
+        final StringBuilder requestURL = new StringBuilder(request.getRequestURL());
         if (requestURL.charAt(requestURL.length() - 1) != '/') {
             requestURL.append('/');
         }
         requestURL.append(pathToNode);
-        String clusterURL = "";
-        String newClusterURL = requestURL.toString();
-        while (!clusterURL.equals(newClusterURL)) {
-            clusterURL = newClusterURL;
-            newClusterURL = clusterURL.replaceAll("/[^./]+/\\.\\./", "/");
-        }
+        String clusterURL = canonicalize(requestURL);
+        String analyticsURL = canonicalize(clusterURL + "../");
         String nodeURL = clusterURL + "node/";
         for (int i = 0; i < ncs.length(); i++) {
             JSONObject nc = ncs.getJSONObject(i);
@@ -121,6 +122,19 @@ public class ClusterAPIServlet extends HttpServlet {
         cc.put(CONFIG_URI_KEY, clusterURL + "cc/config");
         cc.put(STATS_URI_KEY, clusterURL + "cc/stats");
         cc.put(THREAD_DUMP_URI_KEY, clusterURL + "cc/threaddump");
+        json.put(SHUTDOWN_URI_KEY, analyticsURL + "shutdown");
+        json.put(FULL_SHUTDOWN_URI_KEY, analyticsURL + "shutdown?all=true");
+        json.put(VERSION_URI_KEY, analyticsURL + "version");
         return json;
+    }
+
+    private String canonicalize(CharSequence requestURL) {
+        String clusterURL = "";
+        String newClusterURL = requestURL.toString();
+        while (!clusterURL.equals(newClusterURL)) {
+            clusterURL = newClusterURL;
+            newClusterURL = PARENT_DIR.matcher(clusterURL).replaceAll("/");
+        }
+        return clusterURL;
     }
 }

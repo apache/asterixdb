@@ -37,7 +37,7 @@ cd %CLUSTERDIR%\..\..
 set INSTALLDIR=%cd%
 
 call %INSTALLDIR%\bin\${HELPER_COMMAND} get_cluster_state -quiet
-if %ERRORLEVEL% EQU 0 (
+if %ERRORLEVEL% NEQ 1 (
   call %INSTALLDIR%\bin\${HELPER_COMMAND} shutdown_cluster_all
 ) else (
   echo WARNING: sample cluster does not appear to be running, will attempt to wait for

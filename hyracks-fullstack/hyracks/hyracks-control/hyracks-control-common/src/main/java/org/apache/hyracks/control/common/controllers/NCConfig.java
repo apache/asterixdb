@@ -129,6 +129,9 @@ public class NCConfig implements Serializable {
             + " (default: same as -messaging-port; must set -messaging-public-port also)", required = false)
     public int messagingPublicPort = 0;
 
+    @Option(name = "-ncservice-pid", usage = "PID of the NCService which launched this NCDriver", required = false)
+    public int ncservicePid = 0;
+
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
@@ -257,6 +260,9 @@ public class NCConfig implements Serializable {
         configuration.put("messaging-public-port", String.valueOf(messagingPublicPort));
         if (appNCMainClass != null) {
             configuration.put("app-nc-main-class", appNCMainClass);
+        }
+        if (ncservicePid != 0) {
+            configuration.put("ncservice-pid", String.valueOf(ncservicePid));
         }
     }
 }

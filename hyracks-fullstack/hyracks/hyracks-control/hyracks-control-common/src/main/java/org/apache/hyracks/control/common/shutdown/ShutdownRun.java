@@ -24,7 +24,7 @@ import java.util.TreeSet;
 
 public class ShutdownRun implements IShutdownStatusConditionVariable{
 
-    private final Set<String> shutdownNodeIds = new TreeSet<String>();
+    private final Set<String> shutdownNodeIds = new TreeSet<>();
     private boolean shutdownSuccess = false;
     private static final int SHUTDOWN_TIMER_MS = 10000; //10 seconds
 
@@ -35,12 +35,11 @@ public class ShutdownRun implements IShutdownStatusConditionVariable{
     /**
      * Notify that a node is shutting down.
      *
-     * @param nodeId
-     * @param status
+     * @param nodeId the node acknowledging the shutdown
      */
     public synchronized void notifyShutdown(String nodeId) {
         shutdownNodeIds.remove(nodeId);
-        if (shutdownNodeIds.size() == 0) {
+        if (shutdownNodeIds.isEmpty()) {
             shutdownSuccess = true;
             notifyAll();
         }
@@ -48,10 +47,14 @@ public class ShutdownRun implements IShutdownStatusConditionVariable{
 
     @Override
     public synchronized boolean waitForCompletion() throws Exception {
-        /*
-         * Either be woken up when we're done, or default to fail.
-         */
-        wait(SHUTDOWN_TIMER_MS);
+        if (shutdownNodeIds.isEmpty()) {
+            shutdownSuccess = true;
+        } else {
+            /*
+             * Either be woken up when we're done, or default to fail.
+             */
+            wait(SHUTDOWN_TIMER_MS);
+        }
         return shutdownSuccess;
     }
 

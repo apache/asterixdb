@@ -40,9 +40,8 @@ DIRNAME=$(dirname $0)
 
 CLUSTERDIR=$(cd $DIRNAME/..; echo $PWD)
 INSTALLDIR=$(cd $CLUSTERDIR/../..; echo $PWD)
-
-if $INSTALLDIR/bin/${HELPER_COMMAND} get_cluster_state -quiet;
-then
+$INSTALLDIR/bin/${HELPER_COMMAND} get_cluster_state -quiet
+if [ $? -ne 1 ]; then
   $INSTALLDIR/bin/${HELPER_COMMAND} shutdown_cluster_all
 else
   echo "WARNING: sample cluster does not appear to be running, will attempt to wait for"
@@ -59,4 +58,4 @@ while [ -n "$($JAVA_HOME/bin/jps | awk '/CCDriver/')" ]; do
   sleep 2s
   echo -n .
 done
-[ ! $first ] && echo ".done."
+[ ! $first ] && echo ".done." || true

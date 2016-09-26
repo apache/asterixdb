@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -87,6 +88,7 @@ import org.apache.hyracks.control.cc.work.RemoveDeadNodesWork;
 import org.apache.hyracks.control.cc.work.ReportProfilesWork;
 import org.apache.hyracks.control.cc.work.ReportResultPartitionFailureWork;
 import org.apache.hyracks.control.cc.work.ReportResultPartitionWriteCompletionWork;
+import org.apache.hyracks.control.cc.work.ShutdownNCServiceWork;
 import org.apache.hyracks.control.cc.work.TaskCompleteWork;
 import org.apache.hyracks.control.cc.work.TaskFailureWork;
 import org.apache.hyracks.control.cc.work.TriggerNCWork;
@@ -114,7 +116,7 @@ import org.ini4j.Ini;
 import org.xml.sax.InputSource;
 
 public class ClusterControllerService implements IControllerService {
-    private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
     private final CCConfig ccConfig;
 
@@ -279,11 +281,42 @@ public class ClusterControllerService implements IControllerService {
         }
     }
 
+    private void terminateNCServices() throws Exception {
+        Ini ini = ccConfig.getIni();
+        if (ini == null) {
+            return;
+        }
+        List<ShutdownNCServiceWork> shutdownNCServiceWorks = new ArrayList<>();
+        for (String section : ini.keySet()) {
+            if (!section.startsWith("nc/")) {
+                continue;
+            }
+            String ncid = section.substring(3);
+            String address = IniUtils.getString(ini, section, "address", null);
+            int port = IniUtils.getInt(ini, section, "port", 9090);
+            if (address == null) {
+                address = InetAddress.getLoopbackAddress().getHostAddress();
+            }
+            ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(address, port, ncid);
+            workQueue.schedule(shutdownWork);
+            shutdownNCServiceWorks.add(shutdownWork);
+        }
+        for (ShutdownNCServiceWork shutdownWork : shutdownNCServiceWorks) {
+            shutdownWork.sync();
+        }
+    }
+
     private void notifyApplication() throws Exception {
         if (aep != null) {
             // Sometimes, there is no application entry point. Check hyracks-client project
             aep.startupCompleted();
         }
+    }
+    public void stop(boolean terminateNCService) throws Exception {
+        if (terminateNCService) {
+            terminateNCServices();
+        }
+        stop();
     }
 
     @Override

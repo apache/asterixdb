@@ -3,9 +3,16 @@
         "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/config",
         "node_id": "asterix_nc1",
         "partitions": [
-            "partition_0",
-            "partition_1"
+            {
+                "active": true,
+                "partition_id": "partition_0"
+            },
+            {
+                "active": true,
+                "partition_id": "partition_1"
+            }
         ],
+        "state": "ACTIVE",
         "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats",
         "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/threaddump"
     },
@@ -13,9 +20,16 @@
         "configUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/config",
         "node_id": "asterix_nc2",
         "partitions": [
-            "partition_2",
-            "partition_3"
+            {
+                "active": true,
+                "partition_id": "partition_2"
+            },
+            {
+                "active": true,
+                "partition_id": "partition_3"
+            }
         ],
+        "state": "ACTIVE",
         "statsUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/stats",
         "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/threaddump"
     }

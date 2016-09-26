@@ -629,10 +629,23 @@ public class ClusterStateManager {
         for (Map.Entry<String, ClusterPartition[]> entry : node2PartitionsMap.entrySet()) {
             JSONObject nodeJSON = new JSONObject();
             nodeJSON.put("node_id", entry.getKey());
-            List<String> partitions = new ArrayList<>();
+            boolean allActive = true;
+            boolean anyActive = false;
+            Set<Map<String, Object>> partitions = new HashSet<>();
             for (ClusterPartition part : entry.getValue()) {
-                partitions.add("partition_" + part.getPartitionId());
+                HashMap<String, Object> partition = new HashMap<>();
+                partition.put("partition_id", "partition_" + part.getPartitionId());
+                partition.put("active", part.isActive());
+                partitions.add(partition);
+                allActive = allActive && part.isActive();
+                if (allActive) {
+                    anyActive = true;
+                }
             }
+            nodeJSON.put("state", failedNodes.contains(entry.getKey()) ? "FAILED"
+                    : allActive ? "ACTIVE"
+                    : anyActive ? "PARTIALLY_ACTIVE"
+                    : "INACTIVE");
             nodeJSON.put("partitions", partitions);
             stateDescription.accumulate("ncs", nodeJSON);
         }

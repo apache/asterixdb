@@ -80,7 +80,7 @@ public class SampleLocalClusterIT {
     public void test0_startCluster() throws Exception {
         Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh"))
                 .inheritIO().start();
-        Assert.assertEquals(process.waitFor(), 0);
+        Assert.assertEquals(0, process.waitFor());
     }
 
     @Test
@@ -90,14 +90,14 @@ public class SampleLocalClusterIT {
                 "http://127.0.0.1:19002" + Servlets.AQL_QUERY.getPath(), Collections.emptyList());
         StringWriter sw = new StringWriter();
         IOUtils.copy(resultStream, sw);
-        Assert.assertEquals(sw.toString().trim(), "2");
+        Assert.assertEquals("2", sw.toString().trim());
     }
 
     @Test
     public void test2_stopCluster() throws Exception {
         Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"))
                 .inheritIO().start();
-        Assert.assertEquals(process.waitFor(), 0);
+        Assert.assertEquals(0, process.waitFor());
         try {
             new URL("http://127.0.0.1:19002").openConnection().connect();
             Assert.assertTrue("Expected connection to be refused.", false);

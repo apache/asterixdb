@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import static org.apache.hyracks.control.common.controllers.ServiceConstants.NC_SERVICE_MAGIC_COOKIE;
+
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
@@ -26,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.ini4j.Ini;
 
@@ -35,11 +38,6 @@ import org.ini4j.Ini;
  */
 public class TriggerNCWork extends AbstractWork {
 
-    // This constant must match the corresponding constant in
-    // hyracks-control/hyracks-nc-service/src/main/java/org/apache/hyracks/control/nc/service/NCService.java
-    // I didn't want to introduce a Maven-level dependency on the
-    // hyracks-nc-service package (or vice-versa).
-    public static final String NC_MAGIC_COOKIE = "hyncmagic";
     private static final Logger LOGGER = Logger.getLogger(TriggerNCWork.class.getName());
 
     private final ClusterControllerService ccs;
@@ -55,32 +53,25 @@ public class TriggerNCWork extends AbstractWork {
     }
     @Override
     public final void run() {
-        ccs.getExecutor().execute(new Runnable() {
-            @Override
-            @SuppressWarnings("squid:S2142") // suppress interrupted exception warning
-            public void run() {
-                while (true) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Connecting NC service '" + ncId + "' at " + ncHost + ":" + ncPort);
-                    }
-                    try (Socket s = new Socket(ncHost, ncPort)) {
-                        ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-                        oos.writeUTF(NC_MAGIC_COOKIE);
-                        oos.writeUTF(serializeIni(ccs.getCCConfig().getIni()));
-                        oos.close();
-                        break;
-                        // QQQ Should probably have an ACK here
-                    } catch (IOException e) {
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.log(Level.WARNING, "Failed to contact NC service at " + ncHost +
-                                    ":" + ncPort + "; will retry", e);
-                        }
-                    }
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
+        ccs.getExecutor().execute(() -> {
+            while (true) {
+                LOGGER.info("Connecting NC service '" + ncId + "' at " + ncHost + ":" + ncPort);
+                try (Socket s = new Socket(ncHost, ncPort)) {
+                    ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+                    oos.writeUTF(NC_SERVICE_MAGIC_COOKIE);
+                    oos.writeUTF(ServiceCommand.START_NC.name());
+                    oos.writeUTF(TriggerNCWork.this.serializeIni(ccs.getCCConfig().getIni()));
+                    oos.close();
+                    return;
+                    // QQQ Should probably have an ACK here
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Failed to contact NC service at " + ncHost + ":" + ncPort
+                            + "; will retry", e);
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    return;
                 }
             }
         });
@@ -95,7 +86,7 @@ public class TriggerNCWork extends AbstractWork {
         ccini.store(iniString);
         // Finally insert *this* NC's name into localnc section - this is a fixed
         // entry point so that NCs can determine where all their config is.
-        iniString.append("\n[localnc]\nid=" + ncId + "\n");
+        iniString.append("\n[localnc]\nid=").append(ncId).append("\n");
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Returning Ini file:\n" + iniString.toString());
         }

@@ -53,7 +53,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
                 throw new IPCException("Shutdown in Progress");
             }
             Map<String, NodeControllerState> nodeControllerStateMap = ccs.getNodeMap();
-            Set<String> nodeIds = new TreeSet<String>();
+            Set<String> nodeIds = new TreeSet<>();
             nodeIds.addAll(nodeControllerStateMap.keySet());
             /**
              * set up our listener for the node ACKs
@@ -70,33 +70,22 @@ public class ClusterShutdownWork extends SynchronizableWork {
                 @Override
                 public void run() {
                     try {
-                        /**
+                        /*
                          * wait for all our acks
                          */
                         boolean cleanShutdown = shutdownStatus.waitForCompletion();
-                        if (cleanShutdown) {
-                            callback.setValue(true);
-                            ccs.stop();
-                            LOGGER.info("JVM Exiting.. Bye!");
-                            Runtime rt = Runtime.getRuntime();
-                            rt.exit(0);
+                        if (!cleanShutdown) {
+                            /*
+                             * best effort - just exit, user will have to kill misbehaving NCs
+                             */
+                            LOGGER.severe("Clean shutdown of NCs timed out- giving up!  Unresponsive nodes: " +
+                                    shutdownStatus.getRemainingNodes());
                         }
-                        /**
-                         * best effort - just exit, user will have to kill misbehaving NCs
-                         */
-                        else {
-                            LOGGER.severe("Clean shutdown of NCs timed out- CC bailing out!");
-                            StringBuilder unresponsive = new StringBuilder();
-                            for (String s : shutdownStatus.getRemainingNodes()) {
-                                unresponsive.append(s).append(' ');
-                            }
-                            LOGGER.severe("Unresponsive Nodes: " + unresponsive);
-                            callback.setValue(false);
-                            ccs.stop();
-                            LOGGER.info("JVM Exiting.. Bye!");
-                            Runtime rt = Runtime.getRuntime();
-                            rt.exit(1);
-                        }
+                        callback.setValue(cleanShutdown);
+                        ccs.stop(terminateNCService);
+                        LOGGER.info("JVM Exiting.. Bye!");
+                        Runtime rt = Runtime.getRuntime();
+                        rt.exit(cleanShutdown ? 0 : 1);
                     } catch (Exception e) {
                         callback.setException(e);
                     }
