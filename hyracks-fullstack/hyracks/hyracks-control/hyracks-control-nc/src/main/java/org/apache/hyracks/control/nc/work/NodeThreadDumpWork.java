@@ -33,7 +33,6 @@ public class NodeThreadDumpWork extends ThreadDumpWork {
     @Override
     protected void doRun() throws Exception {
         final String result = takeDump(ncs.getThreadMXBean());
-
         ncs.getClusterController().notifyThreadDump(
                 ncs.getApplicationContext().getNodeId(), requestId, result);
     }
