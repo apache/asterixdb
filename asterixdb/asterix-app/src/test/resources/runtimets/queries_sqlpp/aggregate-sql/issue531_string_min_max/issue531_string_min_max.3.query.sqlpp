@@ -27,10 +27,10 @@
 use test;
 
 
-select element {'sql-min':test.`array_sql-min`((
+select element {'sql-min':test.array_sql_min((
         select element l.name
         from  t1 as l
-    )),'sql-max':test.`array_sql-max`((
+    )),'sql-max':test.array_sql_max((
         select element l.name
         from  t1 as l
     ))};

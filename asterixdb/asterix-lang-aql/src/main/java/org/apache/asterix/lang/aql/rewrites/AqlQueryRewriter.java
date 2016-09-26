@@ -30,6 +30,8 @@ import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.FunctionParser;
+import org.apache.asterix.lang.aql.rewrites.visitor.AqlBuiltinFunctionRewriteVisitor;
+import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.aql.visitor.AQLInlineUdfsVisitor;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
@@ -72,6 +74,7 @@ class AqlQueryRewriter implements IQueryRewriter {
             wrapInLets();
         }
         inlineDeclaredUdfs();
+        rewriteFunctionName();
         topExpr.setVarCounter(context.getVarCounter());
     }
 
@@ -93,6 +96,14 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
     }
 
+    private void rewriteFunctionName() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        AqlBuiltinFunctionRewriteVisitor visitor = new AqlBuiltinFunctionRewriteVisitor();
+        topExpr.accept(visitor, null);
+    }
+
     private void inlineDeclaredUdfs() throws AsterixException {
         if (topExpr == null) {
             return;
@@ -104,7 +115,8 @@ class AqlQueryRewriter implements IQueryRewriter {
 
         List<FunctionDecl> storedFunctionDecls = FunctionUtil.retrieveUsedStoredFunctions(metadataProvider,
                 topExpr.getBody(), funIds, null,
-                expr -> getFunctionCalls(expr), func -> functionParser.getFunctionDecl(func), null);
+                expr -> getFunctionCalls(expr), func -> functionParser.getFunctionDecl(func),
+                signature -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature));
         declaredFunctions.addAll(storedFunctionDecls);
         if (!declaredFunctions.isEmpty()) {
             AQLInlineUdfsVisitor visitor =

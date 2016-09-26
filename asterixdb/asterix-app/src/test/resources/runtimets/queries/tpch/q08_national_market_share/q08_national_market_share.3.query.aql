@@ -39,42 +39,42 @@ for $t in (
           )
           where $nrc.c_custkey = $o.o_custkey
           return {
-            "o_orderdate" : $o.o_orderdate, 
-            "o_orderkey": $o.o_orderkey 
+            "o_orderdate" : $o.o_orderdate,
+            "o_orderkey": $o.o_orderkey
           }
         )
         where $l.l_orderkey = $nrco.o_orderkey
-          and $nrco.o_orderdate >= '1995-01-01' 
+          and $nrco.o_orderdate >= '1995-01-01'
           and $nrco.o_orderdate < '1996-12-31'
         return {
-          "o_orderdate": $nrco.o_orderdate, 
-          "l_partkey": $l.l_partkey, 
-          "l_discount": $l.l_discount, 
-          "l_extendedprice": $l.l_extendedprice, 
+          "o_orderdate": $nrco.o_orderdate,
+          "l_partkey": $l.l_partkey,
+          "l_discount": $l.l_discount,
+          "l_extendedprice": $l.l_extendedprice,
           "l_suppkey": $l.l_suppkey
         }
       )
       for $p in dataset("Part")
       where $p.p_partkey = $lnrco.l_partkey and $p.p_type = 'ECONOMY ANODIZED STEEL'
       return {
-        "o_orderdate": $lnrco.o_orderdate, 
-        "l_discount": $lnrco.l_discount, 
-        "l_extendedprice": $lnrco.l_extendedprice, 
-        "l_suppkey": $lnrco.l_suppkey 
+        "o_orderdate": $lnrco.o_orderdate,
+        "l_discount": $lnrco.l_discount,
+        "l_extendedprice": $lnrco.l_extendedprice,
+        "l_suppkey": $lnrco.l_suppkey
       }
     )
     where $s.s_suppkey = $lnrcop.l_suppkey
     return {
-      "o_orderdate": $lnrcop.o_orderdate, 
-      "l_discount": $lnrcop.l_discount, 
-      "l_extendedprice": $lnrcop.l_extendedprice, 
-      "l_suppkey": $lnrcop.l_suppkey, 
+      "o_orderdate": $lnrcop.o_orderdate,
+      "l_discount": $lnrcop.l_discount,
+      "l_extendedprice": $lnrcop.l_extendedprice,
+      "l_suppkey": $lnrcop.l_suppkey,
       "s_nationkey": $s.s_nationkey
     }
   )
   for $n2 in dataset('Nation')
   where $slnrcop.s_nationkey = $n2.n_nationkey
-  let $o_year := get-year($slnrcop.o_orderdate)
+  let $o_year := GET_YEAR($slnrcop.o_orderdate)
   return {
     "year": $o_year,
     "revenue": $slnrcop.l_extendedprice *(1-$slnrcop.l_discount),
@@ -85,7 +85,7 @@ group by $year := $t.year with $t
 order by $year
 return {
   "year": $year,
-  "mkt_share": sum(for $i in $t return switch-case($i.s_name='BRAZIL', true, $i.revenue, false, 0.0))/ 
+  "mkt_share": sum(for $i in $t return switch-case($i.s_name='BRAZIL', true, $i.revenue, false, 0.0))/
         sum(for $i in $t return $i.revenue)
 }
 

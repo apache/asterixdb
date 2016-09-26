@@ -35,7 +35,7 @@ SELECT supp_nation, cust_nation, l_year, sum(volume) AS revenue
 FROM
   (
     SELECT supp_nation, cust_nation,
-      `get-year`(l_shipdate) AS l_year,
+      get_year(l_shipdate) AS l_year,
        l_extendedprice * (1 - l_discount) AS volume
     FROM
       q7_volume_shipping_tmp t JOIN

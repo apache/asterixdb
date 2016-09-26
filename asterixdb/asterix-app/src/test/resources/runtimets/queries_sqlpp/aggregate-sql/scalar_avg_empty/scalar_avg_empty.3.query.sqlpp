@@ -21,4 +21,4 @@
  * Success        : Yes
  */
 
-select element `array_sql-avg`([]);
+select element array_sql_avg([]);

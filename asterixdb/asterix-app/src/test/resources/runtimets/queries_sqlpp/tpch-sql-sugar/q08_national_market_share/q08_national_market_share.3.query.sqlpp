@@ -58,7 +58,7 @@ FROM  (
                 WHERE s_suppkey = l_suppkey
                 ) AS slnrcop,
                 Nation
-                LET o_year = `get-year`(o_orderdate)
+                LET o_year = GET_YEAR(o_orderdate)
                 WHERE s_nationkey = n_nationkey
              ) as t
 GROUP BY year

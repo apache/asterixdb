@@ -1,0 +1,76 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.asterix.lang.common.util;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+
+public class CommonFunctionMapUtil {
+
+    // Maps from a function name to an another internal function name (i.e., AsterixDB internal name).
+    private static final Map<String, String> FUNCTION_NAME_MAP = new HashMap<>();
+
+    static {
+        FUNCTION_NAME_MAP.put("ceil", "ceiling"); //ceil,  internal: ceiling
+        FUNCTION_NAME_MAP.put("length", "string-length"); // length,  internal: string-length
+        FUNCTION_NAME_MAP.put("lower", "lowercase"); // lower, internal: lowercase
+        FUNCTION_NAME_MAP.put("substr", "substring"); // substr,  internal: substring
+        FUNCTION_NAME_MAP.put("upper", "uppercase"); // upper, internal: uppercase
+        FUNCTION_NAME_MAP.put("title", "initcap"); // title, internal: initcap
+        FUNCTION_NAME_MAP.put("regexp_contains", "matches"); // regexp_contains, internal: matches
+        FUNCTION_NAME_MAP.put("regexp_replace", "replace"); //regexp_replace, internal: replace
+        FUNCTION_NAME_MAP.put("power", "caret"); //pow, internal: caret
+        FUNCTION_NAME_MAP.put("int", "integer"); // int, internal: integer
+
+        // The "mapped-to" names are to be deprecated.
+        FUNCTION_NAME_MAP.put("tinyint", "int8"); // tinyint, internal: int8
+        FUNCTION_NAME_MAP.put("smallint", "int16"); // smallint, internal: int16
+        FUNCTION_NAME_MAP.put("integer", "int32"); // integer, internal: int32
+        FUNCTION_NAME_MAP.put("bigint", "int64"); // bigint, internal: int64
+    }
+
+    private CommonFunctionMapUtil() {
+
+    }
+
+    /**
+     * Maps a user invoked function signature to a builtin internal function signature if possible.
+     *
+     * @param fs,
+     *            the signature of an user typed function.
+     * @return the corresponding system internal function signature if it exists, otherwise
+     *         the input function synature.
+     */
+    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) throws AsterixException {
+        String name = fs.getName();
+        String lowerCaseName = name.toLowerCase();
+        String mappedName = FUNCTION_NAME_MAP.get(lowerCaseName);
+        if (mappedName != null) {
+            return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
+        }
+        String understoreName = lowerCaseName.replace('_', '-');
+        FunctionSignature newFs = new FunctionSignature(fs.getNamespace(), understoreName, fs.getArity());
+        return AsterixBuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
+    }
+}

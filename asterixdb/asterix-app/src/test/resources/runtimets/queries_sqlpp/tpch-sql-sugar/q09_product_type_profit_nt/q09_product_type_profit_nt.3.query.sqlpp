@@ -24,7 +24,7 @@ SELECT nation, o_year, sum(amount) AS sum_profit
 FROM
   (
     SELECT   n_name AS nation,
-             `get-year`(o_orderdate) AS o_year,
+             get_year(o_orderdate) AS o_year,
              l_extendedprice * (1 - l_discount) -  ps_supplycost * l_quantity AS amount
     FROM
       Orders JOIN
