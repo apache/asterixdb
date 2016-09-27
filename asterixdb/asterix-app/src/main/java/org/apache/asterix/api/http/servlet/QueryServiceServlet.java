@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -48,6 +49,7 @@ import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -434,7 +436,7 @@ public class QueryServiceServlet extends HttpServlet {
 
         int respCode = HttpServletResponse.SC_OK;
         Stats stats = new Stats();
-        long execStart = 0;
+        long execStart = -1;
         long execEnd = -1;
 
         resultWriter.print("{\n");
@@ -443,6 +445,11 @@ public class QueryServiceServlet extends HttpServlet {
         printSignature(resultWriter);
         printType(resultWriter, sessionConfig);
         try {
+            final IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
+            if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
+                // using a plain IllegalStateException here to get into the right catch clause for a 500
+                throw new IllegalStateException("Cannot execute request, cluster is " + clusterState);
+            }
             if (param.statement == null || param.statement.isEmpty()) {
                 throw new AsterixException("Empty request, no statement provided");
             }
@@ -477,7 +484,9 @@ public class QueryServiceServlet extends HttpServlet {
             printStatus(resultWriter, ResultStatus.FATAL);
             respCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         } finally {
-            if (execEnd == -1) {
+            if (execStart == -1) {
+                execEnd = -1;
+            } else if (execEnd == -1) {
                 execEnd = System.nanoTime();
             }
         }
