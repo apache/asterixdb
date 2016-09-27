@@ -53,7 +53,6 @@
       * [WITH clauses](#With_clauses)
       * [LET clauses](#Let_clauses)
       * [UNION ALL](#Union_all)
-      * [MISSING in query results](#Missing_in_query_results)
       * [SQL++ Vs. SQL-92](#Vs_SQL-92)
 * [4. DDL and DML statements](#DDL_and_DML_statements)
       * [Declarations](#Declarations)

@@ -97,7 +97,7 @@
     </menu>
 
     <menu name="Functions">
-      <item name="Functions" href="aql/functions.html"/>
+      <item name="Builtin Functions" href="aql/functions.html"/>
       <item name="AQL Allen's Relations Functions" href="aql/allens.html"/>
     </menu>
 
