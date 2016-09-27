@@ -36,7 +36,7 @@
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         -- ASSIGN  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- SPLIT  |PARTITIONED|
+                                                            -- REPLICATE  |PARTITIONED|
                                                               -- HASH_PARTITION_EXCHANGE [$$23]  |PARTITIONED|
                                                                 -- UNNEST  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -87,13 +87,13 @@
                                                                                                               -- ASSIGN  |PARTITIONED|
                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                    -- SPLIT  |PARTITIONED|
+                                                                                                                    -- REPLICATE  |PARTITIONED|
                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- SPLIT  |PARTITIONED|
+                                                      -- REPLICATE  |PARTITIONED|
                                                         -- HASH_PARTITION_EXCHANGE [$$23]  |PARTITIONED|
                                                           -- UNNEST  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -144,7 +144,7 @@
                                                                                                         -- ASSIGN  |PARTITIONED|
                                                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                              -- SPLIT  |PARTITIONED|
+                                                                                                              -- REPLICATE  |PARTITIONED|
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -153,7 +153,7 @@
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ASSIGN  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- SPLIT  |PARTITIONED|
+                              -- REPLICATE  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

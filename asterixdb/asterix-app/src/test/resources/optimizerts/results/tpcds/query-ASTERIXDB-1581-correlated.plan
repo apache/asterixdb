@@ -55,12 +55,12 @@
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- SPLIT  |PARTITIONED|
+                                                                      -- REPLICATE  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                             -- ASSIGN  |PARTITIONED|
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                -- SPLIT  |PARTITIONED|
+                                                                                -- REPLICATE  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                     -- BTREE_SEARCH  |PARTITIONED|
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -70,13 +70,13 @@
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- SPLIT  |PARTITIONED|
+                                                                      -- REPLICATE  |PARTITIONED|
                                                                         -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
                                                                           -- ASSIGN  |PARTITIONED|
                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                               -- ASSIGN  |PARTITIONED|
                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  -- SPLIT  |PARTITIONED|
+                                                                                  -- REPLICATE  |PARTITIONED|
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -92,7 +92,7 @@
                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                 -- ASSIGN  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    -- SPLIT  |PARTITIONED|
+                                                                    -- REPLICATE  |PARTITIONED|
                                                                       -- HASH_PARTITION_EXCHANGE [$$138]  |PARTITIONED|
                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                           -- ASSIGN  |PARTITIONED|
@@ -111,20 +111,20 @@
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                           -- HYBRID_HASH_JOIN [$$143][$$144]  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              -- SPLIT  |PARTITIONED|
+                                                                                              -- REPLICATE  |PARTITIONED|
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   -- BTREE_SEARCH  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       -- ASSIGN  |PARTITIONED|
                                                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              -- SPLIT  |PARTITIONED|
+                                                                                              -- REPLICATE  |PARTITIONED|
                                                                                                 -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
                                                                                                   -- ASSIGN  |PARTITIONED|
                                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                                       -- ASSIGN  |PARTITIONED|
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                          -- SPLIT  |PARTITIONED|
+                                                                                                          -- REPLICATE  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -137,7 +137,7 @@
                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                     -- ASSIGN  |PARTITIONED|
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        -- SPLIT  |PARTITIONED|
+                                                                        -- REPLICATE  |PARTITIONED|
                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -182,12 +182,12 @@
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                 -- HYBRID_HASH_JOIN [$$125][$$126]  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                    -- SPLIT  |PARTITIONED|
+                                                                                    -- REPLICATE  |PARTITIONED|
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                                           -- ASSIGN  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              -- SPLIT  |PARTITIONED|
+                                                                                              -- REPLICATE  |PARTITIONED|
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   -- BTREE_SEARCH  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -197,13 +197,13 @@
                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                       -- ASSIGN  |PARTITIONED|
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          -- SPLIT  |PARTITIONED|
+                                                                                          -- REPLICATE  |PARTITIONED|
                                                                                             -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
                                                                                               -- ASSIGN  |PARTITIONED|
                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                   -- ASSIGN  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                      -- SPLIT  |PARTITIONED|
+                                                                                                      -- REPLICATE  |PARTITIONED|
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -216,7 +216,7 @@
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     -- HYBRID_HASH_JOIN [$$138][$$137]  |PARTITIONED|
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        -- SPLIT  |PARTITIONED|
+                                                                        -- REPLICATE  |PARTITIONED|
                                                                           -- HASH_PARTITION_EXCHANGE [$$138]  |PARTITIONED|
                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                               -- ASSIGN  |PARTITIONED|
@@ -235,20 +235,20 @@
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                               -- HYBRID_HASH_JOIN [$$143][$$144]  |PARTITIONED|
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                  -- SPLIT  |PARTITIONED|
+                                                                                                  -- REPLICATE  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       -- BTREE_SEARCH  |PARTITIONED|
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                           -- ASSIGN  |PARTITIONED|
                                                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                  -- SPLIT  |PARTITIONED|
+                                                                                                  -- REPLICATE  |PARTITIONED|
                                                                                                     -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
                                                                                                       -- ASSIGN  |PARTITIONED|
                                                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                                                           -- ASSIGN  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                              -- SPLIT  |PARTITIONED|
+                                                                                                              -- REPLICATE  |PARTITIONED|
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -259,7 +259,7 @@
                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                           -- ASSIGN  |PARTITIONED|
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              -- SPLIT  |PARTITIONED|
+                                                                              -- REPLICATE  |PARTITIONED|
                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -272,7 +272,7 @@
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ASSIGN  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- SPLIT  |PARTITIONED|
+                                                        -- REPLICATE  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

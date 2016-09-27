@@ -40,7 +40,7 @@ public class ReplicatePOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
-        return PhysicalOperatorTag.SPLIT;
+        return PhysicalOperatorTag.REPLICATE;
     }
 
     @Override
