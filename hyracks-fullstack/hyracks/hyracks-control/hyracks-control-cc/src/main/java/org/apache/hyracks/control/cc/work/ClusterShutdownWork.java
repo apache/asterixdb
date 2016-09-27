@@ -50,7 +50,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
     public void doRun() {
         try {
             if (ccs.getShutdownRun() != null) {
-                throw new IPCException("Shutdown in Progress");
+                throw new IPCException("Shutdown already in progress");
             }
             Map<String, NodeControllerState> nodeControllerStateMap = ccs.getNodeMap();
             Set<String> nodeIds = new TreeSet<>();
@@ -73,12 +73,13 @@ public class ClusterShutdownWork extends SynchronizableWork {
                         /*
                          * wait for all our acks
                          */
+                        LOGGER.info("Waiting for NCs to shutdown...");
                         boolean cleanShutdown = shutdownStatus.waitForCompletion();
                         if (!cleanShutdown) {
                             /*
                              * best effort - just exit, user will have to kill misbehaving NCs
                              */
-                            LOGGER.severe("Clean shutdown of NCs timed out- giving up!  Unresponsive nodes: " +
+                            LOGGER.severe("Clean shutdown of NCs timed out- giving up; unresponsive nodes: " +
                                     shutdownStatus.getRemainingNodes());
                         }
                         callback.setValue(cleanShutdown);
@@ -96,12 +97,13 @@ public class ClusterShutdownWork extends SynchronizableWork {
         }
     }
 
-    protected void shutdownNode(String key, NodeControllerState ncState) {
+    protected void shutdownNode(String nodeId, NodeControllerState ncState) {
         try {
+            LOGGER.info("Notifying NC " + nodeId + " to shutdown...");
             ncState.getNodeController().shutdown(terminateNCService);
         } catch (Exception e) {
-            LOGGER.log(
-                    Level.INFO, "Exception shutting down NC " + key + " (possibly dead?), continuing shutdown...", e);
+            LOGGER.log(Level.INFO,
+                    "Exception shutting down NC " + nodeId + " (possibly dead?), continuing shutdown...", e);
         }
     }
 }

@@ -98,7 +98,7 @@ import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactor
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 
 public class NodeControllerService implements IControllerService {
-    private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
 
     private static final double MEMORY_FUDGE_FACTOR = 0.8;
 
@@ -182,7 +182,7 @@ public class NodeControllerService implements IControllerService {
 
         lccm = new LifeCycleComponentManager();
         queue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
-        jobletMap = new Hashtable<JobId, Joblet>();
+        jobletMap = new Hashtable<>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER,
                 new File(new File(NodeControllerService.class.getName()), id));
@@ -192,7 +192,7 @@ public class NodeControllerService implements IControllerService {
         runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         registrationPending = true;
-        getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
+        getNodeControllerInfosAcceptor = new MutableObject<>();
         memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
         ioCounter = new IOCounterFactory().getIOCounter();
     }
@@ -210,7 +210,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     private static List<IODeviceHandle> getDevices(String ioDevices) {
-        List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
+        List<IODeviceHandle> devices = new ArrayList<>();
         StringTokenizer tok = new StringTokenizer(ioDevices, ",");
         while (tok.hasMoreElements()) {
             String devPath = tok.nextToken().trim();
@@ -227,7 +227,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
-        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<Map<String, NodeControllerInfo>>();
+        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<>();
         synchronized (getNodeControllerInfosAcceptor) {
             while (getNodeControllerInfosAcceptor.getValue() != null) {
                 getNodeControllerInfosAcceptor.wait();
@@ -350,7 +350,7 @@ public class NodeControllerService implements IControllerService {
             LOGGER.log(Level.INFO, "Stopping NodeControllerService");
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing shutdown abnormally");
+                LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing with abnormal shutdown");
             }
             partitionManager.close();
             datasetPartitionManager.close();
@@ -480,7 +480,7 @@ public class NodeControllerService implements IControllerService {
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Exception sending heartbeat", e);
             }
         }
     }
@@ -495,7 +495,7 @@ public class NodeControllerService implements IControllerService {
         @Override
         public void run() {
             try {
-                FutureValue<List<JobProfile>> fv = new FutureValue<List<JobProfile>>();
+                FutureValue<List<JobProfile>> fv = new FutureValue<>();
                 BuildJobProfilesWork bjpw = new BuildJobProfilesWork(NodeControllerService.this, fv);
                 queue.scheduleAndSync(bjpw);
                 List<JobProfile> profiles = fv.get();
@@ -503,7 +503,7 @@ public class NodeControllerService implements IControllerService {
                     cc.reportProfile(id, profiles);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Exception reporting profile", e);
             }
         }
     }
@@ -573,15 +573,17 @@ public class NodeControllerService implements IControllerService {
 
                 case SHUTDOWN_REQUEST:
                     final CCNCFunctions.ShutdownRequestFunction sdrf = (CCNCFunctions.ShutdownRequestFunction) fn;
-                    queue.schedule(new ShutdownWork(NodeControllerService.this, sdrf.isTerminateNCService()));
+                    executor.submit(new ShutdownWork(NodeControllerService.this, sdrf.isTerminateNCService()));
                     return;
 
                 case THREAD_DUMP_REQUEST:
                     final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
-                    queue.schedule(new NodeThreadDumpWork(NodeControllerService.this, tdrf.getRequestId()));
+                    executor.submit(new NodeThreadDumpWork(NodeControllerService.this, tdrf.getRequestId()));
                     return;
+
+                default:
+                    throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
             }
-            throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
 
         }
     }
@@ -611,15 +613,11 @@ public class NodeControllerService implements IControllerService {
 
         @Override
         public void run() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shutdown hook in progress");
-            }
+            LOGGER.info("Shutdown hook in progress");
             try {
                 nodeControllerService.stop();
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Exception in executing shutdown hook" + e);
-                }
+                LOGGER.log(Level.WARNING, "Exception in executing shutdown hook", e);
             }
         }
     }

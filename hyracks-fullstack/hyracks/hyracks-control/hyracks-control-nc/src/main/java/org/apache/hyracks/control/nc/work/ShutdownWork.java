@@ -27,7 +27,7 @@ import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ShutdownWork extends AbstractWork {
-    private static Logger LOGGER = Logger.getLogger(ShutdownWork.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ShutdownWork.class.getName());
     private final NodeControllerService ncs;
     private final boolean terminateNCService;
 
@@ -43,25 +43,25 @@ public class ShutdownWork extends AbstractWork {
             ccs.notifyShutdown(ncs.getId());
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Exception notifying CC of shutdown acknowledgment", e);
-            throw new RuntimeException(e);
+            // proceed with shutdown
         }
 
         LOGGER.info("JVM Exiting.. Bye!");
-            //run the shutdown in a new thread, so we don't block this last work task
-            Thread t = new Thread("NC " + ncs.getId() + " Shutdown") {
-                @Override
-                public void run() {
-                    try {
-                        ncs.stop();
-                    } catch (Exception e) {
-                        LOGGER.log(Level.SEVERE, "Exception stopping node controller service", e);
-                    } finally {
-                        Runtime rt = Runtime.getRuntime();
-                        rt.exit(terminateNCService ? 99 : 0);
-                    }
+        //run the shutdown in a new thread, so we don't block this last work task
+        Thread t = new Thread("NC " + ncs.getId() + " Shutdown") {
+            @Override
+            public void run() {
+                try {
+                    ncs.stop();
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "Exception stopping node controller service", e);
+                } finally {
+                    Runtime rt = Runtime.getRuntime();
+                    rt.exit(terminateNCService ? 99 : 0);
                 }
-            };
-            t.start();
+            }
+        };
+        t.start();
     }
 
 }

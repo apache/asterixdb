@@ -45,7 +45,7 @@ public class WorkQueue {
             throw new IllegalArgumentException("Illegal thread priority number.");
         }
         this.threadPriority = threadPriority;
-        queue = new LinkedBlockingQueue<AbstractWork>();
+        queue = new LinkedBlockingQueue<>();
         thread = new WorkerThread(id);
         stopSemaphore = new Semaphore(1);
         stopped = true;
@@ -59,6 +59,7 @@ public class WorkQueue {
         try {
             stopSemaphore.acquire();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new HyracksException(e);
         }
         if (DEBUG) {
@@ -73,14 +74,11 @@ public class WorkQueue {
         synchronized (this) {
             stopped = true;
         }
-        schedule(new AbstractWork() {
-            @Override
-            public void run() {
-            }
-        });
+        thread.interrupt();
         try {
             stopSemaphore.acquire();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new HyracksException(e);
         }
     }
@@ -119,8 +117,8 @@ public class WorkQueue {
                     }
                     try {
                         r = queue.take();
-                    } catch (InterruptedException e) {
-                        continue;
+                    } catch (InterruptedException e) { // NOSONAR: aborting the thread
+                        break;
                     }
                     if (DEBUG) {
                         LOGGER.log(Level.FINEST,
@@ -133,7 +131,7 @@ public class WorkQueue {
                         }
                         r.run();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.WARNING, "Exception while executing " + r, e);
                     }
                 }
             } finally {

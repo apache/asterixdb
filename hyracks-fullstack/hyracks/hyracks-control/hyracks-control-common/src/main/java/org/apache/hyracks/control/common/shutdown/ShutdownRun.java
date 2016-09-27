@@ -21,12 +21,13 @@ package org.apache.hyracks.control.common.shutdown;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 public class ShutdownRun implements IShutdownStatusConditionVariable{
 
     private final Set<String> shutdownNodeIds = new TreeSet<>();
     private boolean shutdownSuccess = false;
-    private static final int SHUTDOWN_TIMER_MS = 10000; //10 seconds
+    private static final long SHUTDOWN_TIMER_MS = TimeUnit.SECONDS.toMillis(30);
 
     public ShutdownRun(Set<String> nodeIds) {
         shutdownNodeIds.addAll(nodeIds);
