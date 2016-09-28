@@ -16,24 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.nc.work;
+package org.apache.hyracks.control.nc.task;
 
-import org.apache.hyracks.control.common.work.ThreadDumpWork;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class NodeThreadDumpWork extends ThreadDumpWork {
+public class ThreadDumpTask implements Runnable {
+    private static final Logger LOGGER = Logger.getLogger(ThreadDumpTask.class.getName());
     private final NodeControllerService ncs;
     private final String requestId;
 
-    public NodeThreadDumpWork(NodeControllerService ncs, String requestId) {
+    public ThreadDumpTask(NodeControllerService ncs, String requestId) {
         this.ncs = ncs;
         this.requestId = requestId;
     }
 
     @Override
-    protected void doRun() throws Exception {
-        final String result = takeDump(ncs.getThreadMXBean());
-        ncs.getClusterController().notifyThreadDump(
-                ncs.getApplicationContext().getNodeId(), requestId, result);
+    public void run() {
+        String result;
+        try {
+            result = ThreadDumpHelper.takeDumpJSON(ncs.getThreadMXBean());
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception taking thread dump", e);
+            result = null;
+        }
+        try {
+            ncs.getClusterController().notifyThreadDump(
+                    ncs.getApplicationContext().getNodeId(), requestId, result);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Exception sending thread dump to CC", e);
+        }
     }
 }

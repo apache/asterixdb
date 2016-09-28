@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.work;
+package org.apache.hyracks.control.common.utils;
 
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -29,10 +29,13 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public abstract class ThreadDumpWork extends SynchronizableWork {
+public class ThreadDumpHelper {
 
-    protected String takeDump(ThreadMXBean threadMXBean) throws JSONException {
-        ThreadInfo [] threadInfos = threadMXBean.dumpAllThreads(true, true);
+    private ThreadDumpHelper() {
+    }
+
+    public static String takeDumpJSON(ThreadMXBean threadMXBean) throws JSONException {
+        ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
         List<Map<String, Object>> threads = new ArrayList<>();
 
         for (ThreadInfo thread : threadInfos) {

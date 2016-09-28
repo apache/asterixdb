@@ -85,10 +85,10 @@ import org.apache.hyracks.control.nc.work.BuildJobProfilesWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
 import org.apache.hyracks.control.nc.work.DeployBinaryWork;
 import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
-import org.apache.hyracks.control.nc.work.ShutdownWork;
+import org.apache.hyracks.control.nc.task.ShutdownTask;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
-import org.apache.hyracks.control.nc.work.NodeThreadDumpWork;
+import org.apache.hyracks.control.nc.task.ThreadDumpTask;
 import org.apache.hyracks.control.nc.work.UnDeployBinaryWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
@@ -573,12 +573,12 @@ public class NodeControllerService implements IControllerService {
 
                 case SHUTDOWN_REQUEST:
                     final CCNCFunctions.ShutdownRequestFunction sdrf = (CCNCFunctions.ShutdownRequestFunction) fn;
-                    executor.submit(new ShutdownWork(NodeControllerService.this, sdrf.isTerminateNCService()));
+                    executor.submit(new ShutdownTask(NodeControllerService.this, sdrf.isTerminateNCService()));
                     return;
 
                 case THREAD_DUMP_REQUEST:
                     final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
-                    executor.submit(new NodeThreadDumpWork(NodeControllerService.this, tdrf.getRequestId()));
+                    executor.submit(new ThreadDumpTask(NodeControllerService.this, tdrf.getRequestId()));
                     return;
 
                 default:

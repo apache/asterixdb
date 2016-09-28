@@ -36,6 +36,8 @@ import org.apache.hyracks.ipc.api.RPCInterface;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterface {
+    private static final int SHUTDOWN_CONNECTION_TIMEOUT_SECS = 30;
+
     private final IIPCHandle ipcHandle;
 
     private final RPCInterface rpci;
@@ -127,15 +129,16 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
         HyracksClientInterfaceFunctions.ClusterShutdownFunction csdf =
                 new HyracksClientInterfaceFunctions.ClusterShutdownFunction(terminateNCService);
         rpci.call(ipcHandle, csdf);
+        int i = 0;
         // give the CC some time to do final settling after it returns our request
-        int seconds = 30;
-        while (ipcHandle.isConnected() && --seconds > 0) {
+        while (ipcHandle.isConnected() && i++ < SHUTDOWN_CONNECTION_TIMEOUT_SECS) {
             synchronized (this) {
                 wait(TimeUnit.SECONDS.toMillis(1));
             }
         }
         if (ipcHandle.isConnected()) {
-            throw new IPCException("CC refused to release connection after 30 seconds");
+            throw new IPCException("CC refused to release connection after " + SHUTDOWN_CONNECTION_TIMEOUT_SECS
+                    + " seconds");
         }
     }
 
