@@ -32,6 +32,7 @@ public class RunFileReader implements IFrameReader {
     private IFileHandle handle;
     private final IIOManager ioManager;
     private final long size;
+    private long readPreviousPtr;
     private long readPtr;
     private boolean deleteAfterClose;
 
@@ -46,6 +47,7 @@ public class RunFileReader implements IFrameReader {
     public void open() throws HyracksDataException {
         handle = ioManager.open(file, IIOManager.FileReadWriteMode.READ_ONLY, null);
         readPtr = 0;
+        readPreviousPtr = 0;
     }
 
     @Override
@@ -53,6 +55,7 @@ public class RunFileReader implements IFrameReader {
         if (readPtr >= size) {
             return false;
         }
+        readPreviousPtr = readPtr;
         frame.reset();
 
         int readLength = ioManager.syncRead(handle, readPtr, frame.getBuffer());
@@ -79,6 +82,12 @@ public class RunFileReader implements IFrameReader {
 
     public void reset() throws HyracksDataException {
         readPtr = 0;
+        readPreviousPtr = readPtr;
+    }
+
+    public void reset(long pointer) throws HyracksDataException {
+        readPtr = pointer;
+        readPreviousPtr = readPtr;
     }
 
     @Override
@@ -91,5 +100,9 @@ public class RunFileReader implements IFrameReader {
 
     public long getFileSize() {
         return size;
+    }
+
+    public long getReadPointer() {
+        return readPreviousPtr;
     }
 }

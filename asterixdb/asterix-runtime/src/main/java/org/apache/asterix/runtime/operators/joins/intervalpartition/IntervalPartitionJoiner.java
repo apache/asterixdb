@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -47,8 +49,10 @@ import org.apache.hyracks.dataflow.std.buffermanager.VPartitionTupleBufferManage
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
- * This class mainly applies one level of HHJ on a pair of
- * relations. It is always called by the descriptor.
+ * The Interval Partition Join runs in three stages: build, probe-in-memory, probe-spill.
+ * build: Saves all build partitions either to memory or disk.
+ * probe-in-memory: Joins all in memory partitions and saves the necessary partitions to disk.
+ * probe-spill: Spilled build partitions are loaded into memory and joined with all probe remaining partitions.
  */
 public class IntervalPartitionJoiner {
 
@@ -58,9 +62,6 @@ public class IntervalPartitionJoiner {
         BUILD,
         PROBE
     }
-
-    // Used for special probe BigObject which can not be held into the Join memory
-    private FrameTupleAppender bigProbeFrameAppender;
 
     private IHyracksTaskContext ctx;
 
@@ -76,13 +77,12 @@ public class IntervalPartitionJoiner {
     private RunFileWriter[] buildRFWriters; //writing spilled build partitions
     private RunFileWriter[] probeRFWriters; //writing spilled probe partitions
 
-    private final int memForJoin;
+    private final int buildMemory;
     private final int k;
     private final int numOfPartitions;
     private InMemoryIntervalPartitionJoin[] inMemJoiner; //Used for joining resident partitions
 
     private VPartitionTupleBufferManager buildBufferManager;
-    private VPartitionTupleBufferManager probeBufferManager;
 
     private final FrameTupleAccessor accessorBuild;
     private final FrameTupleAccessor accessorProbe;
@@ -97,17 +97,23 @@ public class IntervalPartitionJoiner {
 
     private long joinComparisonCount = 0;
     private long joinResultCount = 0;
-    private long spillCount = 0;
     private long spillReadCount = 0;
     private long spillWriteCount = 0;
     private long buildSize;
+    private long probeSize;
     private int tmp = -1;
+
+    private RunFileWriter probeRunFileWriter = null;
+    private final IFrameTupleAppender probeRunFileAppender;
+    private int probeRunFilePid = -1;
 
     public IntervalPartitionJoiner(IHyracksTaskContext ctx, int memForJoin, int k, int numOfPartitions,
             String buildRelName, String probeRelName, IIntervalMergeJoinChecker imjc, RecordDescriptor buildRd,
-            RecordDescriptor probeRd, ITuplePartitionComputer buildHpc, ITuplePartitionComputer probeHpc) {
+            RecordDescriptor probeRd, ITuplePartitionComputer buildHpc, ITuplePartitionComputer probeHpc)
+            throws HyracksDataException {
         this.ctx = ctx;
-        this.memForJoin = memForJoin;
+        // TODO fix available memory size
+        this.buildMemory = memForJoin;
         this.k = k;
         this.buildRd = buildRd;
         this.probeRd = probeRd;
@@ -125,21 +131,19 @@ public class IntervalPartitionJoiner {
         this.accessorBuild = new FrameTupleAccessor(buildRd);
         this.accessorProbe = new FrameTupleAccessor(probeRd);
 
+        reloadBuffer = new VSizeFrame(ctx);
+        probeRunFileAppender = new FrameTupleAppender(new VSizeFrame(ctx));
         ipjd = new IntervalPartitionJoinData(k, imjc, numOfPartitions);
     }
 
-    public void initBuild() throws HyracksDataException {
-        buildBufferManager = new VPartitionTupleBufferManager(ctx, getPartitionMemoryConstrain(), numOfPartitions,
-                memForJoin * ctx.getInitialFrameSize());
+    public void buildInit() throws HyracksDataException {
+        buildBufferManager = new VPartitionTupleBufferManager(ctx, VPartitionTupleBufferManager.NO_CONSTRAIN,
+                numOfPartitions, buildMemory * ctx.getInitialFrameSize());
         System.err.println("k: " + k);
         buildSize = 0;
     }
 
-    private IPartitionedMemoryConstrain getPartitionMemoryConstrain() {
-        return VPartitionTupleBufferManager.NO_CONSTRAIN;
-    }
-
-    public void build(ByteBuffer buffer) throws HyracksDataException {
+    public void buildStep(ByteBuffer buffer) throws HyracksDataException {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
 
@@ -148,7 +152,8 @@ public class IntervalPartitionJoiner {
             pid = buildHpc.partition(accessorBuild, i, k);
 
             if (tmp != pid) {
-                System.err.println("buildSize: " + buildSize + " pid: " + pid + " k: " + k + " pair: " + IntervalPartitionUtil.getIntervalPartition(pid, k));
+                System.err.println("buildSize: " + buildSize + " pid: " + pid + " k: " + k + " pair: "
+                        + IntervalPartitionUtil.getIntervalPartition(pid, k));
                 tmp = pid;
             }
             processTuple(i, pid);
@@ -157,7 +162,7 @@ public class IntervalPartitionJoiner {
         }
     }
 
-    public void closeBuild() throws HyracksDataException {
+    public void buildClose() throws HyracksDataException {
         System.err.println("buildSize: " + buildSize);
 
         int inMemoryPartitions = 0;
@@ -165,7 +170,7 @@ public class IntervalPartitionJoiner {
         flushAndClearBuildSpilledPartition();
 
         // Trying to bring back as many spilled partitions as possible, making them resident
-        bringBackSpilledPartitionIfHasMoreMemory();
+        bringBackSpilledPartitionIfHasMoreMemory(false);
 
         // Update build partition join map based on partitions with actual data.
         for (int i = ipjd.buildNextInMemory(0); i >= 0; i = ipjd.buildNextInMemory(i + 1)) {
@@ -239,7 +244,6 @@ public class IntervalPartitionJoiner {
 
     private void spillPartition(int pid) throws HyracksDataException {
         RunFileWriter writer = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.BUILD);
-        spillCount++;
         spillWriteCount += buildBufferManager.getNumFrames(pid);
         buildBufferManager.flushPartition(pid, writer);
         buildBufferManager.clearPartition(pid);
@@ -274,9 +278,9 @@ public class IntervalPartitionJoiner {
         for (int pid = 0; pid < numOfPartitions; ++pid) {
             if (buildBufferManager.getNumTuples(pid) > 0) {
                 buildBufferManager.clearPartition(pid);
-                ipjd.buildRemoveFromJoin(pid);
             }
         }
+        ipjd.buildClearMemory();
     }
 
     private void flushAndClearBuildSpilledPartition() throws HyracksDataException {
@@ -291,63 +295,88 @@ public class IntervalPartitionJoiner {
         }
     }
 
-    private void flushAndClearProbeSpilledPartition() throws HyracksDataException {
-        for (int pid = 0; pid < numOfPartitions; ++pid) {
-            if (probeBufferManager.getNumTuples(pid) > 0) {
-                spillWriteCount += probeBufferManager.getNumFrames(pid);
-                RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.PROBE);
-                probeBufferManager.flushPartition(pid, runFileWriter);
-                probeBufferManager.clearPartition(pid);
-                probeRFWriters[pid].close();
-            }
+    private void flushProbeSpilledPartition() throws HyracksDataException {
+        if (probeRunFileWriter != null) {
+            // flush previous runFile
+            probeRunFileAppender.write(probeRunFileWriter, true);
+            probeRunFileWriter.close();
+            spillWriteCount++;
         }
     }
 
-    private void bringBackSpilledPartitionIfHasMoreMemory() throws HyracksDataException {
-        // we need number of |spilledPartitions| buffers to store the probe data
-        int freeSpace = (memForJoin - ipjd.buildGetSpilledCount()) * ctx.getInitialFrameSize();
+    private void bringBackSpilledPartitionIfHasMoreMemory(boolean partitalLoad) throws HyracksDataException {
+        int freeFrames = buildMemory;
         for (int i = ipjd.buildNextInMemoryWithResults(0); i >= 0; i = ipjd.buildNextInMemoryWithResults(i + 1)) {
-            freeSpace -= buildBufferManager.getPhysicalSize(i);
+            freeFrames -= buildBufferManager.getNumFrames(i);
         }
 
         int pid = 0;
-        while ((pid = selectPartitionsToReload(freeSpace, pid)) >= 0) {
+        while ((pid = selectPartitionsToReload(freeFrames, pid, partitalLoad)) >= 0 && freeFrames > 0) {
+            if (pid == 225) {
+                int i = 0;
+            }
             if (!loadPartitionInMem(pid, buildRFWriters[pid])) {
                 return;
             }
-            freeSpace -= buildBufferManager.getPhysicalSize(pid);
+            freeFrames -= buildBufferManager.getNumFrames(pid);
         }
     }
 
+    int buildParitialLoadPid = -1;
+    int buildParitialNextTid = -1;
+    long buildParitialResetReader = -1;
+
     private boolean loadPartitionInMem(int pid, RunFileWriter wr) throws HyracksDataException {
-        RunFileReader r = wr.createDeleteOnCloseReader();
-        r.open();
-        if (reloadBuffer == null) {
-            reloadBuffer = new VSizeFrame(ctx);
+        if (pid == 225) {
+            int i = 0;
         }
+        RunFileReader r = wr.createReader();
+        r.open();
+        if (buildParitialLoadPid == pid && buildParitialResetReader > 0) {
+            r.reset(buildParitialResetReader);
+        }
+        int framesLoaded = 0;
         while (r.nextFrame(reloadBuffer)) {
+            framesLoaded++;
             accessorBuild.reset(reloadBuffer.getBuffer());
-            for (int tid = 0; tid < accessorBuild.getTupleCount(); tid++) {
+            spillReadCount++;
+            for (int tid = buildParitialNextTid > 0 ? buildParitialNextTid : 0; tid < accessorBuild
+                    .getTupleCount(); tid++) {
                 if (!buildBufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
-                    // for some reason (e.g. due to fragmentation) if the inserting failed, we need to clear the occupied frames
-                    buildBufferManager.clearPartition(pid);
+                    // for some reason (e.g. due to fragmentation) if the inserting failed
+                    // we need to start this partition from this location on the next round.
+                    buildParitialLoadPid = pid;
+                    buildParitialNextTid = tid;
+                    buildParitialResetReader = r.getReadPointer();
+                    ipjd.buildLoad(pid);
+                    createInMemoryJoiner(pid);
                     r.close();
                     return false;
                 }
             }
-            spillReadCount++;
+        }
+        if (framesLoaded == 0) {
+            int t = 0;
         }
 
-        r.close();
         ipjd.buildLoad(pid);
+        createInMemoryJoiner(pid);
+        r.close();
         buildRFWriters[pid] = null;
+        buildParitialLoadPid = -1;
+        buildParitialNextTid = -1;
+        buildParitialResetReader = -1;
         return true;
     }
 
-    private int selectPartitionsToReload(int freeSpace, int pid) {
-        for (int id = ipjd.buildNextSpilled(0); id >= 0; id = ipjd.buildNextSpilled(id + 1)) {
+    private int selectPartitionsToReload(int freeFrames, int pid, boolean partitalLoad) {
+        int freeSpace = freeFrames * ctx.getInitialFrameSize();
+        if (freeSpace > 0 && buildParitialLoadPid > 0 && buildParitialResetReader > 0) {
+            return buildParitialLoadPid;
+        }
+        for (int id = ipjd.buildNextSpilled(pid); id >= 0; id = ipjd.buildNextSpilled(id + 1)) {
             assert buildRFWriters[id].getFileSize() > 0 : "How come a spilled partition have size 0?";
-            if (freeSpace >= buildRFWriters[id].getFileSize()) {
+            if (partitalLoad || freeSpace >= buildRFWriters[id].getFileSize()) {
                 return id;
             }
         }
@@ -366,20 +395,24 @@ public class IntervalPartitionJoiner {
         inMemJoiner[pid] = null;
     }
 
-    public void initProbe() throws HyracksDataException {
-        int probeMemory = numOfPartitions > memForJoin ? memForJoin : numOfPartitions;
-        probeBufferManager = new VPartitionTupleBufferManager(ctx, getPartitionMemoryConstrain(), numOfPartitions,
-                (probeMemory) * ctx.getInitialFrameSize());
-
+    public void probeInit() throws HyracksDataException {
         probeRFWriters = new RunFileWriter[numOfPartitions];
+        probeSize = 0;
     }
 
-    public void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
+    public void probeStep(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
         accessorProbe.reset(buffer);
         int tupleCount = accessorProbe.getTupleCount();
 
         for (int i = 0; i < tupleCount; ++i) {
             int pid = probeHpc.partition(accessorProbe, i, k);
+
+            if (tmp != pid) {
+                System.err.println("probeSize: " + probeSize + " pid: " + pid + " k: " + k + " pair: "
+                        + IntervalPartitionUtil.getIntervalPartition(pid, k));
+                tmp = pid;
+            }
+
             if (!ipjd.hasProbeJoinMap(pid)) {
                 // Set probe join map
                 ipjd.setProbeJoinMap(pid,
@@ -390,23 +423,7 @@ public class IntervalPartitionJoiner {
             if (!ipjd.isProbeJoinMapEmpty(pid)) {
                 if (ipjd.probeHasSpilled(pid)) {
                     // pid is Spilled
-                    while (!probeBufferManager.insertTuple(pid, accessorProbe, i, tempPtr)) {
-                        int victim = pid;
-                        if (probeBufferManager.getNumTuples(pid) == 0) {
-                            // current pid is empty, choose the biggest one
-                            victim = selectLargestSpilledPartition();
-                        }
-                        if (victim < 0) {
-                            // current tuple is too big for all the free space
-                            flushBigProbeObjectToDisk(pid, accessorProbe, i);
-                            break;
-                        }
-                        RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(victim, SIDE.PROBE);
-                        spillCount++;
-                        spillWriteCount += probeBufferManager.getNumFrames(pid);
-                        probeBufferManager.flushPartition(victim, runFileWriter);
-                        probeBufferManager.clearPartition(victim);
-                    }
+                    probeSpillTuple(accessorProbe, i, pid);
                 }
                 for (Iterator<Integer> pidIterator = ipjd.getProbeJoinMap(pid); pidIterator.hasNext();) {
                     // pid has join partitions that are Resident
@@ -417,33 +434,43 @@ public class IntervalPartitionJoiner {
                 }
             }
             ipjd.probeIncrementCount(pid);
+            probeSize++;
         }
     }
 
-    public void closeProbe(IFrameWriter writer) throws HyracksDataException {
-        // We do NOT join the spilled partitions here, that decision is made at the descriptor level (which join technique to use)
+    /**
+     * Closes the probe process.
+     * We do NOT join the spilled partitions here, use {@link joinSpilledPartitions}.
+     *
+     * @param writer
+     * @throws HyracksDataException
+     */
+    public void probeClose(IFrameWriter writer) throws HyracksDataException {
+        System.err.println("probeSize: " + probeSize);
+
         for (int i = 0; i < inMemJoiner.length; ++i) {
             if (inMemJoiner[i] != null) {
                 closeInMemoryJoiner(i, writer);
                 ipjd.buildLogJoined(i);
+                ipjd.buildRemoveFromJoin(i);
             }
         }
         clearBuildMemory();
-        flushAndClearProbeSpilledPartition();
-        probeBufferManager.close();
-        probeBufferManager = null;
+        flushProbeSpilledPartition();
     }
 
-    private void flushBigProbeObjectToDisk(int pid, FrameTupleAccessor accessorProbe, int i)
+    private void probeSpillTuple(IFrameTupleAccessor accessorProbe, int probeTupleIndex, int pid)
             throws HyracksDataException {
-        if (bigProbeFrameAppender == null) {
-            bigProbeFrameAppender = new FrameTupleAppender(new VSizeFrame(ctx));
+        if (pid != probeRunFilePid) {
+            flushProbeSpilledPartition();
+            probeRunFileWriter = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.PROBE);
+            probeRunFilePid = pid;
         }
-        RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(pid, SIDE.PROBE);
-        if (!bigProbeFrameAppender.append(accessorProbe, i)) {
-            throw new HyracksDataException("The given tuple is too big");
+        if (!probeRunFileAppender.append(accessorProbe, probeTupleIndex)) {
+            probeRunFileAppender.write(probeRunFileWriter, true);
+            probeRunFileAppender.append(accessorProbe, probeTupleIndex);
+            spillWriteCount++;
         }
-        bigProbeFrameAppender.write(runFileWriter, true);
     }
 
     public RunFileReader getBuildRFReader(int pid) throws HyracksDataException {
@@ -456,42 +483,28 @@ public class IntervalPartitionJoiner {
 
     public void joinSpilledPartitions(IFrameWriter writer) throws HyracksDataException {
         LinkedHashMap<Integer, LinkedHashSet<Integer>> probeInMemoryJoinMap;
-        if (reloadBuffer == null) {
-            reloadBuffer = new VSizeFrame(ctx);
-        }
-        HashSet<Integer> inMemory = new HashSet<>();
         while (ipjd.buildGetSpilledCount() > 0) {
             // Load back spilled build partitions.
             // TODO only load partition required for spill join. Consider both sides.
-            bringBackSpilledPartitionIfHasMoreMemory();
+            bringBackSpilledPartitionIfHasMoreMemory(true);
+
+            // Create in memory joiners.
+            //            for (int pid = ipjd.buildNextInMemoryWithResults(0); pid >= 0; pid = ipjd
+            //                    .buildNextInMemoryWithResults(pid + 1)) {
+            //                createInMemoryJoiner(pid);
+            //            }
 
             probeInMemoryJoinMap = ipjd.probeGetInMemoryJoinMap();
 
-            // Create in memory joiners.
-            for (int pid = ipjd.buildNextInMemoryWithResults(0); pid >= 0; pid = ipjd
-                    .buildNextInMemoryWithResults(pid + 1)) {
-                createInMemoryJoiner(pid);
-                inMemory.add(pid);
-            }
-
             // Join all build partitions with disk probe partitions.
             for (Entry<Integer, LinkedHashSet<Integer>> entry : probeInMemoryJoinMap.entrySet()) {
-                if (ipjd.probeGetCount(entry.getKey()) > 0 && probeInMemoryJoinMap.get(entry.getKey()).isEmpty()) {
-                    RunFileReader pReader = getProbeRFReader(entry.getKey());
-                    pReader.open();
-                    while (pReader.nextFrame(reloadBuffer)) {
-                        accessorProbe.reset(reloadBuffer.getBuffer());
-                        for (int i = 0; i < accessorProbe.getTupleCount(); ++i) {
-                            // Tuple has potential match from build phase
-                            for (Integer j : probeInMemoryJoinMap.get(entry.getKey())) {
-                                // j has join partitions that are Resident
-                                if (inMemJoiner[j] != null) {
-                                    inMemJoiner[j].join(accessorProbe, i, writer);
-                                }
-                            }
-                        }
-                    }
-                    pReader.close();
+                if (entry.getKey() == 221) {
+                    int t = 0;
+                }
+                System.err.println(" join pid: " + entry.getKey() + " with : " + probeInMemoryJoinMap);
+
+                if (ipjd.probeGetCount(entry.getKey()) > 0 && !probeInMemoryJoinMap.get(entry.getKey()).isEmpty()) {
+                    joinSpilledProbeWithBuildMemory(writer, probeInMemoryJoinMap, entry.getKey());
                 }
             }
 
@@ -499,11 +512,36 @@ public class IntervalPartitionJoiner {
             for (int pid = ipjd.buildNextInMemoryWithResults(0); pid >= 0; pid = ipjd
                     .buildNextInMemoryWithResults(pid + 1)) {
                 closeInMemoryJoiner(pid, writer);
-                ipjd.buildLogJoined(pid);
+                if (pid != buildParitialLoadPid) {
+                    ipjd.buildLogJoined(pid);
+                    ipjd.buildRemoveFromJoin(pid);
+                } else {
+                    int t = 0;
+                }
             }
-            inMemory.clear();
             clearBuildMemory();
         }
+    }
+
+    private void joinSpilledProbeWithBuildMemory(IFrameWriter writer,
+            LinkedHashMap<Integer, LinkedHashSet<Integer>> probeInMemoryJoinMap, int probePid)
+            throws HyracksDataException {
+        RunFileReader pReader = getProbeRFReader(probePid);
+        pReader.open();
+        while (pReader.nextFrame(reloadBuffer)) {
+            accessorProbe.reset(reloadBuffer.getBuffer());
+            spillReadCount++;
+            for (int i = 0; i < accessorProbe.getTupleCount(); ++i) {
+                // Tuple has potential match from build phase
+                for (Integer j : probeInMemoryJoinMap.get(probePid)) {
+                    // j has join partitions that are Resident
+                    if (inMemJoiner[j] != null) {
+                        inMemJoiner[j].join(accessorProbe, i, writer);
+                    }
+                }
+            }
+        }
+        pReader.close();
     }
 
     class IntervalPartitionJoinData {
@@ -553,6 +591,10 @@ public class IntervalPartitionJoiner {
                     probeSpilledStatus.set(pid);
                 }
             }
+        }
+
+        public void buildClearMemory() {
+            buildInMemoryStatus.clear();
         }
 
         public void buildIncrementCount(int pid) {
@@ -676,8 +718,7 @@ public class IntervalPartitionJoiner {
         }
         if (LOGGER.isLoggable(Level.WARNING)) {
             LOGGER.warning("IntervalPartitionJoiner statitics: " + joinComparisonCount + " comparisons, "
-                    + joinResultCount + " results, " + spillCount + " spills, " + spillWriteCount
-                    + " spill frames written, " + spillReadCount + " spill frames read.");
+                    + joinResultCount + " results, " + spillWriteCount + " written, " + spillReadCount + " read.");
         }
     }
 

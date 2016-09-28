@@ -50,6 +50,14 @@ public class RunFileStream {
     private long writeCount = 0;
     private long tupleCount = 0;
 
+    /**
+     * The RunFileSream uses two frames to buffer read and write operations.
+     *
+     * @param ctx
+     * @param key
+     * @param status
+     * @throws HyracksDataException
+     */
     public RunFileStream(IHyracksTaskContext ctx, String key, IRunFileStreamStatus status) throws HyracksDataException {
         this.ctx = ctx;
         this.key = key;

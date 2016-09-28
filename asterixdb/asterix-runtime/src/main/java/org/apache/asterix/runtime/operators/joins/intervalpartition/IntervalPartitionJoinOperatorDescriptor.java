@@ -159,7 +159,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                     state.ipj = new IntervalPartitionJoiner(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
                             BUILD_REL, PROBE_REL, imjc, buildRd, probeRd, buildHpc, probeHpc);
 
-                    state.ipj.initBuild();
+                    state.ipj.buildInit();
                     LOGGER.setLevel(Level.FINE);
                     System.out.println("IntervalPartitionJoinOperatorDescriptor: Logging level is: " + LOGGER.getLevel());
                     if (LOGGER.isLoggable(Level.FINE)) {
@@ -171,13 +171,13 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    state.ipj.build(buffer);
+                    state.ipj.buildStep(buffer);
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
                     if (!failure) {
-                        state.ipj.closeBuild();
+                        state.ipj.buildClose();
                         ctx.setStateObject(state);
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine("IntervalPartitionJoin closed its build phase");
@@ -216,7 +216,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                             new TaskId(new ActivityId(getOperatorId(), BUILD_AND_PARTITION_ACTIVITY_ID), partition));
 
                     writer.open();
-                    state.ipj.initProbe();
+                    state.ipj.probeInit();
 
                     if (LOGGER.isLoggable(Level.FINE)) {
                         LOGGER.fine("IntervalPartitionJoin is starting the probe phase.");
@@ -225,7 +225,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    state.ipj.probe(buffer, writer);
+                    state.ipj.probeStep(buffer, writer);
                 }
 
                 @Override
@@ -235,7 +235,7 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.ipj.closeProbe(writer);
+                    state.ipj.probeClose(writer);
                     state.ipj.joinSpilledPartitions(writer);
                     state.ipj.closeAndDeleteRunFiles();
                     writer.close();
