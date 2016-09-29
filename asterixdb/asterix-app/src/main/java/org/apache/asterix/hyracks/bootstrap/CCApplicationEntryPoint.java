@@ -95,7 +95,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
+        appCtx.setThreadFactory(new AsterixThreadFactory(appCtx.getThreadFactory(), new LifeCycleComponentManager()));
         GlobalRecoveryManager.instantiate((HyracksConnection) getNewHyracksClientConnection());
         ILibraryManager libraryManager = new ExternalLibraryManager();
         AsterixResourceIdManager resourceIdManager = new AsterixResourceIdManager();

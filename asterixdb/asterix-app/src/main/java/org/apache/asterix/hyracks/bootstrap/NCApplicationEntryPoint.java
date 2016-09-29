@@ -95,7 +95,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             throw e;
         }
 
-        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
+        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getThreadFactory(),
+                ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {

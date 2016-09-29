@@ -16,27 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.api;
+package org.apache.hyracks.control.common.utils;
 
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+public class HyracksThreadFactory implements ThreadFactory {
+    private final String identifier;
+    private final AtomicInteger threadId = new AtomicInteger();
 
-public class AsterixThreadFactory implements ThreadFactory {
-
-    private final ThreadFactory delegate;
-    private final ILifeCycleComponentManager lccm;
-
-    public AsterixThreadFactory(ThreadFactory delegate, ILifeCycleComponentManager lifeCycleComponentManager) {
-        this.delegate = delegate;
-        this.lccm = lifeCycleComponentManager;
+    public HyracksThreadFactory(String identifier) {
+        this.identifier = identifier;
     }
 
     @Override
     public Thread newThread(Runnable runnable) {
-        Thread thread = delegate.newThread(runnable);
-        thread.setUncaughtExceptionHandler(lccm);
-        return thread;
+        Thread t = new Thread(runnable, "Executor-" + threadId.incrementAndGet() + ":" + identifier);
+        t.setDaemon(true);
+        return t;
     }
-
 }

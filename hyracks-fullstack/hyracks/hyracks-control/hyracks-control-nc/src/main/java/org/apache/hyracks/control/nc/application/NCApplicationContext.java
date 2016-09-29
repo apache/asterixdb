@@ -32,6 +32,7 @@ import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.common.application.ApplicationContext;
 import org.apache.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 
@@ -48,7 +49,7 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     public NCApplicationContext(NodeControllerService ncs, ServerContext serverCtx, IHyracksRootContext rootCtx,
             String nodeId, MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager,
             IApplicationConfig appConfig) throws IOException {
-        super(serverCtx, appConfig);
+        super(serverCtx, appConfig, new HyracksThreadFactory(nodeId));
         this.lccm = lifeCyclecomponentManager;
         this.nodeId = nodeId;
         this.rootCtx = rootCtx;

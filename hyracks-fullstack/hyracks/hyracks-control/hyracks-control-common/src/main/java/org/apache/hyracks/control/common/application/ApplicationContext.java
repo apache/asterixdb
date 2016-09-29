@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.common.application;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
@@ -30,22 +29,17 @@ import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.context.ServerContext;
 
 public abstract class ApplicationContext implements IApplicationContext {
-    protected ServerContext serverCtx;
+    protected final ServerContext serverCtx;
+    protected final IApplicationConfig appConfig;
+    protected ThreadFactory threadFactory;
     protected Serializable distributedState;
     protected IMessageBroker messageBroker;
-    protected final IApplicationConfig appConfig;
     protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
-    protected ThreadFactory threadFactory = new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            return t;
-        }
-    };
 
-    public ApplicationContext(ServerContext serverCtx, IApplicationConfig appConfig) {
+    public ApplicationContext(ServerContext serverCtx, IApplicationConfig appConfig, ThreadFactory threadFactory) {
         this.serverCtx = serverCtx;
         this.appConfig = appConfig;
+        this.threadFactory = threadFactory;
     }
 
     @Override
