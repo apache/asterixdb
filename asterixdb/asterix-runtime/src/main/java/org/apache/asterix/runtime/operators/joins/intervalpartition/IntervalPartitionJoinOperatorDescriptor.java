@@ -67,11 +67,11 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinOperatorDescriptor.class.getName());
 
-    public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int k, int[] leftKeys,
-            int[] rightKeys, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory imjcf,
+    public IntervalPartitionJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memoryForJoin, int k,
+            int[] leftKeys, int[] rightKeys, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory imjcf,
             RangeId rangeId) {
         super(spec, 2, 1);
-        this.memsize = memsize;
+        this.memsize = memoryForJoin;
         this.buildKey = leftKeys[0];
         this.probeKey = rightKeys[0];
         this.k = k;
@@ -161,7 +161,8 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
 
                     state.ipj.buildInit();
                     LOGGER.setLevel(Level.FINE);
-                    System.out.println("IntervalPartitionJoinOperatorDescriptor: Logging level is: " + LOGGER.getLevel());
+                    System.out
+                            .println("IntervalPartitionJoinOperatorDescriptor: Logging level is: " + LOGGER.getLevel());
                     if (LOGGER.isLoggable(Level.FINE)) {
                         LOGGER.fine("IntervalPartitionJoin is starting the build phase with " + state.k
                                 + " granules repesenting " + state.intervalPartitions + " interval partitions using "

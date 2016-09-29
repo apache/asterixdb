@@ -80,6 +80,29 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
         resultAppender = new FrameTupleAppender(new VSizeFrame(ctx));
     }
 
+    public void setLeftFrame(ByteBuffer buffer) {
+        setFrame(LEFT_PARTITION, buffer);
+    }
+
+    public void setRightFrame(ByteBuffer buffer) {
+        setFrame(RIGHT_PARTITION, buffer);
+    }
+
+    protected TupleStatus loadMemoryTuple(int branch) {
+        TupleStatus loaded;
+        if (inputAccessor[branch] != null && inputAccessor[branch].exists()) {
+            // Still processing frame.
+            int test = inputAccessor[branch].getTupleCount();
+            loaded = TupleStatus.LOADED;
+        } else if (status.branch[branch].hasMore()) {
+            loaded = TupleStatus.UNKNOWN;
+        } else {
+            // No more frames or tuples to process.
+            loaded = TupleStatus.EMPTY;
+        }
+        return loaded;
+    }
+
     protected TupleStatus pauseAndLoadRightTuple() {
         status.continueRightLoad = true;
         locks.getRight(partition).signal();
@@ -97,21 +120,6 @@ public abstract class AbstractMergeJoiner implements IMergeJoiner {
             return TupleStatus.EMPTY;
         }
         return TupleStatus.LOADED;
-    }
-
-    protected TupleStatus loadMemoryTuple(int branch) {
-        TupleStatus loaded;
-        if (inputAccessor[branch] != null && inputAccessor[branch].exists()) {
-            // Still processing frame.
-            int test = inputAccessor[branch].getTupleCount();
-            loaded = TupleStatus.LOADED;
-        } else if (status.branch[branch].hasMore()) {
-            loaded = TupleStatus.UNKNOWN;
-        } else {
-            // No more frames or tuples to process.
-            loaded = TupleStatus.EMPTY;
-        }
-        return loaded;
     }
 
     @Override

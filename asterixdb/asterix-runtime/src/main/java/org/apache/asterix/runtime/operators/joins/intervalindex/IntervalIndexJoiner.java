@@ -141,24 +141,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         joinResultCount++;
     }
 
-    @Override
-    public void closeResult(IFrameWriter writer) throws HyracksDataException {
-        resultAppender.write(writer, true);
-        activeManager[LEFT_PARTITION].clear();
-        activeManager[RIGHT_PARTITION].clear();
-        runFileStream[LEFT_PARTITION].close();
-        runFileStream[RIGHT_PARTITION].close();
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("IntervalIndexJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
-                    + " results, left[" + leftSpillCount + " spills, " + runFileStream[LEFT_PARTITION].getFileCount()
-                    + " files, " + runFileStream[LEFT_PARTITION].getWriteCount() + " written, "
-                    + runFileStream[LEFT_PARTITION].getReadCount() + " read]. right[" + rightSpillCount + " spills, "
-                    + runFileStream[RIGHT_PARTITION].getFileCount() + " files, "
-                    + runFileStream[RIGHT_PARTITION].getWriteCount() + " written, "
-                    + runFileStream[RIGHT_PARTITION].getReadCount() + " read].");
-        }
-    }
-
     private void flushMemory(int partition) throws HyracksDataException {
         activeManager[partition].clear();
     }
@@ -209,7 +191,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
     }
 
     @Override
-    public void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException {
+    public void processLeftFrame(IFrameWriter writer) throws HyracksDataException {
         TupleStatus leftTs = loadLeftTuple();
         TupleStatus rightTs = loadRightTuple();
         while (leftTs.isKnown() && checkHasMoreProcessing(leftTs, LEFT_PARTITION, RIGHT_PARTITION)
@@ -232,6 +214,27 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 }
             }
         }
+    }
+
+    @Override
+    public void processLeftClose(IFrameWriter writer) throws HyracksDataException {
+        processLeftFrame(writer);
+
+        resultAppender.write(writer, true);
+        activeManager[LEFT_PARTITION].clear();
+        activeManager[RIGHT_PARTITION].clear();
+        runFileStream[LEFT_PARTITION].close();
+        runFileStream[RIGHT_PARTITION].close();
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("IntervalIndexJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
+                    + " results, left[" + leftSpillCount + " spills, " + runFileStream[LEFT_PARTITION].getFileCount()
+                    + " files, " + runFileStream[LEFT_PARTITION].getWriteCount() + " written, "
+                    + runFileStream[LEFT_PARTITION].getReadCount() + " read]. right[" + rightSpillCount + " spills, "
+                    + runFileStream[RIGHT_PARTITION].getFileCount() + " files, "
+                    + runFileStream[RIGHT_PARTITION].getWriteCount() + " written, "
+                    + runFileStream[RIGHT_PARTITION].getReadCount() + " read].");
+        }
+
     }
 
     private boolean checkHasMoreProcessing(TupleStatus ts, int partition, int joinPartition) {
@@ -491,11 +494,6 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Unfreezing (" + frozenPartition + ").");
         }
-    }
-
-    @Override
-    public void closeInput(int partition) throws HyracksDataException {
-        // No changes are required.
     }
 
 }

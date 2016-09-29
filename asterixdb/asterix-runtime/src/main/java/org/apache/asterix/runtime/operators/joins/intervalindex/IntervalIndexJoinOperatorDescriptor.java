@@ -151,7 +151,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                 }
                 try {
                     state.indexJoiner.setFrame(LEFT_ACTIVITY_ID, buffer);
-                    state.indexJoiner.processMergeUsingLeftTuple(writer);
+                    state.indexJoiner.processLeftFrame(writer);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -175,8 +175,7 @@ public class IntervalIndexJoinOperatorDescriptor extends AbstractOperatorDescrip
                     if (state.failed) {
                         writer.fail();
                     } else {
-                        state.indexJoiner.processMergeUsingLeftTuple(writer);
-                        state.indexJoiner.closeResult(writer);
+                        state.indexJoiner.processLeftClose(writer);
                         writer.close();
                     }
                     state.status.branch[LEFT_ACTIVITY_ID].setStageClose();

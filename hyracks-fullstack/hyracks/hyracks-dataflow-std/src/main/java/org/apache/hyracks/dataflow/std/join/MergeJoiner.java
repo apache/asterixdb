@@ -110,17 +110,6 @@ public class MergeJoiner extends AbstractMergeJoiner {
         joinResultCount++;
     }
 
-    @Override
-    public void closeResult(IFrameWriter writer) throws HyracksDataException {
-        resultAppender.write(writer, true);
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("MergeJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
-                    + " results, " + spillCount + " spills, " + runFileStream.getFileCount() + " files, "
-                    + runFileStream.getWriteCount() + " spill frames written, " + runFileStream.getReadCount()
-                    + " spill frames read.");
-        }
-    }
-
     private void flushMemory() throws HyracksDataException {
         memoryBuffer.clear();
         bufferManager.reset();
@@ -176,20 +165,13 @@ public class MergeJoiner extends AbstractMergeJoiner {
         return TupleStatus.LOADED;
     }
 
-    @Override
-    public void closeInput(int partition) throws HyracksDataException {
-        if (status.branch[partition].isRunFileWriting()) {
-            unfreezeAndContinue(inputAccessor[partition]);
-        }
-    }
-
     /**
      * Left
      *
      * @throws HyracksDataException
      */
     @Override
-    public void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException {
+    public void processLeftFrame(IFrameWriter writer) throws HyracksDataException {
         TupleStatus leftTs = loadLeftTuple();
         TupleStatus rightTs = loadRightTuple();
         while (leftTs.isLoaded() && (status.branch[RIGHT_PARTITION].hasMore() || memoryHasTuples())) {
@@ -206,6 +188,21 @@ public class MergeJoiner extends AbstractMergeJoiner {
                 processLeftTuple(writer);
                 leftTs = loadLeftTuple();
             }
+        }
+    }
+
+    @Override
+    public void processLeftClose(IFrameWriter writer) throws HyracksDataException {
+        if (status.branch[LEFT_PARTITION].isRunFileWriting()) {
+            unfreezeAndContinue(inputAccessor[LEFT_PARTITION]);
+        }
+        processLeftFrame(writer);
+        resultAppender.write(writer, true);
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("MergeJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
+                    + " results, " + spillCount + " spills, " + runFileStream.getFileCount() + " files, "
+                    + runFileStream.getWriteCount() + " spill frames written, " + runFileStream.getReadCount()
+                    + " spill frames read.");
         }
     }
 

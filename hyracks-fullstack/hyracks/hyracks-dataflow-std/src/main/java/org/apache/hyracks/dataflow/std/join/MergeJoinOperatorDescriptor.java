@@ -151,7 +151,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                 }
                 try {
                     state.joiner.setFrame(LEFT_ACTIVITY_ID, buffer);
-                    state.joiner.processMergeUsingLeftTuple(writer);
+                    state.joiner.processLeftFrame(writer);
                 } finally {
                     locks.getLock(partition).unlock();
                 }
@@ -175,9 +175,7 @@ public class MergeJoinOperatorDescriptor extends AbstractOperatorDescriptor {
                     if (state.failed) {
                         writer.fail();
                     } else {
-                        state.joiner.closeInput(LEFT_ACTIVITY_ID);
-                        state.joiner.processMergeUsingLeftTuple(writer);
-                        state.joiner.closeResult(writer);
+                        state.joiner.processLeftClose(writer);
                         writer.close();
                     }
                     state.status.branch[LEFT_ACTIVITY_ID].setStageClose();

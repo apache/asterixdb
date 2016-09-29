@@ -25,12 +25,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IMergeJoiner {
 
-    void closeResult(IFrameWriter writer) throws HyracksDataException;
+    void processLeftFrame(IFrameWriter writer) throws HyracksDataException;
 
-    void processMergeUsingLeftTuple(IFrameWriter writer) throws HyracksDataException;
+    void processLeftClose(IFrameWriter writer) throws HyracksDataException;
 
     void setFrame(int partition, ByteBuffer buffer);
-
-    void closeInput(int partition) throws HyracksDataException;
 
 }
