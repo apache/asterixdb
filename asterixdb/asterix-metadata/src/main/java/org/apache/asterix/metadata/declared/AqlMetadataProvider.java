@@ -1833,7 +1833,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         // One token (+ optional partitioning field) + primary keys: [token,
         // number of token, PK]
         int numKeys = primaryKeys.size() + secondaryKeys.size();
-        int numTokenKeyPairFields = (!isPartitioned) ? 1 + primaryKeys.size() : 2 + primaryKeys.size();
         int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
 
         // generate field permutations
@@ -1960,8 +1959,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
 
                 filterFieldsForNonBulkLoadOps = new int[numFilterFields];
-                filterFieldsForNonBulkLoadOps[0] = numTokenKeyPairFields;
-                invertedIndexFieldsForNonBulkLoadOps = new int[numTokenKeyPairFields];
+                //for non-bulk-loads, there is only <SK,PK,F> in the incoming tuples
+                filterFieldsForNonBulkLoadOps[0] = numKeys;
+                invertedIndexFieldsForNonBulkLoadOps = new int[numKeys];
                 for (int k = 0; k < invertedIndexFieldsForNonBulkLoadOps.length; k++) {
                     invertedIndexFieldsForNonBulkLoadOps[k] = k;
                 }
