@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
-import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
@@ -39,6 +38,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.SessionConfig;
 import org.junit.Assert;
 import org.junit.Test;
 

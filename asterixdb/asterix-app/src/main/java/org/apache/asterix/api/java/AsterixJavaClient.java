@@ -25,8 +25,6 @@ import java.util.List;
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.Job;
 import org.apache.asterix.app.translator.QueryTranslator;
-import org.apache.asterix.common.app.SessionConfig;
-import org.apache.asterix.common.app.SessionConfig.OutputFormat;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -34,6 +32,8 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobSpecification;
 

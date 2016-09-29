@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.app;
+package org.apache.asterix.translator;
 
 import java.io.PrintWriter;
 import java.util.HashMap;

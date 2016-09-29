@@ -20,7 +20,6 @@ package org.apache.asterix.translator;
 
 import java.util.List;
 
-import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 
