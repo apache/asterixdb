@@ -216,7 +216,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
 
         isShuttingdown = false;
 
-        activeManager = new ActiveManager(ncApplicationContext.getNodeId(),
+        activeManager = new ActiveManager(threadExecutor, ncApplicationContext.getNodeId(),
                 feedProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize());
 
         if (ClusterProperties.INSTANCE.isReplicationEnabled()) {

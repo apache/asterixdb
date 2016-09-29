@@ -18,13 +18,12 @@
  */
 package org.apache.asterix.external.feed.runtime;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.log4j.Logger;
 
 /**
@@ -42,45 +41,42 @@ public class AdapterRuntimeManager {
 
     private final int partition; // The partition number
 
-    private final ExecutorService executorService; // Executor service to run/shutdown the adapter executor
+    private final IHyracksTaskContext ctx;
 
     private IngestionRuntime ingestionRuntime; // Runtime representing the ingestion stage of a feed
+
+    private Future<?> execution;
 
     private volatile boolean done = false;
     private volatile boolean failed = false;
 
-    public AdapterRuntimeManager(EntityId entityId, FeedAdapter feedAdapter, IFrameWriter writer, int partition) {
+    public AdapterRuntimeManager(IHyracksTaskContext ctx, EntityId entityId, FeedAdapter feedAdapter,
+                                 IFrameWriter writer, int partition) {
+        this.ctx = ctx;
         this.feedId = entityId;
         this.feedAdapter = feedAdapter;
         this.partition = partition;
         this.adapterExecutor = new AdapterExecutor(writer, feedAdapter, this);
-        this.executorService = Executors.newSingleThreadExecutor();
     }
 
     public void start() {
-        executorService.execute(adapterExecutor);
+        execution = ctx.getExecutorService().submit(adapterExecutor);
     }
 
     public void stop() throws InterruptedException {
-        boolean stopped = false;
         try {
-            stopped = feedAdapter.stop();
-        } catch (Exception exception) {
-            LOGGER.error("Unable to stop adapter " + feedAdapter, exception);
-        } finally {
-            if (stopped) {
+            if (feedAdapter.stop()) {
                 // stop() returned true, we wait for the process termination
-                executorService.shutdown();
-                try {
-                    executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    LOGGER.error("Interrupted while waiting for feed adapter to finish its work", e);
-                    throw e;
-                }
+                execution.get();
             } else {
                 // stop() returned false, we try to force shutdown
-                executorService.shutdownNow();
+                execution.cancel(true);
             }
+        } catch (InterruptedException e) {
+            LOGGER.error("Interrupted while waiting for feed adapter to finish its work", e);
+            throw e;
+        } catch (Exception exception) {
+            LOGGER.error("Unable to stop adapter " + feedAdapter, exception);
         }
     }
 
