@@ -61,7 +61,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
     private final int[] streamIndex;
     private final RunFileStream[] runFileStream;
 
-//    private final LinkedList<TuplePointer> buffer = new LinkedList<>();
+    //    private final LinkedList<TuplePointer> buffer = new LinkedList<>();
 
     private final IIntervalMergeJoinChecker imjc;
 
@@ -342,7 +342,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 if (activeManager[LEFT_PARTITION].addTuple(inputAccessor[LEFT_PARTITION], tp)) {
                     processTupleJoin(activeManager[RIGHT_PARTITION].getActiveList(), memoryAccessor[RIGHT_PARTITION],
                             inputAccessor[LEFT_PARTITION], true, writer);
-//                    buffer.add(tp);
+                    //                    buffer.add(tp);
                 } else {
                     // Spill case
                     freezeAndSpill();
@@ -356,10 +356,10 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         } while (loadLeftTuple().isLoaded() && loadRightTuple().isLoaded() && !checkToProcessRightTuple());
 
         // Add Results
-//        if (!buffer.isEmpty()) {
-//            processActiveJoin(activeManager[RIGHT_PARTITION].getActiveList(), memoryAccessor[RIGHT_PARTITION], buffer,
-//                    memoryAccessor[LEFT_PARTITION], true, writer);
-//        }
+        //        if (!buffer.isEmpty()) {
+        //            processActiveJoin(activeManager[RIGHT_PARTITION].getActiveList(), memoryAccessor[RIGHT_PARTITION], buffer,
+        //                    memoryAccessor[LEFT_PARTITION], true, writer);
+        //        }
     }
 
     private void processRightTuple(IFrameWriter writer) throws HyracksDataException {
@@ -374,7 +374,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 if (activeManager[RIGHT_PARTITION].addTuple(inputAccessor[RIGHT_PARTITION], tp)) {
                     processTupleJoin(activeManager[LEFT_PARTITION].getActiveList(), memoryAccessor[LEFT_PARTITION],
                             inputAccessor[RIGHT_PARTITION], false, writer);
-//                    buffer.add(tp);
+                    //                    buffer.add(tp);
                 } else {
                     // Spill case
                     freezeAndSpill();
@@ -388,32 +388,32 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
         } while (loadRightTuple().isLoaded() && checkToProcessRightTuple());
 
         // Add Results
-//        if (!buffer.isEmpty()) {
-//            processActiveJoin(activeManager[LEFT_PARTITION].getActiveList(), memoryAccessor[LEFT_PARTITION], buffer,
-//                    memoryAccessor[RIGHT_PARTITION], false, writer);
-//        }
+        //        if (!buffer.isEmpty()) {
+        //            processActiveJoin(activeManager[LEFT_PARTITION].getActiveList(), memoryAccessor[LEFT_PARTITION], buffer,
+        //                    memoryAccessor[RIGHT_PARTITION], false, writer);
+        //        }
     }
 
-//    private void processActiveJoin(List<TuplePointer> outer, ITuplePointerAccessor outerAccessor,
-//            List<TuplePointer> inner, ITuplePointerAccessor innerAccessor, boolean reversed, IFrameWriter writer)
-//            throws HyracksDataException {
-//        for (TuplePointer outerTp : outer) {
-//            outerAccessor.reset(outerTp);
-//            for (TuplePointer innerTp : inner) {
-//                innerAccessor.reset(innerTp);
-//                if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor,
-//                        innerTp.getTupleIndex(), reversed)) {
-//                    addToResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(),
-//                            reversed, writer);
-//                }
-//                joinComparisonCount++;
-//            }
-//        }
-//        if (LOGGER.isLoggable(Level.FINE)) {
-//            LOGGER.fine("Sweep for " + buffer.size() + " tuples");
-//        }
-//        buffer.clear();
-//    }
+    //    private void processActiveJoin(List<TuplePointer> outer, ITuplePointerAccessor outerAccessor,
+    //            List<TuplePointer> inner, ITuplePointerAccessor innerAccessor, boolean reversed, IFrameWriter writer)
+    //            throws HyracksDataException {
+    //        for (TuplePointer outerTp : outer) {
+    //            outerAccessor.reset(outerTp);
+    //            for (TuplePointer innerTp : inner) {
+    //                innerAccessor.reset(innerTp);
+    //                if (imjc.checkToSaveInResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor,
+    //                        innerTp.getTupleIndex(), reversed)) {
+    //                    addToResult(outerAccessor, outerTp.getTupleIndex(), innerAccessor, innerTp.getTupleIndex(),
+    //                            reversed, writer);
+    //                }
+    //                joinComparisonCount++;
+    //            }
+    //        }
+    //        if (LOGGER.isLoggable(Level.FINE)) {
+    //            LOGGER.fine("Sweep for " + buffer.size() + " tuples");
+    //        }
+    //        buffer.clear();
+    //    }
 
     private void processTupleJoin(List<TuplePointer> outer, ITuplePointerAccessor outerAccessor,
             ITupleAccessor tupleAccessor, boolean reversed, IFrameWriter writer) throws HyracksDataException {

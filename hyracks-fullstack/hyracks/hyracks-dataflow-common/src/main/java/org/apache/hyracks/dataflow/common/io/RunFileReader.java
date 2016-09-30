@@ -105,4 +105,8 @@ public class RunFileReader implements IFrameReader {
     public long getReadPointer() {
         return readPreviousPtr;
     }
+
+    public long getReadPointerCurrent() {
+        return readPtr;
+    }
 }
