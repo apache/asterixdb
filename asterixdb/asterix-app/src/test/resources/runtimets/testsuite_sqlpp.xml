@@ -8134,6 +8134,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">
+      <compilation-unit name="union_negative_3">
+        <output-dir compare="Text">union</output-dir>
+        <expected-error>Operation UNION with set semantics is not supported.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
       <compilation-unit name="union_orderby">
         <output-dir compare="Text">union_orderby</output-dir>
       </compilation-unit>
