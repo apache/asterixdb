@@ -1,19 +1,19 @@
 DataverseUse pull-select-above-eq-join
 TypeDecl UserType [
   open RecordType {
-    uid : int32,
+    uid : integer,
     name : string,
     city : string,
-    lottery_numbers : UnorderedList <int32>
+    lottery_numbers : UnorderedList <integer>
 
   }
 ]
 TypeDecl VisitorType [
   open RecordType {
-    vid : int32,
+    vid : integer,
     name : string,
     city : string,
-    lottery_numbers : UnorderedList <int32>
+    lottery_numbers : UnorderedList <integer>
 
   }
 ]

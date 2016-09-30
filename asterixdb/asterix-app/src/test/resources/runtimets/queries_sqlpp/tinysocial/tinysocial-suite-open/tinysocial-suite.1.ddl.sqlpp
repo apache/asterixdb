@@ -34,11 +34,11 @@ create type TinySocial.TweetMessageType as {
 
 create type TinySocial.FacebookUserType as
  open {
-  id : int64
+  id : bigint
 }
 
 create type TinySocial.FacebookMessageType as
  open {
-  `message-id` : int64
+  `message-id` : bigint
 }
 

@@ -34,7 +34,8 @@ import org.kohsuke.args4j.spi.StopOptionHandler;
 public class NCConfig implements Serializable {
     private static final long serialVersionUID = 2L;
 
-    @Option(name = "-cc-host", usage = "Cluster Controller host name (required unless specified in config file)", required = false)
+    @Option(name = "-cc-host", usage = "Cluster Controller host name (required unless specified in config file)",
+            required = false)
     public String ccHost = null;
 
     @Option(name = "-cc-port", usage = "Cluster Controller port (default: 1099)", required = false)
@@ -43,76 +44,100 @@ public class NCConfig implements Serializable {
     @Option(name = "-address", usage = "IP Address for NC (default: localhost)", required = false)
     public String ipAddress = InetAddress.getLoopbackAddress().getHostAddress();
 
-    @Option(name = "-cluster-net-ip-address", usage = "IP Address to bind cluster listener (default: same as -address)", required = false)
+    @Option(name = "-cluster-net-ip-address", usage = "IP Address to bind cluster listener (default: same as -address)",
+            required = false)
     public String clusterNetIPAddress;
 
-    @Option(name = "-cluster-net-port", usage = "IP port to bind cluster listener (default: random port)", required = false)
+    @Option(name = "-cluster-net-port", usage = "IP port to bind cluster listener (default: random port)",
+            required = false)
     public int clusterNetPort = 0;
 
-    @Option(name = "-cluster-net-public-ip-address", usage = "Public IP Address to announce cluster listener (default: same as -cluster-net-ip-address)", required = false)
+    @Option(name = "-cluster-net-public-ip-address",
+            usage = "Public IP Address to announce cluster listener (default: same as -cluster-net-ip-address)",
+            required = false)
     public String clusterNetPublicIPAddress;
 
-    @Option(name = "-cluster-net-public-port", usage = "Public IP port to announce cluster listener (default: same as -cluster-net-port; must set -cluser-net-public-ip-address also)", required = false)
+    @Option(name = "-cluster-net-public-port",
+            usage = "Public IP port to announce cluster listener (default: same as -cluster-net-port; " +
+                    "must set -cluster-net-public-ip-address also)", required = false)
     public int clusterNetPublicPort = 0;
 
-    @Option(name = "-node-id", usage = "Logical name of node controller unique within the cluster (required unless specified in config file)", required = false)
+    @Option(name = "-node-id", usage = "Logical name of node controller unique within the cluster (required unless " +
+            "specified in config file)", required = false)
     public String nodeId = null;
 
-    @Option(name = "-data-ip-address", usage = "IP Address to bind data listener (default: same as -address)", required = false)
+    @Option(name = "-data-ip-address", usage = "IP Address to bind data listener (default: same as -address)",
+            required = false)
     public String dataIPAddress;
 
     @Option(name = "-data-port", usage = "IP port to bind data listener (default: random port)", required = false)
     public int dataPort = 0;
 
-    @Option(name = "-data-public-ip-address", usage = "Public IP Address to announce data listener (default: same as -data-ip-address)", required = false)
+    @Option(name = "-data-public-ip-address",
+            usage = "Public IP Address to announce data listener (default: same as -data-ip-address)", required = false)
     public String dataPublicIPAddress;
 
-    @Option(name = "-data-public-port", usage = "Public IP port to announce data listener (default: same as -data-port; must set -data-public-ip-address also)", required = false)
+    @Option(name = "-data-public-port",
+            usage = "Public IP port to announce data listener (default: same as -data-port; must set " +
+                    "-data-public-ip-address also)", required = false)
     public int dataPublicPort = 0;
 
-    @Option(name = "-result-ip-address", usage = "IP Address to bind dataset result distribution listener (default: same as -address)", required = false)
+    @Option(name = "-result-ip-address",
+            usage = "IP Address to bind dataset result distribution listener (default: same as -address)",
+            required = false)
     public String resultIPAddress;
 
-    @Option(name = "-result-port", usage = "IP port to bind dataset result distribution listener (default: random port)", required = false)
+    @Option(name = "-result-port",
+            usage = "IP port to bind dataset result distribution listener (default: random port)",
+            required = false)
     public int resultPort = 0;
 
-    @Option(name = "-result-public-ip-address", usage = "Public IP Address to announce dataset result distribution listener (default: same as -result-ip-address)", required = false)
+    @Option(name = "-result-public-ip-address",
+            usage = "Public IP Address to announce dataset result distribution listener (default: same as " +
+                    "-result-ip-address)", required = false)
     public String resultPublicIPAddress;
 
-    @Option(name = "-result-public-port", usage = "Public IP port to announce dataset result distribution listener (default: same as -result-port; must set -result-public-ip-address also)", required = false)
+    @Option(name = "-result-public-port", usage = "Public IP port to announce dataset result distribution listener " +
+            "(default: same as -result-port; must set -result-public-ip-address also)", required = false)
     public int resultPublicPort = 0;
 
-    @Option(name = "-retries", usage = "Number of attempts to contact CC before giving up (default = 5)")
+    @Option(name = "-retries", usage = "Number of attempts to contact CC before giving up (default: 5)")
     public int retries = 5;
 
-    @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
+    @Option(name = "-iodevices",
+            usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)",
+            required = false)
     public String ioDevices = System.getProperty("java.io.tmpdir");
 
     @Option(name = "-net-thread-count", usage = "Number of threads to use for Network I/O (default: 1)")
     public int nNetThreads = 1;
 
-    @Option(name = "-net-buffer-count", usage = "Number of network buffers per input/output channel (default:1)", required = false)
+    @Option(name = "-net-buffer-count", usage = "Number of network buffers per input/output channel (default: 1)",
+            required = false)
     public int nNetBuffers = 1;
 
     @Option(name = "-max-memory", usage = "Maximum memory usable at this Node Controller in bytes (default: -1 auto)")
     public int maxMemory = -1;
 
-    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds. (default: 24 hours)")
+    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should " +
+            "be retained by the system in milliseconds. (default: 24 hours)")
     public long resultTTL = 86400000;
 
-    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup should be invoked in milliseconds. (default: 1 minute)")
+    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup " +
+            "should be invoked in milliseconds. (default: 1 minute)")
     public long resultSweepThreshold = 60000;
 
-    @Option(name = "-result-manager-memory", usage = "Memory usable for result caching at this Node Controller in bytes (default: -1 auto)")
+    @Option(name = "-result-manager-memory",
+            usage = "Memory usable for result caching at this Node Controller in bytes (default: -1 auto)")
     public int resultManagerMemory = -1;
 
     @Option(name = "-app-nc-main-class", usage = "Application NC Main Class")
     public String appNCMainClass;
 
-    @Option(name = "-config-file", usage = "Specify path to local configuration file (default: no local config)", required = false)
+    @Option(name = "-config-file", usage = "Specify path to local configuration file (default: no local config)",
+            required = false)
     public String configFile = null;
 
-    //TODO add messaging values to NC start scripts
     @Option(name = "-messaging-ip-address", usage = "IP Address to bind messaging "
             + "listener (default: same as -address)", required = false)
     public String messagingIPAddress;
@@ -128,6 +153,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-messaging-public-port", usage = "Public IP port to announce messaging listener"
             + " (default: same as -messaging-port; must set -messaging-public-port also)", required = false)
     public int messagingPublicPort = 0;
+
+    @Option(name = "-ncservice-pid", usage = "PID of the NCService which launched this NCDriver", required = false)
+    public int ncservicePid = -1;
 
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
@@ -163,7 +191,12 @@ public class NCConfig implements Serializable {
         dataPublicPort = IniUtils.getInt(ini, nodeSection, "public.data.port", dataPublicPort);
         resultPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.result.address", resultPublicIPAddress);
         resultPublicPort = IniUtils.getInt(ini, nodeSection, "public.result.port", resultPublicPort);
-        //TODO pass messaging info from ini file
+
+        messagingIPAddress = IniUtils.getString(ini, nodeSection, "messaging.address", messagingIPAddress);
+        messagingPort = IniUtils.getInt(ini, nodeSection, "messaging.port", messagingPort);
+        messagingPublicIPAddress = IniUtils.getString(ini, nodeSection, "public.messaging.address",
+                messagingPublicIPAddress);
+        messagingPublicPort = IniUtils.getInt(ini, nodeSection, "public.messaging.port", messagingPublicPort);
 
         retries = IniUtils.getInt(ini, nodeSection, "retries", retries);
 
@@ -257,6 +290,9 @@ public class NCConfig implements Serializable {
         configuration.put("messaging-public-port", String.valueOf(messagingPublicPort));
         if (appNCMainClass != null) {
             configuration.put("app-nc-main-class", appNCMainClass);
+        }
+        if (ncservicePid != 0) {
+            configuration.put("ncservice-pid", String.valueOf(ncservicePid));
         }
     }
 }

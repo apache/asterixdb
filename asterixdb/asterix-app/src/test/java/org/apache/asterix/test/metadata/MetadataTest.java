@@ -42,7 +42,7 @@ public class MetadataTest {
 
     private TestCaseContext tcCtx;
 
-    private static final String PATH_ACTUAL = "mdtest" + File.separator;
+    private static final String PATH_ACTUAL = "target" + File.separator + "mdtest" + File.separator;
     private static final String PATH_BASE = StringUtils
             .join(new String[] { "src", "test", "resources", "metadata" + File.separator }, File.separator);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";

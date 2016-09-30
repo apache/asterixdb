@@ -36,7 +36,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
-import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
@@ -141,7 +141,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         List<IAType> searchKeyType = new ArrayList<IAType>(searchKey.size());
         while (fieldTypeCursor.next()) {
             String typeName = ((AString) fieldTypeCursor.get()).getStringValue();
-            IAType fieldType = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dvName, typeName, false);
+            IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dvName, typeName, false);
             searchKeyType.add(fieldType);
         }
 

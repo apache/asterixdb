@@ -33,10 +33,10 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int64,
-  `statuses-count` : int64,
+  `friends-count` : bigint,
+  `statuses-count` : bigint,
   name : string,
-  `followers-count` : int64
+  `followers-count` : bigint
 }
 
 create type test.TweetMessageNestedType as
@@ -54,11 +54,11 @@ create type test.TweetMessageType as
 
 create external  dataset TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin_nested.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
-create  index IdIx  on TweetMessages (nested.tweetid:int64?) type btree enforced;
+create  index IdIx  on TweetMessages (nested.tweetid:bigint?) type btree enforced;
 
-create  index msgCountAIx  on TweetMessages (nested.countA:int64?) type btree enforced;
+create  index msgCountAIx  on TweetMessages (nested.countA:bigint?) type btree enforced;
 
-create  index msgCountBIx  on TweetMessages (nested.countB:int64?) type btree enforced;
+create  index msgCountBIx  on TweetMessages (nested.countB:bigint?) type btree enforced;
 
 create  index twmSndLocIx  on TweetMessages (nested.`sender-location`:point?) type rtree enforced;
 

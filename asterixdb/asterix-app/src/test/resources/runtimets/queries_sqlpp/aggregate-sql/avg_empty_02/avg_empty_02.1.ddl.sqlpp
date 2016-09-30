@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that coll_sql-avg aggregation correctly returns null for an empty stream,
+ * Description    : Tests that array_sql-avg aggregation correctly returns null for an empty stream,
  *                  with an aggregate combiner.
  * Success        : Yes
  */
@@ -30,7 +30,7 @@ use test;
 
 create type test.TestType as
  closed {
-  id : int64,
+  id : bigint,
   val : double
 }
 

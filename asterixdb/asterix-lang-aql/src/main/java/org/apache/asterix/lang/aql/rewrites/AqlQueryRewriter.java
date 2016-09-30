@@ -30,12 +30,14 @@ import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.FunctionParser;
+import org.apache.asterix.lang.aql.rewrites.visitor.AqlBuiltinFunctionRewriteVisitor;
+import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.aql.visitor.AQLInlineUdfsVisitor;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
@@ -46,11 +48,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.entities.Function;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 
 class AqlQueryRewriter implements IQueryRewriter {
 
@@ -58,7 +56,6 @@ class AqlQueryRewriter implements IQueryRewriter {
     private Query topExpr;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
-    private MetadataTransactionContext mdTxnCtx;
     private AqlMetadataProvider metadataProvider;
 
     private void setup(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
@@ -66,7 +63,6 @@ class AqlQueryRewriter implements IQueryRewriter {
         this.topExpr = topExpr;
         this.context = context;
         this.declaredFunctions = declaredFunctions;
-        this.mdTxnCtx = metadataProvider.getMetadataTxnContext();
         this.metadataProvider = metadataProvider;
     }
 
@@ -78,6 +74,7 @@ class AqlQueryRewriter implements IQueryRewriter {
             wrapInLets();
         }
         inlineDeclaredUdfs();
+        rewriteFunctionName();
         topExpr.setVarCounter(context.getVarCounter());
     }
 
@@ -99,6 +96,14 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
     }
 
+    private void rewriteFunctionName() throws AsterixException {
+        if (topExpr == null) {
+            return;
+        }
+        AqlBuiltinFunctionRewriteVisitor visitor = new AqlBuiltinFunctionRewriteVisitor();
+        topExpr.accept(visitor, null);
+    }
+
     private void inlineDeclaredUdfs() throws AsterixException {
         if (topExpr == null) {
             return;
@@ -108,9 +113,11 @@ class AqlQueryRewriter implements IQueryRewriter {
             funIds.add(fdecl.getSignature());
         }
 
-        List<FunctionDecl> otherFDecls = new ArrayList<FunctionDecl>();
-        buildOtherUdfs(topExpr.getBody(), otherFDecls, funIds);
-        declaredFunctions.addAll(otherFDecls);
+        List<FunctionDecl> storedFunctionDecls = FunctionUtil.retrieveUsedStoredFunctions(metadataProvider,
+                topExpr.getBody(), funIds, null,
+                expr -> getFunctionCalls(expr), func -> functionParser.getFunctionDecl(func),
+                signature -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature));
+        declaredFunctions.addAll(storedFunctionDecls);
         if (!declaredFunctions.isEmpty()) {
             AQLInlineUdfsVisitor visitor =
                     new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(), declaredFunctions, metadataProvider);
@@ -118,59 +125,7 @@ class AqlQueryRewriter implements IQueryRewriter {
                 // loop until no more changes
             }
         }
-        declaredFunctions.removeAll(otherFDecls);
-    }
-
-    private void buildOtherUdfs(Expression expression, List<FunctionDecl> functionDecls,
-            List<FunctionSignature> declaredFunctions) throws AsterixException {
-        if (expression == null) {
-            return;
-        }
-        String value = metadataProvider.getConfig().get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS);
-        boolean includePrivateFunctions = (value != null) ? Boolean.valueOf(value.toLowerCase()) : false;
-        Set<FunctionSignature> functionCalls = getFunctionCalls(expression);
-        for (FunctionSignature signature : functionCalls) {
-
-            if (declaredFunctions != null && declaredFunctions.contains(signature)) {
-                continue;
-            }
-
-            Function function = lookupUserDefinedFunctionDecl(signature);
-            if (function == null) {
-                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
-                    continue;
-                }
-                StringBuilder messageBuilder = new StringBuilder();
-                if (functionDecls.size() > 0) {
-                    messageBuilder.append("function " + functionDecls.get(functionDecls.size() - 1).getSignature()
-                            + " depends upon function " + signature + " which is undefined");
-                } else {
-                    messageBuilder.append("function " + signature + " is undefined ");
-                }
-                throw new AsterixException(messageBuilder.toString());
-            }
-
-            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-                FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
-                if (functionDecl != null) {
-                    if (functionDecls.contains(functionDecl)) {
-                        throw new AsterixException(
-                                "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature()
-                                        + " <==> " + functionDecl.getSignature());
-                    }
-                    functionDecls.add(functionDecl);
-                    buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
-                }
-            }
-        }
-
-    }
-
-    private Function lookupUserDefinedFunctionDecl(FunctionSignature signature) throws AsterixException {
-        if (signature.getNamespace() == null) {
-            return null;
-        }
-        return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
+        declaredFunctions.removeAll(storedFunctionDecls);
     }
 
     private Set<FunctionSignature> getFunctionCalls(Expression expression) throws AsterixException {

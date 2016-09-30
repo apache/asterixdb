@@ -33,7 +33,7 @@ use test;
 write output to asterix_nc1:"rttest/btree-index_btree-secondary-35.adm"
 create type test.TestType as
 {
-  id : int32
+  id : integer
 }
 
 create  dataset testdst(TestType) primary key id;

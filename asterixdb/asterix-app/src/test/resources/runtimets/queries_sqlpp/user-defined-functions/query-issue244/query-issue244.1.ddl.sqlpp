@@ -30,7 +30,7 @@ create dataverse test;
 use test;
 
 create type TypeA as open {
-    id : int64,
+    id : bigint,
     name : string
 }
 

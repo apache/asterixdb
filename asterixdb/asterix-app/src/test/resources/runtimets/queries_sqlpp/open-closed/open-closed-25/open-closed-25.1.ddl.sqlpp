@@ -31,7 +31,7 @@ use test;
 
 create type test.testType as
 {
-  id : int64,
+  id : bigint,
   name : string,
   opt_tag : {{string}}?
 }

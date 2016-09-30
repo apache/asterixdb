@@ -64,7 +64,8 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Plan ID: " + planId);
+        sb.append(PreparePartitionsFailbackRequestMessage.class.getSimpleName());
+        sb.append(" Plan ID: " + planId);
         sb.append(" Partitions: " + partitions);
         sb.append(" releaseMetadataNode: " + releaseMetadataNode);
         return sb.toString();
@@ -109,15 +110,10 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
         PreparePartitionsFailbackResponseMessage reponse = new PreparePartitionsFailbackResponseMessage(planId,
                 requestId, partitions);
         try {
-            broker.sendMessageToCC(reponse, null);
+            broker.sendMessageToCC(reponse);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
             throw ExceptionUtils.convertToHyracksDataException(e);
         }
-    }
-
-    @Override
-    public String type() {
-        return "PREPARE_PARTITIONS_FAILBACK_REQUEST";
     }
 }

@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -46,7 +46,7 @@ public class RuntimeContext {
     private IBufferCache bufferCache;
     private IFileMapManager fileMapManager;
     private ILocalResourceRepository localResourceRepository;
-    private IIndexLifecycleManager lcManager;
+    private IResourceLifecycleManager lcManager;
     private ResourceIdFactory resourceIdFactory;
     private ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -90,7 +90,7 @@ public class RuntimeContext {
         return resourceIdFactory;
     }
 
-    public IIndexLifecycleManager getIndexLifecycleManager() {
+    public IResourceLifecycleManager getIndexLifecycleManager() {
         return lcManager;
     }
 }

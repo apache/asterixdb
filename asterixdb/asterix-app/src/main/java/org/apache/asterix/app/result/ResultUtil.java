@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

@@ -32,12 +32,12 @@ use insertIssue;
 create type insertIssue.subElem as
  closed {
   n : string,
-  e : int64?
+  e : bigint?
 }
 
 create type insertIssue.elem as
  closed {
-  id : int64,
+  id : bigint,
   name : string,
   sub : [subElem]
 }

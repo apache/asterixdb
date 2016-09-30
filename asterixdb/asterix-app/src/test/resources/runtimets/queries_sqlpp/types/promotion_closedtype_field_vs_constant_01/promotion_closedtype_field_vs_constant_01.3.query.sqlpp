@@ -26,6 +26,6 @@ use test;
 
 select element {'emp.id':emp.id,'emp.age':emp.age}
 from  empDataset as emp
-where (emp.age = test.int8('1'))
+where (emp.age = test.tinyint('1'))
 order by emp.id,emp.age
 ;

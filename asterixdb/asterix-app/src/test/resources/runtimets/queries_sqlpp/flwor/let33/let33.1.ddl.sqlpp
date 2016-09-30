@@ -30,7 +30,7 @@ use foo;
 
 create type foo.fbuser as
 {
-  id : int32,
+  id : integer,
   name : string
 }
 

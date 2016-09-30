@@ -85,9 +85,10 @@ import org.apache.hyracks.control.nc.work.BuildJobProfilesWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
 import org.apache.hyracks.control.nc.work.DeployBinaryWork;
 import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
-import org.apache.hyracks.control.nc.work.ShutdownWork;
+import org.apache.hyracks.control.nc.task.ShutdownTask;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
+import org.apache.hyracks.control.nc.task.ThreadDumpTask;
 import org.apache.hyracks.control.nc.work.UnDeployBinaryWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
@@ -97,7 +98,7 @@ import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactor
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 
 public class NodeControllerService implements IControllerService {
-    private static Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
 
     private static final double MEMORY_FUDGE_FACTOR = 0.8;
 
@@ -181,7 +182,7 @@ public class NodeControllerService implements IControllerService {
 
         lccm = new LifeCycleComponentManager();
         queue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
-        jobletMap = new Hashtable<JobId, Joblet>();
+        jobletMap = new Hashtable<>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER,
                 new File(new File(NodeControllerService.class.getName()), id));
@@ -191,7 +192,7 @@ public class NodeControllerService implements IControllerService {
         runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         registrationPending = true;
-        getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
+        getNodeControllerInfosAcceptor = new MutableObject<>();
         memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
         ioCounter = new IOCounterFactory().getIOCounter();
     }
@@ -209,7 +210,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     private static List<IODeviceHandle> getDevices(String ioDevices) {
-        List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
+        List<IODeviceHandle> devices = new ArrayList<>();
         StringTokenizer tok = new StringTokenizer(ioDevices, ",");
         while (tok.hasMoreElements()) {
             String devPath = tok.nextToken().trim();
@@ -226,7 +227,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
-        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<Map<String, NodeControllerInfo>>();
+        FutureValue<Map<String, NodeControllerInfo>> fv = new FutureValue<>();
         synchronized (getNodeControllerInfosAcceptor) {
             while (getNodeControllerInfosAcceptor.getValue() != null) {
                 getNodeControllerInfosAcceptor.wait();
@@ -349,7 +350,7 @@ public class NodeControllerService implements IControllerService {
             LOGGER.log(Level.INFO, "Stopping NodeControllerService");
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing shutdown abnormally");
+                LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing with abnormal shutdown");
             }
             partitionManager.close();
             datasetPartitionManager.close();
@@ -416,6 +417,10 @@ public class NodeControllerService implements IControllerService {
         return queue;
     }
 
+    public ThreadMXBean getThreadMXBean() {
+        return threadMXBean;
+    }
+
     private class HeartbeatTask extends TimerTask {
         private IClusterController cc;
 
@@ -475,7 +480,7 @@ public class NodeControllerService implements IControllerService {
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Exception sending heartbeat", e);
             }
         }
     }
@@ -490,7 +495,7 @@ public class NodeControllerService implements IControllerService {
         @Override
         public void run() {
             try {
-                FutureValue<List<JobProfile>> fv = new FutureValue<List<JobProfile>>();
+                FutureValue<List<JobProfile>> fv = new FutureValue<>();
                 BuildJobProfilesWork bjpw = new BuildJobProfilesWork(NodeControllerService.this, fv);
                 queue.scheduleAndSync(bjpw);
                 List<JobProfile> profiles = fv.get();
@@ -498,7 +503,7 @@ public class NodeControllerService implements IControllerService {
                     cc.reportProfile(id, profiles);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Exception reporting profile", e);
             }
         }
     }
@@ -509,74 +514,76 @@ public class NodeControllerService implements IControllerService {
                 Exception exception) {
             CCNCFunctions.Function fn = (CCNCFunctions.Function) payload;
             switch (fn.getFunctionId()) {
-                case SEND_APPLICATION_MESSAGE: {
-                    CCNCFunctions.SendApplicationMessageFunction amf = (CCNCFunctions.SendApplicationMessageFunction) fn;
+                case SEND_APPLICATION_MESSAGE:
+                    CCNCFunctions.SendApplicationMessageFunction amf =
+                            (CCNCFunctions.SendApplicationMessageFunction) fn;
                     queue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(),
                             amf.getDeploymentId(), amf.getNodeId()));
                     return;
-                }
-                case START_TASKS: {
+
+                case START_TASKS:
                     CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
                     queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getDeploymentId(), stf.getJobId(),
                             stf.getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags()));
                     return;
-                }
 
-                case ABORT_TASKS: {
+                case ABORT_TASKS:
                     CCNCFunctions.AbortTasksFunction atf = (CCNCFunctions.AbortTasksFunction) fn;
                     queue.schedule(new AbortTasksWork(NodeControllerService.this, atf.getJobId(), atf.getTasks()));
                     return;
-                }
 
-                case CLEANUP_JOBLET: {
+                case CLEANUP_JOBLET:
                     CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
                     queue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(), cjf.getStatus()));
                     return;
-                }
 
-                case REPORT_PARTITION_AVAILABILITY: {
-                    CCNCFunctions.ReportPartitionAvailabilityFunction rpaf = (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
+                case REPORT_PARTITION_AVAILABILITY:
+                    CCNCFunctions.ReportPartitionAvailabilityFunction rpaf =
+                            (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
                     queue.schedule(new ReportPartitionAvailabilityWork(NodeControllerService.this,
                             rpaf.getPartitionId(), rpaf.getNetworkAddress()));
                     return;
-                }
 
-                case NODE_REGISTRATION_RESULT: {
+                case NODE_REGISTRATION_RESULT:
                     CCNCFunctions.NodeRegistrationResult nrrf = (CCNCFunctions.NodeRegistrationResult) fn;
                     setNodeRegistrationResult(nrrf.getNodeParameters(), nrrf.getException());
                     return;
-                }
 
-                case GET_NODE_CONTROLLERS_INFO_RESPONSE: {
-                    CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf = (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
+                case GET_NODE_CONTROLLERS_INFO_RESPONSE:
+                    CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf =
+                            (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
                     setNodeControllersInfo(gncirf.getNodeControllerInfos());
                     return;
-                }
 
-                case DEPLOY_BINARY: {
-                    CCNCFunctions.DeployBinaryFunction ndbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                    queue.schedule(new DeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId(),
-                            ndbf.getBinaryURLs()));
+                case DEPLOY_BINARY:
+                    CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
+                    queue.schedule(new DeployBinaryWork(NodeControllerService.this, dbf.getDeploymentId(),
+                            dbf.getBinaryURLs()));
                     return;
-                }
 
-                case UNDEPLOY_BINARY: {
+                case UNDEPLOY_BINARY:
                     CCNCFunctions.UnDeployBinaryFunction ndbf = (CCNCFunctions.UnDeployBinaryFunction) fn;
                     queue.schedule(new UnDeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId()));
                     return;
-                }
 
-                case STATE_DUMP_REQUEST: {
+                case STATE_DUMP_REQUEST:
                     final CCNCFunctions.StateDumpRequestFunction dsrf = (StateDumpRequestFunction) fn;
                     queue.schedule(new StateDumpWork(NodeControllerService.this, dsrf.getStateDumpId()));
                     return;
-                }
-                case SHUTDOWN_REQUEST: {
-                    queue.schedule(new ShutdownWork(NodeControllerService.this));
+
+                case SHUTDOWN_REQUEST:
+                    final CCNCFunctions.ShutdownRequestFunction sdrf = (CCNCFunctions.ShutdownRequestFunction) fn;
+                    executor.submit(new ShutdownTask(NodeControllerService.this, sdrf.isTerminateNCService()));
                     return;
-                }
+
+                case THREAD_DUMP_REQUEST:
+                    final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
+                    executor.submit(new ThreadDumpTask(NodeControllerService.this, tdrf.getRequestId()));
+                    return;
+
+                default:
+                    throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
             }
-            throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
 
         }
     }
@@ -594,7 +601,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     /**
-     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
+     * Shutdown hook that invokes {@link NodeControllerService#stop() stop} method.
      */
     private static class JVMShutdownHook extends Thread {
 
@@ -606,15 +613,11 @@ public class NodeControllerService implements IControllerService {
 
         @Override
         public void run() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shutdown hook in progress");
-            }
+            LOGGER.info("Shutdown hook in progress");
             try {
                 nodeControllerService.stop();
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Exception in executing shutdown hook" + e);
-                }
+                LOGGER.log(Level.WARNING, "Exception in executing shutdown hook", e);
             }
         }
     }

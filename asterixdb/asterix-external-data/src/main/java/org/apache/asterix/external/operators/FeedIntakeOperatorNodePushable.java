@@ -74,7 +74,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
             // create the distributor
             frameDistributor = new DistributeFeedFrameWriter(feedId, writer, FeedRuntimeType.INTAKE, partition);
             // create adapter runtime manager
-            adapterRuntimeManager = new AdapterRuntimeManager(feedId, adapter, frameDistributor, partition);
+            adapterRuntimeManager = new AdapterRuntimeManager(ctx, feedId, adapter, frameDistributor, partition);
             // create and register the runtime
             ActiveRuntimeId runtimeId = new ActiveRuntimeId(feedId, FeedRuntimeType.INTAKE.toString(), partition);
             ingestionRuntime = new IngestionRuntime(feedId, runtimeId, frameDistributor, adapterRuntimeManager, ctx);

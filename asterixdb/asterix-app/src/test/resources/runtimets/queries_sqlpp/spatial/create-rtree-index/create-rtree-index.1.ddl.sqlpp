@@ -29,7 +29,7 @@ use test;
 
 create type test.SpatialType as
 {
-  id : int64,
+  id : bigint,
   point : point,
   line1 : line,
   poly1 : polygon,

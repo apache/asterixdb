@@ -60,7 +60,7 @@ public class ExternalBTreeWithBuddyDataflowHelper extends AbstractLSMIndexDatafl
         synchronized (lcManager) {
             if (index == null) {
                 try {
-                    index = lcManager.getIndex(resourcePath);
+                    index = lcManager.get(resourcePath);
                 } catch (HyracksDataException e) {
                     return null;
                 }

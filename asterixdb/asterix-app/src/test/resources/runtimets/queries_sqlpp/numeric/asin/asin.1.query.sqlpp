@@ -21,9 +21,9 @@
   "a": asin(10.0),
   "b": asin(0.5f),
   "c": asin(100),
-  "d": asin(int32("0")),
-  "e": asin(int8("-1")),
-  "f": asin(int16("1")),
+  "d": asin(integer("0")),
+  "e": asin(tinyint("-1")),
+  "f": asin(smallint("1")),
   "g": asin(null),
   "h": asin(missing)
 };

@@ -33,21 +33,21 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int64,
-  `statuses-count` : int64,
+  `friends-count` : bigint,
+  `statuses-count` : bigint,
   name : string,
-  `followers-count` : int64
+  `followers-count` : bigint
 }
 
 create type test.TweetMessageType as
 {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
   `referred-topics` : {{string}},
-  countA : int64,
-  countB : int64
+  countA : bigint,
+  countB : bigint
 }
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;

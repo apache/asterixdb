@@ -33,6 +33,6 @@ select element {'tweetid1':t1.nested.tweetid,'count1':t1.nested.countA,'t2info':
         order by t2.nested.tweetid
     )}
 from  TweetMessages as t1
-where (t1.nested.tweetid < test.int64('10'))
+where (t1.nested.tweetid < test.bigint('10'))
 order by t1.nested.tweetid
 ;

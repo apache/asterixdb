@@ -1,0 +1,862 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+  /*
+* Description  : Fix ArrayOutOfBound and IndexOutOfBound exception
+* Expected Res : Success
+* Issue        : 1334 and 1616
+* Date         : 12th Sept. 2016
+*/
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type userType1 as open {
+    'utc_offset':int64?,
+    'friends_count':int64?,
+    'profile_image_url_https':string?,
+    'listed_count':int64?,
+    'profile_background_image_url':string?,
+    'default_profile_image':boolean?,
+    'favourites_count':int64?,
+    'description':string?,
+    'created_at':string?,
+    'is_translator':boolean?,
+    'profile_background_image_url_https':string?,
+    'protected':boolean?,
+    'screen_name':string?,
+    'id_str':string?,
+    'profile_link_color':string?,
+    'id':int64?,
+    'geo_enabled':boolean?,
+    'profile_background_color':string?,
+    'lang':string?,
+    'profile_sidebar_border_color':string?,
+    'profile_text_color':string?,
+    'verified':boolean?,
+    'profile_image_url':string?,
+    'time_zone':string?,
+    'contributors_enabled':boolean?,
+    'profile_background_tile':boolean?,
+    'profile_banner_url':string?,
+    'statuses_count':int64?,
+    'followers_count':int64?,
+    'profile_use_background_image':boolean?,
+    'default_profile':boolean?,
+    'name':string?,
+    'location':string?,
+    'profile_sidebar_fill_color':string?,
+    'url':string?
+}
+create type smallType1 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType1 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType1 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType1 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType1 as open {
+    'small':smallType1?,
+    'large':largeType1?,
+    'thumb':thumbType1?,
+    'medium':mediumType1?
+}
+create type listType2 as open {
+    'content_type':string?,
+    'bitrate':int64?,
+    'url':string?
+}
+create type video_infoType1 as open {
+    'aspect_ratio':[int64]?,
+    'duration_millis':int64?,
+    'variants':[listType2]?
+}
+create type listType1 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType1?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'url':string?,
+    'video_info':video_infoType1?,
+    'source_user_id':int64?,
+    'source_status_id':int64?,
+    'source_status_id_str':string?,
+    'source_user_id_str':string?
+}
+create type extended_entitiesType1 as open {
+    'media':[listType1]?
+}
+create type smallType2 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType2 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType2 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType2 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType2 as open {
+    'small':smallType2?,
+    'large':largeType2?,
+    'thumb':thumbType2?,
+    'medium':mediumType2?
+}
+create type listType3 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType2?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'url':string?,
+    'source_user_id':int64?,
+    'source_status_id':int64?,
+    'source_status_id_str':string?,
+    'source_user_id_str':string?
+}
+create type listType4 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'expanded_url':string?,
+    'url':string?
+}
+create type listType5 as open {
+    'indices':[int64]?,
+    'text':string?
+}
+create type listType6 as open {
+    'indices':[int64]?,
+    'screen_name':string?,
+    'id_str':string?,
+    'name':string?,
+    'id':int64?
+}
+create type entitiesType1 as open {
+    'media':[listType3]?,
+    'urls':[listType4]?,
+    'hashtags':[listType5]?,
+    'user_mentions':[listType6]?
+}
+create type bounding_boxType1 as open {
+    'coordinates':[[[double]]]?,
+    'type':string?
+}
+create type placeType1 as open {
+    'country_code':string?,
+    'country':string?,
+    'full_name':string?,
+    'bounding_box':bounding_boxType1?,
+    'place_type':string?,
+    'name':string?,
+    'id':string?,
+    'url':string?
+}
+create type userType2 as open {
+    'utc_offset':int64?,
+    'friends_count':int64?,
+    'profile_image_url_https':string?,
+    'listed_count':int64?,
+    'profile_background_image_url':string?,
+    'default_profile_image':boolean?,
+    'favourites_count':int64?,
+    'description':string?,
+    'created_at':string?,
+    'is_translator':boolean?,
+    'profile_background_image_url_https':string?,
+    'protected':boolean?,
+    'screen_name':string?,
+    'id_str':string?,
+    'profile_link_color':string?,
+    'id':int64?,
+    'geo_enabled':boolean?,
+    'profile_background_color':string?,
+    'lang':string?,
+    'profile_sidebar_border_color':string?,
+    'profile_text_color':string?,
+    'verified':boolean?,
+    'profile_image_url':string?,
+    'time_zone':string?,
+    'contributors_enabled':boolean?,
+    'profile_background_tile':boolean?,
+    'profile_banner_url':string?,
+    'statuses_count':int64?,
+    'followers_count':int64?,
+    'profile_use_background_image':boolean?,
+    'default_profile':boolean?,
+    'name':string?,
+    'profile_sidebar_fill_color':string?,
+    'location':string?,
+    'url':string?
+}
+create type listType7 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'expanded_url':string?,
+    'url':string?
+}
+create type listType8 as open {
+    'indices':[int64]?,
+    'text':string?
+}
+create type listType9 as open {
+    'indices':[int64]?,
+    'screen_name':string?,
+    'id_str':string?,
+    'name':string?,
+    'id':int64?
+}
+create type smallType3 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType3 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType3 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType3 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType3 as open {
+    'small':smallType3?,
+    'large':largeType3?,
+    'thumb':thumbType3?,
+    'medium':mediumType3?
+}
+create type listType10 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType3?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'url':string?,
+    'source_user_id':int64?,
+    'source_status_id':int64?,
+    'source_status_id_str':string?,
+    'source_user_id_str':string?
+}
+create type entitiesType2 as open {
+    'urls':[listType7]?,
+    'hashtags':[listType8]?,
+    'user_mentions':[listType9]?,
+    'media':[listType10]?
+}
+create type smallType4 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType4 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType4 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType4 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType4 as open {
+    'small':smallType4?,
+    'large':largeType4?,
+    'thumb':thumbType4?,
+    'medium':mediumType4?
+}
+create type listType12 as open {
+    'content_type':string?,
+    'url':string?,
+    'bitrate':int64?
+}
+create type video_infoType2 as open {
+    'aspect_ratio':[int64]?,
+    'duration_millis':int64?,
+    'variants':[listType12]?
+}
+create type listType11 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType4?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'url':string?,
+    'source_user_id':int64?,
+    'source_status_id':int64?,
+    'source_status_id_str':string?,
+    'source_user_id_str':string?,
+    'video_info':video_infoType2?
+}
+create type extended_entitiesType2 as open {
+    'media':[listType11]?
+}
+create type bounding_boxType2 as open {
+    'coordinates':[[[double]]]?,
+    'type':string?
+}
+create type placeType2 as open {
+    'country_code':string?,
+    'country':string?,
+    'full_name':string?,
+    'bounding_box':bounding_boxType2?,
+    'place_type':string?,
+    'name':string?,
+    'id':string?,
+    'url':string?
+}
+create type quoted_statusType1 as open {
+    'created_at':string?,
+    'truncated':boolean?,
+    'source':string?,
+    'retweet_count':int64?,
+    'retweeted':boolean?,
+    'filter_level':string?,
+    'is_quote_status':boolean?,
+    'id_str':string?,
+    'favorite_count':int64?,
+    'id':int64?,
+    'text':string?,
+    'lang':string?,
+    'user':userType2?,
+    'favorited':boolean?,
+    'quoted_status_id':int64?,
+    'possibly_sensitive':boolean?,
+    'entities':entitiesType2?,
+    'quoted_status_id_str':string?,
+    'extended_entities':extended_entitiesType2?,
+    'in_reply_to_status_id_str':string?,
+    'in_reply_to_status_id':int64?,
+    'in_reply_to_user_id_str':string?,
+    'in_reply_to_screen_name':string?,
+    'in_reply_to_user_id':int64?,
+    'place':placeType2?
+}
+create type coordinatesType1 as open {
+    'coordinates':[double]?,
+    'type':string?
+}
+create type geoType1 as open {
+    'coordinates':[double]?,
+    'type':string?
+}
+create type scopesType1 as open {
+    'followers':boolean?
+}
+create type retweeted_statusType1 as open {
+    'created_at':string?,
+    'truncated':boolean?,
+    'source':string?,
+    'retweet_count':int64?,
+    'retweeted':boolean?,
+    'filter_level':string?,
+    'is_quote_status':boolean?,
+    'id_str':string?,
+    'favorite_count':int64?,
+    'id':int64?,
+    'text':string?,
+    'lang':string?,
+    'user':userType1?,
+    'favorited':boolean?,
+    'extended_entities':extended_entitiesType1?,
+    'possibly_sensitive':boolean?,
+    'entities':entitiesType1?,
+    'place':placeType1?,
+    'quoted_status':quoted_statusType1?,
+    'quoted_status_id':int64?,
+    'quoted_status_id_str':string?,
+    'in_reply_to_status_id_str':string?,
+    'in_reply_to_status_id':int64?,
+    'in_reply_to_user_id_str':string?,
+    'in_reply_to_screen_name':string?,
+    'in_reply_to_user_id':int64?,
+    'coordinates':coordinatesType1?,
+    'geo':geoType1?,
+    'scopes':scopesType1?
+}
+create type listType13 as open {
+    'indices':[int64]?,
+    'screen_name':string?,
+    'id_str':string?,
+    'name':string?,
+    'id':int64?
+}
+create type smallType5 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType5 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType5 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType5 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType5 as open {
+    'small':smallType5?,
+    'large':largeType5?,
+    'thumb':thumbType5?,
+    'medium':mediumType5?
+}
+create type listType14 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType5?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'url':string?,
+    'source_user_id':int64?,
+    'source_status_id':int64?,
+    'source_status_id_str':string?,
+    'source_user_id_str':string?
+}
+create type listType15 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'expanded_url':string?,
+    'url':string?
+}
+create type listType16 as open {
+    'indices':[int64]?,
+    'text':string?
+}
+create type listType17 as open {
+    'indices':[int64]?,
+    'text':string?
+}
+create type entitiesType3 as open {
+    'user_mentions':[listType13]?,
+    'media':[listType14]?,
+    'urls':[listType15]?,
+    'hashtags':[listType16]?,
+    'symbols':[listType17]?
+}
+create type userType3 as open {
+    'friends_count':int64?,
+    'profile_image_url_https':string?,
+    'listed_count':int64?,
+    'profile_background_image_url':string?,
+    'default_profile_image':boolean?,
+    'favourites_count':int64?,
+    'description':string?,
+    'created_at':string?,
+    'is_translator':boolean?,
+    'profile_background_image_url_https':string?,
+    'protected':boolean?,
+    'screen_name':string?,
+    'id_str':string?,
+    'profile_link_color':string?,
+    'id':int64?,
+    'geo_enabled':boolean?,
+    'profile_background_color':string?,
+    'lang':string?,
+    'profile_sidebar_border_color':string?,
+    'profile_text_color':string?,
+    'verified':boolean?,
+    'profile_image_url':string?,
+    'contributors_enabled':boolean?,
+    'profile_background_tile':boolean?,
+    'profile_banner_url':string?,
+    'statuses_count':int64?,
+    'followers_count':int64?,
+    'profile_use_background_image':boolean?,
+    'default_profile':boolean?,
+    'name':string?,
+    'location':string?,
+    'profile_sidebar_fill_color':string?,
+    'utc_offset':int64?,
+    'time_zone':string?,
+    'url':string?
+}
+create type smallType6 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType6 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType6 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType6 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType6 as open {
+    'small':smallType6?,
+    'large':largeType6?,
+    'thumb':thumbType6?,
+    'medium':mediumType6?
+}
+create type listType19 as open {
+    'content_type':string?,
+    'bitrate':int64?,
+    'url':string?
+}
+create type video_infoType3 as open {
+    'aspect_ratio':[int64]?,
+    'duration_millis':int64?,
+    'variants':[listType19]?
+}
+create type listType18 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType6?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'url':string?,
+    'source_user_id':int64?,
+    'source_status_id':int64?,
+    'source_status_id_str':string?,
+    'source_user_id_str':string?,
+    'video_info':video_infoType3?
+}
+create type extended_entitiesType3 as open {
+    'media':[listType18]?
+}
+create type userType4 as open {
+    'utc_offset':int64?,
+    'friends_count':int64?,
+    'profile_image_url_https':string?,
+    'listed_count':int64?,
+    'profile_background_image_url':string?,
+    'default_profile_image':boolean?,
+    'favourites_count':int64?,
+    'description':string?,
+    'created_at':string?,
+    'is_translator':boolean?,
+    'profile_background_image_url_https':string?,
+    'protected':boolean?,
+    'screen_name':string?,
+    'id_str':string?,
+    'profile_link_color':string?,
+    'id':int64?,
+    'geo_enabled':boolean?,
+    'profile_background_color':string?,
+    'lang':string?,
+    'profile_sidebar_border_color':string?,
+    'profile_text_color':string?,
+    'verified':boolean?,
+    'profile_image_url':string?,
+    'time_zone':string?,
+    'contributors_enabled':boolean?,
+    'profile_background_tile':boolean?,
+    'profile_banner_url':string?,
+    'statuses_count':int64?,
+    'followers_count':int64?,
+    'profile_use_background_image':boolean?,
+    'default_profile':boolean?,
+    'name':string?,
+    'profile_sidebar_fill_color':string?,
+    'location':string?,
+    'url':string?
+}
+create type smallType7 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType7 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType7 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType7 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType7 as open {
+    'small':smallType7?,
+    'large':largeType7?,
+    'thumb':thumbType7?,
+    'medium':mediumType7?
+}
+create type listType21 as open {
+    'content_type':string?,
+    'bitrate':int64?,
+    'url':string?
+}
+create type video_infoType4 as open {
+    'aspect_ratio':[int64]?,
+    'variants':[listType21]?,
+    'duration_millis':int64?
+}
+create type listType20 as open {
+    'display_url':string?,
+    'source_user_id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'source_status_id':int64?,
+    'url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType7?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'source_status_id_str':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'source_user_id_str':string?,
+    'video_info':video_infoType4?
+}
+create type extended_entitiesType4 as open {
+    'media':[listType20]?
+}
+create type smallType8 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type largeType8 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type thumbType8 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type mediumType8 as open {
+    'w':int64?,
+    'h':int64?,
+    'resize':string?
+}
+create type sizesType8 as open {
+    'small':smallType8?,
+    'large':largeType8?,
+    'thumb':thumbType8?,
+    'medium':mediumType8?
+}
+create type listType22 as open {
+    'display_url':string?,
+    'source_user_id':int64?,
+    'type':string?,
+    'media_url':string?,
+    'source_status_id':int64?,
+    'url':string?,
+    'indices':[int64]?,
+    'sizes':sizesType8?,
+    'id_str':string?,
+    'expanded_url':string?,
+    'source_status_id_str':string?,
+    'media_url_https':string?,
+    'id':int64?,
+    'source_user_id_str':string?
+}
+create type listType23 as open {
+    'display_url':string?,
+    'indices':[int64]?,
+    'expanded_url':string?,
+    'url':string?
+}
+create type listType24 as open {
+    'indices':[int64]?,
+    'screen_name':string?,
+    'id_str':string?,
+    'name':string?,
+    'id':int64?
+}
+create type listType25 as open {
+    'indices':[int64]?,
+    'text':string?
+}
+create type entitiesType4 as open {
+    'media':[listType22]?,
+    'urls':[listType23]?,
+    'user_mentions':[listType24]?,
+    'hashtags':[listType25]?
+}
+create type bounding_boxType3 as open {
+    'coordinates':[[[double]]]?,
+    'type':string?
+}
+create type placeType3 as open {
+    'country_code':string?,
+    'country':string?,
+    'full_name':string?,
+    'bounding_box':bounding_boxType3?,
+    'place_type':string?,
+    'name':string?,
+    'id':string?,
+    'url':string?
+}
+create type quoted_statusType2 as open {
+    'created_at':string?,
+    'truncated':boolean?,
+    'source':string?,
+    'retweet_count':int64?,
+    'retweeted':boolean?,
+    'filter_level':string?,
+    'is_quote_status':boolean?,
+    'id_str':string?,
+    'favorite_count':int64?,
+    'id':int64?,
+    'text':string?,
+    'lang':string?,
+    'user':userType4?,
+    'favorited':boolean?,
+    'extended_entities':extended_entitiesType4?,
+    'possibly_sensitive':boolean?,
+    'entities':entitiesType4?,
+    'quoted_status_id':int64?,
+    'quoted_status_id_str':string?,
+    'in_reply_to_status_id_str':string?,
+    'in_reply_to_status_id':int64?,
+    'in_reply_to_user_id_str':string?,
+    'in_reply_to_screen_name':string?,
+    'in_reply_to_user_id':int64?,
+    'place':placeType3?
+}
+create type bounding_boxType4 as open {
+    'coordinates':[[[double]]]?,
+    'type':string?
+}
+create type placeType4 as open {
+    'country_code':string?,
+    'country':string?,
+    'full_name':string?,
+    'bounding_box':bounding_boxType4?,
+    'place_type':string?,
+    'name':string?,
+    'id':string?,
+    'url':string?
+}
+create type geoType2 as open {
+    'coordinates':[double]?,
+    'type':string?
+}
+create type coordinatesType2 as open {
+    'coordinates':[double]?,
+    'type':string?
+}
+create type TweetType as open {
+    'id':string,
+    'created_at':string?,
+    'source':string?,
+    'retweeted_status':retweeted_statusType1?,
+    'retweet_count':int64?,
+    'retweeted':boolean?,
+    'filter_level':string?,
+    'is_quote_status':boolean?,
+    'id_str':string?,
+    'favorite_count':int64?,
+    'text':string?,
+    'lang':string?,
+    'favorited':boolean?,
+    'truncated':boolean?,
+    'timestamp_ms':string?,
+    'entities':entitiesType3?,
+    'user':userType3?,
+    'extended_entities':extended_entitiesType3?,
+    'in_reply_to_status_id_str':string?,
+    'in_reply_to_status_id':int64?,
+    'in_reply_to_user_id_str':string?,
+    'in_reply_to_screen_name':string?,
+    'in_reply_to_user_id':int64?,
+    'possibly_sensitive':boolean?,
+    'quoted_status':quoted_statusType2?,
+    'quoted_status_id':int64?,
+    'quoted_status_id_str':string?,
+    'place':placeType4?,
+    'geo':geoType2?,
+    'coordinates':coordinatesType2?
+}
+
+create dataset Tweets(TweetType)
+primary key id
+

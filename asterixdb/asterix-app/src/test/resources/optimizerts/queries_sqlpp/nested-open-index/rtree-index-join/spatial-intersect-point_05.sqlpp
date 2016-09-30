@@ -31,7 +31,7 @@ use test;
 
 create type test.MyRecordNestedOpen as
 {
-  id : int32,
+  id : integer,
   kwds : string,
   line1 : line,
   line2 : line,

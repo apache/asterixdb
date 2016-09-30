@@ -31,6 +31,12 @@ public abstract class AbstractWork implements Runnable {
         return className.substring(className.lastIndexOf('.') + 1, endIndex);
     }
 
+    /**
+     * run is executed on a single thread that services the work queue. As a result run should never wait or block as
+     * this will delay processing for the whole queue.
+     */
+    public abstract void run();
+
     @Override
     public String toString() {
         return getName();

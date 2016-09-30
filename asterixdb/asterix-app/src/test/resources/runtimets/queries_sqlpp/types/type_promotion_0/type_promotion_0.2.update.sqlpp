@@ -21,8 +21,8 @@ use TestVerse;
 
 
 insert into Int64Test
-select element {'myint64':TestVerse.int64('13'),'myoptint64':13,'myint32':TestVerse.int8('2'),'myoptint32':TestVerse.int16('3'),'myint16':TestVerse.int8('9'),'myoptint16':TestVerse.int8('10'),'mydouble':TestVerse.float('2.12'),'myoptdouble':TestVerse.int64('32'),'myfloat':TestVerse.int8('9'),'myoptfloat':TestVerse.int32('328')};
+select element {'myint64':bigint('13'),'myoptint64':13,'myint32':tinyint('2'),'myoptint32':smallint('3'),'myint16':tinyint('9'),'myoptint16':tinyint('10'),'mydouble':float('2.12'),'myoptdouble':bigint('32'),'myfloat':tinyint('9'),'myoptfloat':integer('328')};
 insert into Int64Test
-select element {'myint64':12,'myoptint64':null,'myint32':TestVerse.int8('2'),'myoptint32':TestVerse.date(null),'myint16':TestVerse.int8('9'),'myoptint16':TestVerse.`interval-starts`(null,null),'mydouble':TestVerse.float('2.12'),'myoptdouble':TestVerse.time(null),'myfloat':TestVerse.int8('9'),'myoptfloat':TestVerse.datetime(null)};
+select element {'myint64':12,'myoptint64':null,'myint32':tinyint('2'),'myoptint32':date(null),'myint16':tinyint('9'),'myoptint16':`interval-starts`(null,null),'mydouble':float('2.12'),'myoptdouble':time(null),'myfloat':tinyint('9'),'myoptfloat':datetime(null)};
 insert into Int64Test
-select element {'myint64':TestVerse.int16('11'),'myoptint64':TestVerse.int8('3'),'myint32':TestVerse.int8('2'),'myoptint32':TestVerse.int16('3'),'myint16':TestVerse.int8('9'),'myoptint16':TestVerse.int8('10'),'mydouble':TestVerse.int8('2'),'myoptdouble':TestVerse.int16('32'),'myfloat':TestVerse.int16('9'),'myoptfloat':TestVerse.datetime(null)};
+select element {'myint64':smallint('11'),'myoptint64':tinyint('3'),'myint32':tinyint('2'),'myoptint32':smallint('3'),'myint16':tinyint('9'),'myoptint16':tinyint('10'),'mydouble':tinyint('2'),'myoptdouble':smallint('32'),'myfloat':smallint('9'),'myoptfloat':datetime(null)};

@@ -26,7 +26,7 @@ warehousing and social data storage and analysis. AsterixDB has:
 
  * A semistructured NoSQL style data model (ADM) resulting from extending JSON
    with object database ideas
- * An expressive and declarative query language (AQL) that supports a broad
+ * Two expressive and declarative query languages (SQL++ and AQL) that support a broad
    range of queries and analysis over semistructured data
  * A parallel runtime query execution engine, Apache Hyracks, that has been
    scale-tested on up to 1000+ cores and 500+ disks

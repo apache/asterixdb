@@ -55,7 +55,8 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Plan ID: " + planId);
+        sb.append(CompleteFailbackRequestMessage.class.getSimpleName());
+        sb.append(" Plan ID: " + planId);
         sb.append(" Node ID: " + nodeId);
         sb.append(" Partitions: " + partitions);
         return sb.toString();
@@ -78,7 +79,7 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
             CompleteFailbackResponseMessage reponse = new CompleteFailbackResponseMessage(planId,
                     requestId, partitions);
             try {
-                broker.sendMessageToCC(reponse, null);
+                broker.sendMessageToCC(reponse);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failure sending message to CC", e);
                 hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
@@ -87,10 +88,5 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
         if (hde != null) {
             throw hde;
         }
-    }
-
-    @Override
-    public String type() {
-        return "COMPLETE_FAILBACK_REQUEST";
     }
 }

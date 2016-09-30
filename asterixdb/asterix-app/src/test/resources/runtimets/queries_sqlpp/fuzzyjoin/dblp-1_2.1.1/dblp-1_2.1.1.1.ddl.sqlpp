@@ -25,7 +25,7 @@ use fuzzyjoin;
 
 create type fuzzyjoin.DBLPType as
  closed {
-  id : int32,
+  id : integer,
   dblpid : string,
   title : string,
   authors : string,

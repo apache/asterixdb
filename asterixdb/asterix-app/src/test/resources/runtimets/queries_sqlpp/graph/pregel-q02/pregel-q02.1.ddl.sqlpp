@@ -25,14 +25,14 @@ use Pregelix;
 
 create type Pregelix.EdgeType as
 {
-  destVertexId : int64,
+  destVertexId : bigint,
   `value` : float?
 }
 
 create type Pregelix.NodeType as
 {
-  id : int64,
-  `value` : int64?,
+  id : bigint,
+  `value` : bigint?,
   edges : {{EdgeType}}
 }
 

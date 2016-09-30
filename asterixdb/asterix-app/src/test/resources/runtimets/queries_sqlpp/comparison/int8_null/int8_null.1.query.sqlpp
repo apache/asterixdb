@@ -18,4 +18,4 @@
  */
 
 
-{'result1':(int8('3') > null),'result2':(null >= int8('3')),'result3':(int8('3') < null),'result4':(null <= int8('3')),'result5':(int8('3') = null),'result6':(null != int8('3'))};
+{'result1':(tinyint('3') > null),'result2':(null >= tinyint('3')),'result3':(tinyint('3') < null),'result4':(null <= tinyint('3')),'result5':(tinyint('3') = null),'result6':(null != tinyint('3'))};

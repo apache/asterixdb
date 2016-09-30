@@ -23,5 +23,5 @@ use test;
 select element {'id':c.cid,'custname':c.name,'age':c.age,'MathcashBack':rec}
 from  Customers as c
 with  rec as {'cashBack':c.cashBack,'cashBack+5':(c.cashBack + 5),'cashBack-5':(c.cashBack - 5),'cashBack*5':(c.cashBack * 5),'cashBack/5':(c.cashBack / 5),'-cashBack':-c.cashBack}
-where (c.cid >= test.int32('3'))
+where (c.cid >= test.integer('3'))
 ;

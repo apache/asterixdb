@@ -16,13 +16,15 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-    <test-case FilePath="comparison/deep_equal">
-      <compilation-unit name="documentation-example">
-        <output-dir compare="Text">documentation-example</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="comparison/deep_equal">
-      <compilation-unit name="open-records-example">
-        <output-dir compare="Text">open-records-example</output-dir>
-      </compilation-unit>
-    </test-case>
+<test-group name="deep-equal">
+  <test-case FilePath="comparison/deep_equal">
+    <compilation-unit name="documentation-example">
+      <output-dir compare="Text">documentation-example</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison/deep_equal">
+    <compilation-unit name="open-records-example">
+      <output-dir compare="Text">open-records-example</output-dir>
+    </compilation-unit>
+  </test-case>
+</test-group>

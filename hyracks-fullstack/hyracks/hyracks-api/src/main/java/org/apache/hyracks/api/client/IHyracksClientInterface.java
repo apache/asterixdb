@@ -54,7 +54,9 @@ public interface IHyracksClientInterface {
 
     public JobInfo getJobInfo(JobId jobId) throws Exception;
 
-    public void stopCluster() throws Exception;
+    public void stopCluster(boolean terminateNCService) throws Exception;
 
     public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception;
+
+    public String getThreadDump(String node) throws Exception;
 }

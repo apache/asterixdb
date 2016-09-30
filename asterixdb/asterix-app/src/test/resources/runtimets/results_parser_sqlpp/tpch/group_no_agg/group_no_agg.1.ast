@@ -1,7 +1,7 @@
 DataverseUse tpch
 TypeDecl RegionType [
   closed RecordType {
-    r_regionkey : int32,
+    r_regionkey : integer,
     r_name : string,
     r_comment : string
   }

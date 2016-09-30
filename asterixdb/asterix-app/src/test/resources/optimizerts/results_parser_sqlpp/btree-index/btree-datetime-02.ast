@@ -1,7 +1,7 @@
 DataverseUse emergencyTest
 TypeDecl CHPReport [
   open RecordType {
-    id : int64,
+    id : bigint,
     timestamp : datetime,
     title : string,
     message : string

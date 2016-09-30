@@ -24,22 +24,19 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 
 public class AsterixThreadFactory implements ThreadFactory {
 
+    private final ThreadFactory delegate;
     private final ILifeCycleComponentManager lccm;
 
-    public AsterixThreadFactory(ILifeCycleComponentManager lifeCycleComponentManager) {
+    public AsterixThreadFactory(ThreadFactory delegate, ILifeCycleComponentManager lifeCycleComponentManager) {
+        this.delegate = delegate;
         this.lccm = lifeCycleComponentManager;
     }
 
     @Override
-    public Thread newThread(Runnable r) {
-        Thread t;
-        if ((r instanceof Thread)) {
-            t = (Thread) r;
-        } else {
-            t = new Thread(r);
-        }
-        t.setUncaughtExceptionHandler(lccm);
-        return t;
+    public Thread newThread(Runnable runnable) {
+        Thread thread = delegate.newThread(runnable);
+        thread.setUncaughtExceptionHandler(lccm);
+        return thread;
     }
 
 }

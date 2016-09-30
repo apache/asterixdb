@@ -1,11 +1,11 @@
 DataverseUse test
 TypeDecl NumericType [
   open RecordType {
-    id : int32,
-    int8Field : int8?,
-    int16Field : int16?,
-    int32Field : int32?,
-    int64Field : int64?,
+    id : integer,
+    int8Field : tinyint?,
+    int16Field : smallint?,
+    int32Field : integer?,
+    int64Field : bigint?,
     floatField : float?,
     doubleField : double?
   }

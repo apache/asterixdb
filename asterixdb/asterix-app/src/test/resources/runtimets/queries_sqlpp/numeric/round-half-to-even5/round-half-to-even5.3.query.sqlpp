@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.`round-half-to-even`(test.int8('-20')),'f1':test.`round-half-to-even`(-1.5),'f2':test.`round-half-to-even`(12.5),'f3':test.`round-half-to-even`(1.5)};
+{'f0':test.`round-half-to-even`(test.tinyint('-20')),'f1':test.`round-half-to-even`(-1.5),'f2':test.`round-half-to-even`(12.5),'f3':test.`round-half-to-even`(1.5)};

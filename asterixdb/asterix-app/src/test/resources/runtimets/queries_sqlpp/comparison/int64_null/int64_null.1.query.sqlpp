@@ -17,4 +17,5 @@
  * under the License.
  */
 
-{'result1':(test.int64('3') > null),'result2':(null >= test.int64('3')),'result3':(test.int64('3') < null),'result4':(null <= test.int64('3')),'result5':(test.int64('3') = null),'result6':(null != test.int64('3'))};
+{'result1':(bigint('3') > null),'result2':(null >= bigint('3')),'result3':(bigint('3') < null),'result4':(null <= bigint('3')),'result5':(bigint('3') = null),'result6':(null != bigint('3'))};
+

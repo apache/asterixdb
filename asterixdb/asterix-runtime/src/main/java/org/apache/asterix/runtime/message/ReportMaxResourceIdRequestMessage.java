@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReportMaxResourceIdRequestMessage extends AbstractApplicationMessage {
+public class ReportMaxResourceIdRequestMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -32,7 +32,7 @@ public class ReportMaxResourceIdRequestMessage extends AbstractApplicationMessag
     }
 
     @Override
-    public String type() {
-        return "REPORT_MAX_RESOURCE_ID_REQUEST";
+    public String toString() {
+        return ReportMaxResourceIdRequestMessage.class.getSimpleName();
     }
 }

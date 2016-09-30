@@ -30,53 +30,53 @@ use test;
 
 create type test.S as
 {
-  id : int64
+  id : bigint
 }
 
 create type test.GS as
 {
-  id : int64,
+  id : bigint,
   Genus : string
 }
 
 create type test.FGS as
 {
-  id : int64,
+  id : bigint,
   Family : string
 }
 
 create type test.OFGS as
 {
-  id : int64,
+  id : bigint,
   `Order` : string
 }
 
 create type test.COFGS as
 {
-  id : int64,
+  id : bigint,
   Class : string
 }
 
 create type test.PCOFGS as
 {
-  id : int64,
+  id : bigint,
   Phylum : string
 }
 
 create type test.KPCOFGS as
 {
-  id : int64,
+  id : bigint,
   Kingdom : string
 }
 
 create type test.Classification as
 {
-  id : int64
+  id : bigint
 }
 
 create type test.Animal as
 {
-  id : int64
+  id : bigint
 }
 
 create  dataset Animals(Animal) primary key id;

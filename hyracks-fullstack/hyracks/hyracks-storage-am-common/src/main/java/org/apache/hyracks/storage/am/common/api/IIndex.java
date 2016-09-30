@@ -26,7 +26,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
  * This interface describes the operations common to all indexes. Indexes
  * implementing this interface can easily reuse existing index operators for
  * dataflow. Users must perform operations on an via an {@link IIndexAccessor}.
- * During dataflow, the lifecycle of IIndexes are handled through an {@link IIndexLifecycleManager}.
+ * During dataflow, the lifecycle of IIndexes are handled through an {@link IResourceLifecycleManager}.
  */
 public interface IIndex {
 

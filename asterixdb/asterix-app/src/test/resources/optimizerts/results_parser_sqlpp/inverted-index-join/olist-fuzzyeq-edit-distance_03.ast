@@ -1,22 +1,22 @@
 DataverseUse test
 TypeDecl AddressType [
   closed RecordType {
-    number : int32,
+    number : integer,
     street : string,
     city : string
   }
 ]
 TypeDecl CustomerType [
   closed RecordType {
-    cid : int32,
+    cid : integer,
     name : string,
-    age : int32?,
+    age : integer?,
     address : AddressType?,
     interests : OrderedList [string]
 ,
     children : OrderedList [          open RecordType {
             name : string,
-            age : int32?
+            age : integer?
           }
 ]
 

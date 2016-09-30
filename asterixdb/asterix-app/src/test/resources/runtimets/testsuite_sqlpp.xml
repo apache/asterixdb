@@ -1077,6 +1077,11 @@
         <output-dir compare="Text">neq_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="comparison">
+      <compilation-unit name="neq_02">
+        <output-dir compare="Text">neq_01</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
         <test-case FilePath="comparison">
           <compilation-unit name="numeric-comparison_01">
@@ -2441,7 +2446,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q07_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function coll_count could potentially express the intent.</expected-error>
+        <expected-error>COUNT is a SQL-92 aggregate function. The SQL++ core aggregate function array_count could potentially express the intent.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -2473,6 +2478,16 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="query-ASTERIXDB-159">
         <output-dir compare="Text">query-ASTERIXDB-159</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="query-ASTERIXDB-1626">
+        <output-dir compare="Text">query-ASTERIXDB-1626</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="global-aggregate">
+      <compilation-unit name="query-ASTERIXDB-1626-2">
+        <output-dir compare="Text">query-ASTERIXDB-1626-2</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -3158,7 +3173,7 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="missing-optionality">
           <output-dir compare="Text">missing-optionality</output-dir>
-          <expected-error>"?"</expected-error>
+          <expected-error>string) enforced</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
@@ -4372,6 +4387,11 @@
         <output-dir compare="Text">sign</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="non-finite">
+        <output-dir compare="Clean-JSON">non-finite</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="open-closed">
     <!--
@@ -4667,6 +4687,11 @@
     </test-case>
   </test-group>
   <test-group name="quantifiers">
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="anysat_01">
+        <output-dir compare="Text">somesat_01</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="quantifiers">
       <compilation-unit name="everysat_01">
         <output-dir compare="Text">everysat_01</output-dir>
@@ -5768,6 +5793,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1572">
+        <output-dir compare="Text">query-ASTERIXDB-1572</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="query-ASTERIXDB-1574">
         <output-dir compare="Text">query-ASTERIXDB-1574</output-dir>
         <expected-error>Unnest or index access expects the input to be a collection, but it was of type</expected-error>
@@ -5921,8 +5951,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1591">
+        <output-dir compare="Text">query-ASTERIXDB-1591</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="query-ASTERIXDB-1596">
         <output-dir compare="Text">query-ASTERIXDB-1596</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="query-ASTERIXDB-1602">
+        <output-dir compare="Text">query-ASTERIXDB-1602</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -6967,6 +7007,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-ASTERIXDB-1652">
+        <expected-error>In function call "test.length(...)", the dataverse "test" cannot be found!</expected-error>
+        <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-ASTERIXDB-1652-2">
+        <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue218-2">
         <output-dir compare="Text">query-issue218-2</output-dir>
       </compilation-unit>
@@ -6989,7 +7040,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>function test.printName@0 is undefined</expected-error>
+        <expected-error>function test.printName@0 is not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -7155,13 +7206,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
-        <expected-error>Cannot find dataset y because there is no dataverse declared, nor an alias with name y</expected-error>
+        <expected-error>Cannot find dataset y in dataverse Default nor an alias with name y</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>function test.int8@0 is undefined</expected-error>
+        <expected-error>function test.tinyint@0 is not defined</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->
@@ -7670,6 +7721,11 @@
   </test-group>
   <test-group name="types">
     <test-case FilePath="types">
+      <compilation-unit name="any-object">
+        <output-dir compare="Text">any-object</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>
       </compilation-unit>
@@ -8078,6 +8134,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">
+      <compilation-unit name="union_negative_3">
+        <output-dir compare="Text">union</output-dir>
+        <expected-error>Operation UNION with set semantics is not supported.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
       <compilation-unit name="union_orderby">
         <output-dir compare="Text">union_orderby</output-dir>
       </compilation-unit>
@@ -8100,6 +8162,11 @@
     <test-case FilePath="union">
       <compilation-unit name="query-ASTERIXDB-1354-2">
         <output-dir compare="Text">query-ASTERIXDB-1354-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="query-ASTERIXDB-1629">
+        <output-dir compare="Text">query-ASTERIXDB-1629</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

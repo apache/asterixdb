@@ -31,7 +31,7 @@ use test;
 
 create type test.sType as
  closed {
-  b : int32
+  b : integer
 }
 
 create  dataset s(sType) primary key b;

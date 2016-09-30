@@ -74,6 +74,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final Queue<BufferCacheHeaderHelper> headerPageCache = new ConcurrentLinkedQueue<>();
 
     //DEBUG
+    private Level fileOpsLevel = Level.FINE;
     private ArrayList<CachedPage> confiscatedPages;
     private Lock confiscateLock;
     private HashMap<CachedPage, StackTraceElement[]> confiscatedPagesOwner;
@@ -789,8 +790,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void createFile(FileReference fileRef) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Creating file: " + fileRef + " in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Creating file: " + fileRef + " in cache: " + this);
         }
         synchronized (fileInfoMap) {
             fileMapManager.registerFile(fileRef);
@@ -799,8 +800,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public int createMemFile() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Creating memory file in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Creating memory file in cache: " + this);
         }
         int fileId;
         synchronized (fileInfoMap) {
@@ -815,8 +816,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void openFile(int fileId) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Opening file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Opening file: " + fileId + " in cache: " + this);
         }
         synchronized (fileInfoMap) {
             BufferedFileHandle fInfo;
@@ -916,8 +917,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void closeFile(int fileId) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Closing file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Closing file: " + fileId + " in cache: " + this);
         }
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(dumpState());
@@ -932,8 +933,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 throw new HyracksDataException("Closed fileId: " + fileId + " more times than it was opened.");
             }
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Closed file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Closed file: " + fileId + " in cache: " + this);
         }
     }
 
@@ -954,8 +955,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public synchronized void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Deleting file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Deleting file: " + fileId + " in cache: " + this);
         }
         synchronized (fileInfoMap) {
             sweepAndFlush(fileId, flushDirtyPages);
@@ -997,8 +998,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public synchronized void deleteMemFile(int fileId) throws HyracksDataException {
         //TODO: possible sanity chcecking here like in above?
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Deleting memory file: " + fileId + " in cache: " + this);
+        if (LOGGER.isLoggable(fileOpsLevel)) {
+            LOGGER.log(fileOpsLevel, "Deleting memory file: " + fileId + " in cache: " + this);
         }
         synchronized (virtualFiles) {
             virtualFiles.remove(fileId);

@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppRuntimeContextProvider {
 
@@ -73,11 +72,6 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     @Override
     public ILocalResourceRepository getLocalResourceRepository() {
         return asterixAppRuntimeContext.getLocalResourceRepository();
-    }
-
-    @Override
-    public IResourceIdFactory getResourceIdFactory() {
-        return asterixAppRuntimeContext.getResourceIdFactory();
     }
 
     @Override

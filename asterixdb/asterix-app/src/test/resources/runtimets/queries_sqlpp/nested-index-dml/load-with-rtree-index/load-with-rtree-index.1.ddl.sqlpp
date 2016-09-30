@@ -27,17 +27,17 @@ create type TinySocial.TwitterUserType as
 {
   `screen-name` : string,
   lang : string,
-  friends_count : int64,
-  statuses_count : int64,
+  friends_count : bigint,
+  statuses_count : bigint,
   name : string,
-  followers_count : int64,
+  followers_count : bigint,
   `sender-location` : point?
 }
 
 create type TinySocial.TweetMessageType as
  closed {
   user : TwitterUserType,
-  tweetid : int64,
+  tweetid : bigint,
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string

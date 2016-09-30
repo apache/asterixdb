@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
@@ -38,9 +39,14 @@ import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AOrderedList;
+import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -78,16 +84,14 @@ public class LangRecordParseUtil {
                 break;
             default:
                 throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
-                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE,
-                        new Serializable[] { Expression.Kind.LITERAL_EXPRESSION.toString(),
-                                Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
+                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE, new Serializable[] { Expression.Kind.LITERAL_EXPRESSION
+                                .toString(), Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
                                 Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString() });
         }
     }
 
     public static void parseRecord(RecordConstructor recordValue, ArrayBackedValueStorage serialized, boolean tagged,
-            List<Pair<String, String>> defaults)
-            throws HyracksDataException {
+            List<Pair<String, String>> defaults) throws HyracksDataException {
         AMutableString fieldNameString = new AMutableString(null);
         ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
@@ -102,8 +106,8 @@ public class LangRecordParseUtil {
             // get key
             fieldNameString.setValue(exprToStringLiteral(fb.getLeftExpr()).getStringValue());
             if (!fieldNames.add(fieldNameString.getStringValue())) {
-                throw new HyracksDataException(
-                        "Field " + fieldNameString.getStringValue() + " was specified multiple times");
+                throw new HyracksDataException("Field " + fieldNameString.getStringValue()
+                        + " was specified multiple times");
             }
             stringSerde.serialize(fieldNameString, fieldName.getDataOutput());
             // get value
@@ -186,5 +190,45 @@ public class LangRecordParseUtil {
                 throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
                         "Unknown Literal Type %1$s", value.getLiteralType());
         }
+    }
+
+    public static void recordToMap(Map<String, String> map, ARecord record)
+            throws AlgebricksException {
+        String[] keys = record.getType().getFieldNames();
+        for (int i = 0; i < keys.length; i++) {
+            String key = keys[i];
+            String value = aObjToString(record.getValueByPos(i));
+            map.put(key, value);
+        }
+    }
+
+    public static String aObjToString(IAObject aObj) throws AlgebricksException {
+        switch (aObj.getType().getTypeTag()) {
+            case DOUBLE:
+                return Double.toString(((ADouble) aObj).getDoubleValue());
+            case INT64:
+                return Long.toString(((AInt64) aObj).getLongValue());
+            case ORDEREDLIST:
+                return aOrderedListToString((AOrderedList) aObj);
+            case STRING:
+                return ((AString) aObj).getStringValue();
+            default:
+                throw new AlgebricksException("value of type " + aObj.getType() + " is not supported yet");
+        }
+    }
+
+    private static String aOrderedListToString(AOrderedList ol) throws AlgebricksException {
+        StringBuilder delimitedList = new StringBuilder();
+        IACursor cursor = ol.getCursor();
+        if (cursor.next()) {
+            IAObject next = cursor.get();
+            delimitedList.append(aObjToString(next));
+        }
+        while (cursor.next()) {
+            IAObject next = cursor.get();
+            delimitedList.append(",");
+            delimitedList.append(aObjToString(next));
+        }
+        return delimitedList.toString();
     }
 }

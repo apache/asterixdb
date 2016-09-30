@@ -43,7 +43,7 @@
                                                 -- STREAM_PROJECT  |UNPARTITIONED|
                                                   -- ASSIGN  |UNPARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- SPLIT  |PARTITIONED|
+                                                      -- REPLICATE  |PARTITIONED|
                                                         -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
                                                           -- RUNNING_AGGREGATE  |PARTITIONED|
                                                             -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
@@ -80,7 +80,7 @@
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- SPLIT  |PARTITIONED|
+                                                -- REPLICATE  |PARTITIONED|
                                                   -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
                                                     -- RUNNING_AGGREGATE  |PARTITIONED|
                                                       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|

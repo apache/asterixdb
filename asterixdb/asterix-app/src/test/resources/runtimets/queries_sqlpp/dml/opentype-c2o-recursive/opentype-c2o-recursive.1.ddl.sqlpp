@@ -37,7 +37,7 @@ create type testdv2.AddressType as
 create type testdv2.Dept as
 {
   name : string,
-  id : int64
+  id : bigint
 }
 
 create type testdv2.testtype as

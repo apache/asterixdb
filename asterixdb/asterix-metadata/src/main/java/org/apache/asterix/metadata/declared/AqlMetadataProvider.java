@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
@@ -42,8 +42,8 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallb
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
@@ -92,8 +92,8 @@ import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.AsterixLSMInvertedIndexUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.operators.AsterixLSMTreeUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
@@ -415,6 +415,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AsterixException(e);
         }
         return format;
+    }
+
+    public Dataverse findDataverse(String dataverseName) throws AsterixException {
+        return MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
     }
 
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> buildFeedIntakeRuntime(
@@ -951,7 +955,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName())
                 .getNodeNames();
         for (String nd : nodeGroup) {
-            numPartitions += AsterixClusterProperties.INSTANCE.getNodePartitionsCount(nd);
+            numPartitions += ClusterStateManager.INSTANCE.getNodePartitionsCount(nd);
         }
         numElementsHint = numElementsHint / numPartitions;
         return numElementsHint;
@@ -1027,7 +1031,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
-        return AsterixClusterProperties.INSTANCE.getClusterLocations();
+        return ClusterStateManager.INSTANCE.getClusterLocations();
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForFilesIndex(
@@ -1829,7 +1833,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         // One token (+ optional partitioning field) + primary keys: [token,
         // number of token, PK]
         int numKeys = primaryKeys.size() + secondaryKeys.size();
-        int numTokenKeyPairFields = (!isPartitioned) ? 1 + primaryKeys.size() : 2 + primaryKeys.size();
         int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
 
         // generate field permutations
@@ -1956,8 +1959,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
 
                 filterFieldsForNonBulkLoadOps = new int[numFilterFields];
-                filterFieldsForNonBulkLoadOps[0] = numTokenKeyPairFields;
-                invertedIndexFieldsForNonBulkLoadOps = new int[numTokenKeyPairFields];
+                //for non-bulk-loads, there is only <SK,PK,F> in the incoming tuples
+                filterFieldsForNonBulkLoadOps[0] = numKeys;
+                invertedIndexFieldsForNonBulkLoadOps = new int[numKeys];
                 for (int k = 0; k < invertedIndexFieldsForNonBulkLoadOps.length; k++) {
                     invertedIndexFieldsForNonBulkLoadOps[k] = k;
                 }

@@ -2,12 +2,12 @@ DataverseUse insertIssue
 TypeDecl subElem [
   closed RecordType {
     n : string,
-    e : int64?
+    e : bigint?
   }
 ]
 TypeDecl elem [
   closed RecordType {
-    id : int64,
+    id : bigint,
     name : string,
     sub : OrderedList [subElem]
 

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -29,6 +32,7 @@ import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.api.http.servlet.AQLAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
+import org.apache.asterix.api.http.servlet.ClusterCCDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
 import org.apache.asterix.api.http.servlet.DDLAPIServlet;
@@ -49,6 +53,7 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.event.service.ILookupService;
@@ -59,7 +64,6 @@ import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManager;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
@@ -71,9 +75,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
@@ -94,7 +95,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
+        appCtx.setThreadFactory(new AsterixThreadFactory(appCtx.getThreadFactory(), new LifeCycleComponentManager()));
         GlobalRecoveryManager.instantiate((HyracksConnection) getNewHyracksClientConnection());
         ILibraryManager libraryManager = new ExternalLibraryManager();
         AsterixResourceIdManager resourceIdManager = new AsterixResourceIdManager();
@@ -219,6 +220,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.VERSION);
         addServlet(context, Servlets.CLUSTER_STATE);
         addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL);
+        addServlet(context, Servlets.CLUSTER_STATE_CC_DETAIL);
 
         return jsonAPIServer;
     }
@@ -294,6 +296,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 return new ClusterAPIServlet();
             case CLUSTER_STATE_NODE_DETAIL:
                 return new ClusterNodeDetailsAPIServlet();
+            case CLUSTER_STATE_CC_DETAIL:
+                return new ClusterCCDetailsAPIServlet();
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }
@@ -320,7 +324,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         ILookupService zookeeperService = ClusterManager.getLookupService();
         if (zookeeperService != null) {
             // Our asterix app runtimes tests don't use zookeeper
-            zookeeperService.reportClusterState(AsterixClusterProperties.INSTANCE.getCluster().getInstanceName(),
+            zookeeperService.reportClusterState(ClusterProperties.INSTANCE.getCluster().getInstanceName(),
                     ClusterState.ACTIVE);
         }
     }

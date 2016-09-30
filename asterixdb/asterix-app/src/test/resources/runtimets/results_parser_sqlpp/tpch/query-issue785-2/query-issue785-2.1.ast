@@ -1,23 +1,23 @@
 DataverseUse tpch
 TypeDecl OrderType [
   closed RecordType {
-    o_orderkey : int64,
-    o_custkey : int64,
+    o_orderkey : bigint,
+    o_custkey : bigint,
     o_orderstatus : string,
     o_totalprice : double,
     o_orderdate : string,
     o_orderpriority : string,
     o_clerk : string,
-    o_shippriority : int64,
+    o_shippriority : bigint,
     o_comment : string
   }
 ]
 TypeDecl CustomerType [
   closed RecordType {
-    c_custkey : int64,
+    c_custkey : bigint,
     c_name : string,
     c_address : string,
-    c_nationkey : int64,
+    c_nationkey : bigint,
     c_phone : string,
     c_acctbal : double,
     c_mktsegment : string,
@@ -26,10 +26,10 @@ TypeDecl CustomerType [
 ]
 TypeDecl SupplierType [
   closed RecordType {
-    s_suppkey : int64,
+    s_suppkey : bigint,
     s_name : string,
     s_address : string,
-    s_nationkey : int64,
+    s_nationkey : bigint,
     s_phone : string,
     s_acctbal : double,
     s_comment : string
@@ -37,15 +37,15 @@ TypeDecl SupplierType [
 ]
 TypeDecl NationType [
   closed RecordType {
-    n_nationkey : int64,
+    n_nationkey : bigint,
     n_name : string,
-    n_regionkey : int64,
+    n_regionkey : bigint,
     n_comment : string
   }
 ]
 TypeDecl RegionType [
   closed RecordType {
-    r_regionkey : int64,
+    r_regionkey : bigint,
     r_name : string,
     r_comment : string
   }

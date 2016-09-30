@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl DBLPNestedType [
   open RecordType {
-    id : int32,
+    id : integer,
     dblpid : string,
     authors : string,
     misc : string

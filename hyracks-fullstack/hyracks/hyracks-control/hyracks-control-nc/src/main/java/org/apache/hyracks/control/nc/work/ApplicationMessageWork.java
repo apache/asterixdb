@@ -53,7 +53,7 @@ public class ApplicationMessageWork extends AbstractWork {
             if (ctx.getMessageBroker() != null) {
                 ctx.getMessageBroker().receivedMessage(data, nodeId);
             } else {
-                LOGGER.log(Level.WARNING, "Messsage was sent, but no Message Broker set!");
+                LOGGER.log(Level.WARNING, "Message was sent, but no Message Broker set!");
             }
         } catch (Exception e) {
             Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error in application message delivery!", e);

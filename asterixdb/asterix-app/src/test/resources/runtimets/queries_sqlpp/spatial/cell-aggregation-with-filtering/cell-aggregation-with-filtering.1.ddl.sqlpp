@@ -25,8 +25,8 @@ use test;
 
 create type test.Tweet as
  closed {
-  id : int64,
-  tweetid : int64,
+  id : bigint,
+  tweetid : bigint,
   loc : point,
   time : datetime,
   text : string

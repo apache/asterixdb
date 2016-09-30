@@ -22,12 +22,12 @@ import java.io.Serializable;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ActiveManagerMessage extends AbstractApplicationMessage {
+public class ActiveManagerMessage implements IApplicationMessage {
     public static final byte STOP_ACTIVITY = 0x00;
 
     private static final long serialVersionUID = 1L;
@@ -62,7 +62,7 @@ public class ActiveManagerMessage extends AbstractApplicationMessage {
     }
 
     @Override
-    public String type() {
-        return "ACTIVE_MANAGER_MESSAGE";
+    public String toString() {
+        return ActiveManagerMessage.class.getSimpleName();
     }
 }

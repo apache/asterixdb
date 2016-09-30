@@ -1,9 +1,9 @@
 TypeDecl Emp [
   closed RecordType {
-    id : int64,
+    id : bigint,
     fname : string,
     lname : string,
-    age : int64,
+    age : bigint,
     dept : string
   }
 ]

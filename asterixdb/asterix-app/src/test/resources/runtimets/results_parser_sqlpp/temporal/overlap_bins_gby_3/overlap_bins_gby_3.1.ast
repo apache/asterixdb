@@ -1,9 +1,9 @@
 DataverseUse multitask
 TypeDecl LogType [
   closed RecordType {
-    row_id : int32,
+    row_id : integer,
     time : time,
-    duration : int32,
+    duration : integer,
     app : string
   }
 ]

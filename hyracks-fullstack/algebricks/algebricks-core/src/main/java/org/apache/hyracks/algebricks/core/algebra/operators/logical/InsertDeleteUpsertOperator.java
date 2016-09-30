@@ -216,7 +216,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
         return additionalFilteringExpressions;
     }
 
-    public LogicalVariable getPrevRecordVar() {
+    public LogicalVariable getBeforeOpRecordVar() {
         return prevRecordVar;
     }
 
@@ -228,7 +228,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
         prevRecordType = recordType;
     }
 
-    public LogicalVariable getPrevFilterVar() {
+    public LogicalVariable getBeforeOpFilterVar() {
         return prevFilterVar;
     }
 
@@ -244,7 +244,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
         this.prevFilterType = prevFilterType;
     }
 
-    public List<LogicalVariable> getPrevAdditionalNonFilteringVars() {
+    public List<LogicalVariable> getBeforeOpAdditionalNonFilteringVars() {
         return prevAdditionalNonFilteringVars;
     }
 

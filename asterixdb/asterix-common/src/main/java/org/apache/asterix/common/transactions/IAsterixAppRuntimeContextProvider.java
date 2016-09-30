@@ -27,7 +27,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public interface IAsterixAppRuntimeContextProvider {
 
@@ -48,8 +47,6 @@ public interface IAsterixAppRuntimeContextProvider {
     public ILSMIOOperationScheduler getLSMIOScheduler();
 
     public ILocalResourceRepository getLocalResourceRepository();
-
-    public IResourceIdFactory getResourceIdFactory();
 
     public IIOManager getIOManager();
 

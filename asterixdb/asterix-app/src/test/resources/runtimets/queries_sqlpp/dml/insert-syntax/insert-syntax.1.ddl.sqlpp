@@ -31,7 +31,7 @@ use testdv2;
 
 create type testdv2.testtype as
 {
-  id : int64,
+  id : bigint,
   name : string
 }
 

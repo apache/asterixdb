@@ -1,19 +1,19 @@
 DataverseUse test
 TypeDecl AddressType [
   open RecordType {
-    number : int64,
+    number : bigint,
     street : string,
     city : string
   }
 ]
 TypeDecl CustomerType [
   open RecordType {
-    cid : int64,
+    cid : bigint,
     name : string,
-    age : int64?,
+    age : bigint?,
     address : AddressType?,
     lastorder :       open RecordType {
-        oid : int64,
+        oid : bigint,
         total : float
       }
 

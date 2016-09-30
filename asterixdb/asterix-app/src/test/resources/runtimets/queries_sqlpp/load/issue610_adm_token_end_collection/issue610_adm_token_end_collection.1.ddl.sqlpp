@@ -30,9 +30,9 @@ use foo;
 
 create type foo.bartype as
 {
-  id : int32,
+  id : integer,
   nest_rec : {
-      id : int32
+      id : integer
   }
 
 }

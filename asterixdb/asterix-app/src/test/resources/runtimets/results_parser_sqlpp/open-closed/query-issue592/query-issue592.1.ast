@@ -1,12 +1,12 @@
 DataverseUse fooverse
 TypeDecl bartype [
   open RecordType {
-    baz : int64
+    baz : bigint
   }
 ]
 TypeDecl footype [
   open RecordType {
-    id : int64,
+    id : bigint,
     bars : OrderedList [bartype]
 ?
   }

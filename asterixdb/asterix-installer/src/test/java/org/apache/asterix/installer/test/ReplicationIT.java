@@ -49,7 +49,7 @@ public class ReplicationIT {
             .join(new String[] { "src", "test", "resources", "integrationts", "replication" }, File.separator);
     private static final String CLUSTER_BASE = StringUtils
             .join(new String[] { "src", "test", "resources", "clusterts" }, File.separator);
-    private static final String PATH_ACTUAL = "repliationtest" + File.separator;
+    private static final String PATH_ACTUAL = "target" + File.separator + "repliationtest" + File.separator;
     private static String managixFolderName;
     private static final Logger LOGGER = Logger.getLogger(ReplicationIT.class.getName());
     private static File asterixProjectDir = new File(System.getProperty("user.dir"));

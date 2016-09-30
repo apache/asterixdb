@@ -32,7 +32,7 @@ set `import-private-functions` `true`;
 
 create type test.DBLPType as
  closed {
-  id : int32,
+  id : integer,
   dblpid : string,
   title : string,
   authors : string,

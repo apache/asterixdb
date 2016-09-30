@@ -40,11 +40,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -64,7 +64,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             return false;
         }
         GroupByOperator gbyOp = (GroupByOperator) op;
-        if (gbyOp.getExecutionMode() != ExecutionMode.PARTITIONED) {
+        ExecutionMode executionMode = gbyOp.getExecutionMode();
+        if (executionMode != ExecutionMode.PARTITIONED
+                && !(executionMode == ExecutionMode.UNPARTITIONED && gbyOp.isGroupAll())) {
             return false;
         }
 
@@ -195,6 +197,11 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             newGbyOp.addGbyExpression(replGbyList.get(i), new VariableReferenceExpression(newOpGbyList.get(i)));
             VariableUtilities.substituteVariables(gbyOp, newOpGbyList.get(i), replGbyList.get(i), false, context);
         }
+
+        // Sets the global flag to be false.
+        newGbyOp.setGlobal(false);
+        // Sets the group all flag.
+        newGbyOp.setGroupAll(gbyOp.isGroupAll());
         return newGbyOp;
     }
 

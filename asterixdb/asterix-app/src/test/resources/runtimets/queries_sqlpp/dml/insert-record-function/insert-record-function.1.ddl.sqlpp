@@ -31,9 +31,9 @@ use test;
 
 create type test.LineIDType as
  closed {
-  l_orderkey : int32,
-  l_linenumber : int32,
-  l_suppkey : int32
+  l_orderkey : integer,
+  l_linenumber : integer,
+  l_suppkey : integer
 }
 
 create  dataset LineID(LineIDType) primary key l_orderkey,l_linenumber;

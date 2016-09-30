@@ -26,7 +26,7 @@ use STBench;
 create type STBench.SimpleGeoPlaceType as
  closed {
   coordinates : point,
-  id : int64,
+  id : bigint,
   name : string,
   tags : string,
   categories : string,

@@ -25,7 +25,7 @@ use local;
 
 create type local.ttype as
 {
-  id : int32
+  id : integer
 }
 
 create  dataset dset(ttype) primary key id;

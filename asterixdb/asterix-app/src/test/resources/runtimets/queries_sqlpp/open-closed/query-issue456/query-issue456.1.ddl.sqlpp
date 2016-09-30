@@ -31,9 +31,9 @@ use test;
 
 create type test.TypeOpen as
 {
-  id : int64,
-  int_m : int64,
-  int_o : int64?,
+  id : bigint,
+  int_m : bigint,
+  int_o : bigint?,
   string_m : string,
   string_o : string?
 }

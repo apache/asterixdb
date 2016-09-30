@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.floor(test.int8('-20')),'f1':test.floor(-1.11),'f2':test.floor(12.9),'f3':test.floor(1.11)};
+{'f0':test.floor(test.tinyint('-20')),'f1':test.floor(-1.11),'f2':test.floor(12.9),'f3':test.floor(1.11)};

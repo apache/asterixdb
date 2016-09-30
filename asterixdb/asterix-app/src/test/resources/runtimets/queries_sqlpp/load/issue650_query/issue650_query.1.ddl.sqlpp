@@ -30,9 +30,9 @@ use fuzzyjoin;
 
 create type fuzzyjoin.UserType as
 {
-  uid : int32,
+  uid : integer,
   name : string,
-  lottery_numbers : [int32],
+  lottery_numbers : [integer],
   interests : {{string}}
 }
 

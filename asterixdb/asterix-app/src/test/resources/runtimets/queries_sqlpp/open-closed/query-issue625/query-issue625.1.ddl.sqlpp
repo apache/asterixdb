@@ -31,8 +31,8 @@ use fooverse;
 
 create type fooverse.FooType as
 {
-  id : int64,
-  numbers : [int64]
+  id : bigint,
+  numbers : [bigint]
 }
 
 create  dataset Foo(FooType) primary key id;

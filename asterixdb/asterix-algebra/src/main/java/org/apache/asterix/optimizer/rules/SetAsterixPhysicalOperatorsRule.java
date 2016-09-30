@@ -171,7 +171,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                         columnList.add(varRef.getVariableReference());
                                     }
                                 }
-                                op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
+                                op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll()));
                             }
                         }
                     } else if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag()
@@ -185,7 +185,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 columnList.add(varRef.getVariableReference());
                             }
                         }
-                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList));
+                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll()));
                     } else {
                         throw new AlgebricksException("Unsupported nested operator within a group-by: "
                                 + ((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().name());

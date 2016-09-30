@@ -30,7 +30,7 @@ use test;
 
 create type test.DBLPNestedType as
  closed {
-  id : int64,
+  id : bigint,
   dblpid : string,
   title : string,
   authors : string,
@@ -44,7 +44,7 @@ create type test.DBLPType as
 
 create type test.CSXNestedType as
  closed {
-  id : int64,
+  id : bigint,
   csxid : string,
   title : string,
   authors : string,

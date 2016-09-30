@@ -26,7 +26,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -96,7 +96,7 @@ public interface IExternalDataSourceFactory extends Serializable {
                 Iterator<String> storeIt = stores.iterator();
                 while (storeIt.hasNext()) {
                     String node = storeIt.next();
-                    int numIODevices = AsterixClusterProperties.INSTANCE.getIODevices(node).length;
+                    int numIODevices = ClusterStateManager.INSTANCE.getIODevices(node).length;
                     for (int k = 0; k < numIODevices; k++) {
                         locs.add(node);
                         i++;

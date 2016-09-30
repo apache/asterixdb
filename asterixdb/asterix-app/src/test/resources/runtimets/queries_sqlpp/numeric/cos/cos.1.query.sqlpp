@@ -20,9 +20,9 @@
 {
   "a": cos(120.0),
   "b": cos(90.5f),
-  "c": cos(int32("90")),
-  "d": cos(int16("0")),
-  "e": cos(int8("-45")),
+  "c": cos(integer("90")),
+  "d": cos(smallint("0")),
+  "e": cos(tinyint("-45")),
   "f": cos(1),
   "g": cos(null),
   "h": cos(missing)

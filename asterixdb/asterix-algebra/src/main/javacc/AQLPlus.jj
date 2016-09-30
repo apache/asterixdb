@@ -100,6 +100,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 
 
@@ -407,7 +408,7 @@ TypeReferenceExpression TypeReference() throws ParseException:
       } else {
           id = new Identifier(t.toString());
       }
-          return new TypeReferenceExpression(id);
+          return new TypeReferenceExpression(new Pair<Identifier,Identifier>(null,id));
     }
 }
 

@@ -2,7 +2,7 @@ DataverseUse test
 Set import-private-functions=true
 TypeDecl DBLPTypetmp [
   closed RecordType {
-    id : int32,
+    id : integer,
     dblpid : string,
     title : string,
     authors : string,
@@ -11,7 +11,7 @@ TypeDecl DBLPTypetmp [
 ]
 TypeDecl CSXTypetmp [
   closed RecordType {
-    id : int32,
+    id : integer,
     csxid : string,
     title : string,
     authors : string,

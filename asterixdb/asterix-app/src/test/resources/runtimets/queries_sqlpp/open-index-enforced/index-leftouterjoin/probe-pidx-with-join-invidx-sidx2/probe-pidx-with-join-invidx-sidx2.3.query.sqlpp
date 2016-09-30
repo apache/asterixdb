@@ -34,6 +34,6 @@ select element {'tweet':{'id':t1.tweetid,'topics':t1.`message-text`},'similar-tw
         order by t2.tweetid
     )}
 from  TweetMessagesTmp as t1
-where (t1.tweetid > test.int64('240'))
+where (t1.tweetid > test.bigint('240'))
 order by t1.tweetid
 ;

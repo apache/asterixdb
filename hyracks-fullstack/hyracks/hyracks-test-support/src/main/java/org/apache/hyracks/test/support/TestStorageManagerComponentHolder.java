@@ -28,7 +28,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
@@ -51,13 +52,14 @@ public class TestStorageManagerComponentHolder {
     private static IFileMapProvider fileMapProvider;
     private static IOManager ioManager;
     private static ILocalResourceRepository localResourceRepository;
-    private static IIndexLifecycleManager lcManager;
+    private static IResourceLifecycleManager<IIndex> lcManager;
     private static ResourceIdFactory resourceIdFactory;
 
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;
     private final static ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable r) {
             return new Thread(r);
         }
@@ -73,7 +75,7 @@ public class TestStorageManagerComponentHolder {
         lcManager = null;
     }
 
-    public synchronized static IIndexLifecycleManager getIndexLifecycleManager(IHyracksTaskContext ctx) {
+    public synchronized static IResourceLifecycleManager<IIndex> getIndexLifecycleManager() {
         if (lcManager == null) {
             lcManager = new IndexLifecycleManager();
         }
@@ -110,7 +112,8 @@ public class TestStorageManagerComponentHolder {
     public synchronized static ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
         if (localResourceRepository == null) {
             try {
-                ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
+                ILocalResourceRepositoryFactory localResourceRepositoryFactory =
+                        new TransientLocalResourceRepositoryFactory();
                 localResourceRepository = localResourceRepositoryFactory.createRepository();
             } catch (HyracksException e) {
                 //In order not to change the IStorageManagerInterface due to the test code, throw runtime exception.

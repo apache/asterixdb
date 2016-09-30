@@ -36,11 +36,11 @@ public class ClusterShutdownIT {
     @Test
     public void runShutdown() throws Exception {
         IHyracksClientConnection hcc = new HyracksConnection("localhost", 1098);
-        hcc.stopCluster();
+        hcc.stopCluster(false);
         //what happens here...
         closeTwice.expect(IPCException.class);
         closeTwice.expectMessage("Cannot send on a closed handle");
-        hcc.stopCluster();
+        hcc.stopCluster(false);
         ServerSocket c = null;
         ServerSocket s = null;
         try {

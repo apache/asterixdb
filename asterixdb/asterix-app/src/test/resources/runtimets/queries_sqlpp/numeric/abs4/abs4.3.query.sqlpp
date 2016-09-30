@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.abs(test.int8('-20')),'f1':test.abs(-1.11),'f2':test.abs(12.9),'f3':test.abs(1.11)};
+{'f0':test.abs(test.tinyint('-20')),'f1':test.abs(-1.11),'f2':test.abs(12.9),'f3':test.abs(1.11)};

@@ -1,18 +1,18 @@
 DataverseUse teacher
 TypeDecl stdType [
   open RecordType {
-    id : int64,
+    id : bigint,
     name : string,
-    age : int64,
+    age : bigint,
     sex : string,
     dept : string
   }
 ]
 TypeDecl tchrType [
   open RecordType {
-    id : int64,
+    id : bigint,
     name : string,
-    age : int64,
+    age : bigint,
     sex : string,
     dept : string
   }

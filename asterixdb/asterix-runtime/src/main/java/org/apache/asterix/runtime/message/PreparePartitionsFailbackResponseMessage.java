@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.message;
 
 import java.util.Set;
 
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
@@ -40,11 +40,11 @@ public class PreparePartitionsFailbackResponseMessage extends AbstractFailbackPl
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException {
-        AsterixClusterProperties.INSTANCE.processPreparePartitionsFailbackResponse(this);
+        ClusterStateManager.INSTANCE.processPreparePartitionsFailbackResponse(this);
     }
 
     @Override
-    public String type() {
-        return "PREPARE_PARTITIONS_FAILBACK_RESPONSE";
+    public String toString() {
+        return PreparePartitionsFailbackResponseMessage.class.getSimpleName() + " " + partitions.toString();
     }
 }

@@ -1,14 +1,14 @@
 DataverseUse test
 TypeDecl AddressType [
   open RecordType {
-    number : int64,
+    number : bigint,
     street : string,
     city : string
   }
 ]
 TypeDecl AllType [
   open RecordType {
-    id : int64,
+    id : bigint,
     name : string,
     age : float,
     salary : double,
@@ -31,7 +31,7 @@ TypeDecl AllType [
 ]
 TypeDecl MyListType [
   open RecordType {
-    id : int64,
+    id : bigint,
     mylist : OrderedList [string]
 
   }

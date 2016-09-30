@@ -25,12 +25,12 @@ use test;
 
 create type test.Schema as
  closed {
-  id : int32,
+  id : integer,
   time : time,
   date : date,
   datetime : datetime,
-  dtduration : `day-time-duration`,
-  ymduration : `year-month-duration`
+  dtduration : `day_time_duration`,
+  ymduration : `year_month_duration`
 }
 
 create  dataset tsdata(Schema) primary key id;

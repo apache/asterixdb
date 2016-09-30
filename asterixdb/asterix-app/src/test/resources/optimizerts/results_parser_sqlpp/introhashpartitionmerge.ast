@@ -1,8 +1,8 @@
 DataverseUse fuzzyjoin
 TypeDecl TOKENSRANKEDADMType [
   closed RecordType {
-    token : int32,
-    rank : int32
+    token : integer,
+    rank : integer
   }
 ]
 DatasetDecl TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by [[rank]]

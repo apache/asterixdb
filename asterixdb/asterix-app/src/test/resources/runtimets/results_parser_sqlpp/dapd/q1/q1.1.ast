@@ -15,7 +15,7 @@ TypeDecl UserType [
 ,
     address : AddressType,
     member_of : UnorderedList <          open RecordType {
-            sig_id : int64,
+            sig_id : bigint,
             chapter_name : string,
             member_since : date
           }

@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
@@ -38,7 +38,7 @@ public class AsterixExternalLibraryIT {
     private static final String LIBRARY_NAME = "testlib";
     private static final String LIBRARY_DATAVERSE = "externallibtest";
     private static final String PATH_BASE = "src/test/resources/integrationts/library";
-    private static final String PATH_ACTUAL = "ittest/";
+    private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     private static final String LIBRARY_PATH = "target" + File.separator + "resources" + File.separator + "externallib"
             + File.separator + "testlib-zip-binary-assembly.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
@@ -49,7 +49,7 @@ public class AsterixExternalLibraryIT {
     private final TestExecutor testExecutor = new TestExecutor();
 
     @Rule
-    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(
+    public TestRule retainLogs = new RetainLogsRule(
             AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
 
     @BeforeClass

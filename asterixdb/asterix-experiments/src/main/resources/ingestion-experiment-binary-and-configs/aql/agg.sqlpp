@@ -1,6 +1,6 @@
 use experiments;
 
-select element coll_avg((
+select element array_avg((
 select element "string-length"(g.message)
 from GleambookMessages as g
 where g.send_time > datetime('2013-07-16T14:31:31') and

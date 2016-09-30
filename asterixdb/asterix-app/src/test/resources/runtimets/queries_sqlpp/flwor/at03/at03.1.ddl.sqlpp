@@ -37,11 +37,11 @@ create type test.EmploymentType as
 
 create type test.FacebookUserType as
  closed {
-  id : int32,
+  id : integer,
   alias : string,
   name : string,
   `user-since` : datetime,
-  `friend-ids` : {{int64}},
+  `friend-ids` : {{bigint}},
   employment : [EmploymentType]
 }
 

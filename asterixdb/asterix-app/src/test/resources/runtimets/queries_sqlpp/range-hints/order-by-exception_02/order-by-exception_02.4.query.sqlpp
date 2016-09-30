@@ -22,5 +22,4 @@ use TinySocial;
 
 select element user
 from  TwitterUsers as user
-order by user.`screen-name` desc
-;
+order by user.`screen-name`;

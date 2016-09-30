@@ -19,7 +19,11 @@
 
 package org.apache.asterix.om.typecomputer.base;
 
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class TypeCastUtils {
@@ -27,14 +31,18 @@ public class TypeCastUtils {
     private TypeCastUtils() {
     }
 
-    public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, IAType requiredRecordType,
-            IAType inputRecordType) {
+    public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, IAType requiredType,
+            IAType inputType) throws AlgebricksException {
         boolean changed = false;
         Object[] opaqueParameters = expr.getOpaqueParameters();
         if (opaqueParameters == null) {
             opaqueParameters = new Object[2];
-            opaqueParameters[0] = requiredRecordType;
-            opaqueParameters[1] = inputRecordType;
+            opaqueParameters[0] = requiredType;
+            opaqueParameters[1] = inputType;
+            if (!ATypeHierarchy.isCompatible(requiredType.getTypeTag(),
+                            TypeComputeUtils.getActualType(inputType).getTypeTag())) {
+                throw new AlgebricksException(inputType + " can't be casted to " + requiredType);
+            }
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;
         }

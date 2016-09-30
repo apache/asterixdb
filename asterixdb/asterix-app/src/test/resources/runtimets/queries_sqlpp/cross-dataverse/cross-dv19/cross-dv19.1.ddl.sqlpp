@@ -30,7 +30,7 @@ create  dataverse test2;
 
 create type test1.testtype as
 {
-  id : int32,
+  id : integer,
   name : string,
   loc : point,
   time : datetime
@@ -38,7 +38,7 @@ create type test1.testtype as
 
 create type test2.testtype as
 {
-  id : int32,
+  id : integer,
   name : string?,
   loc : point,
   time : datetime
@@ -46,8 +46,8 @@ create type test2.testtype as
 
 create type test1.Tweet as
 {
-  id : int32,
-  tweetid : int64,
+  id : integer,
+  tweetid : bigint,
   loc : point,
   time : datetime,
   text : string

@@ -25,12 +25,12 @@ use test;
 
 create type test.UserTypeOpen as
 {
-  id : int64
+  id : bigint
 }
 
 create type test.UserTypeClose as
  closed {
-  id : int64,
+  id : bigint,
   name : string,
   md5 : binary
 }

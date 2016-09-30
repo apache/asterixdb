@@ -18,9 +18,6 @@
  */
 package org.apache.hyracks.api.messages;
 
-/**
- * @author rico
- */
 public interface IMessageBroker {
 
     public void receivedMessage(IMessage message, String nodeId) throws Exception;

@@ -1,8 +1,8 @@
 DataverseUse test
 TypeDecl OrderType [
   open RecordType {
-    oid : int64,
-    cid : int64,
+    oid : bigint,
+    cid : bigint,
     orderstatus : string,
     orderpriority : string,
     clerk : string,

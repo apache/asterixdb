@@ -1,19 +1,19 @@
 DataverseUse test
 TypeDecl EmpTmp [
   closed RecordType {
-    id : int64,
+    id : bigint,
     fname : string,
     lname : string,
-    age : int64,
+    age : bigint,
     dept : string
   }
 ]
 TypeDecl Nested [
   closed RecordType {
-    id : int64,
+    id : bigint,
     fname : string,
     lname : string,
-    age : int64,
+    age : bigint,
     dept : string
   }
 ]

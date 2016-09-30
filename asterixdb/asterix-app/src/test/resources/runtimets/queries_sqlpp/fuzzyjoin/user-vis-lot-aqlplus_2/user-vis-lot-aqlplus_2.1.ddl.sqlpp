@@ -25,17 +25,17 @@ use fuzzyjoin;
 
 create type fuzzyjoin.UserType as
 {
-  uid : int64,
+  uid : bigint,
   name : string,
-  lottery_numbers : [int64],
+  lottery_numbers : [bigint],
   interests : {{string}}
 }
 
 create type fuzzyjoin.VisitorType as
 {
-  vid : int64,
+  vid : bigint,
   name : string,
-  lottery_numbers : [int64],
+  lottery_numbers : [bigint],
   interests : {{string}}
 }
 

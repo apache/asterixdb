@@ -39,8 +39,8 @@ public class GroupbyClause implements Clause {
     private Map<Expression, VariableExpr> withVarMap;
     private VariableExpr groupVar;
     private List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
-    private boolean hashGroupByHint;
-    private boolean groupAll;
+    private boolean hashGroupByHint = false;
+    private boolean groupAll = false;
 
     public GroupbyClause() {
         // Default constructor.

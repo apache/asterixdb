@@ -23,22 +23,22 @@ USE test;
 
 
 CREATE TYPE OrderType AS CLOSED {
-  o_orderkey: int32,
-  o_custkey: int32,
+  o_orderkey: integer,
+  o_custkey: integer,
   o_orderstatus: string,
   o_totalprice: double,
   o_orderdate: string,
   o_orderpriority: string,
   o_clerk: string,
-  o_shippriority: int32,
+  o_shippriority: integer,
   o_comment: string
 }
 
 CREATE TYPE CustomerType AS CLOSED {
-  c_custkey: int32,
+  c_custkey: integer,
   c_name: string,
   c_address: string,
-  c_nationkey: int32,
+  c_nationkey: integer,
   c_phone: string,
   c_acctbal: double,
   c_mktsegment: string,

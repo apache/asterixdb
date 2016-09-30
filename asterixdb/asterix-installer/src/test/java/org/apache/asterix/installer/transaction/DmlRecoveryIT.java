@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -44,7 +44,7 @@ public class DmlRecoveryIT {
     // variable to indicate whether this test will be executed
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
-    private static final String PATH_ACTUAL = "rttest/";
+    private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
 
     private static final String TESTSUITE_PATH_BASE = "../asterix-app/src/test/resources/runtimets/";
 
@@ -60,7 +60,7 @@ public class DmlRecoveryIT {
     private final TestExecutor testExecutor = new TestExecutor();
 
     @Rule
-    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(managixHomePath, reportPath);
+    public TestRule retainLogs = new RetainLogsRule(managixHomePath, reportPath);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -114,8 +114,9 @@ public class DmlRecoveryIT {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(TESTSUITE_PATH_BASE))) {
-            if (ctx.getTestCase().getFilePath().equals("dml"))
+            if (ctx.getTestCase().getFilePath().equals("dml")) {
                 testArgs.add(new Object[] { ctx });
+            }
         }
         return testArgs;
     }

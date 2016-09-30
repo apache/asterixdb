@@ -34,6 +34,6 @@ select element {
             order by t2.tweetid
         )}
 from  TweetMessages as t1
-where (t1.tweetid < test.int64('10'))
+where (t1.tweetid < test.bigint('10'))
 order by t1.tweetid
 ;

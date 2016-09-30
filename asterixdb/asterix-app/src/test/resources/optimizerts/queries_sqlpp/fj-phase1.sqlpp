@@ -25,16 +25,16 @@ use rares03;
 
 create type rares03.UserType as
 {
-  uid : int32,
+  uid : integer,
   name : string,
-  lottery_numbers : {{int32}}
+  lottery_numbers : {{integer}}
 }
 
 create type rares03.VisitorType as
 {
-  vid : int32,
+  vid : integer,
   name : string,
-  lottery_numbers : {{int32}}
+  lottery_numbers : {{integer}}
 }
 
 create  nodegroup group1 if not exists  on

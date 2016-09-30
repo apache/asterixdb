@@ -25,10 +25,10 @@ use test;
 
 create type test.LineItemType as
 {
-  l_orderkey : int64,
-  l_partkey : int64,
-  l_suppkey : int64,
-  l_linenumber : int64,
+  l_orderkey : bigint,
+  l_partkey : bigint,
+  l_suppkey : bigint,
+  l_linenumber : bigint,
   l_quantity : double,
   l_extendedprice : double,
   l_discount : double,

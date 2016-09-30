@@ -173,7 +173,7 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
         return prevSecondaryKeyExprs;
     }
 
-    public void setPrevSecondaryKeyExprs(List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs) {
+    public void setBeforeOpSecondaryKeyExprs(List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs) {
         this.prevSecondaryKeyExprs = prevSecondaryKeyExprs;
     }
 
@@ -181,7 +181,8 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
         return prevAdditionalFilteringExpression;
     }
 
-    public void setPrevAdditionalFilteringExpression(Mutable<ILogicalExpression> prevAdditionalFilteringExpression) {
+    public void
+            setBeforeOpAdditionalFilteringExpression(Mutable<ILogicalExpression> prevAdditionalFilteringExpression) {
         this.prevAdditionalFilteringExpression = prevAdditionalFilteringExpression;
     }
 

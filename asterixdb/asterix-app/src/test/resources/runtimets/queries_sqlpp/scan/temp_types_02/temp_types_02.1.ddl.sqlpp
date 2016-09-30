@@ -25,7 +25,7 @@ use test;
 
 create type test.TempType as
  closed {
-  id : int32,
+  id : integer,
   date : date,
   time : time,
   datetime : datetime,

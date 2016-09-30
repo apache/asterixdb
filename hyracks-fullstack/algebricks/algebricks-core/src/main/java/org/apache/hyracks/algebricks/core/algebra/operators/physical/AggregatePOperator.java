@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -35,7 +34,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntime
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -63,10 +61,10 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         ILogicalOperator op2 = op.getInputs().get(0).getValue();
         if (aggOp.getExecutionMode() != AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) {
             deliveredProperties = new StructuralPropertiesVector(op2.getDeliveredPhysicalProperties()
-                    .getPartitioningProperty(), new ArrayList<ILocalStructuralProperty>());
+                    .getPartitioningProperty(), new ArrayList<>());
         } else {
             deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED,
-                    new ArrayList<ILocalStructuralProperty>());
+                    new ArrayList<>());
         }
     }
 

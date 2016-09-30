@@ -18,7 +18,7 @@
  */
 use SocialNetworkData;
 
-coll_count(
+array_count(
  (
   select element {
   'uname': user.name,

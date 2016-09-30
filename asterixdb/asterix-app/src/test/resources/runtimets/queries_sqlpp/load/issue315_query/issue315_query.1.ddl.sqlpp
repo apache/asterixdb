@@ -30,8 +30,8 @@ use test;
 
 create type test.Schema as
  closed {
-  id : int32,
-  age : int32,
+  id : integer,
+  age : integer,
   name : string
 }
 

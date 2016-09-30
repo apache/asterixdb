@@ -8,13 +8,13 @@ TypeDecl EmploymentType [
 ]
 TypeDecl FacebookUserType [
   closed RecordType {
-    id : int64,
-    id-copy : int64,
+    id : bigint,
+    id-copy : bigint,
     alias : string,
     name : string,
     user-since : datetime,
     user-since-copy : datetime,
-    friend-ids : UnorderedList <int64>
+    friend-ids : UnorderedList <bigint>
 ,
     employment : OrderedList [EmploymentType]
 

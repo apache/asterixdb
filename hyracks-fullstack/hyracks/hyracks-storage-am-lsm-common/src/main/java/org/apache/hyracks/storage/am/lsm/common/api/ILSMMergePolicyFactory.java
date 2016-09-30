@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 
 public interface ILSMMergePolicyFactory extends Serializable {
     // Having two methods to create the merge policy with two different signatures is hacky, but we do it now
@@ -32,7 +32,7 @@ public interface ILSMMergePolicyFactory extends Serializable {
     // in asterix and cannot be seen in hyracks. Thus we pass IHyracksTaskContext and let the merge policy do the casting.
     public ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IHyracksTaskContext ctx);
 
-    public ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IIndexLifecycleManager ilcm);
+    public ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IResourceLifecycleManager ilcm);
 
     public String getName();
 

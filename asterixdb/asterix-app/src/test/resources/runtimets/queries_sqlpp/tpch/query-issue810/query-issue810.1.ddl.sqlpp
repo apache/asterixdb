@@ -31,10 +31,10 @@ use tpch;
 
 create type tpch.LineItemType as
  closed {
-  l_orderkey : int32,
-  l_partkey : int32,
-  l_suppkey : int32,
-  l_linenumber : int32,
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
   l_quantity : double,
   l_extendedprice : double,
   l_discount : double,

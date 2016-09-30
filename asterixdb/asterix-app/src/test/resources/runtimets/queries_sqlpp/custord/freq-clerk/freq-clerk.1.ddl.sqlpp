@@ -25,24 +25,24 @@ use test;
 
 create type test.AddressType as
 {
-  number : int32,
+  number : integer,
   street : string,
   city : string
 }
 
 create type test.CustomerOrderType as
 {
-  cid : int32,
+  cid : integer,
   name : string,
-  age : int32?,
+  age : integer?,
   address : AddressType?,
   orders : [OrderType]
 }
 
 create type test.OrderType as
 {
-  oid : int32,
-  cid : int32,
+  oid : integer,
+  cid : integer,
   orderstatus : string,
   orderpriority : string,
   clerk : string,

@@ -26,6 +26,6 @@ use test;
 
 select element {'tbin':d,'count':test.count(i)}
 from  tsdata as i
-group by test.`interval-bin`(i.timestamp,test.datetime('1990-01-01T00:00:00.000Z'),test.`year-month-duration`('P20Y')) as d
+group by test.`interval-bin`(i.timestamp,test.datetime('1990-01-01T00:00:00.000Z'),test.`year_month_duration`('P20Y')) as d
 order by test.`get-interval-start`(d)
 ;

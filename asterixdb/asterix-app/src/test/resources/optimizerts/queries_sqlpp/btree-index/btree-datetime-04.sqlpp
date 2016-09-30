@@ -31,7 +31,7 @@ use emergencyTest;
 
 create type emergencyTest.CHPReport as
 {
-  id : int64,
+  id : bigint,
   timestamp : datetime,
   title : string,
   message : string

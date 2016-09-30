@@ -3,10 +3,10 @@ TypeDecl TwitterUserType [
   open RecordType {
     screen-name : string,
     lang : string,
-    friends_count : int64,
-    statuses_count : int64,
+    friends_count : bigint,
+    statuses_count : bigint,
     name : string,
-    followers_count : int64
+    followers_count : bigint
   }
 ]
 DatasetDecl TwitterUsers(TwitterUserType) partitioned by [[screen-name]]

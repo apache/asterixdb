@@ -24,8 +24,6 @@ import java.util.List;
 
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.app.translator.QueryTranslator;
-import org.apache.asterix.common.app.SessionConfig;
-import org.apache.asterix.common.app.SessionConfig.OutputFormat;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.feed.api.IFeedWork;
@@ -38,6 +36,8 @@ import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 

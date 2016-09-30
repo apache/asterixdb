@@ -26,6 +26,6 @@ use test;
 
 select element {'emp.id':emp.id,'emp.worksince':emp.worksince}
 from  empDataset as emp
-where (emp.worksince = test.int64('2001'))
+where (emp.worksince = test.bigint('2001'))
 order by emp.id,emp.worksince
 ;

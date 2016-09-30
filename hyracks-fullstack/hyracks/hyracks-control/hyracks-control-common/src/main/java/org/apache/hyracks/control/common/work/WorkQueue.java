@@ -18,8 +18,10 @@
  */
 package org.apache.hyracks.control.common.work;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,11 +35,11 @@ public class WorkQueue {
 
     private final LinkedBlockingQueue<AbstractWork> queue;
     private final WorkerThread thread;
-    private final Semaphore stopSemaphore;
     private boolean stopped;
     private AtomicInteger enqueueCount;
     private AtomicInteger dequeueCount;
     private int threadPriority = Thread.MAX_PRIORITY;
+    private final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
     public WorkQueue(String id, int threadPriority) {
         if (threadPriority != Thread.MAX_PRIORITY && threadPriority != Thread.NORM_PRIORITY
@@ -45,22 +47,16 @@ public class WorkQueue {
             throw new IllegalArgumentException("Illegal thread priority number.");
         }
         this.threadPriority = threadPriority;
-        queue = new LinkedBlockingQueue<AbstractWork>();
+        queue = new LinkedBlockingQueue<>();
         thread = new WorkerThread(id);
-        stopSemaphore = new Semaphore(1);
         stopped = true;
-        if(DEBUG) {
+        if (DEBUG) {
             enqueueCount = new AtomicInteger(0);
             dequeueCount = new AtomicInteger(0);
         }
     }
 
     public void start() throws HyracksException {
-        try {
-            stopSemaphore.acquire();
-        } catch (InterruptedException e) {
-            throw new HyracksException(e);
-        }
         if (DEBUG) {
             enqueueCount.set(0);
             dequeueCount.set(0);
@@ -73,14 +69,11 @@ public class WorkQueue {
         synchronized (this) {
             stopped = true;
         }
-        schedule(new AbstractWork() {
-            @Override
-            public void run() {
-            }
-        });
+        thread.interrupt();
         try {
-            stopSemaphore.acquire();
+            thread.join();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new HyracksException(e);
         }
     }
@@ -109,35 +102,46 @@ public class WorkQueue {
 
         @Override
         public void run() {
-            try {
-                AbstractWork r;
-                while (true) {
-                    synchronized (WorkQueue.this) {
-                        if (stopped) {
-                            return;
-                        }
-                    }
-                    try {
-                        r = queue.take();
-                    } catch (InterruptedException e) {
-                        continue;
-                    }
-                    if (DEBUG) {
-                        LOGGER.log(Level.FINEST,
-                                "Dequeue (" + WorkQueue.this.hashCode() + "): " + dequeueCount.incrementAndGet() + "/"
-                                        + enqueueCount);
-                    }
-                    try {
-                        if (LOGGER.isLoggable(r.logLevel())) {
-                            LOGGER.log(r.logLevel(), "Executing: " + r);
-                        }
-                        r.run();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+            AbstractWork r;
+            while (true) {
+                synchronized (WorkQueue.this) {
+                    if (stopped) {
+                        return;
                     }
                 }
-            } finally {
-                stopSemaphore.release();
+                try {
+                    r = queue.take();
+                } catch (InterruptedException e) { // NOSONAR: aborting the thread
+                    break;
+                }
+                if (DEBUG) {
+                    LOGGER.log(Level.FINEST,
+                            "Dequeue (" + WorkQueue.this.hashCode() + "): " + dequeueCount.incrementAndGet() + "/"
+                                    + enqueueCount);
+                }
+                if (LOGGER.isLoggable(r.logLevel())) {
+                    LOGGER.log(r.logLevel(), "Executing: " + r);
+                }
+                ThreadInfo before = threadMXBean.getThreadInfo(thread.getId());
+                try {
+                    r.run();
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Exception while executing " + r, e);
+                } finally {
+                    auditWaitsAndBlocks(r, before);
+                }
+            }
+        }
+
+        protected void auditWaitsAndBlocks(AbstractWork r, ThreadInfo before) {
+            ThreadInfo after = threadMXBean.getThreadInfo(thread.getId());
+            final long waitedDelta = after.getWaitedCount() - before.getWaitedCount();
+            final long blockedDelta = after.getBlockedCount() - before.getBlockedCount();
+            if (waitedDelta > 0 || blockedDelta > 0) {
+                LOGGER.warning("Work " + r + " waited " + waitedDelta + " times (~"
+                        + (after.getWaitedTime() - before.getWaitedTime()) + "ms), blocked " + blockedDelta
+                        + " times (~" + (after.getBlockedTime() - before.getBlockedTime()) + "ms)"
+                );
             }
         }
     }

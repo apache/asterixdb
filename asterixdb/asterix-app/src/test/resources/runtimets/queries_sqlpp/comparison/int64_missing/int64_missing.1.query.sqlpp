@@ -18,4 +18,5 @@
  */
 
 
-{'result1':(test.int64('3') > missing),'result2':(missing >= test.int64('3')),'result3':(test.int64('3') < missing),'result4':(missing <= test.int64('3')),'result5':(test.int64('3') = missing),'result6':(missing != test.int64('3'))};
+
+{'result1':(bigint('3') > missing),'result2':(missing >= bigint('3')),'result3':(bigint('3') < missing),'result4':(missing <= bigint('3')),'result5':(bigint('3') = missing),'result6':(missing != bigint('3'))};

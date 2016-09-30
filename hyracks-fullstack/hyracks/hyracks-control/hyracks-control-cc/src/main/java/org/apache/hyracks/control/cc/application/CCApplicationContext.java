@@ -38,6 +38,7 @@ import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ApplicationContext;
 import org.apache.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
 public class CCApplicationContext extends ApplicationContext implements ICCApplicationContext {
@@ -55,7 +56,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
 
     public CCApplicationContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext,
             IApplicationConfig appConfig) throws IOException {
-        super(serverCtx, appConfig);
+        super(serverCtx, appConfig, new HyracksThreadFactory("ClusterController"));
         this.ccContext = ccContext;
         this.ccs = ccs;
         initPendingNodeIds = new HashSet<>();

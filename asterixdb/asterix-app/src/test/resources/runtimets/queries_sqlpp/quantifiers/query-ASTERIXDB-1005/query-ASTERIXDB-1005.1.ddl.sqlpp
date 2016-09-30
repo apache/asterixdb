@@ -39,7 +39,7 @@ create type BankAccountType as open{
 
 // Restaurant's information
 create type RestaurantsType as open {
-restr_id: int64,
+restr_id: bigint,
 name: string,
 address: string,
 bank_account: BankAccountType,

@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl MyRecord [
   closed RecordType {
-    id : int64,
+    id : bigint,
     point : point?,
     kwds : string,
     line1 : line,
@@ -13,7 +13,7 @@ TypeDecl MyRecord [
 ]
 TypeDecl MyMiniRecord [
   closed RecordType {
-    id : int64,
+    id : bigint,
     point : point?
   }
 ]

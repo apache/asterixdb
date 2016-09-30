@@ -31,21 +31,21 @@ use test;
 
 create type test.AddressType as
  closed {
-  number : int64,
+  number : bigint,
   street : string,
   city : string
 }
 
 create type test.CustomerType as
  closed {
-  cid : int64,
+  cid : bigint,
   name : string,
-  age : int64?,
+  age : bigint?,
   address : AddressType?,
   interests : [string],
   children : [{
           name : string,
-          age : int64?
+          age : bigint?
       }
 ]
 }

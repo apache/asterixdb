@@ -25,19 +25,19 @@ use custord;
 
 create type custord.AddressType as
 {
-  number : int32,
+  number : integer,
   street : string,
   city : string
 }
 
 create type custord.CustomerType as
 {
-  cid : int32,
+  cid : integer,
   name : string,
-  age : int32?,
+  age : integer?,
   address : AddressType?,
   lastorder : {
-      oid : int32,
+      oid : integer,
       total : float
   }
 
@@ -45,8 +45,8 @@ create type custord.CustomerType as
 
 create type custord.OrderType as
 {
-  oid : int32,
-  cid : int32,
+  oid : integer,
+  cid : integer,
   orderstatus : string,
   orderpriority : string,
   clerk : string,
@@ -55,7 +55,7 @@ create type custord.OrderType as
 
 create type custord.CustomerOrdersType as
 {
-  cid : int32,
+  cid : integer,
   cust : CustomerType,
   orders : [OrderType]
 }

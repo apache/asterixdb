@@ -24,7 +24,8 @@ if NOT DEFINED JAVA_HOME (
   goto :ERROR
 )
 REM ensure JAVA_HOME has no spaces nor quotes, since appassembler can't handle them
-for %%I in (%JAVA_HOME%) do (
+set JAVA_HOME=%JAVA_HOME:"=%
+for %%I in ("%JAVA_HOME%") do (
   set JAVA_HOME=%%~sI
 )
 
@@ -42,6 +43,7 @@ set LOGSDIR=%CLUSTERDIR%\logs
 
 echo CLUSTERDIR=%CLUSTERDIR%
 echo INSTALLDIR=%INSTALLDIR%
+echo LOGSDIR=%LOGSDIR%
 echo.
 cd %CLUSTERDIR%
 if NOT EXIST %LOGSDIR% (
@@ -63,21 +65,18 @@ start /MIN "red-nc" cmd /c "echo See output in %LOGSDIR%\red-service.log && %INS
 start /MIN "cc" cmd /c "echo See output in %LOGSDIR%\cc.log && %INSTALLDIR%\bin\${CC_COMMAND} -config-file %CLUSTERDIR%\conf\cc.conf >>%LOGSDIR%\cc.log 2>&1"
 
 echo.
-echo Waiting for sample cluster [localhost:${LISTEN_PORT}] to be ready...
-call %INSTALLDIR%\bin\${HELPER_COMMAND} wait_for_cluster -quiet -timeout 30
-if %ERRORLEVEL% NEQ 0 (
-  echo ERROR: cluster did not start successfully
-  echo See output in %LOGSDIR%\
-  goto :ERROR
+call %INSTALLDIR%\bin\${HELPER_COMMAND} wait_for_cluster -timeout 30
+if %ERRORLEVEL% EQU 0 (
+  goto :END
 )
-echo Sample cluster [localhost:${LISTEN_PORT}] is ready...
-echo.
-echo See output in %LOGSDIR%
-echo.
-popd
-endlocal
 
 :ERROR
+echo.
 popd
 endlocal
 exit /B 1
+
+:END
+echo.
+popd
+endlocal

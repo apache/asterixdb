@@ -1,15 +1,15 @@
 DataverseUse test
 TypeDecl empInfoType [
   open RecordType {
-    id : int64,
-    empno : int64,
+    id : bigint,
+    empno : bigint,
     name : string
   }
 ]
 TypeDecl deptInfoType [
   open RecordType {
-    did : int64,
-    dno : int32,
+    did : bigint,
+    dno : integer,
     dname : string
   }
 ]

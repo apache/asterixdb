@@ -33,19 +33,19 @@ use test;
 
 create type test.EmpTmp as
  closed {
-  id : int64,
+  id : bigint,
   fname : string,
   lname : string,
-  age : int64,
+  age : bigint,
   dept : string
 }
 
 create type test.Nested as
  closed {
-  id : int64,
+  id : bigint,
   fname : string,
   lname : string,
-  age : int64,
+  age : bigint,
   dept : string
 }
 

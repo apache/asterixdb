@@ -30,5 +30,5 @@ create  dataset TweetMessages(TweetMessageType) primary key tweetid hints (`CARD
 
 create  index fbUserSinceIdx  on FacebookUsers (`user-since`:datetime?) type btree enforced;
 
-create  index fbAuthorIdx  on FacebookMessages (`author-id`:int64?) type btree enforced;
+create  index fbAuthorIdx  on FacebookMessages (`author-id`:bigint?) type btree enforced;
 

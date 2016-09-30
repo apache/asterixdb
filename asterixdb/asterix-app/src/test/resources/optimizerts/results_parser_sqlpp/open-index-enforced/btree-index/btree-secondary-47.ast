@@ -2,7 +2,7 @@ DataverseUse test
 WriteOutputTo asterix_nc1:rttest/btree-index_btree-secondary-45.adm
 TypeDecl TestType [
   open RecordType {
-    id : int32
+    id : integer
   }
 ]
 DatasetDecl testdst(TestType) partitioned by [[id]]

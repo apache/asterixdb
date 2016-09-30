@@ -133,7 +133,7 @@ public class StartTasksWork extends AbstractWork {
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
-                List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
+                List<IPartitionCollector> collectors = new ArrayList<>();
 
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {

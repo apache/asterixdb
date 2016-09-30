@@ -325,9 +325,17 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                     context);
             changed = changed || resultFromChild.first;
             for (Map.Entry<LogicalVariable, LogicalVariable> entry : resultFromChild.second.entrySet()) {
-                if (liveVars.contains(entry.getKey())) {
-                    // Only needs to map live variables for its ancestors.
-                    replacedVarMapForAncestor.put(entry.getKey(), entry.getValue());
+                LogicalVariable oldVar = entry.getKey();
+                LogicalVariable newVar = entry.getValue();
+                if (liveVars.contains(oldVar)) {
+                    // Maps live variables for its ancestors.
+                    replacedVarMapForAncestor.put(oldVar, newVar);
+                    // Recursively maps live variables for its ancestors.
+                    oldVar = newVar;
+                    while ((newVar = resultFromChild.second.get(newVar)) != null) {
+                        replacedVarMapForAncestor.put(oldVar, newVar);
+                        oldVar = newVar;
+                    }
                 }
             }
             replacedVarMap.putAll(resultFromChild.second);

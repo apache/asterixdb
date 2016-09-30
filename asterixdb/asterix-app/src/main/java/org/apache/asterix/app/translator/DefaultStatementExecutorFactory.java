@@ -21,10 +21,10 @@ package org.apache.asterix.app.translator;
 import java.util.List;
 
 import org.apache.asterix.app.cc.CompilerExtensionManager;
-import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.asterix.translator.SessionConfig;
 
 public class DefaultStatementExecutorFactory implements IStatementExecutorFactory {
 

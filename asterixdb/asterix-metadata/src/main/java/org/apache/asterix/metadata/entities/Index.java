@@ -37,6 +37,8 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     private static final long serialVersionUID = 1L;
+    public static final int RECORD_INDICATOR = 0;
+    public static final int META_INDICATOR = 1;
 
     private final String dataverseName;
     // Enforced to be unique within a dataverse.

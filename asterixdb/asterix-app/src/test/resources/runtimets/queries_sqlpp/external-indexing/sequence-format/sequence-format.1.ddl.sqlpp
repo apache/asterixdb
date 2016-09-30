@@ -32,9 +32,9 @@ use test;
 
 create type test.EmployeeType as
  closed {
-  id : int64,
+  id : bigint,
   name : string,
-  age : int64
+  age : bigint
 }
 
 create external  dataset EmployeeDataset(EmployeeType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/external-indexing-test.seq`),(`input-format`=`sequence-input-format`),(`format`=`delimited-text`),(`delimiter`=`|`));

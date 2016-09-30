@@ -22,12 +22,12 @@ import java.io.Serializable;
 
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.common.messaging.AbstractApplicationMessage;
+import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class ActivePartitionMessage extends AbstractApplicationMessage {
+public class ActivePartitionMessage implements IApplicationMessage {
 
     public static final byte ACTIVE_RUNTIME_REGISTERED = 0x00;
     public static final byte ACTIVE_RUNTIME_DEREGISTERED = 0x01;
@@ -70,7 +70,7 @@ public class ActivePartitionMessage extends AbstractApplicationMessage {
     }
 
     @Override
-    public String type() {
-        return "ACTIVE_ENTITY_TO_CC_MESSAGE";
+    public String toString() {
+        return ActivePartitionMessage.class.getSimpleName();
     }
 }

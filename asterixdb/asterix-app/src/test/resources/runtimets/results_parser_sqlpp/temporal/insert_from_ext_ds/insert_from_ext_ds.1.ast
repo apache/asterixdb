@@ -7,8 +7,8 @@ TypeDecl testtype [
     datetimeField : datetime?,
     durationField : duration?,
     intervalField : interval?,
-    yearMonthDurationField : year-month-duration?,
-    dayTimeDurationField : day-time-duration?
+    yearMonthDurationField : year_month_duration?,
+    dayTimeDurationField : day_time_duration?
   }
 ]
 DatasetDecl testds(testtype)is an external dataset

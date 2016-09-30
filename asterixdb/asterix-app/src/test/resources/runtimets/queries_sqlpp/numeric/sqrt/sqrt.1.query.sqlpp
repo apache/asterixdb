@@ -20,9 +20,9 @@
 {
   "a": sqrt(120.0),
   "b": sqrt(90.5f),
-  "c": sqrt(int32("90")),
-  "d": sqrt(int16("0")),
-  "e": sqrt(int8("-45")),
+  "c": sqrt(integer("90")),
+  "d": sqrt(smallint("0")),
+  "e": sqrt(tinyint("-45")),
   "f": sqrt(1),
   "g": sqrt(null),
   "h": sqrt(missing)

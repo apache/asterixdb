@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':(test.int32('+3') > test.int8('+1')),'result2':(test.int32('+3') >= test.int16('2')),'result3':(test.int32('+3') < test.int32('+3')),'result4':(test.int32('+3') <= test.int64('-4')),'result5':(test.int32('+3') = test.float('-5.5f')),'result6':(test.int32('+3') != test.double('-6.5d'))};
+{'result1':(test.integer('+3') > test.tinyint('+1')),'result2':(test.integer('+3') >= test.smallint('2')),'result3':(test.integer('+3') < test.integer('+3')),'result4':(test.integer('+3') <= test.bigint('-4')),'result5':(test.integer('+3') = test.float('-5.5f')),'result6':(test.integer('+3') != test.double('-6.5d'))};

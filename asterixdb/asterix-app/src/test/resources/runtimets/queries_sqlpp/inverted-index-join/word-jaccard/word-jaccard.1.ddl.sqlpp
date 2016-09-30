@@ -30,7 +30,7 @@ use test;
 
 create type test.DBLPType as
  closed {
-  id : int64,
+  id : bigint,
   dblpid : string,
   title : string,
   authors : string,
@@ -39,7 +39,7 @@ create type test.DBLPType as
 
 create type test.CSXType as
  closed {
-  id : int64,
+  id : bigint,
   csxid : string,
   title : string,
   authors : string,

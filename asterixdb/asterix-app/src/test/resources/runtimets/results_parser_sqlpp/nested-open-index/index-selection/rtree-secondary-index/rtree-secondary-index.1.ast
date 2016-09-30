@@ -1,7 +1,7 @@
 DataverseUse test
 TypeDecl MyRecordtmp [
   open RecordType {
-    id : int64,
+    id : bigint,
     kwds : string,
     line1 : line,
     line2 : line,

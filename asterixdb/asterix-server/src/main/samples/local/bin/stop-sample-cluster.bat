@@ -24,7 +24,8 @@ if NOT DEFINED JAVA_HOME (
 )
 
 REM ensure JAVA_HOME has no spaces nor quotes, since appassembler can't handle them
-for %%I in (%JAVA_HOME%) do (
+set JAVA_HOME=%JAVA_HOME:"=%
+for %%I in ("%JAVA_HOME%") do (
   set JAVA_HOME=%%~sI
 )
 
@@ -36,16 +37,13 @@ cd %CLUSTERDIR%\..\..
 set INSTALLDIR=%cd%
 
 call %INSTALLDIR%\bin\${HELPER_COMMAND} get_cluster_state -quiet
-if %ERRORLEVEL% EQU 0 (
-  call %INSTALLDIR%\bin\${HELPER_COMMAND} shutdown_cluster
+if %ERRORLEVEL% NEQ 1 (
+  call %INSTALLDIR%\bin\${HELPER_COMMAND} shutdown_cluster_all
 ) else (
-  echo WARNING: sample cluster does not appear to be running, will attempt to kill any running
-  echo          NCServices and wait for CCDriver to terminate if running.
+  echo WARNING: sample cluster does not appear to be running, will attempt to wait for
+  echo          CCDriver to terminate if running.
 )
 echo.
-echo Terminating NC services...
-powershell "%JAVA_HOME%\bin\jps.exe -v | select-string -pattern ${NC_SERVICE_COMMAND} | %%{ $_.ToString().Split(' ')[0] } | %%{ Stop-Process $_ }"
-
 powershell "Write-Host "Waiting for CCDriver to terminate..." -nonewline; do { if ($running) { Start-Sleep 1 }; %JAVA_HOME%\bin\jps.exe -v | select-string -pattern ${CC_COMMAND} -quiet -outvariable running | Out-Null; Write-Host "." -nonewline } while ($running)"
 echo .done.
 goto :END

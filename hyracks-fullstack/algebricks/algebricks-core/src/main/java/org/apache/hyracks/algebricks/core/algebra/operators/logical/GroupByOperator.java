@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -53,27 +52,36 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     // In decorList, if the variable (first member of the pair) is null, the
     // second member of the pair is variable reference which is propagated.
 
+    private boolean groupAll = false;
+    private boolean global = true;
+
     public GroupByOperator() {
         super();
-        gByList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
-        decorList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
+        gByList = new ArrayList<>();
+        decorList = new ArrayList<>();
     }
 
     public GroupByOperator(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorList, List<ILogicalPlan> nestedPlans) {
+        this(groupByList, decorList, nestedPlans, false);
+    }
+
+    public GroupByOperator(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList,
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorList, List<ILogicalPlan> nestedPlans,
+            boolean groupAll) {
         super(nestedPlans);
         this.decorList = decorList;
         this.gByList = groupByList;
+        this.groupAll = groupAll;
+        checkGroupAll(groupAll);
     }
 
     public void addGbyExpression(LogicalVariable variable, ILogicalExpression expression) {
-        this.gByList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(variable,
-                new MutableObject<ILogicalExpression>(expression)));
+        this.gByList.add(new Pair<>(variable, new MutableObject<>(expression)));
     }
 
     public void addDecorExpression(LogicalVariable variable, ILogicalExpression expression) {
-        this.decorList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(variable,
-                new MutableObject<ILogicalExpression>(expression)));
+        this.decorList.add(new Pair<>(variable, new MutableObject<>(expression)));
     }
 
     @Override
@@ -85,30 +93,14 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         return gByList;
     }
 
-    public String gByListToString() {
-        return veListToString(gByList);
-    }
-
-    public String decorListToString() {
-        return veListToString(decorList);
-    }
-
     public List<LogicalVariable> getGbyVarList() {
-        List<LogicalVariable> varList = new ArrayList<LogicalVariable>(gByList.size());
+        List<LogicalVariable> varList = new ArrayList<>(gByList.size());
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gByList) {
             ILogicalExpression expr = ve.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) expr;
                 varList.add(v.getVariableReference());
             }
-        }
-        return varList;
-    }
-
-    public List<LogicalVariable> getProducedGbyVarList() {
-        List<LogicalVariable> varList = new ArrayList<LogicalVariable>(gByList.size());
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gByList) {
-            varList.add(ve.first);
         }
         return varList;
     }
@@ -146,7 +138,6 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
 
     @Override
     public void getProducedVariablesExceptNestedPlans(Collection<LogicalVariable> vars) {
-        // super.getProducedVariables(vars);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gByList) {
             if (p.first != null) {
                 vars.add(p.first);
@@ -167,7 +158,6 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> g : decorList) {
             g.second.getValue().getUsedVariables(vars);
         }
-        // super.getUsedVariables(vars);
     }
 
     @Override
@@ -284,5 +274,31 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
             }
         }
         return env;
+    }
+
+    public boolean isGroupAll() {
+        return groupAll;
+    }
+
+    public void setGroupAll(boolean groupAll) {
+        this.groupAll = groupAll;
+        checkGroupAll(groupAll);
+    }
+
+    public boolean isGlobal() {
+        return global;
+    }
+
+    public void setGlobal(boolean global) {
+        this.global = global;
+    }
+
+    // The groupAll flag can only be set if group by columns are empty.
+    private void checkGroupAll(boolean groupAll) {
+        if (groupAll && !gByList.isEmpty()) {
+            throw new IllegalStateException(
+                    "Conflicting parameters for GROUP BY: there should be no GROUP BY keys "
+                            + "when the GROUP ALL flag is set to true");
+        }
     }
 }

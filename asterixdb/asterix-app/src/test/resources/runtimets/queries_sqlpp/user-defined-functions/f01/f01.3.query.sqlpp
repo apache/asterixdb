@@ -25,4 +25,4 @@
 use test;
 
 
-test.int8();
+test.tinyint();

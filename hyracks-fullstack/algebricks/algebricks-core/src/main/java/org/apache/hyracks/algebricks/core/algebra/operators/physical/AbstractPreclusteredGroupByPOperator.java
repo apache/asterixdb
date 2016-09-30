@@ -28,7 +28,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -41,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType;
@@ -103,12 +103,22 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+        GroupByOperator gby = (GroupByOperator) op;
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
+        if (gby.isGroupAll() && gby.isGlobal()) {
+            if (op.getExecutionMode() == ExecutionMode.UNPARTITIONED) {
+                pv[0] = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, null);
+                return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
+            } else {
+                return emptyUnaryRequirements();
+            }
+        }
+
         List<ILocalStructuralProperty> localProps = new ArrayList<>();
         Set<LogicalVariable> gbvars = new ListSet<>(columnList);
-        LocalGroupingProperty groupProp = new LocalGroupingProperty(gbvars, new ArrayList<LogicalVariable>(columnList));
+        LocalGroupingProperty groupProp = new LocalGroupingProperty(gbvars, new ArrayList<>(columnList));
 
-        GroupByOperator gby = (GroupByOperator) op;
+
         boolean goon = true;
         for (ILogicalPlan p : gby.getNestedPlans()) {
             // try to propagate secondary order requirements from nested
@@ -186,7 +196,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     fdList.add(new FunctionalDependency(hd, tl));
                 }
                 if (allOk && PropertiesUtil.matchLocalProperties(localProps, props,
-                        new HashMap<LogicalVariable, EquivalenceClass>(), fdList)) {
+                        new HashMap<>(), fdList)) {
                     localProps = props;
                 }
             }
@@ -195,7 +205,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         IPartitioningProperty pp = null;
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
-            pp = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(columnList),
+            pp = new UnorderedPartitionedProperty(new ListSet<>(columnList),
                     context.getComputationNodeDomain());
         }
         pv[0] = new StructuralPropertiesVector(pp, localProps);
@@ -220,6 +230,22 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
             }
         }
         return null;
+    }
+
+    protected int[] getFdColumns(GroupByOperator gby, IOperatorSchema inputSchema) throws AlgebricksException {
+        int numFds = gby.getDecorList().size();
+        int fdColumns[] = new int[numFds];
+        int j = 0;
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
+            ILogicalExpression expr = p.second.getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                throw new AlgebricksException("pre-sorted group-by expects variable references.");
+            }
+            VariableReferenceExpression v = (VariableReferenceExpression) expr;
+            LogicalVariable decor = v.getVariableReference();
+            fdColumns[j++] = inputSchema.findVariable(decor);
+        }
+        return fdColumns;
     }
 
     private static LogicalVariable getLhsGbyVar(GroupByOperator gby, LogicalVariable var) {

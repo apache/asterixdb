@@ -48,7 +48,8 @@ public class OptimizerParserTest {
             + "optimizerts" + SEPARATOR;
     private static final String PATH_QUERIES = PATH_BASE + "queries_sqlpp" + SEPARATOR;
     private static final String PATH_EXPECTED = PATH_BASE + "results_parser_sqlpp" + SEPARATOR;
-    private static final String PATH_ACTUAL = "opt_parserts" + SEPARATOR;
+    private static final String PATH_ACTUAL =
+            "target" + File.separator + "opt_parserts" + SEPARATOR + "results_parser_sqlpp" + SEPARATOR;
 
     private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
@@ -75,7 +76,7 @@ public class OptimizerParserTest {
             if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)) {
                 String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
                 File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
-                File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
+                File actualFile = new File(PATH_ACTUAL + path + resultFileName);
                 testArgs.add(new Object[] { file, expectedFile, actualFile });
             }
         }

@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -35,6 +36,8 @@ import org.apache.hyracks.ipc.api.RPCInterface;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterface {
+    private static final int SHUTDOWN_CONNECTION_TIMEOUT_SECS = 30;
+
     private final IIPCHandle ipcHandle;
 
     private final RPCInterface rpci;
@@ -46,21 +49,22 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
 
     @Override
     public ClusterControllerInfo getClusterControllerInfo() throws Exception {
-        HyracksClientInterfaceFunctions.GetClusterControllerInfoFunction gccif = new HyracksClientInterfaceFunctions.GetClusterControllerInfoFunction();
+        HyracksClientInterfaceFunctions.GetClusterControllerInfoFunction gccif =
+                new HyracksClientInterfaceFunctions.GetClusterControllerInfoFunction();
         return (ClusterControllerInfo) rpci.call(ipcHandle, gccif);
     }
 
     @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
-        HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = new HyracksClientInterfaceFunctions.GetJobStatusFunction(
-                jobId);
+        HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf =
+                new HyracksClientInterfaceFunctions.GetJobStatusFunction(jobId);
         return (JobStatus) rpci.call(ipcHandle, gjsf);
     }
 
     @Override
     public JobId startJob(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception {
-        HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
-                acggfBytes, jobFlags);
+        HyracksClientInterfaceFunctions.StartJobFunction sjf =
+                new HyracksClientInterfaceFunctions.StartJobFunction(acggfBytes, jobFlags);
         return (JobId) rpci.call(ipcHandle, sjf);
     }
 
@@ -73,62 +77,68 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
 
     @Override
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
-        HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf = new HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction();
+        HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf =
+                new HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction();
         return (NetworkAddress) rpci.call(ipcHandle, gddsf);
     }
 
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
-        HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf = new HyracksClientInterfaceFunctions.WaitForCompletionFunction(
-                jobId);
+        HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf =
+                new HyracksClientInterfaceFunctions.WaitForCompletionFunction(jobId);
         rpci.call(ipcHandle, wfcf);
     }
 
     @Override
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception {
-        HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction gncif = new HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction();
+        HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction gncif =
+                new HyracksClientInterfaceFunctions.GetNodeControllersInfoFunction();
         return (Map<String, NodeControllerInfo>) rpci.call(ipcHandle, gncif);
     }
 
     @Override
     public ClusterTopology getClusterTopology() throws Exception {
-        HyracksClientInterfaceFunctions.GetClusterTopologyFunction gctf = new HyracksClientInterfaceFunctions.GetClusterTopologyFunction();
+        HyracksClientInterfaceFunctions.GetClusterTopologyFunction gctf =
+                new HyracksClientInterfaceFunctions.GetClusterTopologyFunction();
         return (ClusterTopology) rpci.call(ipcHandle, gctf);
     }
 
     @Override
     public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception {
-        HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(
-                binaryURLs, deploymentId);
+        HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf =
+                new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(binaryURLs, deploymentId);
         rpci.call(ipcHandle, dbf);
     }
 
     @Override
     public void unDeployBinary(DeploymentId deploymentId) throws Exception {
-        HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction(
-                deploymentId);
+        HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction dbf =
+                new HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction(deploymentId);
         rpci.call(ipcHandle, dbf);
     }
 
     @Override
     public JobInfo getJobInfo(JobId jobId) throws Exception {
-        HyracksClientInterfaceFunctions.GetJobInfoFunction gjsf = new HyracksClientInterfaceFunctions.GetJobInfoFunction(
-                jobId);
+        HyracksClientInterfaceFunctions.GetJobInfoFunction gjsf =
+                new HyracksClientInterfaceFunctions.GetJobInfoFunction(jobId);
         return (JobInfo) rpci.call(ipcHandle, gjsf);
     }
 
     @Override
-    public void stopCluster() throws Exception {
-        HyracksClientInterfaceFunctions.ClusterShutdownFunction csdf = new HyracksClientInterfaceFunctions.ClusterShutdownFunction();
+    public void stopCluster(boolean terminateNCService) throws Exception {
+        HyracksClientInterfaceFunctions.ClusterShutdownFunction csdf =
+                new HyracksClientInterfaceFunctions.ClusterShutdownFunction(terminateNCService);
         rpci.call(ipcHandle, csdf);
-        //give the CC some time to do final settling after it returns our request
-        for (int i = 3; ipcHandle.isConnected() && i > 0; i--) {
+        int i = 0;
+        // give the CC some time to do final settling after it returns our request
+        while (ipcHandle.isConnected() && i++ < SHUTDOWN_CONNECTION_TIMEOUT_SECS) {
             synchronized (this) {
-                wait(3000l); //3sec
+                wait(TimeUnit.SECONDS.toMillis(1));
             }
         }
         if (ipcHandle.isConnected()) {
-            throw new IPCException("CC refused to release connection after 9 seconds");
+            throw new IPCException("CC refused to release connection after " + SHUTDOWN_CONNECTION_TIMEOUT_SECS
+                    + " seconds");
         }
     }
 
@@ -137,5 +147,12 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
         HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction gjsf =
                 new HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction(nodeId, includeStats, includeConfig);
         return (String) rpci.call(ipcHandle, gjsf);
+    }
+
+    @Override
+    public String getThreadDump(String node) throws Exception {
+        HyracksClientInterfaceFunctions.ThreadDumpFunction tdf =
+                new HyracksClientInterfaceFunctions.ThreadDumpFunction(node);
+        return (String)rpci.call(ipcHandle, tdf);
     }
 }

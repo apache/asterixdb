@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 
 public class AsterixResourceIdManager implements IAsterixResourceIdManager {
 
@@ -36,7 +36,7 @@ public class AsterixResourceIdManager implements IAsterixResourceIdManager {
         if (!allReported) {
             synchronized (this) {
                 if (!allReported) {
-                    if (reportedNodes.size() < AsterixClusterProperties.getNumberOfNodes()) {
+                    if (reportedNodes.size() < ClusterStateManager.getNumberOfNodes()) {
                         return -1;
                     } else {
                         reportedNodes = null;
@@ -58,7 +58,7 @@ public class AsterixResourceIdManager implements IAsterixResourceIdManager {
         if (!allReported) {
             globalResourceId.set(Math.max(maxResourceId, globalResourceId.get()));
             reportedNodes.add(nodeId);
-            if (reportedNodes.size() == AsterixClusterProperties.getNumberOfNodes()) {
+            if (reportedNodes.size() == ClusterStateManager.getNumberOfNodes()) {
                 reportedNodes = null;
                 allReported = true;
             }

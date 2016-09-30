@@ -31,7 +31,7 @@ use test;
 
 create type test.Nametmp as
 {
-  id : int32
+  id : integer
 }
 
 create type test.NameType as

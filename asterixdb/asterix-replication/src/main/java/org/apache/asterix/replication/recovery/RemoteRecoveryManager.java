@@ -32,15 +32,15 @@ import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 
 public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
@@ -181,7 +181,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
                 //3. remove any existing storage data and initialize storage metadata
                 resourceRepository.deleteStorageData(true);
-                resourceRepository.initializeNewUniverse(AsterixClusterProperties.INSTANCE.getStorageDirectoryName());
+                resourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
 
                 //4. select remote replicas to recover from per lost replica data
                 failbackRecoveryReplicas = constructRemoteRecoveryPlan();

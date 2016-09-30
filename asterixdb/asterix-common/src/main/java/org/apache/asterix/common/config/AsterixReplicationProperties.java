@@ -63,9 +63,9 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
     private final String nodeNamePrefix;
     private final Cluster cluster;
 
-    public AsterixReplicationProperties(AsterixPropertiesAccessor accessor, Cluster cluster) {
+    public AsterixReplicationProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
-        this.cluster = cluster;
+        this.cluster = ClusterProperties.INSTANCE.getCluster();
 
         if (cluster != null) {
             nodeNamePrefix = cluster.getInstanceName() + "_";
@@ -76,21 +76,11 @@ public class AsterixReplicationProperties extends AbstractAsterixProperties {
 
     @PropertyKey(REPLICATION_ENABLED_KEY)
     public boolean isReplicationEnabled() {
-        if (cluster != null && cluster.getDataReplication() != null) {
-            if (getReplicationFactor() == 1) {
-                return false;
-            }
-
-            return cluster.getDataReplication().isEnabled();
-
-        } else {
-            return false;
-        }
+        return ClusterProperties.INSTANCE.isReplicationEnabled();
     }
 
     public String getReplicaIPAddress(String nodeId) {
         if (cluster != null) {
-
             for (int i = 0; i < cluster.getNode().size(); i++) {
                 Node node = cluster.getNode().get(i);
                 if (getRealCluserNodeID(node.getId()).equals(nodeId)) {

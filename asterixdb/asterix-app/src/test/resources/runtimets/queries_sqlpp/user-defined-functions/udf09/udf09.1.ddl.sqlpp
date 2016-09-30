@@ -28,7 +28,7 @@ create dataverse test;
 use test;
 
 create type test.TestType as open {
-id : int64
+id : bigint
 }
 
 create dataset test.t1(TestType) primary key id;

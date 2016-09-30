@@ -9,7 +9,7 @@ TypeDecl AddressType [
 ]
 TypeDecl EventType [
   closed RecordType {
-    event_id : int64,
+    event_id : bigint,
     name : string,
     location : AddressType?,
     organizers : UnorderedList <          open RecordType {
@@ -18,7 +18,7 @@ TypeDecl EventType [
 >
 ,
     sponsoring_sigs : OrderedList [          open RecordType {
-            sig_id : int64,
+            sig_id : bigint,
             chapter_name : string
           }
 ]

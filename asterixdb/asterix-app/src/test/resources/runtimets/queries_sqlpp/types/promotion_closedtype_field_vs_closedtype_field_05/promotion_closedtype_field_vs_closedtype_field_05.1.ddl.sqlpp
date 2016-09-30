@@ -30,15 +30,15 @@ use test;
 
 create type test.empInfoType as
 {
-  id : int64,
-  empno : int64,
+  id : bigint,
+  empno : bigint,
   name : string
 }
 
 create type test.deptInfoType as
 {
-  did : int64,
-  dno : int32,
+  did : bigint,
+  dno : integer,
   dname : string
 }
 

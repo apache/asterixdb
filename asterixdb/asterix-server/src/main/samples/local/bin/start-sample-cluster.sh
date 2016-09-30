@@ -44,6 +44,7 @@ LOGSDIR=$CLUSTERDIR/logs
 
 echo "CLUSTERDIR=$CLUSTERDIR"
 echo "INSTALLDIR=$INSTALLDIR"
+echo "LOGSDIR=$LOGSDIR"
 echo
 cd $CLUSTERDIR
 mkdir -p $LOGSDIR
@@ -59,11 +60,5 @@ echo "Starting sample cluster..."
 $INSTALLDIR/bin/${NC_SERVICE_COMMAND} -logdir - -config-file $CLUSTERDIR/conf/blue.conf >> $LOGSDIR/blue-service.log 2>&1 &
 $INSTALLDIR/bin/${NC_SERVICE_COMMAND} -logdir - >> $LOGSDIR/red-service.log 2>&1 &
 $INSTALLDIR/bin/${CC_COMMAND} -config-file $CLUSTERDIR/conf/cc.conf >> $LOGSDIR/cc.log 2>&1 &
-echo "Waiting for sample cluster (localhost:${LISTEN_PORT}) to be ready..."
-if $INSTALLDIR/bin/${HELPER_COMMAND} wait_for_cluster -quiet -timeout 30;
-then
-  echo "Sample cluster (localhost:${LISTEN_PORT}) is ready..."
-else
-  echo "ERROR: cluster did not start successfully"
-fi
-echo "See output in $LOGSDIR/"
+$INSTALLDIR/bin/${HELPER_COMMAND} wait_for_cluster -timeout 30
+exit $?

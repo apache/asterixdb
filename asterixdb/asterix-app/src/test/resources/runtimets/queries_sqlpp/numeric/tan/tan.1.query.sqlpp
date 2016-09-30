@@ -20,9 +20,9 @@
 {
   "a": tan(120.0),
   "b": tan(90.5f),
-  "c": tan(int32("90")),
-  "d": tan(int16("0")),
-  "e": tan(int8("-45")),
+  "c": tan(integer("90")),
+  "d": tan(smallint("0")),
+  "e": tan(tinyint("-45")),
   "f": tan(1),
   "g": tan(null),
   "h": tan(missing)

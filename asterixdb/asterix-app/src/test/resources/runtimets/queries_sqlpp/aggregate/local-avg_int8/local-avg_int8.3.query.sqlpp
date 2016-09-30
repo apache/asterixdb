@@ -22,5 +22,5 @@ use test;
 
 select element test.`local-avg`((
     select element x
-    from  [test.int8('1'),test.int8('2'),test.int8('3')] as x
+    from  [test.tinyint('1'),test.tinyint('2'),test.tinyint('3')] as x
 ));

@@ -70,4 +70,6 @@ public interface IClusterController {
     public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception;
 
     public void getNodeControllerInfos() throws Exception;
+
+    public void notifyThreadDump(String nodeId, String requestId, String threadDumpJSON) throws Exception;
 }

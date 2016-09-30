@@ -32,9 +32,9 @@ use test;
 
 create type test.EmployeeType as
  closed {
-  id : int64,
+  id : bigint,
   name : string,
-  age : int64
+  age : bigint
 }
 
 create external  dataset EmployeeDataset(EmployeeType) using `hdfs`(

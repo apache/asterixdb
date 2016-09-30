@@ -32,7 +32,7 @@ use test;
 
 create type test.myDataType as
 {
-  id : int32
+  id : integer
 }
 
 create  dataset myData(myDataType) primary key id;

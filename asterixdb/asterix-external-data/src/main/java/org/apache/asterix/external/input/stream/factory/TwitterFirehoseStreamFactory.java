@@ -26,7 +26,7 @@ import java.util.Map;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.input.stream.TwitterFirehoseInputStream;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -69,7 +69,7 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
 
         List<String> chosenLocations = new ArrayList<String>();
         String[] availableLocations = locations != null ? locations
-                : AsterixClusterProperties.INSTANCE.getParticipantNodes().toArray(new String[] {});
+                : ClusterStateManager.INSTANCE.getParticipantNodes().toArray(new String[] {});
         for (int i = 0, k = 0; i < count; i++, k = (k + 1) % availableLocations.length) {
             chosenLocations.add(availableLocations[k]);
         }

@@ -30,9 +30,9 @@ import java.util.Map.Entry;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 
-public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycleComponent {
+public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>, ILifeCycleComponent {
     private static final long DEFAULT_MEMORY_BUDGET = 1024 * 1024 * 100; // 100 megabytes
 
     private final Map<String, IndexInfo> indexInfos;
@@ -131,6 +131,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
             }
         }
 
+        @Override
         public String toString() {
             return "{index: " + index + ", isOpen: " + isOpen + ", refCount: " + referenceCount + ", lastAccess: "
                     + lastAccess + "}";
@@ -138,7 +139,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
     }
 
     @Override
-    public List<IIndex> getOpenIndexes() {
+    public List<IIndex> getOpenResources() {
         List<IIndex> openIndexes = new ArrayList<IIndex>();
         for (IndexInfo i : indexInfos.values()) {
             if (i.isOpen) {
@@ -165,6 +166,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
         }
     }
 
+    @Override
     public void dumpState(OutputStream os) throws IOException {
         StringBuilder sb = new StringBuilder();
 
@@ -212,7 +214,7 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
     }
 
     @Override
-    public IIndex getIndex(String resourcePath) throws HyracksDataException {
+    public IIndex get(String resourcePath) throws HyracksDataException {
         IndexInfo info = indexInfos.get(resourcePath);
         return info == null ? null : info.index;
     }

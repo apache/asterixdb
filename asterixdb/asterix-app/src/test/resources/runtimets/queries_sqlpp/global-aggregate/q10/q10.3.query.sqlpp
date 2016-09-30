@@ -19,11 +19,12 @@
 
 USE TinySocial;
 
-// Tests the propagation for WITH binding variables for subqueries in global aggregates.
+-- Tests the propagation for WITH binding variables for subqueries in global aggregates.
 WITH t AS (
-   SELECT VALUE MIN(v)
-   FROM [1, 2, 3] v
+   SELECT VALUE MIN(v)     -- aggregate
+   FROM [1, 2, 3] v        # from clause
 )[0]
 
+# The main select query that uses the WITH variable t.
 SELECT COUNT(1) count, t
 FROM FacebookUsers u;

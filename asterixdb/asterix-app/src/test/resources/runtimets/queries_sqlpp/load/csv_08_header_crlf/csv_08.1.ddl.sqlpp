@@ -31,7 +31,7 @@ use temp;
 
 create type temp.test as
  closed {
-  id : int64,
+  id : bigint,
   float : float?,
   double : double?,
   date : string?,

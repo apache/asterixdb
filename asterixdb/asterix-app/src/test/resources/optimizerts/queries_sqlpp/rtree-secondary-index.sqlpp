@@ -25,7 +25,7 @@ use test;
 
 create type test.MyRecord as
  closed {
-  id : int32,
+  id : integer,
   point : point,
   kwds : string,
   line1 : line,

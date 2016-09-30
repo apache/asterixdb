@@ -25,7 +25,7 @@ create dataverse test;
 use test;
 
 create type TestType as {
-   b: int64
+   b: bigint
 }
 
 create dataset data(TestType) primary key b;

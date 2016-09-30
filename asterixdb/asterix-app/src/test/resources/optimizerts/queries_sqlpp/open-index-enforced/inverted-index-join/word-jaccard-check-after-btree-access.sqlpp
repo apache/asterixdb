@@ -34,21 +34,21 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int32,
-  `statuses-count` : int32,
+  `friends-count` : integer,
+  `statuses-count` : integer,
   name : string,
-  `followers-count` : int32
+  `followers-count` : integer
 }
 
 create type test.TweetMessageType as
 {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
   `referred-topics` : {{string}},
-  countA : int32,
-  countB : int32
+  countA : integer,
+  countB : integer
 }
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
@@ -66,5 +66,5 @@ select element {'t1':t1.tweetid,'t2':t2.tweetid,'sim':sim[1]}
 from  TweetMessages as t1,
       TweetMessages as t2
 with  sim as test.`similarity-jaccard-check`(test.`word-tokens`(t1.`message-text`),test.`word-tokens`(t2.`message-text`),0.600000f)
-where (sim[0] and (t1.tweetid < test.int64('20')) and (t2.tweetid != t1.tweetid))
+where (sim[0] and (t1.tweetid < test.bigint('20')) and (t2.tweetid != t1.tweetid))
 ;

@@ -24,9 +24,11 @@ import org.apache.asterix.experiment.action.derived.RunAQLFileAction;
 import org.apache.asterix.experiment.client.LSMExperimentConstants;
 import org.apache.asterix.experiment.client.LSMExperimentSetRunner.LSMExperimentSetRunnerConfig;
 
+import java.io.IOException;
+
 public class Experiment8ABuilder extends AbstractExperiment8Builder {
 
-    public Experiment8ABuilder(LSMExperimentSetRunnerConfig config) {
+    public Experiment8ABuilder(LSMExperimentSetRunnerConfig config) throws IOException {
         super("8A", config, "8node.xml", "base_8_ingest.aql", "8.dgen");
     }
 

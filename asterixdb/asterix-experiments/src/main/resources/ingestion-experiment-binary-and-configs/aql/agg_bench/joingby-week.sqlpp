@@ -18,14 +18,14 @@
  */
 use SocialNetworkData;
 
-select uid as uid, c as coll_count
+select uid as uid, c as array_count
 from GleambookUsers as user,
      GleambookMessages as message
 where message.author_id = user.id and
       message.send_time >= datetime('2010-04-10T18:10:27') and
       message.send_time < datetime('2010-04-17T18:10:27')
 group by user.id AS uid
-let c = coll_count(message)
+let c = array_count(message)
 order by c desc
 limit 10;
 

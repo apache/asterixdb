@@ -151,8 +151,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-
-
 class SQLPPParser extends ScopeChecker implements IParser {
 
     // optimizer hints
@@ -178,6 +176,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     // data generator hints
     private static final String DGEN_HINT = "dgen";
+
+    // error configuration
+    protected static final boolean REPORT_EXPECTED_TOKENS = false;
 
     private static class IndexParams {
       public IndexType type;
@@ -251,7 +252,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
       return rfdg;
     }
 
-    public SQLPPParser(String s){
+    public SQLPPParser(String s) {
         this(new StringReader(s));
         super.setInput(s);
     }
@@ -272,9 +273,47 @@ class SQLPPParser extends ScopeChecker implements IParser {
             // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
             throw new AsterixException(new ParseException(e.getMessage()));
         } catch (ParseException e) {
-            throw new AsterixException(e.getMessage());
+            throw new AsterixException("Syntax error: " + getMessage(e));
         }
     }
+
+    protected String getMessage(ParseException pe) {
+        Token currentToken = pe.currentToken;
+        if (currentToken == null) {
+            return pe.getMessage();
+        }
+        int[][] expectedTokenSequences = pe.expectedTokenSequences;
+        String[] tokenImage = pe.tokenImage;
+        String sep = REPORT_EXPECTED_TOKENS ? eol : " ";
+        StringBuilder expected = REPORT_EXPECTED_TOKENS ? new StringBuilder() : null;
+        int maxSize = appendExpected(expected, expectedTokenSequences, tokenImage);
+        Token tok = currentToken.next;
+        int line = tok.beginLine;
+        String message = "In line " + line + " >>" + getLine(line) + "<<" + sep + "Encountered ";
+        for (int i = 0; i < maxSize; i++) {
+            if (i != 0) {
+                message += " ";
+            }
+            if (tok.kind == 0) {
+                message += fixQuotes(tokenImage[0]);
+                break;
+            }
+            message += fixQuotes(tokenImage[tok.kind]) + " ";
+            message += quot + addEscapes(tok.image) + quot;
+            tok = tok.next;
+        }
+        message += " at column " + currentToken.next.beginColumn + "." + sep;
+        if (REPORT_EXPECTED_TOKENS) {
+            if (expectedTokenSequences.length == 1) {
+                message += "Was expecting:" + sep + "    ";
+            } else {
+                message += "Was expecting one of:" + sep + "    ";
+            }
+            message += expected.toString();
+        }
+        return message;
+    }
+
 }
 
 PARSER_END(SQLPPParser)
@@ -1324,16 +1363,16 @@ void RecordField(RecordTypeDefinition recType) throws ParseException:
 
 TypeReferenceExpression TypeReference() throws ParseException:
 {
-  String id = null;
+  Pair<Identifier,Identifier> id = null;
 }
 {
- id = Identifier()
+ id = QualifiedName()
    {
-     if (id.equalsIgnoreCase("int")) {
-        id = "int64";
+     if (id.first == null && id.second.getValue().equalsIgnoreCase("int")) {
+        id.second.setValue("int64");
      }
 
-     return new TypeReferenceExpression(new Identifier(id));
+     return new TypeReferenceExpression(id);
    }
 }
 
@@ -1761,7 +1800,7 @@ Expression RelExpr()throws ParseException:
     }
 
     (
-      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> |<SIMILAR> | (<NOT> { not = true; })? (<LIKE>|<IN>))
+      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? (<LIKE>|<IN>))
         {
           String mhint = getHint(token);
           if (mhint != null) {
@@ -1772,7 +1811,10 @@ Expression RelExpr()throws ParseException:
             }
           }
           String operator = token.image.toLowerCase();
-          if(not){
+          if (operator.equals("<>")){
+              operator = "!=";
+          }
+          if (not) {
             operator = "not_" + operator;
           }
           if (op == null) {
@@ -2145,15 +2187,27 @@ Expression Literal() throws ParseException:
     }
   | <INTEGER_LITERAL>
     {
-      lit.setValue(new LongIntegerLiteral(new Long(token.image)));
+        try {
+            lit.setValue(new LongIntegerLiteral(Long.valueOf(token.image)));
+        } catch (NumberFormatException e) {
+            throw new ParseException("Could not parse numeric literal \"" + token.image +'"');
+        }
     }
   | <FLOAT_LITERAL>
     {
-      lit.setValue(new FloatLiteral(new Float(token.image)));
+        try {
+            lit.setValue(new FloatLiteral(Float.valueOf(token.image)));
+        } catch (NumberFormatException e) {
+            throw new ParseException("Could not parse numeric literal \"" + token.image +'"');
+        }
     }
   | <DOUBLE_LITERAL>
     {
-      lit.setValue(new DoubleLiteral(new Double(token.image)));
+        try {
+            lit.setValue(new DoubleLiteral(Double.valueOf(token.image)));
+        } catch (NumberFormatException e) {
+            throw new ParseException("Could not parse numeric literal \"" + token.image +'"');
+        }
     }
   | <MISSING>
     {
@@ -2911,7 +2965,7 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     createNewScope();
   }
 
-   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);    })
+   (      ((<ANY>|<SOME>)  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);    })
         | (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);    }))
     var = Variable() <IN> inExpr = Expression()
     {
@@ -2993,6 +3047,7 @@ TOKEN [IGNORE_CASE]:
 {
   <ALL : "all">
   | <AND : "and">
+  | <ANY : "any">
   | <APPLY : "apply">
   | <AS : "as">
   | <ASC : "asc">
@@ -3129,6 +3184,7 @@ TOKEN :
   | <GE : ">=">
   | <EQ : "=">
   | <NE : "!=">
+  | <LG : "<>">
   | <SIMILAR : "~=">
 }
 
@@ -3268,6 +3324,32 @@ SKIP:
 SKIP:
 {
     <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?>
+}
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"--" (~["\n"])* "\n">
+}
+
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"--" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?>
+}
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"#" (~["\n"])* "\n">
+}
+
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?>
 }
 
 <DEFAULT,IN_DBL_BRACE>

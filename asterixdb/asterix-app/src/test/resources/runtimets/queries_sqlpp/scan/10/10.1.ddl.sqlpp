@@ -26,7 +26,7 @@ use test;
 
 create type test.DBLPType as
 {
-  id : int64,
+  id : bigint,
   dblpid : string,
   title : string,
   authors : string,

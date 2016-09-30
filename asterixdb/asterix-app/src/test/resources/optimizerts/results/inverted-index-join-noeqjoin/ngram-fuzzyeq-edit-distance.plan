@@ -18,7 +18,7 @@
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
                                     -- STREAM_SELECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- SPLIT  |PARTITIONED|
+                                        -- REPLICATE  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- ASSIGN  |PARTITIONED|
@@ -42,7 +42,7 @@
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
                     -- STREAM_SELECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- SPLIT  |PARTITIONED|
+                        -- REPLICATE  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|

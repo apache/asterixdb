@@ -194,7 +194,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             SetOpType setOpType = setOperationRight.getSetOpType();
             if (setOpType != SetOpType.UNION || setOperationRight.isSetSemantics()) {
                 throw new AsterixException("Operation " + setOpType
-                        + (setOperationRight.isSetSemantics() ? "with set semantics" : "ALL") + " is not supported.");
+                        + (setOperationRight.isSetSemantics() ? " with set semantics" : "ALL") + " is not supported.");
             }
             SetOperationInput rightInput = setOperationRight.getSetOperationRightInput();
             inputExprs.add(rightInput.selectBlock()

@@ -22,16 +22,17 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class TypeReferenceExpression implements TypeExpression {
 
-    private final Identifier ident;
+    private final Pair<Identifier, Identifier> ident;
 
-    public TypeReferenceExpression(Identifier ident) {
+    public TypeReferenceExpression(Pair<Identifier, Identifier> ident) {
         this.ident = ident;
     }
 
-    public Identifier getIdent() {
+    public Pair<Identifier, Identifier> getIdent() {
         return ident;
     }
 

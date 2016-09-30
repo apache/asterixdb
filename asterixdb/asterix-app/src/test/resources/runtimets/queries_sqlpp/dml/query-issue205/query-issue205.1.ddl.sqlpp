@@ -31,15 +31,15 @@ use test;
 
 create type test.EmployeeStat as
 {
-  age : int64,
-  salary : int64
+  age : bigint,
+  salary : bigint
 }
 
 create type test.EmployeeType as
  closed {
   id : string,
   stat : EmployeeStat,
-  deptCode : int64
+  deptCode : bigint
 }
 
 create  dataset Employees(EmployeeType) primary key id;

@@ -25,7 +25,7 @@ use test;
 
 create type test.MyRecordtmp as
  closed {
-  id : int64,
+  id : bigint,
   point : point,
   kwds : string,
   line1 : line,
@@ -38,7 +38,7 @@ create type test.MyRecordtmp as
 
 create type test.MyMiniRecordtmp as
  closed {
-  id : int64,
+  id : bigint,
   point : point
 }
 

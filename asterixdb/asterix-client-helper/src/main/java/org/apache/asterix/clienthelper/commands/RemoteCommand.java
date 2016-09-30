@@ -19,6 +19,7 @@
 package org.apache.asterix.clienthelper.commands;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -40,12 +41,9 @@ public abstract class RemoteCommand extends ClientCommand {
 
     @SuppressWarnings("squid:S1166") // log or rethrow exception
     protected int tryConnect(String path, Method method) throws MalformedURLException {
-        URL url = new URL("http://" + hostPort + "/" + path);
         try {
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-            conn.setRequestMethod(method.name());
+            HttpURLConnection conn = openConnection(path, method);
             return conn.getResponseCode();
-
         } catch (IOException e) {
             return -1;
         }
@@ -57,5 +55,16 @@ public abstract class RemoteCommand extends ClientCommand {
 
     protected int tryPost(String path) throws MalformedURLException {
         return tryConnect(path, Method.POST);
+    }
+
+    protected InputStream openAsStream(String path, Method method) throws IOException {
+        return openConnection(path, method).getInputStream();
+    }
+
+    protected HttpURLConnection openConnection(String path, Method method) throws IOException {
+        URL url = new URL("http://" + hostPort + "/" + path);
+        HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+        conn.setRequestMethod(method.name());
+        return conn;
     }
 }

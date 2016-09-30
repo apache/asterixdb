@@ -20,9 +20,9 @@
 {
   "a": log(120.0),
   "b": log(90.5f),
-  "c": log(int32("90")),
-  "d": log(int16("0")),
-  "e": log(int8("-45")),
+  "c": log(integer("90")),
+  "d": log(smallint("0")),
+  "e": log(tinyint("-45")),
   "f": log(1),
   "g": log(null),
   "h": log(missing)

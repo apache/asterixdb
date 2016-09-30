@@ -31,22 +31,22 @@ use test;
 
 create type test.AddressType as
 {
-  number : int64,
+  number : bigint,
   street : string,
   city : string
 }
 
 create type test.AllType as
 {
-  id : int64,
+  id : bigint,
   string : string,
   float : float,
   double : double,
   boolean : boolean,
-  int8 : int8,
-  int16 : int16,
-  int32 : int32,
-  int64 : int64,
+  int8 : tinyint,
+  int16 : smallint,
+  int32 : integer,
+  int64 : bigint,
   unorderedList : {{string}},
   orderedList : [string],
   record : AddressType,

@@ -34,8 +34,8 @@ create type timeTest.timesType as
   time : time,
   datetime : datetime,
   duration : duration,
-  `year-month-duration` : `year-month-duration`,
-  `day-time-duration` : `day-time-duration`,
+  `year-month-duration` : `year_month_duration`,
+  `day-time-duration` : `day_time_duration`,
   `date-interval` : interval,
   `time-interval` : interval,
   `datetime-interval` : interval

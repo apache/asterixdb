@@ -565,7 +565,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
             // the one bound by the aggregation op.
             context.setVar(entry.getValue(), aggVar);
         }
-
+        gOp.setGroupAll(gc.isGroupAll());
         gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
         return new Pair<ILogicalOperator, LogicalVariable>(gOp, null);
     }

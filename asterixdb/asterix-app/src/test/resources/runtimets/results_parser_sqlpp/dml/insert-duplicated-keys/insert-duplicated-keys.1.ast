@@ -2,7 +2,7 @@ DataverseUse STBench
 TypeDecl SimpleGeoPlaceType [
   closed RecordType {
     coordinates : point,
-    id : int64,
+    id : bigint,
     name : string,
     tags : string,
     categories : string,

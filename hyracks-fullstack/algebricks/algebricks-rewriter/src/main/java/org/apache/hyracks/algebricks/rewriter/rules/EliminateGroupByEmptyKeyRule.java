@@ -55,6 +55,10 @@ public class EliminateGroupByEmptyKeyRule implements IAlgebraicRewriteRule {
             return false;
         }
         GroupByOperator groupOp = (GroupByOperator) op;
+        // Only groupAll has equivalent semantics to aggregate.
+        if (!groupOp.isGroupAll()) {
+            return false;
+        }
         List<LogicalVariable> groupVars = groupOp.getGbyVarList();
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorList = groupOp.getDecorList();
         if (!groupVars.isEmpty() || !decorList.isEmpty()) {

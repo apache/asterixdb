@@ -21,9 +21,9 @@ package org.apache.asterix.test.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -44,13 +44,14 @@ public class SqlppExecutionTest {
 
     protected static final Logger LOGGER = Logger.getLogger(SqlppExecutionTest.class.getName());
 
-    protected static final String PATH_ACTUAL = "rttest" + File.separator;
+    protected static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
     protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
             File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     protected static AsterixTransactionProperties txnProperties;
+    protected static final List<String> badTestCases = new ArrayList<>();
     private static final TestExecutor testExecutor = new TestExecutor();
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
@@ -68,6 +69,12 @@ public class SqlppExecutionTest {
     public static void tearDown() throws Exception {
         ExecutionTestUtil.tearDown(cleanupOnStop);
         ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
+        if (!badTestCases.isEmpty()) {
+            System.out.println("The following test cases left some data");
+            for (String testCase : badTestCases) {
+                System.out.println(testCase);
+            }
+        }
     }
 
     @Parameters(name = "SqlppExecutionTest {index}: {0}")
@@ -97,5 +104,6 @@ public class SqlppExecutionTest {
     @Test
     public void test() throws Exception {
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, FailedGroup);
+        testExecutor.cleanup(tcCtx.toString(), badTestCases);
     }
 }

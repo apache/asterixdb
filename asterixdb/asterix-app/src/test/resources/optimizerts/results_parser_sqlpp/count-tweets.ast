@@ -1,8 +1,8 @@
 DataverseUse twitter
 TypeDecl Tweet [
   open RecordType {
-    id : int32,
-    tweetid : int64,
+    id : integer,
+    tweetid : bigint,
     loc : point,
     time : datetime,
     text : string

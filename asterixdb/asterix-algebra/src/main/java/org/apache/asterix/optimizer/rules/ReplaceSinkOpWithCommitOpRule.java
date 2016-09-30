@@ -110,7 +110,7 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
                                 FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING));
                         // argument is the previous record
                         isPrevMissingFunc.getArguments().add(new MutableObject<ILogicalExpression>(
-                                new VariableReferenceExpression(insertDeleteUpsertOperator.getPrevRecordVar())));
+                                new VariableReferenceExpression(insertDeleteUpsertOperator.getBeforeOpRecordVar())));
                         orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isPrevMissingFunc));
                         orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewMissingFunc));
 

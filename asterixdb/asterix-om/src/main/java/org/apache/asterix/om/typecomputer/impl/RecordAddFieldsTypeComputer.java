@@ -40,7 +40,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -56,7 +55,6 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
         IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
 
@@ -65,7 +63,7 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
             throw new AlgebricksException("Input record cannot be null");
         }
 
-        AbstractLogicalExpression arg1 = (AbstractLogicalExpression) funcExpr.getArguments().get(1).getValue();
+        ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
         IAType type1 = (IAType) env.getType(arg1);
         AOrderedListType inputOrderedListType = TypeComputeUtils.extractOrderedListType(type1);
         if (inputOrderedListType == null) {

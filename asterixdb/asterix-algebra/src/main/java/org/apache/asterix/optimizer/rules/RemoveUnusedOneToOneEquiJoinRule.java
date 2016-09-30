@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * 1. The live variables of one input branch of the join are not used in the upstream plan
  * 2. The join is an inner equi join
  * 3. The join condition only uses variables that correspond to primary keys of the same dataset
+ * 4. The records of one input branch will not be filtered by the selective operators till join.
  * Notice that the last condition implies a 1:1 join, i.e., the join does not change the result cardinality.
  * Joins that satisfy the above conditions may be introduced by other rules
  * which use surrogate optimizations. Such an optimization aims to reduce data copies and communication costs by
@@ -61,11 +62,11 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
 
-    private final Set<LogicalVariable> parentsUsedVars = new HashSet<LogicalVariable>();
-    private final List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
-    private final List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
-    private final List<LogicalVariable> pkVars = new ArrayList<LogicalVariable>();
-    private final List<DataSourceScanOperator> dataScans = new ArrayList<DataSourceScanOperator>();
+    private final Set<LogicalVariable> parentsUsedVars = new HashSet<>();
+    private final List<LogicalVariable> usedVars = new ArrayList<>();
+    private final List<LogicalVariable> liveVars = new ArrayList<>();
+    private final List<LogicalVariable> pkVars = new ArrayList<>();
+    private final List<DataSourceScanOperator> dataScans = new ArrayList<>();
     private boolean hasRun = false;
 
     @Override
@@ -179,7 +180,33 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
             // keys from datasource scans of the same dataset.
             return -1;
         }
+        // Suppose we Project B over A.a ~= B.b, where A's fields are involved in a selective operator.
+        // We expect the post-plan will NOT prune the join part derived from A.
+        if (unusedJoinBranchIndex >= 0
+                && isSelectionAboveDataScan(opRef.getValue().getInputs().get(unusedJoinBranchIndex))) {
+            unusedJoinBranchIndex = -1;
+        }
         return unusedJoinBranchIndex;
+    }
+
+    private boolean isSelectionAboveDataScan(Mutable<ILogicalOperator> opRef) {
+        boolean hasSelection = false;
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        LogicalOperatorTag tag = op.getOperatorTag();
+        switch (tag) {
+            case DATASOURCESCAN:
+                return false;
+            case UNNEST_MAP:
+            case LEFT_OUTER_UNNEST_MAP:
+            case LIMIT:
+            case SELECT:
+                return true;
+            default:
+                for (Mutable<ILogicalOperator> inputOp : op.getInputs()) {
+                    hasSelection |= isSelectionAboveDataScan(inputOp);
+                }
+        }
+        return hasSelection;
     }
 
     private void gatherProducingDataScans(Mutable<ILogicalOperator> opRef, List<LogicalVariable> joinUsedVars,

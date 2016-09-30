@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.`round-half-to-even`(test.int8('-20'),2),'f1':test.`round-half-to-even`(test.int16('-23'),2),'f2':test.`round-half-to-even`(test.int32('-29'),2),'f3':test.`round-half-to-even`(test.int64('-21'),2),'f4':test.`round-half-to-even`(test.int8('20'),2),'f5':test.`round-half-to-even`(test.int16('22'),2),'f6':test.`round-half-to-even`(test.int32('23'),2),'f7':test.`round-half-to-even`(test.int64('27'),2)};
+{'f0':test.`round-half-to-even`(test.tinyint('-20'),2),'f1':test.`round-half-to-even`(test.smallint('-23'),2),'f2':test.`round-half-to-even`(test.integer('-29'),2),'f3':test.`round-half-to-even`(test.bigint('-21'),2),'f4':test.`round-half-to-even`(test.tinyint('20'),2),'f5':test.`round-half-to-even`(test.smallint('22'),2),'f6':test.`round-half-to-even`(test.integer('23'),2),'f7':test.`round-half-to-even`(test.bigint('27'),2)};

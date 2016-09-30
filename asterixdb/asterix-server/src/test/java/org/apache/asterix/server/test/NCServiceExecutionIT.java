@@ -21,6 +21,7 @@ package org.apache.asterix.server.test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.aql.TestExecutor;
@@ -93,6 +94,8 @@ public class NCServiceExecutionIT {
 
     private final TestCaseContext tcCtx;
     private static final TestExecutor testExecutor = new TestExecutor();
+
+    private static final List<String> badTestCases = new ArrayList<>();
     private static HyracksVirtualCluster cluster;
 
     @BeforeClass
@@ -113,30 +116,25 @@ public class NCServiceExecutionIT {
         cluster = new HyracksVirtualCluster(new File(APP_HOME), new File(ASTERIX_APP_DIR));
         cluster.addNCService(
                 new File(CONF_DIR, "ncservice1.conf"),
-                new File(LOG_DIR, "ncservice1.log")
-        );
+                new File(LOG_DIR, "ncservice1.log"));
         cluster.addNCService(
                 new File(CONF_DIR, "ncservice2.conf"),
-                new File(LOG_DIR, "ncservice2.log")
-        );
+                new File(LOG_DIR, "ncservice2.log"));
 
         try {
             Thread.sleep(2000);
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
 
         // Start CC
         cluster.start(
                 new File(CONF_DIR, "cc.conf"),
-                new File(LOG_DIR, "cc.log")
-        );
+                new File(LOG_DIR, "cc.log"));
 
         LOGGER.info("Sleeping while cluster comes online...");
         try {
             Thread.sleep(6000);
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
     }
 
@@ -149,6 +147,12 @@ public class NCServiceExecutionIT {
         }
         cluster.stop();
         HDFSCluster.getInstance().cleanup();
+        if (!badTestCases.isEmpty()) {
+            System.out.println("The following test cases left some data");
+            for (String testCase : badTestCases) {
+                System.out.println(testCase);
+            }
+        }
     }
 
     @Parameters
@@ -157,7 +161,7 @@ public class NCServiceExecutionIT {
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(TESTS_DIR))) {
             if (!skip(ctx)) {
-                testArgs.add(new Object[]{ctx});
+                testArgs.add(new Object[] { ctx });
             }
         }
         return testArgs;
@@ -176,7 +180,6 @@ public class NCServiceExecutionIT {
         return false;
     }
 
-
     public NCServiceExecutionIT(TestCaseContext ctx) {
         this.tcCtx = ctx;
     }
@@ -184,5 +187,6 @@ public class NCServiceExecutionIT {
     @Test
     public void test() throws Exception {
         testExecutor.executeTest(ACTUAL_RESULTS_DIR, tcCtx, null, false);
+        testExecutor.cleanup(tcCtx.toString(), badTestCases);
     }
 }

@@ -29,7 +29,7 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param callback
      * @throws Exception
      */
-    public void sendMessageToCC(IApplicationMessage message, IApplicationMessageCallback callback) throws Exception;
+    public void sendMessageToCC(IApplicationMessage message) throws Exception;
 
     /**
      * Sends application message from this NC to another NC.
@@ -38,7 +38,7 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param callback
      * @throws Exception
      */
-    public void sendMessageToNC(String nodeId, IApplicationMessage message, IApplicationMessageCallback callback)
+    public void sendMessageToNC(String nodeId, IApplicationMessage message)
             throws Exception;
 
     /**

@@ -1,8 +1,8 @@
 DataverseUse test
 TypeDecl TestType [
   open RecordType {
-    id : int32,
-    sal : int32?
+    id : integer,
+    sal : integer?
   }
 ]
 DatasetDecl tdst(TestType) partitioned by [[id]]

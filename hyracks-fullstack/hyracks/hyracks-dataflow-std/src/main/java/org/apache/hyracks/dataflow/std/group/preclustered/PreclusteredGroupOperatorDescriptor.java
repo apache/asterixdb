@@ -29,20 +29,28 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+    private static final long serialVersionUID = 1L;
+
     private final int[] groupFields;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IAggregatorDescriptorFactory aggregatorFactory;
-
-    private static final long serialVersionUID = 1L;
+    private final boolean groupAll;
 
     public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor recordDescriptor) {
+        this(spec, groupFields, comparatorFactories, aggregatorFactory, recordDescriptor, false);
+    }
+
+    public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
+            RecordDescriptor recordDescriptor, boolean groupAll) {
         super(spec, 1, 1);
         this.groupFields = groupFields;
         this.comparatorFactories = comparatorFactories;
         this.aggregatorFactory = aggregatorFactory;
         recordDescriptors[0] = recordDescriptor;
+        this.groupAll = groupAll;
     }
 
     @Override
@@ -50,6 +58,6 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
             throws HyracksDataException {
         return new PreclusteredGroupOperatorNodePushable(ctx, groupFields, comparatorFactories, aggregatorFactory,
-                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), recordDescriptors[0]);
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), recordDescriptors[0], groupAll);
     }
 }

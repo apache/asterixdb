@@ -29,7 +29,7 @@ use test;
 
 create type test.Schema as
  closed {
-  id : int64,
+  id : bigint,
   timestamp : datetime
 }
 

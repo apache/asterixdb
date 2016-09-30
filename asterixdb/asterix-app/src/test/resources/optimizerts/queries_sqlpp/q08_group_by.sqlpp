@@ -25,10 +25,10 @@ use q08_group_by;
 
 create type q08_group_by.LineItemType as
  closed {
-  l_orderkey : int32,
-  l_partkey : int32,
-  l_suppkey : int32,
-  l_linenumber : int32,
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
   l_quantity : double,
   l_extendedprice : double,
   l_discount : double,
@@ -45,23 +45,23 @@ create type q08_group_by.LineItemType as
 
 create type q08_group_by.OrderType as
  closed {
-  o_orderkey : int32,
-  o_custkey : int32,
+  o_orderkey : integer,
+  o_custkey : integer,
   o_orderstatus : string,
   o_totalprice : double,
   o_orderdate : string,
   o_orderpriority : string,
   o_clerk : string,
-  o_shippriority : int32,
+  o_shippriority : integer,
   o_comment : string
 }
 
 create type q08_group_by.CustomerType as
  closed {
-  c_custkey : int32,
+  c_custkey : integer,
   c_name : string,
   c_address : string,
-  c_nationkey : int32,
+  c_nationkey : integer,
   c_phone : string,
   c_acctbal : double,
   c_mktsegment : string,
@@ -70,10 +70,10 @@ create type q08_group_by.CustomerType as
 
 create type q08_group_by.SupplierType as
  closed {
-  s_suppkey : int32,
+  s_suppkey : integer,
   s_name : string,
   s_address : string,
-  s_nationkey : int32,
+  s_nationkey : integer,
   s_phone : string,
   s_acctbal : double,
   s_comment : string
@@ -81,27 +81,27 @@ create type q08_group_by.SupplierType as
 
 create type q08_group_by.NationType as
  closed {
-  n_nationkey : int32,
+  n_nationkey : integer,
   n_name : string,
-  n_regionkey : int32,
+  n_regionkey : integer,
   n_comment : string
 }
 
 create type q08_group_by.RegionType as
  closed {
-  r_regionkey : int32,
+  r_regionkey : integer,
   r_name : string,
   r_comment : string
 }
 
 create type q08_group_by.PartType as
  closed {
-  p_partkey : int32,
+  p_partkey : integer,
   p_name : string,
   p_mfgr : string,
   p_brand : string,
   p_type : string,
-  p_size : int32,
+  p_size : integer,
   p_container : string,
   p_retailprice : double,
   p_comment : string

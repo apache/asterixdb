@@ -34,17 +34,17 @@ use test;
 
 create type test.Emp as
  closed {
-  id : int64,
+  id : bigint,
   fname : string,
   lname : string,
-  age : int64,
+  age : bigint,
   dept : string
 }
 
 create type test.EmpOpen as
 {
-  id : int64,
-  age : int64,
+  id : bigint,
+  age : bigint,
   dept : string
 }
 

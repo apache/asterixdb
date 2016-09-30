@@ -25,12 +25,12 @@ use TinySocial;
 
 create type TinySocial.FacebookUserType as
 {
-  id : int64
+  id : bigint
 }
 
 create type TinySocial.FacebookMessageType as
 {
-  `message-id` : int64
+  `message-id` : bigint
 }
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;

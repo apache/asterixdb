@@ -25,7 +25,7 @@ use test;
 
 create type test.MyRecord as
 {
-  id : int64,
+  id : bigint,
   point : point,
   kwds : string
 }

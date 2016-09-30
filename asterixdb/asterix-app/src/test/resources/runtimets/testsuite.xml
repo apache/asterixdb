@@ -20,6 +20,7 @@
 
              <!ENTITY ComparisonQueries SYSTEM "queries/comparison/ComparisonQueries.xml">
              <!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
+             <!ENTITY APIQueries SYSTEM "queries/api/APIQueries.xml">
              <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
              <!ENTITY TemporalQueries SYSTEM "queries/temporal/TemporalQueries.xml">
              ]>
@@ -29,6 +30,7 @@
              ResultOffsetPath="results"
              QueryOffsetPath="queries"
              QueryFileExtension=".aql">
+  &APIQueries;
   <test-group name="external-library">
     <test-case FilePath="external-library">
       <compilation-unit name="typed_adapter">
@@ -210,6 +212,11 @@
     <test-case FilePath="feeds">
       <compilation-unit name="feed-push-socket">
         <output-dir compare="Text">feed-push-socket</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="upsert-feed">
+        <output-dir compare="Text">upsert-feed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -1252,9 +1259,7 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="comparison">
-    &ComparisonQueries;
-  </test-group>
+  &ComparisonQueries;
   <test-group name="constructor">
     <test-case FilePath="constructor">
       <compilation-unit name="binary_01">
@@ -2657,6 +2662,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
+      <compilation-unit name="dblp-csx-aqlplus_5">
+        <output-dir compare="Text">dblp-csx-aqlplus_5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-csx-dblp-aqlplus_1">
         <output-dir compare="Text">dblp-csx-dblp-aqlplus_1</output-dir>
       </compilation-unit>
@@ -3509,6 +3519,18 @@
       <test-case FilePath="open-index-enforced/external-indexing">
         <compilation-unit name="leftouterjoin-rtree">
           <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="open-index-enforced/type-checking">
+      <test-case FilePath="open-index-enforced/type-checking">
+        <compilation-unit name="enforced-type-delete">
+          <output-dir compare="Text">enforced-type-delete</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/type-checking">
+        <compilation-unit name="enforced-type-upsert">
+          <output-dir compare="Text">enforced-type-upsert</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -4804,12 +4826,8 @@
       </compilation-unit>
     </test-case>-->
   </test-group>
-  <test-group name="records">
-    &RecordsQueries;
-  </test-group>
-  <test-group name="deep-equal">
-    &DeepEqualQueries;
-  </test-group>
+  &RecordsQueries;
+  &DeepEqualQueries;
   <test-group name="scan">
     <test-case FilePath="scan">
       <compilation-unit name="10">
@@ -6246,7 +6264,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>Error: function test.printName@0 is undefined</expected-error>
+        <expected-error>Error: function test.printName@0 is not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6422,7 +6440,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>Error: function test.int8@0 is undefined</expected-error>
+        <expected-error>Error: function test.int8@0 is not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -6778,6 +6796,11 @@
     </test-case>
   </test-group>
   <test-group name="types">
+    <test-case FilePath="types">
+      <compilation-unit name="any-object">
+        <output-dir compare="Text">any-object</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>
@@ -7170,29 +7193,6 @@
     <test-case FilePath="temp-dataset">
       <compilation-unit name="temp_primary_plus_ngram_flush">
         <output-dir compare="Text">temp_primary_plus_ngram_flush</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="api">
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_1">
-        <output-dir compare="Text">cluster_state_1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_2">
-        <output-dir compare="Text">cluster_state_2</output-dir>
-        <expected-error>HTTP/1.1 404 Not Found</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_3">
-        <output-dir compare="Text">cluster_state_3</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
-      <compilation-unit name="cluster_state_4">
-        <output-dir compare="Text">cluster_state_4</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

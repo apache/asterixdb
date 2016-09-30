@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.runtime.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
@@ -42,7 +42,7 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
-        clusterLocations = AsterixClusterProperties.INSTANCE.getClusterLocations();
+        clusterLocations = ClusterStateManager.INSTANCE.getClusterLocations();
         numOfReaders = clusterLocations.getLocations().length;
         return clusterLocations;
     }

@@ -33,22 +33,22 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int32,
-  `statuses-count` : int32,
+  `friends-count` : integer,
+  `statuses-count` : integer,
   name : string,
-  `followers-count` : int32
+  `followers-count` : integer
 }
 
 create type test.TweetMessageNestedType as
  closed {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string,
-  countA : int32,
-  countB : int32
+  countA : integer,
+  countB : integer
 }
 
 create type test.TweetMessageType as
@@ -69,6 +69,6 @@ select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested.`message-text
         order by t2.nested.tweetid
     )}
 from  TweetMessages as t1
-where (t1.nested.tweetid > test.int64('240'))
+where (t1.nested.tweetid > test.bigint('240'))
 order by t1.nested.tweetid
 ;

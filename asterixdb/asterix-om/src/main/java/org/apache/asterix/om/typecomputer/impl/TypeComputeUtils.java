@@ -111,19 +111,27 @@ public class TypeComputeUtils {
         byte category = CERTAIN;
         boolean meetNull = false;
         for (IAType inputType : inputTypes) {
-            ATypeTag inputTypeTag = inputType.getTypeTag();
-            if (inputTypeTag == ATypeTag.UNION) {
-                AUnionType unionType = (AUnionType) inputType;
-                if (unionType.isNullableType()) {
+            switch (inputType.getTypeTag()) {
+                case UNION:
+                    AUnionType unionType = (AUnionType) inputType;
+                    if (unionType.isNullableType()) {
+                        category |= NULLABLE;
+                    }
+                    if (unionType.isMissableType()) {
+                        category |= MISSABLE;
+                    }
+                    break;
+                case MISSING:
+                    return MISSING;
+                case NULL:
+                    meetNull = true;
+                    break;
+                case ANY:
                     category |= NULLABLE;
-                }
-                if (unionType.isMissableType()) {
                     category |= MISSABLE;
-                }
-            } else if (inputTypeTag == ATypeTag.MISSING) {
-                return MISSING;
-            } else if (inputTypeTag == ATypeTag.NULL) {
-                meetNull = true;
+                    break;
+                default:
+                    break;
             }
         }
         if (meetNull) {
@@ -133,6 +141,9 @@ public class TypeComputeUtils {
     }
 
     private static IAType getResultType(IAType type, byte category) {
+        if (type.getTypeTag() == ATypeTag.ANY) {
+            return type;
+        }
         if (category == CERTAIN) {
             return type;
         }
@@ -185,6 +196,8 @@ public class TypeComputeUtils {
                 } else {
                     return null;
                 }
+            case ANY:
+                return ARecordType.FULLY_OPEN_RECORD_TYPE;
             default:
                 return null;
         }

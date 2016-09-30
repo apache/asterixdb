@@ -20,22 +20,22 @@ package org.apache.asterix.common.api;
 
 import java.util.List;
 
-import org.apache.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
-import org.apache.asterix.common.context.DatasetLifecycleManager.IndexInfo;
+import org.apache.asterix.common.context.DatasetInfo;
+import org.apache.asterix.common.context.IndexInfo;
+import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
-public interface IDatasetLifecycleManager extends IIndexLifecycleManager {
+public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IIndex> {
     /**
-     * @param datasetID
-     * @param resourceID
+     * @param datasetId
+     * @param indexId
      * @return The corresponding index, or null if it is not found in the registered indexes.
      * @throws HyracksDataException
      */
-    IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException;
+    IIndex getIndex(int datasetId, long indexId) throws HyracksDataException;
 
     /**
      * Flushes all open datasets synchronously.
@@ -75,7 +75,7 @@ public interface IDatasetLifecycleManager extends IIndexLifecycleManager {
      * @param datasetID
      * @return
      */
-    ILSMOperationTracker getOperationTracker(int datasetID);
+    PrimaryIndexOperationTracker getOperationTracker(int datasetID);
 
     /**
      * creates (if necessary) and returns the dataset virtual buffer caches.

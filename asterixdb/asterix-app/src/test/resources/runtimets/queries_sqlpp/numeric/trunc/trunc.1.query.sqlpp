@@ -18,14 +18,14 @@
  */
 
 {
-  'f0':trunc(int8('-20'),2),
-  'f1':trunc(int16('-23'),2),
-  'f2':trunc(int32('-29'),2),
-  'f3':trunc(int64('-21'),2),
-  'f4':trunc(int8('20'),2),
-  'f5':trunc(int16('22'),2),
-  'f6':trunc(int32('23'),2),
-  'f7':trunc(int64('27'),2),
+  'f0':trunc(tinyint('-20'),2),
+  'f1':trunc(smallint('-23'),2),
+  'f2':trunc(integer('-29'),2),
+  'f3':trunc(bigint('-21'),2),
+  'f4':trunc(tinyint('20'),2),
+  'f5':trunc(smallint('22'),2),
+  'f6':trunc(integer('23'),2),
+  'f7':trunc(bigint('27'),2),
   'f8':trunc(1.555f,2),
   'f9':trunc(1.7777999, 3),
   'f10':trunc(21.7777999, -1),

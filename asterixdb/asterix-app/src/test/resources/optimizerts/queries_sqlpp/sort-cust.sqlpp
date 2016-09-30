@@ -25,19 +25,19 @@ use custlimit;
 
 create type custlimit.AddressType as
  closed {
-  number : int32,
+  number : integer,
   street : string,
   city : string
 }
 
 create type custlimit.CustomerType as
  closed {
-  cid : int32,
+  cid : integer,
   name : string,
-  age : int32?,
+  age : integer?,
   address : AddressType?,
   lastorder : {
-      oid : int32,
+      oid : integer,
       total : float
   }
 

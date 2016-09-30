@@ -33,22 +33,22 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int32,
-  `statuses-count` : int32,
+  `friends-count` : integer,
+  `statuses-count` : integer,
   name : string,
-  `followers-count` : int32
+  `followers-count` : integer
 }
 
 create type test.TweetMessageType as
  closed {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string,
-  countA : int32,
-  countB : int32
+  countA : integer,
+  countB : integer
 }
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
@@ -70,6 +70,6 @@ select element {'tweetid1':t1.tweetid,'loc1':t1.`sender-location`,'nearby-messag
     )}
 from  TweetMessages as t1
 with  n as test.`create-circle`(t1.`sender-location`,0.5)
-where (t1.tweetid < test.int64('10'))
+where (t1.tweetid < test.bigint('10'))
 order by t1.tweetid
 ;

@@ -4,7 +4,7 @@ RecordConstructor [
     LiteralExpr [STRING] [result1]
     :
     OperatorExpr [
-      FunctionCall test.int64@1[
+      FunctionCall null.int64@1[
         LiteralExpr [STRING] [3]
       ]
       >
@@ -17,7 +17,7 @@ RecordConstructor [
     OperatorExpr [
       LiteralExpr [NULL]
       >=
-      FunctionCall test.int64@1[
+      FunctionCall null.int64@1[
         LiteralExpr [STRING] [3]
       ]
     ]
@@ -26,7 +26,7 @@ RecordConstructor [
     LiteralExpr [STRING] [result3]
     :
     OperatorExpr [
-      FunctionCall test.int64@1[
+      FunctionCall null.int64@1[
         LiteralExpr [STRING] [3]
       ]
       <
@@ -39,7 +39,7 @@ RecordConstructor [
     OperatorExpr [
       LiteralExpr [NULL]
       <=
-      FunctionCall test.int64@1[
+      FunctionCall null.int64@1[
         LiteralExpr [STRING] [3]
       ]
     ]
@@ -48,7 +48,7 @@ RecordConstructor [
     LiteralExpr [STRING] [result5]
     :
     OperatorExpr [
-      FunctionCall test.int64@1[
+      FunctionCall null.int64@1[
         LiteralExpr [STRING] [3]
       ]
       =
@@ -61,7 +61,7 @@ RecordConstructor [
     OperatorExpr [
       LiteralExpr [NULL]
       !=
-      FunctionCall test.int64@1[
+      FunctionCall null.int64@1[
         LiteralExpr [STRING] [3]
       ]
     ]

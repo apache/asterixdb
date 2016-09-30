@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.aql.TestExecutor;
-import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
@@ -38,11 +38,12 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
 @RunWith(Parameterized.class)
 public class RecoveryIT {
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
-    private static final String PATH_ACTUAL = "rttest/";
+    private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
     private static final String PATH_BASE = "src/test/resources/transactionts/";
     private static final String HDFS_BASE = "../asterix-app/";
     private TestCaseContext tcCtx;
@@ -57,7 +58,7 @@ public class RecoveryIT {
     private final TestExecutor testExecutor = new TestExecutor();
 
     @Rule
-    public TestRule retainLogs = new AsterixTestHelper.RetainLogsRule(managixHomePath, reportPath);
+    public TestRule retainLogs = new RetainLogsRule(managixHomePath, reportPath);
 
     @BeforeClass
     public static void setUp() throws Exception {

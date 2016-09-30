@@ -90,8 +90,8 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
-    public void shutdown() throws Exception {
-        CCNCFunctions.ShutdownRequestFunction sdrf = new CCNCFunctions.ShutdownRequestFunction();
+    public void shutdown(boolean terminateNCService) throws Exception {
+        CCNCFunctions.ShutdownRequestFunction sdrf = new CCNCFunctions.ShutdownRequestFunction(terminateNCService);
         ipcHandle.send(-1, sdrf, null);
     }
 
@@ -99,6 +99,12 @@ public class NodeControllerRemoteProxy implements INodeController {
     public void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
         CCNCFunctions.SendApplicationMessageFunction fn = new CCNCFunctions.SendApplicationMessageFunction(data,
                 deploymentId, nodeId);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void takeThreadDump(String requestId) throws Exception {
+        CCNCFunctions.ThreadDumpRequestFunction fn = new CCNCFunctions.ThreadDumpRequestFunction(requestId);
         ipcHandle.send(-1, fn, null);
     }
 }

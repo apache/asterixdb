@@ -103,8 +103,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         INSTANCE.feedProperties = new AsterixFeedProperties(propertiesAccessor);
         INSTANCE.extensionProperties = new AsterixExtensionProperties(propertiesAccessor);
-        INSTANCE.replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
-                AsterixClusterProperties.INSTANCE.getCluster());
+        INSTANCE.replicationProperties = new AsterixReplicationProperties(propertiesAccessor);
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
         INSTANCE.messagingProperties = new MessagingProperties(propertiesAccessor);

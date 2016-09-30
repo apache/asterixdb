@@ -3,15 +3,15 @@ TypeDecl TwitterUserType [
   closed RecordType {
     screen-name : string,
     lang : string,
-    friends-count : int32,
-    statuses-count : int32,
+    friends-count : integer,
+    statuses-count : integer,
     name : string,
-    followers-count : int32
+    followers-count : integer
   }
 ]
 TypeDecl TweetMessageNestedType [
   open RecordType {
-    tweetid : int64,
+    tweetid : bigint,
     user : TwitterUserType,
     sender-location : point,
     send-time : datetime,

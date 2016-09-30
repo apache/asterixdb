@@ -25,8 +25,8 @@ use fuzzyjoin;
 
 create type fuzzyjoin.TOKENSRANKEDADMType as
  closed {
-  token : int32,
-  rank : int32
+  token : integer,
+  rank : integer
 }
 
 create  nodegroup group1 if not exists  on

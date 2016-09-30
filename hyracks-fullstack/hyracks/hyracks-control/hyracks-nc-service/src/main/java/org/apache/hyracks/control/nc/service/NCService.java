@@ -18,11 +18,6 @@
  */
 package org.apache.hyracks.control.nc.service;
 
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.hyracks.control.common.controllers.IniUtils;
-import org.ini4j.Ini;
-import org.kohsuke.args4j.CmdLineParser;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +31,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.hyracks.control.common.controllers.IniUtils;
+import org.apache.hyracks.control.common.controllers.ServiceConstants;
+import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
+import org.ini4j.Ini;
+import org.kohsuke.args4j.CmdLineParser;
 
 /**
  * Stand-alone process which listens for configuration information from the
@@ -70,10 +72,8 @@ public class NCService {
      */
     private static Process proc = null;
 
-    private static final String MAGIC_COOKIE = "hyncmagic";
-
     private static List<String> buildCommand() throws IOException {
-        List<String> cList = new ArrayList<String>();
+        List<String> cList = new ArrayList<>();
 
         // Find the command to run. For now, we allow overriding the name, but
         // still assume it's located in the bin/ directory of the deployment.
@@ -92,10 +92,15 @@ public class NCService {
 
         cList.add("-config-file");
         // Store the Ini file from the CC locally so NCConfig can read it.
-        // QQQ should arrange to delete this when done
         File tempIni = File.createTempFile("ncconf", ".conf");
+        tempIni.deleteOnExit();
+
         ini.store(tempIni);
         cList.add(tempIni.getCanonicalPath());
+
+        // pass in the PID of the NCService
+        cList.add("-ncservice-pid");
+        cList.add(System.getProperty("app.pid", "0"));
         return cList;
     }
 
@@ -161,10 +166,12 @@ public class NCService {
                 } catch (InterruptedException ignored) {
                 }
             }
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("NCDriver exited with return value " + retval);
+            LOGGER.info("NCDriver exited with return value " + retval);
+            if (retval == 99) {
+                LOGGER.info("Terminating NCService based on return value from NCDriver");
+                exit(0);
             }
-            return (retval == 0);
+            return retval == 0;
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, "Configuration from CC broken", e);
@@ -174,30 +181,42 @@ public class NCService {
     }
 
     private static boolean acceptConnection(InputStream is) {
-        // Simple on-wire protocol: magic cookie (string), CC address (string),
-        // port (string), as encoded on CC by ObjectOutputStream. If we see
-        // anything else or have any error, crap out and await a different
-        // connection.
-        // QQQ This should probably be changed to directly accept the full
-        // config file from the CC, rather than calling back to the CC's
-        // "config" webservice to retrieve it. Revisit when the CC is fully
-        // parsing and validating the master config file.
+        // Simple on-wire protocol:
+        // magic cookie (string)
+        // either:
+        //   START_NC, ini file
+        // or:
+        //   TERMINATE
+        // If we see anything else or have any error, crap out and await a different connection.
         try {
             ObjectInputStream ois = new ObjectInputStream(is);
             String magic = ois.readUTF();
-            if (! MAGIC_COOKIE.equals(magic)) {
+            if (! ServiceConstants.NC_SERVICE_MAGIC_COOKIE.equals(magic)) {
                 LOGGER.severe("Connection used incorrect magic cookie");
                 return false;
             }
-            String iniString = ois.readUTF();
-            ini = new Ini(new StringReader(iniString));
-            ncId = IniUtils.getString(ini, "localnc", "id", "");
-            nodeSection = "nc/" + ncId;
-            return launchNCProcess();
+            switch (ServiceCommand.valueOf(ois.readUTF())) {
+                case START_NC:
+                    String iniString = ois.readUTF();
+                    ini = new Ini(new StringReader(iniString));
+                    ncId = IniUtils.getString(ini, "localnc", "id", "");
+                    nodeSection = "nc/" + ncId;
+                    return launchNCProcess();
+                case TERMINATE:
+                    LOGGER.info("Terminating NCService based on command from CC");
+                    exit(0);
+                    break;
+            }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error decoding connection from server", e);
         }
         return false;
+    }
+
+    @SuppressWarnings("squid:S1147") // call to System.exit()
+    private static void exit(int exitCode) {
+        LOGGER.info("JVM Exiting.. Bye!");
+        System.exit(exitCode);
     }
 
     public static void main(String[] args) throws Exception {
@@ -233,25 +252,17 @@ public class NCService {
         // Loop forever - the NCService will always return to "waiting for CC" state
         // when the child NC terminates for any reason.
         while (true) {
-            ServerSocket listener = new ServerSocket(port, 5, addr);
-            try {
+            try (ServerSocket listener = new ServerSocket(port, 5, addr)) {
                 boolean launched = false;
                 while (!launched) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Waiting for connection from CC on " + addr + ":" + port);
-                    }
-                    Socket socket = listener.accept();
-                    try {
+                    LOGGER.info("Waiting for connection from CC on " + addr + ":" + port);
+                    try (Socket socket = listener.accept()) {
                         // QQQ Because acceptConnection() doesn't return if the
                         // service is started appropriately, the socket remains
                         // open but non-responsive.
                         launched = acceptConnection(socket.getInputStream());
-                    } finally {
-                        socket.close();
                     }
                 }
-            } finally {
-                listener.close();
             }
         }
     }

@@ -25,20 +25,20 @@ use test;
 
 create type test.AddressType as
 {
-  number : int32,
+  number : integer,
   street : string,
   city : string
 }
 
 create type test.CustomerType as
  closed {
-  cid : int64,
+  cid : bigint,
   name : string,
-  cashBack : int64,
-  age : int64?,
+  cashBack : bigint,
+  age : bigint?,
   address : AddressType?,
   lastorder : {
-      oid : int64,
+      oid : bigint,
       total : float
   }
 

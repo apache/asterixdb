@@ -27,9 +27,13 @@ import org.apache.asterix.clienthelper.Args;
 public class ShutdownCommand extends RemoteCommand {
     private final String shutdownPath;
 
-    public ShutdownCommand(Args args) {
+    public ShutdownCommand(Args args, String extra) {
         super(args);
-        shutdownPath = args.getShutdownPath();
+        shutdownPath = args.getShutdownPath() + extra;
+    }
+
+    public ShutdownCommand(Args args) {
+        this(args, "");
     }
 
     private void clusterLog(String suffix) {

@@ -25,13 +25,13 @@ use test;
 
 create type test.OrderType as
 {
-  oid : int64,
-  cid : int64,
+  oid : bigint,
+  cid : bigint,
   orderstatus : string,
   orderpriority : string,
   clerk : string,
   total : float,
-  items : [int64]
+  items : [bigint]
 }
 
 create external  dataset Orders(OrderType) using localfs((`path`=`asterix_nc1://data/nontagged/orderData.json`),(`format`=`adm`));

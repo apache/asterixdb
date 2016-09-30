@@ -1143,6 +1143,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="int_02">
+        <expected-error>Syntax error: Could not parse numeric literal</expected-error>
+        <output-dir compare="AST">int_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="interval">
         <output-dir compare="AST">interval</output-dir>
       </compilation-unit>

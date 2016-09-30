@@ -33,15 +33,15 @@ create type test.TwitterUserType as
  closed {
   `screen-name` : string,
   lang : string,
-  `friends-count` : int32,
-  `statuses-count` : int32,
+  `friends-count` : integer,
+  `statuses-count` : integer,
   name : string,
-  `followers-count` : int32
+  `followers-count` : integer
 }
 
 create type test.TweetMessageNestedType as
 {
-  tweetid : int64,
+  tweetid : bigint,
   user : TwitterUserType,
   `sender-location` : point,
   `send-time` : datetime,
@@ -56,9 +56,9 @@ create type test.TweetMessageType as
 
 create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
 
-create  index msgCountAIx  on TweetMessages (nested.countA:int32?) type btree enforced;
+create  index msgCountAIx  on TweetMessages (nested.countA:integer?) type btree enforced;
 
-create  index msgCountBIx  on TweetMessages (nested.countB:int32?) type btree enforced;
+create  index msgCountBIx  on TweetMessages (nested.countB:integer?) type btree enforced;
 
 write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
 select element {'tweetid1':t1.nested.tweetid,'count1':t1.nested.countA,'t2info':(
@@ -68,6 +68,6 @@ select element {'tweetid1':t1.nested.tweetid,'count1':t1.nested.countA,'t2info':
         order by t2.nested.tweetid
     )}
 from  TweetMessages as t1
-where (t1.nested.tweetid < test.int64('10'))
+where (t1.nested.tweetid < test.bigint('10'))
 order by t1.nested.tweetid
 ;

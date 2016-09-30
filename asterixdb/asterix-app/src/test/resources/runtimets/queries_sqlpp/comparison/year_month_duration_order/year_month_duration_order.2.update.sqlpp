@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   Check comparison and order-by for year-month-duration
+ * Description      :   Check comparison and order-by for year_month_duration
  * Expected Result  :   Success
  * Date             :   May 18, 2013
  */

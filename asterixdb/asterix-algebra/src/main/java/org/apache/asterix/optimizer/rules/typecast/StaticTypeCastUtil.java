@@ -506,9 +506,10 @@ public class StaticTypeCastUtil {
      *            the expression reference
      * @param argExpr
      *            the original expression
+     * @throws AlgebricksException
      */
     private static void injectCastFunction(IFunctionInfo funcInfo, IAType reqType, IAType inputType,
-            Mutable<ILogicalExpression> exprRef, ILogicalExpression argExpr) {
+            Mutable<ILogicalExpression> exprRef, ILogicalExpression argExpr) throws AlgebricksException {
         ScalarFunctionCallExpression cast = new ScalarFunctionCallExpression(funcInfo);
         cast.getArguments().add(new MutableObject<ILogicalExpression>(argExpr));
         exprRef.setValue(cast);

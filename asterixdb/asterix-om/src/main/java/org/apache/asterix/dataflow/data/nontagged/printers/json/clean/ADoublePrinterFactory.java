@@ -29,8 +29,16 @@ public class ADoublePrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ADoublePrinterFactory INSTANCE = new ADoublePrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        final double d = ADoubleSerializerDeserializer.getDouble(b, s + 1);
+        if (Double.isFinite(d)) {
+            ps.print(d);
+        } else {
+            ps.append('"');
+            ps.print(Double.toString(d));
+            ps.append('"');
+        }
+    };
 
     @Override
     public IPrinter createPrinter() {

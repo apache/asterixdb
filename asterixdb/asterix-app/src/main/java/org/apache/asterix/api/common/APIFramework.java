@@ -29,7 +29,6 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
 import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.result.ResultUtil;
-import org.apache.asterix.common.app.SessionConfig;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
@@ -57,6 +56,7 @@ import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -322,7 +322,8 @@ public class APIFramework {
         builder.setMissingWriterFactory(format.getMissingWriterFactory());
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
-        switch (conf.fmt()) {
+        final SessionConfig.OutputFormat outputFormat = conf.fmt();
+        switch (outputFormat) {
             case LOSSLESS_JSON:
                 builder.setPrinterProvider(format.getLosslessJSONPrinterFactoryProvider());
                 break;
@@ -336,7 +337,7 @@ public class APIFramework {
                 builder.setPrinterProvider(format.getCleanJSONPrinterFactoryProvider());
                 break;
             default:
-                throw new RuntimeException("Unexpected OutputFormat!");
+                throw new AlgebricksException("Unexpected OutputFormat: " + outputFormat);
         }
 
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());

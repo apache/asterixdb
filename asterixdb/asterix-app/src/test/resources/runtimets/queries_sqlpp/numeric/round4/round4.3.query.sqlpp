@@ -20,4 +20,4 @@
 use test;
 
 
-{'f0':test.round(test.int8('-20')),'f1':test.round(-1.11),'f2':test.round(12.9),'f3':test.round(1.11)};
+{'f0':test.round(test.tinyint('-20')),'f1':test.round(-1.11),'f2':test.round(12.9),'f3':test.round(1.11)};

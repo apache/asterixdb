@@ -1,9 +1,9 @@
 DataverseUse test
 TypeDecl FacebookMessageType [
   closed RecordType {
-    message-id : int64,
-    author-id : int64,
-    in-response-to : int64?,
+    message-id : bigint,
+    author-id : bigint,
+    in-response-to : bigint?,
     sender-location : point?,
     message : string,
     send-time : datetime

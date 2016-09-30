@@ -25,10 +25,10 @@ use inlined_q18_large_volume_customer;
 
 create type inlined_q18_large_volume_customer.LineItemType as
  closed {
-  l_orderkey : int32,
-  l_partkey : int32,
-  l_suppkey : int32,
-  l_linenumber : int32,
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
   l_quantity : double,
   l_extendedprice : double,
   l_discount : double,
@@ -45,23 +45,23 @@ create type inlined_q18_large_volume_customer.LineItemType as
 
 create type inlined_q18_large_volume_customer.OrderType as
  closed {
-  o_orderkey : int32,
-  o_custkey : int32,
+  o_orderkey : integer,
+  o_custkey : integer,
   o_orderstatus : string,
   o_totalprice : double,
   o_orderdate : string,
   o_orderpriority : string,
   o_clerk : string,
-  o_shippriority : int32,
+  o_shippriority : integer,
   o_comment : string
 }
 
 create type inlined_q18_large_volume_customer.CustomerType as
  closed {
-  c_custkey : int32,
+  c_custkey : integer,
   c_name : string,
   c_address : string,
-  c_nationkey : int32,
+  c_nationkey : integer,
   c_phone : string,
   c_acctbal : double,
   c_mktsegment : string,
@@ -79,14 +79,14 @@ create  dataset Orders(OrderType) primary key o_orderkey on group1;
 create  dataset Customers(CustomerType) primary key c_custkey on group1;
 
 write output to asterix_nc1:"/tmp/inlined_q18_large_volume_customer.adm"
-select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':inlined_q18_large_volume_customer.coll_sum((
+select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':inlined_q18_large_volume_customer.array_sum((
         select element j.l_quantity
         from  l as j
     ))}
 from  Customers as c,
       Orders as o,
       (
-    select element {'l_orderkey':l_orderkey,'t_sum_quantity':inlined_q18_large_volume_customer.coll_sum((
+    select element {'l_orderkey':l_orderkey,'t_sum_quantity':inlined_q18_large_volume_customer.array_sum((
             select element i.l_quantity
             from  l as i
         ))}

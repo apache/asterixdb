@@ -26,11 +26,11 @@ create type page_info_type as {
 
 create type page_views_type as closed {
   user: string,
-  action: int32,
-  timespent: int32,
+  action: integer,
+  timespent: integer,
   query_term: string,
-  ip_addr: int32,
-  timestamp: int32,
+  ip_addr: integer,
+  timestamp: integer,
   estimated_revenue: double,
   page_info: page_info_type,
   page_links: {{ page_info_type}}
