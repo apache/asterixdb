@@ -18,14 +18,6 @@
  */
 package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map.Entry;
-
-import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.value.IRangeMap;
@@ -109,27 +101,6 @@ public class IntervalPartitionUtil {
         return (k * k + k) / 2;
     }
 
-    public static void printJoinPartitionMap(ArrayList<HashSet<Integer>> partitionMap) {
-        for (int i = 0; i < partitionMap.size(); ++i) {
-            System.out.print("(hashset) Partition " + i + " must join with partition(s): ");
-            for (Integer map : partitionMap.get(i)) {
-                System.out.print(map + " ");
-            }
-            System.out.println("");
-        }
-    }
-
-    public static void printPartitionMap(int k) {
-        for (int i = 0; i < k; ++i) {
-            for (int j = i; j < k; ++j) {
-                int pid = intervalPartitionMap(i, j, k);
-                Pair<Integer, Integer> partition = getIntervalPartition(pid, k);
-                System.out.println("Map partition (" + i + ", " + j + ") to partition id: " + pid + " back to pair ("
-                        + partition.first + ", " + partition.second + ")");
-            }
-        }
-    }
-
     /**
      * Map the partition start and end points to a single value.
      * The mapped partitions are sorted in interval starting at 0.
@@ -190,47 +161,6 @@ public class IntervalPartitionUtil {
                     rangeMap.getStartOffset(fieldIndex, partition) + 1);
         }
         return partitionEnd;
-    }
-
-    public static LinkedHashSet<Integer> getProbeJoinPartitions(int pid, int[] buildPSizeInTups,
-            IIntervalMergeJoinChecker imjc, int k) {
-        LinkedHashSet<Integer> joinMap = new LinkedHashSet<>();
-        Pair<Integer, Integer> map = getIntervalPartition(pid, k);
-        int probeStart = map.first;
-        int probeEnd = map.second;
-        // Build partitions with data
-        for (int buildStart = 0; buildStart < k; ++buildStart) {
-            for (int buildEnd = k - 1; buildStart <= buildEnd; --buildEnd) {
-                int buildId = intervalPartitionMap(buildStart, buildEnd, k);
-                if (buildPSizeInTups[buildId] > 0) {
-                    // Join partitions for probe's pid
-                    if (!(buildStart == 0 && probeStart == 0)
-                            && imjc.compareIntervalPartition(buildStart, buildEnd, probeStart, probeEnd)) {
-                        joinMap.add(buildId);
-                    }
-                }
-            }
-        }
-        return joinMap;
-    }
-
-    public static LinkedHashMap<Integer, LinkedHashSet<Integer>> getInMemorySpillJoinMap(
-            LinkedHashMap<Integer, LinkedHashSet<Integer>> probeJoinMap, BitSet buildInMemoryStatus,
-            BitSet probeSpilledStatus) {
-        LinkedHashMap<Integer, LinkedHashSet<Integer>> inMemoryMap = new LinkedHashMap<>();
-        for (Entry<Integer, LinkedHashSet<Integer>> entry : probeJoinMap.entrySet()) {
-            if (probeSpilledStatus.get(entry.getKey())) {
-                for (Integer i : entry.getValue()) {
-                    if (buildInMemoryStatus.get(i)) {
-                        if (!inMemoryMap.containsKey(entry.getKey())) {
-                            inMemoryMap.put(entry.getKey(), new LinkedHashSet<Integer>());
-                        }
-                        inMemoryMap.get(entry.getKey()).add(i);
-                    }
-                }
-            }
-        }
-        return inMemoryMap;
     }
 
     public static long getPartitionDuration(long partitionStart, long partitionEnd, int k) throws HyracksDataException {

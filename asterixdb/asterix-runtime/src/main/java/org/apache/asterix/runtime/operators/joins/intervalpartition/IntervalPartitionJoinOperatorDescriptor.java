@@ -20,7 +20,6 @@
 package org.apache.asterix.runtime.operators.joins.intervalpartition;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.runtime.operators.joins.IIntervalMergeJoinChecker;
@@ -36,34 +35,29 @@ import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.RangeId;
+import org.apache.hyracks.dataflow.std.join.MergeBranchStatus.Stage;
+import org.apache.hyracks.dataflow.std.join.MergeJoinLocks;
 import org.apache.hyracks.dataflow.std.misc.RangeForwardOperatorDescriptor.RangeForwardTaskState;
 
 public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private static final int BUILD_AND_PARTITION_ACTIVITY_ID = 0;
-    private static final int PARTITION_AND_JOIN_ACTIVITY_ID = 1;
-
-    private static final String PROBE_REL = "RelR";
-    private static final String BUILD_REL = "RelS";
-
-    private final int memsize;
-    private final int[] probeKeys;
-    private final int[] buildKeys;
-
+    private static final int LEFT_ACTIVITY_ID = 0;
+    private static final int RIGHT_ACTIVITY_ID = 1;
+    private final int[] leftKeys;
+    private final int[] rightKeys;
+    private final int memoryForJoin;
+    private final IIntervalMergeJoinCheckerFactory imjcf;
+    private final RangeId rangeId;
     private final int k;
 
     private final int probeKey;
     private final int buildKey;
-    private final IIntervalMergeJoinCheckerFactory imjcf;
-    private final RangeId rangeId;
 
     private static final Logger LOGGER = Logger.getLogger(IntervalPartitionJoinOperatorDescriptor.class.getName());
 
@@ -71,76 +65,185 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
             int[] leftKeys, int[] rightKeys, RecordDescriptor recordDescriptor, IIntervalMergeJoinCheckerFactory imjcf,
             RangeId rangeId) {
         super(spec, 2, 1);
-        this.memsize = memoryForJoin;
+        recordDescriptors[0] = recordDescriptor;
         this.buildKey = leftKeys[0];
         this.probeKey = rightKeys[0];
         this.k = k;
-        this.buildKeys = leftKeys;
-        this.probeKeys = rightKeys;
-        recordDescriptors[0] = recordDescriptor;
+        this.leftKeys = leftKeys;
+        this.rightKeys = rightKeys;
+        this.memoryForJoin = memoryForJoin;
         this.imjcf = imjcf;
         this.rangeId = rangeId;
     }
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        ActivityId p1Aid = new ActivityId(odId, BUILD_AND_PARTITION_ACTIVITY_ID);
-        ActivityId p2Aid = new ActivityId(odId, PARTITION_AND_JOIN_ACTIVITY_ID);
-        IActivity phase1 = new PartitionAndBuildActivityNode(p1Aid, p2Aid);
-        IActivity phase2 = new ProbeAndJoinActivityNode(p2Aid, p1Aid);
+        MergeJoinLocks locks = new MergeJoinLocks();
 
-        builder.addActivity(this, phase1);
-        builder.addSourceEdge(0, phase1, 0);
+        ActivityId leftAid = new ActivityId(odId, LEFT_ACTIVITY_ID);
+        ActivityId rightAid = new ActivityId(odId, RIGHT_ACTIVITY_ID);
 
-        builder.addActivity(this, phase2);
-        builder.addSourceEdge(1, phase2, 0);
+        IActivity leftAN = new LeftJoinerActivityNode(leftAid, rightAid, locks);
+        IActivity rightAN = new RightDataActivityNode(rightAid, leftAid, locks);
 
-        builder.addBlockingEdge(phase1, phase2);
+        builder.addActivity(this, rightAN);
+        builder.addSourceEdge(1, rightAN, 0);
 
-        builder.addTargetEdge(0, phase2, 0);
+        builder.addActivity(this, leftAN);
+        builder.addSourceEdge(0, leftAN, 0);
+        builder.addTargetEdge(0, leftAN, 0);
     }
 
-    public static class BuildAndPartitionTaskState extends AbstractStateObject {
-        private IntervalPartitionJoiner ipj;
-        private int intervalPartitions;
-        private int partition;
-        private int k;
-        private int memoryForJoin;
-
-        private BuildAndPartitionTaskState(JobId jobId, TaskId taskId) {
-            super(jobId, taskId);
-        }
-    }
-
-    private class PartitionAndBuildActivityNode extends AbstractActivityNode {
+    private class LeftJoinerActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        private final ActivityId probeAid;
+        private final MergeJoinLocks locks;
 
-        public PartitionAndBuildActivityNode(ActivityId id, ActivityId probeAid) {
+        public LeftJoinerActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
             super(id);
-            this.probeAid = probeAid;
+            this.locks = locks;
         }
 
         @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
+        public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                throws HyracksDataException {
+            locks.setPartitions(nPartitions);
+            final RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            return new LeftJoinerOperator(ctx, partition, inRecordDesc);
+        }
 
-            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(probeAid, 0);
+        private class LeftJoinerOperator extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-            return new AbstractUnaryInputSinkOperatorNodePushable() {
-                private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(
-                        ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
-                private boolean failure = false;
+            private final IHyracksTaskContext ctx;
+            private final int partition;
+            private final RecordDescriptor leftRd;
+            private IntervalPartitionJoinTaskState state;
+            private boolean first = true;
 
-                @Override
-                public void open() throws HyracksDataException {
-                    if (memsize <= 2) {
-                        // Dedicated buffers: One buffer to read and one buffer for output
-                        failure = true;
-                        throw new HyracksDataException("not enough memory for join");
+            public LeftJoinerOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
+                this.ctx = ctx;
+                this.partition = partition;
+                this.leftRd = inRecordDesc;
+            }
+
+            @Override
+            public void open() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    writer.open();
+                    state = new IntervalPartitionJoinTaskState(ctx.getJobletContext().getJobId(),
+                            new TaskId(getActivityId(), partition));;
+                    state.leftRd = leftRd;
+                    ctx.setStateObject(state);
+                    locks.getRight(partition).signal();
+
+                    do {
+                        // Continue after joiner created in right branch.
+                        if (state.partitionJoiner == null) {
+                            locks.getLeft(partition).await();
+                        }
+                    } while (state.partitionJoiner == null);
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageOpen();
+                    locks.getRight(partition).signal();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            @Override
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                locks.getLock(partition).lock();
+                if (first) {
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageData();
+                    first = false;
+                }
+                try {
+                    state.partitionJoiner.setFrame(LEFT_ACTIVITY_ID, buffer);
+                    state.partitionJoiner.processLeftFrame(writer);
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            @Override
+            public void fail() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.failed = true;
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+
+            @Override
+            public void close() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.status.branch[LEFT_ACTIVITY_ID].noMore();
+                    if (state.failed) {
+                        writer.fail();
+                    } else {
+                        state.partitionJoiner.processLeftClose(writer);
+                        writer.close();
                     }
+                    state.status.branch[LEFT_ACTIVITY_ID].setStageClose();
+                    locks.getRight(partition).signal();
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
+        }
+    }
+
+    private class RightDataActivityNode extends AbstractActivityNode {
+        private static final long serialVersionUID = 1L;
+
+        private final ActivityId joinAid;
+        private final MergeJoinLocks locks;
+
+        public RightDataActivityNode(ActivityId id, ActivityId joinAid, MergeJoinLocks locks) {
+            super(id);
+            this.joinAid = joinAid;
+            this.locks = locks;
+        }
+
+        @Override
+        public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
+                IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+                throws HyracksDataException {
+            locks.setPartitions(nPartitions);
+            RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            return new RightDataOperator(ctx, partition, inRecordDesc);
+        }
+
+        private class RightDataOperator extends AbstractUnaryInputSinkOperatorNodePushable {
+
+            private int partition;
+            private IHyracksTaskContext ctx;
+            private final RecordDescriptor rightRd;
+            private IntervalPartitionJoinTaskState state;
+            private boolean first = true;
+
+            public RightDataOperator(IHyracksTaskContext ctx, int partition, RecordDescriptor inRecordDesc) {
+                this.ctx = ctx;
+                this.partition = partition;
+                this.rightRd = inRecordDesc;
+            }
+
+            @Override
+            public void open() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    do {
+                        // Wait for the state to be set in the context form Left.
+                        state = (IntervalPartitionJoinTaskState) ctx.getStateObject(new TaskId(joinAid, partition));
+                        if (state == null) {
+                            locks.getRight(partition).await();
+                        }
+                    } while (state == null);
                     state.k = k;
 
                     RangeForwardTaskState rangeState = RangeForwardTaskState.getRangeState(rangeId.getId(), ctx);
@@ -151,100 +254,64 @@ public class IntervalPartitionJoinOperatorDescriptor extends AbstractOperatorDes
                             partitionStart, partitionEnd).createPartitioner();
                     ITuplePartitionComputer probeHpc = new IntervalPartitionComputerFactory(probeKey, state.k,
                             partitionStart, partitionEnd).createPartitioner();
+                    IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(leftKeys, rightKeys, partition, ctx);
 
-                    state.partition = partition;
-                    state.intervalPartitions = IntervalPartitionUtil.getMaxPartitions(state.k);
-                    state.memoryForJoin = memsize;
-                    IIntervalMergeJoinChecker imjc = imjcf.createMergeJoinChecker(buildKeys, probeKeys, partition, ctx);
-                    state.ipj = new IntervalPartitionJoiner(ctx, state.memoryForJoin, state.k, state.intervalPartitions,
-                            BUILD_REL, PROBE_REL, imjc, buildRd, probeRd, buildHpc, probeHpc);
+                    state.rightRd = rightRd;
+                    state.partitionJoiner = new IntervalPartitionJoiner(ctx, memoryForJoin, partition, state.k,
+                            state.status, locks, imjc, state.leftRd, state.rightRd, buildHpc, probeHpc);
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageOpen();
+                    locks.getLeft(partition).signal();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    locks.getLock(partition).unlock();
+                }
+            }
 
-                    state.ipj.buildInit();
-                    LOGGER.setLevel(Level.FINE);
-                    System.out
-                            .println("IntervalPartitionJoinOperatorDescriptor: Logging level is: " + LOGGER.getLevel());
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin is starting the build phase with " + state.k
-                                + " granules repesenting " + state.intervalPartitions + " interval partitions using "
-                                + state.memoryForJoin + " frames for memory.");
+            @Override
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                locks.getLock(partition).lock();
+                if (first) {
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageData();
+                    first = false;
+                }
+                try {
+                    while (!state.status.continueRightLoad
+                            && state.status.branch[LEFT_ACTIVITY_ID].getStatus() != Stage.CLOSED) {
+                        // Wait for the state to request right frame unless left has finished.
+                        locks.getRight(partition).await();
                     }
+                    state.partitionJoiner.setFrame(RIGHT_ACTIVITY_ID, buffer);
+                    state.status.continueRightLoad = false;
+                    locks.getLeft(partition).signal();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
+            }
 
-                @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    state.ipj.buildStep(buffer);
+            @Override
+            public void fail() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.failed = true;
+                    locks.getLeft(partition).signal();
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
+            }
 
-                @Override
-                public void close() throws HyracksDataException {
-                    if (!failure) {
-                        state.ipj.buildClose();
-                        ctx.setStateObject(state);
-                        if (LOGGER.isLoggable(Level.FINE)) {
-                            LOGGER.fine("IntervalPartitionJoin closed its build phase");
-                        }
-                    }
+            @Override
+            public void close() throws HyracksDataException {
+                locks.getLock(partition).lock();
+                try {
+                    state.status.branch[RIGHT_ACTIVITY_ID].setStageClose();
+                    locks.getLeft(partition).signal();
+                } finally {
+                    locks.getLock(partition).unlock();
                 }
-
-                @Override
-                public void fail() throws HyracksDataException {
-                    failure = true;
-                }
-
-            };
-
-        }
-    }
-
-    private class ProbeAndJoinActivityNode extends AbstractActivityNode {
-        private static final long serialVersionUID = 1L;
-
-        public ProbeAndJoinActivityNode(ActivityId id, ActivityId buildAid) {
-            super(id);
-        }
-
-        @Override
-        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-                throws HyracksDataException {
-
-            return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
-                private BuildAndPartitionTaskState state;
-
-                @Override
-                public void open() throws HyracksDataException {
-                    state = (BuildAndPartitionTaskState) ctx.getStateObject(
-                            new TaskId(new ActivityId(getOperatorId(), BUILD_AND_PARTITION_ACTIVITY_ID), partition));
-
-                    writer.open();
-                    state.ipj.probeInit();
-
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin is starting the probe phase.");
-                    }
-                }
-
-                @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    state.ipj.probeStep(buffer, writer);
-                }
-
-                @Override
-                public void fail() throws HyracksDataException {
-                    writer.fail();
-                }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    state.ipj.probeClose(writer);
-                    state.ipj.joinSpilledPartitions(writer);
-                    state.ipj.closeAndDeleteRunFiles();
-                    writer.close();
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("IntervalPartitionJoin closed its probe phase");
-                    }
-                }
-            };
+            }
         }
     }
 }
