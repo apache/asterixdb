@@ -2187,15 +2187,27 @@ Expression Literal() throws ParseException:
     }
   | <INTEGER_LITERAL>
     {
-      lit.setValue(new LongIntegerLiteral(new Long(token.image)));
+        try {
+            lit.setValue(new LongIntegerLiteral(Long.valueOf(token.image)));
+        } catch (NumberFormatException e) {
+            throw new ParseException("Could not parse numeric literal \"" + token.image +'"');
+        }
     }
   | <FLOAT_LITERAL>
     {
-      lit.setValue(new FloatLiteral(new Float(token.image)));
+        try {
+            lit.setValue(new FloatLiteral(Float.valueOf(token.image)));
+        } catch (NumberFormatException e) {
+            throw new ParseException("Could not parse numeric literal \"" + token.image +'"');
+        }
     }
   | <DOUBLE_LITERAL>
     {
-      lit.setValue(new DoubleLiteral(new Double(token.image)));
+        try {
+            lit.setValue(new DoubleLiteral(Double.valueOf(token.image)));
+        } catch (NumberFormatException e) {
+            throw new ParseException("Could not parse numeric literal \"" + token.image +'"');
+        }
     }
   | <MISSING>
     {

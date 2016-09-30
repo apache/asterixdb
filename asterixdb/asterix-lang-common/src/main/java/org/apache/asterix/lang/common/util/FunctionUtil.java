@@ -116,7 +116,7 @@ public class FunctionUtil {
                     messageBuilder.append("function " + functionDecls.get(functionDecls.size() - 1).getSignature()
                             + " depends upon function " + signature + " which is undefined");
                 } else {
-                    messageBuilder.append("function " + signature + " is undefined ");
+                    messageBuilder.append("function " + signature + " is not defined");
                 }
                 throw new AsterixException(messageBuilder.toString());
             }
