@@ -9,9 +9,13 @@ asterix_logs
 build
 asterixdb/asterix-opt
 asterixdb/asterix-app/src/test/resources/externallib
+asterixdb/asterix-app/opt_parserts/
+asterixdb/asterix-app/rttest/
+asterixdb/asterix-app/runtime_parserts/
 asterixdb/asterix-app/library
 asterixdb/asterix-app/data/csv/beer.csv
 asterixdb/asterix-installer/src/test/resources/clusterts/asterix-installer-*-SNAPSHOT-binary-assembly
+asterixdb/asterix-installer/ittest/
 *-coredump
 *.pyc
 *.iml
