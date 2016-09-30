@@ -8,8 +8,6 @@ A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ q
 
 The following shows the (rich) grammar for the `SELECT` statement in SQL++.
 
-> TW: Should we replace SelectElement with SelectValue? MC: Yes, and done below.
-
     SelectStatement    ::= ( WithClause )?
                            SelectSetOperation (OrderbyClause )? ( LimitClause )?
     SelectSetOperation ::= SelectBlock (<UNION> <ALL> ( SelectBlock | Subquery ) )*
@@ -642,8 +640,6 @@ will rewrite as follows:
     GROUP BY msg.authorId AS uid GROUP AS `$1`(msg AS msg);
 
 > TW: We really need to do something about `COLL_SQL-COUNT`.
-> MC: You mean about its name? And inconsistent dashing? I agree...!  :-)
-> Also, do we need to say anything about the (mandatory) double parens here?
 
 The same sort of rewritings apply to the function symbols `SUM`, `MAX`, `MIN`, and `AVG`.
 In contrast to the SQL++ collection aggregate functions, these special SQL-92 function symbols

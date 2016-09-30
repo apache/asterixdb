@@ -25,8 +25,9 @@ The most basic building block for any SQL++ expression is PrimaryExpression. Thi
                        | <TRUE>
                        | <FALSE>
     StringLiteral  ::= "\'" (<ESCAPE_APOS> | ~["\'"])* "\'"
-                       | "\"" (<ESCAPE_APOS> | ~["\'"])* "\""
+                       | "\"" (<ESCAPE_QUOT> | ~["\'"])* "\""
     <ESCAPE_APOS>  ::= "\\\'"
+    <ESCAPE_QUOT>  ::= "\\\""
     IntegerLiteral ::= <DIGITS>
     <DIGITS>       ::= ["0" - "9"]+
     FloatLiteral   ::= <DIGITS> ( "f" | "F" )
@@ -35,10 +36,6 @@ The most basic building block for any SQL++ expression is PrimaryExpression. Thi
     DoubleLiteral  ::= <DIGITS>
                      | <DIGITS> ( "." <DIGITS> )?
                      | "." <DIGITS>
-
-> MC: I tentatively deleted the following unused ESCAPE_QUOTE definition: &lt;ESCAPE_QUOT&gt;  ::= "\\\""
-> 		&lt;ESCAPE_QUOT&gt;  ::= "\\\""
-> Also, I moved the DelimitedIdentifier down further per TW's suggestion.
 
 Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a record being accessed.
 

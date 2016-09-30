@@ -414,7 +414,7 @@ TypeDecl TypeSpecification(String hint, boolean dgen) throws ParseException:
 }
 {
   <TYPE> nameComponents = TypeName() ifNotExists = IfNotExists()
-  <AS> typeExpr = TypeExpr()
+  <AS> typeExpr = RecordTypeDef()
     {
       long numValues = -1;
       String filename = null;
@@ -683,14 +683,12 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
 {
   String dvName = null;
   boolean ifNotExists = false;
-  String format = null;
 }
 {
   <DATAVERSE> dvName = Identifier()
   ifNotExists = IfNotExists()
-  ( LOOKAHEAD(1) <WITH> <FORMAT> format = ConstantString() )?
     {
-      return new CreateDataverseStatement(new Identifier(dvName), format, ifNotExists);
+      return new CreateDataverseStatement(new Identifier(dvName), null, ifNotExists);
     }
 }
 
@@ -3086,7 +3084,6 @@ TOKEN [IGNORE_CASE]:
   | <FILTER : "filter">
   | <FLATTEN : "flatten">
   | <FOR : "for">
-  | <FORMAT : "format">
   | <FROM : "from">
   | <FULL : "full">
   | <FUNCTION : "function">
