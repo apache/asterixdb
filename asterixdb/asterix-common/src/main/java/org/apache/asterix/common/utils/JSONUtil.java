@@ -112,7 +112,7 @@ public class JSONUtil {
         return escape(new StringBuilder(), str).toString();
     }
 
-    private static StringBuilder escape(StringBuilder sb, String str) {
+    public static StringBuilder escape(StringBuilder sb, String str) {
         for (int i = 0; i < str.length(); ++i) {
             appendEsc(sb, str.charAt(i));
         }

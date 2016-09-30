@@ -226,6 +226,23 @@ public class QueryServiceServlet extends HttpServlet {
         String format;
         boolean pretty;
         String clientContextID;
+
+        @Override
+        public String toString() {
+            return append(new StringBuilder()).toString();
+        }
+
+        public StringBuilder append(final StringBuilder sb) {
+            sb.append("{ ");
+            sb.append("\"statement\": \"");
+            JSONUtil.escape(sb, statement);
+            sb.append("\", ");
+            sb.append("\"format\": \"").append(format).append("\", ");
+            sb.append("\"pretty\": ").append(pretty).append(", ");
+            sb.append("\"clientContextID\": \"").append(clientContextID).append("\" ");
+            sb.append('}');
+            return sb;
+        }
     }
 
     private static String getParameterValue(String content, String attribute) {
@@ -426,6 +443,7 @@ public class QueryServiceServlet extends HttpServlet {
     }
 
     private void handleRequest(RequestParameters param, HttpServletResponse response) throws IOException {
+        LOGGER.info(param.toString());
         long elapsedStart = System.nanoTime();
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter resultWriter = new PrintWriter(stringWriter);
