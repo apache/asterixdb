@@ -155,7 +155,7 @@ public class NCConfig implements Serializable {
     public int messagingPublicPort = 0;
 
     @Option(name = "-ncservice-pid", usage = "PID of the NCService which launched this NCDriver", required = false)
-    public int ncservicePid = 0;
+    public int ncservicePid = -1;
 
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
