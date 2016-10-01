@@ -17,7 +17,7 @@
  * under the License.
  */
 
-select element array_sql_avg((
+select element array_avg((
     select element x
     from  [1.0,2.0,double('3.0')] as x
 ));

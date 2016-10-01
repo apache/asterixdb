@@ -17,12 +17,12 @@
  * under the License.
  */
 /*
-* Description  : Run array_sql-avg over an ordered list with mixed types
+* Description  : Run array_avg over an ordered list with mixed types
 * Expected Res : Failure
 * Date         : Feb 7th 2014
 */
 
-select element array_sql_avg((
+select element array_avg((
     select element x
     from  [float('2.0'),'hello world',93847382783847382,date('2013-01-01')] as x
 ));

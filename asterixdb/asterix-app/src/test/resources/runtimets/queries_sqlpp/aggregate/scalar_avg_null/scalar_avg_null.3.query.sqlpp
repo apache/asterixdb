@@ -24,12 +24,12 @@
 use test;
 
 
-with  i8 as test.array_avg([test.tinyint('1'),test.tinyint('2'),test.tinyint('3'),null]),
-      i16 as test.array_avg([test.smallint('1'),test.smallint('2'),test.smallint('3'),null]),
-      i32 as test.array_avg([test.integer('1'),test.integer('2'),test.integer('3'),null]),
-      i64 as test.array_avg([test.bigint('1'),test.bigint('2'),test.bigint('3'),null]),
-      f as test.array_avg([test.float('1'),test.float('2'),test.float('3'),null]),
-      d as test.array_avg([test.double('1'),test.double('2'),test.double('3'),null])
+with  i8 as test.coll_avg([test.tinyint('1'),test.tinyint('2'),test.tinyint('3'),null]),
+      i16 as test.coll_avg([test.smallint('1'),test.smallint('2'),test.smallint('3'),null]),
+      i32 as test.coll_avg([test.integer('1'),test.integer('2'),test.integer('3'),null]),
+      i64 as test.coll_avg([test.bigint('1'),test.bigint('2'),test.bigint('3'),null]),
+      f as test.coll_avg([test.float('1'),test.float('2'),test.float('3'),null]),
+      d as test.coll_avg([test.double('1'),test.double('2'),test.double('3'),null])
 select element i
 from  [i8,i16,i32,i64,f,d] as i
 ;

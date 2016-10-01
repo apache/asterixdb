@@ -26,7 +26,7 @@
 use tpch;
 
 
-select element {'nation':nation,'o_year':o_year,'sum_profit':ARRAY_SUM((
+select element {'nation':nation,'o_year':o_year,'sum_profit':COLL_SUM((
         select element pr.amount
         from  profit as pr
     ))}

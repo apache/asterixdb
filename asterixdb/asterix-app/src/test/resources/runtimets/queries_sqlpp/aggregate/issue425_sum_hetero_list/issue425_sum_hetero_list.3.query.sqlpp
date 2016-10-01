@@ -17,4 +17,4 @@
  * under the License.
  */
 
-array_sum([23,748374857483]);
+coll_sum([23,748374857483]);

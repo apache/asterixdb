@@ -17,9 +17,9 @@
  * under the License.
  */
 /**
- * issue531_string_array_sql-min_array_sql-max
+ * issue531_string_array_min_array_max
  *
- * Purpose: test the support of string values for array_sql-min and array_sql-max aggregation function
+ * Purpose: test the support of string values for array_min and array_max aggregation function
  * Result: success
  *
  */
@@ -27,10 +27,10 @@
 use test;
 
 
-select element {'sql-min':test.array_sql_min((
+select element {'sql-min':test.array_min((
         select element l.name
         from  t1 as l
-    )),'sql-max':test.array_sql_max((
+    )),'sql-max':test.array_max((
         select element l.name
         from  t1 as l
     ))};

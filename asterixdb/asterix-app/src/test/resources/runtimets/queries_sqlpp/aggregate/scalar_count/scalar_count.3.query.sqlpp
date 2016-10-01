@@ -24,13 +24,13 @@
 use test;
 
 
-with  i8 as test.array_count([test.tinyint('1'),test.tinyint('2'),test.tinyint('3')]),
-      i16 as test.array_count([test.smallint('1'),test.smallint('2'),test.smallint('3')]),
-      i32 as test.array_count([test.integer('1'),test.integer('2'),test.integer('3')]),
-      i64 as test.array_count([test.bigint('1'),test.bigint('2'),test.bigint('3')]),
-      f as test.array_count([test.float('1'),test.float('2'),test.float('3')]),
-      d as test.array_count([test.double('1'),test.double('2'),test.double('3')]),
-      s as test.array_count(['a','b','c'])
+with  i8 as test.coll_count([test.tinyint('1'),test.tinyint('2'),test.tinyint('3')]),
+      i16 as test.coll_count([test.smallint('1'),test.smallint('2'),test.smallint('3')]),
+      i32 as test.coll_count([test.integer('1'),test.integer('2'),test.integer('3')]),
+      i64 as test.coll_count([test.bigint('1'),test.bigint('2'),test.bigint('3')]),
+      f as test.coll_count([test.float('1'),test.float('2'),test.float('3')]),
+      d as test.coll_count([test.double('1'),test.double('2'),test.double('3')]),
+      s as test.coll_count(['a','b','c'])
 select element i
 from  [i8,i16,i32,i64,f,d,s] as i
 ;

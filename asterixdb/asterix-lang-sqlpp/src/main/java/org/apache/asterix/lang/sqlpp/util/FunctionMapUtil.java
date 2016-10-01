@@ -36,16 +36,17 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionMapUtil {
 
-    private final static String CORE_AGGREGATE_PREFIX = "array_";
-    private final static String SQL_PREFIX = "sql-";
+    private final static String CORE_AGGREGATE_PREFIX = "coll_";
+    private final static String CORE_SQL_AGGREGATE_PREFIX = "array_";
+    private final static String INTERNAL_SQL_AGGREGATE_PREFIX = "sql-";
 
     // Maps from a variable-arg SQL function names to an internal list-arg function name.
     private static final Map<String, String> LIST_INPUT_FUNCTION_MAP = new HashMap<>();
 
     static {
         LIST_INPUT_FUNCTION_MAP.put("concat", "string-concat");
-        LIST_INPUT_FUNCTION_MAP.put("greatest", CORE_AGGREGATE_PREFIX + SQL_PREFIX + "max");
-        LIST_INPUT_FUNCTION_MAP.put("least", CORE_AGGREGATE_PREFIX + SQL_PREFIX + "min");
+        LIST_INPUT_FUNCTION_MAP.put("greatest", CORE_SQL_AGGREGATE_PREFIX + "max");
+        LIST_INPUT_FUNCTION_MAP.put("least", CORE_SQL_AGGREGATE_PREFIX + "min");
     }
 
     /**
@@ -76,11 +77,15 @@ public class FunctionMapUtil {
      */
     public static boolean isCoreAggregateFunction(FunctionSignature fs) {
         String name = fs.getName().toLowerCase();
-        if (!name.startsWith(CORE_AGGREGATE_PREFIX)) {
+        boolean coreAgg = name.startsWith(CORE_AGGREGATE_PREFIX);
+        boolean coreSqlAgg = name.startsWith(CORE_SQL_AGGREGATE_PREFIX);
+        if (!coreAgg && !coreSqlAgg) {
             return false;
         }
-        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                name.substring(CORE_AGGREGATE_PREFIX.length()).replace('_', '-'), fs.getArity()));
+        String internalName = coreAgg ? name.substring(CORE_AGGREGATE_PREFIX.length())
+                : (INTERNAL_SQL_AGGREGATE_PREFIX + name.substring(CORE_SQL_AGGREGATE_PREFIX.length()));
+        IFunctionInfo finfo = FunctionUtil
+                .getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity()));
         if (finfo == null) {
             return false;
         }
@@ -99,7 +104,7 @@ public class FunctionMapUtil {
         if (!isSql92AggregateFunction(fs)) {
             return fs;
         }
-        return new FunctionSignature(fs.getNamespace(), CORE_AGGREGATE_PREFIX + SQL_PREFIX + fs.getName(),
+        return new FunctionSignature(fs.getNamespace(), CORE_SQL_AGGREGATE_PREFIX + fs.getName(),
                 fs.getArity());
     }
 
@@ -116,7 +121,7 @@ public class FunctionMapUtil {
             return internalizeCoreAggregateFunctionName(fs);
         } else if (checkSql92Aggregate && isSql92AggregateFunction(fs)) {
             throw new AsterixException(fs.getName()
-                    + " is a SQL-92 aggregate function. The SQL++ core aggregate function " + CORE_AGGREGATE_PREFIX
+                    + " is a SQL-92 aggregate function. The SQL++ core aggregate function " + CORE_SQL_AGGREGATE_PREFIX
                     + fs.getName().toLowerCase() + " could potentially express the intent.");
         }
         String mappedName = CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(fs).getName();
@@ -152,10 +157,11 @@ public class FunctionMapUtil {
      */
     private static FunctionSignature internalizeCoreAggregateFunctionName(FunctionSignature fs)
             throws AsterixException {
-        String name = fs.getName();
-        String lowerCaseName = name.toLowerCase().substring(CORE_AGGREGATE_PREFIX.length());
-        String hyphenName = lowerCaseName.replace('_', '-');
-        return new FunctionSignature(fs.getNamespace(), hyphenName, fs.getArity());
+        String name = fs.getName().toLowerCase();
+        boolean coreAgg = name.startsWith(CORE_AGGREGATE_PREFIX);
+        String lowerCaseName = coreAgg ? name.substring(CORE_AGGREGATE_PREFIX.length())
+                : (INTERNAL_SQL_AGGREGATE_PREFIX + name.substring(CORE_SQL_AGGREGATE_PREFIX.length()));
+        return new FunctionSignature(fs.getNamespace(), lowerCaseName, fs.getArity());
     }
 
 }

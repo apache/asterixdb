@@ -26,7 +26,7 @@
 use tpch;
 
 
-select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_cheaps':array_count(cheap),'count_expensives':array_count(expensive)}
+select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_cheaps':coll_count(cheap),'count_expensives':coll_count(expensive)}
 from  LineItem as l
 where (l.l_shipdate <= '1998-09-02')
 /* +hash */

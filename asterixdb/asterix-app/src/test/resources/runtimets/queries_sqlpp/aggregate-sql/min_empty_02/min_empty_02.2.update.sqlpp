@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that array_sql-min aggregation correctly returns null for an empty stream,
+ * Description    : Tests that array_min aggregation correctly returns null for an empty stream,
  *                  with an aggregate combiner.
  * Success        : Yes
  */

@@ -22,4 +22,4 @@
 * Date         : Jun 2nd 2013
 */
 
-{'count1':array_count([null]),'average1':array_avg([null]),'sum1':array_sum([null]),'min1':array_min([null]),'max1':array_max([null]),'count2':array_count({{null,null}}),'average2':array_avg({{null,null}}),'sum2':array_sum({{null,null}}),'min2':array_min({{null,null}}),'max2':array_max({{null,null}})};
+{'count1':coll_count([null]),'average1':coll_avg([null]),'sum1':coll_sum([null]),'min1':coll_min([null]),'max1':coll_max([null]),'count2':coll_count({{null,null}}),'average2':coll_avg({{null,null}}),'sum2':coll_sum({{null,null}}),'min2':coll_min({{null,null}}),'max2':coll_max({{null,null}})};

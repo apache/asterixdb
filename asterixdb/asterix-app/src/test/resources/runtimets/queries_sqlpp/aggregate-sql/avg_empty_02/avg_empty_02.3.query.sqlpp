@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests that array_sql-avg aggregation correctly returns null for an empty stream,
+ * Description    : Tests that array_avg aggregation correctly returns null for an empty stream,
  *                  with an aggregate combiner.
  * Success        : Yes
  */
@@ -25,7 +25,7 @@
 use test;
 
 
-select element test.array_sql_avg((
+select element test.array_avg((
     select element x.val
     from  Test as x
 ));

@@ -20,11 +20,11 @@
 use tpch;
 
 
-select element {'l_shipmode':l_shipmode,'high_line_count':ARRAY_SUM((
+select element {'l_shipmode':l_shipmode,'high_line_count':COLL_SUM((
         select element 
             CASE i.o_orderpriority = '1-URGENT' OR i.o_orderpriority = '2-HIGH' WHEN true THEN 1 WHEN false THEN 0 END
         from  o as i
-    )),'low_line_count':ARRAY_SUM((
+    )),'low_line_count':COLL_SUM((
         select element case when i.o_orderpriority = '1-URGENT' OR i.o_orderpriority = '2-HIGH' then 0 else 1 end
         from  o as i
     ))}

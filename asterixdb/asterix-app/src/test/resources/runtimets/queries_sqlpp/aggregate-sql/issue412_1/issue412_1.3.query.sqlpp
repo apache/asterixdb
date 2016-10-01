@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{'sql-count':array_sql_count([1,60,null]),'average':array_sql_avg([1,60,null]),'sql-sum':array_sql_sum([1,60,null]),'sql-min':array_sql_min([1,60,null]),'sql-max':array_sql_max([1,60,null])};
+{'sql-count':array_count([1,60,null]),'average':array_avg([1,60,null]),'sql-sum':array_sum([1,60,null]),'sql-min':array_min([1,60,null]),'sql-max':array_max([1,60,null])};

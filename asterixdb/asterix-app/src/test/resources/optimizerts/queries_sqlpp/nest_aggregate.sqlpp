@@ -124,7 +124,7 @@ select element {'nation_key':nation.n_nationkey,'name':nation.n_name,'aggregates
               Customer as customer
         where ((orders.o_custkey = customer.c_custkey) and (customer.c_nationkey = nation.n_nationkey))
         group by orders.o_orderdate as orderdate
-        with  sum as tpch.array_sum((
+        with  sum as tpch.coll_sum((
               select element o.o_totalprice
               from  orders as o
           ))

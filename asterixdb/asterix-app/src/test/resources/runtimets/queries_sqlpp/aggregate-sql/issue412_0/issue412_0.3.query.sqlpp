@@ -17,4 +17,4 @@
  * under the License.
  */
 
-array_sql_count(['ASTERIX','Hyracks',null]);
+array_count(['ASTERIX','Hyracks',null]);

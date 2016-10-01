@@ -45,7 +45,7 @@ declare function tmp1() {
 };
 declare function tmp2() {
 (
-    select element {'p_partkey':p_partkey,'ps_min_supplycost':tpch.array_min((
+    select element {'p_partkey':p_partkey,'ps_min_supplycost':tpch.coll_min((
             select element i.ps_supplycost
             from  pssrn as i
         ))}

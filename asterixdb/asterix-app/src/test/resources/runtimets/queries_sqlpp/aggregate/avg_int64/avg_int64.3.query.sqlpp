@@ -20,7 +20,7 @@
 use test;
 
 
-select element test.array_avg((
+select element test.coll_avg((
     select element x
     from  [test.bigint('1'),test.bigint('2'),test.bigint('3')] as x
 ));

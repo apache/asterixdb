@@ -20,10 +20,10 @@
 use tpch;
 
 
-select element {'year':year,'mkt_share':(ARRAY_SUM((
+select element {'year':year,'mkt_share':(COLL_SUM((
           select element case i.s_name = 'BRAZIL' when true then i.revenue when false then 0.0 end
           from  t as i
-      )) / ARRAY_SUM((
+      )) / COLL_SUM((
           select element i.revenue
           from  t as i
       )))}

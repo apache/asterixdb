@@ -36,7 +36,7 @@ with tab as
  group by i_item_id
 )
 
-select array_count((
+select coll_count((
  select *
  from tab t1, tab t2
 ));

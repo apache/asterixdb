@@ -20,10 +20,10 @@
 use tpch;
 
 
-select element (100.0 * ARRAY_SUM((
+select element (100.0 * COLL_SUM((
       select element case i.p_type like 'PROMO%' when true then i.l_extendedprice * (1 - i.l_discount) else 0.0 end
       from  lp as i
-  )) / ARRAY_SUM((
+  )) / COLL_SUM((
       select element (i.l_extendedprice * (1 - i.l_discount))
       from  lp as i
   )))
