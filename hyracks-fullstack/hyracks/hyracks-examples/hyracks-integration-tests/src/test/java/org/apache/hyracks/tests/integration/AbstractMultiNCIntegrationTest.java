@@ -27,12 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -51,6 +45,11 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.json.JSONArray;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 public abstract class AbstractMultiNCIntegrationTest {
 
@@ -72,7 +71,6 @@ public abstract class AbstractMultiNCIntegrationTest {
 
     public AbstractMultiNCIntegrationTest() {
         outputFiles = new ArrayList<File>();
-        ;
     }
 
     @BeforeClass
@@ -135,37 +133,38 @@ public abstract class AbstractMultiNCIntegrationTest {
 
         IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor();
 
-        IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
-        IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, spec.getResultSetIds().get(0));
+        if (!spec.getResultSetIds().isEmpty()) {
+            IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
+            IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, spec.getResultSetIds().get(0));
 
-        JSONArray resultRecords = new JSONArray();
-        ByteBufferInputStream bbis = new ByteBufferInputStream();
+            JSONArray resultRecords = new JSONArray();
+            ByteBufferInputStream bbis = new ByteBufferInputStream();
 
-        int readSize = reader.read(resultFrame);
+            int readSize = reader.read(resultFrame);
 
-        while (readSize > 0) {
+            while (readSize > 0) {
 
-            try {
-                frameTupleAccessor.reset(resultFrame.getBuffer());
-                for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
-                    int start = frameTupleAccessor.getTupleStartOffset(tIndex);
-                    int length = frameTupleAccessor.getTupleEndOffset(tIndex) - start;
-                    bbis.setByteBuffer(resultFrame.getBuffer(), start);
-                    byte[] recordBytes = new byte[length];
-                    bbis.read(recordBytes, 0, length);
-                    resultRecords.put(new String(recordBytes, 0, length));
-                }
-            } finally {
                 try {
-                    bbis.close();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    frameTupleAccessor.reset(resultFrame.getBuffer());
+                    for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
+                        int start = frameTupleAccessor.getTupleStartOffset(tIndex);
+                        int length = frameTupleAccessor.getTupleEndOffset(tIndex) - start;
+                        bbis.setByteBuffer(resultFrame.getBuffer(), start);
+                        byte[] recordBytes = new byte[length];
+                        bbis.read(recordBytes, 0, length);
+                        resultRecords.put(new String(recordBytes, 0, length));
+                    }
+                } finally {
+                    try {
+                        bbis.close();
+                    } catch (IOException e) {
+                        throw new HyracksDataException(e);
+                    }
                 }
+
+                readSize = reader.read(resultFrame);
             }
-
-            readSize = reader.read(resultFrame);
         }
-
         hcc.waitForCompletion(jobId);
         dumpOutputFiles();
     }

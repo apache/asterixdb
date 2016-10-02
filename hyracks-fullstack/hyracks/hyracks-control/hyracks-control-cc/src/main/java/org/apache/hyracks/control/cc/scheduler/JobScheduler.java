@@ -626,15 +626,10 @@ public class JobScheduler {
 
     /**
      * Indicates that a single task attempt has encountered a failure.
-     *
-     * @param ta
-     *            - Failed Task Attempt
-     * @param ac
-     *            - Activity Cluster that owns this Task
-     * @param details
-     *            - Cause of the failure
+     * @param ta Failed Task Attempt
+     * @param exceptions exeptions thrown during the failure
      */
-    public void notifyTaskFailure(TaskAttempt ta, ActivityCluster ac, List<Exception> exceptions) {
+    public void notifyTaskFailure(TaskAttempt ta, List<Exception> exceptions) {
         try {
             LOGGER.fine("Received failure notification for TaskAttempt " + ta.getTaskAttemptId());
             TaskAttemptId taId = ta.getTaskAttemptId();

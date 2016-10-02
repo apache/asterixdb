@@ -21,7 +21,6 @@ package org.apache.hyracks.control.cc.work;
 import java.util.List;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
-import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.JobRun;
@@ -40,8 +39,7 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
     protected void performEvent(TaskAttempt ta) {
         JobRun run = ccs.getActiveRunMap().get(jobId);
         ccs.getDatasetDirectoryService().reportJobFailure(jobId, exceptions);
-        ActivityCluster ac = ta.getTask().getTaskCluster().getActivityCluster();
-        run.getScheduler().notifyTaskFailure(ta, ac, exceptions);
+        run.getScheduler().notifyTaskFailure(ta, exceptions);
     }
 
     @Override

@@ -47,6 +47,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobFlag;
@@ -55,6 +56,7 @@ import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.comm.channels.NetworkInputChannel;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
+import org.apache.hyracks.control.common.utils.ExceptionUtils;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -97,11 +99,11 @@ public class StartTasksWork extends AbstractWork {
 
     @Override
     public void run() {
+        Task task = null;
         try {
             NCApplicationContext appCtx = ncs.getApplicationContext();
-            final Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, appCtx, acgBytes);
+            Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, appCtx, acgBytes);
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
-
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
                 public RecordDescriptor getOutputRecordDescriptor(ActivityId aid, int outputIndex) {
@@ -117,7 +119,6 @@ public class StartTasksWork extends AbstractWork {
                     return ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
             };
-
             for (TaskAttemptDescriptor td : taskDescriptors) {
                 TaskAttemptId taId = td.getTaskAttemptId();
                 TaskId tid = taId.getTaskId();
@@ -129,7 +130,7 @@ public class StartTasksWork extends AbstractWork {
                 }
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
-                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutorService(), ncs,
+                task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutorService(), ncs,
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
@@ -161,30 +162,32 @@ public class StartTasksWork extends AbstractWork {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("output: " + i + ": " + conn.getConnectorId());
                         }
-                        IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
-                                td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
+                        IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition, td
+                                .getPartitionCount(), td.getOutputPartitionCounts()[i]);
                         operator.setOutputFrameWriter(i, writer, recordDesc);
                     }
                 }
 
                 task.setTaskRuntime(collectors.toArray(new IPartitionCollector[collectors.size()]), operator);
                 joblet.addTask(task);
-
                 task.start();
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            LOGGER.log(Level.WARNING, "Failure starting a task", e);
+            // notify cc of start task failure
+            List<Exception> exceptions = new ArrayList<>();
+            ExceptionUtils.setNodeIds(exceptions, ncs.getId());
+            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, task, exceptions));
         }
     }
 
     private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, JobId jobId, INCApplicationContext appCtx,
-            byte[] acgBytes) throws Exception {
+            byte[] acgBytes) throws HyracksException {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
             if (acgBytes == null) {
-                throw new NullPointerException("JobActivityGraph was null");
+                throw new HyracksException("Joblet was not found. This job was most likely aborted.");
             }
             ActivityClusterGraph acg = (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId,
                     appCtx);
@@ -197,11 +200,11 @@ public class StartTasksWork extends AbstractWork {
     private IPartitionCollector createPartitionCollector(TaskAttemptDescriptor td, final int partition, Task task,
             int i, IConnectorDescriptor conn, RecordDescriptor recordDesc, IConnectorPolicy cPolicy)
             throws HyracksDataException {
-        IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition,
-                td.getInputPartitionCounts()[i], td.getPartitionCount());
+        IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition, td
+                .getInputPartitionCounts()[i], td.getPartitionCount());
         if (cPolicy.materializeOnReceiveSide()) {
-            return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector,
-                    task.getTaskAttemptId(), ncs.getExecutorService());
+            return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector, task
+                    .getTaskAttemptId(), ncs.getExecutorService());
         } else {
             return collector;
         }
@@ -222,10 +225,12 @@ public class StartTasksWork extends AbstractWork {
                 };
             } else {
                 factory = new IPartitionWriterFactory() {
+
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                         return new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(
-                                jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutorService());
+                                jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs
+                                        .getExecutorService());
                     }
                 };
             }
@@ -233,8 +238,8 @@ public class StartTasksWork extends AbstractWork {
             factory = new IPartitionWriterFactory() {
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                    return new PipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(jobId,
-                            conn.getConnectorId(), senderIndex, receiverIndex), taId);
+                    return new PipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(jobId, conn
+                            .getConnectorId(), senderIndex, receiverIndex), taId);
                 }
             };
         }
@@ -254,8 +259,8 @@ public class StartTasksWork extends AbstractWork {
      * @return a list of known channels, one for each connector
      * @throws UnknownHostException
      */
-    private List<List<PartitionChannel>> createInputChannels(TaskAttemptDescriptor td, List<IConnectorDescriptor> inputs)
-            throws UnknownHostException {
+    private List<List<PartitionChannel>> createInputChannels(TaskAttemptDescriptor td,
+            List<IConnectorDescriptor> inputs) throws UnknownHostException {
         NetworkAddress[][] inputAddresses = td.getInputPartitionLocations();
         List<List<PartitionChannel>> channelsForInputConnectors = new ArrayList<List<PartitionChannel>>();
         if (inputAddresses != null) {
@@ -266,8 +271,8 @@ public class StartTasksWork extends AbstractWork {
                         NetworkAddress networkAddress = inputAddresses[i][j];
                         PartitionId pid = new PartitionId(jobId, inputs.get(i).getConnectorId(), j, td
                                 .getTaskAttemptId().getTaskId().getPartition());
-                        PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(
-                                ncs.getNetworkManager(), new InetSocketAddress(InetAddress.getByAddress(networkAddress
+                        PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ncs
+                                .getNetworkManager(), new InetSocketAddress(InetAddress.getByAddress(networkAddress
                                         .lookupIpAddress()), networkAddress.getPort()), pid, 5));
                         channels.add(channel);
                     }
