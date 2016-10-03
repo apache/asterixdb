@@ -143,11 +143,8 @@ Note that `interval_overlapping` is not an Allen's Relation, but syntactic sugar
  * Return Value:
     * a `boolean` value. Specifically, `interval_overlapping(interval1, interval2)` is true if
 
-        (interval2.start >= interval1.start
-        AND interval2.start < interval1.end)
-        OR
-        (interval2.end > interval1.start
-        AND interval2.end <= interval1.end)
+        interval1.start < interval2.end
+        AND interval1.end > interval2.start
 
     * `missing` if the argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,

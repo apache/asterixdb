@@ -1,0 +1,7 @@
+{ "id": 22, "name": "Charles", "office": "X", "attendance": interval(date("2001-01-01"), date("2004-01-01")) }
+{ "id": 23, "name": "Frank", "office": "Y", "attendance": interval(date("2001-01-01"), date("2004-01-01")) }
+{ "id": 25, "name": "Karen", "office": "Y", "attendance": interval(date("2007-01-01"), date("2009-01-01")) }
+{ "id": 24, "name": "Mary", "office": "Y", "attendance": interval(date("2002-01-01"), date("2005-01-01")) }
+{ "id": 21, "name": "Olga", "office": "Z", "attendance": interval(date("2001-01-01"), date("2003-01-01")) }
+{ "id": 26, "name": "Steve", "office": "Z", "attendance": interval(date("2007-01-01"), date("2010-01-01")) }
+{ "id": 27, "name": "Tess", "office": "X", "attendance": interval(date("2008-01-01"), date("2010-01-01")) }
