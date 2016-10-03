@@ -90,15 +90,12 @@
 
     <menu name="Queries - SQL++">
       <item name="The SQL++ Query Language" href="sqlpp/manual.html"/>
+      <item name="Builtin Functions" href="sqlpp/builtins.html"/>
     </menu>
 
     <menu name="Queries - AQL">
       <item name="The Asterix Query Language (AQL)" href="aql/manual.html"/>
-    </menu>
-
-    <menu name="Functions">
-      <item name="Builtin Functions" href="aql/functions.html"/>
-      <item name="AQL Allen's Relations Functions" href="aql/allens.html"/>
+      <item name="Builtin Functions" href="aql/builtins.html"/>
     </menu>
 
     <menu name="Advanced Features">
