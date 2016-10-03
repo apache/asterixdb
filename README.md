@@ -21,7 +21,7 @@
 AsterixDB is a BDMS (Big Data Management System) with a rich feature set that sets it apart from other Big Data platforms.  Its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis. AsterixDB has:
 
  * A semistructured NoSQL style data model (ADM) resulting from extending JSON with object database ideas
- * An expressive and declarative query language (AQL) that supports a broad range of queries and analysis over semistructured data
+ * Two expressive and declarative query languages (SQL++ and AQL) that support a broad range of queries and analysis over semistructured data
  * A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
  * Partitioned LSM-based data storage and indexing to support efficient ingestion and management of semistructured data
  * Support for query access to externally stored data (e.g., data in HDFS) as well as to data stored natively by AsterixDB
@@ -39,10 +39,8 @@ To build AsterixDB from source, you should have a platform with the following:
 
 * A Unix-ish environment (Linux, OS X, will all do).
 * git
-* Maven 3.1.1 or newer.
+* Maven 3.3.9 or newer.
 * Java 8 or newer.
-
-Additionally to run all the integration tests you should be running `sshd` locally, and have passwordless ssh logins enabled for the account which is running the tests.
 
 Instructions for building the master:
 
@@ -57,29 +55,12 @@ Instructions for building the master:
 
 
 ##Running AsterixDB (on your machine from your build)
-Here are steps to get AsterixDB running on your machine:
+Here are steps to get AsterixDB running on your local machine:
 
-* Create a directory as the home for AsterixDB installer program, i.e., managix:
+* Start a single-machine AsterixDB instance:
 
-        $mkdir ~/managix
-
-* Copy AsterixDB binary artifact into the installer directory and unzip it:
-
-        $cp asterixdb/asterix-installer/target/asterix-installer-*-binary-assembly.zip ~/managix/
-        $cd ~/managix
-        $unzip asterix-installer-*-binary-assembly.zip
-
-* Configure the installer:
-
-        $bin/managix configure
-
-* Validate if the computer environment is suitable:
-
-        $bin/managix validate
-
-* Create and start your instance:
-
-        $bin/managix create -n test -c clusters/local/local.xml
+        $cd asterixdb/asterix-server/target/asterix-server-*-binary-assembly/
+        $./samples/local/bin/start-sample-cluster.sh
 
 * Good to go and run queries in your browser at:
 
