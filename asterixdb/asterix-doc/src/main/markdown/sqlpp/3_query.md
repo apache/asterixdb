@@ -72,7 +72,7 @@ The following shows the (rich) grammar for the `SELECT` statement in SQL++.
     OrderbyClause      ::= <ORDER> <BY> Expression ( <ASC> | <DESC> )? ( "," Expression ( <ASC> | <DESC> )? )*
     LimitClause        ::= <LIMIT> Expression ( <OFFSET> Expression )?
 
-In this section, we will make use of two stored collections of records (datasets in ADM parlance), `GleambookUsers` and `GleambookMessages`, in a series of running examples to explain `SELECT` queries. The contents of the example collections are as follows:
+In this section, we will make use of two stored collections of records (datasets), `GleambookUsers` and `GleambookMessages`, in a series of running examples to explain `SELECT` queries. The contents of the example collections are as follows:
 
 `GleambookUsers` collection:
 

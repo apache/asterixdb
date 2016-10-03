@@ -21,7 +21,7 @@
 
     Expression ::= OperatorExpression | CaseExpression | QuantifiedExpression
 
-SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more Asterix Data Model (ADM) instances. There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between alternative values), or a QuantifiedExpression (which yields a boolean value). Each will be detailed as we explore the full SQL++ grammar.
+SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances. There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between alternative values), or a QuantifiedExpression (which yields a boolean value). Each will be detailed as we explore the full SQL++ grammar.
 
 ## <a id="Primary_expressions">Primary Expressions</a>
 
@@ -29,9 +29,9 @@ SQL++ is a highly composable expression language. Each SQL++ expression returns 
                   | VariableReference
                   | ParenthesizedExpression
                   | FunctionCallExpression
-                  | Constructor
+		  | Constructor
 
-The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant) value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly constructed instance of the Asterix Data Model (such as a newly constructed ADM record or list of ADM instances).
+The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant) value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly constructed instance of the data model (such as a newly constructed record or list of data model instances).
 
 ### <a id="Literals">Literals</a>
 
@@ -75,7 +75,7 @@ Different from standard SQL, double quotes play the same role as single quotes a
     <LETTER>    ::= ["A" - "Z", "a" - "z"]
     DelimitedIdentifier   ::= "\`" (<ESCAPE_APOS> | ~["\'"])* "\`"
 
-A variable in SQL++ can be bound to any legal ADM value. A variable reference refers to the value to which an in-scope variable is bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an input parameter in the context of a function body.) Backticks, e.g., \`id\`, are used for delimited identifiers. Delimiting is needed when a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
+A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an input parameter in the context of a function body.) Backticks, e.g., \`id\`, are used for delimited identifiers. Delimiting is needed when a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
 
 ##### Examples
 
@@ -100,7 +100,7 @@ The following expression evaluates to the value 2.
 
     FunctionCallExpression ::= FunctionName "(" ( Expression ( "," Expression )* )? ")"
 
-Functions are included in SQL++, like most languages, as a way to package useful functionality or to componentize complicated or reusable SQL++ computations. A function call is a legal SQL++ query expression that represents the ADM value resulting from the evaluation of its body expression with the given parameter bindings; the parameter value bindings can themselves be any SQL++ expressions.
+Functions are included in SQL++, like most languages, as a way to package useful functionality or to componentize complicated or reusable SQL++ computations. A function call is a legal SQL++ query expression that represents the value resulting from the evaluation of its body expression with the given parameter bindings; the parameter value bindings can themselves be any SQL++ expressions.
 
 The following example is a (built-in) function call expression whose value is 8.
 
@@ -116,7 +116,7 @@ The following example is a (built-in) function call expression whose value is 8.
     RecordConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
     FieldBinding             ::= Expression ":" Expression
 
-A major feature of SQL++ is its ability to construct new ADM data instances. This is accomplished using its constructors for each of the major ADM complex object structures, namely lists (ordered or unordered) and records. Ordered lists are like JSON arrays, while unordered lists have multiset (bag) semantics. Records are built from attributes that are field-name/field-value pairs, again like JSON. (See the AsterixDB Data Model document for more details on each.)
+A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using its constructors for each of the model's complex object structures, namely lists (ordered or unordered) and records. Ordered lists are like JSON arrays, while unordered lists have multiset (bag) semantics. Records are built from attributes that are field-name/field-value pairs, again like JSON. (See the data model document for more details on each.)
 
 The following examples illustrate how to construct a new ordered list with 3 items, a new record with 2 fields, and a new unordered list with 4 items, respectively. List elements can be homogeneous (as in the first example), which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values used to construct lists and records in constructors are all simply SQL++ expressions. Thus, the list elements, field names, and field values used in constructors can be simple literals or they can come from query variable references or even arbitrarily complex SQL++ expressions (subqueries).
 
@@ -125,8 +125,8 @@ The following examples illustrate how to construct a new ordered list with 3 ite
     [ 'a', 'b', 'c' ]
 
     {
-      'project name': 'AsterixDB',
-      'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras' ]
+      'project name': 'Hyracks',
+      'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras', 'tillw' ]
     }
 
     {{ 42, "forty-two!", { "rank": "Captain", "name": "America" }, 3.14159 }}
@@ -137,7 +137,7 @@ The following examples illustrate how to construct a new ordered list with 3 ite
     Field           ::= "." Identifier
     Index           ::= "[" ( Expression | "?" ) "]"
 
-Components of complex types in ADM are accessed via path expressions. Path access can be applied to the result of a SQL++ expression that yields an instance of  a complex type, e.g., a record or list instance. For records, path access is based on field names. For ordered lists, path access is based on (zero-based) array-style indexing. SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an ordered list. Attempts to access non-existent fields or out-of-bound list elements produce the special value `MISSING`.
+Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result of a SQL++ expression that yields an instance of  a complex type, e.g., a record or list instance. For records, path access is based on field names. For ordered lists, path access is based on (zero-based) array-style indexing. SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an ordered list. Attempts to access non-existent fields or out-of-bound list elements produce the special value `MISSING`.
 
 The following examples illustrate field access for a record, index-based element access for an ordered list, and also a composition thereof.
 
