@@ -54,7 +54,7 @@
               <target>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/manual.md">
                   <filelist dir="${project.basedir}/src/main/markdown/sqlpp"
-                         files="0_toc.md,1_intro.md,2_expr.md,3_query.md,4_ddl.md"/>
+                         files="0_toc.md,1_intro.md,2_expr.md,3_query.md,4_error.md,5_ddl.md,appendix_1_keywords.md"/>
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/builtins.md">
                   <filelist dir="${project.basedir}/src/main/markdown/builtins"
