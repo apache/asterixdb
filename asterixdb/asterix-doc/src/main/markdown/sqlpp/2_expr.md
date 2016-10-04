@@ -173,7 +173,7 @@ The following table summarizes the precedence order (from higher to lower) of th
 | ^                                                                           |  exponentiation  |
 | *, /                                                                        |  multiplication, division |
 | +, -                                                                        |  addition, subtraction  |
-| ||                                                                          |  string concatenation |
+| &#124;&#124;                                                                          |  string concatenation |
 | IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN| unknown value comparison |
 | BETWEEN, NOT BETWEEN                                                        | range comparison (inclusive on both sides) |
 | =, !=, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | comparison  |
@@ -293,7 +293,7 @@ The following example illustrates the form of a case expression.
 
 ### <a id="Quantified_expressions">Quantified expressions</a>
 
-    QuantifiedExpression ::= ( <SOME> | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
+    QuantifiedExpression ::= ( (<ANY>|<SOME>) | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
                              <SATISFIES> Expression
 
 Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
