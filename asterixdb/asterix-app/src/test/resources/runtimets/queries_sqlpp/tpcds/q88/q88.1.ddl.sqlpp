@@ -1,0 +1,113 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse tpcds if exists;
+create dataverse tpcds;
+
+use tpcds;
+
+
+create type tpcds.household_demographics_type as
+ closed {
+  hd_demo_sk : bigint,
+  hd_income_band_sk : bigint?,
+  hd_buy_potential : string?,
+  hd_dep_count : bigint?,
+  hd_vehicle_count : bigint?
+}
+create type tpcds.time_dim_type as
+ closed {
+  t_time_sk : bigint,
+  t_time_id : string,
+  t_time : bigint?,
+  t_hour : bigint?,
+  t_minute : bigint?,
+  t_second : bigint?,
+  t_am_pm : string?,
+  t_shift : string?,
+  t_sub_shift : string?,
+  t_meal_time : string?
+}
+create type tpcds.store_sales_type as
+ closed {
+  ss_sold_date_sk:           bigint?,
+  ss_sold_time_sk:           bigint?,
+  ss_item_sk:                bigint,
+  ss_customer_sk:            bigint?,
+  ss_cdemo_sk:               bigint?,
+  ss_hdemo_sk:               bigint?,
+  ss_addr_sk:                bigint?,
+  ss_store_sk:               bigint?,
+  ss_promo_sk:               bigint?,
+  ss_ticket_number:          bigint,
+  ss_quantity:               bigint?,
+  ss_wholesale_cost:         double?,
+  ss_list_price:             double?,
+  ss_sales_price:            double?,
+  ss_ext_discount_amt:       double?,
+  ss_ext_sales_price:        double?,
+  ss_ext_wholesale_cost:     double?,
+  ss_ext_list_price:         double?,
+  ss_ext_tax:                double?,
+  ss_coupon_amt:             double?,
+  ss_net_paid:               double?,
+  ss_net_paid_inc_tax:       double?,
+  ss_net_profit:             double?
+}
+
+create type tpcds.store_type as
+ closed {
+  s_store_sk : bigint,
+  s_store_id : string,
+  s_rec_start_date : string?,
+  s_rec_end_date : string?,
+  s_closed_date_sk : bigint?,
+  s_store_name : string?,
+  s_number_employees : bigint?,
+  s_floor_space : bigint?,
+  s_hours : string?,
+  s_manager : string?,
+  s_market_id : bigint?,
+  s_geography_class : string?,
+  s_market_desc : string?,
+  s_market_manager : string?,
+  s_division_id : bigint?,
+  s_division_name : string?,
+  s_company_id : bigint?,
+  s_company_name : string?,
+  s_street_number : string?,
+  s_street_name : string?,
+  s_street_type : string?,
+  s_suite_number : string?,
+  s_city : string?,
+  s_county : string?,
+  s_state : string?,
+  s_zip : string?,
+  s_country : string?,
+  s_gmt_offset : double?,
+  s_tax_precentage : double?
+}
+
+create dataset household_demographics (household_demographics_type) primary key hd_demo_sk;
+
+create dataset tpcds.time_dim(time_dim_type) primary key t_time_sk
+
+create dataset store_sales (store_sales_type) primary key ss_item_sk, ss_ticket_number;
+
+create dataset store (store_type) primary key s_store_sk;
