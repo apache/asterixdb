@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -88,7 +87,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         });
     }
 
-    public void init() throws HyracksDataException {
+    private void init() throws HyracksDataException {
         Map<ActivityId, IOperatorNodePushable> startOperatorNodePushables = new HashMap<ActivityId, IOperatorNodePushable>();
         Queue<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> childQueue = new LinkedList<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
         List<IConnectorDescriptor> outputConnectors = null;
@@ -206,20 +205,16 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         void runAction(IOperatorNodePushable op, int opIndex) throws HyracksDataException;
     }
 
-    private void runInParallel(OperatorNodePushableAction opAction)
-            throws HyracksDataException {
+    private void runInParallel(OperatorNodePushableAction opAction) throws HyracksDataException {
         List<Future<Void>> initializationTasks = new ArrayList<>();
         try {
             int index = 0;
             // Run one action for all OperatorNodePushables in parallel through a thread pool.
             for (final IOperatorNodePushable op : operatorNodePushablesBFSOrder) {
                 final int opIndex = index++;
-                initializationTasks.add(ctx.getExecutorService().submit(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        opAction.runAction(op, opIndex);
-                        return null;
-                    }
+                initializationTasks.add(ctx.getExecutorService().submit(() -> {
+                    opAction.runAction(op, opIndex);
+                    return null;
                 }));
             }
             // Waits until all parallel actions to finish.
