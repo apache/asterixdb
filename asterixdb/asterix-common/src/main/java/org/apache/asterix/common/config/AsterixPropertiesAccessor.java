@@ -286,7 +286,14 @@ public class AsterixPropertiesAccessor {
             p = asterixConfigurationParams.get(property);
             value = (p == null) ? null : p.getValue();
         } else {
-            value = cfg.getString("asterix", property);
+            value = cfg.getString("app", property);
+            if (value == null) {
+                value = cfg.getString("asterix", property);
+                if (value != null) {
+                    LOGGER.warn("[asterix] config section deprecated and will be removed in a future release;" +
+                            " please update to [app] (found: " + property + ')');
+                }
+            }
         }
         if (value == null) {
             return defaultValue;
