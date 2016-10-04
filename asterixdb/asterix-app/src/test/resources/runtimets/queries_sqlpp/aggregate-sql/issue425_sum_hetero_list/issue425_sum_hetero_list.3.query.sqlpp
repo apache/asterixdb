@@ -17,4 +17,4 @@
  * under the License.
  */
 
-array_sql_sum([23,748374857483]);
+array_sum([23,748374857483]);

@@ -1,3 +1,22 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+
 # <a id="DDL_and_DML_statements">4. DDL and DML statements</a>
 
     Statement ::= ( SingleStatement ( ";" )? )* <EOF>
@@ -11,18 +30,16 @@
                       | DeleteStatement
                       | Query ";"
 
-In addition to queries, the AsterixDB implementation of SQL++ supports statements for data definition and
-manipulation purposes as well as controlling the context to be used in evaluating SQL++ expressions.
-This section details the DDL and DML statements supported in the SQL++ language as realized in Apache AsterixDB.
-
-> TW: AsterixDB?
-> MC: Good question here - I eradicated the preceding references except in the Intro, which needs a rewrite, but here it is really still about AsterixDB, I think?  (Since most of these statements will be hidden in the Couchbase case?)
+In addition to queries, an implementation of SQL++ needs to support statements for data definition
+and manipulation purposes as well as controlling the context to be used in evaluating SQL++ expressions.
+This section details the DDL and DML statements supported in the SQL++ language as realized today in
+Apache AsterixDB.
 
 ## <a id="Declarations">Declarations</a>
 
     DatabaseDeclaration ::= "USE" Identifier
 
-The world of data in an AsterixDB instance is organized into data namespaces called **dataverses**.
+At the uppermost level, the world of data is organized into data namespaces called **dataverses**.
 To set the default dataverse for a series of statements, the USE statement is provided in SQL++.
 
 As an example, the following statement sets the default dataverse to be "TinySocial".
@@ -55,7 +72,6 @@ For our sample data set, this returns:
 
     [
       { "id": 2, "name": "IsbelDull", "friendCount": 2 }
-
     ]
 
 ## <a id="Lifecycle_management_statements">Lifecycle management statements</a>
@@ -74,17 +90,12 @@ It can be used to create new dataverses, datatypes, datasets, indexes, and user-
 
 ### <a id="Dataverses"> Dataverses</a>
 
-    DatabaseSpecification ::= "DATAVERSE" Identifier IfNotExists ( "WITH" "FORMAT" StringLiteral )?
+    DatabaseSpecification ::= "DATAVERSE" Identifier IfNotExists
 
 The CREATE DATAVERSE statement is used to create new dataverses.
 To ease the authoring of reusable SQL++ scripts, an optional IF NOT EXISTS clause is included to allow
 creation to be requested either unconditionally or only if the dataverse does not already exist.
 If this clause is absent, an error is returned if a dataverse with the indicated name already exists.
-(Note: The `WITH FORMAT` clause in the syntax above is a placeholder for possible `future functionality
-that can safely be ignored here.)
-
-> MC: Should we get rid of WITH FORMAT? (I think we should - here and in the system - if we ever do it
-I would actually expect it to be more fine-grained than the dataverse level.)
 
 The following example creates a new dataverse named TinySocial if one does not already exist.
 
@@ -94,7 +105,7 @@ The following example creates a new dataverse named TinySocial if one does not a
 
 ### <a id="Types"> Types</a>
 
-    TypeSpecification    ::= "TYPE" FunctionOrTypeName IfNotExists "AS" TypeExpr
+    TypeSpecification    ::= "TYPE" FunctionOrTypeName IfNotExists "AS" RecordTypeDef
     FunctionOrTypeName   ::= QualifiedName
     IfNotExists          ::= ( <IF> <NOT> <EXISTS> )?
     TypeExpr             ::= RecordTypeDef | TypeReference | OrderedListTypeDef | UnorderedListTypeDef
@@ -106,20 +117,15 @@ The following example creates a new dataverse named TinySocial if one does not a
     OrderedListTypeDef   ::= "[" ( TypeExpr ) "]"
     UnorderedListTypeDef ::= "{{" ( TypeExpr ) "}}"
 
-> TW: How should we refer to the data model? "Asterix Data Model" seems system specific.
-> MC: Agreed that this is an issue. Let's first decide and I can handle the issue in a later pass.
-
-The CREATE TYPE statement is used to create a new named ADM datatype.
-This type can then be used to create stored collections or utilized when defining one or more other ADM datatypes.
-Much more information about the Asterix Data Model (ADM) is available in the [data model reference guide](datamodel.html) to ADM.
+The CREATE TYPE statement is used to create a new named datatype.
+This type can then be used to create stored collections or utilized when defining one or more other datatypes.
+Much more information about the data model is available in the [data model reference guide](datamodel.html).
 A new type can be a record type, a renaming of another type, an ordered list type, or an unordered list type.
 A record type can be defined as being either open or closed.
 Instances of a closed record type are not permitted to contain fields other than those specified in the create type statement.
 Instances of an open record type may carry additional fields, and open is the default for new types if neither option is specified.
 
-> MC: I had forgotten about options other than using CREATE TYPE to introduce new record types! (Are all of the other AS TypeExpr possibilities actually well-tested?)
-
-The following example creates a new ADM record type called GleambookUser type.
+The following example creates a new record type called GleambookUser type.
 Since it is defined as (defaulting to) being an open type,
 instances will be permitted to contain more than what is specified in the type definition.
 The first four fields are essentially traditional typed name/value pairs (much like SQL fields).
@@ -137,7 +143,7 @@ The employment field is an ordered list of instances of another named record typ
       employment: [ EmploymentType ]
     };
 
-The next example creates a new ADM record type, closed this time, called MyUserTupleType.
+The next example creates a new record type, closed this time, called MyUserTupleType.
 Instances of this closed type will not be permitted to have extra fields,
 although the alias field is marked as optional and may thus be NULL or MISSING in legal instances of the type.
 Note that the type of the id field in the example is UUID.
@@ -171,13 +177,8 @@ This field type can be used if you want to have this field be an autogenerated-P
     PrimaryKey           ::= <PRIMARY> <KEY> NestedField ( "," NestedField )* ( <AUTOGENERATED> )?
     CompactionPolicy     ::= Identifier
 
-> TW: Again, a lot of AsterixDB in the following paragraph.
-> Also, while I'm sure that this was always like this, the separation of `Configuration`
-> from `Properties` looks pretty confusing ...
-> MC: Not sure what we should do about all this, actually! (I don't disagree. New JSON syntax coming, too?)
-
 The CREATE DATASET statement is used to create a new dataset.
-Datasets are named, unordered collections of ADM record type instances;
+Datasets are named, unordered collections of record type instances;
 they are where data lives persistently and are the usual targets for SQL++ queries.
 Datasets are typed, and the system ensures that their contents conform to their type definitions.
 An Internal dataset (the default kind) is a dataset whose content lives within and is managed by the system.
@@ -188,13 +189,10 @@ Internal datasets contain several advanced options that can be specified when ap
 One such option is that random primary key (UUID) values can be auto-generated by declaring the field to be UUID and putting "AUTOGENERATED" after the "PRIMARY KEY" identifier.
 In this case, unlike other non-optional fields, a value for the auto-generated PK field should not be provided at insertion time by the user since each record's primary key field value will be auto-generated by the system.
 
-> TW: "The Filter-Based LSM Index Acceleration" seems to be quite system specific ...
-> MC: Indeed, but that is always inescapable in DDL reference manuals, no? (We have to decide what to say where. :-))
-
 Another advanced option, when creating an Internal dataset, is to specify the merge policy to control which of the
 underlying LSM storage components to be merged.
-(AsterixDB supports Log-Structured Merge tree based physical storage for Internal datasets.)
-Apache AsterixDB currently supports four different component merging policies that can be chosen per dataset:
+(The system supports Log-Structured Merge tree based physical storage for Internal datasets.)
+Currently the system supports four different component merging policies that can be chosen per dataset:
 no-merge, constant, prefix, and correlated-prefix.
 The no-merge policy simply never merges disk components.
 The constant policy merges disk components when the number of components reaches a constant number k that can be configured by the user.
@@ -203,14 +201,14 @@ It works by first trying to identify the smallest ordered (oldest to newest) seq
 If such a sequence exists, the components in the sequence are merged together to form a single component.
 Finally, the correlated-prefix policy is similar to the prefix policy, but it delegates the decision of merging the disk components of all the indexes in a dataset to the primary index.
 When the correlated-prefix policy decides that the primary index needs to be merged (using the same decision criteria as for the prefix policy), then it will issue successive merge requests on behalf of all other indexes associated with the same dataset.
-The default policy for AsterixDB is the prefix policy except when there is a filter on a dataset, where the preferred policy for filters is the correlated-prefix.
+The system's default policy is the prefix policy except when there is a filter on a dataset, where the preferred policy for filters is the correlated-prefix.
 
 Another advanced option shown in the syntax above, related to performance and mentioned above, is that a **filter** can optionally be created on a field to further optimize range queries with predicates on the filter's field.
 Filters allow some range queries to avoid searching all LSM components when the query conditions match the filter.
 (Refer to [Filter-Based LSM Index Acceleration](filters.html) for more information about filters.)
 
 An External dataset, in contrast to an Internal dataset, has data stored outside of the system's control.
-Files living in HDFS or in the local filesystem(s) of a cluster's nodes are currently supported in AsterixDB.
+Files living in HDFS or in the local filesystem(s) of a cluster's nodes are currently supported.
 External dataset support allows SQL++ queries to treat foreign data as though it were stored in the system,
 making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it.
 When defining an External dataset, an appropriate adapter type must be selected for the desired external data.
@@ -268,8 +266,6 @@ specified at the end of the index definition.
 `ENFORCING` an open field introduces a check that makes sure that the actual type of the indexed field
 (if the optional field exists in the record) always matches this specified (open) field type.
 
-*Editor's note: The ? shown above after the type is intended to be mandatory, and we need to make that happen.*
-
 The following example creates a btree index called gbAuthorIdx on the authorId field of the GleambookMessages dataset.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the author-id
 field.
@@ -284,8 +280,6 @@ This index can be useful for accelerating exact-match queries, range search quer
 #### Example
 
     CREATE INDEX gbSendTimeIdx ON GleambookMessages(sendTime: datetime?) TYPE BTREE ENFORCED;
-
-> MC: The above works in my branch (with ? mandatory) but not in the main branch. We need to change that. :-)
 
 The following example creates a btree index called crpUserScrNameIdx on screenName,
 a nested field residing within a record-valued user field in the ChirpMessages dataset.
@@ -376,7 +370,7 @@ The LOAD statement accepts the same adapters and the same parameters as discusse
 (See the [guide to external data](externaldata.html) for more information on the available adapters.)
 If a dataset has an auto-generated primary key field, the file to be imported should not include that field in it.
 
-The following example shows how to bulk load the GleambookUsers dataset from an external file containing data that has been prepared in ADM format.
+The following example shows how to bulk load the GleambookUsers dataset from an external file containing data that has been prepared in ADM (Asterix Data Model) format.
 
 ##### Example
 
@@ -389,10 +383,6 @@ The following example shows how to bulk load the GleambookUsers dataset from an 
 
     InsertStatement ::= <INSERT> <INTO> QualifiedName Query
 
-> TW: AsterixDB-specifc transactions semantics ...
-> Also, do we also support `UPSERT`?
-> MC: Yes to both. :-) Whoops. Wait, maybe not. We do have upsert in AQL, but not in SQL++ today, it seems. I'll document it anyway...? :-)
-
 The SQL++ INSERT statement is used to insert new data into a dataset.
 The data to be inserted comes from a SQL++ query expression.
 This expression can be as simple as a constant expression, or in general it can be any legal SQL++ query.
@@ -401,7 +391,7 @@ value for that field in it.
 (The system will automatically extend the provided record with this additional field and a corresponding value.)
 Insertion will fail if the dataset already has data with the primary key value(s) being inserted.
 
-In AsterixDB, inserts are processed transactionally.
+Inserts are processed transactionally by the system.
 The transactional scope of each insert transaction is the insertion of a single object plus its affiliated secondary index entries (if any).
 If the query part of an insert returns a single object, then the INSERT statement will be a single, atomic transaction.
 If the query part returns multiple objects, each object being inserted will be treated as a separate tranaction.
@@ -425,17 +415,16 @@ The following example illustrates a query-based upsert operation.
 
     UPSERT INTO UsersCopy (SELECT VALUE user FROM GleambookUsers user)
 
-*Editor's note: Upserts currently work in AQL but are apparently disabled at the moment in SQL++.
-(@Yingyi, is that indeed the case?)*
+*Editor's note: Upserts currently work in AQL but are not yet enabled (at the moment) in SQL++.
 
 ### <a id="Deletes">DELETEs</a>
 
-    DeleteStatement ::= <DELETE> <FROM> QualifiedName ( (<AS>)? Variable )? ( <WHERE> Expression )?
+    DeleteStatement ::= <DELETE> <FROM> QualifiedName ( ( <AS> )? Variable )? ( <WHERE> Expression )?
 
 The SQL++ DELETE statement is used to delete data from a target dataset.
 The data to be deleted is identified by a boolean expression involving the variable bound to the target dataset in the DELETE statement.
 
-Deletes in AsterixDB are processed transactionally.
+Deletes are processed transactionally by the system.
 The transactional scope of each delete transaction is the deletion of a single object plus its affiliated secondary index entries (if any).
 If the boolean expression for a delete identifies a single object, then the DELETE statement itself will be a single, atomic transaction.
 If the expression identifies multiple objects, then each object deleted will be handled as a separate transaction.

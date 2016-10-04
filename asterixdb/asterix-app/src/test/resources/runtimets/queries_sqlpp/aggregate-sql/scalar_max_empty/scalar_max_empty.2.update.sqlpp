@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of array_sql-max with an empty list.
+ * Description    : Tests the scalar version of array_max with an empty list.
  * Success        : Yes
  */
 

@@ -19,9 +19,9 @@
 
 USE gby;
 
-// Tests that a SQL++ core aggregate function, e.g., ARRAY_AVG,
+// Tests that a SQL++ core aggregate function, e.g., COLL_AVG,
 // cannot be used like a SQL-92 sugar, e.g., AVG. Its input must be a collection.
 FROM Employee e
 GROUP BY e.deptno AS deptno GROUP AS g
-SELECT deptno AS deptno, ARRAY_AVG(e.salary) AS avgpay,
+SELECT deptno AS deptno, COLL_AVG(e.salary) AS avgpay,
        (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i) AS workers;

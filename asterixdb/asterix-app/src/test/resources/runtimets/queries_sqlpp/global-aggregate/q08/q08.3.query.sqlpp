@@ -19,6 +19,6 @@
 
 USE TinySocial;
 
-SELECT ARRAY_COUNT(u.`friend-ids`) count
+SELECT COLL_COUNT(u.`friend-ids`) count
 FROM FacebookUsers u
 ORDER BY u.id;

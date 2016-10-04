@@ -51,7 +51,7 @@ create type tpch.LineItemType as
 
 create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
-select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_cheaps':tpch.array_count(cheap),'count_expensives':tpch.array_count(expensive)}
+select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_cheaps':tpch.coll_count(cheap),'count_expensives':tpch.coll_count(expensive)}
 from  LineItem as l
 where (l.l_shipdate <= '1998-09-02')
 /* +hash */

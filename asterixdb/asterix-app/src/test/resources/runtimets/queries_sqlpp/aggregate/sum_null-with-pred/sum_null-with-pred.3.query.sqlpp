@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   array_sum() aggregate function must return the numeric sum, when non null values are given as input to array_sum().
+ * Description      :   coll_sum() aggregate function must return the numeric sum, when non null values are given as input to coll_sum().
  *                  :   Get the sum for those tuples which are non null for salary fields.
  * Expected result  :   Success
  * Date             :   July 20th 2012
@@ -26,7 +26,7 @@
 use test;
 
 
-select element test.array_sum((
+select element test.coll_sum((
     select element l.sal
     from  tdst as l
     where l.sal IS NOT NULL

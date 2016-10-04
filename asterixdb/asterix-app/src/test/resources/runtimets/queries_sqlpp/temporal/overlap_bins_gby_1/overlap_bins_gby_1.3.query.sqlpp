@@ -24,7 +24,7 @@
 use test;
 
 
-select element {'timebin':bin,'count':count(i2),'total_ms':array_sum((
+select element {'timebin':bin,'count':count(i2),'total_ms':coll_sum((
         select element `ms_from_day_time_duration`(`duration-from-interval`(`get-overlapping-interval`(bin,i3.interval)))
         from  i2 as i3
     ))}

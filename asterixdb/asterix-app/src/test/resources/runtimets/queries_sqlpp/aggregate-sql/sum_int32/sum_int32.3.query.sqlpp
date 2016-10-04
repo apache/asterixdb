@@ -20,7 +20,7 @@
 use test;
 
 
-select element test.array_sql_sum((
+select element test.array_sum((
     select element x
     from  [test.integer('1'),test.integer('2'),test.integer('3')] as x
 ));

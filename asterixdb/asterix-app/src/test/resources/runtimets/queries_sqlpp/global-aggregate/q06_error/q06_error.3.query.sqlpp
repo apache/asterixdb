@@ -19,5 +19,5 @@
 
 USE TinySocial;
 
-SELECT ARRAY_COUNT(u.name) count
+SELECT COLL_COUNT(u.name) count
 FROM FacebookUsers u;

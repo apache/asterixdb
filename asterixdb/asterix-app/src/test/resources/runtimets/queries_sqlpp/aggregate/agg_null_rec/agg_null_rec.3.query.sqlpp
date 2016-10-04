@@ -25,19 +25,19 @@
 use test;
 
 
-{'count':test.array_count((
+{'count':test.coll_count((
     select element t.valplus
     from  Test as t
-)),'average':test.array_avg((
+)),'average':test.coll_avg((
     select element t.valplus
     from  Test as t
-)),'sum':test.array_sum((
+)),'sum':test.coll_sum((
     select element t.valplus
     from  Test as t
-)),'min':test.array_min((
+)),'min':test.coll_min((
     select element t.valplus
     from  Test as t
-)),'max':test.array_max((
+)),'max':test.coll_max((
     select element t.valplus
     from  Test as t
 ))};

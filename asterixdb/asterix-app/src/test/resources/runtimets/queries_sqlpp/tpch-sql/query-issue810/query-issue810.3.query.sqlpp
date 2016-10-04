@@ -28,8 +28,8 @@ USE tpch;
 
 SELECT l_returnflag AS l_returnflag,
        l_linestatus AS l_linestatus,
-       array_count(cheap) AS count_cheaps,
-       array_count(expensive) AS count_expensives
+       coll_count(cheap) AS count_cheaps,
+       coll_count(expensive) AS count_expensives
 FROM LineItem AS l
 WHERE l.l_shipdate <= '1998-09-02'
 /* +hash */

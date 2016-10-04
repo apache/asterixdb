@@ -20,12 +20,8 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.Serializable;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AIntervalPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinterFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
-import org.apache.asterix.runtime.operators.joins.intervalindex.TuplePrinterUtil;
-import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -34,10 +30,10 @@ public class IntervalLogic implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private final ComparisonHelper ch = new ComparisonHelper();
-    private final IPointable s1 = VoidPointable.FACTORY.createPointable();
-    private final IPointable e1 = VoidPointable.FACTORY.createPointable();
-    private final IPointable s2 = VoidPointable.FACTORY.createPointable();
-    private final IPointable e2 = VoidPointable.FACTORY.createPointable();
+    private final transient IPointable s1 = VoidPointable.FACTORY.createPointable();
+    private final transient IPointable e1 = VoidPointable.FACTORY.createPointable();
+    private final transient IPointable s2 = VoidPointable.FACTORY.createPointable();
+    private final transient IPointable e2 = VoidPointable.FACTORY.createPointable();
 
     public boolean validateInterval(AIntervalPointable ip1) throws HyracksDataException {
         ip1.getStart(s1);
@@ -119,10 +115,8 @@ public class IntervalLogic implements Serializable {
         ip1.getEnd(e1);
         ip2.getStart(s2);
         ip2.getEnd(e2);
-        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) <= 0
-                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) >= 0
-                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) != 0
-                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) != 0;
+        return ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), s1, e2) < 0
+                && ch.compare(ip1.getTypeTag(), ip2.getTypeTag(), e1, s2) > 0;
     }
 
     /**

@@ -23,7 +23,7 @@
 use TinySocial;
 
 
-select element array_count((
+select element coll_count((
     select element fbu
     from  FacebookUsers as fbu
 ));

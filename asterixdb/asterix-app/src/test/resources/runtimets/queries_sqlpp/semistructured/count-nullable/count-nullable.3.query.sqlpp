@@ -20,7 +20,7 @@
 use test;
 
 
-select element {'custage':age,'count':test.array_count(c)}
+select element {'custage':age,'count':test.coll_count(c)}
 from  Customers as c
 group by c.age as age
 order by age

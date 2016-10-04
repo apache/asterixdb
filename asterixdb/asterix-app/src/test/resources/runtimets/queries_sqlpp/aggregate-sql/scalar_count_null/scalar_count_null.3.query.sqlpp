@@ -17,20 +17,20 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of array_sql-count with nulls.
+ * Description    : Tests the scalar version of array_count with nulls.
  * Success        : Yes
  */
 
 use test;
 
 
-with  i8 as test.array_sql_count([test.tinyint('1'),test.tinyint('2'),test.tinyint('3'),null]),
-      i16 as test.array_sql_count([test.smallint('1'),test.smallint('2'),test.smallint('3'),null]),
-      i32 as test.array_sql_count([test.integer('1'),test.integer('2'),test.integer('3'),null]),
-      i64 as test.array_sql_count([test.bigint('1'),test.bigint('2'),test.bigint('3'),null]),
-      f as test.array_sql_count([test.float('1'),test.float('2'),test.float('3'),null]),
-      d as test.array_sql_count([test.double('1'),test.double('2'),test.double('3'),null]),
-      s as test.array_sql_count(['a','b','c',null])
+with  i8 as test.array_count([test.tinyint('1'),test.tinyint('2'),test.tinyint('3'),null]),
+      i16 as test.array_count([test.smallint('1'),test.smallint('2'),test.smallint('3'),null]),
+      i32 as test.array_count([test.integer('1'),test.integer('2'),test.integer('3'),null]),
+      i64 as test.array_count([test.bigint('1'),test.bigint('2'),test.bigint('3'),null]),
+      f as test.array_count([test.float('1'),test.float('2'),test.float('3'),null]),
+      d as test.array_count([test.double('1'),test.double('2'),test.double('3'),null]),
+      s as test.array_count(['a','b','c',null])
 select element i
 from  [i8,i16,i32,i64,f,d,s] as i
 ;

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of array_sql-avg with nulls.
+ * Description    : Tests the scalar version of array_avg with nulls.
  * Success        : Yes
  */
 

@@ -20,7 +20,7 @@
 use test;
 
 
-{'average':test.array_sql_avg((
+{'average':test.array_avg((
     select element x.int8Field
     from  Numeric as x
 ))};

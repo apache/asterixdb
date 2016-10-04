@@ -55,9 +55,7 @@ public class AbortTasksWork extends AbstractWork {
         if (dpm != null) {
             ncs.getDatasetPartitionManager().abortReader(jobId);
         }
-
-        Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
-        Joblet ji = jobletMap.get(jobId);
+        Joblet ji = ncs.getJobletMap().get(jobId);
         if (ji != null) {
             Map<TaskAttemptId, Task> taskMap = ji.getTaskMap();
             for (TaskAttemptId taId : tasks) {
@@ -66,6 +64,9 @@ public class AbortTasksWork extends AbstractWork {
                     task.abort();
                 }
             }
+        } else {
+            LOGGER.log(Level.WARNING, "Joblet couldn't be found. Tasks of job " + jobId
+                    + " have all either completed or failed");
         }
     }
 }

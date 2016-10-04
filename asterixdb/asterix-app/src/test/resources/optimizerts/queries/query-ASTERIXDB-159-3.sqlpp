@@ -32,7 +32,7 @@ create  dataset FacebookUsers(FacebookUserType) primary key id;
 SELECT fu1.id id1, fu2.id id2
 FROM FacebookUsers fu1
 LEFT OUTER JOIN FacebookUsers fu2
-ON ARRAY_COUNT(RANGE(fu1.id, fu2.id))>2 AND ARRAY_COUNT(RANGE(fu1.id, fu2.id))<5
+ON COLL_COUNT(RANGE(fu1.id, fu2.id))>2 AND COLL_COUNT(RANGE(fu1.id, fu2.id))<5
 ORDER BY fu1.id DESC, fu2.id DESC
 LIMIT 5;
 

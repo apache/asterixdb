@@ -20,7 +20,7 @@
 use test;
 
 
-{'average':test.array_avg((
+{'average':test.coll_avg((
     select element x.int16Field
     from  Numeric as x
 ))};

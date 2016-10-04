@@ -19,7 +19,7 @@
 
 use feeds_10;
 
-select element feeds_10.array_count((
+select element feeds_10.coll_count((
     select element x
     from  Tweets as x
     order by x.id

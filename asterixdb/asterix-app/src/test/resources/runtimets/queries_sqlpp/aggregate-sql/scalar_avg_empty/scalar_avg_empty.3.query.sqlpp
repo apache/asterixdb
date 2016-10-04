@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of array_sql-avg with an empty list.
+ * Description    : Tests the scalar version of array_avg with an empty list.
  * Success        : Yes
  */
 
-select element array_sql_avg([]);
+select element array_avg([]);

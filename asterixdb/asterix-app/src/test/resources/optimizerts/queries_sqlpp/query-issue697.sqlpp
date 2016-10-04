@@ -37,7 +37,7 @@ create type test.TestType as
 
 create  dataset test(TestType) primary key key1;
 
-select element {'gid':aid,'avg':test.array_avg((
+select element {'gid':aid,'avg':test.coll_avg((
         select element j.`value`
         from  i as j
         where j.`value` is not null

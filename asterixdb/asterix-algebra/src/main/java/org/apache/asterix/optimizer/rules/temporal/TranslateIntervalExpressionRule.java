@@ -19,7 +19,9 @@
 package org.apache.asterix.optimizer.rules.temporal;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.annotations.IntervalJoinExpressionAnnotation;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -47,6 +49,16 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
 
+    private static final Set<FunctionIdentifier> TRANSLATABLE_INTERVALS = new HashSet<>();
+    {
+        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_MEETS);
+        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_MET_BY);
+        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_STARTS);
+        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_STARTED_BY);
+        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_ENDS);
+        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
+    }
+
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
@@ -71,14 +83,14 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         if (funcExpr.getArguments().size() != 2) {
             return false;
         }
-        if (!hasIntervalAnnotation(funcExpr)) {
+        if (!hasTranslatableInterval(funcExpr)) {
             return false;
         }
 
         return translateIntervalExpression(exprRef, funcExpr);
     }
 
-    private boolean hasIntervalAnnotation(AbstractFunctionCallExpression funcExpr) {
+    private boolean hasTranslatableInterval(AbstractFunctionCallExpression funcExpr) {
         for (Object key : funcExpr.getAnnotations().keySet()) {
             IExpressionAnnotation annot = funcExpr.getAnnotations().get(key);
             if (annot instanceof IntervalJoinExpressionAnnotation) {
@@ -87,6 +99,9 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
                     return true;
                 }
             }
+        }
+        if (TRANSLATABLE_INTERVALS.contains(funcExpr.getFunctionIdentifier())) {
+            return true;
         }
         return false;
     }
@@ -206,14 +221,14 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
     }
 
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval) {
-        List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<>();
         intervalArg.add(new MutableObject<ILogicalExpression>(interval));
         return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
     }
 
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval1,
             ILogicalExpression interval2) {
-        List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<>();
         intervalArg.add(new MutableObject<ILogicalExpression>(interval1));
         intervalArg.add(new MutableObject<ILogicalExpression>(interval2));
         return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);

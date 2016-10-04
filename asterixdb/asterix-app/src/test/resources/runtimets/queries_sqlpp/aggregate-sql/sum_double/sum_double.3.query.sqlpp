@@ -20,7 +20,7 @@
 use test;
 
 
-select element test.array_sql_sum((
+select element test.array_sum((
     select element x
     from  [1.0,2.0,3.0] as x
 ));

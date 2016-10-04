@@ -24,7 +24,7 @@ FROM  (
         SELECT c_custkey AS c_custkey, sum(co.o_orderkey_count) AS c_count
         FROM  (
                 SELECT c.c_custkey AS c_custkey,
-                       array_count(
+                       coll_count(
                            (
                             select element o.o_orderkey
                             from  Orders as o

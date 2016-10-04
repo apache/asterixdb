@@ -48,13 +48,21 @@
         <version>1.8</version>
         <executions>
           <execution>
-            <id>concat</id>
+            <id>manual</id>
             <phase>pre-site</phase>
             <configuration>
               <target>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/manual.md">
                   <filelist dir="${project.basedir}/src/main/markdown/sqlpp"
-                         files="0_toc.md,1_intro.md,2_expr.md,3_query.md,4_ddl.md"/>
+                         files="0_toc.md,1_intro.md,2_expr.md,3_query.md,4_error.md,5_ddl.md,appendix_1_keywords.md"/>
+                </concat>
+                <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/builtins.md">
+                  <filelist dir="${project.basedir}/src/main/markdown/builtins"
+                            files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_others.md"/>
+                </concat>
+                <concat destfile="${project.build.directory}/generated-site/markdown/aql/builtins.md">
+                  <filelist dir="${project.basedir}/src/main/markdown/builtins"
+                            files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_aql.md,10_comparison.md,11_others.md"/>
                 </concat>
               </target>
             </configuration>

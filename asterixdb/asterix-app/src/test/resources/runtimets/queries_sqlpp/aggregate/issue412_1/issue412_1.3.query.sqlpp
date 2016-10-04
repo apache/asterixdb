@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{'count':array_count([1,60,null]),'average':array_avg([1,60,null]),'sum':array_sum([1,60,null]),'min':array_min([1,60,null]),'max':array_max([1,60,null])};
+{'count':coll_count([1,60,null]),'average':coll_avg([1,60,null]),'sum':coll_sum([1,60,null]),'min':coll_min([1,60,null]),'max':coll_max([1,60,null])};

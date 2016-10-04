@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of array_sql-sum without nulls.
+ * Description    : Tests the scalar version of array_sum without nulls.
  * Success        : Yes
  */
 

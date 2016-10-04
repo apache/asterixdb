@@ -37,7 +37,7 @@ WITH q22_customer_tmp AS
 
 SELECT cntrycode, count(ct) AS numcust, sum(c_acctbal) AS totacctbal
 FROM  q22_customer_tmp as ct
-WHERE array_count((
+WHERE coll_count((
                 SELECT ELEMENT Orders
                 FROM  Orders
                 WHERE c_custkey = o_custkey

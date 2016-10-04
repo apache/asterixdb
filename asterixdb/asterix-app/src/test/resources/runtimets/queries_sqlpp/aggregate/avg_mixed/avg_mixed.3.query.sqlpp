@@ -22,7 +22,7 @@
 * Date         : Jun 2nd 2013
 */
 
-select element array_avg((
+select element coll_avg((
     select element x
     from  [float('2.0'),'hello world',93847382783847382,date('2013-01-01')] as x
 ));

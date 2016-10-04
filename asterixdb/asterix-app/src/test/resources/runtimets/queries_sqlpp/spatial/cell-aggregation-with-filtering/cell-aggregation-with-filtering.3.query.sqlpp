@@ -26,6 +26,6 @@ with  keywords as 'Allergies',
       region as test.polygon('\n\t33.80503407287759,-126.41235263538363 \n\t44.9090773200516,-126.41235263538363 \n\t44.9090773200516,-87.65258701038363 \n\t33.80503407287759,-87.65258701038363')
 where (test.`spatial-intersect`(t.loc,region) and (t.time > test.datetime('2011-05-15T00:00:00Z')) and (t.time < test.datetime('2011-05-16T23:59:59Z')) and test.contains(t.text,keywords))
 group by test.`spatial-cell`(t.loc,test.`create-point`(24.5,-125.5),3.0,3.0) as c
-with  num as test.array_count(t)
+with  num as test.coll_count(t)
 order by num
 ;

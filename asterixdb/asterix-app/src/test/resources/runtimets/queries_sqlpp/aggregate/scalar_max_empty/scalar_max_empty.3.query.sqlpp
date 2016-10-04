@@ -24,4 +24,4 @@
 use test;
 
 
-select element test.array_max([]);
+select element test.coll_max([]);

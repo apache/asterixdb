@@ -40,10 +40,10 @@ create  nodegroup group1 if not exists  on
 create  dataset Orders(OrderType) primary key oid on group1;
 
 write output to asterix_nc1:"/tmp/orders-aggreg.adm"
-select element {'cid':cid,'ordpercust':`orders-aggreg`.array_count(o),'totalcust':`orders-aggreg`.array_sum((
+select element {'cid':cid,'ordpercust':`orders-aggreg`.coll_count(o),'totalcust':`orders-aggreg`.coll_sum((
         select element i.total
         from  o as i
-    )),'avgcust':`orders-aggreg`.array_avg((
+    )),'avgcust':`orders-aggreg`.coll_avg((
         select element i.total
         from  o as i
     ))}

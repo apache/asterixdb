@@ -49,7 +49,7 @@ from  (
 with  l_year0 as tpch.`get-year`(locs.l_shipdate)
 where ((locs.c_nationkey = t.c_nationkey) and (locs.s_nationkey = t.s_nationkey))
 group by t.supp_nation as supp_nation,t.cust_nation as cust_nation,l_year0 as l_year
-with  revenue as tpch.array_sum((
+with  revenue as tpch.coll_sum((
       select element (i.l_extendedprice * (1 - i.l_discount))
       from  locs as i
   ))

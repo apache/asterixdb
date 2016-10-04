@@ -27,6 +27,5 @@ use dataverse TinyCollege;
 for $f in dataset Staff
 for $d in dataset Students
 where interval-covers($f.employment, $d.attendance)
-/*+ range ["F", "L", "R"] */
 order by $f.name, $d.name
 return { "staff" : $f.name, "student" : $d.name }

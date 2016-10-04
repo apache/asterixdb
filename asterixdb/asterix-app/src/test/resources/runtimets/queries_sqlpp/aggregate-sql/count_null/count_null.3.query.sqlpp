@@ -20,7 +20,7 @@
 use test;
 
 
-{'sql-count':test.array_sql_count((
+{'sql-count':test.array_count((
     select element x.doubleField
     from  Numeric as x
 ))};

@@ -1,3 +1,22 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+
 # The SQL++ Query Language
 
 ## <a id="toc">Table of Contents</a> ##
@@ -54,7 +73,12 @@
       * [LET clauses](#Let_clauses)
       * [UNION ALL](#Union_all)
       * [SQL++ Vs. SQL-92](#Vs_SQL-92)
-* [4. DDL and DML statements](#DDL_and_DML_statements)
+* [4. Errors](#Errors)
+      * [Syntax errors](#Syntax_errors)
+      * [Identifier resolution errors](#Parsing_errors)
+      * [Type errors](#Type_errors)
+      * [Resource errors](#Resource_errors)
+* [5. DDL and DML statements](#DDL_and_DML_statements)
       * [Declarations](#Declarations)
       * [Lifecycle management statements](#Lifecycle_management_statements)
            * [Dataverses](#Dataverses)
@@ -65,4 +89,5 @@
            * [Inserts](#Inserts)
            * [Upserts](#Upserts)
            * [Deletes](#Deletes)
+* [Appendix 1. Reserved keywords](#Reserved_keywords)
 

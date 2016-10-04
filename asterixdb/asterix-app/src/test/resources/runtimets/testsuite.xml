@@ -16,13 +16,16 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
+<!-- Keep test-suite list in Alphabetical order. -->
 <!DOCTYPE test-suite [
 
+             <!ENTITY APIQueries SYSTEM "queries/api/APIQueries.xml">
              <!ENTITY ComparisonQueries SYSTEM "queries/comparison/ComparisonQueries.xml">
              <!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
              <!ENTITY APIQueries SYSTEM "queries/api/APIQueries.xml">
              <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
              <!ENTITY TemporalQueries SYSTEM "queries/temporal/TemporalQueries.xml">
+
              ]>
 
 <test-suite
@@ -4868,7 +4871,7 @@
     </test-case>
     <test-case FilePath="scan">
       <compilation-unit name="alltypes_01">
-        <parameter name="wrapper-array" value="true"/>
+        <parameter name="wrapper-array" value="true" />
         <output-dir compare="Text">alltypes_01-wrapped</output-dir>
       </compilation-unit>
     </test-case>
@@ -4879,7 +4882,7 @@
     </test-case>
     <test-case FilePath="scan">
       <compilation-unit name="alltypes_01">
-        <parameter name="wrapper-array" value="false"/>
+        <parameter name="wrapper-array" value="false" />
         <output-dir compare="Lossless-JSON">alltypes_01-losslessjson-unwrapped</output-dir>
       </compilation-unit>
     </test-case>

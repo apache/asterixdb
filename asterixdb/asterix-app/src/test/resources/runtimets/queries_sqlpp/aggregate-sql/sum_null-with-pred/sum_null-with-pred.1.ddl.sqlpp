@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- * Description      :   sql-array_sum() aggregate function must return the numeric array_sql-sum, when non null values are given as input to sql-array_sum().
- *                  :   Get the array_sql-sum for those tuples which are non null for salary fields.
+ * Description      :   sql-coll_sum() aggregate function must return the numeric array_sum, when non null values are given as input to sql-coll_sum().
+ *                  :   Get the array_sum for those tuples which are non null for salary fields.
  * Expected result  :   Success
  * Date             :   July 20th 2012
  */
