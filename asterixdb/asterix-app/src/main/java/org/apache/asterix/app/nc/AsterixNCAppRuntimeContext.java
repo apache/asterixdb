@@ -75,7 +75,6 @@ import org.apache.asterix.runtime.transaction.GlobalResourceIdFactoryProvider;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
-import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
@@ -134,26 +133,17 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
     private IReplicationManager replicationManager;
     private IRemoteRecoveryManager remoteRecoveryManager;
     private IReplicaResourcesManager replicaResourcesManager;
-    private final int metadataRmiPort;
 
     private final ILibraryManager libraryManager;
     private final NCExtensionManager ncExtensionManager;
 
-    public AsterixNCAppRuntimeContext(INCApplicationContext ncApplicationContext, int metadataRmiPort,
-            List<AsterixExtension> extensions) throws AsterixException, InstantiationException, IllegalAccessException,
+    public AsterixNCAppRuntimeContext(INCApplicationContext ncApplicationContext, List<AsterixExtension> extensions)
+            throws AsterixException, InstantiationException, IllegalAccessException,
             ClassNotFoundException, IOException {
         List<AsterixExtension> allExtensions = new ArrayList<>();
         this.ncApplicationContext = ncApplicationContext;
-        // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
-        // QQQ strip this out eventually
-        AsterixPropertiesAccessor propertiesAccessor;
-        IApplicationConfig cfg = ncApplicationContext.getAppConfig();
-        // QQQ this is NOT a good way to determine whether the config is valid
-        if (cfg.getString("cc", "cluster.address") != null) {
-            propertiesAccessor = new AsterixPropertiesAccessor(cfg);
-        } else {
-            propertiesAccessor = new AsterixPropertiesAccessor();
-        }
+        AsterixPropertiesAccessor propertiesAccessor =
+                AsterixPropertiesAccessor.getInstance(ncApplicationContext.getAppConfig());
         compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
         externalProperties = new AsterixExternalProperties(propertiesAccessor);
         metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
@@ -163,7 +153,6 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         buildProperties = new AsterixBuildProperties(propertiesAccessor);
         replicationProperties = new AsterixReplicationProperties(propertiesAccessor);
         messagingProperties = new MessagingProperties(propertiesAccessor);
-        this.metadataRmiPort = metadataRmiPort;
         libraryManager = new ExternalLibraryManager();
         if (extensions != null) {
             allExtensions.addAll(extensions);
@@ -458,7 +447,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         // This is a special case, we just give the metadataNode directly.
         // This way we can delay the registration of the metadataNode until
         // it is completely initialized.
-        MetadataManager.instantiate(new MetadataManager(proxy, MetadataNode.INSTANCE));
+        MetadataManager.initialize(proxy, MetadataNode.INSTANCE);
         MetadataBootstrap.startUniverse(this, ncApplicationContext, newUniverse);
         MetadataBootstrap.startDDLRecovery();
         ncExtensionManager.initializeMetadata();
@@ -470,7 +459,8 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
 
     @Override
     public void exportMetadataNodeStub() throws RemoteException {
-        IMetadataNode stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, metadataRmiPort);
+        IMetadataNode stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
+                getMetadataProperties().getMetadataPort());
         ((IAsterixStateProxy) ncApplicationContext.getDistributedState()).setMetadataNode(stub);
     }
 

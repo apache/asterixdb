@@ -57,17 +57,16 @@ public class ClusterPartition implements Cloneable {
 
     @Override
     public ClusterPartition clone() {
-        ClusterPartition clone = new ClusterPartition(partitionId, nodeId, ioDeviceNum);
-        return clone;
+        return new ClusterPartition(partitionId, nodeId, ioDeviceNum);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("ID:" + partitionId);
-        sb.append(" Original Node: " + nodeId);
-        sb.append(" IODevice: " + ioDeviceNum);
-        sb.append(" Active Node: " + activeNodeId);
+        sb.append(", Original Node: " + nodeId);
+        sb.append(", IODevice: " + ioDeviceNum);
+        sb.append(", Active Node: " + activeNodeId);
         return sb.toString();
     }
 

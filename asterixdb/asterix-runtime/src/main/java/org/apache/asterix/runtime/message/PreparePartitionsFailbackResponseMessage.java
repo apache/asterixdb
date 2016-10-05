@@ -39,7 +39,7 @@ public class PreparePartitionsFailbackResponseMessage extends AbstractFailbackPl
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         ClusterStateManager.INSTANCE.processPreparePartitionsFailbackResponse(this);
     }
 

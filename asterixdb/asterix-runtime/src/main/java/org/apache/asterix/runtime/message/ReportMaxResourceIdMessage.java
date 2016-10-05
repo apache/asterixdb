@@ -48,7 +48,7 @@ public class ReportMaxResourceIdMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         IAsterixResourceIdManager resourceIdManager =
                 AsterixAppContextInfo.INSTANCE.getResourceIdManager();
         resourceIdManager.report(src, maxResourceId);

@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.util;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
@@ -37,8 +38,8 @@ import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
-import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -66,6 +67,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixReplicationProperties replicationProperties;
     private AsterixExtensionProperties extensionProperties;
     private MessagingProperties messagingProperties;
+    private Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
     private IHyracksClientConnection hcc;
     private Object extensionManager;
     private volatile boolean initialized = false;
@@ -74,8 +76,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     }
 
     public static synchronized void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
-            IGlobalRecoveryMaanger globalRecoveryMaanger, ILibraryManager libraryManager,
-            IAsterixResourceIdManager resourceIdManager)
+                                               IGlobalRecoveryMaanger globalRecoveryMaanger,
+                                               ILibraryManager libraryManager,
+                                               IAsterixResourceIdManager resourceIdManager,
+                                               Supplier<IMetadataBootstrap> metadataBootstrapSupplier)
             throws AsterixException, IOException {
         if (INSTANCE.initialized) {
             throw new AsterixException(AsterixAppContextInfo.class.getSimpleName() + " has been initialized already");
@@ -88,14 +92,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.resourceIdManager = resourceIdManager;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
-        AsterixPropertiesAccessor propertiesAccessor;
-        IApplicationConfig cfg = ccAppCtx.getAppConfig();
-        // QQQ this is NOT a good way to determine whether the config is valid
-        if (cfg.getString("cc", "cluster.address") != null) {
-            propertiesAccessor = new AsterixPropertiesAccessor(cfg);
-        } else {
-            propertiesAccessor = new AsterixPropertiesAccessor();
-        }
+        AsterixPropertiesAccessor propertiesAccessor = AsterixPropertiesAccessor.getInstance(ccAppCtx.getAppConfig());
         INSTANCE.compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
         INSTANCE.externalProperties = new AsterixExternalProperties(propertiesAccessor);
         INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
@@ -107,6 +104,8 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
         INSTANCE.messagingProperties = new MessagingProperties(propertiesAccessor);
+        INSTANCE.metadataBootstrapSupplier = metadataBootstrapSupplier;
+
         Logger.getLogger("org.apache.asterix").setLevel(INSTANCE.externalProperties.getLogLevel());
         Logger.getLogger("org.apache.hyracks").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
@@ -203,5 +202,9 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
 
     public IAsterixResourceIdManager getResourceIdManager() {
         return resourceIdManager;
+    }
+
+    public IMetadataBootstrap getMetadataBootstrap() {
+        return metadataBootstrapSupplier.get();
     }
 }

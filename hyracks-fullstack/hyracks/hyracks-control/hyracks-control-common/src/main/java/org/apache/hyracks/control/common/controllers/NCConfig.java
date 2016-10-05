@@ -288,11 +288,9 @@ public class NCConfig implements Serializable {
         configuration.put("messaging-port", String.valueOf(messagingPort));
         configuration.put("messaging-public-ip-address", messagingPublicIPAddress);
         configuration.put("messaging-public-port", String.valueOf(messagingPublicPort));
+        configuration.put("ncservice-pid", String.valueOf(ncservicePid));
         if (appNCMainClass != null) {
             configuration.put("app-nc-main-class", appNCMainClass);
-        }
-        if (ncservicePid != 0) {
-            configuration.put("ncservice-pid", String.valueOf(ncservicePid));
         }
     }
 }

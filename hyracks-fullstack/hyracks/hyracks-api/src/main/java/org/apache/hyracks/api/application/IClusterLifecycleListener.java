@@ -21,8 +21,11 @@ package org.apache.hyracks.api.application;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.api.exceptions.HyracksException;
+
 /**
- * A listener interface for providing notification call backs to events such as a Node Controller joining/leaving the cluster.
+ * A listener interface for providing notification call backs to events such as a Node Controller joining/leaving the
+ * cluster.
  */
 public interface IClusterLifecycleListener {
 
@@ -35,15 +38,15 @@ public interface IClusterLifecycleListener {
     /**
      * @param nodeId
      *            A unique identifier of a Node Controller
-     * @param ncConfig
+     * @param ncConfiguration
      *            A map containing the set of configuration parameters that were used to start the Node Controller
      */
-    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration);
+    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) throws HyracksException;
 
     /**
      * @param deadNodeIds
      *            A set of Node Controller Ids that have left the cluster. The set is not cumulative.
      */
-    public void notifyNodeFailure(Set<String> deadNodeIds);
+    public void notifyNodeFailure(Set<String> deadNodeIds) throws HyracksException;
 
 }

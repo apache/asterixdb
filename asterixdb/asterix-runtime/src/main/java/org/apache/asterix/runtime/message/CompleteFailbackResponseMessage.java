@@ -48,7 +48,7 @@ public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         ClusterStateManager.INSTANCE.processCompleteFailbackResponse(this);
     }
 }

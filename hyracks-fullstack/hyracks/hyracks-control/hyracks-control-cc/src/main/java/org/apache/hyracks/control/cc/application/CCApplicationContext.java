@@ -110,7 +110,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         }
     }
 
-    public void notifyNodeFailure(Set<String> deadNodeIds) {
+    public void notifyNodeFailure(Set<String> deadNodeIds) throws HyracksException {
         for (IClusterLifecycleListener l : clusterLifecycleListeners) {
             l.notifyNodeFailure(deadNodeIds);
         }

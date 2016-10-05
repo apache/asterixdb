@@ -155,7 +155,7 @@ public class NCServiceExecutionIT {
         }
     }
 
-    @Parameters
+    @Parameters(name = "NCServiceExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();

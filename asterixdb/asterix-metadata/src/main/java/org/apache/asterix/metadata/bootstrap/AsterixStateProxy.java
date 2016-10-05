@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -36,8 +37,8 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     private IMetadataNode metadataNode;
     private static final IAsterixStateProxy cc = new AsterixStateProxy();
 
-    public static IAsterixStateProxy registerRemoteObject() throws RemoteException {
-        IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, 0);
+    public static IAsterixStateProxy registerRemoteObject(int metadataCallbackPort) throws RemoteException {
+        IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort);
         LOGGER.info("Asterix Distributed State Proxy Bound");
         return stub;
     }
@@ -48,12 +49,21 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     }
 
     @Override
-    public void setMetadataNode(IMetadataNode metadataNode) throws RemoteException {
+    public synchronized void setMetadataNode(IMetadataNode metadataNode) {
         this.metadataNode = metadataNode;
+        notifyAll();
     }
 
     @Override
-    public IMetadataNode getMetadataNode() throws RemoteException {
-        return this.metadataNode;
+    public IMetadataNode waitForMetadataNode(long waitFor, TimeUnit timeUnit) throws InterruptedException {
+        synchronized (this) {
+            long timeToWait = TimeUnit.MILLISECONDS.convert(waitFor, timeUnit);
+            while (metadataNode == null && timeToWait > 0) {
+                long startTime = System.currentTimeMillis();
+                wait(timeToWait);
+                timeToWait -= System.currentTimeMillis() - startTime;
+            }
+            return metadataNode;
+        }
     }
 }

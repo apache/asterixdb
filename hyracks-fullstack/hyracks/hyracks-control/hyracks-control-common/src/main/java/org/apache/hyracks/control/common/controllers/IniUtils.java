@@ -35,7 +35,11 @@ import org.ini4j.Profile.Section;
  * the section "nc/red", but if it is not found, will look in the section "nc".
  */
 public class IniUtils {
-    private static <T> T getIniValue(Ini ini, String section, String key, T default_value, Class<T> clazz) {
+
+    private IniUtils() {
+    }
+
+    private static <T> T getIniValue(Ini ini, String section, String key, T defaultValue, Class<T> clazz) {
         T value;
         while (true) {
             value = ini.get(section, key, clazz);
@@ -48,7 +52,7 @@ public class IniUtils {
             }
             break;
         }
-        return (value != null) ? value : default_value;
+        return (value != null) ? value : defaultValue;
     }
 
     @SuppressWarnings("unchecked")

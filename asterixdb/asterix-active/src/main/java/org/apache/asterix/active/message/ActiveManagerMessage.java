@@ -54,7 +54,7 @@ public class ActiveManagerMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
         IAsterixAppRuntimeContext appContext =
                 (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();

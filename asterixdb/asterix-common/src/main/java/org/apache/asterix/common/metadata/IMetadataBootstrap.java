@@ -16,26 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.api;
+package org.apache.asterix.common.metadata;
 
-public interface IClusterManagementWork {
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    public enum WorkType {
-        ADD_NODE,
-        REMOVE_NODE
-    }
-
-    public enum ClusterState {
-        STARTING,
-        PENDING,
-        ACTIVE,
-        UNUSABLE,
-        REBALANCING
-    }
-
-    public WorkType getClusterManagementWorkType();
-
-    public int getWorkId();
-
-    public IClusterEventsSubscriber getSourceSubscriber();
+@FunctionalInterface
+public interface IMetadataBootstrap {
+    /**
+     * Initializes the metadata manager, e.g., finds the remote metadata node.
+     */
+    void init() throws HyracksDataException;
 }

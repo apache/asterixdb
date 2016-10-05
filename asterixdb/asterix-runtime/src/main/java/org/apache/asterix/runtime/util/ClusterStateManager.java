@@ -51,6 +51,8 @@ import org.apache.asterix.runtime.message.TakeoverPartitionsRequestMessage;
 import org.apache.asterix.runtime.message.TakeoverPartitionsResponseMessage;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -109,7 +111,7 @@ public class ClusterStateManager {
         }
     }
 
-    public synchronized void removeNCConfiguration(String nodeId) {
+    public synchronized void removeNCConfiguration(String nodeId) throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Removing configuration parameters for node id " + nodeId);
         }
@@ -139,7 +141,8 @@ public class ClusterStateManager {
         }
     }
 
-    public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration) {
+    public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration)
+            throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering configuration parameters for node id " + nodeId);
         }
@@ -167,7 +170,7 @@ public class ClusterStateManager {
         updateNodePartitions(nodeId, true);
     }
 
-    private synchronized void updateNodePartitions(String nodeId, boolean added) {
+    private synchronized void updateNodePartitions(String nodeId, boolean added) throws HyracksDataException {
         ClusterPartition[] nodePartitions = node2PartitionsMap.get(nodeId);
         // if this isn't a storage node, it will not have cluster partitions
         if (nodePartitions != null) {
@@ -183,7 +186,7 @@ public class ClusterStateManager {
         }
     }
 
-    private synchronized void updateClusterState() {
+    private synchronized void updateClusterState() throws HyracksDataException {
         for (ClusterPartition p : clusterPartitions.values()) {
             if (!p.isActive()) {
                 state = ClusterState.UNUSABLE;
@@ -191,11 +194,14 @@ public class ClusterStateManager {
                 return;
             }
         }
-        //if all storage partitions are active as well as the metadata node, then the cluster is active
+        // if all storage partitions are active as well as the metadata node, then the cluster is active
         if (metadataNodeActive) {
+            state = ClusterState.PENDING;
+            LOGGER.info("Cluster is now " + state);
+            AsterixAppContextInfo.INSTANCE.getMetadataBootstrap().init();
             state = ClusterState.ACTIVE;
-            LOGGER.info("Cluster is now ACTIVE");
-            //start global recovery
+            LOGGER.info("Cluster is now " + state);
+            // start global recovery
             AsterixAppContextInfo.INSTANCE.getGlobalRecoveryManager().startGlobalRecovery();
             if (autoFailover && !pendingProcessingFailbackPlans.isEmpty()) {
                 processPendingFailbackPlans();
@@ -412,19 +418,21 @@ public class ClusterStateManager {
         }
     }
 
-    public synchronized void processPartitionTakeoverResponse(TakeoverPartitionsResponseMessage reponse) {
-        for (Integer partitonId : reponse.getPartitions()) {
+    public synchronized void processPartitionTakeoverResponse(TakeoverPartitionsResponseMessage response)
+            throws HyracksDataException {
+        for (Integer partitonId : response.getPartitions()) {
             ClusterPartition partition = clusterPartitions.get(partitonId);
             partition.setActive(true);
-            partition.setActiveNodeId(reponse.getNodeId());
+            partition.setActiveNodeId(response.getNodeId());
         }
-        pendingTakeoverRequests.remove(reponse.getRequestId());
+        pendingTakeoverRequests.remove(response.getRequestId());
         resetClusterPartitionConstraint();
         updateClusterState();
     }
 
-    public synchronized void processMetadataNodeTakeoverResponse(TakeoverMetadataNodeResponseMessage reponse) {
-        currentMetadataNode = reponse.getNodeId();
+    public synchronized void processMetadataNodeTakeoverResponse(TakeoverMetadataNodeResponseMessage response)
+            throws HyracksDataException {
+        currentMetadataNode = response.getNodeId();
         metadataNodeActive = true;
         LOGGER.info("Current metadata node: " + currentMetadataNode);
         updateClusterState();
@@ -556,7 +564,8 @@ public class ClusterStateManager {
         }
     }
 
-    public synchronized void processCompleteFailbackResponse(CompleteFailbackResponseMessage reponse) {
+    public synchronized void processCompleteFailbackResponse(CompleteFailbackResponseMessage response)
+            throws HyracksDataException {
         /**
          * the failback plan completed successfully:
          * Remove all references to it.
@@ -564,7 +573,7 @@ public class ClusterStateManager {
          * Notify its replicas to reconnect to it.
          * Set the failing back node partitions as active.
          */
-        NodeFailbackPlan plan = planId2FailbackPlanMap.remove(reponse.getPlanId());
+        NodeFailbackPlan plan = planId2FailbackPlanMap.remove(response.getPlanId());
         String nodeId = plan.getNodeId();
         failedNodes.remove(nodeId);
         //notify impacted replicas they can reconnect to this node

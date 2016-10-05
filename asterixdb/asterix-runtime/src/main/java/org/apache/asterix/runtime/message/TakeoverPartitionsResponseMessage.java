@@ -49,7 +49,7 @@ public class TakeoverPartitionsResponseMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         ClusterStateManager.INSTANCE.processPartitionTakeoverResponse(this);
     }
 

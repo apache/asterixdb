@@ -41,7 +41,7 @@ import org.junit.Test;
 public class NCServiceIT {
 
     private static final String TARGET_DIR = StringUtils
-            .join(new String[] { System.getProperty("basedir"), "target" }, File.separator);
+            .join(new String[] { ".", "target" }, File.separator);
     private static final String LOG_DIR = StringUtils
             .join(new String[] { TARGET_DIR, "failsafe-reports" }, File.separator);
     private static final String RESOURCE_DIR = StringUtils

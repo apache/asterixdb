@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.cluster.RemoveNodeWork;
 import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
+import org.apache.hyracks.api.exceptions.HyracksException;
 
 public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
@@ -64,13 +65,16 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
     }
 
     @Override
-    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) {
+    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("NC: " + nodeId + " joined");
         }
         ClusterStateManager.INSTANCE.addNCConfiguration(nodeId, ncConfiguration);
+
         //if metadata node rejoining, we need to rebind the proxy connection when it is active again.
-        MetadataManager.INSTANCE.rebindMetadataNode = !ClusterStateManager.INSTANCE.isMetadataNodeActive();
+        if (!ClusterStateManager.INSTANCE.isMetadataNodeActive()) {
+            MetadataManager.INSTANCE.rebindMetadataNode();
+        }
 
         Set<String> nodeAddition = new HashSet<String>();
         nodeAddition.add(nodeId);
@@ -88,7 +92,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
     }
 
     @Override
-    public void notifyNodeFailure(Set<String> deadNodeIds) {
+    public void notifyNodeFailure(Set<String> deadNodeIds) throws HyracksException {
         for (String deadNode : deadNodeIds) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NC: " + deadNode + " left");
@@ -96,7 +100,9 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             ClusterStateManager.INSTANCE.removeNCConfiguration(deadNode);
 
             //if metadata node failed, we need to rebind the proxy connection when it is active again
-            MetadataManager.INSTANCE.rebindMetadataNode = !ClusterStateManager.INSTANCE.isMetadataNodeActive();
+            if (!ClusterStateManager.INSTANCE.isMetadataNodeActive()) {
+                MetadataManager.INSTANCE.rebindMetadataNode();
+            }
         }
         updateProgress(ClusterEventType.NODE_FAILURE, deadNodeIds);
         Set<IClusterEventsSubscriber> subscribers = ClusterManager.INSTANCE.getRegisteredClusterEventSubscribers();

@@ -18,26 +18,47 @@
  */
 package org.apache.asterix.metadata;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Periodically recycle temporary datasets.
  *
  * @author yingyib
  */
 public class GarbageCollector implements Runnable {
+    private static final Logger LOGGER = Logger.getLogger(GarbageCollector.class.getName());
 
-    private static long CLEANUP_PERIOD = 3600 * 24;
+    private static final long CLEANUP_PERIOD = 3600L * 24;
 
-    @Override
-    public void run() {
-        try {
-            synchronized (this) {
-                this.wait(CLEANUP_PERIOD);
-            }
-            MetadataManager.INSTANCE.cleanupTempDatasets();
-        } catch (Exception e) {
-            // Prints the stack trace to log.
-            e.printStackTrace();
-        }
+    static {
+        // Starts the garbage collector thread which
+        // should always be running.
+        Thread gcThread = new Thread(new GarbageCollector(), "Metadata GC");
+        gcThread.setDaemon(true);
+        gcThread.start();
     }
 
+    @Override
+    @SuppressWarnings("squid:S2142") // rethrow or interrupt thread on InterruptedException
+    public void run() {
+        LOGGER.info("Starting Metadata GC");
+        while (true) {
+            try {
+                synchronized (this) {
+                    this.wait(CLEANUP_PERIOD);
+                }
+                MetadataManager.INSTANCE.cleanupTempDatasets();
+            } catch (InterruptedException e) {
+                break;
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Exception cleaning temp datasets", e);
+            }
+        }
+        LOGGER.info("Exiting Metadata GC");
+    }
+
+    public static void ensure() {
+        // no need to do anything, <clinit> does the work
+    }
 }
