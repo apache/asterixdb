@@ -4712,6 +4712,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1005</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="quantifiers">
+      <compilation-unit name="query-ASTERIXDB-1674">
+        <output-dir compare="Text">query-ASTERIXDB-1674</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
         <test-case FilePath="quantifiers">
           <compilation-unit name="everysat_02">
@@ -5827,6 +5832,11 @@
     <test-case FilePath="subquery">
       <compilation-unit name="query-ASTERIXDB-1597">
         <output-dir compare="Text">query-ASTERIXDB-1597</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-1674">
+        <output-dir compare="Text">query-ASTERIXDB-1674</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

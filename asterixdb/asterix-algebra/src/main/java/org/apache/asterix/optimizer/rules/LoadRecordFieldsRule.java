@@ -29,6 +29,7 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -44,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -79,7 +81,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             AssignOperator a1 = (AssignOperator) op1;
             ILogicalExpression expr = getFirstExpr(a1);
             if (AnalysisUtil.isAccessToFieldRecord(expr)) {
-                boolean res = findAndEliminateRedundantFieldAccess(a1);
+                boolean res = findAndEliminateRedundantFieldAccess(a1, context);
                 context.addToDontApplySet(this, op1);
                 return res;
             }
@@ -184,8 +186,8 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             a2InptList.clear();
             a2InptList.add(topChild);
             // and link it as child in the op. tree
-            topOp.getInputs().set(0, new MutableObject<ILogicalOperator>(a2));
-            findAndEliminateRedundantFieldAccess(a2);
+            topOp.getInputs().set(0, new MutableObject<>(a2));
+            findAndEliminateRedundantFieldAccess(a2, context);
         } else { // e.g., a join
             LinkedList<LogicalVariable> usedInAccess = new LinkedList<LogicalVariable>();
             VariableUtilities.getUsedVariables(a2, usedInAccess);
@@ -231,9 +233,9 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             IOptimizationContext context) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> tpInpList = toPush.getInputs();
         tpInpList.clear();
-        tpInpList.add(new MutableObject<ILogicalOperator>(toPushThroughChildRef.getValue()));
+        tpInpList.add(new MutableObject<>(toPushThroughChildRef.getValue()));
         toPushThroughChildRef.setValue(toPush);
-        findAndEliminateRedundantFieldAccess(toPush);
+        findAndEliminateRedundantFieldAccess(toPush, context);
     }
 
     /**
@@ -244,7 +246,8 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
      * assign $x := Expr
      * assign $y := record-constructor { "field": Expr, ... }
      */
-    private static boolean findAndEliminateRedundantFieldAccess(AssignOperator assign) throws AlgebricksException {
+    private static boolean findAndEliminateRedundantFieldAccess(AssignOperator assign, IOptimizationContext context)
+            throws AlgebricksException {
         ILogicalExpression expr = getFirstExpr(assign);
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
         ILogicalExpression arg0 = f.getArguments().get(0).getValue();
@@ -257,15 +260,16 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
         if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return false;
         }
+        IVariableTypeEnvironment typeEnvironment = context.getOutputTypeEnvironment(assign);
         ConstantExpression ce = (ConstantExpression) arg1;
         ILogicalExpression fldExpr;
         if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
             String fldName = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
-            fldExpr = findFieldExpression(assign, recordVar, fldName,
-                    LoadRecordFieldsRule::findFieldByNameFromRecordConstructor);
+            fldExpr = findFieldExpression(assign, recordVar, fldName, typeEnvironment,
+                    (name, expression, env) -> findFieldByNameFromRecordConstructor(name, expression));
         } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
             Integer fldIdx = ((AInt32) ((AsterixConstantValue) ce.getValue()).getObject()).getIntegerValue();
-            fldExpr = findFieldExpression(assign, recordVar, fldIdx,
+            fldExpr = findFieldExpression(assign, recordVar, fldIdx, typeEnvironment,
                     LoadRecordFieldsRule::findFieldByIndexFromRecordConstructor);
         } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
             return false;
@@ -292,12 +296,14 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
 
     @FunctionalInterface
     private interface FieldResolver {
-        public ILogicalExpression resolve(Object accessKey, AbstractFunctionCallExpression funcExpr);
+        ILogicalExpression resolve(Object accessKey, AbstractFunctionCallExpression funcExpr,
+                IVariableTypeEnvironment typeEnvironment) throws AlgebricksException;
     }
 
     // Finds a field expression.
     private static ILogicalExpression findFieldExpression(AbstractLogicalOperator op, LogicalVariable recordVar,
-            Object accessKey, FieldResolver resolver) {
+            Object accessKey, IVariableTypeEnvironment typeEnvironment, FieldResolver resolver)
+            throws AlgebricksException {
         for (Mutable<ILogicalOperator> child : op.getInputs()) {
             AbstractLogicalOperator opChild = (AbstractLogicalOperator) child.getValue();
             if (opChild.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
@@ -306,18 +312,19 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                 if (i >= 0) {
                     AbstractLogicalExpression constr = (AbstractLogicalExpression) op2.getExpressions().get(i)
                             .getValue();
-                    return resolveFieldExpression(constr, accessKey, resolver);
+                    return resolveFieldExpression(constr, accessKey, typeEnvironment, resolver);
                 }
             } else if (opChild.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
                 NestedTupleSourceOperator nts = (NestedTupleSourceOperator) opChild;
                 AbstractLogicalOperator opBelowNestedPlan = (AbstractLogicalOperator) nts.getDataSourceReference()
                         .getValue().getInputs().get(0).getValue();
-                ILogicalExpression expr1 = findFieldExpression(opBelowNestedPlan, recordVar, accessKey, resolver);
+                ILogicalExpression expr1 = findFieldExpression(opBelowNestedPlan, recordVar, accessKey, typeEnvironment,
+                        resolver);
                 if (expr1 != null) {
                     return expr1;
                 }
             }
-            ILogicalExpression expr2 = findFieldExpression(opChild, recordVar, accessKey, resolver);
+            ILogicalExpression expr2 = findFieldExpression(opChild, recordVar, accessKey, typeEnvironment, resolver);
             if (expr2 != null) {
                 return expr2;
             }
@@ -327,7 +334,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
 
     // Resolves field expression from an access key and a field resolver.
     private static ILogicalExpression resolveFieldExpression(AbstractLogicalExpression constr, Object accessKey,
-            FieldResolver resolver) {
+            IVariableTypeEnvironment typeEnvironment, FieldResolver resolver) throws AlgebricksException {
         if (constr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return null;
         }
@@ -336,7 +343,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                 && !fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             return null;
         }
-        return resolver.resolve(accessKey, fce);
+        return resolver.resolve(accessKey, fce, typeEnvironment);
     }
 
     // Resolves field expression by name-based access.
@@ -355,9 +362,12 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
 
     // Resolves field expression by index-based access.
     private static ILogicalExpression findFieldByIndexFromRecordConstructor(Object index,
-            AbstractFunctionCallExpression fce) {
+            AbstractFunctionCallExpression fce, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         Integer fieldIndex = (Integer) index;
-        return fce.getArguments().size() > fieldIndex ? fce.getArguments().get(2 * fieldIndex + 1).getValue() : null;
+        ARecordType recordType = (ARecordType) typeEnvironment.getType(fce);
+        String[] closedFieldNames = recordType.getFieldNames();
+        return closedFieldNames.length > fieldIndex
+                ? findFieldByNameFromRecordConstructor(closedFieldNames[fieldIndex], fce) : null;
     }
 
     private final class ExtractFieldLoadExpressionVisitor implements ILogicalExpressionReferenceTransform {
