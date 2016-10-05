@@ -55,8 +55,8 @@
     </global.test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <hadoop.version>2.2.0</hadoop.version>
-    <junit.version>4.8.1</junit.version>
-    <commons.io.version>2.4</commons.io.version>
+    <junit.version>4.12</junit.version>
+    <commons.io.version>2.5</commons.io.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
   </properties>
   <dependencyManagement>
