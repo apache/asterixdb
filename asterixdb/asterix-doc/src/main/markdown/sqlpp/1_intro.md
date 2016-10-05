@@ -27,11 +27,11 @@ SQL was designed in the 1970's for interacting with the flat, schema-ified world
 relational databases, while SQL++ is much newer and targets the nested, schema-optional
 (or even schema-less) world of modern NoSQL systems.
 
-In the context of Apache AsterixDB, SQL++ is intended for working with the Asterix Data Model (ADM),
-a data model based on a superset of JSON with an enriched and flexible type system.
+In the context of Apache AsterixDB, SQL++ is intended for working with the Asterix Data Model
+([ADM](../datamodel.html)),a data model based on a superset of JSON with an enriched and flexible type system.
 New AsterixDB users are encouraged to read and work through the (much friendlier) guide
-"AsterixDB 101: An ADM and SQL++ Primer" before attempting to make use of this document.
-In addition, readers are advised to read through the Asterix Data Model (ADM) reference guide
+"[AsterixDB 101: An ADM and SQL++ Primer](primer-sqlpp.html)" before attempting to make use of this document.
+In addition, readers are advised to read through the [Asterix Data Model (ADM) reference guide](../datamodel.html)
 first as well, as an understanding of the data model is a prerequisite to understanding SQL++.
 
 In what follows, we detail the features of the SQL++ language in a grammar-guided manner.

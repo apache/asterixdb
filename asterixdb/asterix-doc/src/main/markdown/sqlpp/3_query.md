@@ -874,14 +874,15 @@ Note that a subquery, like a top-level `SELECT` statment, always returns a colle
 within a query the subquery occurs -- and again, its result is never automatically cast into a scalar.
 
 ## <a id="Vs_SQL-92">SQL++ vs. SQL-92</a>
-The following matrix is a quick "key differences cheat sheet" for SQL++ and SQL-92.
+The following matrix is a quick "SQL-92 compatibility cheat sheet" for SQL++.
 
 | Feature |  SQL++ | SQL-92 |
 |----------|--------|--------|
 | SELECT * | Returns nested records | Returns flattened concatenated records |
 | Subquery | Returns a collection  | The returned collection is cast into a scalar value if the subquery appears in a SELECT list or on one side of a comparison or as input to a function |
-| LEFT OUTER JOIN |  Fills in `MISSING` for non-matches  |   Fills in `NULL`(s) for non-matches    |
-| UNION ALL       | Allows heterogenous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream
+| LEFT OUTER JOIN |  Fills in `MISSING`(s) for non-matches  |   Fills in `NULL`(s) for non-matches    |
+| UNION ALL       | Allows heterogeneous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream
+| IN constant_expr | The constant expression has to be an array or multiset, i.e., [..,..,...] | The constant collection can be represented as comma-separated items in a paren pair |
 | String literal | Double quotes or single quotes | Single quotes only |
 | Delimited identifiers | Backticks | Double quotes |
 
