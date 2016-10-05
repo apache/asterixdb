@@ -30,6 +30,23 @@
     <root.dir>${basedir}/../../..</root.dir>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <profiles>
     <profile>
       <activation>
@@ -49,7 +66,7 @@
           <artifactId>hadoop-test</artifactId>
           <version>0.20.2</version>
           <type>jar</type>
-          <scope>compile</scope>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -75,14 +92,14 @@
           <artifactId>hadoop-minicluster</artifactId>
           <version>1.0.4</version>
           <type>jar</type>
-          <scope>compile</scope>
+          <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-test</artifactId>
           <version>1.0.4</version>
           <type>jar</type>
-          <scope>compile</scope>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>

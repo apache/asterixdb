@@ -244,5 +244,12 @@
       <type>zip</type>
       <classifier>assembly</classifier>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <version>${hadoop.version}</version>
+      <type>jar</type>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

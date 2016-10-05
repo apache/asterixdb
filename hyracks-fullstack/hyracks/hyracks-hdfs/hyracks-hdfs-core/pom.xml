@@ -80,6 +80,20 @@
           <type>jar</type>
           <scope>compile</scope>
         </dependency>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-1.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-test</artifactId>
+          <version>0.20.2</version>
+          <type>jar</type>
+          <scope>test</scope>
+        </dependency>
       </dependencies>
     </profile>
     <profile>
@@ -99,7 +113,27 @@
           <type>jar</type>
           <scope>compile</scope>
         </dependency>
-      </dependencies>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-1.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <version>1.0.4</version>
+          <type>jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-test</artifactId>
+          <version>1.0.4</version>
+          <type>jar</type>
+          <scope>test</scope>
+        </dependency>      </dependencies>
     </profile>
 
     <profile>
@@ -118,6 +152,19 @@
           <version>${project.version}</version>
           <type>jar</type>
           <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-2.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <type>jar</type>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -138,6 +185,19 @@
           <type>jar</type>
           <scope>compile</scope>
         </dependency>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-2.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <type>jar</type>
+          <scope>test</scope>
+        </dependency>
       </dependencies>
     </profile>
     <profile>
@@ -156,6 +216,20 @@
           <version>${project.version}</version>
           <type>jar</type>
           <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-2.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <version>0.23.6</version>
+          <type>jar</type>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -176,6 +250,20 @@
           <type>jar</type>
           <scope>compile</scope>
         </dependency>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-2.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <version>2.0.0-cdh4.1.0</version>
+          <type>jar</type>
+          <scope>test</scope>
+        </dependency>
       </dependencies>
     </profile>
     <profile>
@@ -194,6 +282,20 @@
           <version>${project.version}</version>
           <type>jar</type>
           <scope>compile</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>hyracks-hdfs-2.x</artifactId>
+          <version>${project.version}</version>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <version>2.0.0-cdh4.2.0</version>
+          <type>jar</type>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
