@@ -663,9 +663,6 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
           "overlap6": null
         }
 
-
-### interval_before/interval_after/interval_meets/interval_met_by/interval_overlaps/interval_overlapped_by/interval_overlapping/interval_starts/interval_started_by/interval_covers/interval_covered_by/interval_ends/interval_ended_by ###
-
 ### interval_bin ###
  * Syntax:
 
