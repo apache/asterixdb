@@ -118,9 +118,10 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                                 out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 out.writeShort(listAccessor.size() / 2);
 
+                                final int skipTypeTag = listAccessor.itemsAreSelfDescribing() ? 1 : 0;
                                 for (int i = 0; i < listAccessor.size() / 2; i++) {
-                                    int firstDoubleOffset = listAccessor.getItemOffset(i * 2);
-                                    int secondDobuleOffset = listAccessor.getItemOffset((i * 2) + 1);
+                                    int firstDoubleOffset = listAccessor.getItemOffset(i * 2) + skipTypeTag;
+                                    int secondDobuleOffset = listAccessor.getItemOffset((i * 2) + 1) + skipTypeTag;
 
                                     APointSerializerDeserializer.serialize(
                                             ADoubleSerializerDeserializer.getDouble(listBytes, firstDoubleOffset),

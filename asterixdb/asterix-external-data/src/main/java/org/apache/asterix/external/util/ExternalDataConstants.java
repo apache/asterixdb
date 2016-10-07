@@ -103,6 +103,10 @@ public class ExternalDataConstants {
     public static final String KEY_RECORD_FORMAT = "record-format";
     public static final String KEY_META_TYPE_NAME = "meta-type-name";
     public static final String READER_STREAM = "stream";
+    public static final String KEY_HTTP_PROXY_HOST = "http-proxy-host";
+    public static final String KEY_HTTP_PROXY_PORT = "http-proxy-port";
+    public static final String KEY_HTTP_PROXY_USER = "http-proxy-user";
+    public static final String KEY_HTTP_PROXY_PASSWORD = "http-proxy-password";
     /**
      * HDFS class names
      */
