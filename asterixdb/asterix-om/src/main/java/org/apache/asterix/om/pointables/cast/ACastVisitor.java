@@ -110,8 +110,8 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             arg.first.set(accessor);
             return null;
         }
-        ATypeTag inputTypeTag =
-                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(accessor.getByteArray()[accessor.getStartOffset()]);
+        ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(accessor.getByteArray()[accessor.getStartOffset()]);
         if (!needPromote(inputTypeTag, reqTypeTag)) {
             arg.first.set(accessor);
         } else {
