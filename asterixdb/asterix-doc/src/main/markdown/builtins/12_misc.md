@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-## <a id="OtherFunctions">Other Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="MiscFunctions">Miscellaneous Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 ### uuid ###
  * Syntax:
@@ -29,70 +29,6 @@
     * none
 * Return Value:
     * a generated, random `uuid`.
-
-
-### is_null ###
- * Syntax:
-
-        is_null(expr)
-
- * Checks whether the given expression is evaluated to be a `null` value.
- * Arguments:
-    * `expr` : an expression (any type is allowed).
- * Return Value:
-    * a `boolean` on whether the variable is a `null` or not,
-    * a `missing` if the input is `missing`.
-
- * Example:
-
-        { "v1": is_null(null), "v2": is_null(1), "v3": is_null(missing) };
-
-
- * The expected result is:
-
-        { "v1": true, "v2": false }
-
-
-### is_missing ###
- * Syntax:
-
-        is_missing(expr)
-
- * Checks whether the given expression is evaluated to be a `missing` value.
- * Arguments:
-    * `expr` : an expression (any type is allowed).
- * Return Value:
-    * a `boolean` on whether the variable is a `missing` or not.
-
- * Example:
-
-        { "v1": is_missing(null), "v2": is_missing(1), "v3": is_missing(missing) };
-
-
- * The expected result is:
-
-        { "v1": false, "v2": false, "v3": true }
-
-
-### is_unknown ###
- * Syntax:
-
-        is_unknown(expr)
-
- * Checks whether the given variable is a `null` value or a `missing` value.
- * Arguments:
-    * `expr` : an expression (any type is allowed).
- * Return Value:
-    * a `boolean` on whether the variable is a `null`/``missing` value (`true`) or not (`false`).
-
- * Example:
-
-        { "v1": is_unknown(null), "v2": is_unknown(1), "v3": is_unknown(missing) };
-
-
- * The expected result is:
-
-        { "v1": true, "v2": false, "v3": true }
 
 
 ### len ###

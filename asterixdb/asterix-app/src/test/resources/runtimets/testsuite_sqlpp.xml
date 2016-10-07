@@ -7921,6 +7921,31 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
+      <compilation-unit name="isarray">
+        <output-dir compare="Text">isarray</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isboolean">
+        <output-dir compare="Text">isboolean</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isnumber">
+        <output-dir compare="Text">isnumber</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isobject">
+        <output-dir compare="Text">isobject</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="isstring">
+        <output-dir compare="Text">isstring</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>
       </compilation-unit>

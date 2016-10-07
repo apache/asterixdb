@@ -761,6 +761,16 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
     public static final FunctionIdentifier IS_UNKOWN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "is-unknown", 1);
+    public static final FunctionIdentifier IS_BOOLEAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "is-boolean", 1);
+    public static final FunctionIdentifier IS_NUMBER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-number",
+            1);
+    public static final FunctionIdentifier IS_STRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-string",
+            1);
+    public static final FunctionIdentifier IS_ARRAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-array",
+            1);
+    public static final FunctionIdentifier IS_OBJECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-object",
+            1);
 
     public static final FunctionIdentifier IS_SYSTEM_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "is-system-null", 1);
@@ -794,6 +804,11 @@ public class AsterixBuiltinFunctions {
         addFunction(IS_NULL, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(IS_UNKOWN, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(IS_SYSTEM_NULL, BooleanOnlyTypeComputer.INSTANCE, true);
+        addFunction(IS_BOOLEAN, BooleanOnlyTypeComputer.INSTANCE, true);
+        addFunction(IS_NUMBER, BooleanOnlyTypeComputer.INSTANCE, true);
+        addFunction(IS_STRING, BooleanOnlyTypeComputer.INSTANCE, true);
+        addFunction(IS_ARRAY, BooleanOnlyTypeComputer.INSTANCE, true);
+        addFunction(IS_OBJECT, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(NOT, BooleanFunctionTypeComputer.INSTANCE, true);
 
         addPrivateFunction(EQ, BooleanFunctionTypeComputer.INSTANCE, true);
