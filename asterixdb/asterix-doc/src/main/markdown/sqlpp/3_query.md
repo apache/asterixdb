@@ -789,8 +789,8 @@ SQL++, being designed to deal with nested data and schema-less data, does not (a
 Collection-valued data is perfectly legal in most SQL++ contexts, and its data is schema-less,
 so a query processor rarely knows exactly what to expect where and such automatic conversion is often
 not desirable. Thus, in the queries above, the use of "[0]" extracts the first (i.e., 0th) element of
-a list-valued query expression's result; this is needed above, even though the result is a list of one
-element, to "de-listify" the list and obtain the desired scalar for the comparison.
+an array-valued query expression's result; this is needed above, even though the result is an array of one
+element, to extract the only element in the singleton array and obtain the desired scalar for the comparison.
 
 ## <a id="Let_clauses">LET clauses</a>
 Similar to `WITH` clauses, `LET` clauses can be useful when a (complex) expression is used several times within a query, allowing it to be written once to make the query more concise. The next query shows an example.
@@ -850,7 +850,7 @@ Unlike SQL-92, as was just alluded to, the subqueries in a SELECT list or a bool
 not return singleton, single-column relations.
 Instead, they may return arbitrary collections.
 For example, the following query is a variant of the prior group-by query examples;
-it retrieves a list of up to two "dislike" messages per user.
+it retrieves an array of up to two "dislike" messages per user.
 
 ##### Example
 
