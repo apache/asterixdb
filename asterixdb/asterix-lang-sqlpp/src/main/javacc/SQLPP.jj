@@ -298,7 +298,10 @@ class SQLPPParser extends ScopeChecker implements IParser {
                 message += fixQuotes(tokenImage[0]);
                 break;
             }
-            message += fixQuotes(tokenImage[tok.kind]) + " ";
+            final String fixedTokenImage = tokenImage[tok.kind];
+            if (! tok.image.equalsIgnoreCase(stripQuotes(fixedTokenImage))) {
+                message += fixQuotes(fixedTokenImage) + " ";
+            }
             message += quot + addEscapes(tok.image) + quot;
             tok = tok.next;
         }

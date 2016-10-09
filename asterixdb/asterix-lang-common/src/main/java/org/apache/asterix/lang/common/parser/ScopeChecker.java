@@ -199,13 +199,14 @@ public class ScopeChecker {
         }
     }
 
-    protected String fixQuotes(String token) {
+    protected static String fixQuotes(String token) {
+        final String stripped = stripQuotes(token);
+        return stripped != null ? "'" + stripped + "'" : token;
+    }
+
+    protected static String stripQuotes(String token) {
         final int last = token.length() - 1;
-        if (token.charAt(0) == '"' && token.charAt(last) == '"') {
-            return "'" + token.substring(1, last) + "'";
-        } else {
-            return token;
-        }
+        return token.charAt(0) == '"' && token.charAt(last) == '"' ? token.substring(1, last) : null;
     }
 
     protected static String addEscapes(String str) {
