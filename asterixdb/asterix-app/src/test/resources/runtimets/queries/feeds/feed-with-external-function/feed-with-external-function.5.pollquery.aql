@@ -25,6 +25,7 @@
  * Expected Res : Success
  * Date         : 23rd Apr 2013
  */
+// polltimeoutsecs=30
 use dataverse externallibtest;
 
 for $x in dataset TweetsFeedIngest
