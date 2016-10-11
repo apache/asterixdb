@@ -23,9 +23,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -40,11 +37,13 @@ import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.file.FileSplit;
-import org.apache.hyracks.dataflow.std.misc.SplitOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.misc.ReplicateOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import org.apache.hyracks.tests.util.ResultSerializerFactoryProvider;
+import org.junit.Assert;
+import org.junit.Test;
 
-public class SplitOperatorTest extends AbstractIntegrationTest {
+public class ReplicateOperatorTest extends AbstractIntegrationTest {
 
     public void compareFiles(String fileNameA, String fileNameB) throws IOException {
         BufferedReader fileA = new BufferedReader(new FileReader(fileNameA));
@@ -69,7 +68,7 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
         String inputFileName = "data/words.txt";
         File[] outputFile = new File[outputArity];
         for (int i = 0; i < outputArity; i++) {
-            outputFile[i] = File.createTempFile("splitop", null);
+            outputFile[i] = File.createTempFile("replicateop", null);
             outputFile[i].deleteOnExit();
         }
 
@@ -86,8 +85,8 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
                 inputSplits), stringParser, stringRec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scanOp, locations);
 
-        SplitOperatorDescriptor splitOp = new SplitOperatorDescriptor(spec, stringRec, outputArity);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, splitOp, locations);
+        ReplicateOperatorDescriptor replicateOp = new ReplicateOperatorDescriptor(spec, stringRec, outputArity);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, replicateOp, locations);
 
         IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputFile.length];
         for (int i = 0; i < outputArity; i++) {
@@ -99,9 +98,9 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i], locations);
         }
 
-        spec.connect(new OneToOneConnectorDescriptor(spec), scanOp, 0, splitOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), scanOp, 0, replicateOp, 0);
         for (int i = 0; i < outputArity; i++) {
-            spec.connect(new OneToOneConnectorDescriptor(spec), splitOp, i, outputOp[i], 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), replicateOp, i, outputOp[i], 0);
         }
 
         for (int i = 0; i < outputArity; i++) {

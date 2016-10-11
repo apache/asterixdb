@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.std.misc;
+package org.apache.hyracks.dataflow.std.base;
 
 import java.nio.ByteBuffer;
 
@@ -32,28 +32,32 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
-import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 
-public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
-    private static final long serialVersionUID = 1L;
+/**
+ * Abstract class for two replication related operator descriptor - replicate and split
+ * Replicate operator propagates all frames to all output branches.
+ * That is, each tuple will be propagated to all output branches.
+ * Split operator propagates each tuple in a frame to one output branch only.
+ */
+public abstract class AbstractReplicateOperatorDescriptor extends AbstractOperatorDescriptor {
+    protected static final long serialVersionUID = 1L;
 
-    private final static int SPLITTER_MATERIALIZER_ACTIVITY_ID = 0;
-    private final static int MATERIALIZE_READER_ACTIVITY_ID = 1;
+    protected final static int SPLITTER_MATERIALIZER_ACTIVITY_ID = 0;
+    protected final static int MATERIALIZE_READER_ACTIVITY_ID = 1;
 
-    private final boolean[] outputMaterializationFlags;
-    private final boolean requiresMaterialization;
-    private final int numberOfNonMaterializedOutputs;
-    private final int numberOfMaterializedOutputs;
+    protected final boolean[] outputMaterializationFlags;
+    protected final boolean requiresMaterialization;
+    protected final int numberOfNonMaterializedOutputs;
+    protected final int numberOfMaterializedOutputs;
 
-    public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity) {
+    public AbstractReplicateOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
+            int outputArity) {
         this(spec, rDesc, outputArity, new boolean[outputArity]);
     }
 
-    public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity,
-            boolean[] outputMaterializationFlags) {
+    public AbstractReplicateOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
+            int outputArity, boolean[] outputMaterializationFlags) {
         super(spec, 1, outputArity);
         for (int i = 0; i < outputArity; i++) {
             recordDescriptors[i] = rDesc;
@@ -80,16 +84,16 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        SplitterMaterializerActivityNode sma =
-                new SplitterMaterializerActivityNode(new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
+        ReplicatorMaterializerActivityNode sma = new ReplicatorMaterializerActivityNode(
+                new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
         builder.addActivity(this, sma);
         builder.addSourceEdge(0, sma, 0);
         int pipelineOutputIndex = 0;
         int activityId = MATERIALIZE_READER_ACTIVITY_ID;
         for (int i = 0; i < outputArity; i++) {
             if (outputMaterializationFlags[i]) {
-                MaterializeReaderActivityNode mra =
-                        new MaterializeReaderActivityNode(new ActivityId(odId, activityId++));
+                MaterializeReaderActivityNode mra = new MaterializeReaderActivityNode(
+                        new ActivityId(odId, activityId++));
                 builder.addActivity(this, mra);
                 builder.addBlockingEdge(sma, mra);
                 builder.addTargetEdge(i, mra, 0);
@@ -99,16 +103,17 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
         }
     }
 
-    private final class SplitterMaterializerActivityNode extends AbstractActivityNode {
+    protected class ReplicatorMaterializerActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        public SplitterMaterializerActivityNode(ActivityId id) {
+        public ReplicatorMaterializerActivityNode(ActivityId id) {
             super(id);
         }
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+                throws HyracksDataException {
             return new AbstractUnaryInputOperatorNodePushable() {
                 private MaterializerTaskState state;
                 private final IFrameWriter[] writers = new IFrameWriter[numberOfNonMaterializedOutputs];
@@ -140,10 +145,8 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void flush() throws HyracksDataException {
-                    if (!requiresMaterialization) {
-                        for (IFrameWriter writer : writers) {
-                            writer.flush();
-                        }
+                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                        writers[i].flush();
                     }
                 }
 
@@ -204,7 +207,7 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
         }
     }
 
-    private final class MaterializeReaderActivityNode extends AbstractActivityNode {
+    protected class MaterializeReaderActivityNode extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
         public MaterializeReaderActivityNode(ActivityId id) {
@@ -227,5 +230,4 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
             };
         }
     }
-
 }

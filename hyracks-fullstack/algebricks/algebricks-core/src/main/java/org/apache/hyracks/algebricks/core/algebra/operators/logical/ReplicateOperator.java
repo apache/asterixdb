@@ -18,36 +18,18 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
-import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class ReplicateOperator extends AbstractLogicalOperator {
-
-    private int outputArity;
-    private boolean[] outputMaterializationFlags;
-    private List<Mutable<ILogicalOperator>> outputs;
+public class ReplicateOperator extends AbstractReplicateOperator {
 
     public ReplicateOperator(int outputArity) {
-        this.outputArity = outputArity;
-        this.outputMaterializationFlags = new boolean[outputArity];
-        this.outputs = new ArrayList<>();
+        super(outputArity);
     }
 
     public ReplicateOperator(int outputArity, boolean[] outputMaterializationFlags) {
-        this.outputArity = outputArity;
-        this.outputMaterializationFlags = outputMaterializationFlags;
-        this.outputs = new ArrayList<>();
+        super(outputArity, outputMaterializationFlags);
     }
 
     @Override
@@ -58,52 +40,6 @@ public class ReplicateOperator extends AbstractLogicalOperator {
     @Override
     public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg) throws AlgebricksException {
         return visitor.visitReplicateOperator(this, arg);
-    }
-
-    @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
-            throws AlgebricksException {
-        return false;
-    }
-
-    @Override
-    public VariablePropagationPolicy getVariablePropagationPolicy() {
-        return VariablePropagationPolicy.ALL;
-    }
-
-    @Override
-    public boolean isMap() {
-        return true;
-    }
-
-    @Override
-    public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
-    }
-
-    public void substituteVar(LogicalVariable v1, LogicalVariable v2) {
-        // do nothing
-    }
-
-    public int getOutputArity() {
-        return outputArity;
-    }
-
-    public void setOutputMaterializationFlags(boolean[] outputMaterializationFlags) {
-        this.outputMaterializationFlags = outputMaterializationFlags;
-    }
-
-    public boolean[] getOutputMaterializationFlags() {
-        return outputMaterializationFlags;
-    }
-
-    public List<Mutable<ILogicalOperator>> getOutputs() {
-        return outputs;
-    }
-
-    @Override
-    public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
     public boolean isBlocker() {
