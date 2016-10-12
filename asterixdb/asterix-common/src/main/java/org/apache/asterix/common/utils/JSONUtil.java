@@ -49,7 +49,7 @@ public class JSONUtil {
         } else if (o instanceof JSONArray) {
             return append(sb, (JSONArray) o, indent);
         } else if (o instanceof String) {
-            return quote(sb, (String) o);
+            return quoteAndEscape(sb, (String) o);
         } else if (JSONObject.NULL.equals(o) || o instanceof Number || o instanceof Boolean) {
             return sb.append(String.valueOf(o));
         }
@@ -102,10 +102,11 @@ public class JSONUtil {
     }
 
     public static String quoteAndEscape(String str) {
-        StringBuilder sb = new StringBuilder();
-        sb.append('"');
-        escape(sb, str);
-        return sb.append('"').toString();
+        return quoteAndEscape(new StringBuilder(), str).toString();
+    }
+
+    private static StringBuilder quoteAndEscape(StringBuilder sb, String str) {
+        return escape(sb.append('"'), str).append('"');
     }
 
     public static String escape(String str) {
