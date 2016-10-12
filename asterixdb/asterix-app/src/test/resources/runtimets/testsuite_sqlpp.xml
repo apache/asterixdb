@@ -4014,6 +4014,11 @@
         <output-dir compare="Text">is</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="query-ASTERIXDB-1689">
+        <output-dir compare="Text">query-ASTERIXDB-1689</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="numeric">
     <test-case FilePath="numeric">

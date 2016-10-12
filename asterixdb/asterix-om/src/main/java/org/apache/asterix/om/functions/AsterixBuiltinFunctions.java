@@ -55,6 +55,7 @@ import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.CastTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
@@ -801,15 +802,15 @@ public class AsterixBuiltinFunctions {
 
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_NULL, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(IS_UNKOWN, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_SYSTEM_NULL, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_BOOLEAN, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_NUMBER, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_STRING, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_ARRAY, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_OBJECT, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(NOT, BooleanFunctionTypeComputer.INSTANCE, true);
+        addFunction(IS_NULL, BooleanOrMissingTypeComputer.INSTANCE, true);
+        addFunction(IS_SYSTEM_NULL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_NUMBER, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_STRING, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_ARRAY, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_OBJECT, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(NOT, ABooleanTypeComputer.INSTANCE, true);
 
         addPrivateFunction(EQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(LE, BooleanFunctionTypeComputer.INSTANCE, true);
