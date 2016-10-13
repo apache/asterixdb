@@ -39,6 +39,7 @@ import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.common.utils.PrintUtil;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -209,7 +210,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
                 LOGGER.info("Node ID: " + nodeId);
-                LOGGER.info("Stores: " + metadataProperties.getStores());
+                LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
                 LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
 
