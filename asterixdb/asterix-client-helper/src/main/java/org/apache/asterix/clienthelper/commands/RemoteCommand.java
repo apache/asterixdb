@@ -23,10 +23,14 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.clienthelper.Args;
 
 public abstract class RemoteCommand extends ClientCommand {
+
+    public static final int MAX_CONNECTION_TIMEOUT_SECS = 60;
+
     protected enum Method {
         GET,
         POST
@@ -64,6 +68,10 @@ public abstract class RemoteCommand extends ClientCommand {
     protected HttpURLConnection openConnection(String path, Method method) throws IOException {
         URL url = new URL("http://" + hostPort + "/" + path);
         HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+        final int timeoutMillis =
+                (int) TimeUnit.SECONDS.toMillis(Math.max(MAX_CONNECTION_TIMEOUT_SECS, args.getTimeoutSecs()));
+        conn.setConnectTimeout(timeoutMillis);
+        conn.setReadTimeout(timeoutMillis);
         conn.setRequestMethod(method.name());
         return conn;
     }
