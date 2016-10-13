@@ -89,7 +89,10 @@
     <name>storage.memorycomponent.numpages</name>
     <value>8</value>
     <description>The number of pages to allocate for a memory component.
-      (Default = 8)
+      This budget is shared by all the memory components of the primary
+      index and all its secondary indexes across all I/O devices on a node.
+      Note: in-memory components usually has fill factor of 75% since
+      the pages are 75% full and the remaining 25% is un-utilized. (Default = 256)
     </description>
   </property>
   <property>
