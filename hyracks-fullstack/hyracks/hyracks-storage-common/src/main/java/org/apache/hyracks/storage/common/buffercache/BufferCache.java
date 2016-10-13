@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -82,6 +83,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     //!DEBUG
     private IIOReplicationManager ioReplicationManager;
     private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
+    private final AtomicLong masterPinCount = new AtomicLong();
 
     private boolean closed;
 
@@ -1245,6 +1247,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     private ICachedPage getPageLoop(long dpid, int multiplier, boolean confiscate)
             throws HyracksDataException {
+        final long startingPinCount = masterPinCount.get();
         int cycleCount = 0;
         try {
             while (true) {
@@ -1252,6 +1255,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 int startCleanedCount = cleanerThread.cleanedCount;
                 ICachedPage page = confiscate ? confiscateInner(dpid, multiplier) : findPageInner(dpid);
                 if (page != null) {
+                    masterPinCount.incrementAndGet();
                     return page;
                 }
                 // no page available to confiscate. try kicking the cleaner thread.
@@ -1286,13 +1290,15 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 if (cycleCount > MAX_PIN_ATTEMPT_CYCLES) {
                     cycleCount = 0; // suppress warning below
                     throw new HyracksDataException("Unable to find free page in buffer cache after "
-                            + MAX_PIN_ATTEMPT_CYCLES + " cycles (buffer cache undersized?)");
+                            + MAX_PIN_ATTEMPT_CYCLES + " cycles (buffer cache undersized?); "
+                            + (masterPinCount.get() - startingPinCount) + " successful pins since start of cycle");
                 }
             }
         } finally {
             if (cycleCount > PIN_ATTEMPT_CYCLES_WARNING_THRESHOLD && LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Took " + cycleCount + " cycles to find free page in buffer cache.  (buffer cache " +
-                        "undersized?)");
+                        "undersized?); " + (masterPinCount.get() - startingPinCount) +
+                        " successful pins since start of cycle");
             }
         }
     }
