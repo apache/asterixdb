@@ -177,7 +177,17 @@ public class APIServlet extends HttpServlet {
             InputStreamReader isr = new InputStreamReader(is);
             StringBuilder sb = new StringBuilder();
             BufferedReader br = new BufferedReader(isr);
-            String line = br.readLine();
+            String line;
+            try {
+                line = br.readLine();
+            } catch (NullPointerException e) {
+                LOGGER.log(Level.WARNING, "NPE reading resource " + resourcePath
+                        + ", assuming JDK-8080094; returning 404", e);
+                // workaround lame JDK bug where a broken InputStream is returned in case the resourcePath is a
+                // directory; see https://bugs.openjdk.java.net/browse/JDK-8080094
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
 
             while (line != null) {
                 sb.append(line);
