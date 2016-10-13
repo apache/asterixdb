@@ -428,17 +428,12 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitReplicateOperator(ReplicateOperator op, Void arg) throws AlgebricksException {
-        for (Mutable<ILogicalOperator> outputOp : op.getOutputs()) {
-            VariableUtilities.getUsedVariables(outputOp.getValue(), usedVariables);
-        }
         return null;
     }
 
     @Override
     public Void visitSplitOperator(SplitOperator op, Void arg) throws AlgebricksException {
-        for (Mutable<ILogicalOperator> outputOp : op.getOutputs()) {
-            VariableUtilities.getUsedVariables(outputOp.getValue(), usedVariables);
-        }
+        op.getBranchingExpression().getValue().getUsedVariables(usedVariables);
         return null;
     }
 
