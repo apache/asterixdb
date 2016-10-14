@@ -513,9 +513,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String dataverseName = getActiveDataverse(dd.getDataverse());
         String datasetName = dd.getName().getValue();
         DatasetType dsType = dd.getDatasetType();
-        String itemTypeDataverseName = dd.getItemTypeDataverse().getValue();
+        String itemTypeDataverseName = getActiveDataverse(dd.getItemTypeDataverse());
         String itemTypeName = dd.getItemTypeName().getValue();
-        String metaItemTypeDataverseName = dd.getMetaItemTypeDataverse().getValue();
+        String metaItemTypeDataverseName = getActiveDataverse(dd.getMetaItemTypeDataverse());
         String metaItemTypeName = dd.getMetaItemTypeName().getValue();
         Identifier ngNameId = dd.getNodegroupName();
         String nodegroupName = getNodeGroupName(ngNameId, dd, dataverseName);
@@ -3101,7 +3101,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return (dataverse != null) ? dataverse : activeDefaultDataverse.getDataverseName();
     }
 
-    protected String getActiveDataverse(Identifier dataverse) throws AlgebricksException {
+    protected String getActiveDataverse(Identifier dataverse) {
         return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
     }
 
