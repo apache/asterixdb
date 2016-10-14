@@ -65,7 +65,7 @@ public abstract class AbstractLangTranslator {
                 }
             }
             if (!ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)) {
-                throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE + " state."
+                throw new AsterixException("Cluster is in " + ClusterState.UNUSABLE + " state."
                         + "\n One or more Node Controllers have left or haven't joined yet.\n");
             } else {
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -75,7 +75,7 @@ public abstract class AbstractLangTranslator {
         }
 
         if (ClusterStateManager.INSTANCE.getState().equals(ClusterState.UNUSABLE)) {
-            throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE + " state."
+            throw new AsterixException("Cluster is in " + ClusterState.UNUSABLE + " state."
                     + "\n One or more Node Controllers have left.\n");
         }
 
@@ -83,8 +83,7 @@ public abstract class AbstractLangTranslator {
             int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
-                while (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()
-                        && waitCycleCount < maxWaitCycles) {
+                while (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted() && waitCycleCount < maxWaitCycles) {
                     Thread.sleep(1000);
                     waitCycleCount++;
                 }
@@ -94,7 +93,7 @@ public abstract class AbstractLangTranslator {
                 }
             }
             if (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()) {
-                throw new AsterixException(" Asterix Cluster Global recovery is not yet complete and The system is in "
+                throw new AsterixException("Cluster Global recovery is not yet complete and the system is in "
                         + ClusterState.ACTIVE + " state");
             }
         }
