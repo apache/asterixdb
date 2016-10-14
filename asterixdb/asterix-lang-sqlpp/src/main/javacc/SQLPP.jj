@@ -2980,7 +2980,7 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
       quantifiedList.add(pair);
     }
     )*
-     <SATISFIES> satisfiesExpr = Expression()
+     <SATISFIES> satisfiesExpr = Expression() (<END>)?
      {
        qc.setSatisfiesExpr(satisfiesExpr);
        qc.setQuantifiedList(quantifiedList);

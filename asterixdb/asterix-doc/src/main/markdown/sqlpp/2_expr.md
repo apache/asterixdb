@@ -311,7 +311,7 @@ The following example illustrates the form of a case expression.
 ### <a id="Quantified_expressions">Quantified expressions</a>
 
     QuantifiedExpression ::= ( (<ANY>|<SOME>) | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
-                             <SATISFIES> Expression
+                             <SATISFIES> Expression (<END>)?
 
 Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
 
