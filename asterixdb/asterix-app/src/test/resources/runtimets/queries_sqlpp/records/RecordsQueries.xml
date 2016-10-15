@@ -103,6 +103,16 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="records">
+    <compilation-unit name="object_pairs">
+      <output-dir compare="Text">object_pairs</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="records">
+    <compilation-unit name="object_pairs-2">
+      <output-dir compare="Text">object_pairs-2</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="records">
     <compilation-unit name="open-record-constructor_01">
       <output-dir compare="Text">open-record-constructor_01</output-dir>
     </compilation-unit>

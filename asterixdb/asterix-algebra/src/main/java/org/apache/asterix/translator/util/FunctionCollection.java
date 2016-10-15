@@ -259,6 +259,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldVal
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordAddFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
@@ -680,6 +681,9 @@ public class FunctionCollection {
 
         // Cast function
         functionsToInjectUnkownHandling.add(CastTypeDescriptor.FACTORY);
+
+        // Record function
+        functionsToInjectUnkownHandling.add(RecordPairsDescriptor.FACTORY);
 
         List<IFunctionDescriptorFactory> generatedFactories = new ArrayList<>();
         for (IFunctionDescriptorFactory factory : functionsToInjectUnkownHandling) {

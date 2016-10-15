@@ -1,0 +1,3 @@
+{ "name": "a", "value": 1 }
+{ "name": "b", "value": "c" }
+{ "name": "d", "value": [ 1, "e" ] }

@@ -62,6 +62,9 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("isarray", "is-array"); // isarray, internal: is-array
         FUNCTION_NAME_MAP.put("isobject", "is-object"); // isobject, internal: is-object
         FUNCTION_NAME_MAP.put("isobj", "is-object"); // isobj, internal: is-object
+
+        // Record functions.
+        FUNCTION_NAME_MAP.put("object_pairs", "record-pairs"); // object_pairs, internal: record-pairs
     }
 
     private CommonFunctionMapUtil() {

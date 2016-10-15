@@ -553,6 +553,10 @@ public class NonTaggedDataFormat implements IDataFormat {
                                 listFieldPath);
                         break;
                     }
+                    case ANY:
+                        PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType, java.util.List)",
+                                ARecordType.FULLY_OPEN_RECORD_TYPE, listFieldPath);
+                        break;
                     default: {
                         throw new NotImplementedException("field-access-nested for data of type " + t);
                     }
@@ -565,9 +569,13 @@ public class NonTaggedDataFormat implements IDataFormat {
                     throws AlgebricksException {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
-                if (t.getTypeTag().equals(ATypeTag.RECORD)) {
+                ATypeTag typeTag = t.getTypeTag();
+                if (typeTag.equals(ATypeTag.RECORD)) {
                     ARecordType recType = (ARecordType) t;
                     PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                } else if (typeTag.equals(ATypeTag.ANY)) {
+                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)",
+                            ARecordType.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("get-record-fields for data of type " + t);
                 }
@@ -579,15 +587,36 @@ public class NonTaggedDataFormat implements IDataFormat {
                     throws AlgebricksException {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
-                if (t.getTypeTag().equals(ATypeTag.RECORD)) {
+                ATypeTag typeTag = t.getTypeTag();
+                if (typeTag.equals(ATypeTag.RECORD)) {
                     ARecordType recType = (ARecordType) t;
                     PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                } else if (typeTag.equals(ATypeTag.ANY)) {
+                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)",
+                            ARecordType.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("get-record-field-value for data of type " + t);
                 }
             }
         });
-
+        functionTypeInferers.put(AsterixBuiltinFunctions.RECORD_PAIRS, new FunctionTypeInferer() {
+            @Override
+            public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
+                    throws AlgebricksException {
+                AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+                IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
+                ATypeTag typeTag = t.getTypeTag();
+                if (typeTag.equals(ATypeTag.RECORD)) {
+                    ARecordType recType = (ARecordType) t;
+                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                } else if (typeTag.equals(ATypeTag.ANY)) {
+                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)",
+                            ARecordType.FULLY_OPEN_RECORD_TYPE);
+                } else {
+                    throw new NotImplementedException("record-fields with data of type " + t);
+                }
+            }
+        });
     }
 
     @Override

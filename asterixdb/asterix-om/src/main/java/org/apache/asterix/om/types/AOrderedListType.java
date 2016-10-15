@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.om.types;
 
-import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +26,7 @@ public class AOrderedListType extends AbstractCollectionType {
 
     private static final long serialVersionUID = 1L;
 
-    public static final AOrderedListType FULL_OPEN_ORDEREDLIST_TYPE = new AOrderedListType(null,"");
+    public static final AOrderedListType FULL_OPEN_ORDEREDLIST_TYPE = new AOrderedListType(BuiltinType.ANY, "");
 
     /**
      * @param itemType
