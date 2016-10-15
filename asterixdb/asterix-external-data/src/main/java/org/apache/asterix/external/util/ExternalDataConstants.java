@@ -18,11 +18,6 @@
  */
 package org.apache.asterix.external.util;
 
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.TextInputFormat;
-
 public class ExternalDataConstants {
     // TODO: Remove unused variables.
     /**
@@ -110,10 +105,10 @@ public class ExternalDataConstants {
     /**
      * HDFS class names
      */
-    public static final String CLASS_NAME_TEXT_INPUT_FORMAT = TextInputFormat.class.getName();
-    public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = SequenceFileInputFormat.class.getName();
-    public static final String CLASS_NAME_RC_INPUT_FORMAT = RCFileInputFormat.class.getName();
-    public static final String CLASS_NAME_HDFS_FILESYSTEM = DistributedFileSystem.class.getName();
+    public static final String CLASS_NAME_TEXT_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
+    public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = "org.apache.hadoop.mapred.SequenceFileInputFormat";
+    public static final String CLASS_NAME_RC_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
+    public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
     /**
      * input formats aliases
      */

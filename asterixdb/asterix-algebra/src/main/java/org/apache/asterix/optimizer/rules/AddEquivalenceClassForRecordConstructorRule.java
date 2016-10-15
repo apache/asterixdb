@@ -19,6 +19,7 @@
 
 package org.apache.asterix.optimizer.rules;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
-import org.mortbay.util.SingletonList;
 
 /**
  * Adds equivalent classes for record-constructors.
@@ -120,8 +120,8 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)),
                         new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(parameterIndex / 2))))); // Every two parameters corresponds to a field.
-                EquivalenceClass equivClass = new EquivalenceClass(SingletonList.newSingletonList(fieldVar), fieldVar,
-                        SingletonList.newSingletonList(expr));
+                EquivalenceClass equivClass = new EquivalenceClass(Collections.singletonList(fieldVar), fieldVar,
+                        Collections.singletonList(expr));
                 ecs.put(fieldVar, equivClass);
                 changed = true;
             }

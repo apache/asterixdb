@@ -53,7 +53,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
-import org.mortbay.util.SingletonList;
 
 public class EquivalenceClassUtils {
 
@@ -122,8 +121,8 @@ public class EquivalenceClassUtils {
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(referredRecordVar)),
                     new MutableObject<ILogicalExpression>(
                             new ConstantExpression(new AsterixConstantValue(new AInt32(fieldIndexInRecord)))));
-            EquivalenceClass equivClass = new EquivalenceClass(SingletonList.newSingletonList(var), var,
-                    SingletonList.newSingletonList(expr));
+            EquivalenceClass equivClass = new EquivalenceClass(Collections.singletonList(var), var,
+                    Collections.singletonList(expr));
             Map<LogicalVariable, EquivalenceClass> equivalenceMap = context.getEquivalenceClassMap(operator);
             if (equivalenceMap == null) {
                 equivalenceMap = new HashMap<LogicalVariable, EquivalenceClass>();
