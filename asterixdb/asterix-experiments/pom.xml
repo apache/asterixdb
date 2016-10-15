@@ -153,6 +153,7 @@
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-tools</artifactId>
       <version>${project.version}</version>
+      <type>test-jar</type>
     </dependency>
     <dependency>
       <groupId>com.hierynomus</groupId>

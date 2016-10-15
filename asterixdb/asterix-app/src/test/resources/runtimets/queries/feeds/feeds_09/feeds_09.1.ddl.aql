@@ -56,12 +56,12 @@ primary key id;
 create index message_text on SyntheticTweets(message_text) type btree;
 
 create feed  SyntheticTweetFeed
-using twitter_firehose
+using stream
 (("duration"="5"),
 ("tps"="50"),
 ("tput-duration"="5"),
 ("type-name"="TweetMessageType"),
 ("dataverse-dataset"="feeds:SyntheticTweets"),
 ("format"="adm"),
-("reader-stream"="twitter_firehose"),
+("stream-source"="org.apache.asterix.external.input.stream.TwitterFirehoseStreamFactory"),
 ("mode"="controlled"));

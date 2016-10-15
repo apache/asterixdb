@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.stream.factory;
+package org.apache.asterix.external.input.stream;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
             count = Integer.parseInt(ingestionCardinalityParam);
         }
 
-        List<String> chosenLocations = new ArrayList<String>();
+        List<String> chosenLocations = new ArrayList<>();
         String[] availableLocations = locations != null ? locations
                 : ClusterStateManager.INSTANCE.getParticipantNodes().toArray(new String[] {});
         for (int i = 0, k = 0; i < count; i++, k = (k + 1) % availableLocations.length) {

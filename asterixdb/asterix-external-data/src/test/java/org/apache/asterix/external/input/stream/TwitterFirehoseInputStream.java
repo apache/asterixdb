@@ -29,7 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.util.TweetGenerator;
+import org.apache.asterix.external.generator.TweetGenerator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class TwitterFirehoseInputStream extends AsterixInputStream {

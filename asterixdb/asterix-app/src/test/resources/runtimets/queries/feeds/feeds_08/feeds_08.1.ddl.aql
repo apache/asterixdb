@@ -58,8 +58,9 @@ primary key id;
 create index ngram_index on SyntheticTweets(message_text) type ngram(3);
 
 create feed  SyntheticTweetFeed
-using twitter_firehose
+using stream
 (("duration"="5"),
+("stream-source"="org.apache.asterix.external.input.stream.TwitterFirehoseStreamFactory"),
 ("tps"="50"),
 ("type-name"="TweetMessageType"),
 ("tput-duration"="5"),

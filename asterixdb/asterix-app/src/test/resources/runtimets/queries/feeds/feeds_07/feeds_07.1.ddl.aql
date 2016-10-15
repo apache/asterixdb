@@ -54,12 +54,12 @@ create dataset SyntheticTweets(TweetMessageType)
 primary key id;
 
 create feed  SyntheticTweetFeed
-using twitter_firehose(
+using stream(
 ("duration"="5"),
 ("tps"="50"),
 ("type-name"="TweetMessageType"),
 ("format"="adm"),
-("reader-stream"="twitter_firehose"),
+("stream-source"="org.apache.asterix.external.input.stream.TwitterFirehoseStreamFactory"),
 ("tput-duration"="5"),
 ("dataverse-dataset"="feeds:SyntheticTweets"),
 ("mode"="controlled"));

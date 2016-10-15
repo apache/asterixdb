@@ -45,9 +45,10 @@ create type feeds.TweetMessageType as
 
 create  dataset SyntheticTweets(TweetMessageType) primary key id;
 create  index ngram_index  on SyntheticTweets (message_text) type ngram (3);
-create  primary feed SyntheticTweetFeed using twitter_firehose (
+create  primary feed SyntheticTweetFeed using stream (
 (`duration`=`5`),
 (`tps`=`50`),
+(`stream-source`=`org.apache.asterix.external.input.stream.TwitterFirehoseStreamFactory`),
 (`type-name`=`TweetMessageType`),
 (`tput-duration`=`5`),
 (`dataverse-dataset`=`feeds:SyntheticTweets`),

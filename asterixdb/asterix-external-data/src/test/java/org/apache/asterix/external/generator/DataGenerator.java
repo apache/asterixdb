@@ -16,13 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.external.generator;
 
-package org.apache.asterix.tools.external.data;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,52 +25,38 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.asterix.external.util.DataGenerator;
+import org.apache.asterix.external.util.Datatypes;
+import org.apache.asterix.external.util.Datatypes.Tweet;
 
-public class DataGeneratorForSpatialIndexEvaluation {
-
-    private static final String DUMMY_SIZE_ADJUSTER = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+public class DataGenerator {
 
     private RandomDateGenerator randDateGen;
-
     private RandomNameGenerator randNameGen;
-
     private RandomMessageGenerator randMessageGen;
-
     private RandomLocationGenerator randLocationGen;
-
-    private LocationGeneratorFromOpenStreetMapData locationGenFromOpenStreetMapData;
-
     private Random random = new Random();
-
     private TwitterUser twUser = new TwitterUser();
-
     private TweetMessage twMessage = new TweetMessage();
+    private static final String DEFAULT_COUNTRY = "US";
 
-    public DataGeneratorForSpatialIndexEvaluation(InitializationInfo info) {
-        initialize(info, null, 0);
-    }
-
-    public DataGeneratorForSpatialIndexEvaluation(InitializationInfo info, String openStreetMapFilePath,
-            int locationSampleInterval) {
-        initialize(info, openStreetMapFilePath, locationSampleInterval);
+    public DataGenerator(InitializationInfo info) {
+        initialize(info);
     }
 
     public class TweetMessageIterator implements Iterator<TweetMessage> {
 
-        private int duration;
-        private final GULongIDGenerator idGen;
+        private final int duration;
         private long startTime = 0;
+        private int tweetId;
 
-        public TweetMessageIterator(int duration, GULongIDGenerator idGen) {
+        public TweetMessageIterator(int duration) {
             this.duration = duration;
-            this.idGen = idGen;
             this.startTime = System.currentTimeMillis();
         }
 
         @Override
         public boolean hasNext() {
-            if (duration == 0) {
+            if (duration == TweetGenerator.INFINITY) {
                 return true;
             }
             return System.currentTimeMillis() - startTime <= duration * 1000;
@@ -83,18 +64,14 @@ public class DataGeneratorForSpatialIndexEvaluation {
 
         @Override
         public TweetMessage next() {
+            tweetId++;
             TweetMessage msg = null;
             getTwitterUser(null);
             Message message = randMessageGen.getNextRandomMessage();
-            Point location = randLocationGen != null ? randLocationGen.getRandomPoint()
-                    : locationGenFromOpenStreetMapData.getNextPoint();
+            Point location = randLocationGen.getRandomPoint();
             DateTime sendTime = randDateGen.getNextRandomDatetime();
-            int btreeExtraFieldKey = random.nextInt();
-            if (btreeExtraFieldKey == Integer.MIN_VALUE) {
-                btreeExtraFieldKey = Integer.MIN_VALUE + 1;
-            }
-            twMessage.reset(idGen.getNextULong(), twUser, location, sendTime, message.getReferredTopics(), message,
-                    btreeExtraFieldKey, DUMMY_SIZE_ADJUSTER);
+            twMessage.reset(tweetId, twUser, location.getLatitude(), location.getLongitude(), sendTime.toString(),
+                    message, DEFAULT_COUNTRY);
             msg = twMessage;
             return msg;
         }
@@ -102,11 +79,7 @@ public class DataGeneratorForSpatialIndexEvaluation {
         @Override
         public void remove() {
             // TODO Auto-generated method stub
-        }
 
-        public void resetDuration(int duration) {
-            this.duration = duration;
-            startTime = System.currentTimeMillis();
         }
 
     }
@@ -121,17 +94,10 @@ public class DataGeneratorForSpatialIndexEvaluation {
         public String[] org_list = DataGenerator.org_list;
     }
 
-    public void initialize(InitializationInfo info, String openStreetMapFilePath, int locationSampleInterval) {
+    public void initialize(InitializationInfo info) {
         randDateGen = new RandomDateGenerator(info.startDate, info.endDate);
         randNameGen = new RandomNameGenerator(info.firstNames, info.lastNames);
-        if (openStreetMapFilePath == null) {
-            randLocationGen = new RandomLocationGenerator(24, 49, 66, 98);
-            locationGenFromOpenStreetMapData = null;
-        } else {
-            locationGenFromOpenStreetMapData = new LocationGeneratorFromOpenStreetMapData();
-            locationGenFromOpenStreetMapData.intialize(openStreetMapFilePath, locationSampleInterval);
-            randLocationGen = null;
-        }
+        randLocationGen = new RandomLocationGenerator(24, 49, 66, 98);
         randMessageGen = new RandomMessageGenerator(info.vendors, info.jargon);
     }
 
@@ -264,8 +230,7 @@ public class DataGeneratorForSpatialIndexEvaluation {
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("datetime");
-            builder.append("(\"");
+            builder.append("\"");
             builder.append(super.getYear());
             builder.append("-");
             builder.append(super.getMonth() < 10 ? "0" + super.getMonth() : super.getMonth());
@@ -273,7 +238,7 @@ public class DataGeneratorForSpatialIndexEvaluation {
             builder.append(super.getDay() < 10 ? "0" + super.getDay() : super.getDay());
             builder.append("T");
             builder.append(hour + ":" + min + ":" + sec);
-            builder.append("\")");
+            builder.append("\"");
             return builder.toString();
         }
     }
@@ -520,198 +485,114 @@ public class DataGeneratorForSpatialIndexEvaluation {
 
     }
 
-    public static class LocationGeneratorFromOpenStreetMapData {
-        /**
-         * the source of gps data:
-         * https://blog.openstreetmap.org/2012/04/01/bulk-gps-point-data/
-         */
-        private String openStreetMapFilePath;
-        private long sampleInterval;
-        private long lineCount = 0;
-        private BufferedReader br;
-        private String line;
-        private String strPoints[] = null;
-        private StringBuilder sb = new StringBuilder();
-        private Point point = new Point();
-        private float[] floatPoint = new float[2];
-
-        public void intialize(String openStreetMapFilePath, int sampleInterval) {
-            this.openStreetMapFilePath = openStreetMapFilePath;
-            this.sampleInterval = sampleInterval;
-            try {
-                br = new BufferedReader(new FileReader(openStreetMapFilePath));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
-        }
-
-        public Point getNextPoint() {
-            try {
-                while (true) {
-                    if ((line = br.readLine()) == null) {
-                        br = new BufferedReader(new FileReader(openStreetMapFilePath));
-                        line = br.readLine(); //can't be null
-                    }
-                    if (lineCount++ % sampleInterval != 0) {
-                        continue;
-                    }
-                    sb.setLength(0);
-                    strPoints = line.split(",");
-                    if (strPoints.length != 2) {
-                        //ignore invalid point
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-                if (line == null) {
-                    //roll over the data from the same file.
-                    br.close();
-                    br = null;
-                    lineCount = 0;
-                    br = new BufferedReader(new FileReader(openStreetMapFilePath));
-                    while ((line = br.readLine()) != null) {
-                        if (lineCount++ % sampleInterval != 0) {
-                            continue;
-                        }
-                        sb.setLength(0);
-                        strPoints = line.split(",");
-                        if (strPoints.length != 2) {
-                            //ignore invalid point
-                            continue;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                floatPoint[0] = Float.parseFloat(strPoints[0]) / 10000000; //latitude (y value)
-                floatPoint[1] = Float.parseFloat(strPoints[1]) / 10000000; //longitude (x value)
-                point.reset(floatPoint[1], floatPoint[0]);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
-            return point;
-        }
-
-        @Override
-        public void finalize() {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
-    }
-
     public static class TweetMessage {
 
-        private static int NUM_BTREE_EXTRA_FIELDS = 8;
+        private static final String[] DEFAULT_FIELDS = new String[] { TweetFields.TWEETID, TweetFields.USER,
+                TweetFields.LATITUDE, TweetFields.LONGITUDE, TweetFields.MESSAGE_TEXT, TweetFields.CREATED_AT,
+                TweetFields.COUNTRY };
 
-        private long tweetid;
+        private int id;
         private TwitterUser user;
-        private Point senderLocation;
-        private DateTime sendTime;
-        private List<String> referredTopics;
+        private double latitude;
+        private double longitude;
+        private String created_at;
         private Message messageText;
-        private int[] btreeExtraFields;
-        private String dummySizeAdjuster;
+        private String country;
+
+        public static final class TweetFields {
+            public static final String TWEETID = "id";
+            public static final String USER = "user";
+            public static final String LATITUDE = "latitude";
+            public static final String LONGITUDE = "longitude";
+            public static final String MESSAGE_TEXT = "message_text";
+            public static final String CREATED_AT = "created_at";
+            public static final String COUNTRY = "country";
+
+        }
 
         public TweetMessage() {
-            this.btreeExtraFields = new int[NUM_BTREE_EXTRA_FIELDS];
         }
 
-        public TweetMessage(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
-                List<String> referredTopics, Message messageText, int btreeExtraField, String dummySizeAdjuster) {
-            this.tweetid = tweetid;
+        public TweetMessage(int tweetid, TwitterUser user, double latitude, double longitude, String created_at,
+                Message messageText, String country) {
+            this.id = tweetid;
             this.user = user;
-            this.senderLocation = senderLocation;
-            this.sendTime = sendTime;
-            this.referredTopics = referredTopics;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.created_at = created_at;
             this.messageText = messageText;
-            this.btreeExtraFields = new int[NUM_BTREE_EXTRA_FIELDS];
-            setBtreeExtraFields(btreeExtraField);
-            this.dummySizeAdjuster = dummySizeAdjuster;
+            this.country = country;
         }
 
-        private void setBtreeExtraFields(int fVal) {
-            for (int i = 0; i < btreeExtraFields.length; ++i) {
-                btreeExtraFields[i] = fVal;
+        public void reset(int tweetid, TwitterUser user, double latitude, double longitude, String created_at,
+                Message messageText, String country) {
+            this.id = tweetid;
+            this.user = user;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.created_at = created_at;
+            this.messageText = messageText;
+            this.country = country;
+        }
+
+        public String getAdmEquivalent(String[] fields) {
+            if (fields == null) {
+                fields = DEFAULT_FIELDS;
             }
-        }
-
-        public void reset(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
-                List<String> referredTopics, Message messageText, int btreeExtraField, String dummySizeAdjuster) {
-            this.tweetid = tweetid;
-            this.user = user;
-            this.senderLocation = senderLocation;
-            this.sendTime = sendTime;
-            this.referredTopics = referredTopics;
-            this.messageText = messageText;
-            setBtreeExtraFields(btreeExtraField);
-            this.dummySizeAdjuster = dummySizeAdjuster;
-        }
-
-        @Override
-        public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("{");
-            builder.append("\"tweetid\":");
-            builder.append("int64(\"" + tweetid + "\")");
-            builder.append(",");
-            builder.append("\"user\":");
-            builder.append(user);
-            builder.append(",");
-            builder.append("\"sender-location\":");
-            builder.append(senderLocation);
-            builder.append(",");
-            builder.append("\"send-time\":");
-            builder.append(sendTime);
-            builder.append(",");
-            builder.append("\"referred-topics\":");
-            builder.append("{{");
-            for (String topic : referredTopics) {
-                builder.append("\"" + topic + "\"");
+            for (String field : fields) {
+                switch (field) {
+                    case Datatypes.Tweet.ID:
+                        appendFieldName(builder, Datatypes.Tweet.ID);
+                        builder.append("int64(\"" + id + "\")");
+                        break;
+                    case Datatypes.Tweet.USER:
+                        appendFieldName(builder, Datatypes.Tweet.USER);
+                        builder.append(user);
+                        break;
+                    case Datatypes.Tweet.LATITUDE:
+                        appendFieldName(builder, Datatypes.Tweet.LATITUDE);
+                        builder.append(latitude);
+                        break;
+                    case Datatypes.Tweet.LONGITUDE:
+                        appendFieldName(builder, Datatypes.Tweet.LONGITUDE);
+                        builder.append(longitude);
+                        break;
+                    case Datatypes.Tweet.MESSAGE:
+                        appendFieldName(builder, Datatypes.Tweet.MESSAGE);
+                        builder.append("\"");
+                        for (int i = 0; i < messageText.getLength(); i++) {
+                            builder.append(messageText.charAt(i));
+                        }
+                        builder.append("\"");
+                        break;
+                    case Datatypes.Tweet.CREATED_AT:
+                        appendFieldName(builder, Datatypes.Tweet.CREATED_AT);
+                        builder.append(created_at);
+                        break;
+                    case Datatypes.Tweet.COUNTRY:
+                        appendFieldName(builder, Datatypes.Tweet.COUNTRY);
+                        builder.append("\"" + country + "\"");
+                        break;
+                }
                 builder.append(",");
             }
-            if (referredTopics.size() > 0) {
-                builder.deleteCharAt(builder.lastIndexOf(","));
-            }
-            builder.append("}}");
-            builder.append(",");
-            builder.append("\"message-text\":");
-            builder.append("\"");
-            for (int i = 0; i < messageText.getLength(); i++) {
-                builder.append(messageText.charAt(i));
-            }
-            builder.append("\"");
-            builder.append(",");
-            for (int i = 0; i < btreeExtraFields.length; ++i) {
-                builder.append("\"btree-extra-field" + (i + 1) + "\":");
-                builder.append(btreeExtraFields[i]);
-                if (i != btreeExtraFields.length - 1) {
-                    builder.append(",");
-                }
-            }
-            builder.append(",");
-            builder.append("\"dummy-size-adjuster\":");
-            builder.append("\"");
-            builder.append(dummySizeAdjuster);
-            builder.append("\"");
+            builder.deleteCharAt(builder.length() - 1);
             builder.append("}");
-            return new String(builder);
+            return builder.toString();
         }
 
-        public long getTweetid() {
-            return tweetid;
+        private void appendFieldName(StringBuilder builder, String fieldName) {
+            builder.append("\"" + fieldName + "\":");
         }
 
-        public void setTweetid(long tweetid) {
-            this.tweetid = tweetid;
+        public int getTweetid() {
+            return id;
+        }
+
+        public void setTweetid(int tweetid) {
+            this.id = tweetid;
         }
 
         public TwitterUser getUser() {
@@ -722,28 +603,12 @@ public class DataGeneratorForSpatialIndexEvaluation {
             this.user = user;
         }
 
-        public Point getSenderLocation() {
-            return senderLocation;
+        public double getLatitude() {
+            return latitude;
         }
 
-        public void setSenderLocation(Point senderLocation) {
-            this.senderLocation = senderLocation;
-        }
-
-        public DateTime getSendTime() {
-            return sendTime;
-        }
-
-        public void setSendTime(DateTime sendTime) {
-            this.sendTime = sendTime;
-        }
-
-        public List<String> getReferredTopics() {
-            return referredTopics;
-        }
-
-        public void setReferredTopics(List<String> referredTopics) {
-            this.referredTopics = referredTopics;
+        public String getSendTime() {
+            return created_at;
         }
 
         public Message getMessageText() {
@@ -752,6 +617,10 @@ public class DataGeneratorForSpatialIndexEvaluation {
 
         public void setMessageText(Message messageText) {
             this.messageText = messageText;
+        }
+
+        public String getCountry() {
+            return country;
         }
 
     }
@@ -809,13 +678,13 @@ public class DataGeneratorForSpatialIndexEvaluation {
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("{");
-            builder.append("\"screen-name\":" + "\"" + screenName + "\"");
+            builder.append("\"screen_name\":" + "\"" + screenName + "\"");
             builder.append(",");
-            builder.append("\"lang\":" + "\"" + lang + "\"");
+            builder.append("\"language\":" + "\"" + lang + "\"");
             builder.append(",");
             builder.append("\"friends_count\":" + friendsCount);
             builder.append(",");
-            builder.append("\"statuses_count\":" + statusesCount);
+            builder.append("\"status_count\":" + statusesCount);
             builder.append(",");
             builder.append("\"name\":" + "\"" + name + "\"");
             builder.append(",");
@@ -1320,22 +1189,4 @@ public class DataGeneratorForSpatialIndexEvaluation {
             "Lexicone", "Fax-fax", "Viatechi", "Inchdox", "Kongreen", "Doncare", "Y-geohex", "Opeelectronics",
             "Medflex", "Dancode", "Roundhex", "Labzatron", "Newhotplus", "Sancone", "Ronholdings", "Quoline",
             "zoomplus", "Fix-touch", "Codetechno", "Tanzumbam", "Indiex", "Canline" };
-
-    public static void main(String[] args) throws Exception {
-        DataGeneratorForSpatialIndexEvaluation dg = new DataGeneratorForSpatialIndexEvaluation(
-                new InitializationInfo());
-        TweetMessageIterator tmi = dg.new TweetMessageIterator(1, new GULongIDGenerator(0, (byte) 0));
-        int len = 0;
-        int count = 0;
-        while (tmi.hasNext()) {
-            String tm = tmi.next().toString();
-            System.out.println(tm);
-            len += tm.length();
-            ++count;
-        }
-        System.out.println(DataGeneratorForSpatialIndexEvaluation.DUMMY_SIZE_ADJUSTER.length());
-        System.out.println(len);
-        System.out.println(count);
-        System.out.println(len / count);
-    }
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
+package org.apache.asterix.external.generator;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.util.DataGenerator.InitializationInfo;
-import org.apache.asterix.external.util.DataGenerator.TweetMessage;
-import org.apache.asterix.external.util.DataGenerator.TweetMessageIterator;
+import org.apache.asterix.external.generator.DataGenerator.InitializationInfo;
+import org.apache.asterix.external.generator.DataGenerator.TweetMessage;
+import org.apache.asterix.external.generator.DataGenerator.TweetMessageIterator;
 
 public class TweetGenerator {
     private static final Logger LOGGER = Logger.getLogger(TweetGenerator.class.getName());

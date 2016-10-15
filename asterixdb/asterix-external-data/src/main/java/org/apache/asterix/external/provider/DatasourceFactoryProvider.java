@@ -33,7 +33,6 @@ import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordRead
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactory;
 import org.apache.asterix.external.input.stream.factory.SocketClientInputStreamFactory;
 import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
-import org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 
@@ -73,9 +72,6 @@ public class DatasourceFactoryProvider {
                 case ExternalDataConstants.STREAM_SOCKET_CLIENT:
                     streamSourceFactory = new SocketServerInputStreamFactory();
                     break;
-                case ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER:
-                    streamSourceFactory = new TwitterFirehoseStreamFactory();
-                    break;
                 default:
                     try {
                         streamSourceFactory = (IInputStreamFactory) Class.forName(streamSource).newInstance();
@@ -102,8 +98,6 @@ public class DatasourceFactoryProvider {
             case ExternalDataConstants.READER_PUSH_TWITTER:
             case ExternalDataConstants.READER_PULL_TWITTER:
                 return new TwitterRecordReaderFactory();
-            case ExternalDataConstants.ALIAS_TWITTER_FIREHOSE_ADAPTER:
-                return new StreamRecordReaderFactory(new TwitterFirehoseStreamFactory());
             case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
             case ExternalDataConstants.SOCKET:
                 return new StreamRecordReaderFactory(new SocketServerInputStreamFactory());
