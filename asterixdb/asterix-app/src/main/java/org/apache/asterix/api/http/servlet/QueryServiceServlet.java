@@ -523,7 +523,7 @@ public class QueryServiceServlet extends HttpServlet {
         resultWriter.flush();
         String result = stringWriter.toString();
 
-        GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, result);
+        GlobalConfig.ASTERIX_LOGGER.log(Level.FINE, result);
 
         response.setStatus(respCode);
         response.getWriter().print(result);

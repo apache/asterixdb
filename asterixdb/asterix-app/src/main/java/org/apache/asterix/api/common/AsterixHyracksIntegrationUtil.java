@@ -125,7 +125,7 @@ public class AsterixHyracksIntegrationUtil {
         if (tempPath.endsWith(File.separator)) {
             tempPath = tempPath.substring(0, tempPath.length() - 1);
         }
-        System.err.println("Using the path: " + tempPath);
+        LOGGER.info("Using the temp path: " + tempPath);
         // get initial partitions from properties
         String[] nodeStores = propertiesAccessor.getStores().get(ncName);
         if (nodeStores == null) {
