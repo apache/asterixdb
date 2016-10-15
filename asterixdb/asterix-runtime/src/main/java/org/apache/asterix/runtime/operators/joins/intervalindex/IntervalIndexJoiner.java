@@ -435,7 +435,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                     + bufferManager.getNumTuples(RIGHT_PARTITION) + " memory].");
         }
         if (bufferManager.getNumTuples(LEFT_PARTITION) > bufferManager.getNumTuples(RIGHT_PARTITION)) {
-            runFileStream[RIGHT_PARTITION].startRunFile();
+            runFileStream[RIGHT_PARTITION].startRunFileWriting();
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Memory is full. Freezing the left branch. (Left memory tuples: "
                         + bufferManager.getNumTuples(LEFT_PARTITION) + ", Right memory tuples: "
@@ -444,7 +444,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
             bufferManager.printStats("memory details");
             rightSpillCount++;
         } else {
-            runFileStream[LEFT_PARTITION].startRunFile();
+            runFileStream[LEFT_PARTITION].startRunFileWriting();
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Memory is full. Freezing the right branch. (Left memory tuples: "
                         + bufferManager.getNumTuples(LEFT_PARTITION) + ", Right memory tuples: "
@@ -456,7 +456,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
     }
 
     private void continueStream(int diskPartition, ITupleAccessor accessor) throws HyracksDataException {
-        runFileStream[diskPartition].closeRunFile();
+        runFileStream[diskPartition].closeRunFileReading();
         accessor.reset(inputBuffer[diskPartition]);
         accessor.setTupleId(streamIndex[diskPartition]);
         if (LOGGER.isLoggable(Level.FINE)) {
@@ -490,7 +490,7 @@ public class IntervalIndexJoiner extends AbstractMergeJoiner {
                 || (RIGHT_PARTITION == frozenPartition && !status.branch[RIGHT_PARTITION].isRunFileReading())) {
             streamIndex[frozenPartition] = accessor.getTupleId();
         }
-        runFileStream[frozenPartition].openRunFile(accessor);
+        runFileStream[frozenPartition].startReadingRunFile(accessor);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Unfreezing (" + frozenPartition + ").");
         }

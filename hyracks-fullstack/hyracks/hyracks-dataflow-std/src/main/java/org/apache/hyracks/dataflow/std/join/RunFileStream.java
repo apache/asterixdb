@@ -31,6 +31,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
+import org.apache.hyracks.dataflow.std.structures.RunFilePointer;
 
 public class RunFileStream {
 
@@ -79,9 +80,22 @@ public class RunFileStream {
         return writeCount;
     }
 
-    public void startRunFile() throws HyracksDataException {
+    public void startRunFileWriting() throws HyracksDataException {
         runFileCounter++;
 
+        status.setRunFileWriting(true);
+        String prefix = this.getClass().getSimpleName() + '-' + key + '-' + Long.toString(runFileCounter) + '-'
+                + this.toString();
+        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(prefix);
+        runFileWriter = new RunFileWriter(file, ctx.getIOManager());
+        runFileWriter.open();
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("A new run file has been started (key: " + key + ", number: " + runFileCounter + ", file: "
+                    + file + ").");
+        }
+    }
+
+    public void resumeRunFileWriting() throws HyracksDataException {
         status.setRunFileWriting(true);
         String prefix = this.getClass().getSimpleName() + '-' + key + '-' + Long.toString(runFileCounter) + '-'
                 + this.toString();
@@ -105,28 +119,28 @@ public class RunFileStream {
         tupleCount++;
     }
 
-    public void openRunFile(ITupleAccessor accessor) throws HyracksDataException {
+    public void startReadingRunFile(ITupleAccessor accessor) throws HyracksDataException {
         status.setRunFileReading(true);
 
         // Create reader
-        runFileReader = runFileWriter.createDeleteOnCloseReader();
+        runFileReader = runFileWriter.createReader();
         runFileReader.open();
 
         // Load first frame
         loadNextBuffer(accessor);
     }
 
-    public void resetReader(ITupleAccessor accessor) throws HyracksDataException {
-        if (status.isRunFileWriting()) {
-            flushAndStopRunFile(accessor);
-            openRunFile(accessor);
-        } else {
-            runFileReader.reset();
-
-            // Load first frame
-            loadNextBuffer(accessor);
-        }
-    }
+//    public void resetReader(ITupleAccessor accessor) throws HyracksDataException {
+//        if (status.isRunFileWriting()) {
+//            flushAndStopRunFile(accessor);
+//            startReadingRunFile(accessor);
+//        } else {
+//            runFileReader.reset();
+//
+//            // Load first frame
+//            loadNextBuffer(accessor);
+//        }
+//    }
 
     public boolean loadNextBuffer(ITupleAccessor accessor) throws HyracksDataException {
         if (runFileReader.nextFrame(runFileBuffer)) {
@@ -136,6 +150,14 @@ public class RunFileStream {
             return true;
         }
         return false;
+    }
+
+    public long getReadPointer() throws HyracksDataException {
+        return runFileReader.getReadPointer();
+    }
+
+    public void resetReadPointer(long fileOffset) throws HyracksDataException {
+        runFileReader.reset(fileOffset);
     }
 
     public void flushAndStopRunFile(ITupleAccessor accessor) throws HyracksDataException {
@@ -163,7 +185,7 @@ public class RunFileStream {
         }
     }
 
-    public void closeRunFile() throws HyracksDataException {
+    public void closeRunFileReading() throws HyracksDataException {
         status.setRunFileReading(false);
         runFileReader.close();
     }

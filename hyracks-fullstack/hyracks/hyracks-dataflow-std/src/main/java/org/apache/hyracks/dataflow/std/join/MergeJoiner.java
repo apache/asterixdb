@@ -35,6 +35,7 @@ import org.apache.hyracks.dataflow.std.buffermanager.ITupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
+import org.apache.hyracks.dataflow.std.structures.RunFilePointer;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
@@ -54,7 +55,10 @@ public class MergeJoiner extends AbstractMergeJoiner {
     private final LinkedList<TuplePointer> memoryBuffer = new LinkedList<>();
 
     private int leftStreamIndex;
+    private final RunFileStream runFileStreamOld;
     private final RunFileStream runFileStream;
+    private ITupleAccessor tmpAccessor;
+    private final RunFilePointer runFilePointer;
 
     private final IMergeJoinChecker mjc;
 
@@ -69,6 +73,8 @@ public class MergeJoiner extends AbstractMergeJoiner {
             IMergeJoinChecker mjc, RecordDescriptor leftRd, RecordDescriptor rightRd) throws HyracksDataException {
         super(ctx, partition, status, locks, leftRd, rightRd);
         this.mjc = mjc;
+        tmpAccessor = new TupleAccessor(leftRd);
+        runFilePointer = new RunFilePointer();
 
         // Memory (right buffer)
         if (memorySize < 1) {
@@ -81,6 +87,7 @@ public class MergeJoiner extends AbstractMergeJoiner {
 
         // Run File and frame cache (left buffer)
         leftStreamIndex = TupleAccessor.UNSET;
+        runFileStreamOld = new RunFileStream(ctx, "left", status.branch[LEFT_PARTITION]);
         runFileStream = new RunFileStream(ctx, "left", status.branch[LEFT_PARTITION]);
 
         if (LOGGER.isLoggable(Level.FINE)) {
@@ -158,7 +165,8 @@ public class MergeJoiner extends AbstractMergeJoiner {
 
     private TupleStatus loadSpilledTuple(int partition) throws HyracksDataException {
         if (!inputAccessor[partition].exists()) {
-            if (!runFileStream.loadNextBuffer(inputAccessor[partition])) {
+            runFileStream.loadNextBuffer(tmpAccessor);
+            if (!runFileStreamOld.loadNextBuffer(inputAccessor[partition])) {
                 return TupleStatus.EMPTY;
             }
         }
@@ -200,8 +208,8 @@ public class MergeJoiner extends AbstractMergeJoiner {
         resultAppender.write(writer, true);
         if (LOGGER.isLoggable(Level.WARNING)) {
             LOGGER.warning("MergeJoiner statitics: " + joinComparisonCount + " comparisons, " + joinResultCount
-                    + " results, " + spillCount + " spills, " + runFileStream.getFileCount() + " files, "
-                    + runFileStream.getWriteCount() + " spill frames written, " + runFileStream.getReadCount()
+                    + " results, " + spillCount + " spills, " + runFileStreamOld.getFileCount() + " files, "
+                    + runFileStreamOld.getWriteCount() + " spill frames written, " + runFileStreamOld.getReadCount()
                     + " spill frames read.");
         }
     }
@@ -209,7 +217,11 @@ public class MergeJoiner extends AbstractMergeJoiner {
     private TupleStatus processLeftTupleSpill(IFrameWriter writer) throws HyracksDataException {
         //        System.err.print("Spill ");
 
-        runFileStream.addToRunFile(inputAccessor[LEFT_PARTITION]);
+        runFileStreamOld.addToRunFile(inputAccessor[LEFT_PARTITION]);
+        if (true) {
+            runFileStream.addToRunFile(inputAccessor[LEFT_PARTITION]);
+        }
+
         processLeftTuple(writer);
 
         // Memory is empty and we can start processing the run file.
@@ -264,7 +276,13 @@ public class MergeJoiner extends AbstractMergeJoiner {
                     + bufferManager.getNumTuples() + " tuples memory].");
         }
 
-        runFileStream.startRunFile();
+        if (runFilePointer.getFileOffset() > 0) {
+
+        } else {
+            runFilePointer.reset(0, 0);
+            runFileStream.startRunFileWriting();
+        }
+        runFileStreamOld.startRunFileWriting();
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(
                     "Memory is full. Freezing the right branch. (memory tuples: " + bufferManager.getNumTuples() + ")");
@@ -275,7 +293,7 @@ public class MergeJoiner extends AbstractMergeJoiner {
     private void continueStream(ITupleAccessor accessor) throws HyracksDataException {
         //        System.err.println("continueStream");
 
-        runFileStream.closeRunFile();
+        runFileStreamOld.closeRunFileReading();
         accessor.reset(inputBuffer[LEFT_PARTITION]);
         accessor.setTupleId(leftStreamIndex);
         if (LOGGER.isLoggable(Level.FINE)) {
@@ -289,20 +307,25 @@ public class MergeJoiner extends AbstractMergeJoiner {
             LOGGER.warning("snapshot: " + frameCounts[RIGHT_PARTITION] + " right, " + frameCounts[LEFT_PARTITION]
                     + " left, " + joinComparisonCount + " comparisons, " + joinResultCount + " results, ["
                     + bufferManager.getNumTuples() + " tuples memory, " + spillCount + " spills, "
-                    + (runFileStream.getFileCount() - spillFileCount) + " files, "
-                    + (runFileStream.getWriteCount() - spillWriteCount) + " written, "
-                    + (runFileStream.getReadCount() - spillReadCount) + " read].");
-            spillFileCount = runFileStream.getFileCount();
-            spillReadCount = runFileStream.getReadCount();
-            spillWriteCount = runFileStream.getWriteCount();
+                    + (runFileStreamOld.getFileCount() - spillFileCount) + " files, "
+                    + (runFileStreamOld.getWriteCount() - spillWriteCount) + " written, "
+                    + (runFileStreamOld.getReadCount() - spillReadCount) + " read].");
+            spillFileCount = runFileStreamOld.getFileCount();
+            spillReadCount = runFileStreamOld.getReadCount();
+            spillWriteCount = runFileStreamOld.getWriteCount();
         }
 
+        runFileStreamOld.flushAndStopRunFile(accessor);
         runFileStream.flushAndStopRunFile(accessor);
         flushMemory();
         if (!status.branch[LEFT_PARTITION].isRunFileReading()) {
             leftStreamIndex = accessor.getTupleId();
         }
-        runFileStream.openRunFile(accessor);
+        runFileStreamOld.startReadingRunFile(accessor);
+
+        runFileStream.resetReadPointer(runFilePointer.getFileOffset());
+        accessor.setTupleId(runFilePointer.getTupleIndex());
+        runFileStream.startReadingRunFile(accessor);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Unfreezing right partition.");
         }

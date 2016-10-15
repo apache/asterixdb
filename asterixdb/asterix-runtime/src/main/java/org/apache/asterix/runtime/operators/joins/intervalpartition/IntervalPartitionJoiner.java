@@ -64,6 +64,8 @@ public class IntervalPartitionJoiner extends AbstractMergeJoiner {
     private final int numOfPartitions;
     private long buildSize = 0;
     private long probeSize = 0;
+    private long[] buildPartitionSizes;
+    private long[] probePartitionSizes;
     private final TreeMap<RunFilePointer, Integer> probeRunFilePointers;
 
     private final VPartitionTupleBufferManager buildBufferManager;
@@ -92,8 +94,10 @@ public class IntervalPartitionJoiner extends AbstractMergeJoiner {
         this.accessorProbe = new FrameTupleAccessor(leftRd);
         reloadBuffer = new VSizeFrame(ctx);
 
-        this.numOfPartitions = IntervalPartitionUtil.getMaxPartitions(k);;
+        this.numOfPartitions = IntervalPartitionUtil.getMaxPartitions(k);
         this.imjc = imjc;
+        buildPartitionSizes = new long[numOfPartitions];
+        probePartitionSizes = new long[numOfPartitions];
 
         // TODO fix available memory size
         this.buildMemory = memorySize;
@@ -135,6 +139,7 @@ public class IntervalPartitionJoiner extends AbstractMergeJoiner {
             }
             inputAccessor[LEFT_PARTITION].next();
             probeSize++;
+            probePartitionSizes[pid]++;
         }
         inputBuffer[LEFT_PARTITION].rewind();
         probeRunFileWriter.nextFrame(inputBuffer[LEFT_PARTITION]);
@@ -151,6 +156,16 @@ public class IntervalPartitionJoiner extends AbstractMergeJoiner {
             LOGGER.warning("IntervalPartitionJoiner statitics: " + k + " k, " + joinComparisonCount + " comparisons, "
                     + joinResultCount + " results, " + spillWriteCount + " written, " + spillReadCount + " read.");
         }
+        System.err.print("build: [");
+        for (int i = 0; i < buildPartitionSizes.length; i++) {
+            System.err.print(buildPartitionSizes[i] + ", ");
+        }
+        System.err.println("]");
+        System.err.print("probe: [");
+        for (int i = 0; i < probePartitionSizes.length; i++) {
+            System.err.print(probePartitionSizes[i] + ", ");
+        }
+        System.err.println("]");
     }
 
     private void joinLoopOnMemory(IFrameWriter writer) throws HyracksDataException {
@@ -181,6 +196,8 @@ public class IntervalPartitionJoiner extends AbstractMergeJoiner {
                 Pair<Integer, Integer> build = IntervalPartitionUtil.getIntervalPartition(buildId, k);
                 if (imjc.compareIntervalPartition(probe.first, probe.second, build.first, build.second)) {
                     fbms.add(buildBufferManager.getPartitionFrameBufferManager(buildId));
+                    System.err.println("join " + probe + "(" + probePartitionSizes[probeRunFilePointers.get(probeId)]
+                            + ") with " + build + "(" + buildPartitionSizes[buildId] + ")");
                 }
             }
             if (!fbms.isEmpty()) {
@@ -262,6 +279,7 @@ public class IntervalPartitionJoiner extends AbstractMergeJoiner {
                     inputAccessor[RIGHT_PARTITION].getTupleId(), tempPtr)) {
                 return;
             }
+            buildPartitionSizes[pid]++;
 
             if (buildPid != pid) {
                 // Track new partitions in memory.
