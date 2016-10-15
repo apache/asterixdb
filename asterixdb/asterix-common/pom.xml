@@ -246,6 +246,7 @@
       <groupId>com.rometools</groupId>
       <artifactId>rome</artifactId>
       <version>1.5.1</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
