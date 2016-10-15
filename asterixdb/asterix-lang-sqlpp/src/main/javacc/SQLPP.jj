@@ -11,7 +11,7 @@ PARSER_BEGIN(SQLPPParser)
 package org.apache.asterix.lang.sqlpp.parser;
 
 // For SQL++ ParserTokenManager
-import org.apache.xerces.util.IntStack;
+import java.util.ArrayDeque;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -3024,7 +3024,7 @@ LetClause WithElement() throws ParseException:
 TOKEN_MGR_DECLS:
 {
     public int commentDepth = 0;
-    public IntStack lexerStateStack = new IntStack();
+    public ArrayDeque<Integer> lexerStateStack = new ArrayDeque<Integer>();
 
     public void pushState() {
       lexerStateStack.push( curLexState );

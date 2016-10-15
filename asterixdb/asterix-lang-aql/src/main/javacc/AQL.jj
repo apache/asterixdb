@@ -11,7 +11,7 @@ PARSER_BEGIN(AQLParser)
 package org.apache.asterix.lang.aql.parser;
 
 // For AQLParserTokenManager
-import org.apache.xerces.util.IntStack;
+import java.util.ArrayDeque;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -2563,7 +2563,7 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
 TOKEN_MGR_DECLS:
 {
     public int commentDepth = 0;
-    public IntStack lexerStateStack = new IntStack();
+    public ArrayDeque<Integer> lexerStateStack = new ArrayDeque<Integer>();
 
     public void pushState() {
       lexerStateStack.push( curLexState );
