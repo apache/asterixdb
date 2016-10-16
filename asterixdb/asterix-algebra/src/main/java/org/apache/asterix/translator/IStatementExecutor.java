@@ -116,6 +116,8 @@ public interface IStatementExecutor {
      * @param dmlStatement
      *            The data modification statement when the query results in a modification to a dataset
      * @return the compiled {@code JobSpecification}
+     * @param returnQuery
+     *            In the case of dml, the user may run a query on affected data
      * @throws AsterixException
      * @throws RemoteException
      * @throws AlgebricksException
@@ -124,7 +126,7 @@ public interface IStatementExecutor {
      */
     JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement dmlStatement)
-            throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException;
+                    throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException;
 
     /**
      * returns the active dataverse for an entity or a statement

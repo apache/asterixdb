@@ -824,7 +824,7 @@ data that has been prepared in ADM format.
 
 #### Insert
 
-    InsertStatement ::= "insert" "into" "dataset" QualifiedName Query
+    InsertStatement ::= "insert" "into" "dataset" QualifiedName ( "as" Variable )? Query ( "returning" Query )?
 
 The AQL insert statement is used to insert data into a dataset.
 The data to be inserted comes from an AQL query expression.
@@ -834,13 +834,17 @@ being the insertion of a single object plus its affiliated secondary index entri
 If the query part of an insert returns a single object, then the insert statement itself will
 be a single, atomic transaction.
 If the query part returns multiple objects, then each object inserted will be handled independently
-as a tranaction. If a dataset has an auto-generated primary key field, an insert statement should not include a value for that field in it. (The system will automatically extend the provided record with this additional field and a corresponding value.)
+as a tranaction. If a dataset has an auto-generated primary key field, an insert statement should not include a value for that field in it. (The system will automatically extend the provided record with this additional field and a corresponding value.).
+The optional "as Variable" provides a variable binding for the inserted records, which can be used in the "returning" clause.
+The optional "returning Query" allows users to run simple queries/functions on the records returned by the insert.
+This query cannot refer to any datasets.
+
 
 The following example illustrates a query-based insertion.
 
 ##### Example
 
-    insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user)
+    insert into dataset UsersCopy as $inserted (for $user in dataset FacebookUsers return $user ) returning $inserted.screen-name
 
 #### Delete
 

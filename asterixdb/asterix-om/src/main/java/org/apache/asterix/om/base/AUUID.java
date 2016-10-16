@@ -37,13 +37,12 @@ public class AUUID implements IAObject {
     public static final int UUID_CHARS = 36;
     public static final int UUID_BYTES = 16;
 
-    protected final byte [] uuidBytes;
+    protected final byte[] uuidBytes;
 
-    protected static final char [] CHARS;
-
+    private static final char[] CHARS;
 
     static {
-        CHARS = new char [16];
+        CHARS = new char[16];
         for (int i = 0; i < 16; i++) {
             CHARS[i] = Character.forDigit(i, 16);
         }
@@ -53,7 +52,7 @@ public class AUUID implements IAObject {
         this(new byte[UUID_BYTES]);
     }
 
-    public AUUID(byte [] bytes) {
+    public AUUID(byte[] bytes) {
         this.uuidBytes = bytes;
     }
 
@@ -95,11 +94,16 @@ public class AUUID implements IAObject {
         return appendLiteralOnly(buf).append('}').toString();
     }
 
+    public String toSimpleString() {
+        StringBuilder buf = new StringBuilder(UUID_CHARS + 9);
+        return appendLiteralOnly(buf).toString();
+    }
+
     public StringBuilder appendLiteralOnly(StringBuilder buf) {
         return appendLiteralOnly(uuidBytes, 0, buf);
     }
 
-    private static StringBuilder digits(byte b [], int offset, int count, StringBuilder result) {
+    private static StringBuilder digits(byte b[], int offset, int count, StringBuilder result) {
         for (int i = 0; i < count; i++) {
             result.append(CHARS[(b[offset + i] >> 4) & 0xf]);
             result.append(CHARS[b[offset + i] & 0xf]);
@@ -107,7 +111,7 @@ public class AUUID implements IAObject {
         return result;
     }
 
-    public static StringBuilder appendLiteralOnly(byte [] bytes, int offset, StringBuilder result) {
+    public static StringBuilder appendLiteralOnly(byte[] bytes, int offset, StringBuilder result) {
         digits(bytes, offset, 4, result).append('-');
         digits(bytes, offset + 4, 2, result).append('-');
         digits(bytes, offset + 6, 2, result).append('-');

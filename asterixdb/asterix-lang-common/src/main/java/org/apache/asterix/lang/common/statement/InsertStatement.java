@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
@@ -29,13 +30,18 @@ public class InsertStatement implements Statement {
     private final Identifier dataverseName;
     private final Identifier datasetName;
     private final Query query;
-    private final int varCounter;
+    private int varCounter;
+    private final VariableExpr var;
+    private Query returnQuery;
 
-    public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter) {
+    public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter,
+            VariableExpr var, Query returnQuery) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.query = query;
         this.varCounter = varCounter;
+        this.var = var;
+        this.returnQuery = returnQuery;
     }
 
     @Override
@@ -55,8 +61,24 @@ public class InsertStatement implements Statement {
         return query;
     }
 
+    public void addToVarCounter(int addition) {
+        varCounter += addition;
+    }
+
     public int getVarCounter() {
         return varCounter;
+    }
+
+    public VariableExpr getVar() {
+        return var;
+    }
+
+    public Query getReturnQuery() {
+        return returnQuery;
+    }
+
+    public void setRewrittenReturnQuery(Query rewrittenReturnQuery) {
+        this.returnQuery = rewrittenReturnQuery;
     }
 
     @Override
@@ -66,7 +88,7 @@ public class InsertStatement implements Statement {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(datasetName, dataverseName, query);
+        return ObjectUtils.hashCodeMulti(datasetName, dataverseName, query, varCounter, var, returnQuery);
     }
 
     @Override
@@ -79,12 +101,17 @@ public class InsertStatement implements Statement {
         }
         InsertStatement target = (InsertStatement) object;
         return ObjectUtils.equals(datasetName, target.datasetName)
-                && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query);
+                && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query)
+                && ObjectUtils.equals(varCounter, target.varCounter) && ObjectUtils.equals(var, target.var)
+                && ObjectUtils.equals(returnQuery, target.returnQuery);
     }
 
     @Override
     public byte getCategory() {
-        return Category.UPDATE;
+        if (var == null) {
+            return Category.UPDATE;
+        }
+        return Category.QUERY;
     }
 
 }

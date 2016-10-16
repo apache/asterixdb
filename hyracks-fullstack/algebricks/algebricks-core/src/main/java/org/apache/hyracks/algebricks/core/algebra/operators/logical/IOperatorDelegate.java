@@ -30,13 +30,13 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 /**
  * @author rico
  */
-public interface IOperatorExtension {
+public interface IOperatorDelegate {
 
     void setExecutionMode(ExecutionMode mode);
 
     boolean isMap();
 
-    public IOperatorExtension newInstance();
+    public IOperatorDelegate newInstance();
 
     boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException;
 

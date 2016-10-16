@@ -21,8 +21,11 @@ package org.apache.asterix.algebra.extension;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
+import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -36,15 +39,17 @@ public interface IExtensionStatement extends Statement {
     }
 
     /**
-     * Called when the {@code IQueryTranslator} encounters an extension statement.
+     * Called when the {@code IStatementExecutor} encounters an extension statement.
      * An implementation class should implement the actual processing of the statement in this method.
      *
      * @param queryTranslator
      * @param metadataProvider
      * @param statementExecutor
      * @param hcc
+     * @param resultSetIdCounter
      * @throws Exception
      */
     void handle(IStatementExecutor statementExecutor, AqlMetadataProvider metadataProvider,
-            IHyracksClientConnection hcc) throws HyracksDataException, AlgebricksException;
+            IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats,
+            int resultSetIdCounter) throws HyracksDataException, AlgebricksException;
 }

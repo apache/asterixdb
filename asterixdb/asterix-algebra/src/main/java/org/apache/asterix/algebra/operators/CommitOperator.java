@@ -19,23 +19,32 @@
 
 package org.apache.asterix.algebra.operators;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractExtensibleLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorExtension;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDelegatedLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorDelegate;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
-public class CommitOperator extends AbstractExtensibleLogicalOperator {
+public class CommitOperator extends AbstractDelegatedLogicalOperator {
 
-    private final List<LogicalVariable> primaryKeyLogicalVars;
-    private final LogicalVariable upsertVar;
+    private List<LogicalVariable> primaryKeyLogicalVars;
+    private LogicalVariable upsertVar;
+    private boolean isSink;
 
-    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar) {
+    public CommitOperator(boolean isSink) {
+        this.isSink = isSink;
+        this.upsertVar = null;
+        primaryKeyLogicalVars = new ArrayList<>();
+    }
+
+    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar, boolean isSink) {
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
         this.upsertVar = upsertVar;
+        this.isSink = isSink;
     }
 
     @Override
@@ -44,9 +53,23 @@ public class CommitOperator extends AbstractExtensibleLogicalOperator {
         return false;
     }
 
+    public boolean isSink() {
+        return isSink;
+    }
+
+    public void setSink(boolean isSink) {
+        this.isSink = isSink;
+    }
+
+    //Provided for Extensions but not used by core
+    public void setVars(List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar) {
+        this.primaryKeyLogicalVars = primaryKeyLogicalVars;
+        this.upsertVar = upsertVar;
+    }
+
     @Override
-    public IOperatorExtension newInstance() {
-        return new CommitOperator(primaryKeyLogicalVars, upsertVar);
+    public IOperatorDelegate newInstance() {
+        return new CommitOperator(primaryKeyLogicalVars, upsertVar, isSink);
     }
 
     @Override

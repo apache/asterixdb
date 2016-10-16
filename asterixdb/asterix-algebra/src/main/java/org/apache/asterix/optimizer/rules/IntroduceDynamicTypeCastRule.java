@@ -22,6 +22,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -46,6 +47,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -90,11 +93,19 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         // We identify INSERT and DISTRIBUTE_RESULT operators.
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         switch (op1.getOperatorTag()) {
-            case SINK: {
+            case SINK:
+            case DELEGATE_OPERATOR: {
                 /**
-                 * pattern match: sink insert assign
-                 * resulting plan: sink-insert-project-assign
+                 * pattern match: commit insert assign
+                 * resulting plan: commit-insert-project-assign
                  */
+                if (op1.getOperatorTag() == LogicalOperatorTag.DELEGATE_OPERATOR) {
+                    DelegateOperator eOp = (DelegateOperator) op1;
+                    if (!(eOp.getDelegate() instanceof CommitOperator)) {
+                        return false;
+                    }
+                }
+
                 AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
                 if (op2.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
                     InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op2;
@@ -131,21 +142,8 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 // Remember this is the operator we need to modify
                 op = op1;
 
-                // The Variable we want is the (hopefully singular, hopefully record-typed) live variable
-                // of the singular input operator of the DISTRIBUTE_RESULT
-                if (op.getInputs().size() > 1) {
-                    // Hopefully not possible?
-                    throw new AlgebricksException(
-                            "output-record-type defined for expression with multiple input operators");
-                }
-                AbstractLogicalOperator input = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-                List<LogicalVariable> liveVars = new ArrayList<>();
-                VariableUtilities.getLiveVariables(input, liveVars);
-                if (liveVars.size() > 1) {
-                    throw new AlgebricksException(
-                            "Expression with multiple fields cannot be cast to output-record-type!");
-                }
-                recordVar = liveVars.get(0);
+                recordVar = ((VariableReferenceExpression) ((DistributeResultOperator) op).getExpressions().get(0)
+                        .getValue()).getVariableReference();
                 break;
             }
             default: {
@@ -210,15 +208,15 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 if (var.equals(recordVar)) {
                     /** insert an assign operator to call the function on-top-of the variable */
                     IAType actualType = (IAType) env.getVarType(var);
-                    AbstractFunctionCallExpression cast =
-                            new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fd));
+                    AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(fd));
                     cast.getArguments()
                             .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
                     /** enforce the required record type */
                     TypeCastUtils.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
                     LogicalVariable newAssignVar = context.newVar();
-                    AssignOperator newAssignOperator =
-                            new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
+                    AssignOperator newAssignOperator = new AssignOperator(newAssignVar,
+                            new MutableObject<ILogicalExpression>(cast));
                     newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op));
                     opRef.setValue(newAssignOperator);
                     context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);

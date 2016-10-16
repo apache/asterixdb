@@ -34,11 +34,11 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 /**
  * @author rico
  */
-public class ExtensionOperator extends AbstractLogicalOperator {
+public class DelegateOperator extends AbstractLogicalOperator {
 
-    private IOperatorExtension delegate;
+    private IOperatorDelegate delegate;
 
-    public ExtensionOperator(IOperatorExtension delegate) {
+    public DelegateOperator(IOperatorDelegate delegate) {
         super();
         if (delegate == null) {
             throw new IllegalArgumentException("delegate cannot be null!");
@@ -54,13 +54,14 @@ public class ExtensionOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
+            throws AlgebricksException {
         return delegate.acceptExpressionTransform(transform);
     }
 
     @Override
     public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg) throws AlgebricksException {
-        return visitor.visitExtensionOperator(this, arg);
+        return visitor.visitDelegateOperator(this, arg);
     }
 
     @Override
@@ -80,10 +81,10 @@ public class ExtensionOperator extends AbstractLogicalOperator {
 
     @Override
     public LogicalOperatorTag getOperatorTag() {
-        return LogicalOperatorTag.EXTENSION_OPERATOR;
+        return LogicalOperatorTag.DELEGATE_OPERATOR;
     }
 
-    public IOperatorExtension getNewInstanceOfDelegateOperator() {
+    public IOperatorDelegate getNewInstanceOfDelegateOperator() {
         return delegate.newInstance();
     }
 
@@ -117,7 +118,7 @@ public class ExtensionOperator extends AbstractLogicalOperator {
         return delegate.toString();
     }
 
-    public IOperatorExtension getDelegate() {
+    public IOperatorDelegate getDelegate() {
         return delegate;
     }
 

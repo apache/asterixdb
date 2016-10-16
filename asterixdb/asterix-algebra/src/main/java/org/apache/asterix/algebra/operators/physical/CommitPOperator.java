@@ -47,15 +47,17 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     private final String dataverse;
     private final String dataset;
     private final LogicalVariable upsertVar;
+    private final boolean isSink;
 
     public CommitPOperator(JobId jobId, String dataverse, String dataset, int datasetId,
-            List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar) {
+            List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar, boolean isSink) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
         this.upsertVar = upsertVar;
         this.dataverse = dataverse;
         this.dataset = dataset;
+        this.isSink = isSink;
     }
 
     @Override
@@ -105,7 +107,7 @@ public class CommitPOperator extends AbstractPhysicalOperator {
         }
         runtime = new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
                 metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), upsertVarIdx,
-                datasetPartitions);
+                datasetPartitions, isSink);
         builder.contributeMicroOperator(op, runtime, recDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

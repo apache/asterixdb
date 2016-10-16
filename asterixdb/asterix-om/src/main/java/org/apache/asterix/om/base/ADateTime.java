@@ -20,14 +20,13 @@ package org.apache.asterix.om.base;
 
 import java.io.IOException;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * ADateTime type represents the timestamp values.
@@ -40,12 +39,15 @@ import org.apache.asterix.om.visitors.IOMVisitor;
  * - minute; <br/>
  * - second; <br/>
  * - millisecond. <br/>
- * By default, an ADateTime value is a UTC time value, i.e., there is no timezone information maintained. However user can use the timezone based AQL function to convert a UTC time to a timezone-embedded time.
+ * By default, an ADateTime value is a UTC time value, i.e., there is no timezone information maintained. However user
+ * can use the timezone based AQL function to convert a UTC time to a timezone-embedded time.
  * <p/>
  * And the string representation of an ADateTime value follows the ISO8601 standard, in the following format:<br/>
  * [+|-]YYYY-MM-DDThh:mm:ss.xxxZ
  * <p/>
- * Internally, an ADateTime value is stored as the number of milliseconds elapsed since 1970-01-01T00:00:00.000Z (also called chronon time). Functions to convert between a string representation of an ADateTime and its chronon time are implemented in {@link GregorianCalendarSystem}.
+ * Internally, an ADateTime value is stored as the number of milliseconds elapsed since 1970-01-01T00:00:00.000Z (also
+ * called chronon time). Functions to convert between a string representation of an ADateTime and its chronon time are
+ * implemented in {@link GregorianCalendarSystem}.
  * <p/>
  */
 public class ADateTime implements IAObject {
@@ -119,6 +121,13 @@ public class ADateTime implements IAObject {
             throw new RuntimeException(e);
         }
         sbder.append(" }");
+        return sbder.toString();
+    }
+
+    public String toSimpleString() throws IOException {
+        StringBuilder sbder = new StringBuilder();
+        GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
+                GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
         return sbder.toString();
     }
 

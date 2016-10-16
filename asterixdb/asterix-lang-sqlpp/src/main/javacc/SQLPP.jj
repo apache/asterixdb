@@ -969,7 +969,7 @@ InsertStatement InsertStatement() throws ParseException:
   <INSERT> <INTO> nameComponents = QualifiedName() query = Query(false)
     {
       query.setTopLevel(true);
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), null, null);
     }
 }
 

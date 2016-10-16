@@ -926,18 +926,27 @@ boolean IfExists() throws ParseException :
 
 InsertStatement InsertStatement() throws ParseException:
 {
+  VariableExpr var = null;
   Pair<Identifier,Identifier> nameComponents = null;
   Query query;
+  Query returnQuery = null;
   boolean upsert = false;
 }
 {
-  (<INSERT>|<UPSERT>{ upsert = true; }) <INTO> <DATASET> nameComponents = QualifiedName() query = Query()
+  (<INSERT>|<UPSERT>{ upsert = true; }) <INTO> <DATASET> nameComponents = QualifiedName()
+  (<AS> var = Variable())?
+  {
+    if(var != null){
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+    }
+  }
+  query = Query() ( <RETURNING> returnQuery = Query())?
     {
       query.setTopLevel(true);
       if(upsert){
-        return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+        return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var, returnQuery);
       } else{
-        return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+        return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var, returnQuery);
       }
     }
 }
@@ -2646,6 +2655,7 @@ TOKEN :
   | <PRIMARY : "primary">
   | <REFRESH : "refresh">
   | <RETURN : "return">
+  | <RETURNING : "returning">
   | <RTREE : "rtree">
   | <RUN : "run">
   | <SATISFIES : "satisfies">

@@ -34,8 +34,8 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.external.feed.api.FeedOperationCounter;
 import org.apache.asterix.external.feed.api.IFeedJoint;
 import org.apache.asterix.external.feed.api.IFeedJoint.State;
-import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber;
-import org.apache.asterix.external.feed.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
+import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber;
+import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber.ActiveLifecycleEvent;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.watch.FeedConnectJobInfo;
 import org.apache.asterix.external.feed.watch.FeedIntakeInfo;
@@ -63,7 +63,7 @@ import org.apache.log4j.Logger;
 public class FeedEventsListener implements IActiveEntityEventsListener {
     private static final Logger LOGGER = Logger.getLogger(FeedEventsListener.class);
     private final Map<EntityId, Pair<FeedOperationCounter, List<IFeedJoint>>> feedPipeline;
-    private final List<IFeedLifecycleEventSubscriber> subscribers;
+    private final List<IActiveLifecycleEventSubscriber> subscribers;
     private final Map<Long, ActiveJob> jobs;
     private final Map<Long, ActiveJob> intakeJobs;
     private final Map<EntityId, FeedIntakeInfo> entity2Intake;
@@ -145,7 +145,7 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
             case FEED_CONNECT:
                 ((FeedConnectJobInfo) jobInfo).partitionStart();
                 if (((FeedConnectJobInfo) jobInfo).collectionStarted()) {
-                    notifyFeedEventSubscribers(FeedLifecycleEvent.FEED_COLLECT_STARTED);
+                    notifyFeedEventSubscribers(ActiveLifecycleEvent.FEED_COLLECT_STARTED);
                 }
                 break;
             case INTAKE:
@@ -161,7 +161,7 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         if (feedPipeline.get(message.getEntityId()).first.decrementAndGet() == 0) {
             ((FeedIntakeInfo) jobInfo).getIntakeFeedJoint().setState(State.ACTIVE);
             jobInfo.setState(ActivityState.ACTIVE);
-            notifyFeedEventSubscribers(FeedLifecycleEvent.FEED_INTAKE_STARTED);
+            notifyFeedEventSubscribers(ActiveLifecycleEvent.FEED_INTAKE_STARTED);
         }
     }
 
@@ -339,10 +339,10 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         return locations;
     }
 
-    private synchronized void notifyFeedEventSubscribers(FeedLifecycleEvent event) {
+    private synchronized void notifyFeedEventSubscribers(ActiveLifecycleEvent event) {
         if (subscribers != null && !subscribers.isEmpty()) {
-            for (IFeedLifecycleEventSubscriber subscriber : subscribers) {
-                subscriber.handleFeedEvent(event);
+            for (IActiveLifecycleEventSubscriber subscriber : subscribers) {
+                subscriber.handleEvent(event);
             }
         }
     }
@@ -362,8 +362,8 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         // notify event listeners
         feedPipeline.remove(feedId);
         entity2Intake.remove(feedId);
-        notifyFeedEventSubscribers(pair.first.isFailedIngestion() ? FeedLifecycleEvent.FEED_INTAKE_FAILURE
-                : FeedLifecycleEvent.FEED_INTAKE_ENDED);
+        notifyFeedEventSubscribers(pair.first.isFailedIngestion() ? ActiveLifecycleEvent.FEED_INTAKE_FAILURE
+                : ActiveLifecycleEvent.FEED_INTAKE_ENDED);
     }
 
     private synchronized void handleFeedCollectJobFinishMessage(FeedConnectJobInfo cInfo) throws Exception {
@@ -389,8 +389,8 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         connectJobInfos.remove(connectionId);
         jobs.remove(cInfo.getJobId().getId());
         // notify event listeners
-        FeedLifecycleEvent event =
-                failure ? FeedLifecycleEvent.FEED_COLLECT_FAILURE : FeedLifecycleEvent.FEED_COLLECT_ENDED;
+        ActiveLifecycleEvent event =
+                failure ? ActiveLifecycleEvent.FEED_COLLECT_FAILURE : ActiveLifecycleEvent.FEED_COLLECT_ENDED;
         notifyFeedEventSubscribers(event);
     }
 
@@ -569,16 +569,16 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
 
     }
 
-    public synchronized void registerFeedEventSubscriber(IFeedLifecycleEventSubscriber subscriber) {
+    public synchronized void registerFeedEventSubscriber(IActiveLifecycleEventSubscriber subscriber) {
         subscribers.add(subscriber);
     }
 
-    public void deregisterFeedEventSubscriber(IFeedLifecycleEventSubscriber subscriber) {
+    public void deregisterFeedEventSubscriber(IActiveLifecycleEventSubscriber subscriber) {
         subscribers.remove(subscriber);
     }
 
     public synchronized boolean isFeedConnectionActive(FeedConnectionId connectionId,
-            IFeedLifecycleEventSubscriber eventSubscriber) {
+            IActiveLifecycleEventSubscriber eventSubscriber) {
         boolean active = false;
         FeedConnectJobInfo cInfo = connectJobInfos.get(connectionId);
         if (cInfo != null) {
@@ -643,7 +643,7 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
     }
 
     @Override
-    public boolean isEntityConnectedToDataset(String dataverseName, String datasetName) {
+    public boolean isEntityUsingDataset(String dataverseName, String datasetName) {
         return isConnectedToDataset(datasetName);
     }
 }

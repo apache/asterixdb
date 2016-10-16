@@ -41,14 +41,13 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
+public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -61,30 +60,32 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        if (op.getOperatorTag() != LogicalOperatorTag.SINK) {
+        if (op.getOperatorTag() != LogicalOperatorTag.DELEGATE_OPERATOR) {
             return false;
         }
-        SinkOperator sinkOperator = (SinkOperator) op;
+        DelegateOperator eOp = (DelegateOperator) op;
+        if (!(eOp.getDelegate() instanceof CommitOperator)) {
+            return false;
+        }
+        boolean isSink = ((CommitOperator) eOp.getDelegate()).isSink();
 
         List<Mutable<ILogicalExpression>> primaryKeyExprs = null;
         int datasetId = 0;
         String dataverse = null;
         String datasetName = null;
-        AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) sinkOperator.getInputs().get(0).getValue();
+        AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) eOp.getInputs().get(0).getValue();
         LogicalVariable upsertVar = null;
-        AssignOperator upsertFlagAssign = null;
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.INDEX_INSERT_DELETE_UPSERT) {
-                IndexInsertDeleteUpsertOperator indexInsertDeleteUpsertOperator = (IndexInsertDeleteUpsertOperator) descendantOp;
-                if (!indexInsertDeleteUpsertOperator.isBulkload()
-                        && indexInsertDeleteUpsertOperator.getPrevSecondaryKeyExprs() == null) {
-                    primaryKeyExprs = indexInsertDeleteUpsertOperator.getPrimaryKeyExpressions();
-                    datasetId = ((DatasetDataSource) indexInsertDeleteUpsertOperator.getDataSourceIndex()
-                            .getDataSource()).getDataset().getDatasetId();
-                    dataverse = ((DatasetDataSource) indexInsertDeleteUpsertOperator.getDataSourceIndex()
-                            .getDataSource()).getDataset().getDataverseName();
-                    datasetName = ((DatasetDataSource) indexInsertDeleteUpsertOperator.getDataSourceIndex()
-                            .getDataSource()).getDataset().getDatasetName();
+                IndexInsertDeleteUpsertOperator operator = (IndexInsertDeleteUpsertOperator) descendantOp;
+                if (!operator.isBulkload() && operator.getPrevSecondaryKeyExprs() == null) {
+                    primaryKeyExprs = operator.getPrimaryKeyExpressions();
+                    datasetId = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset()
+                            .getDatasetId();
+                    dataverse = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset()
+                            .getDataverseName();
+                    datasetName = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset()
+                            .getDatasetName();
                     break;
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
@@ -115,18 +116,19 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
                         orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewMissingFunc));
 
                         // AssignOperator puts in the cast var the casted record
-                        upsertFlagAssign = new AssignOperator(upsertVar, new MutableObject<ILogicalExpression>(orFunc));
+                        AssignOperator upsertFlagAssign = new AssignOperator(upsertVar,
+                                new MutableObject<ILogicalExpression>(orFunc));
                         // Connect the current top of the plan to the cast operator
                         upsertFlagAssign.getInputs()
-                                .add(new MutableObject<ILogicalOperator>(sinkOperator.getInputs().get(0).getValue()));
-                        sinkOperator.getInputs().clear();
-                        sinkOperator.getInputs().add(new MutableObject<ILogicalOperator>(upsertFlagAssign));
+                                .add(new MutableObject<ILogicalOperator>(eOp.getInputs().get(0).getValue()));
+                        eOp.getInputs().clear();
+                        eOp.getInputs().add(new MutableObject<ILogicalOperator>(upsertFlagAssign));
                         context.computeAndSetTypeEnvironmentForOperator(upsertFlagAssign);
                     }
                     break;
                 }
             }
-            if (descendantOp.getInputs().size() < 1) {
+            if (descendantOp.getInputs().isEmpty()) {
                 break;
             }
             descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
@@ -137,7 +139,7 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
         }
 
         //copy primaryKeyExprs
-        List<LogicalVariable> primaryKeyLogicalVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> primaryKeyLogicalVars = new ArrayList<>();
         for (Mutable<ILogicalExpression> expr : primaryKeyExprs) {
             VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr.getValue();
             primaryKeyLogicalVars.add(new LogicalVariable(varRefExpr.getVariableReference().getId()));
@@ -148,17 +150,17 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
         JobId jobId = mp.getJobId();
 
         //create the logical and physical operator
-        CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, upsertVar);
+        CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, upsertVar, isSink);
         CommitPOperator commitPOperator = new CommitPOperator(jobId, dataverse, datasetName, datasetId,
-                primaryKeyLogicalVars, upsertVar);
+                primaryKeyLogicalVars, upsertVar, isSink);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.
-        ExtensionOperator extensionOperator = new ExtensionOperator(commitOperator);
+        DelegateOperator extensionOperator = new DelegateOperator(commitOperator);
         extensionOperator.setPhysicalOperator(commitPOperator);
 
         //update plan link
-        extensionOperator.getInputs().add(sinkOperator.getInputs().get(0));
+        extensionOperator.getInputs().add(eOp.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
         opRef.setValue(extensionOperator);
         return true;

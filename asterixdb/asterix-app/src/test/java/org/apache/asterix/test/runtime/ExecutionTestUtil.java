@@ -52,8 +52,12 @@ public class ExecutionTestUtil {
         return setUp(cleanup, TEST_CONFIG_FILE_NAME, integrationUtil, true);
     }
 
+    public static List<ILibraryManager> setUp(boolean cleanup, String configFile) throws Exception {
+        return setUp(cleanup, configFile, integrationUtil, true);
+    }
+
     public static List<ILibraryManager> setUp(boolean cleanup, String configFile,
-            AsterixHyracksIntegrationUtil integrationUtil, boolean startHdfs) throws Exception {
+            AsterixHyracksIntegrationUtil alternateIntegrationUtil, boolean startHdfs) throws Exception {
         System.out.println("Starting setup");
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting setup");
@@ -63,6 +67,7 @@ public class ExecutionTestUtil {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing pseudo cluster");
         }
+        integrationUtil = alternateIntegrationUtil;
         integrationUtil.init(cleanup);
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -87,8 +92,8 @@ public class ExecutionTestUtil {
         libraryManagers.add(AsterixAppContextInfo.INSTANCE.getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : integrationUtil.ncs) {
-            IAsterixAppRuntimeContext runtimeCtx =
-                    (IAsterixAppRuntimeContext) nc.getApplicationContext().getApplicationObject();
+            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext()
+                    .getApplicationObject();
             libraryManagers.add(runtimeCtx.getLibraryManager());
         }
         return libraryManagers;

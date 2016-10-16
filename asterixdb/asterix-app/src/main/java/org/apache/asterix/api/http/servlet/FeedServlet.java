@@ -25,21 +25,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.Collection;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.active.EntityId;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.watch.FeedActivity;
-import org.apache.asterix.external.feed.watch.FeedActivity.FeedActivityDetails;
-
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final String FEED_EXTENSION_NAME = "Feed";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -88,50 +81,5 @@ public class FeedServlet extends HttpServlet {
 
         PrintWriter out = response.getWriter();
         out.println(outStr);
-    }
-
-    @SuppressWarnings("unused")
-    private void insertTable(StringBuilder html, Collection<FeedActivity> list) {
-    }
-
-    @SuppressWarnings("null")
-    private void insertRow(StringBuilder html, FeedActivity activity) {
-        String intake = activity.getFeedActivityDetails().get(FeedActivityDetails.INTAKE_LOCATIONS);
-        String compute = activity.getFeedActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
-        String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
-
-        FeedConnectionId connectionId = new FeedConnectionId(
-                new EntityId(FEED_EXTENSION_NAME, activity.getDataverseName(), activity.getFeedName()),
-                activity.getDatasetName());
-        int intakeRate = 0;
-        int storeRate = 0;
-
-        html.append("<tr>");
-        html.append("<td>" + activity.getFeedName() + "</td>");
-        html.append("<td>" + activity.getDatasetName() + "</td>");
-        html.append("<td>" + activity.getConnectTimestamp() + "</td>");
-        //html.append("<td>" + insertLink(html, FeedDashboardServlet.getParameterizedURL(activity), "Details") + "</td>");
-        html.append("<td>" + intake + "</td>");
-        html.append("<td>" + compute + "</td>");
-        html.append("<td>" + store + "</td>");
-        String color = "black";
-        if (intakeRate > storeRate) {
-            color = "red";
-        }
-        if (intakeRate < 0) {
-            html.append("<td>" + "UNKNOWN" + "</td>");
-        } else {
-            html.append("<td>" + insertColoredText("" + intakeRate, color) + " rec/sec" + "</td>");
-        }
-        if (storeRate < 0) {
-            html.append("<td>" + "UNKNOWN" + "</td>");
-        } else {
-            html.append("<td>" + insertColoredText("" + storeRate, color) + " rec/sec" + "</td>");
-        }
-        html.append("</tr>");
-    }
-
-    private String insertColoredText(String s, String color) {
-        return "<font color=\"" + color + "\">" + s + "</font>";
     }
 }

@@ -27,7 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 /**
  * @author rico
  */
-public abstract class AbstractExtensibleLogicalOperator implements IOperatorExtension {
+public abstract class AbstractDelegatedLogicalOperator implements IOperatorDelegate {
 
     private AbstractLogicalOperator.ExecutionMode mode = AbstractLogicalOperator.ExecutionMode.UNPARTITIONED;
     protected List<LogicalVariable> schema;

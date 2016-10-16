@@ -16,22 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.feed.api;
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+create type TweetMessageTypeuuid as closed {
+  tweetid: int,
+  message-text: string,
+  location:point
+}
 
-public interface IFeedLifecycleEventSubscriber {
+create dataset TweetMessageuuids(TweetMessageTypeuuid)
+primary key tweetid;
 
-    public enum FeedLifecycleEvent {
-        FEED_INTAKE_STARTED,
-        FEED_COLLECT_STARTED,
-        FEED_INTAKE_FAILURE,
-        FEED_COLLECT_FAILURE,
-        FEED_INTAKE_ENDED,
-        FEED_COLLECT_ENDED
-    }
 
-    public void assertEvent(FeedLifecycleEvent event) throws AsterixException, InterruptedException;
-
-    public void handleFeedEvent(FeedLifecycleEvent event);
+insert into dataset TweetMessageuuids as $a(
+let $x :=
+[{ "tweetid":1,"message-text":"hello","location":create-point(6.0,6.0)},
+{"tweetid":2,"message-text":"goodbye","location":create-point(1.0,1.0)},
+{"tweetid":3,"message-text":"the end","location":create-point(6.0,3.0)},
+{"tweetid":4,"message-text":"what","location":create-point(3.0,6.0)},
+{"tweetid":5,"message-text":"good","location":create-point(5.0,6.0)}]
+for $y in $x
+return $y
+) returning
+let $x := create-circle($a.location,5.0)
+order by $a.tweetid
+return {
+  "x":$x,
+  "tweetid":$a.tweetid
 }

@@ -31,6 +31,6 @@ public interface IActiveEntityEventsListener {
 
     public EntityId getEntityId();
 
-    public boolean isEntityConnectedToDataset(String dataverseName, String datasetName);
+    public boolean isEntityUsingDataset(String dataverseName, String datasetName);
 
 }
