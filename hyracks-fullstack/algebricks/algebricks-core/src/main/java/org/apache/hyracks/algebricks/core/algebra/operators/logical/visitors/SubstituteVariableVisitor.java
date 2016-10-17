@@ -220,16 +220,6 @@ public class SubstituteVariableVisitor
     }
 
     @Override
-    public Void visitPartitioningSplitOperator(PartitioningSplitOperator op,
-            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
-        for (Mutable<ILogicalExpression> e : op.getExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
-        return null;
-    }
-
-    @Override
     public Void visitProjectOperator(ProjectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         List<LogicalVariable> usedVariables = op.getVariables();

@@ -356,8 +356,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
 
     @Override
     public Void visitRangeForwardOperator(RangeForwardOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("range forward ");
-        addIndent(indent).append("split " + branchingExpression.getValue().accept(exprVisitor, indent));
+        addIndent(indent).append("range forward");
         return null;
     }
 

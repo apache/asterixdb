@@ -405,12 +405,6 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     }
 
     @Override
-    public Void visitPartitioningSplitOperator(PartitioningSplitOperator op, IOptimizationContext ctx)
-            throws AlgebricksException {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public Void visitProjectOperator(ProjectOperator op, IOptimizationContext ctx) throws AlgebricksException {
         propagateFDsAndEquivClassesForUsedVars(op, ctx, op.getVariables());
         return null;
@@ -424,6 +418,12 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
 
     @Override
     public Void visitRangeForwardOperator(RangeForwardOperator op, IOptimizationContext ctx) throws AlgebricksException {
+        propagateFDsAndEquivClasses(op, ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitSplitOperator(SplitOperator op, IOptimizationContext ctx) throws AlgebricksException {
         propagateFDsAndEquivClasses(op, ctx);
         return null;
     }

@@ -47,7 +47,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RangeForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -172,13 +171,6 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
             v.setMaxOutputFrames(f);
         }
         arg.putLogicalPropertiesVector(op, v);
-        return null;
-    }
-
-    @Override
-    public Void visitPartitioningSplitOperator(PartitioningSplitOperator op, IOptimizationContext arg)
-            throws AlgebricksException {
-        // TODO Auto-generated method stub
         return null;
     }
 
