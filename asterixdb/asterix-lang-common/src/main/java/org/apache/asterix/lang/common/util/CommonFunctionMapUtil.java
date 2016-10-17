@@ -48,6 +48,20 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("smallint", "int16"); // smallint, internal: int16
         FUNCTION_NAME_MAP.put("integer", "int32"); // integer, internal: int32
         FUNCTION_NAME_MAP.put("bigint", "int64"); // bigint, internal: int64
+
+        // Type functions.
+        FUNCTION_NAME_MAP.put("isnull", "is-null"); // isnull, internal: is-null
+        FUNCTION_NAME_MAP.put("ismissing", "is-missing"); // ismissing, internal: is-missing
+        FUNCTION_NAME_MAP.put("isunknown", "is-unknown"); // isunknown, internal: is-unknown
+        FUNCTION_NAME_MAP.put("isboolean", "is-boolean"); // isboolean, internal: is-boolean
+        FUNCTION_NAME_MAP.put("isbool", "is-boolean"); // isbool, internal: is-boolean
+        FUNCTION_NAME_MAP.put("isnumber", "is-number"); // isnumber, internal: is-number
+        FUNCTION_NAME_MAP.put("isnum", "is-number"); // isnum, internal: is-number
+        FUNCTION_NAME_MAP.put("isstring", "is-string"); // isstring, internal: is-string
+        FUNCTION_NAME_MAP.put("isstr", "is-string"); // isstr, internal: is-string
+        FUNCTION_NAME_MAP.put("isarray", "is-array"); // isarray, internal: is-array
+        FUNCTION_NAME_MAP.put("isobject", "is-object"); // isobject, internal: is-object
+        FUNCTION_NAME_MAP.put("isobj", "is-object"); // isobj, internal: is-object
     }
 
     private CommonFunctionMapUtil() {

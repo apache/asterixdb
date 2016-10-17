@@ -71,18 +71,18 @@ class ARecordCaster {
     private final DataOutputStream dos = new DataOutputStream(bos);
 
     private final RecordBuilder recBuilder = new RecordBuilder();
-    private final IVisitablePointable nullTypeTag = allocator.allocateEmpty();
-    private final IVisitablePointable missingTypeTag = allocator.allocateEmpty();
+    private final IVisitablePointable nullTypeTag = PointableAllocator.allocateUnrestableEmpty();
+    private final IVisitablePointable missingTypeTag = PointableAllocator.allocateUnrestableEmpty();
 
-    private final IBinaryComparator fieldNameComparator =
-            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
+    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory
+            .of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
     private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
     private final DataOutputStream outputDos = new DataOutputStream(outputBos);
 
-    private final IVisitablePointable fieldTempReference = allocator.allocateEmpty();
-    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg =
-            new Triple<>(fieldTempReference, null, null);
+    private final IVisitablePointable fieldTempReference = PointableAllocator.allocateUnrestableEmpty();
+    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<>(fieldTempReference, null,
+            null);
 
     private int numInputFields = 0;
 
@@ -155,6 +155,7 @@ class ARecordCaster {
     private void loadRequiredType(ARecordType reqType) throws IOException {
         reqFieldNames.clear();
         reqFieldTypeTags.clear();
+        allocator.reset();
 
         cachedReqType = reqType;
         int numSchemaFields = reqType.getFieldTypes().length;

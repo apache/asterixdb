@@ -58,11 +58,11 @@
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/builtins.md">
                   <filelist dir="${project.basedir}/src/main/markdown/builtins"
-                            files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_others.md"/>
+                            files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_type.md,12_misc.md"/>
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/aql/builtins.md">
                   <filelist dir="${project.basedir}/src/main/markdown/builtins"
-                            files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_aql.md,10_comparison.md,11_others.md"/>
+                            files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_aql.md,10_comparison.md,11_type.md,12_misc.md"/>
                 </concat>
               </target>
             </configuration>

@@ -44,7 +44,6 @@ As you read through this document, you should try each step for yourself on your
 Once you have reached the end, you will be fully armed and dangerous, with all the basic AsterixDB knowledge
 that you'll need to start down the path of modeling, storing, and querying your own semistructured data.
 
-----
 ## ADM: Modeling Semistructed Data in AsterixDB ##
 In this section you will learn all about modeling Big Data using
 ADM, the data model of the AsterixDB BDMS.
@@ -74,13 +73,13 @@ that have extra data in them.
 Datatypes are open by default unless you tell AsterixDB otherwise.
 Let's put these concepts to work
 
-Our little sample scenario involves hypothetical information about users of two popular social networks,
-Facebook and Twitter, and their messages.
+Our little sample scenario involves information about users of two hypothetical social networks,
+Gleambook and Chirp, and their messages.
 We'll start by defining a dataverse called "TinySocial" to hold our datatypes and datasets.
 The AsterixDB data model (ADM) is essentially a superset of JSON---it's what you get by extending
 JSON with more data types and additional data modeling constructs borrowed from object databases.
-The following is how we can create the TinySocial dataverse plus a set of ADM types for modeling
-Twitter users, their Tweets, Facebook users, their users' employment information, and their messages.
+The following shows how we can create the TinySocial dataverse plus a set of ADM types for modeling
+Chirp users, their Chirps, Gleambook users, their users' employment information, and their messages.
 (Note: Keep in mind that this is just a tiny and somewhat silly example intended for illustrating
 some of the key features of AsterixDB. :-))
 
@@ -89,85 +88,82 @@ some of the key features of AsterixDB. :-))
         create dataverse TinySocial;
         use dataverse TinySocial;
 
-        create type TwitterUserType as open {
-            screen-name: string,
+        create type ChirpUserType as {
+            screenName: string,
             lang: string,
-            friends_count: int64,
-            statuses_count: int64,
+            friendsCount: int,
+            statusesCount: int,
             name: string,
-            followers_count: int64
-        }
+            followersCount: int
+        };
 
-        create type TweetMessageType as closed {
-            tweetid: string,
-            user: TwitterUserType,
-            sender-location: point?,
-            send-time: datetime,
-            referred-topics: {{ string }},
-            message-text: string
-        }
+        create type ChirpMessageType as closed {
+            chirpId: string,
+            user: ChirpUserType,
+            senderLocation: point?,
+            sendTime: datetime,
+            referredTopics: {{ string }},
+            messageText: string
+        };
 
-        create type EmploymentType as open {
-            organization-name: string,
-            start-date: date,
-            end-date: date?
-        }
+        create type EmploymentType as {
+            organizationName: string,
+            startDate: date,
+            endDate: date?
+        };
 
-        create type FacebookUserType as closed {
-            id: int64,
+        create type GleambookUserType as {
+            id: int,
             alias: string,
             name: string,
-            user-since: datetime,
-            friend-ids: {{ int64 }},
+            userSince: datetime,
+            friendIds: {{ int }},
             employment: [EmploymentType]
-        }
+        };
 
-        create type FacebookMessageType as closed {
-            message-id: int64,
-            author-id: int64,
-            in-response-to: int64?,
-            sender-location: point?,
+        create type GleambookMessageType as {
+            messageId: int,
+            authorId: int,
+            inResponseTo: int?,
+            senderLocation: point?,
             message: string
-        }
-
-
+        };
 
 The first three lines above tell AsterixDB to drop the old TinySocial dataverse, if one already
 exists, and then to create a brand new one and make it the focus of the statements that follow.
-The first type creation statement creates a datatype for holding information about Twitter users.
+The first _create type_ statement creates a datatype for holding information about Chirp users.
 It is a record type with a mix of integer and string data, very much like a (flat) relational tuple.
 The indicated fields are all mandatory, but because the type is open, additional fields are welcome.
-The second statement creates a datatype for Twitter messages; this shows how to specify a closed type.
-Interestingly (based on one of Twitter's APIs), each Twitter message actually embeds an instance of the
+The second statement creates a datatype for Chirp messages; this shows how to specify a closed type.
+Interestingly (based on one of Chirp's APIs), each Chirp message actually embeds an instance of the
 sending user's information (current as of when the message was sent), so this is an example of a nested
 record in ADM.
-Twitter messages can optionally contain the sender's location, which is modeled via the sender-location
+Chirp messages can optionally contain the sender's location, which is modeled via the senderLocation
 field of spatial type _point_; the question mark following the field type indicates its optionality.
 An optional field is like a nullable field in SQL---it may be present or missing, but when it's present,
-its data type will conform to the datatype's specification.
-The send-time field illustrates the use of a temporal primitive type, _datetime_.
-Lastly, the referred-topics field illustrates another way that ADM is richer than the relational model;
-this field holds a bag (a.k.a. an unordered list) of strings.
-Since the overall datatype definition for Twitter messages says "closed", the fields that it lists are
+its value's data type will conform to the datatype's specification.
+The sendTime field illustrates the use of a temporal primitive type, _datetime_.
+Lastly, the referredTopics field illustrates another way that ADM is richer than the relational model;
+this field holds a bag (*a.k.a.* an unordered list) of strings.
+Since the overall datatype definition for Chirp messages says "closed", the fields that it lists are
 the only fields that instances of this type will be allowed to contain.
-The next two create type statements create a record type for holding information about one component of
-the employment history of a Facebook user and then a record type for holding the user information itself.
-The Facebook user type highlights a few additional ADM data model features.
-Its friend-ids field is a bag of integers, presumably the Facebook user ids for this user's friends,
+The next two _create type_ statements create a record type for holding information about one component of
+the employment history of a Gleambook user and then a record type for holding the user information itself.
+The Gleambook user type highlights a few additional ADM data model features.
+Its friendIds field is a bag of integers, presumably the Gleambook user ids for this user's friends,
 and its employment field is an ordered list of employment records.
-The final create type statement defines a type for handling the content of a Facebook message in our
+The final _create type_ statement defines a type for handling the content of a Gleambook message in our
 hypothetical social data storage scenario.
 
 Before going on, we need to once again emphasize the idea that AsterixDB is aimed at storing
 and querying not just Big Data, but Big _Semistructured_ Data.
-This means that most of the fields listed in the create type statements above could have been
+This means that most of the fields listed in the _create type_ statements above could have been
 omitted without changing anything other than the resulting size of stored data instances on disk.
 AsterixDB stores its information about the fields defined a priori as separate metadata, whereas
 the information about other fields that are "just there" in instances of open datatypes is stored
 with each instance---making for more bits on disk and longer times for operations affected by
 data size (e.g., dataset scans).
-The only fields that _must_ be specified a priori are the primary key.
-Indexes can be built on fields that don't belong to the pre-specified part of datatype's schema as long as their type is specified at index create time and and the _enforced_ keyword is provided at the end of the index definition.  (The _enforced_ keyword asks the system to ensure that the indexed field or fields conform to this specified type in all of the dataset's record instances where they are present.)  Additionally, indexed fields may be nested arbitrarily deep within a dataset's records as long as the nesting does not go pass through a list (be it ordered or unordered) along the way.
+The only fields that _must_ be specified a priori are the primary key fields of each dataset.
 
 ### Creating Datasets and Indexes ###
 
@@ -179,52 +175,50 @@ We can do this as follows, utilizing the DDL capabilities of AsterixDB.
 
         use dataverse TinySocial;
 
-        create dataset FacebookUsers(FacebookUserType)
-        primary key id;
+        create dataset GleambookUsers(GleambookUserType)
+            primary key id;
 
-        create dataset FacebookMessages(FacebookMessageType)
-        primary key message-id;
+        create dataset GleambookMessages(GleambookMessageType)
+            primary key messageId;
 
-        create dataset TwitterUsers(TwitterUserType)
-        primary key screen-name;
+        create dataset ChirpUsers(ChirpUserType)
+            primary key screenName;
 
-        create dataset TweetMessages(TweetMessageType)
-        primary key tweetid
-        hints(cardinality=100);
+        create dataset ChirpMessages(ChirpMessageType)
+            primary key chirpId
+            hints(cardinality=100);
 
-        create index fbUserSinceIdx on FacebookUsers(user-since);
-        create index fbAuthorIdx on FacebookMessages(author-id) type btree;
-        create index fbSenderLocIndex on FacebookMessages(sender-location) type rtree;
-        create index fbMessageIdx on FacebookMessages(message) type keyword;
+        create index gbUserSinceIdx on GleambookUsers(userSince);
+        create index gbAuthorIdx on GleambookMessages(authorId) type btree;
+        create index gbSenderLocIndex on GleambookMessages(senderLocation) type rtree;
+        create index gbMessageIdx on GleambookMessages(message) type keyword;
 
         for $ds in dataset Metadata.Dataset return $ds;
         for $ix in dataset Metadata.Index return $ix;
 
-
-
-The ADM DDL statements above create four datasets for holding our social data in the TinySocial
-dataverse: FacebookUsers, FacebookMessages, TwitterUsers, and TweetMessages.
-The first statement creates the FacebookUsers data set.
-It specifies that this dataset will store data instances conforming to FacebookUserType and that
+The DDL statements above create four datasets for holding our social data in the TinySocial
+dataverse: GleambookUsers, GleambookMessages, ChirpUsers, and ChirpMessages.
+The first _create dataset_ statement creates the GleambookUsers data set.
+It specifies that this dataset will store data instances conforming to GleambookUserType and that
 it has a primary key which is the id field of each instance.
 The primary key information is used by AsterixDB to uniquely identify instances for the purpose
 of later lookup and for use in secondary indexes.
 Each AsterixDB dataset is stored (and indexed) in the form of a B+ tree on primary key;
 secondary indexes point to their indexed data by primary key.
-In AsterixDB clusters, the primary key is also used to hash-partition (a.k.a. shard) the
+In AsterixDB clusters, the primary key is also used to hash-partition (*a.k.a.* shard) the
 dataset across the nodes of the cluster.
-The next three create dataset statements are similar.
+The next three _create dataset_ statements are similar.
 The last one illustrates an optional clause for providing useful hints to AsterixDB.
 In this case, the hint tells AsterixDB that the dataset definer is anticipating that the
-TweetMessages dataset will contain roughly 100 objects; knowing this can help AsterixDB
+ChirpMessages dataset will contain roughly 100 objects; knowing this can help AsterixDB
 to more efficiently manage and query this dataset.
 (AsterixDB does not yet gather and maintain data statistics; it will currently, abitrarily,
 assume a cardinality of one million objects per dataset in the absence of such an optional
 definition-time hint.)
 
-The create dataset statements above are followed by four more DDL statements, each of which
+The _create dataset_ statements above are followed by four more DDL statements, each of which
 creates a secondary index on a field of one of the datasets.
-The first one indexes the FacebookUsers dataset on its user-since field.
+The first one indexes the GleambookUsers dataset on its userSince field.
 This index will be a B+ tree index; its type is unspecified and _btree_ is the default type.
 The other three illustrate how you can explicitly specify the desired type of index.
 In addition to btree, _rtree_ and inverted _keyword_ indexes are supported by AsterixDB.
@@ -246,9 +240,8 @@ of fully-qualified dataset names (i.e., _dataversename.datasetname_)
 to reference datasets that live in a dataverse other than the one that
 was named in the most recently executed _use dataverse_ directive.
 
-----
 ## Loading Data Into AsterixDB ##
-Okay, so far so good---AsterixDB is now ready for data, so let's give it some data to store
+Okay, so far so good---AsterixDB is now ready for data, so let's give it some data to store.
 Our next task will be to load some sample data into the four datasets that we just defined.
 Here we will load a tiny set of records, defined in ADM format (a superset of JSON), into each dataset.
 In the boxes below you can see the actual data instances contained in each of the provided sample files.
@@ -261,61 +254,60 @@ We should note that ADM format is a textual serialization of what AsterixDB will
 when persisted in AsterixDB, the data format will be binary and the data in the predefined fields
 of the data instances will be stored separately from their associated field name and type metadata.
 
-[Twitter Users](../data/twu.adm)
+[Chirp Users](../data/chu.adm)
 
-        {"screen-name":"NathanGiesen@211","lang":"en","friends_count":18,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416}
-        {"screen-name":"ColineGeyer@63","lang":"en","friends_count":121,"statuses_count":362,"name":"Coline Geyer","followers_count":17159}
-        {"screen-name":"NilaMilliron_tw","lang":"en","friends_count":445,"statuses_count":164,"name":"Nila Milliron","followers_count":22649}
-        {"screen-name":"ChangEwing_573","lang":"en","friends_count":182,"statuses_count":394,"name":"Chang Ewing","followers_count":32136}
+        {"screenName":"NathanGiesen@211","lang":"en","friendsCount":18,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416}
+        {"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159}
+        {"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649}
+        {"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136}
 
-[Tweet Messages](../data/twm.adm)
+[Chirp Messages](../data/chm.adm)
 
-        {"tweetid":"1","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("47.44,80.65"),"send-time":datetime("2008-04-26T10:10:00"),"referred-topics":{{"t-mobile","customization"}},"message-text":" love t-mobile its customization is good:)"}
-        {"tweetid":"2","user":{"screen-name":"ColineGeyer@63","lang":"en","friends_count":121,"statuses_count":362,"name":"Coline Geyer","followers_count":17159},"sender-location":point("32.84,67.14"),"send-time":datetime("2010-05-13T10:10:00"),"referred-topics":{{"verizon","shortcut-menu"}},"message-text":" like verizon its shortcut-menu is awesome:)"}
-        {"tweetid":"3","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("29.72,75.8"),"send-time":datetime("2006-11-04T10:10:00"),"referred-topics":{{"motorola","speed"}},"message-text":" like motorola the speed is good:)"}
-        {"tweetid":"4","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("39.28,70.48"),"send-time":datetime("2011-12-26T10:10:00"),"referred-topics":{{"sprint","voice-command"}},"message-text":" like sprint the voice-command is mind-blowing:)"}
-        {"tweetid":"5","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("40.09,92.69"),"send-time":datetime("2006-08-04T10:10:00"),"referred-topics":{{"motorola","speed"}},"message-text":" can't stand motorola its speed is terrible:("}
-        {"tweetid":"6","user":{"screen-name":"ColineGeyer@63","lang":"en","friends_count":121,"statuses_count":362,"name":"Coline Geyer","followers_count":17159},"sender-location":point("47.51,83.99"),"send-time":datetime("2010-05-07T10:10:00"),"referred-topics":{{"iphone","voice-clarity"}},"message-text":" like iphone the voice-clarity is good:)"}
-        {"tweetid":"7","user":{"screen-name":"ChangEwing_573","lang":"en","friends_count":182,"statuses_count":394,"name":"Chang Ewing","followers_count":32136},"sender-location":point("36.21,72.6"),"send-time":datetime("2011-08-25T10:10:00"),"referred-topics":{{"samsung","platform"}},"message-text":" like samsung the platform is good"}
-        {"tweetid":"8","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("46.05,93.34"),"send-time":datetime("2005-10-14T10:10:00"),"referred-topics":{{"t-mobile","shortcut-menu"}},"message-text":" like t-mobile the shortcut-menu is awesome:)"}
-        {"tweetid":"9","user":{"screen-name":"NathanGiesen@211","lang":"en","friends_count":39339,"statuses_count":473,"name":"Nathan Giesen","followers_count":49416},"sender-location":point("36.86,74.62"),"send-time":datetime("2012-07-21T10:10:00"),"referred-topics":{{"verizon","voicemail-service"}},"message-text":" love verizon its voicemail-service is awesome"}
-        {"tweetid":"10","user":{"screen-name":"ColineGeyer@63","lang":"en","friends_count":121,"statuses_count":362,"name":"Coline Geyer","followers_count":17159},"sender-location":point("29.15,76.53"),"send-time":datetime("2008-01-26T10:10:00"),"referred-topics":{{"verizon","voice-clarity"}},"message-text":" hate verizon its voice-clarity is OMG:("}
-        {"tweetid":"11","user":{"screen-name":"NilaMilliron_tw","lang":"en","friends_count":445,"statuses_count":164,"name":"Nila Milliron","followers_count":22649},"sender-location":point("37.59,68.42"),"send-time":datetime("2008-03-09T10:10:00"),"referred-topics":{{"iphone","platform"}},"message-text":" can't stand iphone its platform is terrible"}
-        {"tweetid":"12","user":{"screen-name":"OliJackson_512","lang":"en","friends_count":445,"statuses_count":164,"name":"Oli Jackson","followers_count":22649},"sender-location":point("24.82,94.63"),"send-time":datetime("2010-02-13T10:10:00"),"referred-topics":{{"samsung","voice-command"}},"message-text":" like samsung the voice-command is amazing:)"}
+        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("47.44,80.65"),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"t-mobile","customization"}},"messageText":" love t-mobile its customization is good:)"}
+        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("32.84,67.14"),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"verizon","shortcut-menu"}},"messageText":" like verizon its shortcut-menu is awesome:)"}
+        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("29.72,75.8"),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" like motorola the speed is good:)"}
+        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("39.28,70.48"),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"sprint","voice-command"}},"messageText":" like sprint the voice-command is mind-blowing:)"}
+        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("40.09,92.69"),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" can't stand motorola its speed is terrible:("}
+        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("47.51,83.99"),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"iphone","voice-clarity"}},"messageText":" like iphone the voice-clarity is good:)"}
+        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":point("36.21,72.6"),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"samsung","platform"}},"messageText":" like samsung the platform is good"}
+        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("46.05,93.34"),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"t-mobile","shortcut-menu"}},"messageText":" like t-mobile the shortcut-menu is awesome:)"}
+        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("36.86,74.62"),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"verizon","voicemail-service"}},"messageText":" love verizon its voicemail-service is awesome"}
+        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("29.15,76.53"),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"verizon","voice-clarity"}},"messageText":" hate verizon its voice-clarity is OMG:("}
+        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":point("37.59,68.42"),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"iphone","platform"}},"messageText":" can't stand iphone its platform is terrible"}
+        {"chirpId":"12","user":{"screenName":"OliJackson_512","lang":"en","friendsCount":445,"statusesCount":164,"name":"Oli Jackson","followersCount":22649},"senderLocation":point("24.82,94.63"),"sendTime":datetime("2010-02-13T10:10:00"),"referredTopics":{{"samsung","voice-command"}},"messageText":" like samsung the voice-command is amazing:)"}
 
-[Facebook Users](../data/fbu.adm)
+[Gleambook Users](../data/gbu.adm)
 
-        {"id":1,"alias":"Margarita","name":"MargaritaStoddard","user-since":datetime("2012-08-20T10:10:00"),"friend-ids":{{2,3,6,10}},"employment":[{"organization-name":"Codetechno","start-date":date("2006-08-06")}]}
-        {"id":2,"alias":"Isbel","name":"IsbelDull","user-since":datetime("2011-01-22T10:10:00"),"friend-ids":{{1,4}},"employment":[{"organization-name":"Hexviafind","start-date":date("2010-04-27")}]}
-        {"id":3,"alias":"Emory","name":"EmoryUnk","user-since":datetime("2012-07-10T10:10:00"),"friend-ids":{{1,5,8,9}},"employment":[{"organization-name":"geomedia","start-date":date("2010-06-17"),"end-date":date("2010-01-26")}]}
-        {"id":4,"alias":"Nicholas","name":"NicholasStroh","user-since":datetime("2010-12-27T10:10:00"),"friend-ids":{{2}},"employment":[{"organization-name":"Zamcorporation","start-date":date("2010-06-08")}]}
-        {"id":5,"alias":"Von","name":"VonKemble","user-since":datetime("2010-01-05T10:10:00"),"friend-ids":{{3,6,10}},"employment":[{"organization-name":"Kongreen","start-date":date("2010-11-27")}]}
-        {"id":6,"alias":"Willis","name":"WillisWynne","user-since":datetime("2005-01-17T10:10:00"),"friend-ids":{{1,3,7}},"employment":[{"organization-name":"jaydax","start-date":date("2009-05-15")}]}
-        {"id":7,"alias":"Suzanna","name":"SuzannaTillson","user-since":datetime("2012-08-07T10:10:00"),"friend-ids":{{6}},"employment":[{"organization-name":"Labzatron","start-date":date("2011-04-19")}]}
-        {"id":8,"alias":"Nila","name":"NilaMilliron","user-since":datetime("2008-01-01T10:10:00"),"friend-ids":{{3}},"employment":[{"organization-name":"Plexlane","start-date":date("2010-02-28")}]}
-        {"id":9,"alias":"Woodrow","name":"WoodrowNehling","user-since":datetime("2005-09-20T10:10:00"),"friend-ids":{{3,10}},"employment":[{"organization-name":"Zuncan","start-date":date("2003-04-22"),"end-date":date("2009-12-13")}]}
-        {"id":10,"alias":"Bram","name":"BramHatch","user-since":datetime("2010-10-16T10:10:00"),"friend-ids":{{1,5,9}},"employment":[{"organization-name":"physcane","start-date":date("2007-06-05"),"end-date":date("2011-11-05")}]}
+        {"id":1,"alias":"Margarita","name":"MargaritaStoddard","nickname":"Mags","userSince":datetime("2012-08-20T10:10:00"),"friendIds":{{2,3,6,10}},"employment":[{"organizationName":"Codetechno","startDate":date("2006-08-06")},{"organizationName":"geomedia","startDate":date("2010-06-17"),"endDate":date("2010-01-26")}],"gender":"F"}
+        {"id":2,"alias":"Isbel","name":"IsbelDull","nickname":"Izzy","userSince":datetime("2011-01-22T10:10:00"),"friendIds":{{1,4}},"employment":[{"organizationName":"Hexviafind","startDate":date("2010-04-27")}]}
+        {"id":3,"alias":"Emory","name":"EmoryUnk","userSince":datetime("2012-07-10T10:10:00"),"friendIds":{{1,5,8,9}},"employment":[{"organizationName":"geomedia","startDate":date("2010-06-17"),"endDate":date("2010-01-26")}]}
+        {"id":4,"alias":"Nicholas","name":"NicholasStroh","userSince":datetime("2010-12-27T10:10:00"),"friendIds":{{2}},"employment":[{"organizationName":"Zamcorporation","startDate":date("2010-06-08")}]}
+        {"id":5,"alias":"Von","name":"VonKemble","userSince":datetime("2010-01-05T10:10:00"),"friendIds":{{3,6,10}},"employment":[{"organizationName":"Kongreen","startDate":date("2010-11-27")}]}
+        {"id":6,"alias":"Willis","name":"WillisWynne","userSince":datetime("2005-01-17T10:10:00"),"friendIds":{{1,3,7}},"employment":[{"organizationName":"jaydax","startDate":date("2009-05-15")}]}
+        {"id":7,"alias":"Suzanna","name":"SuzannaTillson","userSince":datetime("2012-08-07T10:10:00"),"friendIds":{{6}},"employment":[{"organizationName":"Labzatron","startDate":date("2011-04-19")}]}
+        {"id":8,"alias":"Nila","name":"NilaMilliron","userSince":datetime("2008-01-01T10:10:00"),"friendIds":{{3}},"employment":[{"organizationName":"Plexlane","startDate":date("2010-02-28")}]}
+        {"id":9,"alias":"Woodrow","name":"WoodrowNehling","nickname":"Woody","userSince":datetime("2005-09-20T10:10:00"),"friendIds":{{3,10}},"employment":[{"organizationName":"Zuncan","startDate":date("2003-04-22"),"endDate":date("2009-12-13")}]}
+        {"id":10,"alias":"Bram","name":"BramHatch","userSince":datetime("2010-10-16T10:10:00"),"friendIds":{{1,5,9}},"employment":[{"organizationName":"physcane","startDate":date("2007-06-05"),"endDate":date("2011-11-05")}]}
 
-[Facebook Messages](../data/fbm.adm)
+[Gleambook Messages](../data/gbm.adm)
 
-        {"message-id":1,"author-id":3,"in-response-to":2,"sender-location":point("47.16,77.75"),"message":" love sprint its shortcut-menu is awesome:)"}
-        {"message-id":2,"author-id":1,"in-response-to":4,"sender-location":point("41.66,80.87"),"message":" dislike iphone its touch-screen is horrible"}
-        {"message-id":3,"author-id":2,"in-response-to":4,"sender-location":point("48.09,81.01"),"message":" like samsung the plan is amazing"}
-        {"message-id":4,"author-id":1,"in-response-to":2,"sender-location":point("37.73,97.04"),"message":" can't stand at&t the network is horrible:("}
-        {"message-id":5,"author-id":6,"in-response-to":2,"sender-location":point("34.7,90.76"),"message":" love sprint the customization is mind-blowing"}
-        {"message-id":6,"author-id":2,"in-response-to":1,"sender-location":point("31.5,75.56"),"message":" like t-mobile its platform is mind-blowing"}
-        {"message-id":7,"author-id":5,"in-response-to":15,"sender-location":point("32.91,85.05"),"message":" dislike sprint the speed is horrible"}
-        {"message-id":8,"author-id":1,"in-response-to":11,"sender-location":point("40.33,80.87"),"message":" like verizon the 3G is awesome:)"}
-        {"message-id":9,"author-id":3,"in-response-to":12,"sender-location":point("34.45,96.48"),"message":" love verizon its wireless is good"}
-        {"message-id":10,"author-id":1,"in-response-to":12,"sender-location":point("42.5,70.01"),"message":" can't stand motorola the touch-screen is terrible"}
-        {"message-id":11,"author-id":1,"in-response-to":1,"sender-location":point("38.97,77.49"),"message":" can't stand at&t its plan is terrible"}
-        {"message-id":12,"author-id":10,"in-response-to":6,"sender-location":point("42.26,77.76"),"message":" can't stand t-mobile its voicemail-service is OMG:("}
-        {"message-id":13,"author-id":10,"in-response-to":4,"sender-location":point("42.77,78.92"),"message":" dislike iphone the voice-command is bad:("}
-        {"message-id":14,"author-id":9,"in-response-to":12,"sender-location":point("41.33,85.28"),"message":" love at&t its 3G is good:)"}
-        {"message-id":15,"author-id":7,"in-response-to":11,"sender-location":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
+        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":point("47.16,77.75"),"message":" love sprint its shortcut-menu is awesome:)"}
+        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":point("41.66,80.87"),"message":" dislike iphone its touch-screen is horrible"}
+        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":point("48.09,81.01"),"message":" like samsung the plan is amazing"}
+        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":point("37.73,97.04"),"message":" can't stand at&t the network is horrible:("}
+        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":point("34.7,90.76"),"message":" love sprint the customization is mind-blowing"}
+        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":point("31.5,75.56"),"message":" like t-mobile its platform is mind-blowing"}
+        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":point("32.91,85.05"),"message":" dislike sprint the speed is horrible"}
+        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":point("40.33,80.87"),"message":" like verizon the 3G is awesome:)"}
+        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":point("34.45,96.48"),"message":" love verizon its wireless is good"}
+        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":point("42.5,70.01"),"message":" can't stand motorola the touch-screen is terrible"}
+        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":point("38.97,77.49"),"message":" can't stand at&t its plan is terrible"}
+        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":point("42.26,77.76"),"message":" can't stand t-mobile its voicemail-service is OMG:("}
+        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":point("42.77,78.92"),"message":" dislike iphone the voice-command is bad:("}
+        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love at&t its 3G is good:)"}
+        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
 
-
-It's loading time! We can use AQL _load_ statements to populate our datasets with the sample records shown above.
+It's loading time! We can use AQL _LOAD_ statements to populate our datasets with the sample records shown above.
 The following shows how loading can be done for data stored in `.adm` files in your local filesystem.
 *Note:* You _MUST_ replace the `<Host Name>` and `<Absolute File Path>` placeholders in each load
 statement below with valid values based on the host IP address (or host name) for the machine and
@@ -325,23 +317,20 @@ do not delete the two slashes that appear in front of the absolute path to your 
 (This will lead to a three-slash character sequence at the start of each load statement's file
 input path specification.)
 
-
         use dataverse TinySocial;
 
-        load dataset FacebookUsers using localfs
-        (("path"="<Host Name>://<Absolute File Path>/fbu.adm"),("format"="adm"));
+        load dataset GleambookUsers using localfs
+            (("path"="<Host Name>://<Absolute File Path>/gbu.adm"),("format"="adm"));
 
-        load dataset FacebookMessages using localfs
-        (("path"="<Host Name>://<Absolute File Path>/fbm.adm"),("format"="adm"));
+        load dataset GleambookMessages using localfs
+            (("path"="<Host Name>://<Absolute File Path>/gbm.adm"),("format"="adm"));
 
-        load dataset TwitterUsers using localfs
-        (("path"="<Host Name>://<Absolute File Path>/twu.adm"),("format"="adm"));
+        load dataset ChirpUsers using localfs
+            (("path"="<Host Name>://<Absolute File Path>/chu.adm"),("format"="adm"));
 
-        load dataset TweetMessages using localfs
-        (("path"="<Host Name>://<Absolute File Path>/twm.adm"),("format"="adm"));
+        load dataset ChirpMessages using localfs
+            (("path"="<Host Name>://<Absolute File Path>/chm.adm"),("format"="adm"));
 
-
-----
 ## AQL: Querying Your AsterixDB Data ##
 Congratulations! You now have sample social data stored (and indexed) in AsterixDB.
 (You are part of an elite and adventurous group of individuals. :-))
@@ -384,83 +373,96 @@ the _return_ clause in AQL is like the _select_ clause in SQL (but appears at th
 the beginning of a query), the _let_ clause in AQL is like SQL's _with_ clause, and the _where_
 and _order by_ clauses in both languages are similar.
 
+Based on user demand, in order to let SQL afficiandos to write AQL queries in their favored ways,
+AQL supports a few synonyms:  _from_ for _for_, _select_ for _return_,  _with_ for _let_, and
+_keeping_ for _with_ in the group by clause.
+These have been found to help die-hard SQL fans to feel a little more at home in AQL and to be less
+likely to (mis)interpret _for_ as imperative looping, _return_ as returning from a function call,
+and so on.
+
 Enough talk!
 Let's go ahead and try writing some queries and see about learning AQL by example.
 
 ### Query 0-A - Exact-Match Lookup ###
-For our first query, let's find a Facebook user based on his or her user id.
+For our first query, let's find a Gleambook user based on his or her user id.
 Suppose the user we want is the user whose id is 8:
 
 
         use dataverse TinySocial;
 
-        for $user in dataset FacebookUsers
+        for $user in dataset GleambookUsers
         where $user.id = 8
         return $user;
 
 The query's _for_ clause  binds the variable `$user` incrementally to the data instances residing in
-the dataset named FacebookUsers.
+the dataset named GleambookUsers.
 Its _where_ clause selects only those bindings having a user id of interest, filtering out the rest.
 The _return_ clause returns the (entire) data instance for each binding that satisfies the predicate.
 Since this dataset is indexed on user id (its primary key), this query will be done via a quick index lookup.
 
 The expected result for our sample data is as follows:
 
-        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "user-since": datetime("2008-01-01T10:10:00.000Z"), "friend-ids": {{ 3 }}, "employment": [ { "organization-name": "Plexlane", "start-date": date("2010-02-28"), "end-date": null } ] }
+        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "userSince": datetime("2008-01-01T10:10:00.000Z"), "friendIds": {{ 3 }}, "employment": [ { "organizationName": "Plexlane", "startDate": date("2010-02-28") } ] }
 
 
-### Query 0-B - Range Scan ###
-AQL, like SQL, supports a variety of different predicates.
-For example, for our next query, let's find the Facebook users whose ids are in the range between 2 and 4:
+Note the using the SQL keyword synonyms, another way of phrasing the same query would be:
 
         use dataverse TinySocial;
 
-        for $user in dataset FacebookUsers
+        from $user in dataset GleambookUsers
+        where $user.id = 8
+        select $user;
+
+### Query 0-B - Range Scan ###
+AQL, like SQL, supports a variety of different predicates.
+For example, for our next query, let's find the Gleambook users whose ids are in the range between 2 and 4:
+
+        use dataverse TinySocial;
+
+        for $user in dataset GleambookUsers
         where $user.id >= 2 and $user.id <= 4
         return $user;
 
 This query's expected result, also evaluable using the primary index on user id, is:
 
-        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "user-since": datetime("2011-01-22T10:10:00.000Z"), "friend-ids": {{ 1, 4 }}, "employment": [ { "organization-name": "Hexviafind", "start-date": date("2010-04-27"), "end-date": null } ] }
-        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "user-since": datetime("2012-07-10T10:10:00.000Z"), "friend-ids": {{ 1, 5, 8, 9 }}, "employment": [ { "organization-name": "geomedia", "start-date": date("2010-06-17"), "end-date": date("2010-01-26") } ] }
-        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "user-since": datetime("2010-12-27T10:10:00.000Z"), "friend-ids": {{ 2 }}, "employment": [ { "organization-name": "Zamcorporation", "start-date": date("2010-06-08"), "end-date": null } ] }
-
+        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }
+        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": datetime("2010-12-27T10:10:00.000Z"), "friendIds": {{ 2 }}, "employment": [ { "organizationName": "Zamcorporation", "startDate": date("2010-06-08") } ] }
+        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }
 
 ### Query 1 - Other Query Filters ###
 AQL can do range queries on any data type that supports the appropriate set of comparators.
-As an example, this next query retrieves the Facebook users who joined between July 22, 2010 and July 29, 2012:
+As an example, this next query retrieves the Gleambook users who joined between July 22, 2010 and July 29, 2012:
 
         use dataverse TinySocial;
 
-        for $user in dataset FacebookUsers
-        where $user.user-since >= datetime('2010-07-22T00:00:00')
-          and $user.user-since <= datetime('2012-07-29T23:59:59')
+        for $user in dataset GleambookUsers
+        where $user.userSince >= datetime('2010-07-22T00:00:00')
+          and $user.userSince <= datetime('2012-07-29T23:59:59')
         return $user;
 
 The expected result for this query, also an indexable query, is as follows:
 
-        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "user-since": datetime("2011-01-22T10:10:00.000Z"), "friend-ids": {{ 1, 4 }}, "employment": [ { "organization-name": "Hexviafind", "start-date": date("2010-04-27"), "end-date": null } ] }
-        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "user-since": datetime("2012-07-10T10:10:00.000Z"), "friend-ids": {{ 1, 5, 8, 9 }}, "employment": [ { "organization-name": "geomedia", "start-date": date("2010-06-17"), "end-date": date("2010-01-26") } ] }
-        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "user-since": datetime("2010-12-27T10:10:00.000Z"), "friend-ids": {{ 2 }}, "employment": [ { "organization-name": "Zamcorporation", "start-date": date("2010-06-08"), "end-date": null } ] }
-        { "id": 10, "alias": "Bram", "name": "BramHatch", "user-since": datetime("2010-10-16T10:10:00.000Z"), "friend-ids": {{ 1, 5, 9 }}, "employment": [ { "organization-name": "physcane", "start-date": date("2007-06-05"), "end-date": date("2011-11-05") } ] }
-
+        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }
+        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": datetime("2010-12-27T10:10:00.000Z"), "friendIds": {{ 2 }}, "employment": [ { "organizationName": "Zamcorporation", "startDate": date("2010-06-08") } ] }
+        { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }
+        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }
 
 ### Query 2-A - Equijoin ###
 In addition to simply binding variables to data instances and returning them "whole",
 an AQL query can construct new ADM instances to return based on combinations of its variable bindings.
 This gives AQL the power to do joins much like those done using multi-table _from_ clauses in SQL.
-For example, suppose we wanted a list of all Facebook users paired with their associated messages,
-with the list enumerating the author name and the message text associated with each Facebook message.
+For example, suppose we wanted a list of all Gleambook users paired with their associated messages,
+with the list enumerating the author name and the message text associated with each Gleambook message.
 We could do this as follows in AQL:
 
         use dataverse TinySocial;
 
-        for $user in dataset FacebookUsers
-        for $message in dataset FacebookMessages
-        where $message.author-id = $user.id
+        for $user in dataset GleambookUsers
+        for $message in dataset GleambookMessages
+        where $message.authorId = $user.id
         return {
-        "uname": $user.name,
-        "message": $message.message
+            "uname": $user.name,
+            "message": $message.message
         };
 
 The result of this query is a sequence of new ADM instances, one for each author/message pair.
@@ -472,22 +474,33 @@ a very powerful tool for slicing and dicing semistructured data.)
 
 The expected result of this example AQL join query for our sample data set is:
 
+        { "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
+        { "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
         { "uname": "MargaritaStoddard", "message": " dislike iphone its touch-screen is horrible" }
         { "uname": "MargaritaStoddard", "message": " can't stand at&t the network is horrible:(" }
         { "uname": "MargaritaStoddard", "message": " like verizon the 3G is awesome:)" }
         { "uname": "MargaritaStoddard", "message": " can't stand motorola the touch-screen is terrible" }
-        { "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
-        { "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
         { "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
-        { "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
-        { "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
-        { "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
-        { "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
-        { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
+        { "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
         { "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
         { "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
         { "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
+        { "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
+        { "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
+        { "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
+        { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
 
+Again, as an aside, note that the same query expressed using AQL's SQL keyword synonyms would be:
+
+        use dataverse TinySocial;
+
+        from $user in dataset GleambookUsers
+        from $message in dataset GleambookMessages
+        where $message.authorId = $user.id
+        select {
+            "uname": $user.name,
+            "message": $message.message
+        };
 
 ### Query 2-B - Index join ###
 By default, AsterixDB evaluates equijoin queries using hash-based join methods that work
@@ -506,12 +519,12 @@ should consider employing an index-based nested-loop join technique to process t
 
         use dataverse TinySocial;
 
-        for $user in dataset FacebookUsers
-        for $message in dataset FacebookMessages
-        where $message.author-id /*+ indexnl */  = $user.id
+        for $user in dataset GleambookUsers
+        for $message in dataset GleambookMessages
+        where $message.authorId /*+ indexnl */  = $user.id
         return {
-        "uname": $user.name,
-        "message": $message.message
+            "uname": $user.name,
+            "message": $message.message
         };
 
 
@@ -519,22 +532,21 @@ The expected result is (of course) the same as before, modulo the order of the i
 Result ordering is (intentionally) undefined in AQL in the absence of an _order by_ clause.
 The query result for our sample data in this case is:
 
+        { "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
+        { "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
+        { "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
+        { "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
         { "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
         { "uname": "MargaritaStoddard", "message": " dislike iphone its touch-screen is horrible" }
-        { "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
         { "uname": "MargaritaStoddard", "message": " can't stand at&t the network is horrible:(" }
-        { "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
-        { "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
-        { "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
+        { "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
+        { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
         { "uname": "MargaritaStoddard", "message": " like verizon the 3G is awesome:)" }
         { "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
         { "uname": "MargaritaStoddard", "message": " can't stand motorola the touch-screen is terrible" }
-        { "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
-        { "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
-        { "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
-        { "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
-        { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
-
+        { "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
+        { "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
+        { "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
 
 (It is worth knowing, with respect to influencing AsterixDB's query evaluation, that nested _for_
 clauses---a.k.a. joins--- are currently evaluated with the "outer" clause probing the data of the "inner"
@@ -549,7 +561,7 @@ grouped by customer, without omitting those customers who haven't placed any ord
 
 The AQL language supports nesting, both of queries and of query results, and the combination allows for
 an arguably cleaner/more natural approach to such queries.
-As an example, supposed we wanted, for each Facebook user, to produce a record that has his/her name
+As an example, supposed we wanted, for each Gleambook user, to produce a record that has his/her name
 plus a list of the messages written by that user.
 In SQL, this would involve a left outer join between users and messages, grouping by user, and having
 the user name repeated along side each message.
@@ -557,15 +569,15 @@ In AQL, this sort of use case can be handled (more naturally) as follows:
 
         use dataverse TinySocial;
 
-        for $user in dataset FacebookUsers
+        for $user in dataset GleambookUsers
         return {
-        "uname": $user.name,
-        "messages": for $message in dataset FacebookMessages
-                where $message.author-id = $user.id
-                return $message.message
+            "uname": $user.name,
+            "messages": for $message in dataset GleambookMessages
+                        where $message.authorId = $user.id
+                        return $message.message
         };
 
-This AQL query binds the variable `$user` to the data instances in FacebookUsers;
+This AQL query binds the variable `$user` to the data instances in GleambookUsers;
 for each user, it constructs a result record containing a "uname" field with the user's
 name and a "messages" field with a nested collection of all messages for that user.
 The nested collection for each user is specified by using a correlated subquery.
@@ -575,17 +587,16 @@ use an efficient hash-based strategy when actually computing the query's result.
 
 Here is this example query's expected output:
 
-        { "uname": "MargaritaStoddard", "messages": [ " dislike iphone its touch-screen is horrible", " can't stand at&t the network is horrible:(", " like verizon the 3G is awesome:)", " can't stand motorola the touch-screen is terrible", " can't stand at&t its plan is terrible" ] }
-        { "uname": "IsbelDull", "messages": [ " like samsung the plan is amazing", " like t-mobile its platform is mind-blowing" ] }
-        { "uname": "EmoryUnk", "messages": [ " love sprint its shortcut-menu is awesome:)", " love verizon its wireless is good" ] }
-        { "uname": "NicholasStroh", "messages": [  ] }
-        { "uname": "VonKemble", "messages": [ " dislike sprint the speed is horrible" ] }
         { "uname": "WillisWynne", "messages": [ " love sprint the customization is mind-blowing" ] }
-        { "uname": "SuzannaTillson", "messages": [ " like iphone the voicemail-service is awesome" ] }
+        { "uname": "MargaritaStoddard", "messages": [ " can't stand at&t its plan is terrible", " dislike iphone its touch-screen is horrible", " can't stand at&t the network is horrible:(", " like verizon the 3G is awesome:)", " can't stand motorola the touch-screen is terrible" ] }
+        { "uname": "IsbelDull", "messages": [ " like t-mobile its platform is mind-blowing", " like samsung the plan is amazing" ] }
+        { "uname": "NicholasStroh", "messages": [  ] }
         { "uname": "NilaMilliron", "messages": [  ] }
         { "uname": "WoodrowNehling", "messages": [ " love at&t its 3G is good:)" ] }
-        { "uname": "BramHatch", "messages": [ " dislike iphone the voice-command is bad:(", " can't stand t-mobile its voicemail-service is OMG:(" ] }
-
+        { "uname": "BramHatch", "messages": [ " can't stand t-mobile its voicemail-service is OMG:(", " dislike iphone the voice-command is bad:(" ] }
+        { "uname": "EmoryUnk", "messages": [ " love sprint its shortcut-menu is awesome:)", " love verizon its wireless is good" ] }
+        { "uname": "VonKemble", "messages": [ " dislike sprint the speed is horrible" ] }
+        { "uname": "SuzannaTillson", "messages": [ " like iphone the voicemail-service is awesome" ] }
 
 ### Query 4 - Theta Join ###
 Not all joins are expressible as equijoins and computable using equijoin-oriented algorithms.
@@ -593,40 +604,40 @@ The join predicates for some use cases involve predicates with functions; Asteri
 expression of such queries and will still evaluate them as best it can using nested loop based
 techniques (and broadcast joins in the parallel case).
 
-As an example of such a use case, suppose that we wanted, for each tweet T, to find all of the
-other tweets that originated from within a circle of radius of 1 surrounding tweet T's location.
+As an example of such a use case, suppose that we wanted, for each chirp T, to find all of the
+other chirps that originated from within a circle of radius of 1 surrounding chirp T's location.
 In AQL, this can be specified in a manner similar to the previous query using one of the built-in
 functions on the spatial data type instead of id equality in the correlated query's _where_ clause:
 
         use dataverse TinySocial;
 
-        for $t in dataset TweetMessages
+        for $cm in dataset ChirpMessages
         return {
-        "message": $t.message-text,
-        "nearby-messages": for $t2 in dataset TweetMessages
-                    where spatial-distance($t.sender-location, $t2.sender-location) <= 1
-                    return { "msgtxt":$t2.message-text}
+            "message": $cm.messageText,
+            "nearbyMessages": for $cm2 in dataset ChirpMessages
+                              where spatial-distance($cm.senderLocation, $cm2.senderLocation) <= 1
+                              return { "msgtxt":$cm2.messageText}
         };
 
 Here is the expected result for this query:
 
-        { "message": " love t-mobile its customization is good:)", "nearby-messages": [ { "msgtxt": " love t-mobile its customization is good:)" } ] }
-        { "message": " hate verizon its voice-clarity is OMG:(", "nearby-messages": [ { "msgtxt": " like motorola the speed is good:)" }, { "msgtxt": " hate verizon its voice-clarity is OMG:(" } ] }
-        { "message": " can't stand iphone its platform is terrible", "nearby-messages": [ { "msgtxt": " can't stand iphone its platform is terrible" } ] }
-        { "message": " like samsung the voice-command is amazing:)", "nearby-messages": [ { "msgtxt": " like samsung the voice-command is amazing:)" } ] }
-        { "message": " like verizon its shortcut-menu is awesome:)", "nearby-messages": [ { "msgtxt": " like verizon its shortcut-menu is awesome:)" } ] }
-        { "message": " like motorola the speed is good:)", "nearby-messages": [ { "msgtxt": " hate verizon its voice-clarity is OMG:(" }, { "msgtxt": " like motorola the speed is good:)" } ] }
-        { "message": " like sprint the voice-command is mind-blowing:)", "nearby-messages": [ { "msgtxt": " like sprint the voice-command is mind-blowing:)" } ] }
-        { "message": " can't stand motorola its speed is terrible:(", "nearby-messages": [ { "msgtxt": " can't stand motorola its speed is terrible:(" } ] }
-        { "message": " like iphone the voice-clarity is good:)", "nearby-messages": [ { "msgtxt": " like iphone the voice-clarity is good:)" } ] }
-        { "message": " like samsung the platform is good", "nearby-messages": [ { "msgtxt": " like samsung the platform is good" } ] }
-        { "message": " like t-mobile the shortcut-menu is awesome:)", "nearby-messages": [ { "msgtxt": " like t-mobile the shortcut-menu is awesome:)" } ] }
-        { "message": " love verizon its voicemail-service is awesome", "nearby-messages": [ { "msgtxt": " love verizon its voicemail-service is awesome" } ] }
+        { "message": " can't stand iphone its platform is terrible", "nearbyMessages": [ { "msgtxt": " can't stand iphone its platform is terrible" } ] }
+        { "message": " like verizon its shortcut-menu is awesome:)", "nearbyMessages": [ { "msgtxt": " like verizon its shortcut-menu is awesome:)" } ] }
+        { "message": " like sprint the voice-command is mind-blowing:)", "nearbyMessages": [ { "msgtxt": " like sprint the voice-command is mind-blowing:)" } ] }
+        { "message": " love verizon its voicemail-service is awesome", "nearbyMessages": [ { "msgtxt": " love verizon its voicemail-service is awesome" } ] }
+        { "message": " love t-mobile its customization is good:)", "nearbyMessages": [ { "msgtxt": " love t-mobile its customization is good:)" } ] }
+        { "message": " can't stand motorola its speed is terrible:(", "nearbyMessages": [ { "msgtxt": " can't stand motorola its speed is terrible:(" } ] }
+        { "message": " like motorola the speed is good:)", "nearbyMessages": [ { "msgtxt": " like motorola the speed is good:)" }, { "msgtxt": " hate verizon its voice-clarity is OMG:(" } ] }
+        { "message": " like iphone the voice-clarity is good:)", "nearbyMessages": [ { "msgtxt": " like iphone the voice-clarity is good:)" } ] }
+        { "message": " like samsung the platform is good", "nearbyMessages": [ { "msgtxt": " like samsung the platform is good" } ] }
+        { "message": " hate verizon its voice-clarity is OMG:(", "nearbyMessages": [ { "msgtxt": " like motorola the speed is good:)" }, { "msgtxt": " hate verizon its voice-clarity is OMG:(" } ] }
+        { "message": " like samsung the voice-command is amazing:)", "nearbyMessages": [ { "msgtxt": " like samsung the voice-command is amazing:)" } ] }
+        { "message": " like t-mobile the shortcut-menu is awesome:)", "nearbyMessages": [ { "msgtxt": " like t-mobile the shortcut-menu is awesome:)" } ] }
 
 
 ### Query 5 - Fuzzy Join ###
-As another example of a non-equijoin use case, we could ask AsterixDB to find, for each Facebook user,
-all Twitter users with names "similar" to their name.
+As another example of a non-equijoin use case, we could ask AsterixDB to find, for each Gleambook user,
+all Chirp users with names "similar" to their name.
 AsterixDB supports a variety of "fuzzy match" functions for use with textual and set-based data.
 As one example, we could choose to use edit distance with a threshold of 3 as the definition of name
 similarity, in which case we could write the following query using AQL's operator-based syntax (~=)
@@ -637,125 +648,118 @@ for testing whether or not two values are similar:
         set simfunction "edit-distance";
         set simthreshold "3";
 
-        for $fbu in dataset FacebookUsers
+        for $gbu in dataset GleambookUsers
         return {
-            "id": $fbu.id,
-            "name": $fbu.name,
-            "similar-users": for $t in dataset TweetMessages
-                    let $tu := $t.user
-                    where $tu.name ~= $fbu.name
-                    return {
-                    "twitter-screenname": $tu.screen-name,
-                    "twitter-name": $tu.name
-                    }
+            "id": $gbu.id,
+            "name": $gbu.name,
+            "similarUsers": for $cm in dataset ChirpMessages
+                            let $cu := $cm.user
+                            where $cu.name ~= $gbu.name
+                            return {
+                                "chirpScreenname": $cu.screenName,
+                                "chirpName": $cu.name
+                            }
         };
 
 The expected result for this query against our sample data is:
 
-        { "id": 1, "name": "MargaritaStoddard", "similar-users": [  ] }
-        { "id": 2, "name": "IsbelDull", "similar-users": [  ] }
-        { "id": 3, "name": "EmoryUnk", "similar-users": [  ] }
-        { "id": 4, "name": "NicholasStroh", "similar-users": [  ] }
-        { "id": 5, "name": "VonKemble", "similar-users": [  ] }
-        { "id": 6, "name": "WillisWynne", "similar-users": [  ] }
-        { "id": 7, "name": "SuzannaTillson", "similar-users": [  ] }
-        { "id": 8, "name": "NilaMilliron", "similar-users": [ { "twitter-screenname": "NilaMilliron_tw", "twitter-name": "Nila Milliron" } ] }
-        { "id": 9, "name": "WoodrowNehling", "similar-users": [  ] }
-        { "id": 10, "name": "BramHatch", "similar-users": [  ] }
-
+        { "id": 6, "name": "WillisWynne", "similarUsers": [  ] }
+        { "id": 1, "name": "MargaritaStoddard", "similarUsers": [  ] }
+        { "id": 2, "name": "IsbelDull", "similarUsers": [  ] }
+        { "id": 4, "name": "NicholasStroh", "similarUsers": [  ] }
+        { "id": 8, "name": "NilaMilliron", "similarUsers": [ { "chirpScreenname": "NilaMilliron_tw", "chirpName": "Nila Milliron" } ] }
+        { "id": 9, "name": "WoodrowNehling", "similarUsers": [  ] }
+        { "id": 10, "name": "BramHatch", "similarUsers": [  ] }
+        { "id": 3, "name": "EmoryUnk", "similarUsers": [  ] }
+        { "id": 5, "name": "VonKemble", "similarUsers": [  ] }
+        { "id": 7, "name": "SuzannaTillson", "similarUsers": [  ] }
 
 ### Query 6 - Existential Quantification ###
 The expressive power of AQL includes support for queries involving "some" (existentially quantified)
 and "all" (universally quantified) query semantics.
-As an example of an existential AQL query, here we show a query to list the Facebook users who are currently employed.
-Such employees will have an employment history containing a record with the end-date value missing, which leads us to the
+As an example of an existential AQL query, here we show a query to list the Gleambook users who are currently employed.
+Such employees will have an employment history containing a record with the endDate value missing, which leads us to the
 following AQL query:
 
         use dataverse TinySocial;
 
-        for $fbu in dataset FacebookUsers
-        where (some $e in $fbu.employment satisfies is-missing($e.end-date))
-        return $fbu;
+        for $gbu in dataset GleambookUsers
+        where (some $e in $gbu.employment satisfies is-missing($e.endDate))
+        return $gbu;
 
 The expected result in this case is:
 
-        { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "user-since": datetime("2012-08-20T10:10:00.000Z"), "friend-ids": {{ 2, 3, 6, 10 }}, "employment": [ { "organization-name": "Codetechno", "start-date": date("2006-08-06"), "end-date": null } ] }
-        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "user-since": datetime("2011-01-22T10:10:00.000Z"), "friend-ids": {{ 1, 4 }}, "employment": [ { "organization-name": "Hexviafind", "start-date": date("2010-04-27"), "end-date": null } ] }
-        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "user-since": datetime("2010-12-27T10:10:00.000Z"), "friend-ids": {{ 2 }}, "employment": [ { "organization-name": "Zamcorporation", "start-date": date("2010-06-08"), "end-date": null } ] }
-        { "id": 5, "alias": "Von", "name": "VonKemble", "user-since": datetime("2010-01-05T10:10:00.000Z"), "friend-ids": {{ 3, 6, 10 }}, "employment": [ { "organization-name": "Kongreen", "start-date": date("2010-11-27"), "end-date": null } ] }
-        { "id": 6, "alias": "Willis", "name": "WillisWynne", "user-since": datetime("2005-01-17T10:10:00.000Z"), "friend-ids": {{ 1, 3, 7 }}, "employment": [ { "organization-name": "jaydax", "start-date": date("2009-05-15"), "end-date": null } ] }
-        { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "user-since": datetime("2012-08-07T10:10:00.000Z"), "friend-ids": {{ 6 }}, "employment": [ { "organization-name": "Labzatron", "start-date": date("2011-04-19"), "end-date": null } ] }
-        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "user-since": datetime("2008-01-01T10:10:00.000Z"), "friend-ids": {{ 3 }}, "employment": [ { "organization-name": "Plexlane", "start-date": date("2010-02-28"), "end-date": null } ] }
-
+        { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": datetime("2005-01-17T10:10:00.000Z"), "friendIds": {{ 1, 3, 7 }}, "employment": [ { "organizationName": "jaydax", "startDate": date("2009-05-15") } ] }
+        { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }
+        { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }
+        { "id": 4, "alias": "Nicholas", "name": "NicholasStroh", "userSince": datetime("2010-12-27T10:10:00.000Z"), "friendIds": {{ 2 }}, "employment": [ { "organizationName": "Zamcorporation", "startDate": date("2010-06-08") } ] }
+        { "id": 8, "alias": "Nila", "name": "NilaMilliron", "userSince": datetime("2008-01-01T10:10:00.000Z"), "friendIds": {{ 3 }}, "employment": [ { "organizationName": "Plexlane", "startDate": date("2010-02-28") } ] }
+        { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": datetime("2010-01-05T10:10:00.000Z"), "friendIds": {{ 3, 6, 10 }}, "employment": [ { "organizationName": "Kongreen", "startDate": date("2010-11-27") } ] }
+        { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": datetime("2012-08-07T10:10:00.000Z"), "friendIds": {{ 6 }}, "employment": [ { "organizationName": "Labzatron", "startDate": date("2011-04-19") } ] }
 
 ### Query 7 - Universal Quantification ###
-As an example of a universal AQL query, here we show a query to list the Facebook users who are currently unemployed.
-Such employees will have an employment history containing no records that miss end-date values, leading us to the
+As an example of a universal AQL query, here we show a query to list the Gleambook users who are currently unemployed.
+Such employees will have an employment history containing no records that miss endDate values, leading us to the
 following AQL query:
 
         use dataverse TinySocial;
 
-        for $fbu in dataset FacebookUsers
-        where (every $e in $fbu.employment satisfies not(is-missing($e.end-date)))
-        return $fbu;
+        for $gbu in dataset GleambookUsers
+        where (every $e in $gbu.employment satisfies not(is-missing($e.endDate)))
+        return $gbu;
 
 Here is the expected result for our sample data:
 
-        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "user-since": datetime("2012-07-10T10:10:00.000Z"), "friend-ids": {{ 1, 5, 8, 9 }}, "employment": [ { "organization-name": "geomedia", "start-date": date("2010-06-17"), "end-date": date("2010-01-26") } ] }
-        { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "user-since": datetime("2005-09-20T10:10:00.000Z"), "friend-ids": {{ 3, 10 }}, "employment": [ { "organization-name": "Zuncan", "start-date": date("2003-04-22"), "end-date": date("2009-12-13") } ] }
-        { "id": 10, "alias": "Bram", "name": "BramHatch", "user-since": datetime("2010-10-16T10:10:00.000Z"), "friend-ids": {{ 1, 5, 9 }}, "employment": [ { "organization-name": "physcane", "start-date": date("2007-06-05"), "end-date": date("2011-11-05") } ] }
-
+        { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": datetime("2005-09-20T10:10:00.000Z"), "friendIds": {{ 3, 10 }}, "employment": [ { "organizationName": "Zuncan", "startDate": date("2003-04-22"), "endDate": date("2009-12-13") } ], "nickname": "Woody" }
+        { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }
+        { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }
 
 ### Query 8 - Simple Aggregation ###
 Like SQL, the AQL language of AsterixDB provides support for computing aggregates over large amounts of data.
-As a very simple example, the following AQL query computes the total number of Facebook users:
+As a very simple example, the following AQL query computes the total number of Gleambook users:
 
         use dataverse TinySocial;
 
-        count(for $fbu in dataset FacebookUsers return $fbu);
+        count(for $gbu in dataset GleambookUsers return $gbu);
 
 In AQL, aggregate functions can be applied to arbitrary subquery results; in this case, the count function
-is applied to the result of a query that enumerates the Facebook users.  The expected result here is:
+is applied to the result of a query that enumerates the Gleambook users.  The expected result here is:
 
         10
 
-
-
 ### Query 9-A - Grouping and Aggregation ###
 Also like SQL, AQL supports grouped aggregation.
-For every Twitter user, the following group-by/aggregate query counts the number of tweets sent by that user:
+For every Chirp user, the following group-by/aggregate query counts the number of chirps sent by that user:
 
         use dataverse TinySocial;
 
-        for $t in dataset TweetMessages
-        group by $uid := $t.user.screen-name with $t
+        for $cm in dataset ChirpMessages
+        group by $uid := $cm.user.screenName with $cm
         return {
-        "user": $uid,
-        "count": count($t)
+            "user": $uid,
+            "count": count($cm)
         };
 
-The _for_ clause incrementally binds $t to tweets, and the _group by_ clause groups the tweets by its
-issuer's Twitter screen-name.
+The _for_ clause incrementally binds $cm to chirps, and the _group by_ clause groups the chirps by its
+issuer's Chirp screenName.
 Unlike SQL, where data is tabular---flat---the data model underlying AQL allows for nesting.
-Thus, following the _group by_ clause, the _return_ clause in this query sees a sequence of $t groups,
-with each such group having an associated $uid variable value (i.e., the tweeting user's screen name).
-In the context of the return clause, due to "... with $t ...", $uid is bound to the tweeter's id and $t
-is bound to the _set_ of tweets issued by that tweeter.
-The return clause constructs a result record containing the tweeter's user id and the count of the items
-in the associated tweet set.
+Thus, following the _group by_ clause, the _return_ clause in this query sees a sequence of $cm groups,
+with each such group having an associated $uid variable value (i.e., the chirping user's screen name).
+In the context of the return clause, due to "... with $cm ...", $uid is bound to the chirper's id and $cm
+is bound to the _set_ of chirps issued by that chirper.
+The return clause constructs a result record containing the chirper's user id and the count of the items
+in the associated chirp set.
 The query result will contain one such record per screen name.
 This query also illustrates another feature of AQL; notice that each user's screen name is accessed via a
-path syntax that traverses each tweet's nested record structure.
+path syntax that traverses each chirp's nested record structure.
 
 Here is the expected result for this query over the sample data:
 
+        { "user": "OliJackson_512", "count": 1 }
         { "user": "ChangEwing_573", "count": 1 }
         { "user": "ColineGeyer@63", "count": 3 }
         { "user": "NathanGiesen@211", "count": 6 }
         { "user": "NilaMilliron_tw", "count": 1 }
-        { "user": "OliJackson_512", "count": 1 }
-
-
 
 ### Query 9-B - (Hash-Based) Grouping and Aggregation ###
 As for joins, AsterixDB has multiple evaluation strategies available for processing grouped aggregate queries.
@@ -767,36 +771,34 @@ The following query is similar to Query 9-A, but adds a hash-based aggregation h
 
         use dataverse TinySocial;
 
-        for $t in dataset TweetMessages
+        for $cm in dataset ChirpMessages
         /*+ hash*/
-        group by $uid := $t.user.screen-name with $t
+        group by $uid := $cm.user.screenName with $cm
         return {
-        "user": $uid,
-        "count": count($t)
+            "user": $uid,
+            "count": count($cm)
         };
 
 Here is the expected result:
 
         { "user": "OliJackson_512", "count": 1 }
+        { "user": "ChangEwing_573", "count": 1 }
         { "user": "ColineGeyer@63", "count": 3 }
         { "user": "NathanGiesen@211", "count": 6 }
         { "user": "NilaMilliron_tw", "count": 1 }
-        { "user": "ChangEwing_573", "count": 1 }
-
-
 
 ### Query 10 - Grouping and Limits ###
 In some use cases it is not necessary to compute the entire answer to a query.
 In some cases, just having the first _N_ or top _N_ results is sufficient.
 This is expressible in AQL using the _limit_ clause combined with the _order by_ clause.
 
-The following AQL  query returns the top 3 Twitter users based on who has issued the most tweets:
+The following AQL  query returns the top 3 Chirp users based on who has issued the most chirps:
 
         use dataverse TinySocial;
 
-        for $t in dataset TweetMessages
-        group by $uid := $t.user.screen-name with $t
-        let $c := count($t)
+        for $cm in dataset ChirpMessages
+        group by $uid := $cm.user.screenName with $cm
+        let $c := count($cm)
         order by $c desc
         limit 3
         return {
@@ -808,74 +810,72 @@ The expected result for this query is:
 
         { "user": "NathanGiesen@211", "count": 6 }
         { "user": "ColineGeyer@63", "count": 3 }
-        { "user": "NilaMilliron_tw", "count": 1 }
-
+        { "user": "OliJackson_512", "count": 1 }
 
 ### Query 11 - Left Outer Fuzzy Join ###
-As a last example of AQL and its query power, the following query, for each tweet,
-finds all of the tweets that are similar based on the topics that they refer to:
+As a last example of AQL and its query power, the following query, for each chirp,
+finds all of the chirps that are similar based on the topics that they refer to:
 
         use dataverse TinySocial;
 
         set simfunction "jaccard";
         set simthreshold "0.3";
 
-        for $t in dataset TweetMessages
+        for $cm in dataset ChirpMessages
         return {
-            "tweet": $t,
-            "similar-tweets": for $t2 in dataset TweetMessages
-                    where  $t2.referred-topics ~= $t.referred-topics
-                    and $t2.tweetid != $t.tweetid
-                    return $t2.referred-topics
+            "chirp": $cm,
+            "similarChirps": for $cm2 in dataset ChirpMessages
+                             where  $cm2.referredTopics ~= $cm.referredTopics
+                             and $cm2.chirpId != $cm.chirpId
+                             return $cm2.referredTopics
         };
 
 This query illustrates several things worth knowing in order to write fuzzy queries in AQL.
 First, as mentioned earlier, AQL offers an operator-based syntax for seeing whether two values are "similar" to one another or not.
-Second, recall that the referred-topics field of records of datatype TweetMessageType is a bag of strings.
+Second, recall that the referredTopics field of records of datatype ChirpMessageType is a bag of strings.
 This query sets the context for its similarity join by requesting that Jaccard-based similarity semantics
 ([http://en.wikipedia.org/wiki/Jaccard_index](http://en.wikipedia.org/wiki/Jaccard_index))
 be used for the query's similarity operator and that a similarity index of 0.3 be used as its similarity threshold.
 
 The expected result for this fuzzy join query is:
 
-        { "tweet": { "tweetid": "1", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": 39339, "statuses_count": 473, "name": "Nathan Giesen", "followers_count": 49416 }, "sender-location": point("47.44,80.65"), "send-time": datetime("2008-04-26T10:10:00.000Z"), "referred-topics": {{ "t-mobile", "customization" }}, "message-text": " love t-mobile its customization is good:)" }, "similar-tweets": [ {{ "t-mobile", "shortcut-menu" }} ] }
-        { "tweet": { "tweetid": "10", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": 121, "statuses_count": 362, "name": "Coline Geyer", "followers_count": 17159 }, "sender-location": point("29.15,76.53"), "send-time": datetime("2008-01-26T10:10:00.000Z"), "referred-topics": {{ "verizon", "voice-clarity" }}, "message-text": " hate verizon its voice-clarity is OMG:(" }, "similar-tweets": [ {{ "iphone", "voice-clarity" }}, {{ "verizon", "voicemail-service" }}, {{ "verizon", "shortcut-menu" }} ] }
-        { "tweet": { "tweetid": "11", "user": { "screen-name": "NilaMilliron_tw", "lang": "en", "friends_count": 445, "statuses_count": 164, "name": "Nila Milliron", "followers_count": 22649 }, "sender-location": point("37.59,68.42"), "send-time": datetime("2008-03-09T10:10:00.000Z"), "referred-topics": {{ "iphone", "platform" }}, "message-text": " can't stand iphone its platform is terrible" }, "similar-tweets": [ {{ "iphone", "voice-clarity" }}, {{ "samsung", "platform" }} ] }
-        { "tweet": { "tweetid": "12", "user": { "screen-name": "OliJackson_512", "lang": "en", "friends_count": 445, "statuses_count": 164, "name": "Oli Jackson", "followers_count": 22649 }, "sender-location": point("24.82,94.63"), "send-time": datetime("2010-02-13T10:10:00.000Z"), "referred-topics": {{ "samsung", "voice-command" }}, "message-text": " like samsung the voice-command is amazing:)" }, "similar-tweets": [ {{ "samsung", "platform" }}, {{ "sprint", "voice-command" }} ] }
-        { "tweet": { "tweetid": "2", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": 121, "statuses_count": 362, "name": "Coline Geyer", "followers_count": 17159 }, "sender-location": point("32.84,67.14"), "send-time": datetime("2010-05-13T10:10:00.000Z"), "referred-topics": {{ "verizon", "shortcut-menu" }}, "message-text": " like verizon its shortcut-menu is awesome:)" }, "similar-tweets": [ {{ "verizon", "voicemail-service" }}, {{ "verizon", "voice-clarity" }}, {{ "t-mobile", "shortcut-menu" }} ] }
-        { "tweet": { "tweetid": "3", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": 39339, "statuses_count": 473, "name": "Nathan Giesen", "followers_count": 49416 }, "sender-location": point("29.72,75.8"), "send-time": datetime("2006-11-04T10:10:00.000Z"), "referred-topics": {{ "motorola", "speed" }}, "message-text": " like motorola the speed is good:)" }, "similar-tweets": [ {{ "motorola", "speed" }} ] }
-        { "tweet": { "tweetid": "4", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": 39339, "statuses_count": 473, "name": "Nathan Giesen", "followers_count": 49416 }, "sender-location": point("39.28,70.48"), "send-time": datetime("2011-12-26T10:10:00.000Z"), "referred-topics": {{ "sprint", "voice-command" }}, "message-text": " like sprint the voice-command is mind-blowing:)" }, "similar-tweets": [ {{ "samsung", "voice-command" }} ] }
-        { "tweet": { "tweetid": "5", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": 39339, "statuses_count": 473, "name": "Nathan Giesen", "followers_count": 49416 }, "sender-location": point("40.09,92.69"), "send-time": datetime("2006-08-04T10:10:00.000Z"), "referred-topics": {{ "motorola", "speed" }}, "message-text": " can't stand motorola its speed is terrible:(" }, "similar-tweets": [ {{ "motorola", "speed" }} ] }
-        { "tweet": { "tweetid": "6", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": 121, "statuses_count": 362, "name": "Coline Geyer", "followers_count": 17159 }, "sender-location": point("47.51,83.99"), "send-time": datetime("2010-05-07T10:10:00.000Z"), "referred-topics": {{ "iphone", "voice-clarity" }}, "message-text": " like iphone the voice-clarity is good:)" }, "similar-tweets": [ {{ "verizon", "voice-clarity" }}, {{ "iphone", "platform" }} ] }
-        { "tweet": { "tweetid": "7", "user": { "screen-name": "ChangEwing_573", "lang": "en", "friends_count": 182, "statuses_count": 394, "name": "Chang Ewing", "followers_count": 32136 }, "sender-location": point("36.21,72.6"), "send-time": datetime("2011-08-25T10:10:00.000Z"), "referred-topics": {{ "samsung", "platform" }}, "message-text": " like samsung the platform is good" }, "similar-tweets": [ {{ "iphone", "platform" }}, {{ "samsung", "voice-command" }} ] }
-        { "tweet": { "tweetid": "8", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": 39339, "statuses_count": 473, "name": "Nathan Giesen", "followers_count": 49416 }, "sender-location": point("46.05,93.34"), "send-time": datetime("2005-10-14T10:10:00.000Z"), "referred-topics": {{ "t-mobile", "shortcut-menu" }}, "message-text": " like t-mobile the shortcut-menu is awesome:)" }, "similar-tweets": [ {{ "t-mobile", "customization" }}, {{ "verizon", "shortcut-menu" }} ] }
-        { "tweet": { "tweetid": "9", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": 39339, "statuses_count": 473, "name": "Nathan Giesen", "followers_count": 49416 }, "sender-location": point("36.86,74.62"), "send-time": datetime("2012-07-21T10:10:00.000Z"), "referred-topics": {{ "verizon", "voicemail-service" }}, "message-text": " love verizon its voicemail-service is awesome" }, "similar-tweets": [ {{ "verizon", "voice-clarity" }}, {{ "verizon", "shortcut-menu" }} ] }
-
+        { "chirp": { "chirpId": "11", "user": { "screenName": "NilaMilliron_tw", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Nila Milliron", "followersCount": 22649 }, "senderLocation": point("37.59,68.42"), "sendTime": datetime("2008-03-09T10:10:00.000Z"), "referredTopics": {{ "iphone", "platform" }}, "messageText": " can't stand iphone its platform is terrible" }, "similarChirps": [ {{ "iphone", "voice-clarity" }}, {{ "samsung", "platform" }} ] }
+        { "chirp": { "chirpId": "2", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("32.84,67.14"), "sendTime": datetime("2010-05-13T10:10:00.000Z"), "referredTopics": {{ "verizon", "shortcut-menu" }}, "messageText": " like verizon its shortcut-menu is awesome:)" }, "similarChirps": [ {{ "verizon", "voicemail-service" }}, {{ "verizon", "voice-clarity" }}, {{ "t-mobile", "shortcut-menu" }} ] }
+        { "chirp": { "chirpId": "4", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("39.28,70.48"), "sendTime": datetime("2011-12-26T10:10:00.000Z"), "referredTopics": {{ "sprint", "voice-command" }}, "messageText": " like sprint the voice-command is mind-blowing:)" }, "similarChirps": [ {{ "samsung", "voice-command" }} ] }
+        { "chirp": { "chirpId": "9", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("36.86,74.62"), "sendTime": datetime("2012-07-21T10:10:00.000Z"), "referredTopics": {{ "verizon", "voicemail-service" }}, "messageText": " love verizon its voicemail-service is awesome" }, "similarChirps": [ {{ "verizon", "shortcut-menu" }}, {{ "verizon", "voice-clarity" }} ] }
+        { "chirp": { "chirpId": "1", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("47.44,80.65"), "sendTime": datetime("2008-04-26T10:10:00.000Z"), "referredTopics": {{ "t-mobile", "customization" }}, "messageText": " love t-mobile its customization is good:)" }, "similarChirps": [ {{ "t-mobile", "shortcut-menu" }} ] }
+        { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("40.09,92.69"), "sendTime": datetime("2006-08-04T10:10:00.000Z"), "referredTopics": {{ "motorola", "speed" }}, "messageText": " can't stand motorola its speed is terrible:(" }, "similarChirps": [ {{ "motorola", "speed" }} ] }
+        { "chirp": { "chirpId": "3", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("29.72,75.8"), "sendTime": datetime("2006-11-04T10:10:00.000Z"), "referredTopics": {{ "motorola", "speed" }}, "messageText": " like motorola the speed is good:)" }, "similarChirps": [ {{ "motorola", "speed" }} ] }
+        { "chirp": { "chirpId": "6", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("47.51,83.99"), "sendTime": datetime("2010-05-07T10:10:00.000Z"), "referredTopics": {{ "iphone", "voice-clarity" }}, "messageText": " like iphone the voice-clarity is good:)" }, "similarChirps": [ {{ "iphone", "platform" }}, {{ "verizon", "voice-clarity" }} ] }
+        { "chirp": { "chirpId": "7", "user": { "screenName": "ChangEwing_573", "lang": "en", "friendsCount": 182, "statusesCount": 394, "name": "Chang Ewing", "followersCount": 32136 }, "senderLocation": point("36.21,72.6"), "sendTime": datetime("2011-08-25T10:10:00.000Z"), "referredTopics": {{ "samsung", "platform" }}, "messageText": " like samsung the platform is good" }, "similarChirps": [ {{ "iphone", "platform" }}, {{ "samsung", "voice-command" }} ] }
+        { "chirp": { "chirpId": "10", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("29.15,76.53"), "sendTime": datetime("2008-01-26T10:10:00.000Z"), "referredTopics": {{ "verizon", "voice-clarity" }}, "messageText": " hate verizon its voice-clarity is OMG:(" }, "similarChirps": [ {{ "verizon", "shortcut-menu" }}, {{ "verizon", "voicemail-service" }}, {{ "iphone", "voice-clarity" }} ] }
+        { "chirp": { "chirpId": "12", "user": { "screenName": "OliJackson_512", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Oli Jackson", "followersCount": 22649 }, "senderLocation": point("24.82,94.63"), "sendTime": datetime("2010-02-13T10:10:00.000Z"), "referredTopics": {{ "samsung", "voice-command" }}, "messageText": " like samsung the voice-command is amazing:)" }, "similarChirps": [ {{ "sprint", "voice-command" }}, {{ "samsung", "platform" }} ] }
+        { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("46.05,93.34"), "sendTime": datetime("2005-10-14T10:10:00.000Z"), "referredTopics": {{ "t-mobile", "shortcut-menu" }}, "messageText": " like t-mobile the shortcut-menu is awesome:)" }, "similarChirps": [ {{ "verizon", "shortcut-menu" }}, {{ "t-mobile", "customization" }} ] }
 
 ### Inserting New Data  ###
 In addition to loading and querying data, AsterixDB supports incremental additions to datasets via the AQL _insert_ statement.
 
-The following example adds a new tweet by user "NathanGiesen@211" to the TweetMessages dataset.
-(An astute reader may notice that this tweet was issued a half an hour after his last tweet, so his counts
+The following example adds a new chirp by user "NathanGiesen@211" to the ChirpMessages dataset.
+(An astute reader may notice that this chirp was issued a half an hour after his last chirp, so his counts
 have all gone up in the interim, although he appears not to have moved in the last half hour.)
 
         use dataverse TinySocial;
 
-        insert into dataset TweetMessages
+        insert into dataset ChirpMessages
         (
-           {"tweetid":"13",
+           {"chirpId": "13",
             "user":
-                {"screen-name":"NathanGiesen@211",
-                 "lang":"en",
-                 "friends_count":39345,
-                 "statuses_count":479,
-                 "name":"Nathan Giesen",
-                 "followers_count":49420
+                {"screenName": "NathanGiesen@211",
+                 "lang": "en",
+                 "friendsCount": 39345,
+                 "statusesCount": 479,
+                 "name": "Nathan Giesen",
+                 "followersCount": 49420
                 },
-            "sender-location":point("47.44,80.65"),
-            "send-time":datetime("2008-04-26T10:10:35"),
-            "referred-topics":{{"tweeting"}},
-            "message-text":"tweety tweet, my fellow tweeters!"
+            "senderLocation": point("47.44,80.65"),
+            "sendTime": datetime("2008-04-26T10:10:35"),
+            "referredTopics": {{"chirping"}},
+            "messageText": "chirpy chirp, my fellow chirpers!"
            }
         );
 
@@ -888,11 +888,11 @@ In addition to inserting new data, AsterixDB supports deletion from datasets via
 The statement supports "searched delete" semantics, and its
 _where_ clause can involve any valid XQuery expression.
 
-The following example deletes the tweet that we just added from user "NathanGiesen@211".  (Easy come, easy go. :-))
+The following example deletes the chirp that we just added from user "NathanGiesen@211".  (Easy come, easy go. :-))
 
         use dataverse TinySocial;
 
-        delete $tm from dataset TweetMessages where $tm.tweetid = "13";
+        delete $cm from dataset ChirpMessages where $cm.chirpId = "13";
 
 It should be noted that one form of data change not yet supported by AsterixDB is in-place data modification (_update_).
 Currently, only insert and delete operations are supported; update is not.
@@ -904,27 +904,27 @@ different field values for some of the associated data content).
 In addition to loading, querying, inserting, and deleting data, AsterixDB supports upserting
 records using the AQL _upsert_ statement.
 
-The following example deletes the tweet with the tweetid = 20 (if exists) and inserts the
-new tweet with tweetid=20 and the user "SwanSmitty" to the TweetMessages dataset. The two
+The following example deletes the chirp with chirpId = 20 (if one exists) and inserts the
+new chirp with chirpId = 20 by user "SwanSmitty" to the ChirpMessages dataset. The two
 operations (delete if found and insert) are performed as an atomic operation that is either
 performed completely or not at all.
 
         use dataverse TinySocial;
-        upsert into dataset TweetMessages
+        upsert into dataset ChirpMessages
         (
-           {"tweetid":"20",
+           {"chirpId": "20",
             "user":
-                {"screen-name":"SwanSmitty",
-                 "lang":"en",
-                 "friends_count":91345,
-                 "statuses_count":4079,
-                 "name":"Swanson Smith",
-                 "followers_count":50420
+                {"screenName": "SwanSmitty",
+                 "lang": "en",
+                 "friendsCount": 91345,
+                 "statusesCount": 4079,
+                 "name": "Swanson Smith",
+                 "followersCount": 50420
                 },
-            "sender-location":point("47.44,80.65"),
-            "send-time":datetime("2008-04-26T10:10:35"),
-            "referred-topics":{{"football"}},
-            "message-text":"football is the best sport, period.!"
+            "senderLocation": point("47.44,80.65"),
+            "sendTime": datetime("2008-04-26T10:10:35"),
+            "referredTopics": {{"football"}},
+            "messageText": "football is the best sport, period.!"
            }
         );
 
@@ -932,29 +932,30 @@ The data to be upserted may be specified using any valid AQL query expression.
 For example, the following statement might be used to double the followers count of all existing users.
 
         use dataverse TinySocial;
-        upsert into dataset TweetUsers
+        upsert into dataset ChirpUsers
         (
-           for $user in dataset TweetUsers
+           for $user in dataset ChirpUsers
            return {
-            "screen-name":$user.screen-name,
-            "lang":$user.lang,
-            "friends_count":$user.friends_count,
-            "statuses_count":$user.statuses_count,
-            "name":$user.name,
-            "followers_count":$user.followers_count*2
+            "screenName": $user.screenName,
+            "lang": $user.lang,
+            "friendsCount": $user.friendsCount,
+            "statusesCount": $user.statusesCount,
+            "name": $user.name,
+            "followersCount": $user.followersCount * 2
            }
         );
 
-Note that an upsert operation is executed in two steps, the query is performed,query locks
-are released, and then its result is upserted into the dataset. This means that the record
-can be modified between computing the query result and performing the upsert.
+Note that such an upsert operation is executed in two steps:
+The query is performed, after which the query's locks are released,
+and then its result is upserted into the dataset.
+This means that a record can be modified between computing the query result and performing the upsert.
 
 ### Transaction Support
 
 AsterixDB supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, or searched while a given AQL statement is being executed. This is quite similar to the level of transaction support found in today's NoSQL stores. AsterixDB does not support multi-statement transactions, and in fact an AQL statement that involves multiple records can itself involve multiple independent record-level transactions. An example consequence of this is that, when an AQL statement attempts to insert 1000 records, it is possible that the first 800 records could end up being committed while the remaining 200 records fail to be inserted. This situation could happen, for example, if a duplicate key exception occurs as the 801st insertion is attempted. If this happens, AsterixDB will report the error (e.g., a duplicate key exception) as the result of the offending AQL insert statement, and the application logic above will need to take the appropriate action(s) needed to assess the resulting state and to clean up and/or continue as appropriate.
 
 ## Further Help ##
-That's it  You are now armed and dangerous with respect to semistructured data management using AsterixDB.
+That's it!  You are now armed and dangerous with respect to semistructured data management using AsterixDB and AQL.
 
 AsterixDB is a powerful new BDMS---Big Data Management System---that we hope may usher in a new era of much
 more declarative Big Data management.

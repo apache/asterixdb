@@ -75,17 +75,17 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
     private final int numberOfSchemaFields;
     private final int[] fieldOffsets;
-    private final IVisitablePointable nullReference = AFlatValuePointable.FACTORY.create(null);
-    private final IVisitablePointable missingReference = AFlatValuePointable.FACTORY.create(null);
+    private final IVisitablePointable nullReference = PointableAllocator.allocateUnrestableEmpty();
+    private final IVisitablePointable missingReference = PointableAllocator.allocateUnrestableEmpty();
 
     private int closedPartTypeInfoSize = 0;
-    private int offsetArrayOffset;
     private ATypeTag typeTag;
 
     /**
      * private constructor, to prevent constructing it arbitrarily
      *
      * @param inputType
+     *            inputType should not be null. Use FULLY_OPEN_RECORD_TYPE instead.
      */
     public ARecordVisitablePointable(ARecordType inputType) {
         this.inputRecType = inputType;
@@ -165,27 +165,26 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
         boolean isExpanded = false;
         int openPartOffset = 0;
-        int s = start;
-        int recordOffset = s;
-        if (inputRecType == null) {
-            openPartOffset = s + AInt32SerializerDeserializer.getInt(b, s + 6);
-            s += 8;
-            isExpanded = true;
-        } else {
-            if (inputRecType.isOpen()) {
-                isExpanded = b[s + 5] == 1 ? true : false;
-                if (isExpanded) {
-                    openPartOffset = s + AInt32SerializerDeserializer.getInt(b, s + 6);
-                    s += 10;
-                } else {
-                    s += 6;
-                }
-            } else {
-                s += 5;
+        int recordOffset = start;
+        int offsetArrayOffset;
+
+        //advance to either isExpanded or numberOfSchemaFields
+        int s = start + 5;
+        //inputRecType will never be null.
+        if (inputRecType.isOpen()) {
+            isExpanded = b[s] == 1;
+            //advance either to openPartOffset or numberOfSchemaFields
+            s += 1;
+            if (isExpanded) {
+                openPartOffset = start + AInt32SerializerDeserializer.getInt(b, s);
+                //advance to numberOfSchemaFields
+                s += 4;
             }
         }
+
         try {
             if (numberOfSchemaFields > 0) {
+                //advance to nullBitMap if hasOptionalFields, or fieldOffsets
                 s += 4;
                 int nullBitMapOffset = 0;
                 boolean hasOptionalFields = NonTaggedFormatUtil.hasOptionalField(inputRecType);

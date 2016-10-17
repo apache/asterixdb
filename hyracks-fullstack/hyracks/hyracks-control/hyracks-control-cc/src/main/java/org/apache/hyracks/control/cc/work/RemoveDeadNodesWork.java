@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
@@ -41,7 +42,7 @@ public class RemoveDeadNodesWork extends AbstractWork {
 
     @Override
     public void run() {
-        Set<String> deadNodes = new HashSet<String>();
+        final Set<String> deadNodes = new HashSet<String>();
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
         for (Map.Entry<String, NodeControllerState> e : nodeMap.entrySet()) {
             NodeControllerState state = e.getValue();
@@ -69,8 +70,12 @@ public class RemoveDeadNodesWork extends AbstractWork {
                 }
             }
         }
-        if (deadNodes != null && deadNodes.size() > 0) {
-            ccs.getApplicationContext().notifyNodeFailure(deadNodes);
+        if (!deadNodes.isEmpty()) {
+            try {
+                ccs.getApplicationContext().notifyNodeFailure(deadNodes);
+            } catch (HyracksException e) {
+                LOGGER.log(Level.WARNING, "Uncaught exception on notifyNodeFailure", e);
+            }
         }
     }
 

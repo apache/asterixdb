@@ -21,6 +21,7 @@ package org.apache.asterix.clienthelper.commands;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -38,17 +39,18 @@ public class WaitForClusterCommand extends RemoteCommand {
     @Override
     @SuppressWarnings("squid:S2142") // interrupted exception
     public int execute() throws IOException {
+        final int timeoutSecs = args.getTimeoutSecs();
         log("Waiting "
-                + (args.getTimeoutSecs() > 0 ? "up to " + args.getTimeoutSecs() + " seconds " : "")
+                + (timeoutSecs > 0 ? "up to " + timeoutSecs + " seconds " : "")
                 + "for cluster " + hostPort + " to be available.");
 
         long startTime = System.currentTimeMillis();
+        long timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSecs);
         boolean first = true;
         String lastState = null;
         while (true) {
             if (!first) {
-                if (args.getTimeoutSecs() >= 0
-                        && (startTime + (args.getTimeoutSecs() * 1000) < System.currentTimeMillis())) {
+                if (timeoutMillis > 0 && (startTime + timeoutMillis < System.currentTimeMillis())) {
                     break;
                 }
                 try {
@@ -75,7 +77,7 @@ public class WaitForClusterCommand extends RemoteCommand {
                 // ignore exception, try again
             }
         }
-        log("Cluster " + hostPort + " was not available before timeout of " + args.getTimeoutSecs()
+        log("Cluster " + hostPort + " was not available before timeout of " + timeoutSecs
                 + " seconds was exhausted" + (lastState != null ? " (state: " + lastState + ")" : "")
                 + "; check logs for more information");
         return 1;

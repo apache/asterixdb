@@ -76,7 +76,10 @@
     <name>storage.memorycomponent.numpages</name>
     <value>256</value>
     <description>The number of pages to allocate for a memory component.
-      (Default = 256)
+      This budget is shared by all the memory components of the primary
+      index and all its secondary indexes across all I/O devices on a node.
+      Note: in-memory components usually has fill factor of 75% since
+      the pages are 75% full and the remaining 25% is un-utilized. (Default = 256)
     </description>
   </property>
 
@@ -99,9 +102,11 @@
   <property>
     <name>storage.memorycomponent.globalbudget</name>
     <value>512MB</value>
-    <description>The total size of memory in bytes that the sum of all
-      open memory
-      components cannot exceed. (Default = "536870192" // 512MB)
+    <description>The total size of memory in bytes that the sum of all open memory
+      components cannot exceed. Consider this as the buffer cache for all memory
+      components of all indexes in a node. When this budget is fully used, a victim
+      dataset will be chosen. The chosen dataset must be evicted and closed to make
+      a space for another dataset. (Default = 512MB)
     </description>
   </property>
 

@@ -29,9 +29,11 @@ SQL++ is a highly composable expression language. Each SQL++ expression returns 
                   | VariableReference
                   | ParenthesizedExpression
                   | FunctionCallExpression
-		  | Constructor
+                  | Constructor
 
-The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant) value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly constructed instance of the data model (such as a newly constructed record or list of data model instances).
+The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
+value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly
+constructed instance of the data model (such as a newly constructed record, array, or multiset of data model instances).
 
 ### <a id="Literals">Literals</a>
 
@@ -70,9 +72,9 @@ Different from standard SQL, double quotes play the same role as single quotes a
 
 ### <a id="Variable_references">Variable References</a>
 
-    VariableReference ::= <IDENTIFIER>|<DelimitedIdentifier>
-    <IDENTIFIER>  ::= <LETTER> (<LETTER> | <DIGIT> | "_" | "$")*
-    <LETTER>    ::= ["A" - "Z", "a" - "z"]
+    VariableReference     ::= <IDENTIFIER>|<DelimitedIdentifier>
+    <IDENTIFIER>          ::= <LETTER> (<LETTER> | <DIGIT> | "_" | "$")*
+    <LETTER>              ::= ["A" - "Z", "a" - "z"]
     DelimitedIdentifier   ::= "\`" (<ESCAPE_APOS> | ~["\'"])* "\`"
 
 A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an input parameter in the context of a function body.) Backticks, e.g., \`id\`, are used for delimited identifiers. Delimiting is needed when a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
@@ -110,15 +112,25 @@ The following example is a (built-in) function call expression whose value is 8.
 
 ### <a id="Constructors">Constructors</a>
 
-    ListConstructor          ::= OrderedListConstructor | UnorderedListConstructor
-    OrderedListConstructor   ::= "[" ( Expression ( "," Expression )* )? "]"
-    UnorderedListConstructor ::= "{{" ( Expression ( "," Expression )* )? "}}"
+    CollectionConstructor    ::= ArrayConstructor | MultisetConstructor
+    ArrayConstructor         ::= "[" ( Expression ( "," Expression )* )? "]"
+    MultisetConstructor      ::= "{{" ( Expression ( "," Expression )* )? "}}"
     RecordConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
     FieldBinding             ::= Expression ":" Expression
 
-A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using its constructors for each of the model's complex object structures, namely lists (ordered or unordered) and records. Ordered lists are like JSON arrays, while unordered lists have multiset (bag) semantics. Records are built from attributes that are field-name/field-value pairs, again like JSON. (See the data model document for more details on each.)
+A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using its constructors
+for each of the model's complex object structures, namely arrays, multisets, and records.
+Arrays are like JSON arrays, while multisets have bag semantics.
+Records are built from fields that are field-name/field-value pairs, again like JSON.
+(See the [data model document](../datamodel.html) for more details on each.)
 
-The following examples illustrate how to construct a new ordered list with 3 items, a new record with 2 fields, and a new unordered list with 4 items, respectively. List elements can be homogeneous (as in the first example), which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values used to construct lists and records in constructors are all simply SQL++ expressions. Thus, the list elements, field names, and field values used in constructors can be simple literals or they can come from query variable references or even arbitrarily complex SQL++ expressions (subqueries).
+The following examples illustrate how to construct a new array with 3 items, a new record with 2 fields,
+and a new multiset with 4 items, respectively. Array elements or multiset elements can be homogeneous (as in
+the first example),
+which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values
+used to construct arrays, multisets, and records in constructors are all simply SQL++ expressions. Thus, the collection elements,
+field names, and field values used in constructors can be simple literals or they can come from query variable references
+or even arbitrarily complex SQL++ expressions (subqueries).
 
 ##### Examples
 
@@ -137,17 +149,22 @@ The following examples illustrate how to construct a new ordered list with 3 ite
     Field           ::= "." Identifier
     Index           ::= "[" ( Expression | "?" ) "]"
 
-Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result of a SQL++ expression that yields an instance of  a complex type, e.g., a record or list instance. For records, path access is based on field names. For ordered lists, path access is based on (zero-based) array-style indexing. SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an ordered list. Attempts to access non-existent fields or out-of-bound list elements produce the special value `MISSING`.
+Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
+of a SQL++ expression that yields an instance of  a complex type, e.g., a record or array instance. For records,
+path access is based on field names. For arrays, path access is based on (zero-based) array-style indexing.
+SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an array.
+ Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
 
-The following examples illustrate field access for a record, index-based element access for an ordered list, and also a composition thereof.
+The following examples illustrate field access for a record, index-based element access for an array, and also a
+composition thereof.
 
 ##### Examples
 
-    ({"name": "MyABCs", "list": [ "a", "b", "c"]}).list
+    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array
 
     (["a", "b", "c"])[2]
 
-    ({"name": "MyABCs", "list": [ "a", "b", "c"]}).list[2]
+    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]
 
 ### <a id="Operator_expressions">Operator expressions</a>
 
@@ -294,7 +311,7 @@ The following example illustrates the form of a case expression.
 ### <a id="Quantified_expressions">Quantified expressions</a>
 
     QuantifiedExpression ::= ( (<ANY>|<SOME>) | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
-                             <SATISFIES> Expression
+                             <SATISFIES> Expression (<END>)?
 
 Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
 

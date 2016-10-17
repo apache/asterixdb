@@ -19,6 +19,11 @@
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="basic">
     <test-case FilePath="basic">
+      <compilation-unit name="dataset_with_default_dataverse_type">
+        <output-dir compare="Text">dataset_with_default_dataverse_type</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
       <compilation-unit name="dataset_with_meta-1">
         <output-dir compare="Text">dataset_with_meta-1</output-dir>
       </compilation-unit>

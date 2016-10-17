@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -85,11 +84,6 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        return false;
-    }
-
     private void updateEquivalenceClassMap(LogicalVariable lhs, LogicalVariable rhs) {
         List<LogicalVariable> equivalentVars = equivalentVarsMap.get(rhs);
         if (equivalentVars == null) {
@@ -105,10 +99,11 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
     private boolean removeRedundantVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        LogicalOperatorTag opTag = op.getOperatorTag();
         boolean modified = false;
 
         // Update equivalence class map.
-        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+        if (opTag == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             int numVars = assignOp.getVariables().size();
             for (int i = 0; i < numVars; i++) {
@@ -125,7 +120,7 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         }
 
         // Replace variable references with their first representative.
-        if (op.getOperatorTag() == LogicalOperatorTag.PROJECT) {
+        if (opTag == LogicalOperatorTag.PROJECT) {
             // The project operator does not use expressions, so we need to replace it's variables manually.
             if (replaceProjectVars((ProjectOperator) op)) {
                 modified = true;
@@ -154,7 +149,7 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         }
 
         // Deal with re-mapping of variables in group by.
-        if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
+        if (opTag == LogicalOperatorTag.GROUP) {
             if (handleGroupByVarRemapping((GroupByOperator) op)) {
                 modified = true;
             }
@@ -163,6 +158,12 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
             context.addToDontApplySet(this, op);
+        }
+
+        // Clears the equivalent variable map if the current operator is the root operator
+        // in the query plan.
+        if (opTag == LogicalOperatorTag.DISTRIBUTE_RESULT || opTag == LogicalOperatorTag.SINK) {
+            equivalentVarsMap.clear();
         }
         return modified;
     }

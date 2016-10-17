@@ -39,6 +39,7 @@ import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.common.utils.PrintUtil;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -60,10 +61,6 @@ import org.kohsuke.args4j.Option;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
-
-    @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)",
-            required = false)
-    public int metadataRmiPort = 0;
 
     @Option(name = "-initial-run",
             usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
@@ -94,7 +91,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             parser.printUsage(System.err);
             throw e;
         }
-
         ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getThreadFactory(),
                 ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
@@ -103,11 +99,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
 
+        final NodeControllerService controllerService = (NodeControllerService) ncAppCtx.getControllerService();
+
         if (System.getProperty("java.rmi.server.hostname") == null) {
-            System.setProperty("java.rmi.server.hostname", ((NodeControllerService) ncAppCtx.getControllerService())
+            System.setProperty("java.rmi.server.hostname", (controllerService)
                     .getConfiguration().clusterNetPublicIPAddress);
         }
-        runtimeContext = new AsterixNCAppRuntimeContext(ncApplicationContext, metadataRmiPort, getExtensions());
+        runtimeContext = new AsterixNCAppRuntimeContext(ncApplicationContext, getExtensions());
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
@@ -120,8 +118,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         ncApplicationContext.setApplicationObject(runtimeContext);
         MessagingProperties messagingProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMessagingProperties();
-        messageBroker = new NCMessageBroker((NodeControllerService) ncAppCtx.getControllerService(),
-                messagingProperties);
+        messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         ncApplicationContext.setMessageBroker(messageBroker);
         MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
                 (NCMessageBroker) messageBroker, messagingProperties);
@@ -213,7 +210,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
                 LOGGER.info("Node ID: " + nodeId);
-                LOGGER.info("Stores: " + metadataProperties.getStores());
+                LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
                 LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
 

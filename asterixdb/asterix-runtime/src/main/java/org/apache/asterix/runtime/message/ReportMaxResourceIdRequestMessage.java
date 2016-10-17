@@ -27,7 +27,7 @@ public class ReportMaxResourceIdRequestMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException {
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         ReportMaxResourceIdMessage.send((NodeControllerService) cs);
     }
 

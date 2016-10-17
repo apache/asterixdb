@@ -85,7 +85,7 @@
     </menu>
 
     <menu name="Data Model">
-      <item name="The Asterix Data Model" href="aql/datamodel.html"/>
+      <item name="The Asterix Data Model" href="datamodel.html"/>
     </menu>
 
     <menu name="Queries - SQL++">
@@ -108,7 +108,6 @@
 
     <menu name="API/SDK">
       <item name="HTTP API" href="api.html"/>
-      <item name="Javascript SDK" href="aql/js-sdk.html"/>
     </menu>
 
     <menu ref="reports"/>

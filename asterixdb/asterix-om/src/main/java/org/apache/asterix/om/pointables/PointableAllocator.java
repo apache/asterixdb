@@ -63,6 +63,16 @@ public class PointableAllocator {
     }
 
     /**
+     * This method should ONLY be used for long lasting IVisitablePointable.
+     *
+     * @return
+     *         a generic type IVisitablePointable.
+     */
+    public static IVisitablePointable allocateUnrestableEmpty() {
+        return AFlatValuePointable.FACTORY.create(null);
+    }
+
+    /**
      * allocate closed part value pointable
      *
      * @param type
@@ -98,8 +108,8 @@ public class PointableAllocator {
                 if (listItemType.isDerivedType())
                     return allocateFieldValue(listItemType, b, offset + 1);
                 else
-                    return listValueAllocator.allocate(unorederedListTypeAllocator.allocate(TypeTagUtil
-                            .getBuiltinTypeByTag(listItemType)));
+                    return listValueAllocator.allocate(
+                            unorederedListTypeAllocator.allocate(TypeTagUtil.getBuiltinTypeByTag(listItemType)));
             }
         } else if (typeTag.equals(ATypeTag.ORDEREDLIST)) {
             ATypeTag listItemType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[offset]);
@@ -109,8 +119,8 @@ public class PointableAllocator {
                 if (listItemType.isDerivedType())
                     return allocateFieldValue(listItemType, b, offset + 1);
                 else
-                    return listValueAllocator.allocate(orederedListTypeAllocator.allocate(TypeTagUtil
-                            .getBuiltinTypeByTag(listItemType)));
+                    return listValueAllocator.allocate(
+                            orederedListTypeAllocator.allocate(TypeTagUtil.getBuiltinTypeByTag(listItemType)));
             }
         } else
             return flatValueAllocator.allocate(null);

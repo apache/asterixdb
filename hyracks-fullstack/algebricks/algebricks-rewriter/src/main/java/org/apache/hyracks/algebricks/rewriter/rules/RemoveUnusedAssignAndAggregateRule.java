@@ -383,7 +383,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             // We may have visited this operator before if there are multiple
             // paths in the plan.
             if (accumulatedUsedVarFromRootMap.containsKey(opRef)) {
-                accumulatedUsedVarFromRootMap.get(opRef).addAll(usedVarsSetInThisOp);
+                accumulatedUsedVarFromRootMap.get(opRef).addAll(accumulatedUsedVarFromRootSet);
             } else {
                 accumulatedUsedVarFromRootMap.put(opRef, new HashSet<LogicalVariable>(accumulatedUsedVarFromRootSet));
             }

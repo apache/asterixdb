@@ -22,12 +22,13 @@ package org.apache.asterix.metadata.api;
 import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Interface for setting/getting distributed state of Asterix.
  */
 public interface IAsterixStateProxy extends Remote, Serializable {
-    public void setMetadataNode(IMetadataNode metadataNode) throws RemoteException;
+    void setMetadataNode(IMetadataNode metadataNode) throws RemoteException;
 
-    public IMetadataNode getMetadataNode() throws RemoteException;
+    IMetadataNode waitForMetadataNode(long waitFor, TimeUnit timeUnit) throws RemoteException, InterruptedException;
 }

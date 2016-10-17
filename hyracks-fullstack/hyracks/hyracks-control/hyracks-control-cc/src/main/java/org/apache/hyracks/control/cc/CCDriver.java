@@ -23,7 +23,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 
 public class CCDriver {
-    public static void main(String args[]) throws Exception {
+    public static void main(String args []) throws Exception {
         try {
             CCConfig ccConfig = new CCConfig();
             CmdLineParser cp = new CmdLineParser(ccConfig);

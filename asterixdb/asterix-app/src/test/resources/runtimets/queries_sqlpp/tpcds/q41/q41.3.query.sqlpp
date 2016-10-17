@@ -1,0 +1,71 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+USE tpcds;
+
+SELECT  distinct(i_product_name)
+ FROM item i1
+ WHERE i1.i_manufact_id >= 742 AND i1.i_manufact_id <= 742+40
+   AND array_count((select 1 as item_cnt
+        from item i2
+        where (i2.i_manufact = i1.i_manufact AND
+        ((i2.i_category = 'Women' AND
+        (i2.i_color = 'orchid' OR i2.i_color = 'papaya') AND
+        (i2.i_units = 'Pound' OR i2.i_units = 'Lb') AND
+        (i2.i_size = 'petite' OR i2.i_size = 'medium')
+        ) or
+        (i2.i_category = 'Women' AND
+        (i2.i_color = 'burlywood' OR i2.i_color = 'navy') AND
+        (i2.i_units = 'Bundle' OR i2.i_units = 'Each') AND
+        (i2.i_size = 'N/A' OR i2.i_size = 'extra large')
+        ) or
+        (i2.i_category = 'Men' AND
+        (i2.i_color = 'bisque' OR i2.i_color = 'azure') AND
+        (i2.i_units = 'N/A' OR i2.i_units = 'Tsp') AND
+        (i2.i_size = 'small' OR i2.i_size = 'large')
+        ) or
+        (i2.i_category = 'Men' AND
+        (i2.i_color = 'chocolate' OR i2.i_color = 'cornflower') AND
+        (i2.i_units = 'Bunch' OR i2.i_units = 'Gross') AND
+        (i2.i_size = 'petite' OR i2.i_size = 'medium')
+        ))) or
+       (i2.i_manufact = i1.i_manufact AND
+        ((i2.i_category = 'Women' AND
+        (i2.i_color = 'salmon' OR i2.i_color = 'midnight') AND
+        (i2.i_units = 'Oz' OR i2.i_units = 'Box') AND
+        (i2.i_size = 'petite' OR i2.i_size = 'medium')
+        ) or
+        (i2.i_category = 'Women' AND
+        (i2.i_color = 'snow' OR i2.i_color = 'steel') AND
+        (i2.i_units = 'Carton' OR i2.i_units = 'Tbl') AND
+        (i2.i_size = 'N/A' OR i2.i_size = 'extra large')
+        ) or
+        (i2.i_category = 'Men' AND
+        (i2.i_color = 'purple' OR i2.i_color = 'gainsboro') AND
+        (i2.i_units = 'Dram' OR i2.i_units = 'Unknown') AND
+        (i2.i_size = 'small' OR i2.i_size = 'large')
+        ) or
+        (i2.i_category = 'Men' AND
+        (i2.i_color = 'metallic' OR i2.i_color = 'forest') AND
+        (i2.i_units = 'Gram' OR i2.i_units = 'Ounce') AND
+        (i2.i_size = 'petite' OR i2.i_size = 'medium')
+        ))))) > 0
+ ORDER BY i1.i_product_name
+ LIMIT 100;

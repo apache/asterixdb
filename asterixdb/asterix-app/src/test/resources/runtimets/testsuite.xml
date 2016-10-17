@@ -1345,6 +1345,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
+      <compilation-unit name="polygon-from-open-list_issue1627">
+        <output-dir compare="Text">polygon-from-open-list_issue1627</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor">
       <compilation-unit name="primitive-01">
         <output-dir compare="Text">primitive-01</output-dir>
       </compilation-unit>

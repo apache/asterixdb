@@ -45,7 +45,7 @@ public class Args {
 
 
     @Option(name = "-timeout", metaVar = "<secs>", usage = "Timeout for wait commands in seconds")
-    protected int timeoutSecs = -1;
+    protected int timeoutSecs = 0;
 
     @Option(name = "-quiet", aliases = "-q", usage = "Suppress all normal output")
     protected boolean quiet;

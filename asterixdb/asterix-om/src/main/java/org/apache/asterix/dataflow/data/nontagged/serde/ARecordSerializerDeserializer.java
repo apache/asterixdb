@@ -214,8 +214,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
 
     @SuppressWarnings("unchecked")
     public static void serializeSimpleSchemalessRecord(List<Pair<String, String>> record, DataOutput dataOutput,
-            boolean writeTypeTag)
-            throws HyracksDataException {
+            boolean writeTypeTag) throws HyracksDataException {
         ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
@@ -268,67 +267,39 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
 
     public static final int getFieldOffsetById(byte[] serRecord, int offset, int fieldId, int nullBitmapSize,
             boolean isOpen) {
-        byte nullTestCode = (byte) (1 << (7 - 2 * (fieldId % 4)));
-        byte missingTestCode = (byte) (1 << (7 - 2 * (fieldId % 4) - 1));
+        final byte nullTestCode = (byte) (1 << (7 - 2 * (fieldId % 4)));
+        final byte missingTestCode = (byte) (1 << (7 - 2 * (fieldId % 4) - 1));
+
+        //early exit if not Record
+        if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+            return -1;
+        }
+
+        //advance to isExpanded or numberOfSchemaFields
+        int pointer = offset + 5;
+
         if (isOpen) {
-            if (serRecord[0 + offset] == ATypeTag.RECORD.serialize()) {
-                // 5 is the index of the byte that determines whether the record
-                // is expanded or not, i.e. it has an open part.
-                if (serRecord[5 + offset] == 1) { // true
-                    if (nullBitmapSize > 0) {
-                        // 14 = tag (1) + record Size (4) + isExpanded (1) +
-                        // offset of openPart (4) + number of closed fields (4)
-                        int pos = 14 + offset + fieldId / 4;
-                        if ((serRecord[pos] & nullTestCode) == 0) {
-                            // the field value is null
-                            return 0;
-                        }
-                        if ((serRecord[pos] & missingTestCode) == 0) {
-                            // the field value is missing
-                            return -1;
-                        }
-                    }
-                    return offset + AInt32SerializerDeserializer.getInt(serRecord,
-                            14 + offset + nullBitmapSize + (4 * fieldId));
-                } else {
-                    if (nullBitmapSize > 0) {
-                        // 9 = tag (1) + record Size (4) + isExpanded (1) +
-                        // number of closed fields (4)
-                        int pos = 10 + offset + fieldId / 4;
-                        if ((serRecord[pos] & nullTestCode) == 0) {
-                            // the field value is null
-                            return 0;
-                        }
-                        if ((serRecord[pos] & missingTestCode) == 0) {
-                            // the field value is missing
-                            return -1;
-                        }
-                    }
-                    return offset + AInt32SerializerDeserializer.getInt(serRecord,
-                            10 + offset + nullBitmapSize + (4 * fieldId));
-                }
-            } else {
+            final boolean isExpanded = serRecord[pointer] == 1;
+            //if isExpanded, advance to numberOfSchemaFields
+            pointer += 1 + (isExpanded ? 4 : 0);
+        }
+
+        //advance to nullBitmap
+        pointer += 4;
+
+        if (nullBitmapSize > 0) {
+            final int pos = pointer + fieldId / 4;
+            if ((serRecord[pos] & nullTestCode) == 0) {
+                // the field value is null
+                return 0;
+            }
+            if ((serRecord[pos] & missingTestCode) == 0) {
+                // the field value is missing
                 return -1;
             }
-        } else {
-            if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                return Integer.MIN_VALUE;
-            }
-            if (nullBitmapSize > 0) {
-                // 9 = tag (1) + record Size (4) + number of closed fields
-                // (4)
-                int pos = 9 + offset + fieldId / 4;
-                if ((serRecord[pos] & nullTestCode) == 0) {
-                    // the field value is null
-                    return 0;
-                }
-                if ((serRecord[pos] & missingTestCode) == 0) {
-                    // the field value is missing
-                    return -1;
-                }
-            }
-            return offset + AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
         }
+
+        return offset + AInt32SerializerDeserializer.getInt(serRecord, pointer + nullBitmapSize + (4 * fieldId));
     }
 
     public static final int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart)

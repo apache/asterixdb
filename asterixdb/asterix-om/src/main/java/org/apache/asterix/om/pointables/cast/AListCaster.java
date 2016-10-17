@@ -43,11 +43,9 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
  * ACastVisitor.
  */
 class AListCaster {
-    // pointable allocator
-    private final PointableAllocator allocator = new PointableAllocator();
 
     // for storing the cast result
-    private final IVisitablePointable itemTempReference = allocator.allocateEmpty();
+    private final IVisitablePointable itemTempReference = PointableAllocator.allocateUnrestableEmpty();
     private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<>(itemTempReference, null,
             null);
 

@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -81,6 +82,10 @@ public class TestExecutor {
     private static final Pattern JAVA_BLOCK_COMMENT_PATTERN =
             Pattern.compile("/\\*.*\\*/", Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern REGEX_LINES_PATTERN = Pattern.compile("^(-)?/(.*)/([im]*)$");
+    private static final Pattern POLL_TIMEOUT_PATTERN =
+            Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
+    private static final Pattern POLL_DELAY_PATTERN = Pattern.compile("polldelaysecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
+
     private static Method managixExecuteMethod = null;
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
 
@@ -656,6 +661,42 @@ public class TestExecutor {
                 } else {
                     InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
                     ResultExtractor.extract(resultStream);
+                }
+                break;
+            case "pollquery":
+                // polltimeoutsecs=nnn, polldelaysecs=nnn
+                final Matcher timeoutMatcher = POLL_TIMEOUT_PATTERN.matcher(statement);
+                int timeoutSecs;
+                if (timeoutMatcher.find()) {
+                    timeoutSecs = Integer.parseInt(timeoutMatcher.group(1));
+                } else {
+                    throw new IllegalArgumentException("ERROR: polltimeoutsecs=nnn must be present in poll file");
+                }
+                final Matcher retryDelayMatcher = POLL_DELAY_PATTERN.matcher(statement);
+                int retryDelaySecs = retryDelayMatcher.find() ? Integer.parseInt(timeoutMatcher.group(1)) : 1;
+                long startTime = System.currentTimeMillis();
+                long limitTime = startTime + TimeUnit.SECONDS.toMillis(timeoutSecs);
+                ctx.setType(ctx.getType().substring("poll".length()));
+                Exception finalException;
+                LOGGER.fine("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs  + " second(s) delay");
+                while (true) {
+                    try {
+                        executeTest(testCaseCtx, ctx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
+                                expectedResultFileCtxs, testFile, actualPath);
+                        finalException = null;
+                        break;
+                    } catch (Exception e) {
+                        if ((System.currentTimeMillis() > limitTime)) {
+                            finalException = e;
+                            break;
+                        }
+                        LOGGER.fine("sleeping " + retryDelaySecs + " second(s) before polling again");
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(retryDelaySecs));
+                    }
+                }
+                if (finalException != null) {
+                    throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result",
+                            finalException);
                 }
                 break;
             case "query":

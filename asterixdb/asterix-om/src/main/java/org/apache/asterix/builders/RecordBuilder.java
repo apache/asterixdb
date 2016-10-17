@@ -172,14 +172,6 @@ public class RecordBuilder implements IARecordBuilder {
         addNullOrMissingField(fid, value.getByteArray(), value.getStartOffset());
     }
 
-    public void addField(int fid, byte[] value) {
-        closedPartOffsets[fid] = closedPartOutputStream.size();
-        // We assume the tag is not included (closed field)
-        closedPartOutputStream.write(value, 0, value.length);
-        numberOfClosedFields++;
-        addNullOrMissingField(fid, value, 0);
-    }
-
     private void addNullOrMissingField(int fid, byte[] data, int offset) {
         if (containsOptionalField) {
             byte nullByte = (byte) (1 << (7 - 2 * (fid % 4)));

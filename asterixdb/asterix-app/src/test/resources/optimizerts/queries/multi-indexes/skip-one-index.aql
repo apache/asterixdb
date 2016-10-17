@@ -1,0 +1,49 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type tTweet as closed {
+  id: int32,
+  location: point,
+  message: string,
+  create_at: datetime,
+  misc: string
+}
+
+create dataset dsTweet(tTweet) primary key id;
+
+create index ngram_index on dsTweet(message) type ngram(3);
+create index time_index on dsTweet(create_at) type btree;
+create index location_index on dsTweet(location) type rtree;
+
+write output to nc1:"rttest/btree-rtree-ngram-intersect.adm";
+
+let $region := create-rectangle(create-point(-128.43007812500002,20.298506037222175), create-point(-64.26992187500002,54.56902589732035))
+let $ts_start := datetime("2015-11-11T00:00:00Z")
+let $ts_end := datetime("2015-12-18T23:59:59Z")
+let $keyword := "hello"
+for $t in dataset dsTweet
+where $t.create_at >= $ts_start and $t.create_at < $ts_end
+  and /* +skip-index */ spatial-intersect($t.location, $region)
+  and contains($t.message, $keyword)
+return $t
+

@@ -789,8 +789,8 @@ SQL++, being designed to deal with nested data and schema-less data, does not (a
 Collection-valued data is perfectly legal in most SQL++ contexts, and its data is schema-less,
 so a query processor rarely knows exactly what to expect where and such automatic conversion is often
 not desirable. Thus, in the queries above, the use of "[0]" extracts the first (i.e., 0th) element of
-a list-valued query expression's result; this is needed above, even though the result is a list of one
-element, to "de-listify" the list and obtain the desired scalar for the comparison.
+an array-valued query expression's result; this is needed above, even though the result is an array of one
+element, to extract the only element in the singleton array and obtain the desired scalar for the comparison.
 
 ## <a id="Let_clauses">LET clauses</a>
 Similar to `WITH` clauses, `LET` clauses can be useful when a (complex) expression is used several times within a query, allowing it to be written once to make the query more concise. The next query shows an example.
@@ -850,7 +850,7 @@ Unlike SQL-92, as was just alluded to, the subqueries in a SELECT list or a bool
 not return singleton, single-column relations.
 Instead, they may return arbitrary collections.
 For example, the following query is a variant of the prior group-by query examples;
-it retrieves a list of up to two "dislike" messages per user.
+it retrieves an array of up to two "dislike" messages per user.
 
 ##### Example
 
@@ -874,14 +874,15 @@ Note that a subquery, like a top-level `SELECT` statment, always returns a colle
 within a query the subquery occurs -- and again, its result is never automatically cast into a scalar.
 
 ## <a id="Vs_SQL-92">SQL++ vs. SQL-92</a>
-The following matrix is a quick "key differences cheat sheet" for SQL++ and SQL-92.
+The following matrix is a quick "SQL-92 compatibility cheat sheet" for SQL++.
 
 | Feature |  SQL++ | SQL-92 |
 |----------|--------|--------|
 | SELECT * | Returns nested records | Returns flattened concatenated records |
 | Subquery | Returns a collection  | The returned collection is cast into a scalar value if the subquery appears in a SELECT list or on one side of a comparison or as input to a function |
-| LEFT OUTER JOIN |  Fills in `MISSING` for non-matches  |   Fills in `NULL`(s) for non-matches    |
-| UNION ALL       | Allows heterogenous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream
+| LEFT OUTER JOIN |  Fills in `MISSING`(s) for non-matches  |   Fills in `NULL`(s) for non-matches    |
+| UNION ALL       | Allows heterogeneous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream
+| IN constant_expr | The constant expression has to be an array or multiset, i.e., [..,..,...] | The constant collection can be represented as comma-separated items in a paren pair |
 | String literal | Double quotes or single quotes | Single quotes only |
 | Delimited identifiers | Backticks | Double quotes |
 

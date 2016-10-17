@@ -26,13 +26,18 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.SinkOperatorDescriptor;
 import org.apache.hyracks.tests.util.ExceptionOnCreatePushRuntimeOperatorDescriptor;
 import org.junit.Assert;
+import org.junit.Test;
 
 public class JobFailureTest extends AbstractMultiNCIntegrationTest {
 
-    // commenting out due to intermittent hangs:
-    // https://asterix-jenkins.ics.uci.edu/job/asterix-gerrit-notopic/2877/artifact/target/threaddumps/jstack_28541.html
-    // @Test
+    @Test
     public void failureOnCreatePushRuntime() throws Exception {
+        for (int round = 0; round < 1000; ++round) {
+            execTest();
+        }
+    }
+
+    private void execTest() throws Exception {
         JobSpecification spec = new JobSpecification();
         AbstractSingleActivityOperatorDescriptor sourceOpDesc = new ExceptionOnCreatePushRuntimeOperatorDescriptor(spec,
                 0, 1, new int[] { 4 }, true);

@@ -96,8 +96,6 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        boolean needToCheckOffsetValue = true;
-
         // Get the LIMIT constant
         if (limitOp.getMaxObjects().getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             // Currently, we support LIMIT with a constant value.
@@ -106,6 +104,9 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
             // since the original external sort's performance might be better.
             if (topK > Integer.MAX_VALUE) {
                 return false;
+            }
+            if (topK < 0) {
+                topK = 0;
             }
         } else {
             return false;
@@ -116,7 +117,15 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         // Final topK will be applied through LIMIT.
         if (limitOp.getOffset().getValue() != null) {
             if (limitOp.getOffset().getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                topK = topK + ((int) AccessMethodUtils.getInt64Constant(limitOp.getOffset()));
+                long offset = AccessMethodUtils.getInt64Constant(limitOp.getOffset());
+                if (offset < 0) {
+                    offset = 0;
+                }
+                // Check the overflow case.
+                if (offset >= Integer.MAX_VALUE - topK) {
+                    return false;
+                }
+                topK += offset;
             } else {
                 return false;
             }
@@ -133,7 +142,6 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         opRef2.setValue(newOrderOp);
         context.computeAndSetTypeEnvironmentForOperator(newOrderOp);
         context.addToDontApplySet(this, limitOp);
-
         return true;
     }
 

@@ -34,7 +34,9 @@ public class CCConfig {
     @Option(name = "-address", usage = "IP Address for CC (default: localhost)", required = false)
     public String ipAddress = InetAddress.getLoopbackAddress().getHostAddress();
 
-    @Option(name = "-client-net-ip-address", usage = "Sets the IP Address to listen for connections from clients (default: same as -address)", required = false)
+    @Option(name = "-client-net-ip-address",
+            usage = "Sets the IP Address to listen for connections from clients (default: same as -address)",
+            required = false)
     public String clientNetIpAddress;
 
     @Option(name = "-client-net-port", usage = "Sets the port to listen for connections from clients (default 1098)")
@@ -43,46 +45,60 @@ public class CCConfig {
     // QQQ Note that clusterNetIpAddress is *not directly used* yet. Both
     // the cluster listener and the web server listen on "all interfaces".
     // This IP address is only used to instruct the NC on which IP to call in.
-    @Option(name = "-cluster-net-ip-address", usage = "Sets the IP Address to listen for connections from NCs (default: same as -address)", required = false)
+    @Option(name = "-cluster-net-ip-address",
+            usage = "Sets the IP Address to listen for connections from NCs (default: same as -address)",
+            required = false)
     public String clusterNetIpAddress;
 
-    @Option(name = "-cluster-net-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
+    @Option(name = "-cluster-net-port",
+            usage = "Sets the port to listen for connections from node controllers (default 1099)")
     public int clusterNetPort = 1099;
 
     @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 16001)")
     public int httpPort = 16001;
 
-    @Option(name = "-heartbeat-period", usage = "Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000)")
+    @Option(name = "-heartbeat-period",
+            usage = "Sets the time duration between two heartbeats from each node controller in milliseconds" +
+                    " (default: 10000)")
     public int heartbeatPeriod = 10000;
 
-    @Option(name = "-max-heartbeat-lapse-periods", usage = "Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5)")
+    @Option(name = "-max-heartbeat-lapse-periods",
+            usage = "Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5)")
     public int maxHeartbeatLapsePeriods = 5;
 
-    @Option(name = "-profile-dump-period", usage = "Sets the time duration between two profile dumps from each node controller in milliseconds. 0 to disable. (default: 0)")
+    @Option(name = "-profile-dump-period", usage = "Sets the time duration between two profile dumps from each node " +
+            "controller in milliseconds. 0 to disable. (default: 0)")
     public int profileDumpPeriod = 0;
 
-    @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not specified in the job specification. (default: 5)")
+    @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not " +
+            "specified in the job specification. (default: 5)")
     public int defaultMaxJobAttempts = 5;
 
-    @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to the specified value. (default: 10)")
+    @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to " +
+            "the specified value. (default: 10)")
     public int jobHistorySize = 10;
 
-    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds. (default: 24 hours)")
+    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should " +
+            "be retained by the system in milliseconds. (default: 24 hours)")
     public long resultTTL = 86400000;
 
-    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup should be invoked in milliseconds. (default: 1 minute)")
+    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup " +
+            "should be invoked in milliseconds. (default: 1 minute)")
     public long resultSweepThreshold = 60000;
 
-    @Option(name = "-cc-root", usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
+    @Option(name = "-cc-root",
+            usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
     public String ccRoot = "ClusterControllerService";
 
-    @Option(name = "-cluster-topology", required = false, usage = "Sets the XML file that defines the cluster topology. (default: null)")
+    @Option(name = "-cluster-topology", required = false,
+            usage = "Sets the XML file that defines the cluster topology. (default: null)")
     public File clusterTopologyDefinition = null;
 
     @Option(name = "-app-cc-main-class", required = false, usage = "Application CC Main Class")
     public String appCCMainClass = null;
 
-    @Option(name = "-config-file", usage = "Specify path to master configuration file (default: none)", required = false)
+    @Option(name = "-config-file",
+            usage = "Specify path to master configuration file (default: none)", required = false)
     public String configFile = null;
 
     @Argument
@@ -132,8 +148,8 @@ public class CCConfig {
         }
 
         // "address" is the default for all IP addresses
-        if (clusterNetIpAddress == null) clusterNetIpAddress = ipAddress;
-        if (clientNetIpAddress == null) clientNetIpAddress = ipAddress;
+        clusterNetIpAddress = clusterNetIpAddress == null ? ipAddress : clusterNetIpAddress;
+        clientNetIpAddress = clientNetIpAddress == null ? ipAddress : clientNetIpAddress;
     }
 
     /**

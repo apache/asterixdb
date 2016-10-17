@@ -31,6 +31,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -54,6 +55,7 @@ import org.apache.log4j.Logger;
 public class AsterixPropertiesAccessor {
     private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
+    private static final AtomicReference<AsterixPropertiesAccessor> instanceHolder = new AtomicReference<>();
     private final String instanceName;
     private final String metadataNodeName;
     private final List<String> nodeNames = new ArrayList<>();;
@@ -76,7 +78,7 @@ public class AsterixPropertiesAccessor {
      * @throws AsterixException
      * @throws IOException
      */
-    public AsterixPropertiesAccessor() throws AsterixException, IOException {
+    private AsterixPropertiesAccessor() throws AsterixException, IOException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
         if (fileName == null) {
             fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
@@ -164,25 +166,24 @@ public class AsterixPropertiesAccessor {
     /**
      * Constructor which wraps an IApplicationConfig.
      */
-    public AsterixPropertiesAccessor(IApplicationConfig cfg) throws AsterixException {
+    private AsterixPropertiesAccessor(IApplicationConfig cfg) throws AsterixException {
         this.cfg = cfg;
         instanceName = cfg.getString(AsterixProperties.SECTION_ASTERIX, AsterixProperties.PROPERTY_INSTANCE_NAME,
                 AsterixProperties.DEFAULT_INSTANCE_NAME);
-        String mdNode = null;
         nodePartitionsMap = new HashMap<>();
         MutableInt uniquePartitionId = new MutableInt(0);
         extensions = new ArrayList<>();
         // Iterate through each configured NC.
         for (String section : cfg.getSections()) {
             if (section.startsWith(AsterixProperties.SECTION_PREFIX_NC)) {
-                mdNode = configureNc(section, mdNode, uniquePartitionId);
+                configureNc(section, uniquePartitionId);
             } else if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
                 String className = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_EXTENSION, section);
                 configureExtension(className, section);
             }
         }
-
-        metadataNodeName = mdNode;
+        metadataNodeName = getProperty(AsterixProperties.PROPERTY_METADATA_NODE,
+                nodeNames.isEmpty() ? "" : nodeNames.get(0), PropertyInterpreters.getStringPropertyInterpreter());
         asterixConfigurationParams = null;
         loadAsterixBuildProperties();
     }
@@ -197,16 +198,8 @@ public class AsterixPropertiesAccessor {
         extensions.add(new AsterixExtension(className, kvs));
     }
 
-    private String configureNc(String section, String mdNode, MutableInt uniquePartitionId) {
+    private void configureNc(String section, MutableInt uniquePartitionId) {
         String ncId = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_NC, section);
-        String newMetadataNode = mdNode;
-
-        // Here we figure out which is the metadata node. If any NCs
-        // declare "metadata.port", use that one; otherwise just use the first.
-        if (mdNode == null || cfg.getString(section, AsterixProperties.PROPERTY_METADATA_PORT) != null) {
-            // QQQ But we don't actually *honor* metadata.port yet!
-            newMetadataNode = ncId;
-        }
 
         // Now we assign the coredump and txnlog directories for this node.
         // QQQ Default values? Should they be specified here? Or should there
@@ -225,7 +218,7 @@ public class AsterixPropertiesAccessor {
         String[] nodeStores = new String[iodevices.length];
         ClusterPartition[] nodePartitions = new ClusterPartition[iodevices.length];
         for (int i = 0; i < nodePartitions.length; i++) {
-            // Construct final storage path from iodevice dir + storage subdir.
+            // Construct final storage path from iodevice dir + storage subdir.s
             nodeStores[i] = iodevices[i] + File.separator + storageSubdir;
             // Create ClusterPartition instances for this NC.
             ClusterPartition partition = new ClusterPartition(uniquePartitionId.getValue(), ncId, i);
@@ -236,7 +229,6 @@ public class AsterixPropertiesAccessor {
         stores.put(ncId, nodeStores);
         nodePartitionsMap.put(ncId, nodePartitions);
         nodeNames.add(ncId);
-        return newMetadataNode;
     }
 
     private void loadAsterixBuildProperties() throws AsterixException {
@@ -286,7 +278,14 @@ public class AsterixPropertiesAccessor {
             p = asterixConfigurationParams.get(property);
             value = (p == null) ? null : p.getValue();
         } else {
-            value = cfg.getString("asterix", property);
+            value = cfg.getString("app", property);
+            if (value == null) {
+                value = cfg.getString("asterix", property);
+                if (value != null) {
+                    LOGGER.warn("[asterix] config section deprecated and will be removed in a future release;" +
+                            " please update to [app] (found: " + property + ')');
+                }
+            }
         }
         if (value == null) {
             return defaultValue;
@@ -326,5 +325,25 @@ public class AsterixPropertiesAccessor {
 
     public List<AsterixExtension> getExtensions() {
         return extensions;
+    }
+
+    public static AsterixPropertiesAccessor getInstance(IApplicationConfig cfg) throws IOException, AsterixException {
+        // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
+        // QQQ strip this out eventually
+        // QQQ this is NOT a good way to determine whether the config is valid
+        AsterixPropertiesAccessor propertiesAccessor;
+        if (cfg != null && cfg.getString("cc", "cluster.address") != null) {
+            propertiesAccessor = new AsterixPropertiesAccessor(cfg);
+        } else {
+            propertiesAccessor = new AsterixPropertiesAccessor();
+        }
+        if (!instanceHolder.compareAndSet(null, propertiesAccessor)) {
+            propertiesAccessor = instanceHolder.get();
+        }
+        return propertiesAccessor;
+    }
+
+    public static AsterixPropertiesAccessor getInstance() throws IOException, AsterixException {
+        return getInstance(null);
     }
 }

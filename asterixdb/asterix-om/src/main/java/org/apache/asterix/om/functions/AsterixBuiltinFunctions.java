@@ -55,6 +55,7 @@ import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.CastTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
@@ -765,6 +766,16 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
     public static final FunctionIdentifier IS_UNKOWN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "is-unknown", 1);
+    public static final FunctionIdentifier IS_BOOLEAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "is-boolean", 1);
+    public static final FunctionIdentifier IS_NUMBER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-number",
+            1);
+    public static final FunctionIdentifier IS_STRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-string",
+            1);
+    public static final FunctionIdentifier IS_ARRAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-array",
+            1);
+    public static final FunctionIdentifier IS_OBJECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-object",
+            1);
 
     public static final FunctionIdentifier IS_SYSTEM_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "is-system-null", 1);
@@ -795,10 +806,15 @@ public class AsterixBuiltinFunctions {
 
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_NULL, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(IS_UNKOWN, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(IS_SYSTEM_NULL, BooleanOnlyTypeComputer.INSTANCE, true);
-        addFunction(NOT, BooleanFunctionTypeComputer.INSTANCE, true);
+        addFunction(IS_NULL, BooleanOrMissingTypeComputer.INSTANCE, true);
+        addFunction(IS_SYSTEM_NULL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_NUMBER, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_STRING, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_ARRAY, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_OBJECT, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(NOT, ABooleanTypeComputer.INSTANCE, true);
 
         addPrivateFunction(EQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(LE, BooleanFunctionTypeComputer.INSTANCE, true);

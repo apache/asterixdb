@@ -20,13 +20,13 @@
 package org.apache.hyracks.api.rewriter.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.concurrent.Callable;
+import java.util.Map.Entry;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -56,6 +56,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     private final int partition;
     private final int nPartitions;
     private int inputArity = 0;
+    private boolean[] startedInitialization;
 
     public SuperActivityOperatorNodePushable(SuperActivity parent, Map<ActivityId, IActivity> startActivities,
             IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
@@ -79,11 +80,14 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
-        // Initializes all OperatorNodePushables in parallel.
-        runInParallel(op -> op.initialize());
+        // Initializes all OperatorNodePushables in parallel and then finally deinitializes them.
+        runInParallel((op, index) -> {
+            startedInitialization[index] = true;
+            op.initialize();
+        });
     }
 
-    public void init() throws HyracksDataException {
+    private void init() throws HyracksDataException {
         Map<ActivityId, IOperatorNodePushable> startOperatorNodePushables = new HashMap<ActivityId, IOperatorNodePushable>();
         Queue<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> childQueue = new LinkedList<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
         List<IConnectorDescriptor> outputConnectors = null;
@@ -150,12 +154,19 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 }
             }
         }
+
+        // Sets the startedInitialization flags to be false.
+        startedInitialization = new boolean[operatorNodePushablesBFSOrder.size()];
+        Arrays.fill(startedInitialization, false);
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        // De-initialize all OperatorNodePushables in parallel.
-        runInParallel(op -> op.deinitialize());
+        runInParallel((op, index) -> {
+            if (startedInitialization[index]) {
+                op.deinitialize();
+            }
+        });
     }
 
     @Override
@@ -191,20 +202,19 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     }
 
     interface OperatorNodePushableAction {
-        public void runAction(IOperatorNodePushable op) throws HyracksDataException;
+        void runAction(IOperatorNodePushable op, int opIndex) throws HyracksDataException;
     }
 
     private void runInParallel(OperatorNodePushableAction opAction) throws HyracksDataException {
-        List<Future<Void>> initializationTasks = new ArrayList<Future<Void>>();
+        List<Future<Void>> initializationTasks = new ArrayList<>();
         try {
+            int index = 0;
             // Run one action for all OperatorNodePushables in parallel through a thread pool.
             for (final IOperatorNodePushable op : operatorNodePushablesBFSOrder) {
-                initializationTasks.add(ctx.getExecutorService().submit(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        opAction.runAction(op);
-                        return null;
-                    }
+                final int opIndex = index++;
+                initializationTasks.add(ctx.getExecutorService().submit(() -> {
+                    opAction.runAction(op, opIndex);
+                    return null;
                 }));
             }
             // Waits until all parallel actions to finish.

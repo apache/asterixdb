@@ -1,0 +1,103 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+USE tpcds;
+
+SELECT VALUE {"h8_30_to_9" : COLL_COUNT((select 1
+     FROM store_sales ss1, household_demographics , time_dim, store s1
+     WHERE ss1.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss1.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss1.ss_store_sk = s1.s_store_sk
+     AND time_dim.t_hour = 8
+     AND time_dim.t_minute >= 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s1.s_store_name = 'ese')), "h9_to_9_30": COLL_COUNT((select 1
+     FROM store_sales ss2, household_demographics , time_dim, store s2
+     WHERE ss2.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss2.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss2.ss_store_sk = s2.s_store_sk
+     AND time_dim.t_hour = 9
+     AND time_dim.t_minute < 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s2.s_store_name = 'ese')), "h9_30_to_10": COLL_COUNT((select 1
+     FROM store_sales ss3, household_demographics , time_dim, store s3
+     WHERE ss3.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss3.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss3.ss_store_sk = s3.s_store_sk
+     AND time_dim.t_hour = 9
+     AND time_dim.t_minute >= 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s3.s_store_name = 'ese')), "h10_to_10_30": COLL_COUNT((select 1
+     FROM store_sales ss4, household_demographics , time_dim, store s4
+     WHERE ss4.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss4.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss4.ss_store_sk = s4.s_store_sk
+     AND time_dim.t_hour = 10
+     AND time_dim.t_minute < 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s4.s_store_name = 'ese')), "h10_30_to_11": COLL_COUNT( (select 1
+     FROM store_sales ss5, household_demographics , time_dim, store s5
+     WHERE ss5.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss5.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss5.ss_store_sk = s5.s_store_sk
+     AND time_dim.t_hour = 10
+     AND time_dim.t_minute >= 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s5.s_store_name = 'ese')), "h11_to_11_30": COLL_COUNT((select 1
+     FROM store_sales ss6, household_demographics , time_dim, store s6
+     WHERE ss6.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss6.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss6.ss_store_sk = s6.s_store_sk
+     AND time_dim.t_hour = 11
+     AND time_dim.t_minute < 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s6.s_store_name = 'ese')), "h11_30_to_12": COLL_COUNT((select 1
+     FROM store_sales ss7, household_demographics , time_dim, store s7
+     WHERE ss7.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss7.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss7.ss_store_sk = s7.s_store_sk
+     AND time_dim.t_hour = 11
+     AND time_dim.t_minute >= 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s7.s_store_name = 'ese')), "h12_to_12_30":  COLL_COUNT((select 1
+     FROM store_sales ss8, household_demographics , time_dim, store s8
+     WHERE ss8.ss_sold_time_sk = time_dim.t_time_sk
+     AND ss8.ss_hdemo_sk = household_demographics.hd_demo_sk
+     AND ss8.ss_store_sk = s8.s_store_sk
+     AND time_dim.t_hour = 12
+     AND time_dim.t_minute < 30
+     AND ((household_demographics.hd_dep_count = 3 AND household_demographics.hd_vehicle_count<=3+2) or
+          (household_demographics.hd_dep_count = 0 AND household_demographics.hd_vehicle_count<=0+2) or
+          (household_demographics.hd_dep_count = 1 AND household_demographics.hd_vehicle_count<=1+2))
+     AND s8.s_store_name = 'ese'))};

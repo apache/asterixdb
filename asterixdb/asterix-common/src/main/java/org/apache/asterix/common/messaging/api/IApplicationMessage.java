@@ -28,5 +28,5 @@ public interface IApplicationMessage extends IMessage {
     /**
      * handle the message upon delivery
      */
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException;
+    void handle(IControllerService cs) throws HyracksDataException, InterruptedException;
 }

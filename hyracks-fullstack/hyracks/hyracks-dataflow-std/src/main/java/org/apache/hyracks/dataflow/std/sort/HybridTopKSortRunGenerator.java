@@ -67,6 +67,9 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        if (topK <= 0) {
+            return;
+        }
         inAccessor.reset(buffer);
         if (tupleSorter != null) {
             boolean isBadK = false;

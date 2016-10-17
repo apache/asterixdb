@@ -18,14 +18,6 @@
  */
 package org.apache.asterix.external.util;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import twitter4j.FilterQuery;
-import twitter4j.Twitter;
-import twitter4j.TwitterFactory;
-import twitter4j.TwitterStream;
-import twitter4j.TwitterStreamFactory;
-import twitter4j.conf.ConfigurationBuilder;
-
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +26,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.asterix.common.exceptions.AsterixException;
+
+import twitter4j.FilterQuery;
+import twitter4j.Twitter;
+import twitter4j.TwitterFactory;
+import twitter4j.TwitterStream;
+import twitter4j.TwitterStreamFactory;
+import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterUtil {
 
@@ -65,12 +66,11 @@ public class TwitterUtil {
     /**
      * Gets more than one bounding box from a sequences of coordinates
      * (following Twitter formats) + predefined location names, as US and EU.
-     *
      * E.g., for EU and US, we would use -29.7, 79.2, 36.7, 72.0; -124.848974,
-     *      -66.885444, 24.396308, 49.384358.
+     * -66.885444, 24.396308, 49.384358.
      *
      * @param locationValue
-     *          String value of the location coordinates or names (comma-separated)
+     *            String value of the location coordinates or names (comma-separated)
      * @return
      * @throws AsterixException
      */
@@ -219,7 +219,23 @@ public class TwitterUtil {
         cb.setOAuthConsumerSecret(oAuthConsumerSecret);
         cb.setOAuthAccessToken(oAuthAccessToken);
         cb.setOAuthAccessTokenSecret(oAuthAccessTokenSecret);
+        configureProxy(cb, configuration);
         return cb;
+    }
+
+    private static void configureProxy(ConfigurationBuilder cb, Map<String, String> configuration) {
+        final String httpProxyHost = configuration.get(ExternalDataConstants.KEY_HTTP_PROXY_HOST);
+        final String httpProxyPort = configuration.get(ExternalDataConstants.KEY_HTTP_PROXY_PORT);
+        if (httpProxyHost != null && httpProxyPort != null) {
+            cb.setHttpProxyHost(httpProxyHost);
+            cb.setHttpProxyPort(Integer.parseInt(httpProxyPort));
+            final String httpProxyUser = configuration.get(ExternalDataConstants.KEY_HTTP_PROXY_USER);
+            final String httpProxyPassword = configuration.get(ExternalDataConstants.KEY_HTTP_PROXY_PASSWORD);
+            if (httpProxyUser != null && httpProxyPassword != null) {
+                cb.setHttpProxyUser(httpProxyUser);
+                cb.setHttpProxyPassword(httpProxyPassword);
+            }
+        }
     }
 
     public static void initializeConfigurationWithAuthInfo(Map<String, String> configuration) throws AsterixException {

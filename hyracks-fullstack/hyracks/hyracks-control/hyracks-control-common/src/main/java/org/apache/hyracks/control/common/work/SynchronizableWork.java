@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.control.common.work;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public abstract class SynchronizableWork extends AbstractWork {
     private boolean done;
 
@@ -34,8 +37,9 @@ public abstract class SynchronizableWork extends AbstractWork {
     public final void run() {
         try {
             doRun();
-        } catch (Exception e) {
-            this.e = e;
+        } catch (Exception ex) {
+            Logger.getLogger(getClass().getName()).log(Level.INFO, "Exception thrown from work", ex);
+            this.e = ex;
         } finally {
             synchronized (this) {
                 done = true;
@@ -46,11 +50,7 @@ public abstract class SynchronizableWork extends AbstractWork {
 
     public final synchronized void sync() throws Exception {
         while (!done) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw e;
-            }
+            wait();
         }
         if (e != null) {
             throw e;

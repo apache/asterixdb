@@ -34,7 +34,7 @@ public class AsterixProperties {
     public static final String PROPERTY_CLUSTER_ADDRESS = "cluster.address";
     public static final String PROPERTY_INSTANCE_NAME = "instance";
     public static final String DEFAULT_INSTANCE_NAME = "DEFAULT_INSTANCE";
-    public static final String PROPERTY_METADATA_PORT = "metadata.port";
+    public static final String PROPERTY_METADATA_NODE = "metadata.node";
     public static final String PROPERTY_COREDUMP_DIR = "coredumpdir";
     public static final String DEFAULT_COREDUMP_DIR = String.join(File.separator, ASTERIXDB, "coredump");
     public static final String PROPERTY_TXN_LOG_DIR = "txnlogdir";

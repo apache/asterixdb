@@ -30,6 +30,23 @@
     <root.dir>${basedir}/../../..</root.dir>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <profiles>
     <profile>
       <activation>
@@ -56,14 +73,8 @@
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-hdfs</artifactId>
-          <type>jar</type>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-          <type>jar</type>
-          <scope>compile</scope>
+          <classifier>tests</classifier>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -80,26 +91,10 @@
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-common</artifactId>
-          <type>jar</type>
-          <scope>compile</scope>
         </dependency>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-mapreduce-client-core</artifactId>
-          <type>jar</type>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-hdfs</artifactId>
-          <type>jar</type>
-          <scope>compile</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-          <type>jar</type>
-          <scope>compile</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -139,7 +134,7 @@
           <artifactId>hadoop-minicluster</artifactId>
           <version>0.23.6</version>
           <type>jar</type>
-          <scope>compile</scope>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -179,7 +174,7 @@
           <artifactId>hadoop-minicluster</artifactId>
           <version>2.0.0-cdh4.2.0</version>
           <type>jar</type>
-          <scope>compile</scope>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>
@@ -219,7 +214,7 @@
           <artifactId>hadoop-minicluster</artifactId>
           <version>2.0.0-cdh4.1.0</version>
           <type>jar</type>
-          <scope>compile</scope>
+          <scope>test</scope>
         </dependency>
       </dependencies>
     </profile>

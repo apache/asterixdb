@@ -235,8 +235,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         }
     }
 
-    private synchronized void addPendingThread(Thread t) {
+    private synchronized boolean addPendingThread(Thread t) {
+        if (aborted) {
+            return false;
+        }
         pendingThreads.add(t);
+        return true;
     }
 
     private synchronized void removePendingThread(Thread t) {
@@ -256,9 +260,16 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public void run() {
         Thread ct = Thread.currentThread();
         String threadName = ct.getName();
-        addPendingThread(ct);
+        ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
+        // Calls synchronized addPendingThread(..) to make sure that in the abort() method,
+        // the thread is not escaped from interruption.
+        if (!addPendingThread(ct)) {
+            exceptions.add(new InterruptedException("Task " + getTaskAttemptId() + " was aborted!"));
+            ExceptionUtils.setNodeIds(exceptions, ncs.getId());
+            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));
+            return;
+        }
         try {
-            ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
             try {
                 operator.initialize();
                 if (collectors.length > 0) {
@@ -271,11 +282,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         executorService.execute(new Runnable() {
                             @Override
                             public void run() {
-                                if (aborted) {
+                                Thread thread = Thread.currentThread();
+                                // Calls synchronized addPendingThread(..) to make sure that in the abort() method,
+                                // the thread is not escaped from interruption.
+                                if (!addPendingThread(thread)) {
                                     return;
                                 }
-                                Thread thread = Thread.currentThread();
-                                addPendingThread(thread);
                                 String oldName = thread.getName();
                                 thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
                                 thread.setPriority(Thread.MIN_PRIORITY);
