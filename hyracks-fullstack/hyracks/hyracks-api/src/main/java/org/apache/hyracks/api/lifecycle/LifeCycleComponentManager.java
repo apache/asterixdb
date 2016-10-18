@@ -119,8 +119,8 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
                     }
                     componentDumpStream = new FileOutputStream(f);
                 }
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe("Stopping component instance" + component.getClass().getName() + " dump state "
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Stopping component instance " + component.getClass().getName() + " dump state "
                             + dumpState + " dump path " + componentDumpPath);
                 }
                 component.stop(dumpState, componentDumpStream);
@@ -143,12 +143,12 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
         dumpPath = configuration.get(Config.DUMP_PATH_KEY);
         if (dumpPath == null) {
             dumpPath = System.getProperty("user.dir");
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe("dump path not configured. Using current directory " + dumpPath);
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("dump path not configured. Using current directory " + dumpPath);
             }
         }
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.severe("LifecycleComponentManager configured " + this);
+            LOGGER.info("LifecycleComponentManager configured " + this);
         }
         configured = true;
     }
