@@ -66,6 +66,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
+import org.apache.hyracks.util.StorageUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -85,6 +86,7 @@ public class TestExecutor {
     private static final Pattern POLL_TIMEOUT_PATTERN =
             Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern POLL_DELAY_PATTERN = Pattern.compile("polldelaysecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
+    public static final int TRUNCATE_THRESHOLD = 16384;
 
     private static Method managixExecuteMethod = null;
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
@@ -147,30 +149,24 @@ public class TestExecutor {
                     if (lineExpected.isEmpty()) {
                         continue;
                     }
-                    throw new ComparisonException(
-                            "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> ");
+                    throwLineChanged(scriptFile, lineExpected, "<EOF>", num);
                 }
 
                 // Comparing result equality but ignore "Time"-prefixed fields. (for metadata tests.)
                 String[] lineSplitsExpected = lineExpected.split("Time");
                 String[] lineSplitsActual = lineActual.split("Time");
                 if (lineSplitsExpected.length != lineSplitsActual.length) {
-                    throw new ComparisonException(
-                            "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
-                                    + "\n> " + lineActual);
+                    throwLineChanged(scriptFile, lineExpected, lineActual, num);
                 }
                 if (!equalStrings(lineSplitsExpected[0], lineSplitsActual[0], regex)) {
-                    throw new ComparisonException(
-                            "Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected
-                                    + "\n> " + lineActual);
+                    throwLineChanged(scriptFile, lineExpected, lineActual, num);
                 }
 
                 for (int i = 1; i < lineSplitsExpected.length; i++) {
                     String[] splitsByCommaExpected = lineSplitsExpected[i].split(",");
                     String[] splitsByCommaActual = lineSplitsActual[i].split(",");
                     if (splitsByCommaExpected.length != splitsByCommaActual.length) {
-                        throw new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\n< "
-                                + lineExpected + "\n> " + lineActual);
+                        throwLineChanged(scriptFile, lineExpected, lineActual, num);
                     }
                     for (int j = 1; j < splitsByCommaExpected.length; j++) {
                         if (splitsByCommaExpected[j].indexOf("DatasetId") >= 0) {
@@ -179,9 +175,7 @@ public class TestExecutor {
                             continue;
                         }
                         if (!equalStrings(splitsByCommaExpected[j], splitsByCommaActual[j], regex)) {
-                            throw new ComparisonException(
-                                    "Result for " + scriptFile + " changed at line " + num + ":\n< "
-                                            + lineExpected + "\n> " + lineActual);
+                            throwLineChanged(scriptFile, lineExpected, lineActual, num);
                         }
                     }
                 }
@@ -201,6 +195,25 @@ public class TestExecutor {
             readerActual.close();
         }
 
+    }
+
+    private void throwLineChanged(File scriptFile, String lineExpected, String lineActual, int num)
+            throws ComparisonException {
+        throw new ComparisonException(
+                "Result for " + scriptFile + " changed at line " + num + ":\n< "
+                        + truncateIfLong(lineExpected) + "\n> " + truncateIfLong(lineActual));
+    }
+
+    private String truncateIfLong(String string) {
+        if (string.length() < TRUNCATE_THRESHOLD) {
+            return string;
+        }
+        final StringBuilder truncatedString = new StringBuilder(string);
+        truncatedString.setLength(TRUNCATE_THRESHOLD);
+        truncatedString.append("\n<truncated ")
+                .append(StorageUtil.toHumanReadableSize(string.length() - TRUNCATE_THRESHOLD))
+                .append("...>");
+        return truncatedString.toString();
     }
 
     private boolean equalStrings(String expected, String actual, boolean regexMatch) {

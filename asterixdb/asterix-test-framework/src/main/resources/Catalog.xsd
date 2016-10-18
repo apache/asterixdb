@@ -164,7 +164,6 @@
 
                <!-- This name is always equal to the name of the test case -->
                <xs:attribute name="name" type="xs:string" use="required"/>
-
             </xs:complexType>
          </xs:element>
 
@@ -180,6 +179,7 @@
 
       <xs:attribute name="FilePath" type="test:SimplifiedRelativeFilePath" use="required"/>
       <xs:attribute name="category" type="test:category-enum"/>
+      <xs:attribute name="repeat" type="xs:positiveInteger" default="1" />
    </xs:complexType>
 
    <!-- category-enum type                                                   -->

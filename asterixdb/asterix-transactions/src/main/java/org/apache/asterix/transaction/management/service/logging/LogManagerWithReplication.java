@@ -98,17 +98,13 @@ public class LogManagerWithReplication extends LogManager {
             }
         }
 
-        if (getLogFileOffset(appendLSN.get()) + logRecord.getLogSize() > logFileSize) {
-            prepareNextLogFile();
-            appendPage.isFull(true);
-            getAndInitNewPage();
-        } else if (!appendPage.hasSpace(logRecord.getLogSize())) {
-            appendPage.isFull(true);
-            if (logRecord.getLogSize() > logPageSize) {
-                getAndInitNewLargePage(logRecord.getLogSize());
-            } else {
-                getAndInitNewPage();
+        final int logRecordSize = logRecord.getLogSize();
+        if (!appendPage.hasSpace(logRecordSize)) {
+            if (getLogFileOffset(appendLSN.get()) + logRecordSize > logFileSize) {
+                prepareNextLogFile();
             }
+            appendPage.isFull(true);
+            getAndInitNewPage(logRecordSize);
         }
         appendPage.appendWithReplication(logRecord, appendLSN.get());
 
@@ -116,7 +112,7 @@ public class LogManagerWithReplication extends LogManager {
             logRecord.setLSN(appendLSN.get());
         }
 
-        appendLSN.addAndGet(logRecord.getLogSize());
+        appendLSN.addAndGet(logRecordSize);
     }
 
     @Override

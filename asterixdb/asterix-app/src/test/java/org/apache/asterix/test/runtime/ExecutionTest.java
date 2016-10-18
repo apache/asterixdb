@@ -117,6 +117,7 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
+        int repeat = ExecutionTest.repeat * tcCtx.getRepeat();
         try {
             for (int i = 1; i <= repeat; i++) {
                 if (repeat > 1) {

@@ -6731,7 +6731,7 @@
         <output-dir compare="Text">big_object_load_only_20M</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="big-object">
+    <test-case FilePath="big-object" repeat="5">
       <compilation-unit name="big_object_feed_20M">
         <output-dir compare="Text">big_object_feed_20M</output-dir>
       </compilation-unit>

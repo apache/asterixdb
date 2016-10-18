@@ -126,6 +126,10 @@ public class TestCaseContext {
         return testCase;
     }
 
+    public int getRepeat() {
+        return testCase.getRepeat().intValue();
+    }
+
     public List<TestFileContext> getFilesInDir(String basePath, String dirName, boolean withType) {
         List<TestFileContext> testFileCtxs = new ArrayList<TestFileContext>();
 
