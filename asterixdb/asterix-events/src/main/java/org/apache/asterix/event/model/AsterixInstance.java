@@ -66,10 +66,6 @@ public class AsterixInstance implements Serializable {
         this.backupInfo = new ArrayList<BackupInfo>();
     }
 
-    public Date getModifiedTimestamp() {
-        return stateChangeTimestamp;
-    }
-
     public State getState() {
         return state;
     }
@@ -85,14 +81,6 @@ public class AsterixInstance implements Serializable {
 
     public String getName() {
         return name;
-    }
-
-    public Date getCreatedTimestamp() {
-        return createdTimestamp;
-    }
-
-    public Date getStateChangeTimestamp() {
-        return stateChangeTimestamp;
     }
 
     public void setStateChangeTimestamp(Date stateChangeTimestamp) {
@@ -112,7 +100,7 @@ public class AsterixInstance implements Serializable {
     }
 
     public String getDescription(boolean detailed) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("Name:" + name + "\n");
         buffer.append("Created:" + createdTimestamp + "\n");
 
@@ -150,15 +138,11 @@ public class AsterixInstance implements Serializable {
         return "http://" + cluster.getMasterNode().getClientIp() + ":" + webPort;
     }
 
-    public AsterixRuntimeState getAsterixRuntimeState() {
-        return runtimeState;
-    }
-
     public void setAsterixRuntimeStates(AsterixRuntimeState runtimeState) {
         this.runtimeState = runtimeState;
     }
 
-    private void addDetailedInformation(StringBuffer buffer) {
+    private void addDetailedInformation(StringBuilder buffer) {
         buffer.append("Master node:" + cluster.getMasterNode().getId() + ":" + cluster.getMasterNode().getClusterIp()
                 + "\n");
         for (Node node : cluster.getNode()) {
@@ -196,7 +180,7 @@ public class AsterixInstance implements Serializable {
 
     private String getIndentation(String name, int lenMax) {
         int len = name.length();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < lenMax - len; i++) {
             buf.append(" ");
         }

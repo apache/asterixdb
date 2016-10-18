@@ -67,7 +67,7 @@ public class ZooKeeperService implements ILookupService {
     public boolean isRunning(Configuration conf) throws Exception {
         List<String> servers = conf.getZookeeper().getServers().getServer();
         int clientPort = conf.getZookeeper().getClientPort().intValue();
-        StringBuffer connectionString = new StringBuffer();
+        StringBuilder connectionString = new StringBuilder();
         for (String serverAddress : servers) {
             connectionString.append(serverAddress);
             connectionString.append(":");
@@ -101,7 +101,7 @@ public class ZooKeeperService implements ILookupService {
         ZookeeperUtil.writeConfiguration(ZOO_KEEPER_CONFIG, conf, ZOOKEEPER_LEADER_CONN_PORT,
                 ZOOKEEPER_LEADER_ELEC_PORT);
         String initScript = ZOOKEEPER_HOME + File.separator + "bin" + File.separator + "zk.init";
-        StringBuffer cmdBuffer = new StringBuffer();
+        StringBuilder cmdBuffer = new StringBuilder();
         cmdBuffer.append(initScript + " ");
         cmdBuffer.append(conf.getZookeeper().getHomeDir() + " ");
         cmdBuffer.append(conf.getZookeeper().getServers().getJavaHome() + " ");
@@ -137,7 +137,7 @@ public class ZooKeeperService implements ILookupService {
             LOGGER.debug("Stopping ZooKeeper running at " + zkConnectionString);
         }
         String stopScript = ZOOKEEPER_HOME + File.separator + "bin" + File.separator + "stop_zk";
-        StringBuffer cmdBuffer = new StringBuffer();
+        StringBuilder cmdBuffer = new StringBuilder();
         cmdBuffer.append(stopScript + " ");
         cmdBuffer.append(conf.getZookeeper().getHomeDir() + " ");
         List<String> zkServers = conf.getZookeeper().getServers().getServer();
@@ -282,7 +282,7 @@ class ZookeeperUtil {
     public static void writeConfiguration(String zooKeeperConfigPath, Configuration conf, int leaderConnPort,
             int leaderElecPort) throws IOException {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("tickTime=1000" + "\n");
         buffer.append("dataDir=" + conf.getZookeeper().getHomeDir() + File.separator + "data" + "\n");
         buffer.append("clientPort=" + conf.getZookeeper().getClientPort().intValue() + "\n");

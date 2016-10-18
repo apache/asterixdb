@@ -24,7 +24,6 @@ public class ServiceProvider {
     private static ILookupService lookupService = new ZooKeeperService();
 
     private ServiceProvider() {
-
     }
 
     public ILookupService getLookupService() {

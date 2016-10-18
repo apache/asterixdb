@@ -51,7 +51,6 @@ public class VerificationUtil {
         boolean ccRunning = true;
         List<String> failedNCs = new ArrayList<String>();
         String[] infoFields;
-        ProcessInfo pInfo;
         List<ProcessInfo> processes = new ArrayList<ProcessInfo>();
 
         for (String line : output.split("\n")) {
@@ -64,8 +63,7 @@ public class VerificationUtil {
                 } else {
                     nodeid = instance.getCluster().getMasterNode().getId();
                 }
-                pInfo = new ProcessInfo(infoFields[0], infoFields[1], nodeid, pid);
-                processes.add(pInfo);
+                processes.add(new ProcessInfo(infoFields[0], infoFields[1], nodeid, pid));
             } catch (Exception e) {
                 if (infoFields[0].equalsIgnoreCase("CC")) {
                     ccRunning = false;
@@ -79,11 +77,11 @@ public class VerificationUtil {
 
     public static void updateInstanceWithRuntimeDescription(AsterixInstance instance, AsterixRuntimeState state,
             boolean expectedRunning) {
-        StringBuffer summary = new StringBuffer();
+        StringBuilder summary = new StringBuilder();
         if (expectedRunning) {
             if (!state.isCcRunning()) {
-                summary.append("Cluster Controller not running at " + instance.getCluster().getMasterNode().getId()
-                        + "\n");
+                summary.append(
+                        "Cluster Controller not running at " + instance.getCluster().getMasterNode().getId() + "\n");
                 instance.setState(State.UNUSABLE);
             }
             if (state.getFailedNCs() != null && !state.getFailedNCs().isEmpty()) {
@@ -113,7 +111,7 @@ public class VerificationUtil {
 
     public static void verifyBackupRestoreConfiguration(String hdfsUrl, String hadoopVersion, String hdfsBackupDir)
             throws Exception {
-        StringBuffer errorCheck = new StringBuffer();
+        StringBuilder errorCheck = new StringBuilder();
         if (hdfsUrl == null || hdfsUrl.length() == 0) {
             errorCheck.append("\n HDFS Url not configured");
         }

@@ -41,7 +41,7 @@ public class OutputHandler implements IOutputHandler {
         EventType eventType = EventType.valueOf(event.getType().toUpperCase());
         boolean ignore = true;
         String trimmedOutput = output.trim();
-        StringBuffer errorMessage = new StringBuffer();
+        StringBuilder errorMessage = new StringBuilder();
         switch (eventType) {
             case FILE_TRANSFER:
                 if (trimmedOutput.length() > 0) {
@@ -57,14 +57,9 @@ public class OutputHandler implements IOutputHandler {
                 if (trimmedOutput.length() > 0) {
                     if (trimmedOutput.contains("AccessControlException")) {
                         errorMessage.append("Insufficient permissions on back up directory");
-                        ignore = false;
                     }
-                    if (output.contains("does not exist") || output.contains("File exist")
-                            || (output.contains("No such file or directory"))) {
-                        ignore = true;
-                    } else {
-                        ignore = false;
-                    }
+                    ignore = output.contains("does not exist") || output.contains("File exist")
+                            || (output.contains("No such file or directory"));
                 }
                 break;
 
@@ -87,10 +82,6 @@ public class OutputHandler implements IOutputHandler {
             default:
                 break;
         }
-        if (ignore) {
-            return new OutputAnalysis(true, null);
-        } else {
-            return new OutputAnalysis(false, errorMessage.toString());
-        }
+        return ignore ? new OutputAnalysis(true, null) : new OutputAnalysis(false, errorMessage.toString());
     }
 }

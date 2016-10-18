@@ -41,17 +41,11 @@ import org.apache.asterix.event.schema.pattern.Pattern;
 public class EventUtil {
 
     public static final String EVENTS_DIR = "events";
-    public static final String CLUSTER_CONF = "config/cluster.xml";
-    public static final String PATTERN_CONF = "config/pattern.xml";
     public static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     public static final String NC_JAVA_OPTS = "nc.java.opts";
     public static final String CC_JAVA_OPTS = "cc.java.opts";
 
     private static final String IP_LOCATION = "IP_LOCATION";
-    private static final String CLUSTER_ENV = "ENV";
-    private static final String SCRIPT = "SCRIPT";
-    private static final String ARGS = "ARGS";
-    private static final String EXECUTE_SCRIPT = "events/execute.sh";
 
     public static Cluster getCluster(String clusterConfigurationPath) throws JAXBException {
         File file = new File(clusterConfigurationPath);
@@ -201,7 +195,7 @@ public class EventUtil {
                 return node;
             }
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(EventDriver.CLIENT_NODE.getId() + ",");
         buffer.append(cluster.getMasterNode().getId() + ",");
         for (Node v : cluster.getNode()) {
@@ -209,27 +203,6 @@ public class EventUtil {
         }
         buffer.deleteCharAt(buffer.length() - 1);
         throw new IllegalArgumentException("Unknown node id :" + nodeid + " valid ids:" + buffer);
-    }
-
-    public static void executeEventScript(Node node, String script, List<String> args, Cluster cluster)
-            throws IOException, InterruptedException {
-        List<String> pargs = new ArrayList<String>();
-        pargs.add("/bin/bash");
-        pargs.add(EventDriver.getEventsDir() + "/" + EXECUTE_SCRIPT);
-        StringBuffer argBuffer = new StringBuffer();
-        String env = EventDriver.getStringifiedEnv(cluster) + " " + IP_LOCATION + "=" + node.getClusterIp();
-        if (args != null) {
-            for (String arg : args) {
-                argBuffer.append(arg + " ");
-            }
-        }
-        ProcessBuilder pb = new ProcessBuilder(pargs);
-        pb.environment().putAll(EventDriver.getEnvironment());
-        pb.environment().put(IP_LOCATION, node.getClusterIp());
-        pb.environment().put(CLUSTER_ENV, env);
-        pb.environment().put(SCRIPT, script);
-        pb.environment().put(ARGS, argBuffer.toString());
-        pb.start();
     }
 
     public static void executeLocalScript(Node node, String script, List<String> args) throws IOException,

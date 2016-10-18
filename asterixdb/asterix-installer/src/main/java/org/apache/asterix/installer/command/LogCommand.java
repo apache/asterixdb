@@ -58,7 +58,7 @@ public class LogCommand extends AbstractCommand {
                 throw new InstallerException("Unable to create output directory:" + outputDirPath);
             }
         }
-        Patterns transferLogPattern = pc.getGenerateLogPattern(asterixInstanceName, instance.getCluster(),
+        Patterns transferLogPattern = pc.getGenerateLogPattern(instance.getCluster(),
                 outputDirPath);
         eventrixClient.submit(transferLogPattern);
         File outputDirFile = new File(outputDirPath);

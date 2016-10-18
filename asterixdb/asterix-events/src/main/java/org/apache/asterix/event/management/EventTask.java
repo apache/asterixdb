@@ -143,10 +143,6 @@ public class EventTask extends TimerTask {
         return interval;
     }
 
-    public long getInitialDelay() {
-        return initialDelay;
-    }
-
     public Pattern getPattern() {
         return pattern;
     }

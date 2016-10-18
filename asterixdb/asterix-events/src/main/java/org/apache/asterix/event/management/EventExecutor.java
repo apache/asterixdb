@@ -35,7 +35,6 @@ import org.apache.commons.io.IOUtils;
 
 public class EventExecutor {
 
-    public static final String EVENTS_DIR = "events";
     private static final String EXECUTE_SCRIPT = "execute.sh";
     private static final String IP_LOCATION = "IP_LOCATION";
     private static final String CLUSTER_ENV = "ENV";
@@ -49,7 +48,7 @@ public class EventExecutor {
         pargs.add("/bin/bash");
         pargs.add(client.getEventsHomeDir() + File.separator + AsterixEventServiceUtil.EVENT_DIR + File.separator
                 + EXECUTE_SCRIPT);
-        StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getClusterIp() + " ");
+        StringBuilder envBuffer = new StringBuilder(IP_LOCATION + "=" + node.getClusterIp() + " ");
         boolean isMasterNode = node.getId().equals(cluster.getMasterNode().getId());
 
         if (!node.getId().equals(EventDriver.CLIENT_NODE_ID) && cluster.getEnv() != null) {
@@ -59,41 +58,11 @@ public class EventExecutor {
                     envBuffer.append(p.getKey() + "=" + val + " ");
                 } else if (p.getKey().equals(EventUtil.NC_JAVA_OPTS)) {
                     if (!isMasterNode) {
-                        StringBuilder builder = new StringBuilder();
-                        builder.append("\"");
-                        String javaOpts = p.getValue();
-                        if (javaOpts != null) {
-                            builder.append(javaOpts);
-                        }
-                        if (node.getDebugPort() != null) {
-                            int debugPort = node.getDebugPort().intValue();
-                            if (!javaOpts.contains("-Xdebug")) {
-                                builder.append(
-                                        (" " + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address="
-                                                + debugPort));
-                            }
-                        }
-                        builder.append("\"");
-                        envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
+                        appendJavaOpts(node, envBuffer, p);
                     }
                 } else if (p.getKey().equals(EventUtil.CC_JAVA_OPTS)) {
                     if (isMasterNode) {
-                        StringBuilder builder = new StringBuilder();
-                        builder.append("\"");
-                        String javaOpts = p.getValue();
-                        if (javaOpts != null) {
-                            builder.append(javaOpts);
-                        }
-                        if (node.getDebugPort() != null) {
-                            int debugPort = node.getDebugPort().intValue();
-                            if (!javaOpts.contains("-Xdebug")) {
-                                builder.append(
-                                        (" " + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address="
-                                                + debugPort));
-                            }
-                        }
-                        builder.append("\"");
-                        envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
+                        appendJavaOpts(node, envBuffer, p);
                     }
                 } else if (p.getKey().equals("LOG_DIR")) {
                     String val = node.getLogDir() == null ? p.getValue() : node.getLogDir();
@@ -106,7 +75,7 @@ public class EventExecutor {
             pargs.add(cluster.getUsername() == null ? System.getProperty("user.name") : cluster.getUsername());
         }
 
-        StringBuffer argBuffer = new StringBuffer();
+        StringBuilder argBuffer = new StringBuilder();
         if (args != null && args.size() > 0) {
             for (String arg : args) {
                 argBuffer.append(arg + " ");
@@ -118,7 +87,7 @@ public class EventExecutor {
         pb.environment().put(CLUSTER_ENV, envBuffer.toString());
         pb.environment().put(SCRIPT, script);
         pb.environment().put(ARGS, argBuffer.toString());
-        pb.environment().put(DAEMON, isDaemon ? "true" : "false");
+        pb.environment().put(DAEMON, Boolean.toString(isDaemon));
 
         Process p = pb.start();
         if (!isDaemon) {
@@ -131,5 +100,22 @@ public class EventExecutor {
                 throw new IOException(analysis.getErrorMessage() + result);
             }
         }
+    }
+
+    protected void appendJavaOpts(Node node, StringBuilder envBuffer, Property p) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\"");
+        String javaOpts = p.getValue();
+        if (javaOpts != null) {
+            builder.append(javaOpts);
+        }
+        if (node.getDebugPort() != null) {
+            int debugPort = node.getDebugPort().intValue();
+            if (javaOpts == null || !javaOpts.contains("-Xdebug")) {
+                builder.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=").append(debugPort);
+            }
+        }
+        builder.append("\"");
+        envBuffer.append("JAVA_OPTS=").append(builder.toString()).append(" ");
     }
 }

@@ -65,33 +65,25 @@ import org.apache.commons.io.IOUtils;
 public class AsterixEventServiceUtil {
 
     public static final String TXN_LOG_DIR = "txnLogs";
-    public static final String TXN_LOG_DIR_KEY_SUFFIX = "txnLogDir";
     public static final String ASTERIX_CONFIGURATION_FILE = "asterix-configuration.xml";
-    public static final String TXN_LOG_CONFIGURATION_FILE = "log.properties";
     public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
-    public static final String ASTERIX_DIR = "asterix";
     public static final String EVENT_DIR = "events";
-    public static final String DEFAULT_ASTERIX_CONFIGURATION_PATH = "conf" + File.separator + File.separator
-            + "asterix-configuration.xml";
     public static final int CLUSTER_NET_PORT_DEFAULT = 1098;
     public static final int CLIENT_NET_PORT_DEFAULT = 1099;
     public static final int HTTP_PORT_DEFAULT = 8888;
-    public static final int WEB_INTERFACE_PORT_DEFAULT = 19001;
 
-    public static final String MANAGIX_INTERNAL_DIR = ".installer";
     public static final String MANAGIX_CONF_XML = "conf" + File.separator + "managix-conf.xml";
 
     private static final int BUFFER_SIZE = 4096;
 
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
-            AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
+            AsterixConfiguration asterixConfiguration) throws IOException {
         Node metadataNode = getMetadataNode(asterixInstanceName, cluster);
         String asterixZipName = asterixZipName();
         String asterixVersion = asterixZipName.substring("asterix-server-".length(),
                 asterixZipName.indexOf("-binary-assembly"));
-        AsterixInstance instance = new AsterixInstance(asterixInstanceName, cluster, asterixConfiguration,
+        return new AsterixInstance(asterixInstanceName, cluster, asterixConfiguration,
                 metadataNode.getId(), asterixVersion);
-        return instance;
     }
 
     public static void createAsterixZip(AsterixInstance asterixInstance)

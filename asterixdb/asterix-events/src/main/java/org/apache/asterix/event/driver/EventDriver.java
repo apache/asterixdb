@@ -41,31 +41,15 @@ import org.kohsuke.args4j.CmdLineParser;
 public class EventDriver {
 
     public static final String CLIENT_NODE_ID = "client_node";
-    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, "127.0.0.1", null, null, null, null, null, null);
+    public static final String CLUSTER_IP = "127.0.0.1";
+    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, CLUSTER_IP, null, null, null, null, null, null);
 
     private static String eventsDir;
-    private static Events events;
     private static Map<String, String> env = new HashMap<String, String>();
     private static String scriptDirSuffix;
 
-    public static String getEventsDir() {
-        return eventsDir;
-    }
-
-    public static Events getEvents() {
-        return events;
-    }
-
     public static Map<String, String> getEnvironment() {
         return env;
-    }
-
-    public static String getStringifiedEnv(Cluster cluster) {
-        StringBuffer buffer = new StringBuffer();
-        for (Property p : cluster.getEnv().getProperty()) {
-            buffer.append(p.getKey() + "=" + p.getValue() + " ");
-        }
-        return buffer.toString();
     }
 
     public static Cluster initializeCluster(String path) throws JAXBException, IOException {
@@ -74,17 +58,6 @@ public class EventDriver {
             env.put(p.getKey(), p.getValue());
         }
         return cluster;
-    }
-
-    public static Patterns initializePatterns(String path) throws JAXBException, IOException {
-        File file = new File(path);
-        JAXBContext ctx = JAXBContext.newInstance(Patterns.class);
-        Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        return (Patterns) unmarshaller.unmarshal(file);
-    }
-
-    private static void initialize(EventConfig eventConfig) throws IOException, JAXBException {
-
     }
 
     public static void main(String[] args) throws Exception {
@@ -104,14 +77,10 @@ public class EventDriver {
                 Randomizer.getInstance(eventConfig.seed);
             }
             Cluster cluster = initializeCluster(eventConfig.clusterPath);
-            initialize(eventConfig);
 
             if (!eventConfig.dryRun) {
                 prepare(cluster);
             }
-            //AsterixEventServiceClient client = new AsterixEventServiceClient(eventsDir, cluster, eventConfig.dryRun,
-            //      new DefaultOutputHandler());
-            // client.submit(patterns);
             if (!eventConfig.dryRun) {
                 cleanup(cluster);
             }
@@ -123,12 +92,12 @@ public class EventDriver {
 
     private static void prepare(Cluster cluster) throws IOException, InterruptedException {
 
-        scriptDirSuffix = "" + System.nanoTime();
+        scriptDirSuffix = Long.toString(System.nanoTime());
         List<String> args = new ArrayList<String>();
         args.add(scriptDirSuffix);
         Node clientNode = new Node();
         clientNode.setId("client");
-        clientNode.setClusterIp("127.0.0.1");
+        clientNode.setClusterIp(CLUSTER_IP);
         for (Node node : cluster.getNode()) {
             args.add(node.getClusterIp());
         }
@@ -140,7 +109,7 @@ public class EventDriver {
         args.add(scriptDirSuffix);
         Node clientNode = new Node();
         clientNode.setId("client");
-        clientNode.setClusterIp("127.0.0.1");
+        clientNode.setClusterIp(CLUSTER_IP);
         for (Node node : cluster.getNode()) {
             args.add(node.getClusterIp());
         }

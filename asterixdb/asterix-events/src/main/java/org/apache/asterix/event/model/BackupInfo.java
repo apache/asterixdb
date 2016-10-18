@@ -58,7 +58,6 @@ public class BackupInfo implements Serializable {
     public String toString() {
         return id + " " + date + " " + "(" + getBackupType() + ")" + " " + "[ " + this.getBackupConf().getBackupDir()
                 + " ]";
-
     }
 
     public BackupType getBackupType() {

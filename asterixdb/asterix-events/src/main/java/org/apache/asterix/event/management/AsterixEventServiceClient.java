@@ -196,8 +196,7 @@ public class AsterixEventServiceClient {
 
             }
         }
-        Patterns patterns = new Patterns(patternList);
-        return patterns;
+        return new Patterns(patternList);
     }
 
     private Pattern getDirectoryTransferPattern(String username, String src, Nodeid srcNode, String destNodeIp,

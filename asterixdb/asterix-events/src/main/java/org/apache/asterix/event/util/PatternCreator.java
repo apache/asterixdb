@@ -54,8 +54,6 @@ public class PatternCreator {
     private PatternCreator() {
     }
 
-    private ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-
     private void addInitialDelay(Pattern p, int delay, String unit) {
         Delay d = new Delay(new Value(null, Integer.toString(delay)), unit);
         p.setDelay(d);
@@ -97,26 +95,6 @@ public class PatternCreator {
                     asterixInstanceName + "_" + node.getId(), iodevices, createCommand);
             addInitialDelay(createNC, 5, "sec");
             ps.add(createNC);
-        }
-
-        return new Patterns(ps);
-    }
-
-    public Patterns getStopCommandPattern(String asterixInstanceName) throws Exception {
-        List<Pattern> ps = new ArrayList<>();
-        AsterixInstance asterixInstance = lookupService.getAsterixInstance(asterixInstanceName);
-        Cluster cluster = asterixInstance.getCluster();
-
-        String ccLocation = cluster.getMasterNode().getId();
-        Pattern createCC = createCCStopPattern(ccLocation);
-        addInitialDelay(createCC, 5, "sec");
-        ps.add(createCC);
-
-        int nodeControllerIndex = 1;
-        for (Node node : cluster.getNode()) {
-            Pattern createNC = createNCStopPattern(node.getId(), asterixInstanceName + "_" + nodeControllerIndex);
-            ps.add(createNC);
-            nodeControllerIndex++;
         }
 
         return new Patterns(ps);
@@ -600,7 +578,7 @@ public class PatternCreator {
         return new Patterns(ps);
     }
 
-    public Patterns getGenerateLogPattern(String asterixInstanceName, Cluster cluster, String outputDir) {
+    public Patterns getGenerateLogPattern(Cluster cluster, String outputDir) {
         List<Pattern> patternList = new ArrayList<>();
         Map<String, String> nodeLogs = new HashMap<>();
 

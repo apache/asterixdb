@@ -35,16 +35,8 @@ public class ProcessInfo implements Serializable {
         this.processId = processId;
     }
 
-    public String getProcessName() {
-        return processName;
-    }
-
     public String getHost() {
         return host;
-    }
-
-    public int getProcessId() {
-        return processId;
     }
 
     public String getNodeId() {

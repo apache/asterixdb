@@ -21,13 +21,12 @@ package org.apache.asterix.event.service;
 import java.io.File;
 import java.io.FileFilter;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import org.apache.asterix.event.error.OutputHandler;
 import org.apache.asterix.event.management.AsterixEventServiceClient;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.installer.schema.conf.Configuration;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class AsterixEventService {
 
@@ -46,15 +45,12 @@ public class AsterixEventService {
 
     public static AsterixEventServiceClient getAsterixEventServiceClient(Cluster cluster, boolean transferArtifacts,
             boolean dryRun) throws Exception {
-        AsterixEventServiceClient client = new AsterixEventServiceClient(configuration, eventHome, cluster,
-                transferArtifacts, dryRun, OutputHandler.INSTANCE);
-        return client;
+        return new AsterixEventServiceClient(configuration, eventHome, cluster, transferArtifacts, dryRun,
+                OutputHandler.INSTANCE);
     }
 
     public static AsterixEventServiceClient getAsterixEventServiceClient(Cluster cluster) throws Exception {
-        AsterixEventServiceClient client = new AsterixEventServiceClient(configuration, eventHome, cluster, false,
-                false, OutputHandler.INSTANCE);
-        return client;
+        return new AsterixEventServiceClient(configuration, eventHome, cluster, false, false, OutputHandler.INSTANCE);
     }
 
     private static String initBinary(final String fileNamePattern) {
