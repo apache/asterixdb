@@ -105,17 +105,20 @@ public class NCService {
     }
 
     private static void configEnvironment(Map<String,String> env) {
-        if (env.containsKey("JAVA_OPTS")) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Keeping JAVA_OPTS from environment");
+        String jvmargs = IniUtils.getString(ini, nodeSection, "jvm.args", null);
+        if (jvmargs != null) {
+            LOGGER.info("Using JAVA_OPTS from conf file (jvm.args)");
+        } else {
+            jvmargs = env.get("JAVA_OPTS");
+            if (jvmargs != null) {
+                LOGGER.info("Using JAVA_OPTS from environment");
+            } else {
+                LOGGER.info("Using default JAVA_OPTS");
+                jvmargs = "-Xmx1536m";
             }
-            return;
         }
-        String jvmargs = IniUtils.getString(ini, nodeSection, "jvm.args", "-Xmx1536m");
         env.put("JAVA_OPTS", jvmargs);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Setting JAVA_OPTS to " + jvmargs);
-        }
+        LOGGER.info("Setting JAVA_OPTS to " + jvmargs);
     }
 
     /**

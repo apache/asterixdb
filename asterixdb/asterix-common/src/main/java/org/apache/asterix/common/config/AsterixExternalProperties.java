@@ -92,13 +92,11 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
                 PropertyInterpreters.getLevelPropertyInterpreter());
     }
 
-    @PropertyKey(EXTERNAL_NC_JAVA_OPTS_KEY)
     public String getNCJavaParams() {
         return accessor.getProperty(EXTERNAL_NC_JAVA_OPTS_KEY, EXTERNAL_NC_JAVA_OPTS_DEFAULT,
                 PropertyInterpreters.getStringPropertyInterpreter());
     }
 
-    @PropertyKey(EXTERNAL_CC_JAVA_OPTS_KEY)
     public String getCCJavaParams() {
         return accessor.getProperty(EXTERNAL_CC_JAVA_OPTS_KEY, EXTERNAL_CC_JAVA_OPTS_DEFAULT,
                 PropertyInterpreters.getStringPropertyInterpreter());

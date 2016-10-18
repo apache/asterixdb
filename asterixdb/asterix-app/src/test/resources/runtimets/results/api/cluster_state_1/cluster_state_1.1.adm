@@ -6,7 +6,6 @@
     },
     "config": {
         "api.port": 19002,
-        "cc.java.opts": "-Xmx1024m",
         "cluster.partitions": {
             "0": "ID:0, Original Node: asterix_nc1, IODevice: 0, Active Node: asterix_nc1",
             "1": "ID:1, Original Node: asterix_nc1, IODevice: 1, Active Node: asterix_nc1",
@@ -33,7 +32,6 @@
         "metadata.partition": "ID:0, Original Node: asterix_nc1, IODevice: 0, Active Node: asterix_nc1",
         "metadata.port": 0,
         "metadata.registration.timeout.secs": 60,
-        "nc.java.opts": "-Xmx1024m",
         "node.partitions": {
             "asterix_nc1": [
                 "ID:0, Original Node: asterix_nc1, IODevice: 0, Active Node: asterix_nc1",
