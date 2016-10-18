@@ -28,7 +28,7 @@ import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
-import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 
@@ -71,7 +71,7 @@ public class ClusterWorkExecutor implements Runnable {
                     Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
                     if (node != null) {
                         try {
-                            ClusterManager.INSTANCE.addNode(node);
+                            ClusterManagerProvider.getClusterManager().addNode(node);
                             addedNodes.add(node);
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.info("Added NC at:" + node.getId());

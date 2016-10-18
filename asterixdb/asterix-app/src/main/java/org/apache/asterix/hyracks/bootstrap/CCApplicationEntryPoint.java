@@ -62,7 +62,7 @@ import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
-import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
@@ -128,7 +128,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             server.start();
         }
 
-        ClusterManager.INSTANCE.registerSubscriber(GlobalRecoveryManager.instance());
+        ClusterManagerProvider.getClusterManager().registerSubscriber(GlobalRecoveryManager.instance());
 
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
         ccAppCtx.setMessageBroker(messageBroker);
@@ -323,13 +323,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     @Override
     public void startupCompleted() throws Exception {
-        // Notify Zookeeper that the startup is complete
-        ILookupService zookeeperService = ClusterManager.getLookupService();
-        if (zookeeperService != null) {
-            // Our asterix app runtimes tests don't use zookeeper
-            zookeeperService.reportClusterState(ClusterProperties.INSTANCE.getCluster().getInstanceName(),
-                    ClusterState.ACTIVE);
-        }
+        ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
     }
 
     public static synchronized void setAsterixStateProxy(IAsterixStateProxy proxy) {

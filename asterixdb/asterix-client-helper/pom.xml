@@ -96,6 +96,12 @@
       <groupId>org.codehaus.mojo.appassembler</groupId>
       <artifactId>appassembler-booter</artifactId>
       <version>1.10</version>
+      <exclusions>
+        <exclusion>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

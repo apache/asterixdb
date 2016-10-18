@@ -37,7 +37,7 @@ import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.AddNodeWorkResponse;
-import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
 import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
 import org.apache.asterix.runtime.util.ClusterStateManager;
@@ -79,7 +79,8 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         Set<String> nodeAddition = new HashSet<String>();
         nodeAddition.add(nodeId);
         updateProgress(ClusterEventType.NODE_JOIN, nodeAddition);
-        Set<IClusterEventsSubscriber> subscribers = ClusterManager.INSTANCE.getRegisteredClusterEventSubscribers();
+        Set<IClusterEventsSubscriber> subscribers =
+                ClusterManagerProvider.getClusterManager().getRegisteredClusterEventSubscribers();
         Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
         for (IClusterEventsSubscriber sub : subscribers) {
             Set<IClusterManagementWork> workRequest = sub.notifyNodeJoin(nodeId);
@@ -105,7 +106,8 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             }
         }
         updateProgress(ClusterEventType.NODE_FAILURE, deadNodeIds);
-        Set<IClusterEventsSubscriber> subscribers = ClusterManager.INSTANCE.getRegisteredClusterEventSubscribers();
+        Set<IClusterEventsSubscriber> subscribers =
+                ClusterManagerProvider.getClusterManager().getRegisteredClusterEventSubscribers();
         Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
         for (IClusterEventsSubscriber sub : subscribers) {
             Set<IClusterManagementWork> workRequest = sub.notifyNodeFailure(deadNodeIds);
@@ -172,7 +174,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
             if (node != null) {
                 try {
-                    ClusterManager.INSTANCE.addNode(node);
+                    ClusterManagerProvider.getClusterManager().addNode(node);
                     addedNodes.add(asterixInstanceName + "_" + node.getId());
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Added NC at:" + node.getId());

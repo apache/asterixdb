@@ -54,4 +54,5 @@ public interface IClusterManager {
      */
     public Set<IClusterEventsSubscriber> getRegisteredClusterEventSubscribers();
 
+    void notifyStartupCompleted() throws Exception;
 }
