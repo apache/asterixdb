@@ -96,13 +96,15 @@ public class FunctionUtil {
             if (declaredFunctions != null && declaredFunctions.contains(signature)) {
                 continue;
             }
-            String dataverseName = signature.getNamespace() == null ? metadataProvider.getDefaultDataverseName()
-                    : signature.getNamespace();
+            if (signature.getNamespace() == null) {
+                signature.setNamespace(metadataProvider.getDefaultDataverseName());
+            }
+            String namespace = signature.getNamespace();
             // Checks the existence of the referred dataverse.
-            if (metadataProvider.findDataverse(dataverseName) == null
-                    && !dataverseName.equals(FunctionConstants.ASTERIX_NS)) {
-                throw new AsterixException("In function call \"" + dataverseName + "." + signature.getName()
-                        + "(...)\", the dataverse \"" + dataverseName + "\" cannot be found!");
+            if (metadataProvider.findDataverse(namespace) == null
+                    && !namespace.equals(FunctionConstants.ASTERIX_NS)) {
+                throw new AsterixException("In function call \"" + namespace + "." + signature.getName()
+                        + "(...)\", the dataverse \"" + namespace + "\" cannot be found!");
             }
             Function function = lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
             if (function == null) {

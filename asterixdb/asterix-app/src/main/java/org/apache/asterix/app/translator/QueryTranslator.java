@@ -1773,6 +1773,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         String dataverse = getActiveDataverseName(cfs.getSignature().getNamespace());
+        cfs.getSignature().setNamespace(dataverse);
         String functionName = cfs.getaAterixFunction().getName();
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1801,6 +1802,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleFunctionDropStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
+        signature.setNamespace(getActiveDataverseName(signature.getNamespace()));
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockManager.INSTANCE.functionStatementBegin(signature.getNamespace(),
@@ -1965,7 +1967,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     @Override
     public JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement stmt)
-                    throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException {
+            throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException {
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<Query, Integer> reWrittenQuery = apiFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
@@ -2266,7 +2268,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      */
     protected Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse,
             Feed feed, String dataset, FeedPolicyEntity feedPolicy, MetadataTransactionContext mdTxnCtx)
-                    throws AsterixException {
+            throws AsterixException {
         IFeedJoint sourceFeedJoint;
         FeedConnectionRequest request;
         List<String> functionsToApply = new ArrayList<>();
@@ -2557,7 +2559,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected JobSpecification handleQuery(AqlMetadataProvider metadataProvider, Query query,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats)
-                    throws Exception {
+            throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2591,7 +2593,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private void handleQueryResult(AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc,
             IHyracksDataset hdc, JobSpecification compiled, ResultDelivery resultDelivery, Stats stats)
-                    throws Exception {
+            throws Exception {
         if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINE)) {
             GlobalConfig.ASTERIX_LOGGER.fine(compiled.toJSON().toString(1));
         }
