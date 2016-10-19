@@ -67,4 +67,11 @@ then
 ccArgs=$ccArgs' -cc-root '$CC_ROOT
 fi
 cd $WORKING_DIR
-$ASTERIX_HOME/bin/asterixcc echo $ccArgs &> $LOG_DIR/cc.log
+DATE=`date`
+
+cat <<EOF >> $LOG_DIR/cc.log
+--------------------------------------------------------------------------------
+LOG START: $DATE
+--------------------------------------------------------------------------------
+EOF
+$ASTERIX_HOME/bin/asterixcc echo $ccArgs &>> $LOG_DIR/cc.log

@@ -555,7 +555,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             LOGGER.finer("del job slot " + TypeUtil.Global.toString(jobSlot));
         jobArenaMgr.deallocate(jobSlot);
         jobId2JobSlotMap.remove(jobId);
-        stats.logCounters(LOGGER, Level.INFO, true);
+        stats.logCounters(LOGGER, Level.FINE, true);
     }
 
     private long findOrAllocJobSlot(int jobId) {
@@ -662,7 +662,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     }
 
     private long findResourceInGroup(ResourceGroup group, int dsId, int entityHashValue) {
-        stats.logCounters(LOGGER, Level.INFO, false);
+        stats.logCounters(LOGGER, Level.FINE, false);
         long resSlot = group.firstResourceIndex.get();
         while (resSlot != NILL) {
             // either we already have a lock on this resource or we have a
