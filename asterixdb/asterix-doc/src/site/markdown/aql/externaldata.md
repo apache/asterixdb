@@ -34,10 +34,10 @@
 Data that needs to be processed by AsterixDB could be residing outside AsterixDB storage. Examples include data files on a distributed file system such as HDFS or on the local file system of a machine that is part of an AsterixDB cluster. For AsterixDB to process such data, an end-user may create a regular dataset in AsterixDB (a.k.a. an internal dataset) and load the dataset with the data. AsterixDB also supports ‘‘external datasets’’ so that it is not necessary to “load” all data prior to using it. This also avoids creating multiple copies of data and the need to keep the copies in sync.
 
 ### <a id="IntroductionAdapterForAnExternalDataset">Adapter for an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
-External data is accessed using wrappers (adapters in AsterixDB) that abstract away the mechanism of connecting with an external service, receiving its data and transforming the data into ADM records that are understood by AsterixDB. AsterixDB comes with built-in adapters for common storage systems such as HDFS or the local file system.
+External data is accessed using wrappers (adapters in AsterixDB) that abstract away the mechanism of connecting with an external service, receiving its data and transforming the data into ADM objects that are understood by AsterixDB. AsterixDB comes with built-in adapters for common storage systems such as HDFS or the local file system.
 
 ### <a id="BuiltinAdapters">Builtin Adapters</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
-AsterixDB offers a set of builtin adapters that can be used to query external data or for loading data into an internal dataset using a load statement or a data feed. Each adapter requires specifying the `format` of the data in order to be able to parse records correctly. Using adapters with feeds, the parameter `output-type` must also be specified.
+AsterixDB offers a set of builtin adapters that can be used to query external data or for loading data into an internal dataset using a load statement or a data feed. Each adapter requires specifying the `format` of the data in order to be able to parse objects correctly. Using adapters with feeds, the parameter `output-type` must also be specified.
 
 Following is a listing of existing built-in adapters and their configuration parameters:
 
@@ -76,12 +76,12 @@ Following is a listing of existing built-in adapters and their configuration par
 As an example we consider the Lineitem dataset from the [TPCH schema](http://www.openlinksw.com/dataspace/doc/dav/wiki/Main/VOSTPCHLinkedData/tpch.sql).
 We assume that you have successfully created an AsterixDB instance following the instructions at [Installing AsterixDB Using Managix](../install.html). _For constructing an example, we assume a single machine setup.._
 
-Similar to a regular dataset, an external dataset has an associated datatype. We shall first create the datatype associated with each record in Lineitem data. Paste the following in the
+Similar to a regular dataset, an external dataset has an associated datatype. We shall first create the datatype associated with each object in Lineitem data. Paste the following in the
 query textbox on the webpage at http://127.0.0.1:19001 and hit ‘Execute’.
 
         create dataverse ExternalFileDemo;
         use dataverse ExternalFileDemo;
-        
+
         create type LineitemType as closed {
           l_orderkey:int32,
           l_partkey: int32,
@@ -125,8 +125,8 @@ Above, the definition is not complete as we need to provide a set of parameters 
 </tr>
 <tr>
   <td> path </td>
-  <td> A fully qualified path of the form <tt>host://&lt;absolute path&gt;</tt>. 
-  Use a comma separated list if there are multiple files. 
+  <td> A fully qualified path of the form <tt>host://&lt;absolute path&gt;</tt>.
+  Use a comma separated list if there are multiple files.
   E.g. <tt>host1://&lt;absolute path&gt;</tt>, <tt>host2://&lt;absolute path&gt;</tt> and so forth. </td>
 </tr>
 <tr>
@@ -143,7 +143,7 @@ We *complete the create dataset statement* as follows.
 
 
         use dataverse ExternalFileDemo;
-        
+
         create external dataset Lineitem(LineitemType)
         using localfs
         (("path"="127.0.0.1://SOURCE_PATH"),
@@ -172,8 +172,8 @@ Next we move over to the the section [Writing Queries against an External Datase
 #### 2) Data file resides on an HDFS instance ####
 rerequisite: It is required that the Namenode and HDFS Datanodes are reachable from the hosts that form the AsterixDB cluster. AsterixDB provides a built-in adapter for data residing on HDFS. The HDFS adapter can be referred (in AQL) by its alias - ‘hdfs’. We can create an external dataset named Lineitem and associate the HDFS adapter with it as follows;
 
-		create external dataset Lineitem(LineitemType) 
-		using hdfs((“hdfs”:”hdfs://localhost:54310”),(“path”:”/asterix/Lineitem.tbl”),...,(“input- format”:”rc-format”));
+        create external dataset Lineitem(LineitemType)
+        using hdfs((“hdfs”:”hdfs://localhost:54310”),(“path”:”/asterix/Lineitem.tbl”),...,(“input- format”:”rc-format”));
 
 The expected parameters are described below:
 
@@ -191,7 +191,7 @@ The expected parameters are described below:
   <td> The absolute path to the source HDFS file or directory. Use a comma separated list if there are multiple files or directories. </td></tr>
 <tr>
   <td> input-format </td>
-  <td> The associated input format. Use 'text-input-format' for text files , 'sequence-input-format' for hadoop sequence files, 'rc-input-format' for Hadoop Record Columnar files, or a fully qualified name of an implementation of org.apache.hadoop.mapred.InputFormat. </td>
+  <td> The associated input format. Use 'text-input-format' for text files , 'sequence-input-format' for hadoop sequence files, 'rc-input-format' for Hadoop Object Columnar files, or a fully qualified name of an implementation of org.apache.hadoop.mapred.InputFormat. </td>
 </tr>
 <tr>
   <td> format </td>
@@ -203,11 +203,11 @@ The expected parameters are described below:
 </tr>
 <tr>
   <td> parser </td>
-  <td> The parser used to parse HDFS records if the format is 'binary'. Use 'hive- parser' for data deserialized by a Hive Serde (AsterixDB can understand deserialized Hive objects) or a fully qualified class name of user- implemented parser that implements the interface org.apache.asterix.external.input.InputParser. </td>
+  <td> The parser used to parse HDFS objects if the format is 'binary'. Use 'hive- parser' for data deserialized by a Hive Serde (AsterixDB can understand deserialized Hive objects) or a fully qualified class name of user- implemented parser that implements the interface org.apache.asterix.external.input.InputParser. </td>
 </tr>
 <tr>
   <td> hive-serde </td>
-  <td> The Hive serde is used to deserialize HDFS records if format is binary and the parser is hive-parser. Use a fully qualified name of a class implementation of org.apache.hadoop.hive.serde2.SerDe. </td>
+  <td> The Hive serde is used to deserialize HDFS objects if format is binary and the parser is hive-parser. Use a fully qualified name of a class implementation of org.apache.hadoop.hive.serde2.SerDe. </td>
 </tr>
 <tr>
   <td> local-socket-path </td>
@@ -218,11 +218,11 @@ The expected parameters are described below:
 *Difference between 'input-format' and 'format'*
 
 *input-format*: Files stored under HDFS have an associated storage format. For example,
-TextInputFormat represents plain text files. SequenceFileInputFormat indicates binary compressed files. RCFileInputFormat corresponds to records stored in a record columnar fashion. The parameter ‘input-format’ is used to distinguish between these and other HDFS input formats.
+TextInputFormat represents plain text files. SequenceFileInputFormat indicates binary compressed files. RCFileInputFormat corresponds to objects stored in a object columnar fashion. The parameter ‘input-format’ is used to distinguish between these and other HDFS input formats.
 
 *format*: The parameter ‘format’ refers to the type of the data contained in the file. For example, data contained in a file could be in json or ADM format, could be in delimited-text with fields separated by a delimiting character or could be in binary format.
 
-As an example. consider the [data file](../data/lineitem.tbl).  The file is a text file with each line representing a record. The fields in each record are separated by the '|' character.
+As an example. consider the [data file](../data/lineitem.tbl).  The file is a text file with each line representing a object. The fields in each object are separated by the '|' character.
 
 We assume the HDFS URL to be hdfs://localhost:54310. We further assume that the example data file is copied to HDFS at a path denoted by “/asterix/Lineitem.tbl”.
 
@@ -231,7 +231,7 @@ The complete set of parameters for our example file are as follows. ((“hdfs”
 
 #### Using the Hive Parser ####
 
-if a user wants to create an external dataset that uses hive-parser to parse HDFS records, it is important that the datatype associated with the dataset matches the actual data in the Hive table for the correct initialization of the Hive SerDe. Here is the conversion from the supported Hive data types to AsterixDB data types:
+if a user wants to create an external dataset that uses hive-parser to parse HDFS objects, it is important that the datatype associated with the dataset matches the actual data in the Hive table for the correct initialization of the Hive SerDe. Here is the conversion from the supported Hive data types to AsterixDB data types:
 
 <table>
 <tr>
@@ -280,7 +280,7 @@ if a user wants to create an external dataset that uses hive-parser to parse HDF
 </tr>
 <tr>
   <td>STRUCT</td>
-  <td>Nested Record</td>
+  <td>Nested Object</td>
 </tr>
 <tr>
   <td>LIST</td>
@@ -293,25 +293,25 @@ if a user wants to create an external dataset that uses hive-parser to parse HDF
 
 *Example 1*: We can modify the create external dataset statement as follows:
 
-		create external dataset Lineitem('LineitemType)
-		using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/Lineitem.tbl"),("input-format"="text- input-format"),("format"="delimited-text"),("delimiter"="|"));
+        create external dataset Lineitem('LineitemType)
+        using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/Lineitem.tbl"),("input-format"="text- input-format"),("format"="delimited-text"),("delimiter"="|"));
 
-*Example 2*: Here, we create an external dataset of lineitem records stored in sequence files that has content in ADM format:
+*Example 2*: Here, we create an external dataset of lineitem objects stored in sequence files that has content in ADM format:
 
-		create external dataset Lineitem('LineitemType) 
-		using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/SequenceLineitem.tbl"),("input- format"="sequence-input-format"),("format"="adm"));
+        create external dataset Lineitem('LineitemType)
+        using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/SequenceLineitem.tbl"),("input- format"="sequence-input-format"),("format"="adm"));
 
-*Example 3*: Here, we create an external dataset of lineitem records stored in record-columnar files that has content in binary format parsed using hive-parser with hive ColumnarSerde:
+*Example 3*: Here, we create an external dataset of lineitem objects stored in object-columnar files that has content in binary format parsed using hive-parser with hive ColumnarSerde:
 
-		create external dataset Lineitem('LineitemType)
-		using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/RCLineitem.tbl"),("input-format"="rc-input-format"),("format"="binary"),("parser"="hive-parser"),("hive- serde"="org.apache.hadoop.hive.serde2.columnar.ColumnarSerde"));
+        create external dataset Lineitem('LineitemType)
+        using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/RCLineitem.tbl"),("input-format"="rc-input-format"),("format"="binary"),("parser"="hive-parser"),("hive- serde"="org.apache.hadoop.hive.serde2.columnar.ColumnarSerde"));
 
 ## <a id="WritingQueriesAgainstAnExternalDataset">Writing Queries against an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 You may write AQL queries against an external dataset in exactly the same way that queries are written against internal datasets. The following is an example of an AQL query that applies a filter and returns an ordered result.
 
 
         use dataverse ExternalFileDemo;
-        
+
         for $c in dataset('Lineitem')
         where $c.l_orderkey <= 3
         order by $c.l_orderkey, $c.l_linenumber
@@ -321,25 +321,25 @@ You may write AQL queries against an external dataset in exactly the same way th
 AsterixDB supports building B-Tree and R-Tree indexes over static data stored in the Hadoop Distributed File System.
 To create an index, first create an external dataset over the data as follows
 
-		create external dataset Lineitem(LineitemType) 
-		using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/Lineitem.tbl"),("input-format"="text-input- format"),("format"="delimited-text"),("delimiter"="|"));
+        create external dataset Lineitem(LineitemType)
+        using hdfs(("hdfs"="hdfs://localhost:54310"),("path"="/asterix/Lineitem.tbl"),("input-format"="text-input- format"),("format"="delimited-text"),("delimiter"="|"));
 
 You can then create a B-Tree index on this dataset instance as if the dataset was internally stored as follows:
 
-		create index PartkeyIdx on Lineitem(l_partkey);
+        create index PartkeyIdx on Lineitem(l_partkey);
 
 You could also create an R-Tree index as follows:
 
-		￼create index IndexName on DatasetName(attribute-name) type rtree;
+        ￼create index IndexName on DatasetName(attribute-name) type rtree;
 
 After building the indexes, the AsterixDB query compiler can use them to access the dataset and answer queries in a more cost effective manner.
 AsterixDB can read all HDFS input formats, but indexes over external datasets can currently be built only for HDFS datasets with 'text-input-format', 'sequence-input-format' or 'rc-input-format'.
 
 ## <a id="ExternalDataSnapshots">External Data Snapshots</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
-An external data snapshot represents the status of a dataset's files in HDFS at a point in time. Upon creating the first index over an external dataset, AsterixDB captures and stores a snapshot of the dataset in HDFS. Only records present at the snapshot capture time are indexed, and any additional indexes created afterwards will only contain data that was present at the snapshot capture time thus preserving consistency across all indexes of a dataset.
+An external data snapshot represents the status of a dataset's files in HDFS at a point in time. Upon creating the first index over an external dataset, AsterixDB captures and stores a snapshot of the dataset in HDFS. Only objects present at the snapshot capture time are indexed, and any additional indexes created afterwards will only contain data that was present at the snapshot capture time thus preserving consistency across all indexes of a dataset.
 To update all indexes of an external dataset and advance the snapshot time to be the present time, a user can use the refresh external dataset command as follows:
 
-		refresh external dataset DatasetName;
+        refresh external dataset DatasetName;
 
 After a refresh operation commits, all of the dataset's indexes will reflect the status of the data as of the new snapshot capture time.
 
@@ -357,7 +357,7 @@ Q. I created an index over an external dataset and then added some data to my HD
 
 A. No, queries' results are access path independent and the stored snapshot is used to determines which data are going to be included when processing queries.
 
-Q. I created an index over an external dataset and then deleted some of my dataset's files in HDFS, Will indexed data access still return the records in deleted files?
+Q. I created an index over an external dataset and then deleted some of my dataset's files in HDFS, Will indexed data access still return the objects in deleted files?
 
 A. No. When AsterixDB accesses external data, with or without the use of indexes, it only access files present in the file system at runtime.
 

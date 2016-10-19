@@ -33,7 +33,7 @@ SQL++ is a highly composable expression language. Each SQL++ expression returns 
 
 The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
 value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly
-constructed instance of the data model (such as a newly constructed record, array, or multiset of data model instances).
+constructed instance of the data model (such as a newly constructed object, array, or multiset of data model instances).
 
 ### <a id="Literals">Literals</a>
 
@@ -58,7 +58,7 @@ constructed instance of the data model (such as a newly constructed record, arra
                      | <DIGITS> ( "." <DIGITS> )?
                      | "." <DIGITS>
 
-Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a record being accessed.
+Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a object being accessed.
 
 The following are some simple examples of SQL++ literals.
 
@@ -115,20 +115,20 @@ The following example is a (built-in) function call expression whose value is 8.
     CollectionConstructor    ::= ArrayConstructor | MultisetConstructor
     ArrayConstructor         ::= "[" ( Expression ( "," Expression )* )? "]"
     MultisetConstructor      ::= "{{" ( Expression ( "," Expression )* )? "}}"
-    RecordConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
+    ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
     FieldBinding             ::= Expression ":" Expression
 
 A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using its constructors
-for each of the model's complex object structures, namely arrays, multisets, and records.
+for each of the model's complex object structures, namely arrays, multisets, and objects.
 Arrays are like JSON arrays, while multisets have bag semantics.
-Records are built from fields that are field-name/field-value pairs, again like JSON.
+Objects are built from fields that are field-name/field-value pairs, again like JSON.
 (See the [data model document](../datamodel.html) for more details on each.)
 
-The following examples illustrate how to construct a new array with 3 items, a new record with 2 fields,
+The following examples illustrate how to construct a new array with 3 items, a new object with 2 fields,
 and a new multiset with 4 items, respectively. Array elements or multiset elements can be homogeneous (as in
 the first example),
 which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values
-used to construct arrays, multisets, and records in constructors are all simply SQL++ expressions. Thus, the collection elements,
+used to construct arrays, multisets, and objects in constructors are all simply SQL++ expressions. Thus, the collection elements,
 field names, and field values used in constructors can be simple literals or they can come from query variable references
 or even arbitrarily complex SQL++ expressions (subqueries).
 
@@ -150,12 +150,12 @@ or even arbitrarily complex SQL++ expressions (subqueries).
     Index           ::= "[" ( Expression | "?" ) "]"
 
 Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
-of a SQL++ expression that yields an instance of  a complex type, e.g., a record or array instance. For records,
+of a SQL++ expression that yields an instance of  a complex type, e.g., a object or array instance. For objects,
 path access is based on field names. For arrays, path access is based on (zero-based) array-style indexing.
 SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an array.
  Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
 
-The following examples illustrate field access for a record, index-based element access for an array, and also a
+The following examples illustrate field access for a object, index-based element access for an array, and also a
 composition thereof.
 
 ##### Examples
@@ -220,7 +220,7 @@ Collection operators are used for membership tests (IN, NOT IN) or empty collect
 | NOT EXISTS |  Check whether a collection is empty         | SELECT * FROM ChirpMessages cm <br/>WHERE NOT EXISTS cm.referredTopics; |
 
 ### <a id="Comparison_operators">Comparison operators</a>
-Comparison operators are used to compare values. The comparison operators fall into one of two sub-categories: missing value comparisons and regular value comparisons. SQL++ (and JSON) has two ways of representing missing information in a record - the presence of the field with a NULL for its value (as in SQL), and the absence of the field (which JSON permits). For example, the first of the following records represents Jack, whose friend is Jill. In the other examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more natural (for JSON) way, i.e., by not having a friend field.
+Comparison operators are used to compare values. The comparison operators fall into one of two sub-categories: missing value comparisons and regular value comparisons. SQL++ (and JSON) has two ways of representing missing information in a object - the presence of the field with a NULL for its value (as in SQL), and the absence of the field (which JSON permits). For example, the first of the following objects represents Jack, whose friend is Jill. In the other examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more natural (for JSON) way, i.e., by not having a friend field.
 
 ##### Examples
 {"name": "Jack", "friend": "Jill"}

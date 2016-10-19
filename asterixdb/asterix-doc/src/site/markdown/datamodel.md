@@ -43,7 +43,7 @@
     * [Null](#IncompleteInformationTypesNull)
     * [Missing](#IncompleteInformationTypesMissing)
 * [Derived Types](#DerivedTypes)
-    * [Record](#DerivedTypesRecord)
+    * [Object](#DerivedTypesObject)
     * [Array](#DerivedTypesArray)
     * [Multiset](#DerivedTypesMultiset)
 
@@ -350,12 +350,12 @@ For example, a user might not be able to know the value of a field and let it be
 
 
 ### <a id="IncompleteInformationTypesMissing">Missing</a> ###
-`missing` represents a missing name-value pair in a record.
+`missing` represents a missing name-value pair in a object.
 If the referenced field does not exist, an empty result value is returned by the query.
 
 As neither the data model nor the system enforces homogeneity for datasets or collections,
 items in a dataset or collection can be of heterogeneous types and
-so a field can be present in one record and `missing` in another.
+so a field can be present in one object and `missing` in another.
 
  * Example:
 
@@ -366,12 +366,12 @@ so a field can be present in one record and `missing` in another.
 
         {  }
 
-Since a field with value `missing` means the field is absent, we get an empty record.
+Since a field with value `missing` means the field is absent, we get an empty object.
 
 ## <a id="DerivedTypes">Derived Types</a> ##
 
-### <a id="DerivedTypesRecord">Record</a>###
-A `record` contains a set of ﬁelds, where each ﬁeld is described by its name and type. A record type is either open or closed. Open records can contain ﬁelds that are not part of the type deﬁnition, while closed records cannot. Syntactically, record constructors are surrounded by curly braces "{...}".
+### <a id="DerivedTypesObject">Object</a>###
+A `object` contains a set of ﬁelds, where each ﬁeld is described by its name and type. A object type is either open or closed. Open objects can contain ﬁelds that are not part of the type deﬁnition, while closed objects cannot. Syntactically, object constructors are surrounded by curly braces "{...}".
 
 An example would be
 

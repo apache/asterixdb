@@ -1,0 +1,40 @@
+Query:
+FunctionCall null.get-object-fields@1[
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [id]
+      :
+      LiteralExpr [LONG] [1]
+    )
+    (
+      LiteralExpr [STRING] [project]
+      :
+      LiteralExpr [STRING] [AsterixDB]
+    )
+    (
+      LiteralExpr [STRING] [address]
+      :
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [city]
+          :
+          LiteralExpr [STRING] [Irvine]
+        )
+        (
+          LiteralExpr [STRING] [state]
+          :
+          LiteralExpr [STRING] [CA]
+        )
+      ]
+    )
+    (
+      LiteralExpr [STRING] [related]
+      :
+      OrderedListConstructor [
+        LiteralExpr [STRING] [Hivestrix]
+        LiteralExpr [STRING] [Preglix]
+        LiteralExpr [STRING] [Apache VXQuery]
+      ]
+    )
+  ]
+]

@@ -22,7 +22,7 @@
              <!ENTITY APIQueries SYSTEM "queries/api/APIQueries.xml">
              <!ENTITY ComparisonQueries SYSTEM "queries/comparison/ComparisonQueries.xml">
              <!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
-             <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
+             <!ENTITY RecordsQueries SYSTEM "queries/objects/ObjectsQueries.xml">
              <!ENTITY TemporalQueries SYSTEM "queries/temporal/TemporalQueries.xml">
 
              ]>
@@ -3361,8 +3361,8 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
-        <compilation-unit name="record-type-collision">
-          <output-dir compare="Text">record-type-collision</output-dir>
+        <compilation-unit name="object-type-collision">
+          <output-dir compare="Text">object-type-collision</output-dir>
           <expected-error>org.apache.asterix.common.exceptions.AsterixException: A field "[value]" is already defined with the type "STRING"</expected-error>
         </compilation-unit>
       </test-case>

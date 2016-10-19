@@ -34,7 +34,7 @@ used to live outside, and we show how it improves users' lives and system perfor
 ## <a name="FeedAdaptors">Feed Adaptors</a>  ##
 
 The functionality of establishing a connection with a data source
-and receiving, parsing and translating its data into ADM records
+and receiving, parsing and translating its data into ADM objects
 (for storage inside AsterixDB) is contained in a feed adaptor. A
 feed adaptor is an implementation of an interface and its details are
 specific to a given data source. An adaptor may optionally be given
@@ -54,7 +54,7 @@ to ingest data that is directed at a prescribed socket.
 
 In this tutorial, we shall describe building two example data ingestion pipelines that cover the popular scenario of ingesting data from (a) Twitter and (b) RSS Feed source.
 
-####Ingesting Twitter Stream 
+####Ingesting Twitter Stream
 We shall use the built-in push-based Twitter adaptor.
 As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM) and the AsterixDB Query Language (AQL). Given below are the type definition in AQL that create a Tweet datatype which is representative of a real tweet as obtained from Twitter.
 
@@ -229,17 +229,17 @@ policy that is expressed as a collection of parameters and associated
 values. An ingestion policy dictates the runtime behavior of
 the feed in response to resource bottlenecks and failures. AsterixDB provides
 a list of policy parameters that help customize the
-system's runtime behavior when handling excess records. AsterixDB
+system's runtime behavior when handling excess objects. AsterixDB
 provides a set of built-in policies, each constructed by setting
 appropriate value(s) for the policy parameter(s) from the table below.
 
-####Policy Parameters 
+####Policy Parameters
 
-- *excess.records.spill*: Set to true if records that cannot be processed by an operator for lack of resources (referred to as excess records hereafter) should be persisted to the local disk for deferred processing. (Default: false)
+- *excess.records.spill*: Set to true if objects that cannot be processed by an operator for lack of resources (referred to as excess objects hereafter) should be persisted to the local disk for deferred processing. (Default: false)
 
-- *excess.records.discard*: Set to true if excess records should be discarded. (Default: false)
+- *excess.records.discard*: Set to true if excess objects should be discarded. (Default: false)
 
-- *excess.records.throttle*: Set to true if rate of arrival of records is required to be reduced in an adaptive manner to prevent having any excess records (Default: false)
+- *excess.records.throttle*: Set to true if rate of arrival of objects is required to be reduced in an adaptive manner to prevent having any excess objects (Default: false)
 
 - *excess.records.elastic*: Set to true if the system should attempt to resolve resource bottlenecks by re-structuring and/or rescheduling the feed ingestion pipeline. (Default: false)
 
@@ -249,7 +249,7 @@ appropriate value(s) for the policy parameter(s) from the table below.
 
 Note that the end user may choose to form a custom policy.  For example,
 it is possible in AsterixDB to create a custom policy that spills excess
-records to disk and subsequently resorts to throttling if the
+objects to disk and subsequently resorts to throttling if the
 spillage crosses a configured threshold. In all cases, the desired
 ingestion policy is specified as part of the `connect feed` statement
 or else the "Basic" policy will be chosen as the default.

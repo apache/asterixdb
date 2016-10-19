@@ -23,15 +23,15 @@
 
 AsterixDB supports the CSV format for both data input and query result
 output. In both cases, the structure of the CSV data must be defined
-using a named ADM record datatype. The CSV format, limitations, and
+using a named ADM object datatype. The CSV format, limitations, and
 MIME type are defined by [RFC
 4180](https://tools.ietf.org/html/rfc4180).
 
 CSV is not as expressive as the full Asterix Data Model, meaning that
 not all data which can be represented in ADM can also be represented
 as CSV. So the form of this datatype is limited. First, obviously it
-may not contain any nested records or lists, as CSV has no way to
-represent nested data structures. All fields in the record type must
+may not contain any nested objects or lists, as CSV has no way to
+represent nested data structures. All fields in the object type must
 be primitive. Second, the set of supported primitive types is limited
 to numerics (`int8`, `int16`, `int32`, `int64`, `float`, `double`) and
 `string`.  On output, a few additional primitive types (`boolean`,
@@ -101,11 +101,11 @@ lines of data being skipped as well.
 ## CSV Output
 
 Any query may be rendered as CSV when using AsterixDB's HTTP
-interface.  To do so, there are two steps required: specify the record
+interface.  To do so, there are two steps required: specify the object
 type which defines the schema of your CSV, and request that Asterix
 use the CSV output format.
 
-#### Output Record Type
+#### Output Object Type
 
 Background: The result of any AQL query is an unordered list of
 _instances_, where each _instance_ is an instance of an AQL
@@ -113,15 +113,15 @@ datatype. When requesting CSV output, there are some restrictions on
 the legal datatypes in this unordered list due to the limited
 expressability of CSV:
 
-1. Each instance must be of a record type.
-2. Each instance must be of the _same_ record type.
-3. The record type must conform to the content and type restrictions
+1. Each instance must be of a object type.
+2. Each instance must be of the _same_ object type.
+3. The object type must conform to the content and type restrictions
 mentioned in the introduction.
 
 While it would be possible to structure your query to cast all result
 instances to a given type, it is not necessary. AQL offers a built-in
 feature which will automatically cast all top-level instances in the
-result to a specified named ADM record type. To enable this feature,
+result to a specified named ADM object type. To enable this feature,
 use a `set` statement prior to the query to set the parameter
 `output-record-type` to the name of an ADM type. This type must have
 already been defined in the current dataverse.
@@ -142,7 +142,7 @@ from different underlying datasets, etc.
 Two notes about `output-record-type`:
 
 1. This feature is not strictly related to CSV; it may be used with
-any output formats (in which case, any record datatype may be
+any output formats (in which case, any object datatype may be
 specified, not subject to the limitations specified in the
 introduction of this page).
 2. When the CSV output format is requested, `output-record-type` is in
@@ -230,16 +230,16 @@ HTTP Accept: header.  This is consistent with RFC 4180.
 
 #### Issues with open datatypes and optional fields
 
-As mentioned earlier, CSV is a rigid format. It cannot express records
+As mentioned earlier, CSV is a rigid format. It cannot express objects
 with different numbers of fields, which ADM allows through both open
 datatypes and optional fields.
 
-If your output record type contains optional fields, this will not
+If your output object type contains optional fields, this will not
 result in any errors. If the output data of a query does not contain
 values for an optional field, this will be represented in CSV as
 `null`.
 
-If your output record type is open, this will also not result in any
+If your output object type is open, this will also not result in any
 errors. If the output data of a query contains any open fields, the
 corresponding rows in the resulting CSV will contain more
 comma-separated values than the others. On each such row, the data
@@ -253,6 +253,6 @@ the file").  Hence it will likely not be handled consistently by all
 CSV processors. Some may throw a parsing error. If you attempt to load
 this data into AsterixDB later using `load dataset`, the extra fields
 will be silently ignored. For this reason it is recommended that you
-use only closed datatypes as output record types. AsterixDB allows to
-use an open record type only to support cases where the type already
+use only closed datatypes as output object types. AsterixDB allows to
+use an open object type only to support cases where the type already
 exists for other parts of your application.

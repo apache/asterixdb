@@ -151,7 +151,7 @@
         deep_equal(expr1, expr2)
 
 
- * Assess the equality between two expressions of any type (e.g., record, arrays, or multiset).
+ * Assess the equality between two expressions of any type (e.g., object, arrays, or multiset).
  Two objects are deeply equal iff both their types and values are equal.
  * Arguments:
     * `expr1` : an expression,

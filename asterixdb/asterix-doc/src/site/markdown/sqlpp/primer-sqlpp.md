@@ -134,12 +134,12 @@ a number of possibilities.
 The first three lines above tell AsterixDB to drop the old TinySocial dataverse, if one already
 exists, and then to create a brand new one and make it the focus of the statements that follow.
 The first _CREATE TYPE_ statement creates a datatype for holding information about Chirp users.
-It is a record type with a mix of integer and string data, very much like a (flat) relational tuple.
+It is a object type with a mix of integer and string data, very much like a (flat) relational tuple.
 The indicated fields are all mandatory, but because the type is open, additional fields are welcome.
 The second statement creates a datatype for Chirp messages; this shows how to specify a closed type.
 Interestingly (based on one of Chirp's APIs), each Chirp message actually embeds an instance of the
 sending user's information (current as of when the message was sent), so this is an example of a nested
-record in ADM.
+object in ADM.
 Chirp messages can optionally contain the sender's location, which is modeled via the senderLocation
 field of spatial type _point_; the question mark following the field type indicates its optionality.
 An optional field is like a nullable field in SQL---it may be present or missing, but when it's present,
@@ -149,11 +149,11 @@ Lastly, the referredTopics field illustrates another way that ADM is richer than
 this field holds a bag (*a.k.a.* an unordered list) of strings.
 Since the overall datatype definition for Chirp messages says "closed", the fields that it lists are
 the only fields that instances of this type will be allowed to contain.
-The next two _CREATE TYPE_ statements create a record type for holding information about one component of
-the employment history of a Gleambook user and then a record type for holding the user information itself.
+The next two _CREATE TYPE_ statements create a object type for holding information about one component of
+the employment history of a Gleambook user and then a object type for holding the user information itself.
 The Gleambook user type highlights a few additional ADM data model features.
 Its friendIds field is a bag of integers, presumably the Gleambook user ids for this user's friends,
-and its employment field is an ordered list of employment records.
+and its employment field is an ordered list of employment objects.
 The final _CREATE TYPE_ statement defines a type for handling the content of a Gleambook message in our
 hypothetical social data storage scenario.
 
@@ -242,14 +242,14 @@ referenced in the most recently executed _USE_ directive.
 Second, they show how to escape SQL++ keywords (or other special names) in object names by using backquotes.
 Last but not least, they show that SQL++ supports a _SELECT VALUE_ variation of SQL's traditional _SELECT_
 statement that returns a single value (or element) from a query instead of constructing a new
-record as the query's result like _SELECT_ does; here, the returned value is an entire record from
+object as the query's result like _SELECT_ does; here, the returned value is an entire object from
 the dataset being queried (e.g., _SELECT VALUE ds_ in the first statement returns the entire
-record from the metadata dataset containing the descriptions of all datasets.
+object from the metadata dataset containing the descriptions of all datasets.
 
 ## Loading Data Into AsterixDB ##
 Okay, so far so good---AsterixDB is now ready for data, so let's give it some data to store.
 Our next task will be to load some sample data into the four datasets that we just defined.
-Here we will load a tiny set of records, defined in ADM format (a superset of JSON), into each dataset.
+Here we will load a tiny set of objects, defined in ADM format (a superset of JSON), into each dataset.
 In the boxes below you can see the actual data instances contained in each of the provided sample files.
 In order to load this data yourself, you should first store the four corresponding `.adm` files
 (whose URLs are indicated on top of each box below) into a filesystem directory accessible to your
@@ -313,7 +313,7 @@ of the data instances will be stored separately from their associated field name
         {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love at&t its 3G is good:)"}
         {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
 
-It's loading time! We can use SQL++ _LOAD_ statements to populate our datasets with the sample records shown above.
+It's loading time! We can use SQL++ _LOAD_ statements to populate our datasets with the sample objects shown above.
 The following shows how loading can be done for data stored in `.adm` files in your local filesystem.
 *Note:* You _MUST_ replace the `<Host Name>` and `<Absolute File Path>` placeholders in each load
 statement below with valid values based on the host IP address (or host name) for the machine and
@@ -384,7 +384,7 @@ Suppose the user we want is the user whose id is 8:
 As in SQL, the query's _FROM_ clause  binds the variable `user` incrementally to the data instances residing in
 the dataset named GleambookUsers.
 Its _WHERE_ clause  selects only those bindings having a user id of interest, filtering out the rest.
-The _SELECT_ _VALUE_ clause returns the (entire) data value (a Gleambook user record in this case)
+The _SELECT_ _VALUE_ clause returns the (entire) data value (a Gleambook user object in this case)
 for each binding that satisfies the predicate.
 Since this dataset is indexed on user id (its primary key), this query will be done via a quick index lookup.
 
@@ -442,10 +442,10 @@ We could do this as follows in SQL++:
         WHERE msg.authorId = user.id;
 
 The result of this query is a sequence of new ADM instances, one for each author/message pair.
-Each instance in the result will be an ADM record containing two fields, "uname" and "message",
+Each instance in the result will be an ADM object containing two fields, "uname" and "message",
 containing the user's name and the message text, respectively, for each author/message pair.
 Notice how the use of a traditional SQL-style _SELECT_ clause, as opposed to the new SQL++ _SELECT VALUE_
-clause, automatically results in the construction of a new record value for each result.
+clause, automatically results in the construction of a new object value for each result.
 
 The expected result of this example SQL++ join query for our sample data set is:
 
@@ -473,9 +473,9 @@ If we were feeling lazy, we might use _SELECT *_ in SQL++ to return all of the m
         FROM GleambookUsers user, GleambookMessages msg
         WHERE msg.authorId = user.id;
 
-In SQL++, this _SELECT *_ query will produce a new nested record for each user/message pair.
-Each result record contains one field (named after the "user" variable) to hold the user record
-and another field (named after the "msg" variable) to hold the matching message record.
+In SQL++, this _SELECT *_ query will produce a new nested object for each user/message pair.
+Each result object contains one field (named after the "user" variable) to hold the user object
+and another field (named after the "msg" variable) to hold the matching message object.
 Note that the nested nature of this SQL++ _SELECT *_ result is different than traditional SQL,
 as SQL was not designed to handle the richer, nested data model that underlies the design of SQL++.
 
@@ -505,7 +505,7 @@ Finally (for now :-)), another less lazy and more explicit SQL++ way of achievin
         FROM GleambookUsers user, GleambookMessages msg
         WHERE msg.authorId = user.id;
 
-This version of the query uses an explicit record constructor to build each result record.
+This version of the query uses an explicit object constructor to build each result object.
 (Note that "uname" and "message" are both simple SQL++ expressions themselves---so in the most general case,
 even the resulting field names can be computed as part of the query,
 making SQL++ a very powerful tool for slicing and dicing semistructured data.)
@@ -532,7 +532,7 @@ that it should consider employing an index-based nested-loop join technique to p
         WHERE msg.authorId /*+ indexnl */ = user.id;
 
 In addition to illustrating the use of a hint, the query also shows how to achieve the same
-result record format using _SELECT_ and _AS_ instead of using an explicit record constructor.
+result object format using _SELECT_ and _AS_ instead of using an explicit object constructor.
 The expected result is (of course) the same as before, modulo the order of the instances.
 Result ordering is (intentionally) undefined in SQL++ in the absence of an _ORDER BY_ clause.
 The query result for our sample data in this case is:
@@ -567,7 +567,7 @@ grouped by customer, without omitting those customers who haven't placed any ord
 
 The SQL++ language supports nesting, both of queries and of query results, and the combination allows for
 an arguably cleaner/more natural approach to such queries.
-As an example, supposed we wanted, for each Gleambook user, to produce a record that has his/her name
+As an example, supposed we wanted, for each Gleambook user, to produce a object that has his/her name
 plus a list of the messages written by that user.
 In SQL, this would involve a left outer join between users and messages, grouping by user, and having
 the user name repeated along side each message.
@@ -582,7 +582,7 @@ In SQL++, this sort of use case can be handled (more naturally) as follows:
         FROM GleambookUsers user;
 
 This SQL++ query binds the variable `user` to the data instances in GleambookUsers;
-for each user, it constructs a result record containing a "uname" field with the user's
+for each user, it constructs a result object containing a "uname" field with the user's
 name and a "messages" field with a nested collection of all messages for that user.
 The nested collection for each user is specified by using a correlated subquery.
 (Note: While it looks like nested loops could be involved in computing the result,
@@ -673,7 +673,7 @@ The expected result for this query against our sample data is:
 The expressive power of SQL++ includes support for queries involving "some" (existentially quantified)
 and "all" (universally quantified) query semantics.
 As an example of an existential SQL++ query, here we show a query to list the Gleambook users who are currently employed.
-Such employees will have an employment history containing a record in which the end-date field is _MISSING_
+Such employees will have an employment history containing a object in which the end-date field is _MISSING_
 (or it could be there but have the value _NULL_, as JSON unfortunately provides two ways to represent unknown values).
 This leads us to the following SQL++ query:
 
@@ -695,7 +695,7 @@ The expected result in this case is:
 
 ### Query 7 - Universal Quantification ###
 As an example of a universal SQL++ query, here we show a query to list the Gleambook users who are currently unemployed.
-Such employees will have an employment history containing no records with unknown end-date field values, leading us to the
+Such employees will have an employment history containing no objects with unknown end-date field values, leading us to the
 following SQL++ query:
 
         USE TinySocial;
@@ -759,11 +759,11 @@ Thus, due to the _GROUP BY_ clause, the _SELECT_ clause in this query sees a seq
 with each such group having an associated _uid_ variable value (i.e., the chirping user's screen name).
 In the context of the _SELECT_ clause, _uid_ is bound to the chirper's id and _cm_
 is now re-bound (due to grouping) to the _set_ of chirps issued by that chirper.
-The _SELECT_ clause yields a result record containing the chirper's user id and the count of the items
+The _SELECT_ clause yields a result object containing the chirper's user id and the count of the items
 in the associated chirp set.
-The query result will contain one such record per screen name.
+The query result will contain one such object per screen name.
 This query also illustrates another feature of SQL++; notice how each user's screen name is accessed via a
-path syntax that traverses each chirp's nested record structure.
+path syntax that traverses each chirp's nested object structure.
 
 Here is the expected result for this query over the sample data:
 
@@ -835,7 +835,7 @@ finds all of the chirps that are similar based on the topics that they refer to:
 This query illustrates several things worth knowing in order to write fuzzy queries in SQL++.
 First, as mentioned earlier, SQL++ offers an operator-based syntax (as well as a functional approach, not shown)
 for seeing whether two values are "similar" to one another or not.
-Second, recall that the referredTopics field of records of datatype ChirpMessageType is a bag of strings.
+Second, recall that the referredTopics field of objects of datatype ChirpMessageType is a bag of strings.
 This query sets the context for its similarity join by requesting that Jaccard-based similarity semantics
 ([http://en.wikipedia.org/wiki/Jaccard_index](http://en.wikipedia.org/wiki/Jaccard_index))
 be used for the query's similarity operator and that a similarity index of 0.3 be used as its similarity threshold.
@@ -884,7 +884,7 @@ have all gone up in the interim, although he appears not to have moved in the la
 
 In general, the data to be inserted may be specified using any valid SQL++ query expression.
 The insertion of a single object instance, as in this example, is just a special case where
-the query expression happens to be a record constructor involving only constants.
+the query expression happens to be a object constructor involving only constants.
 
 ### Deleting Existing Data  ###
 In addition to inserting new data, AsterixDB supports deletion from datasets via the SQL++ _DELETE_ statement.
@@ -898,16 +898,16 @@ The following example deletes the chirp that we just added from user "NathanGies
 
 It should be noted that one form of data change not yet supported by AsterixDB is in-place data modification (_update_).
 Currently, only insert and delete operations are supported in SQL++; updates are not.
-To achieve the effect of an update, two SQL++ statements are currently needed---one to delete the old record from the
-dataset where it resides, and another to insert the new replacement record (with the same primary key but with
+To achieve the effect of an update, two SQL++ statements are currently needed---one to delete the old object from the
+dataset where it resides, and another to insert the new replacement object (with the same primary key but with
 different field values for some of the associated data content).
-AQL additionally supports an upsert operation to either insert a record, if no record with its primary key is currently
-present in the dataset, or to replace the existing record if one already exists with the primary key value being upserted.
+AQL additionally supports an upsert operation to either insert a object, if no object with its primary key is currently
+present in the dataset, or to replace the existing object if one already exists with the primary key value being upserted.
 SQL++ will soon have _UPSERT_ as well.
 
 ### Transaction Support
 
-AsterixDB supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, or searched while a given SQL++ statement is being executed. This is quite similar to the level of transaction support found in today's NoSQL stores. AsterixDB does not support multi-statement transactions, and in fact an SQL++ statement that involves multiple records can itself involve multiple independent record-level transactions. An example consequence of this is that, when an SQL++ statement attempts to insert 1000 records, it is possible that the first 800 records could end up being committed while the remaining 200 records fail to be inserted. This situation could happen, for example, if a duplicate key exception occurs as the 801st insertion is attempted. If this happens, AsterixDB will report the error (e.g., a duplicate key exception) as the result of the offending SQL++ _INSERT_ statement, and the application logic above will need to take the appropriate action(s) needed to assess the resulting state and to clean up and/or continue as appropriate.
+AsterixDB supports object-level ACID transactions that begin and terminate implicitly for each object inserted, deleted, or searched while a given SQL++ statement is being executed. This is quite similar to the level of transaction support found in today's NoSQL stores. AsterixDB does not support multi-statement transactions, and in fact an SQL++ statement that involves multiple objects can itself involve multiple independent object-level transactions. An example consequence of this is that, when an SQL++ statement attempts to insert 1000 objects, it is possible that the first 800 objects could end up being committed while the remaining 200 objects fail to be inserted. This situation could happen, for example, if a duplicate key exception occurs as the 801st insertion is attempted. If this happens, AsterixDB will report the error (e.g., a duplicate key exception) as the result of the offending SQL++ _INSERT_ statement, and the application logic above will need to take the appropriate action(s) needed to assess the resulting state and to clean up and/or continue as appropriate.
 
 ## Further Help ##
 That's it! You are now armed and dangerous with respect to semistructured data management using AsterixDB via SQL++.

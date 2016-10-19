@@ -66,7 +66,7 @@ Each will be detailed as we explore the full AQL grammar.
                   | FunctionCallExpr
                   | DatasetAccessExpression
                   | ListConstructor
-                  | RecordConstructor
+                  | ObjectConstructor
 
 The most basic building block for any AQL expression is the PrimaryExpr.
 This can be a simple literal (constant) value,
@@ -75,7 +75,7 @@ a parenthesized expression,
 a function call,
 an expression accessing the ADM contents of a dataset,
 a newly constructed list of ADM instances,
-or a newly constructed ADM record.
+or a newly constructed ADM object.
 
 #### Literals
 
@@ -168,7 +168,7 @@ The following example is a (built-in) function call expression whose value is 8.
     <SPECIALCHARS>          ::= ["$", "_", "-"]
 
 Querying Big Data is the main point of AsterixDB and AQL.
-Data in AsterixDB reside in datasets (collections of ADM records),
+Data in AsterixDB reside in datasets (collections of ADM objects),
 each of which in turn resides in some namespace known as a dataverse (data universe).
 Data access in a query expression is accomplished via a DatasetAccessExpression.
 Dataset access expressions are most commonly used in FLWOR expressions, where variables
@@ -193,21 +193,21 @@ The third one does the same thing as the second but uses a slightly older AQL sy
     ListConstructor          ::= ( OrderedListConstructor | UnorderedListConstructor )
     OrderedListConstructor   ::= "[" ( Expression ( "," Expression )* )? "]"
     UnorderedListConstructor ::= "{{" ( Expression ( "," Expression )* )? "}}"
-    RecordConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
+    ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
     FieldBinding             ::= Expression ":" Expression
 
 A major feature of AQL is its ability to construct new ADM data instances.
 This is accomplished using its constructors for each of the major ADM complex object structures,
-namely lists (ordered or unordered) and records.
+namely lists (ordered or unordered) and objects.
 Ordered lists are like JSON arrays, while unordered lists have bag (multiset) semantics.
-Records are built from attributes that are field-name/field-value pairs, again like JSON.
+Objects are built from attributes that are field-name/field-value pairs, again like JSON.
 (See the AsterixDB Data Model document for more details on each.)
 
 The following examples illustrate how to construct a new ordered list with 3 items,
-a new unordered list with 4 items, and a new record with 2 fields, respectively.
+a new unordered list with 4 items, and a new object with 2 fields, respectively.
 List elements can be homogeneous (as in the first example), which is the common case,
 or they may be heterogeneous (as in the second example).
-The data values and field name values used to construct lists and records in constructors are all simply AQL expressions.
+The data values and field name values used to construct lists and objects in constructors are all simply AQL expressions.
 Thus the list elements, field names, and field values used in constructors can be simple literals (as in these three examples)
 or they can come from query variable references or even arbitrarily complex AQL expressions.
 
@@ -224,7 +224,7 @@ or they can come from query variable references or even arbitrarily complex AQL 
 
 ##### Note
 
-When constructing nested records there needs to be a space between the closing braces to avoid confusion with the `}}` token that ends an unordered list constructor:
+When constructing nested objects there needs to be a space between the closing braces to avoid confusion with the `}}` token that ends an unordered list constructor:
 `{ "a" : { "b" : "c" }}` will fail to parse while `{ "a" : { "b" : "c" } }` will work.
 
 ### Path Expressions
@@ -234,13 +234,13 @@ When constructing nested records there needs to be a space between the closing b
     Index     ::= "[" ( Expression | "?" ) "]"
 
 Components of complex types in ADM are accessed via path expressions.
-Path access can be applied to the result of an AQL expression that yields an instance of such a type, e.g., a record or list instance.
-For records, path access is based on field names.
+Path access can be applied to the result of an AQL expression that yields an instance of such a type, e.g., a object or list instance.
+For objects, path access is based on field names.
 For ordered lists, path access is based on (zero-based) array-style indexing.
 AQL also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an ordered list.
 Attempts to access non-existent fields or list elements produce a null (i.e., missing information) result as opposed to signaling a runtime error.
 
-The following examples illustrate field access for a record, index-based element access for an ordered list, and also a composition thereof.
+The following examples illustrate field access for a object, index-based element access for an ordered list, and also a composition thereof.
 
 ##### Examples
 
@@ -341,7 +341,7 @@ The following example shows a FLWOR expression that selects and returns one user
 
 The next example shows a FLWOR expression that joins two datasets, FacebookUsers and FacebookMessages,
 returning user/message pairs.
-The results contain one record per pair, with result records containing the user's name and an entire message.
+The results contain one object per pair, with result objects containing the user's name and an entire message.
 
 ##### Example
 
@@ -355,7 +355,7 @@ The results contain one record per pair, with result records containing the user
       };
 
 In the next example, a `let` clause is used to bind a variable to all of a user's FacebookMessages.
-The query returns one record per user, with result records containing the user's name and the set of all messages by that user.
+The query returns one object per user, with result objects containing the user's name and the set of all messages by that user.
 
 ##### Example
 
@@ -485,7 +485,7 @@ It is useful to note that if the set were instead the empty set, the first expre
 
 In addition to expresssions for queries, AQL supports a variety of statements for data
 definition and manipulation purposes as well as controlling the context to be used in
-evaluating AQL expressions. AQL supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, upserted, or searched while a given AQL statement is being executed.
+evaluating AQL expressions. AQL supports object-level ACID transactions that begin and terminate implicitly for each object inserted, deleted, upserted, or searched while a given AQL statement is being executed.
 
 This section details the statements supported in the AQL language.
 
@@ -564,9 +564,9 @@ The following example creates a dataverse named TinySocial.
     TypeSpecification    ::= "type" FunctionOrTypeName IfNotExists "as" TypeExpr
     FunctionOrTypeName   ::= QualifiedName
     IfNotExists          ::= ( "if not exists" )?
-    TypeExpr             ::= RecordTypeDef | TypeReference | OrderedListTypeDef | UnorderedListTypeDef
-    RecordTypeDef        ::= ( "closed" | "open" )? "{" ( RecordField ( "," RecordField )* )? "}"
-    RecordField          ::= Identifier ":" ( TypeExpr ) ( "?" )?
+    TypeExpr             ::= ObjectTypeDef | TypeReference | OrderedListTypeDef | UnorderedListTypeDef
+    ObjectTypeDef        ::= ( "closed" | "open" )? "{" ( ObjectField ( "," ObjectField )* )? "}"
+    ObjectField          ::= Identifier ":" ( TypeExpr ) ( "?" )?
     NestedField          ::= Identifier ( "." Identifier )*
     IndexField           ::= NestedField ( ":" TypeReference )?
     TypeReference        ::= Identifier
@@ -576,16 +576,16 @@ The following example creates a dataverse named TinySocial.
 The create type statement is used to create a new named ADM datatype.
 This type can then be used to create datasets or utilized when defining one or more other ADM datatypes.
 Much more information about the Asterix Data Model (ADM) is available in the [data model reference guide](datamodel.html) to ADM.
-A new type can be a record type, a renaming of another type, an ordered list type, or an unordered list type.
-A record type can be defined as being either open or closed.
-Instances of a closed record type are not permitted to contain fields other than those specified in the create type statement.
-Instances of an open record type may carry additional fields, and open is the default for a new type (if neither option is specified).
+A new type can be a object type, a renaming of another type, an ordered list type, or an unordered list type.
+A object type can be defined as being either open or closed.
+Instances of a closed object type are not permitted to contain fields other than those specified in the create type statement.
+Instances of an open object type may carry additional fields, and open is the default for a new type (if neither option is specified).
 
-The following example creates a new ADM record type called FacebookUser type.
+The following example creates a new ADM object type called FacebookUser type.
 Since it is closed, its instances will contain only what is specified in the type definition.
 The first four fields are traditional typed name/value pairs.
 The friend-ids field is an unordered list of 32-bit integers.
-The employment field is an ordered list of instances of another named record type, EmploymentType.
+The employment field is an ordered list of instances of another named object type, EmploymentType.
 
 ##### Example
 
@@ -598,7 +598,7 @@ The employment field is an ordered list of instances of another named record typ
       "employment" : [ EmploymentType ]
     }
 
-The next example creates a new ADM record type called FbUserType. Note that the type of the id field is UUID. You need to use this field type if you want to have this field be an autogenerated-PK field. Refer to the Datasets section later for more details.
+The next example creates a new ADM object type called FbUserType. Note that the type of the id field is UUID. You need to use this field type if you want to have this field be an autogenerated-PK field. Refer to the Datasets section later for more details.
 
 ##### Example
 
@@ -628,12 +628,12 @@ The next example creates a new ADM record type called FbUserType. Note that the 
     PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )* ( "autogenerated ")?
 
 The create dataset statement is used to create a new dataset.
-Datasets are named, unordered collections of ADM record instances; they
+Datasets are named, unordered collections of ADM object instances; they
 are where data lives persistently and are the targets for queries in AsterixDB.
 Datasets are typed, and AsterixDB will ensure that their contents conform to their type definitions.
 An Internal dataset (the default) is a dataset that is stored in and managed by AsterixDB.
 It must have a specified unique primary key that can be used to partition data across nodes of an AsterixDB cluster.
-The primary key is also used in secondary indexes to uniquely identify the indexed primary data records. Random primary key (UUID) values can be auto-generated by declaring the field to be UUID and putting "autogenerated" after the "primary key" identifier. In this case, values for the auto-generated PK field should not be provided by the user since it will be auto-generated by AsterixDB.
+The primary key is also used in secondary indexes to uniquely identify the indexed primary data objects. Random primary key (UUID) values can be auto-generated by declaring the field to be UUID and putting "autogenerated" after the "primary key" identifier. In this case, values for the auto-generated PK field should not be provided by the user since it will be auto-generated by AsterixDB.
 Optionally, a filter can be created on a field to further optimize range queries with predicates on the filter's field.
 (Refer to [Filter-Based LSM Index Acceleration](filters.html) for more information about filters.)
 
@@ -667,19 +667,19 @@ associated with the same dataset. The default policy for
 AsterixDB is the prefix policy except when there is a filter on a dataset, where the preferred policy for filters is the correlated-prefix.
 
 
-The following example creates an internal dataset for storing FacefookUserType records.
+The following example creates an internal dataset for storing FacefookUserType objects.
 It specifies that their id field is their primary key.
 
 ##### Example
     create internal dataset FacebookUsers(FacebookUserType) primary key id;
 
-The following example creates an internal dataset for storing FbUserType records.
-It specifies that their id field is their primary key. It also specifies that the id field is an auto-generated field, meaning that a randomly generated UUID value will be assigned to each record by the system. (A user should therefore not proivde a value for this field.) Note that the id field should be UUID.
+The following example creates an internal dataset for storing FbUserType objects.
+It specifies that their id field is their primary key. It also specifies that the id field is an auto-generated field, meaning that a randomly generated UUID value will be assigned to each object by the system. (A user should therefore not proivde a value for this field.) Note that the id field should be UUID.
 
 ##### Example
     create internal dataset FbMsgs(FbUserType) primary key id autogenerated;
 
-The next example creates an external dataset for storing LineitemType records.
+The next example creates an external dataset for storing LineitemType objects.
 The choice of the `hdfs` adapter means that its data will reside in HDFS.
 The create statement provides parameters used by the hdfs adapter:
 the URL and path needed to locate the data in HDFS and a description of the data format.
@@ -708,7 +708,7 @@ An index can be created on a nested field (or fields) by providing a valid path 
 An index field is not required to be part of the datatype associated with a dataset if that datatype is declared as
 open and the field's type is provided along with its type and the `enforced` keyword is specified in the end of index definition.
 `Enforcing` an open field will introduce a check that will make sure that the actual type of an indexed
-field (if the field exists in the record) always matches this specified (open) field type.
+field (if the field exists in the object) always matches this specified (open) field type.
 
 The following example creates a btree index called fbAuthorIdx on the author-id field of the FacebookMessages dataset.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the author-id field.
@@ -834,11 +834,10 @@ being the insertion of a single object plus its affiliated secondary index entri
 If the query part of an insert returns a single object, then the insert statement itself will
 be a single, atomic transaction.
 If the query part returns multiple objects, then each object inserted will be handled independently
-as a tranaction. If a dataset has an auto-generated primary key field, an insert statement should not include a value for that field in it. (The system will automatically extend the provided record with this additional field and a corresponding value.).
-The optional "as Variable" provides a variable binding for the inserted records, which can be used in the "returning" clause.
-The optional "returning Query" allows users to run simple queries/functions on the records returned by the insert.
+as a tranaction. If a dataset has an auto-generated primary key field, an insert statement should not include a value for that field in it. (The system will automatically extend the provided object with this additional field and a corresponding value.).
+The optional "as Variable" provides a variable binding for the inserted objects, which can be used in the "returning" clause.
+The optional "returning Query" allows users to run simple queries/functions on the objects returned by the insert.
 This query cannot refer to any datasets.
-
 
 The following example illustrates a query-based insertion.
 

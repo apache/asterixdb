@@ -1,0 +1,37 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+FunctionCall test.open-object-constructor@8[
+  LiteralExpr [STRING] [foo1]
+  LiteralExpr [LONG] [10]
+  LiteralExpr [STRING] [bar1]
+  FunctionCall test.closed-object-constructor@12[
+    LiteralExpr [STRING] [bar1.1]
+    LiteralExpr [LONG] [10]
+    LiteralExpr [STRING] [bar1.2]
+    LiteralExpr [LONG] [20]
+    LiteralExpr [STRING] [bar1.3]
+    LiteralExpr [LONG] [30]
+    LiteralExpr [STRING] [bar1.4]
+    FunctionCall test.closed-object-constructor@8[
+      LiteralExpr [STRING] [bar1.4.1]
+      LiteralExpr [LONG] [10]
+      LiteralExpr [STRING] [bar1.4.2]
+      LiteralExpr [LONG] [20]
+      LiteralExpr [STRING] [bar1.4.3]
+      LiteralExpr [LONG] [30]
+      LiteralExpr [STRING] [bar1.4.4]
+      LiteralExpr [LONG] [40]
+    ]
+    LiteralExpr [STRING] [foo2]
+    LiteralExpr [LONG] [30]
+    LiteralExpr [STRING] [bar2]
+    LiteralExpr [LONG] [40]
+  ]
+  LiteralExpr [STRING] [foo2]
+  LiteralExpr [LONG] [30]
+  LiteralExpr [STRING] [bar2]
+  LiteralExpr [LONG] [40]
+]
+]

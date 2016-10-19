@@ -30,7 +30,7 @@
 ## <a id="Motivation">Motivation</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 Similarity queries are widely used in applications where users need to
-find records that satisfy a similarity predicate, while exact matching
+find objects that satisfy a similarity predicate, while exact matching
 is not sufficient. These queries are especially important for social
 and Web applications, where errors, abbreviations, and inconsistencies
 are common.  As an example, we may want to find all the movies
@@ -214,7 +214,7 @@ lists of the grams in the query string.
 
 A "keyword index" is constructed on a set of strings or sets (e.g., OrderedList, UnorderedList). Instead of
 generating grams as in an ngram index, we generate tokens (e.g., words) and for each token, construct an inverted list that includes the ids of the
-records with this token.  The following two examples show how to create keyword index on two different types:
+objects with this token.  The following two examples show how to create keyword index on two different types:
 
 
 #### Keyword Index on String Type ####

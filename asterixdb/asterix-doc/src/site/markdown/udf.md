@@ -78,12 +78,12 @@ Our library is now installed and is ready to be used.
 In the following we assume that you already created the `TwitterFeed` and its corresponding data types and dataset following the instruction explained in the [feeds tutorial](feeds/tutorial.html).
 
 A feed definition may optionally include the specification of a
-user-defined function that is to be applied to each feed record prior
+user-defined function that is to be applied to each feed object prior
 to persistence. Examples of pre-processing might include adding
-attributes, filtering out records, sampling, sentiment analysis, feature
+attributes, filtering out objects, sampling, sentiment analysis, feature
 extraction, etc. We can express a UDF, which can be defined in AQL or in a programming
 language such as Java, to perform such pre-processing. An AQL UDF is a good fit when
-pre-processing a record requires the result of a query (join or aggregate)
+pre-processing a object requires the result of a query (join or aggregate)
 over data contained in AsterixDB datasets. More sophisticated
 processing such as sentiment analysis of text is better handled
 by providing a Java UDF. A Java UDF has an initialization phase
@@ -145,9 +145,9 @@ could provide data for multiple applications. To achieve this, we
 introduce the notion of primary and secondary feeds in AsterixDB.
 
 A feed in AsterixDB is considered to be a primary feed if it gets
-its data from an external data source. The records contained in a
+its data from an external data source. The objects contained in a
 feed (subsequent to any pre-processing) are directed to a designated
-AsterixDB dataset. Alternatively or additionally, these records can
+AsterixDB dataset. Alternatively or additionally, these objects can
 be used to derive other feeds known as secondary feeds. A secondary
 feed is similar to its parent feed in every other aspect; it can
 have an associated UDF to allow for any subsequent processing,
@@ -167,7 +167,7 @@ respective parent feed (TwitterFeed).
 
         connect feed ProcessedTwitterFeed to dataset ProcessedTweets;
 
-The `addHashTags` function is already provided in the example UDF.To see what records
+The `addHashTags` function is already provided in the example UDF.To see what objects
 are being inserted into the dataset, we can perform a simple dataset scan after
 allowing a few moments for the feed to start ingesting data:
 

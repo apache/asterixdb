@@ -17,27 +17,27 @@
  ! under the License.
  !-->
 
-## <a id="RecordFunctions">Record Functions</a> ##
+## <a id="ObjectFunctions">Object Functions</a> ##
 
-### get_record_fields ###
+### get_object_fields ###
  * Syntax:
 
-        get_record_fields(input_record)
+        get_object_fields(input_object)
 
- * Access the record field names, type and open status for a given record.
+ * Access the object field names, type and open status for a given object.
  * Arguments:
-    * `input_record` : a record value.
+    * `input_object` : a object value.
  * Return Value:
-    * an array of `record` values that include the field_name `string`,
+    * an array of `object` values that include the field_name `string`,
       field_type `string`, is_open `boolean` (used for debug purposes only: `true` if field is open and `false` otherwise),
-      and optional nested `orderedList` for the values of a nested record,
+      and optional nested `orderedList` for the values of a nested object,
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
-    * any other non-record input value will cause a type error.
+    * any other non-object input value will cause a type error.
 
  * Example:
 
-        get_record_fields(
+        get_object_fields(
                           {
                             "id": 1,
                             "project": "AsterixDB",
@@ -70,26 +70,26 @@
         ]
 
  ]
-### get_record_field_value ###
+### get_object_field_value ###
  * Syntax:
 
-        get_record_field_value(input_record, string)
+        get_object_field_value(input_object, string)
 
- * Access the field name given in the `string_expression` from the `record_expression`.
+ * Access the field name given in the `string_expression` from the `object_expression`.
  * Arguments:
-    * `input_record` : a `record` value.
+    * `input_object` : a `object` value.
     * `string` : a `string` representing the top level field name.
  * Return Value:
-    * an `any` value saved in the designated field of the record,
+    * an `any` value saved in the designated field of the object,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
     * a type error will be raised if:
-        * the first argument is any other non-record value,
+        * the first argument is any other non-object value,
         * or, the second argument is any other non-string value.
 
  * Example:
 
-        get_record_field_value({
+        get_object_field_value({
                                  "id": 1,
                                  "project": "AsterixDB",
                                  "address": {"city": "Irvine", "state": "CA"},
@@ -102,28 +102,28 @@
 
         "AsterixDB"
 
-### record_remove_fields ###
+### object_remove_fields ###
  * Syntax:
 
-        record_remove_fields(input_record, field_names)
+        object_remove_fields(input_object, field_names)
 
- * Remove indicated fields from a record given a list of field names.
+ * Remove indicated fields from a object given a list of field names.
  * Arguments:
-    * `input_record`:  a record value.
+    * `input_object`:  a object value.
     * `field_names`: an array of strings and/or array of array of strings.
 
  * Return Value:
-    * a new record value without the fields listed in the second argument,
+    * a new object value without the fields listed in the second argument,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
     * a type error will be raised if:
-        * the first argument is any other non-record value,
+        * the first argument is any other non-object value,
         * or, the second argument is any other non-array value or recursively contains non-string items.
 
 
  * Example:
 
-        record_remove_fields(
+        object_remove_fields(
                                {
                                  "id":1,
                                  "project":"AsterixDB",
@@ -141,27 +141,27 @@
           "address":{ "state": "CA" }
         }
 
-### record_add_fields ###
+### object_add_fields ###
  * Syntax:
 
-        record_add_fields(input_record, fields)
+        object_add_fields(input_object, fields)
 
- * Add fields to a record given a list of field names.
+ * Add fields to a object given a list of field names.
  * Arguments:
-    * `input_record` : a record value.
-    * `fields`: an array of field descriptor records where each record has field_name and  field_value.
+    * `input_object` : a object value.
+    * `fields`: an array of field descriptor objects where each object has field_name and  field_value.
  * Return Value:
-    * a new record value with the new fields included,
+    * a new object value with the new fields included,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
     * a type error will be raised if:
-        * the first argument is any other non-record value,
-        * the second argument is any other non-array value, or contains non-record items.
+        * the first argument is any other non-object value,
+        * the second argument is any other non-array value, or contains non-object items.
 
 
  * Example:
 
-        record_add_fields(
+        object_add_fields(
                            {
                              "id":1,
                              "project":"AsterixDB",
@@ -181,26 +181,26 @@
            "employment_location": point("30.0,70.0")
          }
 
-### record_merge ###
+### object_merge ###
  * Syntax:
 
-        record_merge(record1, record2)
+        object_merge(object1, object2)
 
- * Merge two different records into a new record.
+ * Merge two different objects into a new object.
  * Arguments:
-    * `record1` : a record value.
-    * `record2` : a record value.
+    * `object1` : a object value.
+    * `object2` : a object value.
  * Return Value:
-    * a new record value with fields from both input records. If a field’s names in both records are the same,
+    * a new object value with fields from both input objects. If a field’s names in both objects are the same,
       an exception is issued,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * any other non-record input value will cause a type error.
+    * any other non-object input value will cause a type error.
 
 
  * Example:
 
-        record_merge(
+        object_merge(
                       {
                         "id":1,
                         "project":"AsterixDB",

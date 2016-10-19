@@ -72,7 +72,7 @@ the `send-time` field, the only available option for AsterixDB would
 be to scan the whole `TweetMessages` dataset and then apply the
 predicate as a post-processing step. However, if disk components of
 the primary index were tagged with the minimum and maximum timestamp
-values of the records they contain, we could utilize the tagged
+values of the objects they contain, we could utilize the tagged
 information to directly access the primary index and prune components
 that do not match the query predicate. Thus, we could save substantial
 cost by avoiding scanning the whole dataset and only access the

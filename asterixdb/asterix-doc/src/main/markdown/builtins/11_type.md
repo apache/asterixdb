@@ -129,11 +129,11 @@
 
         is_object(expr)
 
- * Checks whether the given expression is evaluated to be a `record` value.
+ * Checks whether the given expression is evaluated to be a `object` value.
  * Arguments:
     * `expr` : an expression (any type is allowed).
  * Return Value:
-    * a `boolean` on whether the argument is a `record` value or not,
+    * a `boolean` on whether the argument is a `object` value or not,
     * a `missing` if the argument is a `missing` value,
     * a `null` if the argument is a `null` value.
 

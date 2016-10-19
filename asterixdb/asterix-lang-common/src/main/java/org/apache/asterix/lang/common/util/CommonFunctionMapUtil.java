@@ -63,8 +63,16 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("isobject", "is-object"); // isobject, internal: is-object
         FUNCTION_NAME_MAP.put("isobj", "is-object"); // isobj, internal: is-object
 
-        // Record functions.
-        FUNCTION_NAME_MAP.put("object_pairs", "record-pairs"); // object_pairs, internal: record-pairs
+        // Object functions
+        FUNCTION_NAME_MAP.put("record-merge", "object-merge"); // record-merge, internal: object-merge
+        // record-get-fields, internal: object-get-fields
+        FUNCTION_NAME_MAP.put("record-get-fields", "object-get-fields");
+        // record-get-field-value, internal: object-get-field-value
+        FUNCTION_NAME_MAP.put("record-get-field-value", "object-get-field-value");
+        // record-add-fields, internal: object-add-fields
+        FUNCTION_NAME_MAP.put("record-add-fields", "object-add-fields");
+        // record-remove-fields, internal: object-remove-fields
+        FUNCTION_NAME_MAP.put("record-remove-fields", "object-remove-fields");
     }
 
     private CommonFunctionMapUtil() {

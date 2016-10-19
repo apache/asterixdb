@@ -28,7 +28,7 @@
 * [Similarity Functions](#SimilarityFunctions)
 * [Tokenizing Functions](#TokenizingFunctions)
 * [Temporal Functions](#TemporalFunctions)
-* [Record Functions](#RecordFunctions)
+* [Object Functions](#ObjectFunctions)
 * [Aggregate Functions (Array Functions)](#AggregateFunctions)
 * [Comparison Functions](#ComparisonFunctions)
 * [Type Functions](#TypeFunctions)

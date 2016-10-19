@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 <!DOCTYPE test-suite [
-  <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
+  <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
 
 ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">

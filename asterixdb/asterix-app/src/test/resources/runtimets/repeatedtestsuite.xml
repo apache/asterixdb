@@ -25,7 +25,7 @@
   <!-- The following test case is commented out as an example. -->
   <test-group name="repeated-tests">
     <!--
-            <test-case FilePath="records/get-record-fields">
+            <test-case FilePath="records/get-object-fields">
                 <compilation-unit name="tiny-social-example">
                     <output-dir compare="Text">tiny-social-example</output-dir>
                 </compilation-unit>

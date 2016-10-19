@@ -1,0 +1,15 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+FunctionCall test.closed-object-constructor@8[
+  LiteralExpr [STRING] [foo1]
+  LiteralExpr [LONG] [10]
+  LiteralExpr [STRING] [bar1]
+  LiteralExpr [LONG] [20]
+  LiteralExpr [STRING] [foo2]
+  LiteralExpr [LONG] [30]
+  LiteralExpr [STRING] [bar2]
+  LiteralExpr [LONG] [40]
+]
+]
