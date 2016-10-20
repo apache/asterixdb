@@ -99,12 +99,12 @@ public class LogManagerWithReplication extends LogManager {
         }
 
         final int logRecordSize = logRecord.getLogSize();
-        if (!appendPage.hasSpace(logRecordSize)) {
-            if (getLogFileOffset(appendLSN.get()) + logRecordSize > logFileSize) {
-                prepareNextLogFile();
-            }
-            appendPage.isFull(true);
-            getAndInitNewPage(logRecordSize);
+        // Make sure the log will not exceed the log file size
+        if (getLogFileOffset(appendLSN.get()) + logRecordSize >= logFileSize) {
+            prepareNextLogFile();
+            prepareNextPage(logRecordSize);
+        } else if (!appendPage.hasSpace(logRecordSize)) {
+            prepareNextPage(logRecordSize);
         }
         appendPage.appendWithReplication(logRecord, appendLSN.get());
 

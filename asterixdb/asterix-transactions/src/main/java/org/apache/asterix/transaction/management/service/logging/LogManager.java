@@ -81,8 +81,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public LogManager(TransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
-        logManagerProperties =
-                new LogManagerProperties(this.txnSubsystem.getTransactionProperties(), this.txnSubsystem.getId());
+        logManagerProperties = new LogManagerProperties(this.txnSubsystem.getTransactionProperties(),
+                this.txnSubsystem.getId());
         logFileSize = logManagerProperties.getLogPartitionSize();
         logPageSize = logManagerProperties.getLogPageSize();
         numLogPages = logManagerProperties.getNumLogPages();
@@ -157,12 +157,12 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
          * written at the last offset of the current file.
          */
         final int logSize = logRecord.getLogSize();
-        if (!appendPage.hasSpace(logSize)) {
-            if (getLogFileOffset(appendLSN.get()) + logSize >= logFileSize) {
-                prepareNextLogFile();
-            }
-            appendPage.isFull(true);
-            getAndInitNewPage(logSize);
+        // Make sure the log will not exceed the log file size
+        if (getLogFileOffset(appendLSN.get()) + logSize >= logFileSize) {
+            prepareNextLogFile();
+            prepareNextPage(logSize);
+        } else if (!appendPage.hasSpace(logSize)) {
+            prepareNextPage(logSize);
         }
         appendPage.append(logRecord, appendLSN.get());
 
@@ -173,6 +173,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             logRecord.logAppended(appendLSN.get());
         }
         appendLSN.addAndGet(logSize);
+    }
+
+    protected void prepareNextPage(int logSize) {
+        appendPage.isFull(true);
+        getAndInitNewPage(logSize);
     }
 
     protected void getAndInitNewPage(int logSize) {
