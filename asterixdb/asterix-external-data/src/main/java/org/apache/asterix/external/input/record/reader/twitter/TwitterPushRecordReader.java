@@ -26,6 +26,8 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.TwitterUtil;
+import twitter4j.DirectMessage;
 import twitter4j.FilterQuery;
 import twitter4j.StallWarning;
 import twitter4j.Status;
@@ -33,6 +35,9 @@ import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
 import twitter4j.TwitterObjectFactory;
 import twitter4j.TwitterStream;
+import twitter4j.User;
+import twitter4j.UserList;
+import twitter4j.UserStreamListener;
 
 public class TwitterPushRecordReader implements IRecordReader<String> {
     private LinkedBlockingQueue<String> inputQ;
@@ -40,20 +45,32 @@ public class TwitterPushRecordReader implements IRecordReader<String> {
     private GenericRecord<String> record;
     private boolean closed = false;
 
-    public TwitterPushRecordReader(TwitterStream twitterStream, FilterQuery query) {
-        record = new GenericRecord<>();
-        inputQ = new LinkedBlockingQueue<>();
-        this.twitterStream = twitterStream;//TwitterUtil.getTwitterStream(configuration);
-        this.twitterStream.addListener(new TweetListener(inputQ));
+    public TwitterPushRecordReader(TwitterStream twitterStream, TwitterUtil.TweetListener tweetListener,
+            FilterQuery query) {
+        init(twitterStream);
+        tweetListener.setInputQ(inputQ);
+        this.twitterStream.addListener(tweetListener);
         this.twitterStream.filter(query);
     }
 
-    public TwitterPushRecordReader(TwitterStream twitterStream) {
+    public TwitterPushRecordReader(TwitterStream twitterStream, TwitterUtil.TweetListener tweetListener) {
+        init(twitterStream);
+        tweetListener.setInputQ(inputQ);
+        this.twitterStream.addListener(tweetListener);
+        twitterStream.sample();
+    }
+
+    public TwitterPushRecordReader(TwitterStream twitterStream, TwitterUtil.UserTweetsListener tweetListener) {
+        init(twitterStream);
+        tweetListener.setInputQ(inputQ);
+        this.twitterStream.addListener(tweetListener);
+        twitterStream.user();
+    }
+
+    private void init(TwitterStream twitterStream) {
         record = new GenericRecord<>();
         inputQ = new LinkedBlockingQueue<>();
-        this.twitterStream = twitterStream;//
-        this.twitterStream.addListener(new TweetListener(inputQ));
-        twitterStream.sample();
+        this.twitterStream = twitterStream;
     }
 
     @Override
@@ -89,46 +106,6 @@ public class TwitterPushRecordReader implements IRecordReader<String> {
             return false;
         }
         return true;
-    }
-
-    private class TweetListener implements StatusListener {
-
-        private LinkedBlockingQueue<String> inputQ;
-
-        public TweetListener(LinkedBlockingQueue<String> inputQ) {
-            this.inputQ = inputQ;
-        }
-
-        @Override
-        public void onStatus(Status tweet) {
-            String jsonTweet = TwitterObjectFactory.getRawJSON(tweet);
-            inputQ.add(jsonTweet);
-        }
-
-        @Override
-        public void onException(Exception arg0) {
-            // do nothing
-        }
-
-        @Override
-        public void onDeletionNotice(StatusDeletionNotice arg0) {
-            // do nothing
-        }
-
-        @Override
-        public void onScrubGeo(long arg0, long arg1) {
-            // do nothing
-        }
-
-        @Override
-        public void onStallWarning(StallWarning arg0) {
-            // do nothing
-        }
-
-        @Override
-        public void onTrackLimitationNotice(int arg0) {
-            // do nothing
-        }
     }
 
     @Override

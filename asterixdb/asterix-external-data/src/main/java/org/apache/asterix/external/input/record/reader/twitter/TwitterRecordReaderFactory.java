@@ -46,7 +46,6 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     private static final int INTAKE_CARDINALITY = 1; // degree of parallelism at intake stage
 
     private Map<String, String> configuration;
-    private boolean pull;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
     @Override
@@ -73,8 +72,8 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
             builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET);
             throw new AsterixException(builder.toString());
         }
-        if (TwitterRecordReaderFactory.isTwitterPull(configuration)) {
-            pull = true;
+
+        if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.READER_PULL_TWITTER)) {
             if (configuration.get(SearchAPIConstants.QUERY) == null) {
                 throw new AsterixException(
                         "parameter " + SearchAPIConstants.QUERY + " not specified as part of adaptor configuration");
@@ -94,18 +93,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
                             + DEFAULT_INTERVAL + ")");
                 }
             }
-        } else {
-            pull = false;
         }
-    }
-
-    public static boolean isTwitterPull(Map<String, String> configuration) {
-        String reader = configuration.get(ExternalDataConstants.KEY_READER);
-        if (reader.equals(ExternalDataConstants.READER_TWITTER_PULL)
-                || reader.equals(ExternalDataConstants.READER_PULL_TWITTER)) {
-            return true;
-        }
-        return false;
     }
 
     @Override
@@ -116,20 +104,34 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     @Override
     public IRecordReader<? extends String> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        if (pull) {
-            return new TwitterPullRecordReader(TwitterUtil.getTwitterService(configuration),
-                    configuration.get(SearchAPIConstants.QUERY),
-                    Integer.parseInt(configuration.get(SearchAPIConstants.INTERVAL)));
-        } else {
-            FilterQuery query;
-            try {
-                query = TwitterUtil.getFilterQuery(configuration);
-                return (query == null) ? new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration))
-                        : new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration), query);
-            } catch (AsterixException e) {
-                throw new HyracksDataException(e);
-            }
+        IRecordReader<? extends String> recordReader;
+        switch (configuration.get(ExternalDataConstants.KEY_READER)) {
+            case ExternalDataConstants.READER_PULL_TWITTER:
+                recordReader = new TwitterPullRecordReader(TwitterUtil.getTwitterService(configuration),
+                        configuration.get(SearchAPIConstants.QUERY),
+                        Integer.parseInt(configuration.get(SearchAPIConstants.INTERVAL)));
+                break;
+            case ExternalDataConstants.READER_PUSH_TWITTER:
+                FilterQuery query;
+                try {
+                    query = TwitterUtil.getFilterQuery(configuration);
+                    recordReader = (query == null)
+                            ? new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration),
+                                    TwitterUtil.getTweetListener())
+                            : new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration),
+                                    TwitterUtil.getTweetListener(), query);
+                } catch (AsterixException e) {
+                    throw new HyracksDataException(e);
+                }
+                break;
+            case ExternalDataConstants.READER_USER_STREAM_TWITTER:
+                recordReader = new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration),
+                        TwitterUtil.getUserTweetsListener());
+                break;
+            default:
+                throw new HyracksDataException("No Record reader found!");
         }
+        return recordReader;
     }
 
     @Override
@@ -147,4 +149,5 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
         }
         return true;
     }
+
 }

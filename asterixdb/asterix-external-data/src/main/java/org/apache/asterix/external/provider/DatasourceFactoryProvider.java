@@ -97,6 +97,7 @@ public class DatasourceFactoryProvider {
             case ExternalDataConstants.READER_TWITTER_PUSH:
             case ExternalDataConstants.READER_PUSH_TWITTER:
             case ExternalDataConstants.READER_PULL_TWITTER:
+            case ExternalDataConstants.READER_USER_STREAM_TWITTER:
                 return new TwitterRecordReaderFactory();
             case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
             case ExternalDataConstants.SOCKET:
