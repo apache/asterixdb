@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -145,9 +146,19 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return list.isEmpty() ? null : list.get(0);
     }
 
+    /**
+     * Choose all indexes that match the given access method. These indexes will be used as index-search
+     * to replace the given predicates in a SELECT operator. Also, if there are multiple same type of indexes
+     * on the same field, only of them will be chosen. Allowed cases (AccessMethod, IndexType) are:
+     * [BTreeAccessMethod , IndexType.BTREE], [RTreeAccessMethod , IndexType.RTREE],
+     * [InvertedIndexAccessMethod, IndexType.SINGLE_PARTITION_WORD_INVIX || SINGLE_PARTITION_NGRAM_INVIX ||
+     * LENGTH_PARTITIONED_WORD_INVIX || LENGTH_PARTITIONED_NGRAM_INVIX]
+     */
     protected List<Pair<IAccessMethod, Index>> chooseAllIndex(
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         List<Pair<IAccessMethod, Index>> result = new ArrayList<Pair<IAccessMethod, Index>>();
+        // Use variables (fields) to the index types map to check which type of indexes are applied for the vars.
+        Map<List<Pair<Integer, Integer>>, List<IndexType>> resultVarsToIndexTypesMap = new HashMap<>();
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry = amIt.next();
@@ -156,15 +167,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     .iterator();
             while (indexIt.hasNext()) {
                 Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
-                // To avoid a case where the chosen access method and a chosen
-                // index type is different.
-                // Allowed Case: [BTreeAccessMethod , IndexType.BTREE],
-                //               [RTreeAccessMethod , IndexType.RTREE],
-                //               [InvertedIndexAccessMethod,
-                //                 IndexType.SINGLE_PARTITION_WORD_INVIX ||
-                //                           SINGLE_PARTITION_NGRAM_INVIX ||
-                //                           LENGTH_PARTITIONED_WORD_INVIX ||
-                //                           LENGTH_PARTITIONED_NGRAM_INVIX]
                 IAccessMethod chosenAccessMethod = amEntry.getKey();
                 Index chosenIndex = indexEntry.getKey();
                 IndexType indexType = chosenIndex.getIndexType();
@@ -172,11 +174,21 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX
                         || indexType == IndexType.SINGLE_PARTITION_WORD_INVIX
                         || indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX;
-
                 if ((chosenAccessMethod == BTreeAccessMethod.INSTANCE && indexType == IndexType.BTREE)
                         || (chosenAccessMethod == RTreeAccessMethod.INSTANCE && indexType == IndexType.RTREE)
                         || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isKeywordOrNgramIndexChosen)) {
-                    result.add(new Pair<IAccessMethod, Index>(chosenAccessMethod, chosenIndex));
+                    if (resultVarsToIndexTypesMap.containsKey(indexEntry.getValue())) {
+                        List<IndexType> appliedIndexTypes = resultVarsToIndexTypesMap.get(indexEntry.getValue());
+                        if (!appliedIndexTypes.contains(indexType)) {
+                            appliedIndexTypes.add(indexType);
+                            result.add(new Pair<IAccessMethod, Index>(chosenAccessMethod, chosenIndex));
+                        }
+                    } else {
+                        List<IndexType> addedIndexTypes = new ArrayList<>();
+                        addedIndexTypes.add(indexType);
+                        resultVarsToIndexTypesMap.put(indexEntry.getValue(), addedIndexTypes);
+                        result.add(new Pair<IAccessMethod, Index>(chosenAccessMethod, chosenIndex));
+                    }
                 }
             }
         }
