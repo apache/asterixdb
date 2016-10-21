@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,11 +72,11 @@ public class IPCConnectionManager {
         ServerSocket socket = serverSocketChannel.socket();
         socket.bind(socketAddress);
         address = new InetSocketAddress(socket.getInetAddress(), socket.getLocalPort());
-        ipcHandleMap = new HashMap<InetSocketAddress, IPCHandle>();
-        pendingConnections = new ArrayList<IPCHandle>();
-        workingPendingConnections = new ArrayList<IPCHandle>();
-        sendList = new ArrayList<Message>();
-        workingSendList = new ArrayList<Message>();
+        ipcHandleMap = new HashMap<>();
+        pendingConnections = new ArrayList<>();
+        workingPendingConnections = new ArrayList<>();
+        sendList = new ArrayList<>();
+        workingSendList = new ArrayList<>();
     }
 
     InetSocketAddress getAddress() {
@@ -191,7 +192,8 @@ public class IPCConnectionManager {
                 throw new RuntimeException(e);
             }
             BitSet unsentMessagesBitmap = new BitSet();
-            List<Message> tempUnsentMessages = new ArrayList<Message>();
+            List<Message> tempUnsentMessages = new ArrayList<>();
+            int failingLoops = 0;
             while (!stopped) {
                 try {
                     if (LOGGER.isLoggable(Level.FINE)) {
@@ -204,7 +206,7 @@ public class IPCConnectionManager {
                             SocketChannel channel = SocketChannel.open();
                             channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                             channel.configureBlocking(false);
-                            SelectionKey cKey = null;
+                            SelectionKey cKey;
                             if (channel.connect(handle.getRemoteAddress())) {
                                 cKey = channel.register(selector, SelectionKey.OP_READ);
                                 handle.setState(HandleState.CONNECT_SENT);
@@ -305,15 +307,11 @@ public class IPCConnectionManager {
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
                                 IPCHandle handle = (IPCHandle) key.attachment();
-                                try {
-                                    if (!channel.finishConnect()) {
-                                        throw new Exception("Connection did not finish");
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+                                if (!finishConnect(channel)) {
                                     handle.setState(HandleState.CONNECT_FAILED);
                                     continue;
                                 }
+
                                 handle.setState(HandleState.CONNECT_SENT);
                                 registerHandle(handle);
                                 key.interestOps(SelectionKey.OP_READ);
@@ -321,10 +319,32 @@ public class IPCConnectionManager {
                             }
                         }
                     }
+                    // reset failingLoops on a good loop
+                    failingLoops = 0;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    int sleepSecs = (int)Math.pow(2, Math.min(11, failingLoops++));
+                    LOGGER.log(Level.WARNING, "Exception processing message; sleeping " + sleepSecs
+                            + " seconds", e);
+                    try {
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(sleepSecs));
+                    } catch (InterruptedException e1) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
+        }
+
+        private boolean finishConnect(SocketChannel channel) {
+            boolean connectFinished = false;
+            try {
+                connectFinished = channel.finishConnect();
+                if (!connectFinished) {
+                    LOGGER.log(Level.WARNING, "Channel connect did not finish");
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Exception finishing channel connect", e);
+            }
+            return connectFinished;
         }
 
         private void copyUnsentMessages(BitSet unsentMessagesBitmap, List<Message> tempUnsentMessages) {
