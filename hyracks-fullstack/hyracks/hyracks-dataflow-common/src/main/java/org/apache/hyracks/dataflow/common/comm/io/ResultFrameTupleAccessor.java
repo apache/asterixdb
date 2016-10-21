@@ -18,24 +18,10 @@
  */
 package org.apache.hyracks.dataflow.common.comm.io;
 
-import java.io.DataInputStream;
-
-import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-
 public class ResultFrameTupleAccessor extends FrameTupleAccessor {
 
     public ResultFrameTupleAccessor() {
         super(null);
-    }
-
-    @Override
-    protected void prettyPrint(int tid, ByteBufferInputStream bbis, DataInputStream dis, StringBuilder sb) {
-        sb.append(tid + ":(" + getTupleStartOffset(tid) + ", " + getTupleEndOffset(tid) + ")[");
-
-        bbis.setByteBuffer(getBuffer(), getTupleStartOffset(tid));
-        sb.append(dis);
-
-        sb.append("]\n");
     }
 
     @Override

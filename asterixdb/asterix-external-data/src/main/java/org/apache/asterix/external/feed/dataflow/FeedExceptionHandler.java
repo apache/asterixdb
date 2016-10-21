@@ -43,11 +43,6 @@ public class FeedExceptionHandler implements IExceptionHandler {
         this.fta = fta;
     }
 
-    public void prettyPrint(ByteBuffer frame) {
-        fta.reset(frame);
-        fta.prettyPrint();
-    }
-
     @Override
     public ByteBuffer handle(HyracksDataException th, ByteBuffer frame) {
         try {

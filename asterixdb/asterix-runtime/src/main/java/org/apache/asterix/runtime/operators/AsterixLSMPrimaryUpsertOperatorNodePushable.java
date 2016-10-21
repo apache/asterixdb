@@ -78,6 +78,8 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
     private ARecordPointable recPointable;
     private DataOutput prevDos;
     private final boolean hasMeta;
+    private final int filterFieldIndex;
+    private final int metaFieldIndex;
 
     public AsterixLSMPrimaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
@@ -93,6 +95,8 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
         key.setFieldPermutation(searchKeyPermutations);
         hasMeta = (fieldPermutation.length > numOfPrimaryKeys + 1) && (filterFieldIndex < 0
                 || (filterFieldIndex >= 0 && (fieldPermutation.length > numOfPrimaryKeys + 2)));
+        this.metaFieldIndex = numOfPrimaryKeys + 1;
+        this.filterFieldIndex = numOfPrimaryKeys + (hasMeta ? 2 : 1);
         if (filterFieldIndex >= 0) {
             isFiltered = true;
             this.recordType = recordType;
@@ -101,7 +105,6 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
             this.prevRecWithPKWithFilterValue = new ArrayTupleBuilder(fieldPermutation.length + (hasMeta ? 1 : 0));
             this.prevDos = prevRecWithPKWithFilterValue.getDataOutput();
         }
-
     }
 
     // we have the permutation which has [pk locations, record location, optional:filter-location]
@@ -141,8 +144,8 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
                     .createSearchOperationCallback(indexHelper.getResourceID(), ctx, this));
             cursor = indexAccessor.createSearchCursor(false);
             frameTuple = new FrameTupleReference();
-            IAsterixAppRuntimeContext runtimeCtx =
-                    (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                    .getApplicationContext().getApplicationObject();
             AsterixLSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
                     runtimeCtx.getTransactionSubsystem().getLogManager());
         } catch (Exception e) {
@@ -156,40 +159,11 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
         searchPred.reset(key, key, true, true, keySearchCmp, keySearchCmp);
     }
 
-    private void writeOutput(int tupleIndex, boolean recordWasInserted) throws IOException {
-        boolean recordWasDeleted = prevTuple != null;
-        tb.reset();
+    private void writeOutput(int tupleIndex, boolean recordWasInserted, boolean recordWasDeleted) throws IOException {
         frameTuple.reset(accessor, tupleIndex);
         for (int i = 0; i < frameTuple.getFieldCount(); i++) {
             dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
             tb.addFieldEndOffset();
-        }
-        if (recordWasDeleted) {
-            dos.write(prevTuple.getFieldData(numOfPrimaryKeys), prevTuple.getFieldStart(numOfPrimaryKeys),
-                    prevTuple.getFieldLength(numOfPrimaryKeys));
-            tb.addFieldEndOffset();
-            // if has meta, then append meta
-            if (hasMeta) {
-                dos.write(prevTuple.getFieldData(numOfPrimaryKeys + 1), prevTuple.getFieldStart(numOfPrimaryKeys + 1),
-                        prevTuple.getFieldLength(numOfPrimaryKeys + 1));
-                tb.addFieldEndOffset();
-            }
-            // if with filters, append the filter
-            if (isFiltered) {
-                dos.write(prevTuple.getFieldData(numOfPrimaryKeys + (hasMeta ? 2 : 1)),
-                        prevTuple.getFieldStart(numOfPrimaryKeys + (hasMeta ? 2 : 1)),
-                        prevTuple.getFieldLength(numOfPrimaryKeys + (hasMeta ? 2 : 1)));
-                tb.addFieldEndOffset();
-            }
-        } else {
-            addNullField();
-            if (hasMeta) {
-                addNullField();
-            }
-            // if with filters, append null
-            if (isFiltered) {
-                addNullField();
-            }
         }
         if (recordWasInserted || recordWasDeleted) {
             FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
@@ -214,6 +188,7 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
         int i = 0;
         try {
             while (i < tupleCount) {
+                tb.reset();
                 boolean recordWasInserted = false;
                 tuple.reset(accessor, i);
                 resetSearchPredicate(i);
@@ -222,10 +197,26 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
                     cursor.next();
                     prevTuple = cursor.getTuple();
                     cursor.reset();
-                    modCallback.setOp(Operation.DELETE);
                     if (isFiltered) {
                         prevTuple = getPrevTupleWithFilter(prevTuple);
                     }
+                    dos.write(prevTuple.getFieldData(numOfPrimaryKeys), prevTuple.getFieldStart(numOfPrimaryKeys),
+                            prevTuple.getFieldLength(numOfPrimaryKeys));
+                    tb.addFieldEndOffset();
+                    // if has meta, then append meta
+                    if (hasMeta) {
+                        dos.write(prevTuple.getFieldData(metaFieldIndex), prevTuple.getFieldStart(metaFieldIndex),
+                                prevTuple.getFieldLength(metaFieldIndex));
+                        tb.addFieldEndOffset();
+                    }
+                    // if with filters, append the filter
+                    if (isFiltered) {
+                        dos.write(prevTuple.getFieldData(filterFieldIndex),
+                                prevTuple.getFieldStart(filterFieldIndex),
+                                prevTuple.getFieldLength(filterFieldIndex));
+                        tb.addFieldEndOffset();
+                    }
+                    modCallback.setOp(Operation.DELETE);
                     if (i == 0) {
                         lsmAccessor.delete(prevTuple);
                     } else {
@@ -233,6 +224,14 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
                     }
                 } else {
                     prevTuple = null;
+                    addNullField();
+                    if (hasMeta) {
+                        addNullField();
+                    }
+                    // if with filters, append null
+                    if (isFiltered) {
+                        addNullField();
+                    }
                     cursor.reset();
                 }
                 if (!isNull(tuple, numOfPrimaryKeys)) {
@@ -244,7 +243,7 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
                     }
                     recordWasInserted = true;
                 }
-                writeOutput(i, recordWasInserted);
+                writeOutput(i, recordWasInserted, prevTuple != null);
                 i++;
             }
             appender.write(writer, true);

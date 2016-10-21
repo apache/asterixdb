@@ -114,7 +114,7 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
             runtimeAndConstraints = mp.getDeleteRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
                     additionalFilteringKeys, inputDesc, context, spec);
         } else if (operation == Kind.UPSERT) {
-            runtimeAndConstraints = mp.getUpsertRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
+            runtimeAndConstraints = mp.getUpsertRuntime(dataSource, inputSchemas[0], typeEnv, keys, payload,
                     additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec);
         } else {
             throw new AlgebricksException("Unsupported Operation " + operation);

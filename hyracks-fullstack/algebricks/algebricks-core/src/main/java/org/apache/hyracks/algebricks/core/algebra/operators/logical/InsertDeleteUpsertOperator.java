@@ -84,7 +84,6 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() throws AlgebricksException {
         schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getValue().getSchema());
         if (operation == Kind.UPSERT) {
             // The upsert case also produces the previous record
             schema.add(prevRecordVar);
@@ -95,6 +94,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
                 schema.add(prevFilterVar);
             }
         }
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     public void getProducedVariables(Collection<LogicalVariable> producedVariables) {
@@ -146,7 +146,6 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
-                target.addAllVariables(sources[0]);
                 if (operation == Kind.UPSERT) {
                     target.addVariable(prevRecordVar);
                     if (prevAdditionalNonFilteringVars != null) {
@@ -158,6 +157,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
                         target.addVariable(prevFilterVar);
                     }
                 }
+                target.addAllVariables(sources[0]);
             }
         };
     }

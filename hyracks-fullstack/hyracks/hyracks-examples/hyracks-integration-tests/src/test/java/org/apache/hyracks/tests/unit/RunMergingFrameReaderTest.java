@@ -31,7 +31,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.DataInputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,8 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import junit.extensions.PA;
 
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
@@ -61,6 +58,8 @@ import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.RunMergingFrameReader;
 import org.apache.hyracks.dataflow.std.sort.util.GroupVSizeFrame;
 import org.junit.Test;
+
+import junit.extensions.PA;
 
 public class RunMergingFrameReaderTest {
     static IBinaryComparator[] Comparators = new IBinaryComparator[] { ComparatorFactories[0].createBinaryComparator(),
@@ -123,12 +122,6 @@ public class RunMergingFrameReaderTest {
             }
             //            printFrame(frame.getBuffer());
             return true;
-        }
-
-        private void printFrame(ByteBuffer buffer) {
-            FrameTupleAccessor fta = new FrameTupleAccessor(RecordDesc);
-            fta.reset(buffer);
-            fta.prettyPrint();
         }
 
         @Override
