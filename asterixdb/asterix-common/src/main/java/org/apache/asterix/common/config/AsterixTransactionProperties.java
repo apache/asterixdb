@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
+
 import java.util.Map;
 
 import org.apache.hyracks.util.StorageUtil;
-
-import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
-import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
@@ -33,13 +33,13 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     private static final String TXN_LOG_BUFFER_PAGESIZE_KEY = "txn.log.buffer.pagesize";
     private static final int TXN_LOG_BUFFER_PAGESIZE_DEFAULT = StorageUtil.getSizeInBytes(128, KILOBYTE);
 
-    private static final String TXN_LOG_PARTITIONSIZE_KEY = "txn.log.partitionsize";
+    public static final String TXN_LOG_PARTITIONSIZE_KEY = "txn.log.partitionsize";
     private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = StorageUtil.getSizeInBytes(256L, MEGABYTE);
 
     private static final String TXN_LOG_CHECKPOINT_LSNTHRESHOLD_KEY = "txn.log.checkpoint.lsnthreshold";
     private static final int TXN_LOG_CHECKPOINT_LSNTHRESHOLD_DEFAULT = StorageUtil.getSizeInBytes(64, MEGABYTE);
 
-    private static final String TXN_LOG_CHECKPOINT_POLLFREQUENCY_KEY = "txn.log.checkpoint.pollfrequency";
+    public static final String TXN_LOG_CHECKPOINT_POLLFREQUENCY_KEY = "txn.log.checkpoint.pollfrequency";
     private static final int TXN_LOG_CHECKPOINT_POLLFREQUENCY_DEFAULT = 120; // 120s
 
     private static final String TXN_LOG_CHECKPOINT_HISTORY_KEY = "txn.log.checkpoint.history";

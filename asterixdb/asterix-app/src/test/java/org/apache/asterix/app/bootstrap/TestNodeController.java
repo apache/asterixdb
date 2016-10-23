@@ -32,11 +32,8 @@ import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
-import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -46,6 +43,7 @@ import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
@@ -67,7 +65,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.util.HyracksConstants;
@@ -115,8 +112,12 @@ public class TestNodeController {
     private JobId jobId;
     private long jobCounter = 0L;
     private IHyracksJobletContext jobletCtx;
+    private final String testConfigFileName;
+    private final boolean runHDFS;
 
-    public TestNodeController() throws AsterixException, HyracksException, ACIDException {
+    public TestNodeController(String testConfigFileName, boolean runHDFS) {
+        this.testConfigFileName = testConfigFileName;
+        this.runHDFS = runHDFS;
     }
 
     public void init() throws Exception {
@@ -125,7 +126,9 @@ public class TestNodeController {
             outdir.mkdirs();
             // remove library directory
             TestLibrarian.removeLibraryDir();
-            ExecutionTestUtil.setUp(cleanupOnStart);
+            ExecutionTestUtil.setUp(cleanupOnStart,
+                    testConfigFileName == null ? TEST_CONFIG_FILE_NAME : testConfigFileName,
+                    ExecutionTestUtil.integrationUtil, runHDFS);
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;
@@ -299,7 +302,7 @@ public class TestNodeController {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields);
         TreeIndexCreateOperatorDescriptor indexOpDesc = getIndexCreateOpDesc(primaryIndexInfo);
-        return getPrimaryIndexDataflowHelper(createTestContext(), primaryIndexInfo, indexOpDesc);
+        return getPrimaryIndexDataflowHelper(createTestContext(true), primaryIndexInfo, indexOpDesc);
     }
 
     public void createPrimaryIndex(Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType,
@@ -308,7 +311,7 @@ public class TestNodeController {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields);
         TreeIndexCreateOperatorDescriptor indexOpDesc = getIndexCreateOpDesc(primaryIndexInfo);
-        LSMBTreeDataflowHelper dataflowHelper = getPrimaryIndexDataflowHelper(createTestContext(), primaryIndexInfo,
+        LSMBTreeDataflowHelper dataflowHelper = getPrimaryIndexDataflowHelper(createTestContext(true), primaryIndexInfo,
                 indexOpDesc);
         dataflowHelper.create();
     }
@@ -359,9 +362,11 @@ public class TestNodeController {
         return primaryIndexTypeTraits;
     }
 
-    public IHyracksTaskContext createTestContext() throws HyracksDataException {
+    public IHyracksTaskContext createTestContext(boolean withMessaging) throws HyracksDataException {
         IHyracksTaskContext ctx = TestUtils.create(KB32);
-        TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
+        if (withMessaging) {
+            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
+        }
         ctx = Mockito.spy(ctx);
         Mockito.when(ctx.getJobletContext()).thenReturn(jobletCtx);
         Mockito.when(ctx.getIOManager())

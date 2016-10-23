@@ -423,7 +423,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private List<Long> getLogFileIds() {
+    public List<Long> getLogFileIds() {
         File fileLogDir = new File(logDir);
         String[] logFileNames = null;
         List<Long> logFileIds = null;
