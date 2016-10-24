@@ -61,7 +61,7 @@ public class DmlTest {
         Reader loadReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
         AsterixJavaClient asterixLoad = new AsterixJavaClient(integrationUtil.getHyracksClientConnection(), loadReader,
-                ERR, new AqlCompilationProvider(), new DefaultStatementExecutorFactory(null));
+                ERR, new AqlCompilationProvider(), new DefaultStatementExecutorFactory());
         try {
             asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {

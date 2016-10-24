@@ -70,7 +70,7 @@ public class FeedWorkCollection {
 
         private static class SubscribeFeedWorkRunnable implements Runnable {
 
-            private static final DefaultStatementExecutorFactory qtFactory = new DefaultStatementExecutorFactory(null);
+            private static final DefaultStatementExecutorFactory qtFactory = new DefaultStatementExecutorFactory();
             private final FeedConnectionRequest request;
             private final String[] locations;
 

@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.algebra.base.ILangExtension.Language;
-import org.apache.asterix.algebra.extension.ExtensionFunctionIdentifier;
 import org.apache.asterix.algebra.extension.IAlgebraExtensionManager;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.api.ExtensionId;
@@ -35,15 +34,7 @@ import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.translator.IStatementExecutorFactory;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -77,7 +68,7 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
         Pair<ExtensionId, ILangCompilationProvider> aqlcp = null;
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         IStatementExecutorExtension see = null;
-        defaultQueryTranslatorFactory = new DefaultStatementExecutorFactory(this);
+        defaultQueryTranslatorFactory = new DefaultStatementExecutorFactory();
 
         if (list != null) {
             for (AsterixExtension extensionConf : list) {
@@ -138,19 +129,5 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
 
     public ILangCompilationProvider getSqlppCompilationProvider() {
         return sqlppCompilationProvider;
-    }
-
-    // TODO(amoudi/yingyi): this is not a good way to extend rewrite rules. introduce re-write rule provider
-    @Override
-    public boolean unnestToDataScan(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            UnnestOperator unnestOp, ILogicalExpression unnestExpr, AbstractFunctionCallExpression functionCallExpr)
-            throws AlgebricksException {
-        FunctionIdentifier functionId = functionCallExpr.getFunctionIdentifier();
-        if (functionId instanceof ExtensionFunctionIdentifier) {
-            ILangExtension extension =
-                    (ILangExtension) extensions.get(((ExtensionFunctionIdentifier) functionId).getExtensionId());
-            return extension.unnestToDataScan(opRef, context, unnestOp, unnestExpr, functionCallExpr);
-        }
-        return false;
     }
 }

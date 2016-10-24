@@ -18,17 +18,6 @@
  */
 package org.apache.asterix.algebra.extension;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
-
 public interface IAlgebraExtensionManager {
-
-    boolean unnestToDataScan(Mutable<ILogicalOperator> opRef, IOptimizationContext context, UnnestOperator unnestOp,
-            ILogicalExpression unnestExpr, AbstractFunctionCallExpression functionCallExpr) throws AlgebricksException;
 
 }

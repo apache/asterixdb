@@ -21,7 +21,6 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.algebra.extension.IAlgebraExtensionManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -68,11 +67,6 @@ import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependenc
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
-    private final IAlgebraExtensionManager algebraExtensionManager;
-
-    public UnnestToDataScanRule(IAlgebraExtensionManager algebraExtensionManager) {
-        this.algebraExtensionManager = algebraExtensionManager;
-    }
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -89,124 +83,114 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         }
         UnnestOperator unnest = (UnnestOperator) op;
         ILogicalExpression unnestExpr = unnest.getExpressionRef().getValue();
+        if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        return handleFunction(opRef, context, unnest, (AbstractFunctionCallExpression) unnestExpr);
+    }
 
-        if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
-            FunctionIdentifier fid = f.getFunctionIdentifier();
-
-            if (fid.equals(AsterixBuiltinFunctions.DATASET)) {
-                if (unnest.getPositionalVariable() != null) {
-                    // TODO remove this after enabling the support of positional variables in data scan
-                    throw new AlgebricksException("No positional variables are allowed over datasets.");
-                }
-                ILogicalExpression expr = f.getArguments().get(0).getValue();
-                if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                    return false;
-                }
-                ConstantExpression ce = (ConstantExpression) expr;
-                IAlgebricksConstantValue acv = ce.getValue();
-                if (!(acv instanceof AsterixConstantValue)) {
-                    return false;
-                }
-                AsterixConstantValue acv2 = (AsterixConstantValue) acv;
-                if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
-                    return false;
-                }
-                String datasetArg = ((AString) acv2.getObject()).getStringValue();
-
-                AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-                Pair<String, String> datasetReference = parseDatasetReference(metadataProvider, datasetArg);
-                String dataverseName = datasetReference.first;
-                String datasetName = datasetReference.second;
-                Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-                if (dataset == null) {
-                    throw new AlgebricksException(
-                            "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
-                }
-
-                AqlSourceId asid = new AqlSourceId(dataverseName, datasetName);
-                List<LogicalVariable> variables = new ArrayList<LogicalVariable>();
-
-                if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                    int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
-                    for (int i = 0; i < numPrimaryKeys; i++) {
-                        variables.add(context.newVar());
-                    }
-                }
-                variables.add(unnest.getVariable());
-                AqlDataSource dataSource = metadataProvider.findDataSource(asid);
-                boolean hasMeta = dataSource.hasMeta();
-                if (hasMeta) {
+    protected boolean handleFunction(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            UnnestOperator unnest, AbstractFunctionCallExpression f) throws AlgebricksException {
+        FunctionIdentifier fid = f.getFunctionIdentifier();
+        if (fid.equals(AsterixBuiltinFunctions.DATASET)) {
+            if (unnest.getPositionalVariable() != null) {
+                // TODO remove this after enabling the support of positional variables in data scan
+                throw new AlgebricksException("No positional variables are allowed over datasets.");
+            }
+            ILogicalExpression expr = f.getArguments().get(0).getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                return false;
+            }
+            ConstantExpression ce = (ConstantExpression) expr;
+            IAlgebricksConstantValue acv = ce.getValue();
+            if (!(acv instanceof AsterixConstantValue)) {
+                return false;
+            }
+            AsterixConstantValue acv2 = (AsterixConstantValue) acv;
+            if (acv2.getObject().getType().getTypeTag() != ATypeTag.STRING) {
+                return false;
+            }
+            String datasetArg = ((AString) acv2.getObject()).getStringValue();
+            AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+            Pair<String, String> datasetReference = parseDatasetReference(metadataProvider, datasetArg);
+            String dataverseName = datasetReference.first;
+            String datasetName = datasetReference.second;
+            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            if (dataset == null) {
+                throw new AlgebricksException(
+                        "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
+            }
+            AqlSourceId asid = new AqlSourceId(dataverseName, datasetName);
+            List<LogicalVariable> variables = new ArrayList<>();
+            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+                int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+                for (int i = 0; i < numPrimaryKeys; i++) {
                     variables.add(context.newVar());
                 }
-                DataSourceScanOperator scan = new DataSourceScanOperator(variables, dataSource);
-                List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
-                scanInpList.addAll(unnest.getInputs());
-                opRef.setValue(scan);
-                addPrimaryKey(variables, dataSource, context);
-                context.computeAndSetTypeEnvironmentForOperator(scan);
-
-                // Adds equivalence classes --- one equivalent class between a primary key
-                // variable and a record field-access expression.
-                IAType[] schemaTypes = dataSource.getSchemaTypes();
-                ARecordType recordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 2]
-                        : schemaTypes[schemaTypes.length - 1]);
-                ARecordType metaRecordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 1] : null);
-                EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, variables, recordType,
-                        metaRecordType, dataset, context);
-                return true;
-            } else if (fid.equals(AsterixBuiltinFunctions.FEED_COLLECT)) {
-                if (unnest.getPositionalVariable() != null) {
-                    throw new AlgebricksException("No positional variables are allowed over feeds.");
-                }
-
-                String dataverse = ConstantExpressionUtil.getStringArgument(f, 0);
-                String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 1);
-                String getTargetFeed = ConstantExpressionUtil.getStringArgument(f, 2);
-                String subscriptionLocation = ConstantExpressionUtil.getStringArgument(f, 3);
-                String targetDataset = ConstantExpressionUtil.getStringArgument(f, 4);
-                String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
-
-                AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-
-                AqlSourceId asid = new AqlSourceId(dataverse, getTargetFeed);
-                String policyName = metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
-                FeedPolicyEntity policy = metadataProvider.findFeedPolicy(dataverse, policyName);
-                if (policy == null) {
-                    policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
-                    if (policy == null) {
-                        throw new AlgebricksException("Unknown feed policy:" + policyName);
-                    }
-                }
-
-                ArrayList<LogicalVariable> feedDataScanOutputVariables = new ArrayList<LogicalVariable>();
-
-                String csLocations = metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
-                List<LogicalVariable> pkVars = new ArrayList<>();
-                FeedDataSource ds = createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
-                        metadataProvider, policy, outputType, csLocations, unnest.getVariable(), context, pkVars);
-                // The order for feeds is <Record-Meta-PK>
-                feedDataScanOutputVariables.add(unnest.getVariable());
-                // Does it produce meta?
-                if (ds.hasMeta()) {
-                    feedDataScanOutputVariables.add(context.newVar());
-                }
-                // Does it produce pk?
-                if (ds.isChange()) {
-                    feedDataScanOutputVariables.addAll(pkVars);
-                }
-
-                DataSourceScanOperator scan = new DataSourceScanOperator(feedDataScanOutputVariables, ds);
-                List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
-                scanInpList.addAll(unnest.getInputs());
-                opRef.setValue(scan);
-                context.computeAndSetTypeEnvironmentForOperator(scan);
-                return true;
-            } else if (algebraExtensionManager != null) {
-                return algebraExtensionManager.unnestToDataScan(opRef, context, unnest, unnestExpr, f);
             }
+            variables.add(unnest.getVariable());
+            AqlDataSource dataSource = metadataProvider.findDataSource(asid);
+            boolean hasMeta = dataSource.hasMeta();
+            if (hasMeta) {
+                variables.add(context.newVar());
+            }
+            DataSourceScanOperator scan = new DataSourceScanOperator(variables, dataSource);
+            List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
+            scanInpList.addAll(unnest.getInputs());
+            opRef.setValue(scan);
+            addPrimaryKey(variables, dataSource, context);
+            context.computeAndSetTypeEnvironmentForOperator(scan);
+            // Adds equivalence classes --- one equivalent class between a primary key
+            // variable and a record field-access expression.
+            IAType[] schemaTypes = dataSource.getSchemaTypes();
+            ARecordType recordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 2]
+                    : schemaTypes[schemaTypes.length - 1]);
+            ARecordType metaRecordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 1] : null);
+            EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, variables, recordType,
+                    metaRecordType, dataset, context);
+            return true;
+        } else if (fid.equals(AsterixBuiltinFunctions.FEED_COLLECT)) {
+            if (unnest.getPositionalVariable() != null) {
+                throw new AlgebricksException("No positional variables are allowed over feeds.");
+            }
+            String dataverse = ConstantExpressionUtil.getStringArgument(f, 0);
+            String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 1);
+            String getTargetFeed = ConstantExpressionUtil.getStringArgument(f, 2);
+            String subscriptionLocation = ConstantExpressionUtil.getStringArgument(f, 3);
+            String targetDataset = ConstantExpressionUtil.getStringArgument(f, 4);
+            String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
+            AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+            AqlSourceId asid = new AqlSourceId(dataverse, getTargetFeed);
+            String policyName = metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
+            FeedPolicyEntity policy = metadataProvider.findFeedPolicy(dataverse, policyName);
+            if (policy == null) {
+                policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
+                if (policy == null) {
+                    throw new AlgebricksException("Unknown feed policy:" + policyName);
+                }
+            }
+            ArrayList<LogicalVariable> feedDataScanOutputVariables = new ArrayList<>();
+            String csLocations = metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
+            List<LogicalVariable> pkVars = new ArrayList<>();
+            FeedDataSource ds = createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
+                    metadataProvider, policy, outputType, csLocations, unnest.getVariable(), context, pkVars);
+            // The order for feeds is <Record-Meta-PK>
+            feedDataScanOutputVariables.add(unnest.getVariable());
+            // Does it produce meta?
+            if (ds.hasMeta()) {
+                feedDataScanOutputVariables.add(context.newVar());
+            }
+            // Does it produce pk?
+            if (ds.isChange()) {
+                feedDataScanOutputVariables.addAll(pkVars);
+            }
+            DataSourceScanOperator scan = new DataSourceScanOperator(feedDataScanOutputVariables, ds);
+            List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
+            scanInpList.addAll(unnest.getInputs());
+            opRef.setValue(scan);
+            context.computeAndSetTypeEnvironmentForOperator(scan);
+            return true;
         }
-
         return false;
     }
 

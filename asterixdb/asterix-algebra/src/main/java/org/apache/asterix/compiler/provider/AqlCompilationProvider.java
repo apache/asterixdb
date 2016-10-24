@@ -49,4 +49,9 @@ public class AqlCompilationProvider implements ILangCompilationProvider {
         return new AqlExpressionToPlanTranslatorFactory();
     }
 
+    @Override
+    public IRuleSetFactory getRuleSetFactory() {
+        return new DefaultRuleSetFactory();
+    }
+
 }

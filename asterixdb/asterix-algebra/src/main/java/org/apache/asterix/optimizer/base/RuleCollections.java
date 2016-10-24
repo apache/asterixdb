@@ -22,7 +22,6 @@ package org.apache.asterix.optimizer.base;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.asterix.algebra.extension.IAlgebraExtensionManager;
 import org.apache.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
@@ -66,10 +65,10 @@ import org.apache.asterix.optimizer.rules.RemoveRedundantListifyRule;
 import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
 import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
-import org.apache.asterix.optimizer.rules.SetupCommitExtensionOpRule;
 import org.apache.asterix.optimizer.rules.ResolveVariableRule;
 import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
+import org.apache.asterix.optimizer.rules.SetupCommitExtensionOpRule;
 import org.apache.asterix.optimizer.rules.SimilarityCheckRule;
 import org.apache.asterix.optimizer.rules.SweepIllegalNonfunctionalFunctions;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
@@ -155,9 +154,7 @@ public final class RuleCollections {
         return autogen;
     }
 
-    //TODO(amoudi/yingyi): refactor this to use a provider instead of passing the extensionManager
-    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(
-            IAlgebraExtensionManager algebraExtensionManager) {
+    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection() {
         List<IAlgebraicRewriteRule> normalization = new LinkedList<>();
         normalization.add(new ResolveVariableRule());
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
@@ -183,7 +180,7 @@ public final class RuleCollections {
         normalization.add(new ListifyUnnestingFunctionRule());
         normalization.add(new ConstantFoldingRule());
         normalization.add(new RemoveRedundantSelectRule());
-        normalization.add(new UnnestToDataScanRule(algebraExtensionManager));
+        normalization.add(new UnnestToDataScanRule());
         normalization.add(new MetaFunctionToMetaVariableRule());
         normalization.add(new FuzzyEqRule());
         normalization.add(new SimilarityCheckRule());

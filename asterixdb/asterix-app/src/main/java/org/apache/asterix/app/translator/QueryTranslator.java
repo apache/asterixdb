@@ -47,7 +47,6 @@ import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.algebra.extension.IExtensionStatement;
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.app.external.FeedJoint;
 import org.apache.asterix.app.external.FeedOperations;
@@ -230,12 +229,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final APIFramework apiFramework;
     protected final IRewriterFactory rewriterFactory;
 
-    public QueryTranslator(List<Statement> aqlStatements, SessionConfig conf,
-            ILangCompilationProvider compliationProvider, CompilerExtensionManager ccExtensionManager) {
-        this.statements = aqlStatements;
+    public QueryTranslator(List<Statement> statements, SessionConfig conf,
+            ILangCompilationProvider compliationProvider) {
+        this.statements = statements;
         this.sessionConfig = conf;
-        this.declaredFunctions = getDeclaredFunctions(aqlStatements);
-        this.apiFramework = new APIFramework(compliationProvider, ccExtensionManager);
+        this.declaredFunctions = getDeclaredFunctions(statements);
+        this.apiFramework = new APIFramework(compliationProvider);
         this.rewriterFactory = compliationProvider.getRewriterFactory();
         activeDefaultDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
     }
@@ -3123,7 +3122,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return (dataverse != null) ? dataverse : activeDefaultDataverse.getDataverseName();
     }
 
-    protected String getActiveDataverse(Identifier dataverse) {
+    public String getActiveDataverse(Identifier dataverse) {
         return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
     }
 

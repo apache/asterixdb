@@ -56,7 +56,7 @@ public class AsterixJavaClient {
         this.queryText = queryText;
         this.writer = writer;
         this.compilationProvider = compilationProvider;
-        this.apiFramework = new APIFramework(compilationProvider, null);
+        this.apiFramework = new APIFramework(compilationProvider);
         this.statementExecutorFactory = statementExecutorFactory;
         parserFactory = compilationProvider.getParserFactory();
     }

@@ -49,4 +49,9 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
         return new SqlppExpressionToPlanTranslatorFactory();
     }
 
+    @Override
+    public IRuleSetFactory getRuleSetFactory() {
+        return new DefaultRuleSetFactory();
+    }
+
 }

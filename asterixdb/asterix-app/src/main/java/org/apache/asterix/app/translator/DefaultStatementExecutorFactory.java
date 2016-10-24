@@ -20,7 +20,6 @@ package org.apache.asterix.app.translator;
 
 import java.util.List;
 
-import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -28,16 +27,10 @@ import org.apache.asterix.translator.SessionConfig;
 
 public class DefaultStatementExecutorFactory implements IStatementExecutorFactory {
 
-    protected final CompilerExtensionManager cExtensionManager;
-
-    public DefaultStatementExecutorFactory(CompilerExtensionManager cExtensionManager) {
-        this.cExtensionManager = cExtensionManager;
-    }
-
     @Override
     public QueryTranslator create(List<Statement> aqlStatements, SessionConfig conf,
             ILangCompilationProvider compilationProvider) {
-        return new QueryTranslator(aqlStatements, conf, compilationProvider, cExtensionManager);
+        return new QueryTranslator(aqlStatements, conf, compilationProvider);
     }
 
 }

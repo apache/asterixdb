@@ -69,7 +69,7 @@ public class QueryTranslatorTest {
         when(mockCluster.getMasterNode()).thenReturn(mockMasterNode);
         when(mockMasterNode.getClientIp()).thenReturn("127.0.0.1");
 
-        IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory(null).create(statements, mockSessionConfig,
+        IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory().create(statements, mockSessionConfig,
                 new AqlCompilationProvider());
         List<String> parameters = new ArrayList<String>();
         parameters.add("examples/pregelix-example-jar-with-dependencies.jar");

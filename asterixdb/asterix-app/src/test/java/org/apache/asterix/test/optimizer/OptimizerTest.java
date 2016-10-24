@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
-import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -39,10 +38,10 @@ import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.junit.AfterClass;
 import org.junit.Assume;
@@ -76,6 +75,7 @@ public class OptimizerTest {
     private static final ILangCompilationProvider aqlCompilationProvider = new AqlCompilationProvider();
     private static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
     protected static ILangCompilationProvider extensionLangCompilationProvider = null;
+    protected static IStatementExecutorFactory statementExecutorFactory = new DefaultStatementExecutorFactory();
 
     protected static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
 
@@ -178,9 +178,7 @@ public class OptimizerTest {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider,
-                    new DefaultStatementExecutorFactory(
-                            (CompilerExtensionManager) AsterixAppContextInfo.INSTANCE.getExtensionManager()));
+            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider, statementExecutorFactory);
             try {
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {

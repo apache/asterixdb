@@ -58,7 +58,7 @@ public class AsterixCLI {
             for (String queryFile : options.args) {
                 Reader in = new FileReader(queryFile);
                 AsterixJavaClient ajc = new AsterixJavaClient(integrationUtil.getHyracksClientConnection(), in,
-                        compilationProvider, new DefaultStatementExecutorFactory(null));
+                        compilationProvider, new DefaultStatementExecutorFactory());
                 try {
                     ajc.compile(true, false, false, false, false, true, false);
                 } finally {

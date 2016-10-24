@@ -16,26 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.compiler.provider;
 
-package org.apache.asterix.algebra.base;
+import java.util.List;
 
-import org.apache.asterix.common.api.IExtension;
-import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
+import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-/**
- * An interface for language extensions
- */
-public interface ILangExtension extends IExtension {
+public interface IRuleSetFactory {
 
-    public enum Language {
-        AQL,
-        SQLPP
-    }
+    /**
+     * @return the logical rewrites
+     * @throws AlgebricksException
+     */
+    public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites()
+            throws AlgebricksException;
 
-    @Override
-    default ExtensionKind getExtensionKind() {
-        return ExtensionKind.LANG;
-    }
+    /**
+     * @return the physical rewrites
+     */
+    public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites()
+            throws AlgebricksException;
 
-    ILangCompilationProvider getLangCompilationProvider(Language lang);
 }

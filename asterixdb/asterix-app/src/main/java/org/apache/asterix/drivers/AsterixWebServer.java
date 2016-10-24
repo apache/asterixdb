@@ -34,7 +34,7 @@ public class AsterixWebServer {
         server.setHandler(context);
 
         context.addServlet(new ServletHolder(new APIServlet(new AqlCompilationProvider(),
-                new SqlppCompilationProvider(), new DefaultStatementExecutorFactory(null))), "/*");
+                new SqlppCompilationProvider(), new DefaultStatementExecutorFactory())), "/*");
         server.start();
         server.join();
     }

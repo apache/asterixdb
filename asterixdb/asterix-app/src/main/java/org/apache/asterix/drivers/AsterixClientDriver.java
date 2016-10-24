@@ -64,7 +64,7 @@ public class AsterixClientDriver {
         ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         FileReader reader = new FileReader(filename);
         AsterixJavaClient q = new AsterixJavaClient(hcc, reader, compilationProvider,
-                new DefaultStatementExecutorFactory(null));
+                new DefaultStatementExecutorFactory());
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

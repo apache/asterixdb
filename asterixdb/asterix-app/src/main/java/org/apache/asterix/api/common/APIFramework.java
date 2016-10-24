@@ -21,13 +21,11 @@ package org.apache.asterix.api.common;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
-import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
@@ -35,6 +33,7 @@ import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.compiler.provider.IRuleSetFactory;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
 import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
@@ -50,7 +49,6 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.optimizer.base.RuleCollections;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
@@ -63,8 +61,6 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
 import org.apache.hyracks.algebricks.compiler.api.ICompiler;
 import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
-import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
-import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
@@ -77,9 +73,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
-import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
-import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -96,56 +90,13 @@ public class APIFramework {
     private final IRewriterFactory rewriterFactory;
     private final IAstPrintVisitorFactory astPrintVisitorFactory;
     private final ILangExpressionToPlanTranslatorFactory translatorFactory;
-    private final CompilerExtensionManager cExtensionManager;
+    private final IRuleSetFactory ruleSetFactory;
 
-    public APIFramework(ILangCompilationProvider compilationProvider, CompilerExtensionManager cExtensionManager) {
+    public APIFramework(ILangCompilationProvider compilationProvider) {
         this.rewriterFactory = compilationProvider.getRewriterFactory();
         this.astPrintVisitorFactory = compilationProvider.getAstPrintVisitorFactory();
         this.translatorFactory = compilationProvider.getExpressionToPlanTranslatorFactory();
-        this.cExtensionManager = cExtensionManager;
-    }
-
-    private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>
-            buildDefaultLogicalRewrites(CompilerExtensionManager ccExtensionManager) {
-        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<>();
-        SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
-        SequentialFixpointRuleController seqCtrlFullDfs = new SequentialFixpointRuleController(true);
-        SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildInitialTranslationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildTypeInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildAutogenerateIDRuleCollection()));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(ccExtensionManager)));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
-        // fj
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildFuzzyJoinRuleCollection()));
-        //
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(ccExtensionManager)));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildAccessMethodRuleCollection()));
-        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
-
-        //put TXnRuleCollection!
-        return defaultLogicalRewrites;
-    }
-
-    private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultPhysicalRewrites() {
-        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultPhysicalRewrites = new ArrayList<>();
-        SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
-        SequentialOnceRuleController seqOnceTopLevel = new SequentialOnceRuleController(false);
-        defaultPhysicalRewrites
-                .add(new Pair<>(seqOnceCtrl, RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection()));
-        defaultPhysicalRewrites
-                .add(new Pair<>(seqOnceTopLevel, RuleCollections.buildPhysicalRewritesTopLevelRuleCollection()));
-        defaultPhysicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection()));
-        return defaultPhysicalRewrites;
+        this.ruleSetFactory = compilationProvider.getRuleSetFactory();
     }
 
     private static class AqlOptimizationContextFactory implements IOptimizationContextFactory {
@@ -258,8 +209,8 @@ public class APIFramework {
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(AqlOptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
-        builder.setLogicalRewrites(buildDefaultLogicalRewrites(cExtensionManager));
-        builder.setPhysicalRewrites(buildDefaultPhysicalRewrites());
+        builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites());
+        builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites());
         IDataFormat format = queryMetadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());

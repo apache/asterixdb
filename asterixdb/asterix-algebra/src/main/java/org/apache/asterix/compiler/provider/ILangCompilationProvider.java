@@ -45,4 +45,9 @@ public interface ILangCompilationProvider {
      */
     public ILangExpressionToPlanTranslatorFactory getExpressionToPlanTranslatorFactory();
 
+    /**
+     * @return the rule set factory of a language implementation
+     */
+    public IRuleSetFactory getRuleSetFactory();
+
 }
