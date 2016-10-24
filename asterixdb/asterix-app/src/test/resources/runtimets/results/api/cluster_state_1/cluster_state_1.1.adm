@@ -89,6 +89,7 @@
         "web.queryinterface.port": 19006,
         "web.secondary.port": 19005
     },
+    "diagnosticsUri": "http://127.0.0.1:19002/admin/diagnostics",
     "fullShutdownUri": "http://127.0.0.1:19002/admin/shutdown?all=true",
     "metadata_node": "asterix_nc1",
     "ncs": [

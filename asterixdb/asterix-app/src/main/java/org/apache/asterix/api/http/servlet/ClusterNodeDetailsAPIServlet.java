@@ -118,7 +118,7 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         }
     }
 
-    private void fixupKeys(JSONObject json) throws JSONException {
+    protected JSONObject fixupKeys(JSONObject json) throws JSONException {
         // TODO (mblow): generate the keys with _ to begin with
         List<String> keys = new ArrayList<>();
         for (Iterator iter = json.keys(); iter.hasNext(); ) {
@@ -130,9 +130,10 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
                 json.put(newKey, json.remove(key));
             }
         }
+        return json;
     }
 
-    private JSONObject processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
+    protected JSONObject processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
         final String details = hcc.getNodeDetailsJSON(node, true, false);
         if (details == null) {
             throw new IllegalArgumentException();

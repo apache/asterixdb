@@ -1,0 +1,10 @@
+.*"cc": \{
+        "config": \{.*
+        \},
+        "stats": \{.*
+        \},
+        "threaddump": \{.*
+        \}
+.*"ncs".*"node_id": "asterix_nc1",
+.*"threaddump".*"node_id": "asterix_nc2",
+.*"threaddump".*

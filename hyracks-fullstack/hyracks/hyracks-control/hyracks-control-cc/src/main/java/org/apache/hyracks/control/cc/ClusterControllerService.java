@@ -251,6 +251,7 @@ public class ClusterControllerService implements IControllerService {
     private void startApplication() throws Exception {
         appCtx = new CCApplicationContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
         appCtx.addJobLifecycleListener(datasetDirectoryService);
+        executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
         String className = ccConfig.appCCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
@@ -259,7 +260,6 @@ public class ClusterControllerService implements IControllerService {
                     : ccConfig.appArgs.toArray(new String[ccConfig.appArgs.size()]);
             aep.start(appCtx, args);
         }
-        executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
     }
 
     private void connectNCs() throws Exception {

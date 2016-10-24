@@ -58,4 +58,9 @@
       <output-dir compare="Text">version_1</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="api">
+    <compilation-unit name="diagnostics_1">
+      <output-dir compare="Text">diagnostics_1</output-dir>
+    </compilation-unit>
+  </test-case>
 </test-group>

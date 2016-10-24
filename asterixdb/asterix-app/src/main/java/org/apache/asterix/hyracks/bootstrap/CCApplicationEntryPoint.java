@@ -36,12 +36,14 @@ import org.apache.asterix.api.http.servlet.ClusterCCDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
 import org.apache.asterix.api.http.servlet.DDLAPIServlet;
+import org.apache.asterix.api.http.servlet.DiagnosticsAPIServlet;
 import org.apache.asterix.api.http.servlet.FeedServlet;
 import org.apache.asterix.api.http.servlet.QueryAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryServiceServlet;
 import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryWebInterfaceServlet;
+import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
@@ -49,14 +51,11 @@ import org.apache.asterix.app.cc.AsterixResourceIdManager;
 import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.AsterixThreadFactory;
-import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
-import org.apache.asterix.event.service.ILookupService;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
@@ -199,6 +198,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
         context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         context.setAttribute(ASTERIX_BUILD_PROP_ATTR, AsterixAppContextInfo.INSTANCE);
+        context.setAttribute(ServletConstants.EXECUTOR_SERVICE,
+                ((ClusterControllerService) appCtx.getControllerService()).getExecutor());
 
         jsonAPIServer.setHandler(context);
 
@@ -208,7 +209,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.AQL_DDL);
         addServlet(context, Servlets.AQL);
 
-        // SQL++ rest APIs.
+        // SQL+x+ rest APIs.
         addServlet(context, Servlets.SQLPP_QUERY);
         addServlet(context, Servlets.SQLPP_UPDATE);
         addServlet(context, Servlets.SQLPP_DDL);
@@ -224,6 +225,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.CLUSTER_STATE);
         addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL);
         addServlet(context, Servlets.CLUSTER_STATE_CC_DETAIL);
+        addServlet(context, Servlets.DIAGNOSTICS);
 
         return jsonAPIServer;
     }
@@ -301,6 +303,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 return new ClusterNodeDetailsAPIServlet();
             case CLUSTER_STATE_CC_DETAIL:
                 return new ClusterCCDetailsAPIServlet();
+            case DIAGNOSTICS:
+                return new DiagnosticsAPIServlet();
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }

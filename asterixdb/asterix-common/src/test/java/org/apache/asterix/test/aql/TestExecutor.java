@@ -138,7 +138,8 @@ public class TestExecutor {
                 runScriptAndCompareWithResultRegex(scriptFile, expectedFile, actualFile);
                 return;
             } else if (actualFile.toString().endsWith(".regexadm")) {
-                regex = true;
+                runScriptAndCompareWithResultRegexAdm(scriptFile, expectedFile, actualFile);
+                return;
             }
             String lineExpected, lineActual;
             int num = 1;
@@ -356,6 +357,18 @@ public class TestExecutor {
 
     }
 
+    public void runScriptAndCompareWithResultRegexAdm(File scriptFile, File expectedFile, File actualFile)
+            throws Exception {
+        StringWriter actual = new StringWriter();
+        StringWriter expected = new StringWriter();
+        IOUtils.copy(new FileInputStream(actualFile), actual, StandardCharsets.UTF_8);
+        IOUtils.copy(new FileInputStream(expectedFile), expected, StandardCharsets.UTF_8);
+        Pattern pattern = Pattern.compile(expected.toString(), Pattern.DOTALL | Pattern.MULTILINE);
+        if (!pattern.matcher(actual.toString()).matches()) {
+            throw new Exception("Result for " + scriptFile + ": actual file did not match expected result");
+        }
+    }
+
     // For tests where you simply want the byte-for-byte output.
     private static void writeOutputToFile(File actualFile, InputStream resultStream) throws Exception {
         try (FileOutputStream out = new FileOutputStream(actualFile)) {
@@ -499,7 +512,7 @@ public class TestExecutor {
         return builder.build();
     }
 
-    public InputStream executeClusterStateQuery(OutputFormat fmt, String url) throws Exception {
+    public InputStream executeJSONGet(OutputFormat fmt, String url) throws Exception {
         HttpUriRequest request = RequestBuilder.get(url).setHeader("Accept", fmt.mimeType()).build();
 
         HttpResponse response = executeAndCheckHttpRequest(request);
@@ -849,7 +862,7 @@ public class TestExecutor {
             case "cstate": // cluster state query
                 fmt = OutputFormat.forCompilationUnit(cUnit);
                 String extra = stripJavaComments(statement).trim();
-                resultStream = executeClusterStateQuery(fmt, getEndpoint(Servlets.CLUSTER_STATE) + extra);
+                resultStream = executeJSONGet(fmt, getEndpoint(Servlets.CLUSTER_STATE) + extra);
                 expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                 actualResultFile.getParentFile().mkdirs();
@@ -860,7 +873,19 @@ public class TestExecutor {
                 break;
             case "version": // version servlet
                 fmt = OutputFormat.forCompilationUnit(cUnit);
-                resultStream = executeClusterStateQuery(fmt, getEndpoint(Servlets.VERSION));
+                resultStream = executeJSONGet(fmt, getEndpoint(Servlets.VERSION));
+                expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
+                actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
+                actualResultFile.getParentFile().mkdirs();
+                writeOutputToFile(actualResultFile, resultStream);
+                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                        actualResultFile);
+                queryCount.increment();
+                break;
+            case "httpapi": // http api
+                fmt = OutputFormat.forCompilationUnit(cUnit);
+                extra = stripJavaComments(statement).trim();
+                resultStream = executeJSONGet(fmt, "http://" + host + ":" + port + extra);
                 expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                 actualResultFile.getParentFile().mkdirs();

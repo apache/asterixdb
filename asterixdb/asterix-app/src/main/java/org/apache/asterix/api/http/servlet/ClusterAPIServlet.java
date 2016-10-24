@@ -48,6 +48,7 @@ public class ClusterAPIServlet extends HttpServlet {
     public static final String SHUTDOWN_URI_KEY = "shutdownUri";
     public static final String FULL_SHUTDOWN_URI_KEY = "fullShutdownUri";
     public static final String VERSION_URI_KEY = "versionUri";
+    public static final String DIAGNOSTICS_URI_KEY = "diagnosticsUri";
     public static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
 
     @Override
@@ -69,8 +70,6 @@ public class ClusterAPIServlet extends HttpServlet {
             json = getClusterStateJSON(request, "");
             response.setStatus(HttpServletResponse.SC_OK);
             responseWriter.write(json.toString(4));
-        } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "exception thrown for " + request, e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.toString());
@@ -125,6 +124,7 @@ public class ClusterAPIServlet extends HttpServlet {
         json.put(SHUTDOWN_URI_KEY, analyticsURL + "shutdown");
         json.put(FULL_SHUTDOWN_URI_KEY, analyticsURL + "shutdown?all=true");
         json.put(VERSION_URI_KEY, analyticsURL + "version");
+        json.put(DIAGNOSTICS_URI_KEY, analyticsURL + "diagnostics");
         return json;
     }
 
