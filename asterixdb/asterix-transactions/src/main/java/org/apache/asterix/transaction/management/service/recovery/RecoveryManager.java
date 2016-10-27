@@ -405,6 +405,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     case LogType.ABORT:
                     case LogType.FLUSH:
                     case LogType.UPSERT_ENTITY_COMMIT:
+                    case LogType.WAIT:
                     case LogType.MARKER:
                         //do nothing
                         break;
