@@ -30,6 +30,7 @@ import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.configuration.Property;
 import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.transactions.DatasetId;
+import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -123,13 +124,14 @@ public class CheckpointingTest {
                 VSizeFrame frame = new VSizeFrame(ctx);
                 FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
 
+                IRecoveryManager recoveryManager = nc.getTransactionSubsystem().getRecoveryManager();
                 LogManager logManager = (LogManager) nc.getTransactionSubsystem().getLogManager();
                 // Number of log files after node startup should be one
                 int numberOfLogFiles = logManager.getLogFileIds().size();
                 Assert.assertEquals(1, numberOfLogFiles);
 
                 // Low-water mark LSN
-                long lowWaterMarkLSN = nc.getTransactionSubsystem().getRecoveryManager().getMinFirstLSN();
+                long lowWaterMarkLSN = recoveryManager.getMinFirstLSN();
                 // Low-water mark log file id
                 long initialLowWaterMarkFileId = logManager.getLogFileId(lowWaterMarkLSN);
                 // Initial Low-water mark should be in the only available log file
@@ -142,7 +144,7 @@ public class CheckpointingTest {
                 }
 
                 // Check if the new low-water mark is still in the initial low-water mark log file
-                lowWaterMarkLSN = nc.getTransactionSubsystem().getRecoveryManager().getMinFirstLSN();
+                lowWaterMarkLSN = recoveryManager.getMinFirstLSN();
                 long currentLowWaterMarkLogFileId = logManager.getLogFileId(lowWaterMarkLSN);
 
                 if (currentLowWaterMarkLogFileId == initialLowWaterMarkFileId) {
@@ -152,7 +154,7 @@ public class CheckpointingTest {
                      * recovery)
                      */
                     int numberOfLogFilesBeforeCheckpoint = logManager.getLogFileIds().size();
-                    nc.getTransactionSubsystem().getRecoveryManager().checkpoint(false, logManager.getAppendLSN());
+                    recoveryManager.checkpoint(false, logManager.getAppendLSN());
                     int numberOfLogFilesAfterCheckpoint = logManager.getLogFileIds().size();
                     Assert.assertEquals(numberOfLogFilesBeforeCheckpoint, numberOfLogFilesAfterCheckpoint);
 
@@ -164,7 +166,7 @@ public class CheckpointingTest {
                     while (currentLowWaterMarkLogFileId == initialLowWaterMarkFileId) {
                         ITupleReference tuple = tupleGenerator.next();
                         DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
-                        lowWaterMarkLSN = nc.getTransactionSubsystem().getRecoveryManager().getMinFirstLSN();
+                        lowWaterMarkLSN = recoveryManager.getMinFirstLSN();
                         currentLowWaterMarkLogFileId = logManager.getLogFileId(lowWaterMarkLSN);
                     }
                 }
@@ -173,7 +175,7 @@ public class CheckpointingTest {
                  * At this point, the low-water mark is not in the initialLowWaterMarkFileId, so
                  * a checkpoint should delete it.
                  */
-                nc.getTransactionSubsystem().getRecoveryManager().checkpoint(false, logManager.getAppendLSN());
+                recoveryManager.checkpoint(false, recoveryManager.getMinFirstLSN());
 
                 // Validate initialLowWaterMarkFileId was deleted
                 for (Long fileId : logManager.getLogFileIds()) {
