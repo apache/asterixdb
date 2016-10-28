@@ -18,6 +18,22 @@
 # under the License.
 # ------------------------------------------------------------
 
+function usage() {
+  echo
+  echo Usage: $(basename $0) [-f[orce]]
+  echo
+  echo "  -f[orce]  : Forcibly terminates any running ${PRODUCT} processes (after shutting down cluster, if running)"
+}
+
+while [ -n "$1" ]; do
+  case $1 in
+    -f|-force) force=1;;
+    -help|--help|-usage|--usage) usage; exit 0;;
+    *) echo "ERROR: unknown argument '$1'"; usage; exit 1;;
+    esac
+  shift
+done
+
 if [ -z "$JAVA_HOME" -a -x /usr/libexec/java_home ]; then
   JAVA_HOME=$(/usr/libexec/java_home)
   export JAVA_HOME
@@ -43,19 +59,31 @@ INSTALLDIR=$(cd $CLUSTERDIR/../..; echo $PWD)
 $INSTALLDIR/bin/${HELPER_COMMAND} get_cluster_state -quiet
 if [ $? -ne 1 ]; then
   $INSTALLDIR/bin/${HELPER_COMMAND} shutdown_cluster_all
+  first=1
+  tries=0
+  echo -n "INFO: Waiting up to 60s for cluster to shutdown"
+  while [ -n "$($JAVA_HOME/bin/jps | awk '/CCDriver/')" -a $tries -lt 60 ]; do
+    sleep 1s
+    echo -n .
+    tries=$(expr $tries + 1)
+  done
+  echo ".done." || true
 else
-  echo "WARNING: sample cluster does not appear to be running, will attempt to wait for"
-  echo "         CCDriver to terminate if running."
+  echo "WARNING: sample cluster does not appear to be running"
 fi
 
-first=1
-while [ -n "$($JAVA_HOME/bin/jps | awk '/CCDriver/')" ]; do
-  if [ $first ]; then
-    echo
-    echo -n "Waiting for CCDriver to terminate."
-    unset first
+if $JAVA_HOME/bin/jps | grep ' \(CCDriver\|NCDriver\|NCService\)$' > /tmp/$$_jps; then
+  echo -n "WARNING: ${PRODUCT} processes remain after cluster shutdown; "
+  if [ $force ]; then
+    echo "-f[orce] specified, forcibly terminating ${PRODUCT} processes:"
+    cat /tmp/$$_jps | while read line; do
+      echo -n "   - $line..."
+      echo $line | awk '{ print $1 }' | xargs -n1 kill -9
+      echo "killed"
+    done
+  else
+    echo "re-run with -f|-force to forcibly terminate all ${PRODUCT} processes:"
+    cat /tmp/$$_jps | sed 's/^/  - /'
   fi
-  sleep 2s
-  echo -n .
-done
-[ ! $first ] && echo ".done." || true
+fi
+rm /tmp/$$_jps
