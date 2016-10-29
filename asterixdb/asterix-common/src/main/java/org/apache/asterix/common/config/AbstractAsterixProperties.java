@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,12 +42,16 @@ public abstract class AbstractAsterixProperties {
     }
 
     public Map<String, Object> getProperties() {
+        return getProperties(UnaryOperator.identity());
+    }
+
+    public Map<String, Object> getProperties(UnaryOperator<String> keyTransformer) {
         Map<String, Object> properties = new HashMap<>();
         for (Method m : getClass().getMethods()) {
             PropertyKey key = m.getAnnotation(PropertyKey.class);
             if (key != null) {
                 try {
-                    properties.put(key.value(), m.invoke(this));
+                    properties.put(keyTransformer.apply(key.value()), m.invoke(this));
                 } catch (Exception e) {
                     LOGGER.log(Level.INFO, "Error accessing property: " + key.value(), e);
                 }

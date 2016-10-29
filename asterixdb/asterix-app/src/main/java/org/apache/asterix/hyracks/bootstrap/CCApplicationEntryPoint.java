@@ -223,8 +223,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         addServlet(context, Servlets.SHUTDOWN);
         addServlet(context, Servlets.VERSION);
         addServlet(context, Servlets.CLUSTER_STATE);
-        addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL);
-        addServlet(context, Servlets.CLUSTER_STATE_CC_DETAIL);
+        addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL); // this must not precede add of CLUSTER_STATE
+        addServlet(context, Servlets.CLUSTER_STATE_CC_DETAIL); // this must not precede add of CLUSTER_STATE
         addServlet(context, Servlets.DIAGNOSTICS);
 
         return jsonAPIServer;

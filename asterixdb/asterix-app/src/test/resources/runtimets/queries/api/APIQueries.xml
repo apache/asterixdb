@@ -63,4 +63,9 @@
       <output-dir compare="Text">diagnostics_1</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="api">
+    <compilation-unit name="replication">
+      <output-dir compare="Text">replication</output-dir>
+    </compilation-unit>
+  </test-case>
 </test-group>

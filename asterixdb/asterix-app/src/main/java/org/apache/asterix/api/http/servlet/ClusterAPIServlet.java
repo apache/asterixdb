@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.common.config.AbstractAsterixProperties;
+import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,15 +42,17 @@ public class ClusterAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ClusterAPIServlet.class.getName());
 
-    public static final String NODE_ID_KEY = "node_id";
-    public static final String CONFIG_URI_KEY = "configUri";
-    public static final String STATS_URI_KEY = "statsUri";
-    public static final String THREAD_DUMP_URI_KEY = "threadDumpUri";
-    public static final String SHUTDOWN_URI_KEY = "shutdownUri";
-    public static final String FULL_SHUTDOWN_URI_KEY = "fullShutdownUri";
-    public static final String VERSION_URI_KEY = "versionUri";
-    public static final String DIAGNOSTICS_URI_KEY = "diagnosticsUri";
-    public static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
+    protected static final String NODE_ID_KEY = "node_id";
+    protected static final String CONFIG_URI_KEY = "configUri";
+    protected static final String STATS_URI_KEY = "statsUri";
+    protected static final String THREAD_DUMP_URI_KEY = "threadDumpUri";
+    protected static final String SHUTDOWN_URI_KEY = "shutdownUri";
+    protected static final String FULL_SHUTDOWN_URI_KEY = "fullShutdownUri";
+    protected static final String VERSION_URI_KEY = "versionUri";
+    protected static final String DIAGNOSTICS_URI_KEY = "diagnosticsUri";
+    protected static final String REPLICATION_URI_KEY = "replicationUri";
+    private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
+    private static final Pattern REPLICATION_PROPERTY = Pattern.compile("^replication\\.");
 
     @Override
     public final void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -67,9 +70,21 @@ public class ClusterAPIServlet extends HttpServlet {
         JSONObject json;
 
         try {
-            json = getClusterStateJSON(request, "");
+            switch (request.getPathInfo() == null ? "" : request.getPathInfo()) {
+                case "":
+                    json = getClusterStateJSON(request, "");
+                    break;
+                case "/replication":
+                    json = getReplicationJSON();
+                    break;
+                default:
+                    throw new IllegalArgumentException();
+
+            }
             response.setStatus(HttpServletResponse.SC_OK);
             responseWriter.write(json.toString(4));
+        } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "exception thrown for " + request, e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.toString());
@@ -77,10 +92,23 @@ public class ClusterAPIServlet extends HttpServlet {
         responseWriter.flush();
     }
 
+    protected JSONObject getReplicationJSON() throws JSONException {
+        for (AbstractAsterixProperties props : getPropertiesInstances()) {
+            if (props instanceof AsterixReplicationProperties) {
+                JSONObject json = new JSONObject();
+                json.put("config", props.getProperties(key -> REPLICATION_PROPERTY.matcher(key).replaceFirst("")));
+                return json;
+            }
+        }
+        throw new IllegalStateException("ERROR: replication properties not found");
+    }
+
     protected Map<String, Object> getAllClusterProperties() {
         Map<String, Object> allProperties = new HashMap<>();
         for (AbstractAsterixProperties properties : getPropertiesInstances()) {
-            allProperties.putAll(properties.getProperties());
+            if (!(properties instanceof AsterixReplicationProperties)) {
+                allProperties.putAll(properties.getProperties());
+            }
         }
         return allProperties;
     }
@@ -103,7 +131,7 @@ public class ClusterAPIServlet extends HttpServlet {
         }
         requestURL.append(pathToNode);
         String clusterURL = canonicalize(requestURL);
-        String analyticsURL = canonicalize(clusterURL + "../");
+        String adminURL = canonicalize(clusterURL + "../");
         String nodeURL = clusterURL + "node/";
         for (int i = 0; i < ncs.length(); i++) {
             JSONObject nc = ncs.getJSONObject(i);
@@ -121,10 +149,11 @@ public class ClusterAPIServlet extends HttpServlet {
         cc.put(CONFIG_URI_KEY, clusterURL + "cc/config");
         cc.put(STATS_URI_KEY, clusterURL + "cc/stats");
         cc.put(THREAD_DUMP_URI_KEY, clusterURL + "cc/threaddump");
-        json.put(SHUTDOWN_URI_KEY, analyticsURL + "shutdown");
-        json.put(FULL_SHUTDOWN_URI_KEY, analyticsURL + "shutdown?all=true");
-        json.put(VERSION_URI_KEY, analyticsURL + "version");
-        json.put(DIAGNOSTICS_URI_KEY, analyticsURL + "diagnostics");
+        json.put(REPLICATION_URI_KEY, clusterURL + "replication");
+        json.put(SHUTDOWN_URI_KEY, adminURL + "shutdown");
+        json.put(FULL_SHUTDOWN_URI_KEY, adminURL + "shutdown?all=true");
+        json.put(VERSION_URI_KEY, adminURL + "version");
+        json.put(DIAGNOSTICS_URI_KEY, adminURL + "diagnostics");
         return json;
     }
 

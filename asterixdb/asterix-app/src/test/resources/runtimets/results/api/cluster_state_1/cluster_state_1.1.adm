@@ -53,13 +53,6 @@
             ]
         },
         "plot.activate": false,
-        "replication.enabled": false,
-        "replication.factor": 2,
-        "replication.log.batchsize": 4096,
-        "replication.log.buffer.numpages": 8,
-        "replication.log.buffer.pagesize": 131072,
-        "replication.max.remote.recovery.attempts": 5,
-        "replication.timeout": 30,
         "storage.buffercache.maxopenfiles": 2147483647,
         "storage.buffercache.pagesize": 32768,
         "storage.buffercache.size": 33554432,
@@ -128,6 +121,7 @@
             "threadDumpUri": "http://127.0.0.1:19002/admin/cluster/node/asterix_nc2/threaddump"
         }
     ],
+    "replicationUri": "http://127.0.0.1:19002/admin/cluster/replication",
     "shutdownUri": "http://127.0.0.1:19002/admin/shutdown",
     "state": "ACTIVE",
     "versionUri": "http://127.0.0.1:19002/admin/version"

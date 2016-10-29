@@ -1055,7 +1055,7 @@ public class TestExecutor {
     }
 
     protected String getEndpoint(Servlets servlet) {
-        return "http://" + host + ":" + port + getPath(servlet);
+        return "http://" + host + ":" + port + getPath(servlet).replaceAll("/\\*$", "");
     }
 
     public static String stripJavaComments(String text) {
