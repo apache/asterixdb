@@ -79,16 +79,16 @@ import org.apache.hyracks.control.nc.net.NetworkManager;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 import org.apache.hyracks.control.nc.runtime.RootHyracksContext;
+import org.apache.hyracks.control.nc.task.ShutdownTask;
+import org.apache.hyracks.control.nc.task.ThreadDumpTask;
 import org.apache.hyracks.control.nc.work.AbortTasksWork;
 import org.apache.hyracks.control.nc.work.ApplicationMessageWork;
 import org.apache.hyracks.control.nc.work.BuildJobProfilesWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
 import org.apache.hyracks.control.nc.work.DeployBinaryWork;
 import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
-import org.apache.hyracks.control.nc.task.ShutdownTask;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
-import org.apache.hyracks.control.nc.task.ThreadDumpTask;
 import org.apache.hyracks.control.nc.work.UnDeployBinaryWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
@@ -328,7 +328,7 @@ public class NodeControllerService implements IControllerService {
         }
 
         //add JVM shutdown hook
-        Runtime.getRuntime().addShutdownHook(new JVMShutdownHook(this));
+        Runtime.getRuntime().addShutdownHook(new NCShutdownHook(this));
     }
 
     private void startApplication() throws Exception {
@@ -598,27 +598,5 @@ public class NodeControllerService implements IControllerService {
 
     public MessagingNetworkManager getMessagingNetworkManager() {
         return messagingNetManager;
-    }
-
-    /**
-     * Shutdown hook that invokes {@link NodeControllerService#stop() stop} method.
-     */
-    private static class JVMShutdownHook extends Thread {
-
-        private final NodeControllerService nodeControllerService;
-
-        public JVMShutdownHook(NodeControllerService ncAppEntryPoint) {
-            this.nodeControllerService = ncAppEntryPoint;
-        }
-
-        @Override
-        public void run() {
-            LOGGER.info("Shutdown hook in progress");
-            try {
-                nodeControllerService.stop();
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Exception in executing shutdown hook", e);
-            }
-        }
     }
 }
