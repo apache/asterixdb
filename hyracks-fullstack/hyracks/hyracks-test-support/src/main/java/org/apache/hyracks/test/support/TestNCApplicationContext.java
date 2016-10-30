@@ -25,17 +25,18 @@ import org.apache.hyracks.api.application.IApplicationConfig;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
-import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.io.IOManager;
 
 public class TestNCApplicationContext implements INCApplicationContext {
     private final ILifeCycleComponentManager lccm;
-    private final IHyracksRootContext rootCtx;
+    private final IOManager ioManager;
     private final String nodeId;
 
     private Serializable distributedState;
@@ -43,9 +44,9 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     private final IMemoryManager mm;
 
-    public TestNCApplicationContext(IHyracksRootContext rootCtx, String nodeId) {
+    public TestNCApplicationContext(IOManager ioManager, String nodeId) {
         this.lccm = new LifeCycleComponentManager();
-        this.rootCtx = rootCtx;
+        this.ioManager = ioManager;
         this.nodeId = nodeId;
         mm = new IMemoryManager() {
             @Override
@@ -81,8 +82,8 @@ public class TestNCApplicationContext implements INCApplicationContext {
     }
 
     @Override
-    public IHyracksRootContext getRootContext() {
-        return rootCtx;
+    public IIOManager getIoManager() {
+        return ioManager;
     }
 
     @Override

@@ -171,7 +171,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
-        ioManager = ncApplicationContext.getRootContext().getIOManager();
+        ioManager = ncApplicationContext.getIoManager();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages());
 

@@ -19,7 +19,7 @@
 package org.apache.hyracks.api.application;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
-import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 
@@ -44,11 +44,9 @@ public interface INCApplicationContext extends IApplicationContext {
     public String getNodeId();
 
     /**
-     * Get the Hyracks Root Context.
-     *
-     * @return The Hyracks Root Context
+     * @return the IO Manager
      */
-    public IHyracksRootContext getRootContext();
+    public IIOManager getIoManager();
 
     /**
      * Set an object that can be later retrieved by the {@link #getApplicationObject()} call.

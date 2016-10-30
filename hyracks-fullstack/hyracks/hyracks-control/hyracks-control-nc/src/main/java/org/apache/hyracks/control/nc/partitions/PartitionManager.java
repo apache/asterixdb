@@ -36,7 +36,6 @@ import org.apache.hyracks.comm.channels.NetworkOutputChannel;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
@@ -50,14 +49,13 @@ public class PartitionManager {
 
     private final IWorkspaceFileFactory fileFactory;
 
-    private final Map<PartitionId, NetworkOutputChannel> partitionRequests = new HashMap<PartitionId, NetworkOutputChannel>();
+    private final Map<PartitionId, NetworkOutputChannel> partitionRequests = new HashMap<>();
 
     public PartitionManager(NodeControllerService ncs) {
         this.ncs = ncs;
-        this.availablePartitionMap = new HashMap<PartitionId, List<IPartition>>();
+        this.availablePartitionMap = new HashMap<>();
         this.deallocatableRegistry = new DefaultDeallocatableRegistry();
-        this.fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext()
-                .getIOManager());
+        this.fileFactory = new WorkspaceFileFactory(deallocatableRegistry, ncs.getIoManager());
     }
 
     public synchronized void registerPartition(PartitionId pid, TaskAttemptId taId, IPartition partition,
@@ -80,7 +78,7 @@ public class PartitionManager {
              */
             List<IPartition> pList = availablePartitionMap.get(pid);
             if (pList == null) {
-                pList = new ArrayList<IPartition>();
+                pList = new ArrayList<>();
                 availablePartitionMap.put(pid, pList);
             }
             pList.add(partition);

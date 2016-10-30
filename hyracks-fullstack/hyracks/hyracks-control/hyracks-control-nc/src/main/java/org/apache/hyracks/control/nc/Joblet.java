@@ -55,7 +55,6 @@ import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
-import org.apache.hyracks.control.common.job.profiling.om.PartitionProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -110,13 +109,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.frameManager = new FrameManager(acg.getFrameSize());
         memoryAllocation = new AtomicLong();
         this.acg = acg;
-        partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
+        partitionRequestMap = new HashMap<>();
         env = new OperatorEnvironmentImpl(nodeController.getId());
-        stateObjectMap = new HashMap<Object, IStateObject>();
-        taskMap = new HashMap<TaskAttemptId, Task>();
-        counterMap = new HashMap<String, Counter>();
+        stateObjectMap = new HashMap<>();
+        taskMap = new HashMap<>();
+        counterMap = new HashMap<>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
-        fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getRootContext().getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getIoManager());
         cleanupPending = false;
         IJobletEventListenerFactory jelf = acg.getJobletEventListenerFactory();
         if (jelf != null) {
@@ -192,7 +191,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
         for (Task task : taskMap.values()) {
             TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(),
-                    new Hashtable<PartitionId, PartitionProfile>(task.getPartitionSendProfile()));
+                    new Hashtable<>(task.getPartitionSendProfile()));
             task.dumpProfile(taskProfile);
             jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }
@@ -255,7 +254,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public IIOManager getIOManager() {
-        return appCtx.getRootContext().getIOManager();
+        return appCtx.getIoManager();
     }
 
     @Override

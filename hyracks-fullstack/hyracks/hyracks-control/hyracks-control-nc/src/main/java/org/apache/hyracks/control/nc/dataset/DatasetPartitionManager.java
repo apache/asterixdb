@@ -36,7 +36,6 @@ import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.dataset.ResultStateSweeper;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 
@@ -60,13 +59,13 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         this.ncs = ncs;
         this.executor = executor;
         deallocatableRegistry = new DefaultDeallocatableRegistry();
-        fileFactory = new WorkspaceFileFactory(deallocatableRegistry, (IOManager) ncs.getRootContext().getIOManager());
+        fileFactory = new WorkspaceFileFactory(deallocatableRegistry, ncs.getIoManager());
         if (availableMemory >= DatasetMemoryManager.getPageSize()) {
             datasetMemoryManager = new DatasetMemoryManager(availableMemory);
         } else {
             datasetMemoryManager = null;
         }
-        partitionResultStateMap = new LinkedHashMap<JobId, IDatasetStateRecord>();
+        partitionResultStateMap = new LinkedHashMap<>();
         executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold));
     }
 
@@ -265,6 +264,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             timestamp = System.currentTimeMillis();
         }
 
+        @Override
         public long getTimestamp() {
             return timestamp;
         }

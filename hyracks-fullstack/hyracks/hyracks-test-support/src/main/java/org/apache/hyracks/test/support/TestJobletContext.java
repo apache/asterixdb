@@ -69,7 +69,7 @@ public class TestJobletContext implements IHyracksJobletContext {
     }
 
     public IIOManager getIOManager() {
-        return appContext.getRootContext().getIOManager();
+        return appContext.getIoManager();
     }
 
     @Override

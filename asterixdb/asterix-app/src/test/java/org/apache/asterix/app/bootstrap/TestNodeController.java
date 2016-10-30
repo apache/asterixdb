@@ -370,7 +370,7 @@ public class TestNodeController {
         ctx = Mockito.spy(ctx);
         Mockito.when(ctx.getJobletContext()).thenReturn(jobletCtx);
         Mockito.when(ctx.getIOManager())
-                .thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getRootContext().getIOManager());
+                .thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getIoManager());
         return ctx;
     }
 

@@ -46,7 +46,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
-import org.apache.hyracks.api.context.IHyracksRootContext;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.io.IODeviceHandle;
@@ -78,7 +77,6 @@ import org.apache.hyracks.control.nc.net.MessagingNetworkManager;
 import org.apache.hyracks.control.nc.net.NetworkManager;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
-import org.apache.hyracks.control.nc.runtime.RootHyracksContext;
 import org.apache.hyracks.control.nc.task.ShutdownTask;
 import org.apache.hyracks.control.nc.task.ThreadDumpTask;
 import org.apache.hyracks.control.nc.work.AbortTasksWork;
@@ -106,7 +104,7 @@ public class NodeControllerService implements IControllerService {
 
     private final String id;
 
-    private final IHyracksRootContext ctx;
+    private final IOManager ioManager;
 
     private final IPCSystem ipc;
 
@@ -171,7 +169,7 @@ public class NodeControllerService implements IControllerService {
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, ncConfig.clusterNetPort), ipci,
                 new CCNCFunctions.SerializerDeserializer());
 
-        this.ctx = new RootHyracksContext(this, new IOManager(getDevices(ncConfig.ioDevices)));
+        ioManager = new IOManager(getDevices(ncConfig.ioDevices));
         if (id == null) {
             throw new Exception("id not set");
         }
@@ -197,8 +195,8 @@ public class NodeControllerService implements IControllerService {
         ioCounter = new IOCounterFactory().getIOCounter();
     }
 
-    public IHyracksRootContext getRootContext() {
-        return ctx;
+    public IOManager getIoManager() {
+        return ioManager;
     }
 
     public NCApplicationContext getApplicationContext() {
@@ -249,7 +247,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     private void init() throws Exception {
-        ctx.getIOManager().setExecutor(executor);
+        ioManager.setExecutor(executor);
         datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.resultManagerMemory,
                 ncConfig.resultTTL, ncConfig.resultSweepThreshold);
         datasetNetworkManager = new DatasetNetworkManager(ncConfig.resultIPAddress, ncConfig.resultPort,
@@ -332,7 +330,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     private void startApplication() throws Exception {
-        appCtx = new NCApplicationContext(this, serverCtx, ctx, id, memoryManager, lccm, ncConfig.getAppConfig());
+        appCtx = new NCApplicationContext(this, serverCtx, ioManager, id, memoryManager, lccm, ncConfig.getAppConfig());
         String className = ncConfig.appNCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
