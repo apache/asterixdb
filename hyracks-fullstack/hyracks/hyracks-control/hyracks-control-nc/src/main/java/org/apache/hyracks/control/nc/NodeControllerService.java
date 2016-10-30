@@ -324,9 +324,6 @@ public class NodeControllerService implements IControllerService {
         if (ncAppEntryPoint != null) {
             ncAppEntryPoint.notifyStartupComplete();
         }
-
-        //add JVM shutdown hook
-        Runtime.getRuntime().addShutdownHook(new NCShutdownHook(this));
     }
 
     private void startApplication() throws Exception {
