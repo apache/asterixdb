@@ -21,152 +21,16 @@
 
     Expression ::= OperatorExpression | CaseExpression | QuantifiedExpression
 
-SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances. There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between alternative values), or a QuantifiedExpression (which yields a boolean value). Each will be detailed as we explore the full SQL++ grammar.
+SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances.
+There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an
+OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between
+alternative values), or a QuantifiedExpression (which yields a boolean value). Each will be detailed as we
+explore the full SQL++ grammar.
 
-## <a id="Primary_expressions">Primary Expressions</a>
+Note that in the following text, words enclosed in angle brackets denote keywords that are not case-sensitive.
 
-    PrimaryExpr ::= Literal
-                  | VariableReference
-                  | ParenthesizedExpression
-                  | FunctionCallExpression
-                  | Constructor
 
-The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
-value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly
-constructed instance of the data model (such as a newly constructed object, array, or multiset of data model instances).
-
-### <a id="Literals">Literals</a>
-
-    Literal        ::= StringLiteral
-                       | IntegerLiteral
-                       | FloatLiteral
-                       | DoubleLiteral
-                       | <NULL>
-                       | <MISSING>
-                       | <TRUE>
-                       | <FALSE>
-    StringLiteral  ::= "\'" (<ESCAPE_APOS> | ~["\'"])* "\'"
-                       | "\"" (<ESCAPE_QUOT> | ~["\'"])* "\""
-    <ESCAPE_APOS>  ::= "\\\'"
-    <ESCAPE_QUOT>  ::= "\\\""
-    IntegerLiteral ::= <DIGITS>
-    <DIGITS>       ::= ["0" - "9"]+
-    FloatLiteral   ::= <DIGITS> ( "f" | "F" )
-                     | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
-                     | "." <DIGITS> ( "f" | "F" )
-    DoubleLiteral  ::= <DIGITS>
-                     | <DIGITS> ( "." <DIGITS> )?
-                     | "." <DIGITS>
-
-Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a object being accessed.
-
-The following are some simple examples of SQL++ literals.
-
-##### Examples
-
-    'a string'
-    "test string"
-    42
-
-Different from standard SQL, double quotes play the same role as single quotes and may be used for string literals in SQL++.
-
-### <a id="Variable_references">Variable References</a>
-
-    VariableReference     ::= <IDENTIFIER>|<DelimitedIdentifier>
-    <IDENTIFIER>          ::= <LETTER> (<LETTER> | <DIGIT> | "_" | "$")*
-    <LETTER>              ::= ["A" - "Z", "a" - "z"]
-    DelimitedIdentifier   ::= "\`" (<ESCAPE_APOS> | ~["\'"])* "\`"
-
-A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an input parameter in the context of a function body.) Backticks, e.g., \`id\`, are used for delimited identifiers. Delimiting is needed when a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
-
-##### Examples
-
-    tweet
-    id
-    `SELECT`
-    `my-function`
-
-### <a id="Parenthesized_expressions">Parenthesized expressions</a>
-
-    ParenthesizedExpression ::= "(" Expression ")" | Subquery
-
-An expression can be parenthesized to control the precedence order or otherwise clarify a query. In SQL++, for composability, a subquery is also an parenthesized expression.
-
-The following expression evaluates to the value 2.
-
-##### Example
-
-    ( 1 + 1 )
-
-### <a id="Function_call_expressions">Function call expressions</a>
-
-    FunctionCallExpression ::= FunctionName "(" ( Expression ( "," Expression )* )? ")"
-
-Functions are included in SQL++, like most languages, as a way to package useful functionality or to componentize complicated or reusable SQL++ computations. A function call is a legal SQL++ query expression that represents the value resulting from the evaluation of its body expression with the given parameter bindings; the parameter value bindings can themselves be any SQL++ expressions.
-
-The following example is a (built-in) function call expression whose value is 8.
-
-##### Example
-
-    length('a string')
-
-### <a id="Constructors">Constructors</a>
-
-    CollectionConstructor    ::= ArrayConstructor | MultisetConstructor
-    ArrayConstructor         ::= "[" ( Expression ( "," Expression )* )? "]"
-    MultisetConstructor      ::= "{{" ( Expression ( "," Expression )* )? "}}"
-    ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
-    FieldBinding             ::= Expression ":" Expression
-
-A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using its constructors
-for each of the model's complex object structures, namely arrays, multisets, and objects.
-Arrays are like JSON arrays, while multisets have bag semantics.
-Objects are built from fields that are field-name/field-value pairs, again like JSON.
-(See the [data model document](../datamodel.html) for more details on each.)
-
-The following examples illustrate how to construct a new array with 3 items, a new object with 2 fields,
-and a new multiset with 4 items, respectively. Array elements or multiset elements can be homogeneous (as in
-the first example),
-which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values
-used to construct arrays, multisets, and objects in constructors are all simply SQL++ expressions. Thus, the collection elements,
-field names, and field values used in constructors can be simple literals or they can come from query variable references
-or even arbitrarily complex SQL++ expressions (subqueries).
-
-##### Examples
-
-    [ 'a', 'b', 'c' ]
-
-    {
-      'project name': 'Hyracks',
-      'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras', 'tillw' ]
-    }
-
-    {{ 42, "forty-two!", { "rank": "Captain", "name": "America" }, 3.14159 }}
-
-### <a id="Path_expressions">Path expressions</a>
-
-    PathExpression  ::= PrimaryExpression ( Field | Index )*
-    Field           ::= "." Identifier
-    Index           ::= "[" ( Expression | "?" ) "]"
-
-Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
-of a SQL++ expression that yields an instance of  a complex type, e.g., a object or array instance. For objects,
-path access is based on field names. For arrays, path access is based on (zero-based) array-style indexing.
-SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an array.
- Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
-
-The following examples illustrate field access for a object, index-based element access for an array, and also a
-composition thereof.
-
-##### Examples
-
-    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array
-
-    (["a", "b", "c"])[2]
-
-    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]
-
-### <a id="Operator_expressions">Operator expressions</a>
+## <a id="Operator_expressions">Operator expressions</a>
 
 Operators perform a specific operation on the input values or expressions. The syntax of an operator expression is as follows:
 
@@ -188,7 +52,7 @@ The following table summarizes the precedence order (from higher to lower) of th
 |-----------------------------------------------------------------------------|-----------|
 | EXISTS, NOT EXISTS                                                          |  collection emptiness testing |
 | ^                                                                           |  exponentiation  |
-| *, /                                                                        |  multiplication, division |
+| *, /, %                                                                     |  multiplication, division, modulo |
 | +, -                                                                        |  addition, subtraction  |
 | &#124;&#124;                                                                          |  string concatenation |
 | IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN| unknown value comparison |
@@ -197,6 +61,11 @@ The following table summarizes the precedence order (from higher to lower) of th
 | NOT                                                                         | logical negation |
 | AND                                                                         | conjunction |
 | OR                                                                          | disjunction |
+
+In general, if any operand evaluates to a `MISSING` value, the enclosing operator will return `MISSING`;
+if none of operands evaluates to a `MISSING` value but there is an operand evaluates to a `NULL` value,
+the encolosing operator will return `NULL`. However, there are a few exceptions listed in
+[comparison operators](#Comparison_operators) and [logical operators](#Logical_operators).
 
 ### <a id="Arithmetic_operators">Arithmetic operators</a>
 Arithemtic operators are used to exponentiate, add, subtract, multiply, and divide numeric values, or concatenate string values.
@@ -293,7 +162,7 @@ The following table demonstrates the results of `NOT` on all possible inputs.
 | NULL | NULL |
 | MISSING | MISSING |
 
-### <a id="Case_expressions">Case expressions</a>
+## <a id="Case_expressions">Case expressions</a>
 
     CaseExpression ::= SimpleCaseExpression | SearchedCaseExpression
     SimpleCaseExpression ::= <CASE> Expression ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
@@ -308,16 +177,23 @@ The following example illustrates the form of a case expression.
 
     CASE (2 < 3) WHEN true THEN "yes" ELSE "no" END
 
-### <a id="Quantified_expressions">Quantified expressions</a>
+## <a id="Quantified_expressions">Quantified expressions</a>
 
     QuantifiedExpression ::= ( (<ANY>|<SOME>) | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
                              <SATISFIES> Expression (<END>)?
 
-Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
+Quantified expressions are used for expressing existential or universal predicates involving the elements of a
+collection.
 
-The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the set [1, 2, 3] of integers is less than three. The first example yields `FALSE` and second example yields `TRUE`.
+The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the
+set [1, 2, 3] of integers is less than three. The first example yields `FALSE` and second example yields `TRUE`.
 
-It is useful to note that if the set were instead the empty set, the first expression would yield `TRUE` ("every" value in an empty set satisfies the condition) while the second expression would yield `FALSE` (since there isn't "some" value, as there are no values in the set, that satisfies the condition).
+It is useful to note that if the set were instead the empty set, the first expression would yield `TRUE` ("every" value in an
+empty set satisfies the condition) while the second expression would yield `FALSE` (since there isn't "some" value, as there are
+no values in the set, that satisfies the condition).
+
+A quantified expression will return a `NULL` (or `MISSING`) if the first expression in it evaluates to `NULL` (or `MISSING`).
+A type error will be raised if the first expression in a quantified expression does not return a collection.
 
 ##### Examples
 
@@ -325,3 +201,190 @@ It is useful to note that if the set were instead the empty set, the first expre
     SOME x IN [ 1, 2, 3 ] SATISFIES x < 3
 
 
+## <a id="Path_expressions">Path expressions</a>
+
+    PathExpression  ::= PrimaryExpression ( Field | Index )*
+    Field           ::= "." Identifier
+    Index           ::= "[" ( Expression | "?" ) "]"
+
+Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
+of a SQL++ expression that yields an instance of  a complex type, e.g., a object or array instance. For objects,
+path access is based on field names. For arrays, path access is based on (zero-based) array-style indexing.
+SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an array.
+Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
+Type errors will be raised for inappropriate use of a path expression, such as applying a field
+accessor to a numeric value.
+
+The following examples illustrate field access for a object, index-based element access for an array, and also a
+composition thereof.
+
+##### Examples
+
+    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array
+
+    (["a", "b", "c"])[2]
+
+    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]
+
+
+## <a id="Primary_expressions">Primary Expressions</a>
+
+    PrimaryExpr ::= Literal
+                  | VariableReference
+                  | ParenthesizedExpression
+                  | FunctionCallExpression
+                  | Constructor
+
+The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
+value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly
+constructed instance of the data model (such as a newly constructed object, array, or multiset of data model instances).
+
+### <a id="Literals">Literals</a>
+
+    Literal        ::= StringLiteral
+                       | IntegerLiteral
+                       | FloatLiteral
+                       | DoubleLiteral
+                       | <NULL>
+                       | <MISSING>
+                       | <TRUE>
+                       | <FALSE>
+    StringLiteral  ::= "\"" (
+                                 <EscapeQuot>
+                               | <EscapeBslash>
+                               | <EscapeSlash>
+                               | <EscapeBspace>
+                               | <EscapeFormf>
+                               | <EscapeNl>
+                               | <EscapeCr>
+                               | <EscapeTab>
+                               | ~["\"","\\"])*
+                        "\""
+                        | "\'"(
+                                 <EscapeApos>
+                               | <EscapeBslash>
+                               | <EscapeSlash>
+                               | <EscapeBspace>
+                               | <EscapeFormf>
+                               | <EscapeNl>
+                               | <EscapeCr>
+                               | <EscapeTab>
+                               | ~["\'","\\"])*
+                          "\'"
+    <ESCAPE_Apos>  ::= "\\\'"
+    <ESCAPE_Quot>  ::= "\\\""
+    <EscapeBslash> ::= "\\\\"
+    <EscapeSlash>  ::= "\\/"
+    <EscapeBspace> ::= "\\b"
+    <EscapeFormf>  ::= "\\f"
+    <EscapeNl>     ::= "\\n"
+    <EscapeCr>     ::= "\\r"
+    <EscapeTab>    ::= "\\t"
+
+    IntegerLiteral ::= <DIGITS>
+    <DIGITS>       ::= ["0" - "9"]+
+    FloatLiteral   ::= <DIGITS> ( "f" | "F" )
+                     | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+                     | "." <DIGITS> ( "f" | "F" )
+    DoubleLiteral  ::= <DIGITS>
+                     | <DIGITS> ( "." <DIGITS> )?
+                     | "." <DIGITS>
+
+Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a object being accessed.
+
+The following are some simple examples of SQL++ literals.
+
+##### Examples
+
+    'a string'
+    "test string"
+    42
+
+Different from standard SQL, double quotes play the same role as single quotes and may be used for string literals in SQL++.
+
+### <a id="Variable_references">Variable References</a>
+
+    VariableReference     ::= <IDENTIFIER>|<DelimitedIdentifier>
+    <IDENTIFIER>          ::= <LETTER> (<LETTER> | <DIGIT> | "_" | "$")*
+    <LETTER>              ::= ["A" - "Z", "a" - "z"]
+    DelimitedIdentifier   ::= "`" (<EscapeQuot>
+                                    | <EscapeBslash>
+                                    | <EscapeSlash>
+                                    | <EscapeBspace>
+                                    | <EscapeFormf>
+                                    | <EscapeNl>
+                                    | <EscapeCr>
+                                    | <EscapeTab>
+                                    | ~["`","\\"])*
+                              "`"
+
+A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is
+bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an
+input parameter in the context of a function body.) Backticks, e.g., \`id\`, are used for delimited identifiers. Delimiting is needed when
+a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
+
+##### Examples
+
+    tweet
+    id
+    `SELECT`
+    `my-function`
+
+### <a id="Parenthesized_expressions">Parenthesized expressions</a>
+
+    ParenthesizedExpression ::= "(" Expression ")" | Subquery
+
+An expression can be parenthesized to control the precedence order or otherwise clarify a query. In SQL++, for composability, a subquery is also an parenthesized expression.
+
+The following expression evaluates to the value 2.
+
+##### Example
+
+    ( 1 + 1 )
+
+### <a id="Function_call_expressions">Function call expressions</a>
+
+    FunctionCallExpression ::= FunctionName "(" ( Expression ( "," Expression )* )? ")"
+
+Functions are included in SQL++, like most languages, as a way to package useful functionality or to componentize complicated or reusable SQL++ computations. A function call is a legal SQL++ query expression that represents the value resulting from the evaluation of its body expression with the given parameter bindings; the parameter value bindings can themselves be any SQL++ expressions.
+
+The following example is a (built-in) function call expression whose value is 8.
+
+##### Example
+
+    length('a string')
+
+
+### <a id="Constructors">Constructors</a>
+
+    Constructor              ::= ArrayConstructor | MultisetConstructor | ObjectConstructor
+    ArrayConstructor         ::= "[" ( Expression ( "," Expression )* )? "]"
+    MultisetConstructor      ::= "{{" ( Expression ( "," Expression )* )? "}}"
+    ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
+    FieldBinding             ::= Expression ":" Expression
+
+A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using
+its constructors for each of the model's complex object structures, namely arrays, multisets, and objects.
+Arrays are like JSON arrays, while multisets have bag semantics.
+Objects are built from fields that are field-name/field-value pairs, again like JSON.
+
+The following examples illustrate how to construct a new array with 4 items, a new object with 2 fields,
+and a new multiset with 5 items, respectively. Array elements or multiset elements can be homogeneous (as in
+the first example),
+which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values
+used to construct arrays, multisets, and objects in constructors are all simply SQL++ expressions. Thus, the collection
+elements, field names, and field values used in constructors can be simple literals or they can come from query variable
+references or even arbitrarily complex SQL++ expressions (subqueries).
+Type errors will be raised if the field names in a record must be strings, and
+duplicate field errors will be raised if they are not distinct.
+
+##### Examples
+
+    [ 'a', 'b', 'c', 'c' ]
+
+    {
+      'project name': 'Hyracks',
+      'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras', 'tillw' ]
+    }
+
+    {{ 42, "forty-two!", { "rank": "Captain", "name": "America" }, 3.14159, 42 }}

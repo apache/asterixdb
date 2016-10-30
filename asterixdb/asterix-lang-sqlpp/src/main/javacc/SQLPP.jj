@@ -3223,13 +3223,12 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN:
 {
-    < DOUBLE_LITERAL: <DIGITS>
-        | <DIGITS> ( "." <DIGITS> )?
-        | "." <DIGITS>
+    < DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> )
+                      | "." <DIGITS>
     >
-  | < FLOAT_LITERAL: <DIGITS> ( "f" | "F" )
-        | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
-        | "." <DIGITS> ( "f" | "F" )
+  | < FLOAT_LITERAL:  <DIGITS> ( "f" | "F" )
+                      | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+                      | "." <DIGITS> ( "f" | "F" )
     >
   | <DIGITS : (<DIGIT>)+ >
 }
