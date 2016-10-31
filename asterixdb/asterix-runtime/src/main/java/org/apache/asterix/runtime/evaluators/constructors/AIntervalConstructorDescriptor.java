@@ -34,12 +34,15 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -61,7 +64,7 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
@@ -69,14 +72,13 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                     private IPointable argPtr1 = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
-                    private String errorMessage = "This can not be an instance of interval (only support Date/Time/Datetime)";
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -88,13 +90,10 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
 
                         try {
                             if (bytes0[offset0] != bytes1[offset1]) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects both arguments to be of the same type. Either DATE/TIME/DATETIME, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]));
+                                throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0], bytes1[offset1]);
                             }
 
-                            long intervalStart = 0, intervalEnd = 0;
+                            long intervalStart, intervalEnd;
                             ATypeTag intervalType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
 
                             switch (intervalType) {
@@ -111,20 +110,19 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                                     intervalEnd = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                     break;
                                 default:
-                                    throw new AlgebricksException(
-                                            FID.getName() + ": expects NULL/DATE/TIME/DATETIME as arguments, but got "
-                                                    + intervalType);
+                                    throw new UnsupportedItemTypeException(getIdentifier(), bytes0[offset0]);
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": interval end must not be less than the interval start.");
+                                throw new InvalidDataFormatException(getIdentifier(),
+                                        ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
 
                             aInterval.setValue(intervalStart, intervalEnd, intervalType.serialize());
                             intervalSerde.serialize(aInterval, out);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                        } catch (IOException e) {
+                            throw new InvalidDataFormatException(getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         result.set(resultStorage);
                     }

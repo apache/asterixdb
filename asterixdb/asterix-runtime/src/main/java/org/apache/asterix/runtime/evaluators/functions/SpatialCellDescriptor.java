@@ -33,14 +33,14 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -57,13 +57,12 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -84,7 +83,7 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, inputArg0);
                         eval1.evaluate(tuple, inputArg1);
@@ -101,12 +100,13 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                         int offset3 = inputArg3.getStartOffset();
 
                         try {
-                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
-                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
-                            ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
-                            ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
-                            if (tag0 == ATypeTag.POINT && tag1 == ATypeTag.POINT && tag2 == ATypeTag.DOUBLE
-                                    && tag3 == ATypeTag.DOUBLE) {
+                            byte tag0 = bytes0[offset0];
+                            byte tag1 = bytes1[offset1];
+                            byte tag2 = bytes2[offset2];
+                            byte tag3 = bytes3[offset3];
+                            if (tag0 == ATypeTag.SERIALIZED_POINT_TYPE_TAG && tag1 == ATypeTag.SERIALIZED_POINT_TYPE_TAG
+                                    && tag2 == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG
+                                    && tag3 == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
                                 double xLoc = ADoubleSerializerDeserializer.getDouble(bytes0,
                                         offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                 double yLoc = ADoubleSerializerDeserializer.getDouble(bytes0,
@@ -127,16 +127,26 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                 aRectangle.setValue(aPoint[0], aPoint[1]);
                                 rectangleSerde.serialize(aRectangle, out);
                             } else {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.SPATIAL_CELL.getName()
-                                        + ": expects input type: (POINT, POINT, DOUBLE, DOUBLE) but got ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]) + ").");
+                                if (tag0 != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
+                                    throw new TypeMismatchException(getIdentifier(), 0, tag0,
+                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                                }
+                                if (tag1 != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
+                                    throw new TypeMismatchException(getIdentifier(), 1, tag1,
+                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                                }
+                                if (tag2 != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+                                    throw new TypeMismatchException(getIdentifier(), 2, tag2,
+                                            ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+                                }
+                                if (tag3 != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+                                    throw new TypeMismatchException(getIdentifier(), 3, tag3,
+                                            ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+                                }
                             }
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1);
+                            throw new HyracksDataException(e1);
                         }
                     }
                 };

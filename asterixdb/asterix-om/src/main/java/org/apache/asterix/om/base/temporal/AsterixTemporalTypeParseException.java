@@ -24,14 +24,6 @@ public class AsterixTemporalTypeParseException extends HyracksDataException {
 
     private static final long serialVersionUID = 1L;
 
-    public AsterixTemporalTypeParseException() {
-        super();
-    }
-
-    public AsterixTemporalTypeParseException(Exception ex) {
-        super(ex);
-    }
-
     public AsterixTemporalTypeParseException(String msg) {
         super(msg);
     }

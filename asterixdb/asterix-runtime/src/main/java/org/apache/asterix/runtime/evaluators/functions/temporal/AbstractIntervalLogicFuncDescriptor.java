@@ -22,12 +22,12 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -42,14 +42,12 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
 
@@ -73,34 +71,31 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
 
-                        try {
-                            if (argPtr0.getTag() != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG
-                                    || argPtr1.getTag() != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects input type (INTERVAL, INTERVAL) but got ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr0.getTag()) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getTag()) + ")");
-                            }
-
-                            argPtr0.getValue(interval0);
-                            argPtr1.getValue(interval1);
-
-                            if (interval0.getType() != interval1.getType()) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": failed to compare intervals with different internal time type.");
-                            }
-
-                            ABoolean res = compareIntervals(il, interval0, interval1) ? ABoolean.TRUE : ABoolean.FALSE;
-
-                            booleanSerde.serialize(res, out);
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
+                        byte typeTag0 = argPtr0.getTag();
+                        if (typeTag0 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, typeTag0,
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
+                        byte typeTag1 = argPtr0.getTag();
+                        if (typeTag1 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, typeTag1,
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
+                        }
+
+                        argPtr0.getValue(interval0);
+                        argPtr1.getValue(interval1);
+
+                        if (typeTag0 != typeTag1) {
+                            throw new IncompatibleTypeException(getIdentifier(), typeTag0, typeTag1);
+                        }
+
+                        ABoolean res = compareIntervals(il, interval0, interval1) ? ABoolean.TRUE : ABoolean.FALSE;
+                        booleanSerde.serialize(res, out);
                         result.set(resultStorage);
                     }
                 };

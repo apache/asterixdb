@@ -26,14 +26,13 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -61,14 +60,12 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
      */
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -85,7 +82,7 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
                     private AMutableDateTime aDateTime = new AMutableDateTime(0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -95,25 +92,21 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
 
-                        try {
-                            if (bytes0[offset0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG
-                                    && bytes1[offset1] != ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects input type (DATE/NULL, TIME/NULL) but got ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ").");
-
-                            }
-
-                            long datetimeChronon = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
-                                    * GregorianCalendarSystem.CHRONON_OF_DAY
-                                    + ATimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
-
-                            aDateTime.setValue(datetimeChronon);
-                            datetimeSerde.serialize(aDateTime, out);
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
+                        if (bytes0[offset0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                    ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
+                        if (bytes1[offset1] != ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                    ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+                        }
+
+                        long datetimeChronon = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
+                                * GregorianCalendarSystem.CHRONON_OF_DAY
+                                + ATimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
+
+                        aDateTime.setValue(datetimeChronon);
+                        datetimeSerde.serialize(aDateTime, out);
                         result.set(resultStorage);
                     }
                 };

@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -37,10 +38,8 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -70,7 +69,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
         final PointableAllocator pa = new PointableAllocator();
         final IVisitablePointable vp0 = pa.allocateRecordValue(inputRecType);
@@ -91,23 +90,21 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
             private DataOutput out = resultStorage.getDataOutput();
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 resultStorage.reset();
                 eval0.evaluate(tuple, inputArg0);
                 eval1.evaluate(tuple, inputArg1);
 
-                if (inputArg0.getByteArray()[inputArg0.getStartOffset()] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new AlgebricksException(
-                            AsterixBuiltinFunctions.REMOVE_FIELDS.getName() + ": expects input type " + inputRecType
-                                    + ", but got " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                            .deserialize(inputArg0.getByteArray()[inputArg0.getStartOffset()]));
+                byte inputTypeTag0 = inputArg0.getByteArray()[inputArg0.getStartOffset()];
+                if (inputTypeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                    throw new TypeMismatchException(AsterixBuiltinFunctions.REMOVE_FIELDS, 0, inputTypeTag0,
+                            ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                 }
 
-                if (inputArg1.getByteArray()[inputArg1.getStartOffset()] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                    throw new AlgebricksException(
-                            AsterixBuiltinFunctions.REMOVE_FIELDS.getName() + ": expects input type " + inputListType
-                                    + ", but got " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                            .deserialize(inputArg1.getByteArray()[inputArg1.getStartOffset()]));
+                byte inputTypeTag1 = inputArg1.getByteArray()[inputArg1.getStartOffset()];
+                if (inputTypeTag1 != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                    throw new TypeMismatchException(AsterixBuiltinFunctions.REMOVE_FIELDS, 1, inputTypeTag1,
+                            ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                 }
 
                 vp0.set(inputArg0);
@@ -122,14 +119,14 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                     processRecord(requiredRecType, recordPointable, listPointable, 0);
                     rbStack.get(0).write(out, true);
                 } catch (IOException | AsterixException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
                 result.set(resultStorage);
             }
 
             private void processRecord(ARecordType requiredType, ARecordVisitablePointable srp,
                     AListVisitablePointable inputList, int nestedLevel)
-                    throws IOException, AsterixException, AlgebricksException {
+                    throws IOException, AsterixException, HyracksDataException {
                 if (rbStack.size() < (nestedLevel + 1)) {
                     rbStack.add(new RecordBuilder());
                 }
@@ -160,7 +157,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
             private void addKeptFieldToSubRecord(ARecordType requiredType, IVisitablePointable fieldNamePointable,
                     IVisitablePointable fieldValuePointable, IVisitablePointable fieldTypePointable,
                     AListVisitablePointable inputList, int nestedLevel)
-                    throws IOException, AsterixException, AlgebricksException {
+                    throws IOException, AsterixException, HyracksDataException {
 
                 runtimeRecordTypeInfo.reset(requiredType);
                 int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),

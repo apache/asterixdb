@@ -20,10 +20,10 @@ package org.apache.hyracks.algebricks.runtime.aggregators;
 
 import java.io.IOException;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -33,35 +33,35 @@ public class TupleCountAggregateFunctionFactory implements IAggregateEvaluatorFa
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
         final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         return new IAggregateEvaluator() {
 
             int cnt;
 
             @Override
-            public void step(IFrameTupleReference tuple) throws AlgebricksException {
+            public void step(IFrameTupleReference tuple) throws HyracksDataException {
                 ++cnt;
             }
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
                 cnt = 0;
             }
 
             @Override
-            public void finish(IPointable result) throws AlgebricksException {
+            public void finish(IPointable result) throws HyracksDataException {
                 try {
                     abvs.reset();
                     abvs.getDataOutput().writeInt(cnt);
                     result.set(abvs);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 
             @Override
-            public void finishPartial(IPointable result) throws AlgebricksException {
+            public void finishPartial(IPointable result) throws HyracksDataException {
                 finish(result);
             }
         };

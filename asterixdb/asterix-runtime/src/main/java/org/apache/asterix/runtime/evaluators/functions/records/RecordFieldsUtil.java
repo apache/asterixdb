@@ -44,7 +44,6 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -83,7 +82,7 @@ public class RecordFieldsUtil {
     private final static ARecordType openType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
 
     public void processRecord(ARecordPointable recordAccessor, ARecordType recType, DataOutput out, int level)
-            throws IOException, AsterixException, AlgebricksException {
+            throws IOException, AsterixException {
         if (level == 0) {
             // Resets pools for recycling objects before processing a top-level record.
             resetPools();
@@ -221,7 +220,7 @@ public class RecordFieldsUtil {
     }
 
     public void addListField(IValueReference listArg, IAType fieldType, IARecordBuilder fieldRecordBuilder, int level)
-            throws AsterixException, IOException, AlgebricksException {
+            throws AsterixException, IOException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -235,7 +234,7 @@ public class RecordFieldsUtil {
     }
 
     public void addNestedField(IValueReference recordArg, IAType fieldType, IARecordBuilder fieldRecordBuilder,
-            int level) throws HyracksDataException, AlgebricksException, IOException, AsterixException {
+            int level) throws IOException, AsterixException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -257,7 +256,7 @@ public class RecordFieldsUtil {
     }
 
     public void processListValue(IValueReference listArg, IAType fieldType, DataOutput out, int level)
-            throws AsterixException, IOException, AlgebricksException {
+            throws AsterixException, IOException {
         ArrayBackedValueStorage itemValue = getTempBuffer();
         IARecordBuilder listRecordBuilder = getRecordBuilder();
 

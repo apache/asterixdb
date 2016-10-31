@@ -20,9 +20,9 @@ package org.apache.hyracks.algebricks.runtime.base;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ISerializedAggregateEvaluatorFactory extends Serializable {
-    public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws AlgebricksException;
+    public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws HyracksDataException;
 }

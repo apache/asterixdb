@@ -59,7 +59,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
     private boolean isValidResult = false;
 
     public JavaFunctionHelper(IExternalFunctionInfo finfo, IDataOutputProvider outputProvider)
-            throws AlgebricksException {
+            throws HyracksDataException {
         this.finfo = finfo;
         this.outputProvider = outputProvider;
         this.pointableVisitor = new JObjectPointableVisitor();

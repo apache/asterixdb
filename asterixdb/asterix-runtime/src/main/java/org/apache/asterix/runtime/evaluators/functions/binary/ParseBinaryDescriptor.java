@@ -28,7 +28,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -61,13 +61,12 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     @SuppressWarnings("unchecked")
@@ -82,41 +81,36 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final Base64Parser base64Parser = new Base64Parser();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evaluators[0].evaluate(tuple, pointables[0]);
                         evaluators[1].evaluate(tuple, pointables[1]);
 
-                        try {
-                            ATypeTag binaryTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
-                                    .getStartOffset()]];
+                        ATypeTag binaryTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
+                                .getStartOffset()]];
 
-                            ATypeTag formatTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
-                                    .getStartOffset()]];
-                            checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, binaryTag,
-                                    formatTag);
-                            stringPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
-                                    pointables[0].getLength());
-                            formatPointable.set(pointables[1].getByteArray(), pointables[1].getStartOffset() + 1,
-                                    pointables[1].getLength());
-                            if (HEX_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
-                                hexParser.generateByteArrayFromHexString(stringPointable.getByteArray(),
-                                        stringPointable.getCharStartOffset(), stringPointable.getUTF8Length());
+                        ATypeTag formatTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
+                                .getStartOffset()]];
+                        checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, binaryTag,
+                                formatTag);
+                        stringPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
+                                pointables[0].getLength());
+                        formatPointable.set(pointables[1].getByteArray(), pointables[1].getStartOffset() + 1,
+                                pointables[1].getLength());
+                        if (HEX_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
+                            hexParser.generateByteArrayFromHexString(stringPointable.getByteArray(),
+                                    stringPointable.getCharStartOffset(), stringPointable.getUTF8Length());
 
-                                aBinary.setValue(hexParser.getByteArray(), 0, hexParser.getLength());
-                            } else if (BASE64_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
-                                base64Parser.generatePureByteArrayFromBase64String(stringPointable.getByteArray(),
-                                        stringPointable.getCharStartOffset(), stringPointable.getUTF8Length());
+                            aBinary.setValue(hexParser.getByteArray(), 0, hexParser.getLength());
+                        } else if (BASE64_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
+                            base64Parser.generatePureByteArrayFromBase64String(stringPointable.getByteArray(),
+                                    stringPointable.getCharStartOffset(), stringPointable.getUTF8Length());
 
-                                aBinary.setValue(base64Parser.getByteArray(), 0, base64Parser.getLength());
-                            } else {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects format indicator of \"hex\" or \"base64\" in the 2nd argument");
-                            }
-                            binarySerde.serialize(aBinary, dataOutput);
-                        } catch (HyracksDataException e) {
-                            e.printStackTrace();
+                            aBinary.setValue(base64Parser.getByteArray(), 0, base64Parser.getLength());
+                        } else {
+                            throw new UnsupportedItemTypeException(getIdentifier(), formatTag.serialize());
                         }
+                        binarySerde.serialize(aBinary, dataOutput);
                         result.set(resultStorage);
                     }
                 };

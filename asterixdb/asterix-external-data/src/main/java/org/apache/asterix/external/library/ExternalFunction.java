@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -55,7 +56,7 @@ public abstract class ExternalFunction implements IExternalFunction {
     protected final JavaFunctionHelper functionHelper;
 
     public ExternalFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[], IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         this.finfo = finfo;
         this.evaluatorFactories = args;
         argumentEvaluators = new IScalarEvaluator[args.length];
@@ -85,7 +86,7 @@ public abstract class ExternalFunction implements IExternalFunction {
             externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
             externalFunction = externalFunctionFactory.getExternalFunction();
         } catch (Exception e) {
-            throw new AlgebricksException(" Unable to load/instantiate class " + classname, e);
+            throw new HyracksDataException(" Unable to load/instantiate class " + classname, e);
         }
     }
 

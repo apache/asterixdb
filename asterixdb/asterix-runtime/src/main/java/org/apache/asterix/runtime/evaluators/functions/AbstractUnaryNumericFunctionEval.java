@@ -38,13 +38,13 @@ import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -94,14 +94,14 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
 
     public AbstractUnaryNumericFunctionEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
-            FunctionIdentifier funcID) throws AlgebricksException {
+            FunctionIdentifier funcID) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         argEval.evaluate(tuple, argPtr);
         byte[] data = argPtr.getByteArray();
@@ -126,8 +126,10 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
             double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
             processDouble(val, result);
         } else {
-            throw new AlgebricksException(funcID + " expects a numeric input type, but gets "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+            throw new TypeMismatchException(funcID, 0, data[offset], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+                    ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
+                    ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+                    ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
         }
     }
 
@@ -140,7 +142,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
      *            ,
      *            the pointable that should be set to the result location.
      */
-    protected abstract void processInt8(byte arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processInt8(byte arg, IPointable resultPointable) throws HyracksDataException;
 
     /**
      * Processes an int16 argument.
@@ -151,7 +153,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
      *            ,
      *            the pointable that should be set to the result location.
      */
-    protected abstract void processInt16(short arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processInt16(short arg, IPointable resultPointable) throws HyracksDataException;
 
     /**
      * Processes an int32 argument.
@@ -162,7 +164,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
      *            ,
      *            the pointable that should be set to the result location.
      */
-    protected abstract void processInt32(int arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processInt32(int arg, IPointable resultPointable) throws HyracksDataException;
 
     /**
      * Processes an int64 argument.
@@ -173,7 +175,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
      *            ,
      *            the pointable that should be set to the result location.
      */
-    protected abstract void processInt64(long arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processInt64(long arg, IPointable resultPointable) throws HyracksDataException;
 
     /**
      * Processes a float argument.
@@ -184,7 +186,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
      *            ,
      *            the pointable that should be set to the result location.
      */
-    protected abstract void processFloat(float arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processFloat(float arg, IPointable resultPointable) throws HyracksDataException;
 
     /**
      * Processes a double argument.
@@ -195,17 +197,17 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
      *            ,
      *            the pointable that should be set to the result location.
      */
-    protected abstract void processDouble(double arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processDouble(double arg, IPointable resultPointable) throws HyracksDataException;
 
     // Serializes result into the result storage.
     @SuppressWarnings("unchecked")
     protected void serialize(IAObject result, ISerializerDeserializer serde, IPointable resultPointable)
-            throws AlgebricksException {
+            throws HyracksDataException {
         try {
             serde.serialize(result, dataOutput);
             resultPointable.set(resultStorage);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 }

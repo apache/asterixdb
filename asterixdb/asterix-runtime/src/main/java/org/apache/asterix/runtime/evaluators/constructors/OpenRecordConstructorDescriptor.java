@@ -27,7 +27,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -67,7 +66,7 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 int n = args.length / 2;
                 final IScalarEvaluator[] evalNames = new IScalarEvaluator[n];
                 final IScalarEvaluator[] evalFields = new IScalarEvaluator[n];
@@ -85,31 +84,27 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
                     private boolean first = true;
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            resultStorage.reset();
-                            closedFieldId = 0;
-                            if (first) {
-                                first = false;
-                                recBuilder.reset(recType);
-                            }
-                            recBuilder.init();
-                            for (int i = 0; i < evalFields.length; i++) {
-                                evalFields[i].evaluate(tuple, fieldValuePointable);
-                                boolean openField = openFields[i];
-                                if (openField) {
-                                    evalNames[i].evaluate(tuple, fieldNamePointable);
-                                    recBuilder.addField(fieldNamePointable, fieldValuePointable);
-                                } else {
-                                    recBuilder.addField(closedFieldId, fieldValuePointable);
-                                    closedFieldId++;
-                                }
-                            }
-                            recBuilder.write(out, true);
-                            result.set(resultStorage);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        closedFieldId = 0;
+                        if (first) {
+                            first = false;
+                            recBuilder.reset(recType);
                         }
+                        recBuilder.init();
+                        for (int i = 0; i < evalFields.length; i++) {
+                            evalFields[i].evaluate(tuple, fieldValuePointable);
+                            boolean openField = openFields[i];
+                            if (openField) {
+                                evalNames[i].evaluate(tuple, fieldNamePointable);
+                                recBuilder.addField(fieldNamePointable, fieldValuePointable);
+                            } else {
+                                recBuilder.addField(closedFieldId, fieldValuePointable);
+                                closedFieldId++;
+                            }
+                        }
+                        recBuilder.write(out, true);
+                        result.set(resultStorage);
                     }
                 };
             }

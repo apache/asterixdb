@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -70,7 +69,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException, HyracksDataException {
+            throws HyracksDataException {
 
         RecordDescriptor pipelineOutputRecordDescriptor = null;
 
@@ -160,8 +159,14 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
                     startOfPipeline.writeTuple(buffer, t);
-                    startOfPipeline.open();
-                    startOfPipeline.close();
+                    try {
+                        startOfPipeline.open();
+                    } catch (Exception e) {
+                        startOfPipeline.fail();
+                        throw e;
+                    } finally {
+                        startOfPipeline.close();
+                    }
                 }
             }
 

@@ -22,13 +22,13 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -58,7 +58,7 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
 
     AbstractTripleStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0, IScalarEvaluatorFactory eval1,
-            IScalarEvaluatorFactory eval2, FunctionIdentifier funcID) throws AlgebricksException {
+            IScalarEvaluatorFactory eval2, FunctionIdentifier funcID) throws HyracksDataException {
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
         this.eval2 = eval2.createScalarEvaluator(context);
@@ -67,7 +67,7 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         // Gets the first argument.
         eval0.evaluate(tuple, argPtrFirst);
         byte[] bytes0 = argPtrFirst.getByteArray();
@@ -87,13 +87,15 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
         int len2 = argPtrThird.getLength();
 
         // Type check.
-        if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new AlgebricksException(funcID.getName() + ": expects iput type (STRING, STRING, STRING) but got ("
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[start0]) + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[start1]) + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[start2]) + ")");
+        // Type check.
+        if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
 
         // Sets argument UTF8Pointables.
@@ -107,7 +109,7 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
         try {
             process(strPtr1st, strPtr2nd, strPtr3rd, result);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

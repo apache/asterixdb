@@ -24,14 +24,12 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -53,13 +51,12 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -70,7 +67,7 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, inputArg0);
                         eval1.evaluate(tuple, inputArg1);
@@ -81,11 +78,11 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                             int offset0 = inputArg0.getStartOffset();
                             int offset1 = inputArg1.getStartOffset();
 
-                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
-                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
+                            byte tag0 = bytes0[offset0];
+                            byte tag1 = bytes1[offset1];
                             double distance;
-                            if (tag0 == ATypeTag.POINT) {
-                                if (tag1 == ATypeTag.POINT) {
+                            if (tag0 == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
+                                if (tag1 == ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
                                     double x1 = ADoubleSerializerDeserializer.getDouble(bytes0,
                                             offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
                                     double y1 = ADoubleSerializerDeserializer.getDouble(bytes0,
@@ -96,21 +93,17 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                                             offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {
-                                    throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
-                                            + ": does not support the type: " + tag1
-                                            + "; it is only implemented for POINT.");
+                                    throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                                 }
                             } else {
-                                throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_DISTANCE.getName()
-                                        + ": does not support the type: " + tag1
-                                        + "; it is only implemented for POINT.");
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                             }
                             out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                             out.writeDouble(distance);
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

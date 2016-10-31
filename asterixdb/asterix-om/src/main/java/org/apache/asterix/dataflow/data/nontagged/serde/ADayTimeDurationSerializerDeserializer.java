@@ -49,7 +49,7 @@ public class ADayTimeDurationSerializerDeserializer implements ISerializerDeseri
         try {
             out.writeLong(instance.getMilliseconds());
         } catch (IOException e) {
-            throw new HyracksDataException();
+            throw new HyracksDataException(e);
         }
     }
 

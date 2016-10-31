@@ -22,14 +22,15 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -51,13 +52,12 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     // Argument evaluators.
                     private IScalarEvaluator evalString = args[0].createScalarEvaluator(ctx);
@@ -73,26 +73,22 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private byte[] tempLengthArray = new byte[5];
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
 
                         // Calls argument evaluators.
-                        evalStart.evaluate(tuple, argNumber);
                         evalString.evaluate(tuple, argString);
+                        evalStart.evaluate(tuple, argNumber);
 
                         // Gets the repeating times.
-                        int repeatingTimes = 0;
                         byte[] bytes = argNumber.getByteArray();
                         int offset = argNumber.getStartOffset();
-                        try {
-                            repeatingTimes = ATypeHierarchy.getIntegerValue(bytes, offset);
-                        } catch (HyracksDataException e1) {
-                            throw new AlgebricksException(e1);
-                        }
+                        int repeatingTimes = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes,
+                                offset);
                         // Checks repeatingTimes. It should be a non-negative value.
                         if (repeatingTimes < 0) {
-                            throw new AlgebricksException(StringRepeatDescriptor.this.getIdentifier().getName()
-                                    + ": expects a non-negative repeating number but got " + repeatingTimes + ".");
+                            throw new RuntimeDataException(ErrorCode.ERROR_NEGATIVE_VALUE, getIdentifier(), 1,
+                                    repeatingTimes);
                         }
 
                         // Gets the input string.
@@ -100,9 +96,8 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         offset = argString.getStartOffset();
                         // Checks the type of the string argument.
                         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new AlgebricksException(StringRepeatDescriptor.this.getIdentifier().getName()
-                                    + ": expects type STRING for the first argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
 
                         // Calculates the result string length.
@@ -119,7 +114,7 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 out.write(bytes, inputStringStart, inputLen);
                             }
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

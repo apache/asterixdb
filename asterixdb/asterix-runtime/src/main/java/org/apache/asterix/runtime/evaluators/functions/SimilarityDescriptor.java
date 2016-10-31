@@ -33,19 +33,19 @@ import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetric;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.SimilarityFiltersCache;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -65,14 +65,12 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
-
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
 
@@ -100,7 +98,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         // similarity threshold
                         evalThreshold.evaluate(tuple, inputVal);
@@ -108,9 +106,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         int offset = inputVal.getStartOffset();
 
                         if (data[offset] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                            throw new AlgebricksException(
-                                    FID.getName() + ": expects type DOUBLE for the first argument but got "
-                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                            throw new TypeMismatchException(getIdentifier(), 0, data[offset],
+                                    ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(data, offset + 1);
 
@@ -120,9 +117,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         offset = inputVal.getStartOffset();
                         int len = inputVal.getLength();
                         if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new AlgebricksException(
-                                    FID.getName() + ": expects type STRING for the second argument but got "
-                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                            throw new TypeMismatchException(getIdentifier(), 1, data[offset],
+                                    ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
                         SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold, data,
                                 offset, len);
@@ -131,9 +127,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         data = inputVal.getByteArray();
                         offset = inputVal.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            throw new AlgebricksException(
-                                    FID.getName() + ": expects type INT32 for the thrid argument but got "
-                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                            throw new TypeMismatchException(getIdentifier(), 2, data[offset],
+                                    ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                         }
                         int length1 = IntegerPointable.getInteger(data, offset + 1);
 
@@ -141,9 +136,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         data = inputVal.getByteArray();
                         offset = inputVal.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            throw new AlgebricksException(
-                                    FID.getName() + ": expects type INT32 for the fourth argument but got "
-                                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                            throw new TypeMismatchException(getIdentifier(), 3, data[offset],
+                                    ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                         }
                         int length2 = IntegerPointable.getInteger(data, offset + 1);
 
@@ -163,8 +157,9 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName() + ": not defined for values of type"
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset]));
+                                throw new TypeMismatchException(getIdentifier(), 4, data[offset],
+                                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
 
                             int lengthTokens1;
@@ -177,7 +172,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                         itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset,
                                                 i);
                                     } catch (AsterixException e) {
-                                        throw new AlgebricksException(e);
+                                        throw new HyracksDataException(e);
                                     }
                                     tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
@@ -190,7 +185,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                         itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, offset,
                                                 i);
                                     } catch (AsterixException e) {
-                                        throw new AlgebricksException(e);
+                                        throw new HyracksDataException(e);
                                     }
                                     tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
@@ -208,8 +203,9 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName() + ": not defined for values of type"
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset]));
+                                throw new TypeMismatchException(getIdentifier(), 5, data[offset],
+                                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
 
                             int lengthTokens2;
@@ -222,7 +218,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                         itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset,
                                                 i);
                                     } catch (AsterixException e) {
-                                        throw new AlgebricksException(e);
+                                        throw new HyracksDataException(e);
                                     }
                                     tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
@@ -235,7 +231,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                         itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, offset,
                                                 i);
                                     } catch (AsterixException e) {
-                                        throw new AlgebricksException(e);
+                                        throw new HyracksDataException(e);
                                     }
                                     tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
@@ -276,7 +272,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         try {
                             doubleSerde.serialize(res, out);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

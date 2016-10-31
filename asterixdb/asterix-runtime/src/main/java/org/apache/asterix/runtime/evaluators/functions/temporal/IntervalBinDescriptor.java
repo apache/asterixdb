@@ -37,7 +37,11 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.OverflowException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnderflowException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -61,14 +65,13 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -91,7 +94,7 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final GregorianCalendarSystem GREG_CAL = GregorianCalendarSystem.getInstance();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -114,8 +117,9 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 chrononToBin = ADateTimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
                                 break;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
 
                         byte[] bytes1 = argPtr1.getByteArray();
@@ -123,8 +127,7 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                         ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
 
                         if (type0 != type1) {
-                            throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
-                                    + " for the second argument but got " + type1);
+                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0], bytes1[offset1]);
                         }
 
                         long chrononToStart = 0;
@@ -140,8 +143,9 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 chrononToStart = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                 break;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName() + ": expecting " + type0
-                                        + " for the second argument but got " + type1);
+                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
 
                         byte[] bytes2 = argPtr2.getByteArray();
@@ -165,13 +169,11 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalMonths < 0 && totalMonths % yearMonth != 0) ? -1 : 0);
 
                                 if (binIndex > Integer.MAX_VALUE) {
-                                    throw new AlgebricksException(
-                                            getIdentifier().getName() + ": Overflowing time value to be binned!");
+                                    throw new OverflowException(getIdentifier());
                                 }
 
                                 if (binIndex < Integer.MIN_VALUE) {
-                                    throw new AlgebricksException(
-                                            getIdentifier().getName() + ": Underflowing time value to be binned!");
+                                    throw new UnderflowException(getIdentifier());
                                 }
 
                                 break;
@@ -184,9 +186,9 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalChronon < 0 && totalChronon % dayTime != 0) ? -1 : 0);
                                 break;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
-                                        + type2);
+                                throw new TypeMismatchException(getIdentifier().getName(), 2, bytes2[offset2],
+                                        ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
                         }
 
                         switch (type0) {
@@ -207,8 +209,8 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 break;
                             case TIME:
                                 if (yearMonth != 0) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": cannot create year-month bin for a time value");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
                                 binStartChronon = DurationArithmeticOperations.addDuration(chrononToStart,
                                         yearMonth * (int) binIndex, dayTime * binIndex, true);
@@ -222,15 +224,12 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                         yearMonth * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
                                 break;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
-                        try {
-                            aInterval.setValue(binStartChronon, binEndChronon, type0.serialize());
-                            intervalSerde.serialize(aInterval, out);
-                        } catch (HyracksDataException ex) {
-                            throw new AlgebricksException(ex);
-                        }
+                        aInterval.setValue(binStartChronon, binEndChronon, type0.serialize());
+                        intervalSerde.serialize(aInterval, out);
                         result.set(resultStorage);
                     }
                 };

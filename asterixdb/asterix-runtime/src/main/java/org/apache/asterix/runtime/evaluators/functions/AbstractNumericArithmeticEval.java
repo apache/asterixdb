@@ -48,8 +48,12 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.OverflowException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnderflowException;
+import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -97,7 +101,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -134,156 +138,149 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            resultStorage.reset();
-                            resultType = 0;
-                            int currentType = 0;
-                            evalLeft.evaluate(tuple, argPtr0);
-                            evalRight.evaluate(tuple, argPtr1);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        resultType = 0;
+                        int currentType;
+                        evalLeft.evaluate(tuple, argPtr0);
+                        evalRight.evaluate(tuple, argPtr1);
 
-                            for (int i = 0; i < args.length; i++) {
-                                IPointable argPtr = i == 0 ? argPtr0 : argPtr1;
-                                byte[] bytes = argPtr.getByteArray();
-                                int offset = argPtr.getStartOffset();
+                        for (int i = 0; i < args.length; i++) {
+                            IPointable argPtr = i == 0 ? argPtr0 : argPtr1;
+                            byte[] bytes = argPtr.getByteArray();
+                            int offset = argPtr.getStartOffset();
 
-                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
-                                switch (typeTag) {
-                                    case INT8: {
-                                        currentType = typeInt8;
-                                        operandsInteger[i] = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
-                                        operandsFloating[i] = operandsInteger[i];
-                                        break;
-                                    }
-                                    case INT16: {
-                                        currentType = typeInt16;
-                                        operandsInteger[i] = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
-                                        operandsFloating[i] = operandsInteger[i];
-                                        break;
-                                    }
-                                    case INT32: {
-                                        currentType = typeInt32;
-                                        operandsInteger[i] = AInt32SerializerDeserializer.getInt(bytes, offset + 1);
-                                        operandsFloating[i] = operandsInteger[i];
-                                        break;
-                                    }
-                                    case INT64: {
-                                        currentType = typeInt64;
-                                        operandsInteger[i] = AInt64SerializerDeserializer.getLong(bytes, offset + 1);
-                                        operandsFloating[i] = operandsInteger[i];
-                                        break;
-                                    }
-                                    case FLOAT: {
-                                        currentType = typeFloat;
-                                        operandsFloating[i] = AFloatSerializerDeserializer.getFloat(bytes, offset + 1);
-                                        break;
-                                    }
-                                    case DOUBLE: {
-                                        currentType = typeDouble;
-                                        operandsFloating[i] = ADoubleSerializerDeserializer.getDouble(bytes,
-                                                offset + 1);
-                                        break;
-                                    }
-                                    case DATE:
-                                    case TIME:
-                                    case DATETIME:
-                                    case DURATION:
-                                    case YEARMONTHDURATION:
-                                    case DAYTIMEDURATION:
-                                        evaluateTemporalArthmeticOperation(typeTag);
-                                        result.set(resultStorage);
-                                        return;
-                                    default: {
-                                        throw new NotImplementedException(getIdentifier().getName()
-                                                + (i == 0 ? ": Left" : ": Right")
-                                                + " operand expects INT8/INT16/INT32/INT64/FLOAT/DOUBLE/NULL, but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
-                                    }
-                                }
-
-                                if (resultType < currentType) {
-                                    resultType = currentType;
-                                }
+                            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
+                            switch (typeTag) {
+                                case INT8:
+                                    currentType = typeInt8;
+                                    operandsInteger[i] = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
+                                    operandsFloating[i] = operandsInteger[i];
+                                    break;
+                                case INT16:
+                                    currentType = typeInt16;
+                                    operandsInteger[i] = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
+                                    operandsFloating[i] = operandsInteger[i];
+                                    break;
+                                case INT32:
+                                    currentType = typeInt32;
+                                    operandsInteger[i] = AInt32SerializerDeserializer.getInt(bytes, offset + 1);
+                                    operandsFloating[i] = operandsInteger[i];
+                                    break;
+                                case INT64:
+                                    currentType = typeInt64;
+                                    operandsInteger[i] = AInt64SerializerDeserializer.getLong(bytes, offset + 1);
+                                    operandsFloating[i] = operandsInteger[i];
+                                    break;
+                                case FLOAT:
+                                    currentType = typeFloat;
+                                    operandsFloating[i] = AFloatSerializerDeserializer.getFloat(bytes, offset + 1);
+                                    break;
+                                case DOUBLE:
+                                    currentType = typeDouble;
+                                    operandsFloating[i] = ADoubleSerializerDeserializer.getDouble(bytes, offset + 1);
+                                    break;
+                                case DATE:
+                                case TIME:
+                                case DATETIME:
+                                case DURATION:
+                                case YEARMONTHDURATION:
+                                case DAYTIMEDURATION:
+                                    evaluateTemporalArthmeticOperation(typeTag);
+                                    result.set(resultStorage);
+                                    return;
+                                default:
+                                    throw new TypeMismatchException(getIdentifier(), i, bytes[offset],
+                                            ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_DATETIME_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_DURATION_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
                             }
 
-                            long lres = 0;
-                            double dres = 0;
-                            switch (resultType) {
-                                case typeInt8:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
-                                            .getSerializerDeserializer(BuiltinType.AINT8);
-                                    lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                    if (lres > Byte.MAX_VALUE) {
-                                        throw new AlgebricksException("Overflow happened.");
-                                    }
-                                    if (lres < Byte.MIN_VALUE) {
-                                        throw new AlgebricksException("Underflow happened.");
-                                    }
-                                    aInt8.setValue((byte) lres);
-                                    serde.serialize(aInt8, out);
-                                    break;
-                                case typeInt16:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
-                                            .getSerializerDeserializer(BuiltinType.AINT16);
-                                    lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                    if (lres > Short.MAX_VALUE) {
-                                        throw new AlgebricksException("Overflow happened.");
-                                    }
-                                    if (lres < Short.MIN_VALUE) {
-                                        throw new AlgebricksException("Underflow happened.");
-                                    }
-                                    aInt16.setValue((short) lres);
-                                    serde.serialize(aInt16, out);
-                                    break;
-                                case typeInt32:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
-                                            .getSerializerDeserializer(BuiltinType.AINT32);
-                                    lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                    if (lres > Integer.MAX_VALUE) {
-                                        throw new AlgebricksException("Overflow happened.");
-                                    }
-                                    if (lres < Integer.MIN_VALUE) {
-                                        throw new AlgebricksException("Underflow happened.");
-                                    }
-                                    aInt32.setValue((int) lres);
-                                    serde.serialize(aInt32, out);
-                                    break;
-                                case typeInt64:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
-                                            .getSerializerDeserializer(BuiltinType.AINT64);
-                                    lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                    aInt64.setValue(lres);
-                                    serde.serialize(aInt64, out);
-                                    break;
-                                case typeFloat:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
-                                            .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                    dres = evaluateDouble(operandsFloating[0], operandsFloating[1]);
-                                    if (dres > Float.MAX_VALUE) {
-                                        throw new AlgebricksException("Overflow happened.");
-                                    }
-                                    if (dres < -Float.MAX_VALUE) {
-                                        throw new AlgebricksException("Underflow happened.");
-                                    }
-                                    aFloat.setValue((float) dres);
-                                    serde.serialize(aFloat, out);
-                                    break;
-                                case typeDouble:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
-                                            .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                    aDouble.setValue(evaluateDouble(operandsFloating[0], operandsFloating[1]));
-                                    serde.serialize(aDouble, out);
-                                    break;
+                            if (resultType < currentType) {
+                                resultType = currentType;
                             }
-                            result.set(resultStorage);
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
                         }
+
+                        long lres;
+                        double dres;
+                        switch (resultType) {
+                            case typeInt8:
+                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.AINT8);
+                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
+                                if (lres > Byte.MAX_VALUE) {
+                                    throw new OverflowException(getIdentifier());
+                                }
+                                if (lres < Byte.MIN_VALUE) {
+                                    throw new UnderflowException(getIdentifier());
+                                }
+                                aInt8.setValue((byte) lres);
+                                serde.serialize(aInt8, out);
+                                break;
+                            case typeInt16:
+                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.AINT16);
+                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
+                                if (lres > Short.MAX_VALUE) {
+                                    throw new OverflowException(getIdentifier());
+                                }
+                                if (lres < Short.MIN_VALUE) {
+                                    throw new UnderflowException(getIdentifier());
+                                }
+                                aInt16.setValue((short) lres);
+                                serde.serialize(aInt16, out);
+                                break;
+                            case typeInt32:
+                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.AINT32);
+                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
+                                if (lres > Integer.MAX_VALUE) {
+                                    throw new OverflowException(getIdentifier());
+                                }
+                                if (lres < Integer.MIN_VALUE) {
+                                    throw new UnderflowException(getIdentifier());
+                                }
+                                aInt32.setValue((int) lres);
+                                serde.serialize(aInt32, out);
+                                break;
+                            case typeInt64:
+                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.AINT64);
+                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
+                                aInt64.setValue(lres);
+                                serde.serialize(aInt64, out);
+                                break;
+                            case typeFloat:
+                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.AFLOAT);
+                                dres = evaluateDouble(operandsFloating[0], operandsFloating[1]);
+                                if (dres > Float.MAX_VALUE) {
+                                    throw new OverflowException(getIdentifier());
+                                }
+                                if (dres < -Float.MAX_VALUE) {
+                                    throw new UnderflowException(getIdentifier());
+                                }
+                                aFloat.setValue((float) dres);
+                                serde.serialize(aFloat, out);
+                                break;
+                            case typeDouble:
+                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.ADOUBLE);
+                                aDouble.setValue(evaluateDouble(operandsFloating[0], operandsFloating[1]));
+                                serde.serialize(aDouble, out);
+                                break;
+                        }
+                        result.set(resultStorage);
                     }
 
                     @SuppressWarnings("unchecked")
                     private void evaluateTemporalArthmeticOperation(ATypeTag leftType)
-                            throws HyracksDataException, AlgebricksException {
+                            throws HyracksDataException {
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
                         ATypeTag rightType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
@@ -327,7 +324,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                             offset1 + 1);
                                     break;
                                 default:
-                                    throw new NotImplementedException();
+                                    throw new UnsupportedTypeException(getIdentifier(), bytes1[offset1]);
                             }
 
                             dayTime = evaluateTimeInstanceArithmetic(leftChronon, rightChronon);
@@ -361,9 +358,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     offset1 + 1);
                                             break;
                                         default:
-                                            throw new NotImplementedException(getIdentifier().getName()
-                                                    + ": arithmetic operation between " + leftType + " and a "
-                                                    + rightType + " value is not supported.");
+                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                                    bytes1[offset1]);
                                     }
                                     break;
                                 case DATE:
@@ -394,9 +390,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     offset1 + 1);
                                             break;
                                         default:
-                                            throw new NotImplementedException(getIdentifier().getName()
-                                                    + ": arithmetic operation between " + leftType + " and a "
-                                                    + rightType + " value is not supported.");
+                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                                    bytes1[offset1]);
                                     }
                                     break;
                                 case YEARMONTHDURATION:
@@ -417,9 +412,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
                                             break;
                                         default:
-                                            throw new NotImplementedException(getIdentifier().getName()
-                                                    + ": arithmetic operation between " + leftType + " and a "
-                                                    + rightType + " value is not supported.");
+                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                                    bytes1[offset1]);
                                     }
                                     break;
                                 case DURATION:
@@ -454,22 +448,19 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                 break;
                                             }
                                         default:
-                                            throw new NotImplementedException(getIdentifier().getName()
-                                                    + ": arithmetic operation between " + leftType + " and a "
-                                                    + rightType + " value is not supported.");
+                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                                    bytes1[offset1]);
                                     }
                                     break;
                                 default:
-                                    throw new NotImplementedException(
-                                            getIdentifier().getName() + ": arithmetic operation between " + leftType
-                                                    + " and a " + rightType + " value is not supported.");
+                                    throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                            bytes1[offset1]);
                             }
 
                             chronon = evaluateTimeDurationArithmetic(chronon, yearMonth, dayTime, isTimeOnly);
 
                             switch (resultType) {
                                 case DATE:
-
                                     if (chronon < 0 && chronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
                                         chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY - 1;
                                     } else {
@@ -487,10 +478,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     serde.serialize(aDatetime, out);
                                     break;
                                 default:
-                                    throw new NotImplementedException(
-                                            getIdentifier().getName() + ": arithmetic operation between " + leftType
-                                                    + " and a " + rightType + " value is not supported.");
-
+                                    throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                            bytes1[offset1]);
                             }
                         }
                     }

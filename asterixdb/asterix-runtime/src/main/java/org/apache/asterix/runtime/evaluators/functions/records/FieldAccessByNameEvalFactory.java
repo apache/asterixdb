@@ -23,14 +23,15 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -50,7 +51,7 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
 
             private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -65,7 +66,7 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
             private ATypeTag fieldValueTypeTag;
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 try {
                     resultStorage.reset();
                     eval0.evaluate(tuple, inputArg0);
@@ -75,11 +76,9 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     int serRecordLen = inputArg0.getLength();
 
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new AlgebricksException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME.getName()
-                                + ": expects input type NULL or RECORD, but got "
-                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[serRecordOffset]));
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME, 0,
+                                serRecord[serRecordOffset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
-
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset,
@@ -95,9 +94,9 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                             fieldValueTypeTag, true) + 1;
                     result.set(serRecord, fieldValueOffset, fieldValueLength);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 } catch (AsterixException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
         };

@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.sort;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
@@ -57,10 +56,8 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
-
+            throws HyracksDataException {
         return new AbstractOneInputOneOutputPushRuntime() {
-
             FrameSorterMergeSort frameSorter = null;
 
             @Override

@@ -22,13 +22,13 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -55,7 +55,7 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
 
     public AbstractBinaryStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
-            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
+            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws HyracksDataException {
         this.evalLeft = evalLeftFactory.createScalarEvaluator(context);
         this.evalRight = evalRightFactory.createScalarEvaluator(context);
         this.funcID = funcID;
@@ -63,7 +63,7 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
 
         // Gets the first argument.
@@ -79,11 +79,11 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
         int len1 = argPtrSecond.getLength();
 
         // Type check.
-        if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new AlgebricksException(funcID.getName() + ": expects input type STRING, but got "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")!");
+        if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 0, bytes0[offset0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 1, bytes1[offset1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
 
         // Sets StringUTF8Pointables.
@@ -94,7 +94,7 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
         try {
             process(leftPtr, rightPtr, resultPointable);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

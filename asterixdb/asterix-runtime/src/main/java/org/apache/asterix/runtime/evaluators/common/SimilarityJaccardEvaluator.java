@@ -27,12 +27,13 @@ import org.apache.asterix.dataflow.data.nontagged.hash.ListItemBinaryHashFunctio
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap.BinaryEntry;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -89,7 +90,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
     protected final boolean ignoreCase = true;
 
     public SimilarityJaccardEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         firstOrdListEval = args[0].createScalarEvaluator(context);
         secondOrdListEval = args[1].createScalarEvaluator(context);
         byte[] emptyValBuf = new byte[8];
@@ -98,7 +99,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
 
         firstOrdListEval.evaluate(tuple, argPtr1);
@@ -118,7 +119,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
             result.set(resultStorage);
             return;
         }
-        if (prepareLists(argPtr1, argPtr2, firstTypeTag)) {
+        if (prepareLists(argPtr1, argPtr2)) {
             jaccSim = computeResult();
         } else {
             jaccSim = 0.0f;
@@ -126,18 +127,14 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         try {
             writeResult(jaccSim);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }
 
-    protected boolean prepareLists(IPointable left, IPointable right, ATypeTag argType) throws AlgebricksException {
-        try {
-            firstListIter.reset(left.getByteArray(), left.getStartOffset());
-            secondListIter.reset(right.getByteArray(), right.getStartOffset());
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
+    protected boolean prepareLists(IPointable left, IPointable right) throws HyracksDataException {
+        firstListIter.reset(left.getByteArray(), left.getStartOffset());
+        secondListIter.reset(right.getByteArray(), right.getStartOffset());
         // Check for special case where one of the lists is empty, since list
         // types won't match.
         if (firstListIter.size() == 0 || secondListIter.size() == 0) {
@@ -147,7 +144,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         return true;
     }
 
-    protected float computeResult() throws AlgebricksException {
+    protected float computeResult() throws HyracksDataException {
         // We will subtract the intersection size later to get the real union size.
         int firstListSize = firstListIter.size();
         int secondListSize = secondListIter.size();
@@ -161,18 +158,14 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         ATypeTag probeItemTypeTag = (probeList == firstListIter) ? firstItemTypeTag : secondItemTypeTag;
 
         setHashMap(buildItemTypeTag, probeItemTypeTag);
-        try {
-            buildHashMap(buildList);
-            int intersectionSize = probeHashMap(probeList, buildListSize, probeListSize);
-            // Special indicator for the "check" version of jaccard.
-            if (intersectionSize < 0) {
-                return -1;
-            }
-            unionSize -= intersectionSize;
-            return (float) intersectionSize / (float) unionSize;
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+        buildHashMap(buildList);
+        int intersectionSize = probeHashMap(probeList, buildListSize, probeListSize);
+        // Special indicator for the "check" version of jaccard.
+        if (intersectionSize < 0) {
+            return -1;
         }
+        unionSize -= intersectionSize;
+        return (float) intersectionSize / (float) unionSize;
     }
 
     protected void buildHashMap(AbstractAsterixListIterator buildIter) throws HyracksDataException {
@@ -239,7 +232,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         hashMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
     }
 
-    protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws AlgebricksException {
+    protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
         switch (typeTag1) {
             case ORDEREDLIST: {
                 firstListIter = fstOrdListIter;
@@ -250,7 +243,8 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
                 break;
             }
             default: {
-                throw new AlgebricksException("Invalid types " + typeTag1 + " given as arguments to jaccard.");
+                throw new TypeMismatchException(AsterixBuiltinFunctions.SIMILARITY_JACCARD, 0, typeTag1.serialize(),
+                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
             }
         }
         switch (typeTag2) {
@@ -263,7 +257,8 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
                 break;
             }
             default: {
-                throw new AlgebricksException("Invalid types " + typeTag2 + " given as arguments to jaccard.");
+                throw new TypeMismatchException(AsterixBuiltinFunctions.SIMILARITY_JACCARD, 1, typeTag2.serialize(),
+                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
             }
         }
         return true;

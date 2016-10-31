@@ -23,14 +23,13 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -54,14 +53,12 @@ public class DurationEqualDescriptor extends AbstractScalarFunctionDynamicDescri
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -76,7 +73,7 @@ public class DurationEqualDescriptor extends AbstractScalarFunctionDynamicDescri
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -86,26 +83,23 @@ public class DurationEqualDescriptor extends AbstractScalarFunctionDynamicDescri
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
 
-                        try {
-                            if (bytes0[offset0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG
-                                    || bytes1[offset1] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects type NULL/DURATION, NULL/DURATION but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + " and "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]));
-                            }
+                        if (bytes0[offset0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                    ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
+                        }
+                        if (bytes1[offset1] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                    ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
+                        }
 
-                            if ((ADurationSerializerDeserializer.getDayTime(bytes0,
-                                    offset0 + 1) == ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1))
-                                    && (ADurationSerializerDeserializer.getYearMonth(bytes0,
-                                            offset0 + 1) == ADurationSerializerDeserializer.getYearMonth(bytes1,
+                        if ((ADurationSerializerDeserializer.getDayTime(bytes0,
+                                offset0 + 1) == ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1))
+                                && (ADurationSerializerDeserializer.getYearMonth(bytes0,
+                                        offset0 + 1) == ADurationSerializerDeserializer.getYearMonth(bytes1,
                                                     offset1 + 1))) {
                                 boolSerde.serialize(ABoolean.TRUE, out);
-                            } else {
+                        } else {
                                 boolSerde.serialize(ABoolean.FALSE, out);
-                            }
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
                         }
                         result.set(resultStorage);
                     }

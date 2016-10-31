@@ -24,19 +24,19 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -58,7 +58,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private AMutableInt64 result = new AMutableInt64(0);
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -71,7 +71,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
-                            throws AlgebricksException {
+                            throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
@@ -83,13 +83,12 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 result.setValue(len);
                                 int64Serde.serialize(result, out);
                             } else {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_LENGTH.getName()
-                                        + ": expects input type STRING/NULL but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[offset]));
+                                throw new TypeMismatchException(getIdentifier(), 0,
+                                        serString[offset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             resultPointable.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1);
+                            throw new HyracksDataException(e1);
                         }
                     }
                 };

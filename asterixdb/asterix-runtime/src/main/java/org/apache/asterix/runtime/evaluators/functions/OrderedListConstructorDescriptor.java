@@ -28,11 +28,11 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -83,7 +83,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
         }
 
         @Override
-        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
             final IScalarEvaluator[] argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
                 argEvals[i] = args[i].createScalarEvaluator(ctx);
@@ -96,7 +96,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                 private final OrderedListBuilder builder = new OrderedListBuilder();
 
                 @Override
-                public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                     try {
                         resultStorage.reset();
                         builder.reset(orderedlistType);
@@ -108,11 +108,11 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                         builder.write(out, true);
                         result.set(resultStorage);
                     } catch (IOException ioe) {
-                        throw new AlgebricksException(ioe);
+                        throw new HyracksDataException(ioe);
                     }
                 }
 
-                private void writeUntypedItems(IFrameTupleReference tuple) throws AlgebricksException {
+                private void writeUntypedItems(IFrameTupleReference tuple) throws HyracksDataException {
 
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
@@ -121,11 +121,11 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                         }
 
                     } catch (IOException ioe) {
-                        throw new AlgebricksException(ioe);
+                        throw new HyracksDataException(ioe);
                     }
                 }
 
-                private void writeTypedItems(IFrameTupleReference tuple) throws AlgebricksException {
+                private void writeTypedItems(IFrameTupleReference tuple) throws HyracksDataException {
 
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
@@ -134,7 +134,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                         }
 
                     } catch (IOException ioe) {
-                        throw new AlgebricksException(ioe);
+                        throw new HyracksDataException(ioe);
                     }
                 }
 

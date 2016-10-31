@@ -32,12 +32,12 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -71,7 +71,7 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
                     .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                 final DataOutput out = resultStorage.getDataOutput();
                 final IScalarEvaluator evalLeft = evalFactoryLeft.createScalarEvaluator(ctx);
@@ -84,7 +84,7 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private final IVisitablePointable pointableRight = allocator.allocateFieldValue(inputTypeRight);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             evalLeft.evaluate(tuple, pointableLeft);
                             evalRight.evaluate(tuple, pointableRight);
@@ -97,7 +97,7 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
                             boolSerde.serialize(resultBit, out);
                             result.set(resultStorage);
                         } catch (Exception ioe) {
-                            throw new AlgebricksException(ioe);
+                            throw new HyracksDataException(ioe);
                         }
                     }
                 };

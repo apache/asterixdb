@@ -26,9 +26,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
@@ -178,7 +178,8 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         }
 
         @Override
-        public synchronized ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx) {
+        public synchronized ITuplePairComparator createTuplePairComparator(IHyracksTaskContext ctx)
+                throws HyracksDataException {
             return new TuplePairEvaluator(ctx, cond, binaryBooleanInspectorFactory.createBinaryBooleanInspector(ctx));
         }
     }
@@ -186,7 +187,6 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
     public static class TuplePairEvaluator implements ITuplePairComparator {
         private final IHyracksTaskContext ctx;
         private IScalarEvaluator condEvaluator;
-        private final IScalarEvaluatorFactory condFactory;
         private final IPointable p;
         private final CompositeFrameTupleReference compositeTupleRef;
         private final FrameTupleReference leftRef;
@@ -194,9 +194,9 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         private final IBinaryBooleanInspector binaryBooleanInspector;
 
         public TuplePairEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory condFactory,
-                IBinaryBooleanInspector binaryBooleanInspector) {
+                IBinaryBooleanInspector binaryBooleanInspector) throws HyracksDataException {
             this.ctx = ctx;
-            this.condFactory = condFactory;
+            this.condEvaluator = condFactory.createScalarEvaluator(ctx);
             this.binaryBooleanInspector = binaryBooleanInspector;
             this.leftRef = new FrameTupleReference();
             this.p = VoidPointable.FACTORY.createPointable();
@@ -207,19 +207,8 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         @Override
         public int compare(IFrameTupleAccessor outerAccessor, int outerIndex, IFrameTupleAccessor innerAccessor,
                 int innerIndex) throws HyracksDataException {
-            if (condEvaluator == null) {
-                try {
-                    this.condEvaluator = condFactory.createScalarEvaluator(ctx);
-                } catch (AlgebricksException ae) {
-                    throw new HyracksDataException(ae);
-                }
-            }
             compositeTupleRef.reset(outerAccessor, outerIndex, innerAccessor, innerIndex);
-            try {
-                condEvaluator.evaluate(compositeTupleRef, p);
-            } catch (AlgebricksException ae) {
-                throw new HyracksDataException(ae);
-            }
+            condEvaluator.evaluate(compositeTupleRef, p);
             boolean result = binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(),
                     p.getLength());
             if (result) {

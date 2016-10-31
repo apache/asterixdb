@@ -33,7 +33,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -65,13 +65,12 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new EditDistanceListIsFilterableEvaluator(args, ctx);
             }
         };
@@ -97,13 +96,13 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
         public EditDistanceListIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-                throws AlgebricksException {
+                throws HyracksDataException {
             listEval = args[0].createScalarEvaluator(context);
             edThreshEval = args[1].createScalarEvaluator(context);
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             resultStorage.reset();
 
             listEval.evaluate(tuple, listPtr);
@@ -123,21 +122,16 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
                     listLen = AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
                 default:
-                    throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName()
-                            + ": expects input type ORDEREDLIST or UNORDEREDLIST as the first argument, but got "
-                            + typeTag + ".");
+                    throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE,
+                            0, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG,
+                            ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 
             // Check type and extract edit-distance threshold.
             bytes = edThreshPtr.getByteArray();
             offset = edThreshPtr.getStartOffset();
-            long edThresh;
-
-            try {
-                edThresh = ATypeHierarchy.getIntegerValue(bytes, offset);
-            } catch (HyracksDataException e1) {
-                throw new AlgebricksException(e1);
-            }
+            long edThresh = ATypeHierarchy.getIntegerValue(
+                    AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, bytes, offset);
 
             // Compute result.
             long lowerBound = listLen - edThresh;
@@ -148,7 +142,7 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
                     booleanSerde.serialize(ABoolean.TRUE, output);
                 }
             } catch (IOException e) {
-                throw new AlgebricksException(e);
+                throw new HyracksDataException(e);
             }
             result.set(resultStorage);
         }

@@ -24,10 +24,10 @@ import java.io.IOException;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -45,14 +45,14 @@ public class WordTokensEvaluator implements IScalarEvaluator {
     private final AOrderedListType listType;
 
     public WordTokensEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, IBinaryTokenizer tokenizer,
-            BuiltinType itemType) throws AlgebricksException {
+            BuiltinType itemType) throws HyracksDataException {
         stringEval = args[0].createScalarEvaluator(context);
         this.tokenizer = tokenizer;
         this.listType = new AOrderedListType(itemType, null);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         stringEval.evaluate(tuple, argPtr);
         tokenizer.reset(argPtr.getByteArray(), argPtr.getStartOffset(), argPtr.getLength());
@@ -64,7 +64,7 @@ public class WordTokensEvaluator implements IScalarEvaluator {
             }
             listBuilder.write(out, true);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }

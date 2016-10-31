@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -48,10 +47,8 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
-
+            throws HyracksDataException {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
             private boolean first = true;
 
             @Override

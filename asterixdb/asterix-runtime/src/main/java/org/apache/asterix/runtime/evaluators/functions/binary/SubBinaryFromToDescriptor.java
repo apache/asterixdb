@@ -24,7 +24,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -47,26 +46,18 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new AbstractSubBinaryEvaluator(ctx, args, getIdentifier().getName()) {
                     @Override
-                    protected int getSubLength(IFrameTupleReference tuple) throws AlgebricksException {
-                        int subLength = 0;
-                        try {
-                            subLength = ATypeHierarchy.getIntegerValue(pointables[2].getByteArray(),
-                                    pointables[2].getStartOffset());
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
-
-                        return subLength;
+                    protected int getSubLength(IFrameTupleReference tuple) throws HyracksDataException {
+                        return ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 2,
+                                pointables[2].getByteArray(), pointables[2].getStartOffset());
                     }
                 };
             }

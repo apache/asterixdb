@@ -31,10 +31,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -57,14 +56,12 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
-
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
 
@@ -85,26 +82,20 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                             .getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evalLen.evaluate(tuple, lenPtr);
                         evalThreshold.evaluate(tuple, thresholdPtr);
 
                         // length
-                        int length = 0;
-                        try {
-                            length = ATypeHierarchy.getIntegerValue(lenPtr.getByteArray(), lenPtr.getStartOffset());
-                        } catch (HyracksDataException e1) {
-                            throw new AlgebricksException(e1);
-                        }
-
+                        int length = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0, lenPtr.getByteArray(),
+                                lenPtr.getStartOffset());
                         // similarity threshold
                         byte[] data = thresholdPtr.getByteArray();
                         int offset = thresholdPtr.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
-                                    + ": expects type FLOAT the first argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                            throw new TypeMismatchException(getIdentifier(), 1, data[offset],
+                                    ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
                         }
                         float similarityThreshold = AFloatSerializerDeserializer.getFloat(data, offset + 1);
 
@@ -118,7 +109,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         try {
                             int32Serde.serialize(res, out);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

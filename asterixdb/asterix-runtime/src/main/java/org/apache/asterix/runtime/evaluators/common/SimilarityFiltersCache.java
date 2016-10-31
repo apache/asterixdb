@@ -24,7 +24,6 @@ import java.util.Arrays;
 
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersFactory;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -40,16 +39,11 @@ public class SimilarityFiltersCache {
     private SimilarityFilters similarityFiltersCached = null;
 
     public SimilarityFilters get(float similarityThreshold, byte[] similarityNameBytes, int startOffset, int len)
-            throws AlgebricksException {
+            throws HyracksDataException {
         if (similarityThreshold != similarityThresholdCached || similarityNameBytesCached == null
                 || !Arrays.equals(similarityNameBytes, similarityNameBytesCached)) {
             bbis.setByteBuffer(ByteBuffer.wrap(similarityNameBytes), startOffset + 1);
-            String similarityName;
-            try {
-                similarityName = utf8SerDer.deserialize(dis);
-            } catch (HyracksDataException e) {
-                throw new AlgebricksException(e);
-            }
+            String similarityName = utf8SerDer.deserialize(dis);
             similarityNameBytesCached = Arrays.copyOfRange(similarityNameBytes, startOffset, len);
             similarityFiltersCached = SimilarityFiltersFactory.getSimilarityFilters(similarityName,
                     similarityThreshold);

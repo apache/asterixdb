@@ -478,7 +478,7 @@ public class ClassAd extends ExprTree {
         ExprTree tree = pRef;
         // sanity checks
         if (attrName.isEmpty() || pRef == null) {
-            throw new HyracksDataException();
+            throw new HyracksDataException("Attribute name is empty");
         }
         if (tree != null) {
             CaseInsensitiveString pstrAttr = objectPool.caseInsensitiveStringPool.get();

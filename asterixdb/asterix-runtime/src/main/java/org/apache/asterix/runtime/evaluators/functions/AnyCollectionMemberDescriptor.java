@@ -31,11 +31,12 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -75,7 +76,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
         }
 
         @Override
-        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
             return new IScalarEvaluator() {
 
                 private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -86,21 +87,21 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                 private int itemLength;
 
                 @Override
-                public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+
+                    resultStorage.reset();
+                    evalList.evaluate(tuple, inputArgList);
+                    byte[] serList = inputArgList.getByteArray();
+                    int offset = inputArgList.getStartOffset();
+
+                    if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                            && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER, 0,
+                                serList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                    }
 
                     try {
-                        resultStorage.reset();
-                        evalList.evaluate(tuple, inputArgList);
-                        byte[] serList = inputArgList.getByteArray();
-                        int offset = inputArgList.getStartOffset();
-
-                        if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER.getName()
-                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[offset]));
-                        }
-
                         if (serList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                             if (AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset) == 0) {
                                 out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
@@ -136,9 +137,9 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                             result.set(resultStorage);
                         }
                     } catch (IOException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     } catch (AsterixException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     }
                 }
             };

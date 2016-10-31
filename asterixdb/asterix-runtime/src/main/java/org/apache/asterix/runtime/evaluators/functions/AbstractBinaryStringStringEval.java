@@ -22,10 +22,10 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
@@ -39,7 +39,7 @@ public abstract class AbstractBinaryStringStringEval extends AbstractBinaryStrin
     protected final UTF8StringBuilder resultBuilder = new UTF8StringBuilder();
 
     public AbstractBinaryStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
-            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
+            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws HyracksDataException {
         super(context, evalLeftFactory, evalRightFactory, funcID);
     }
 
@@ -60,7 +60,7 @@ public abstract class AbstractBinaryStringStringEval extends AbstractBinaryStrin
      *            , the second input argument.
      * @param resultStrPtr
      *            , a pointable that is supposed to point to the result string.
-     * @throws AlgebricksException
+     * @throws HyracksDataException
      */
     protected abstract void compute(UTF8StringPointable left, UTF8StringPointable right,
             UTF8StringPointable resultStrPtr) throws IOException;

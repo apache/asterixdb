@@ -20,12 +20,15 @@ package org.apache.hyracks.api.exceptions;
 
 import java.io.Serializable;
 import java.util.Formatter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The main execution time exception type for runtime errors in a hyracks environment
  */
 public class HyracksDataException extends HyracksException {
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(HyracksDataException.class.getName());
 
     public static final String NONE = "";
     public static final int UNKNOWN = 0;
@@ -43,10 +46,6 @@ public class HyracksDataException extends HyracksException {
         this.errorCode = errorCode;
         this.nodeId = nodeId;
         this.params = params;
-    }
-
-    public HyracksDataException() {
-        this(NONE, UNKNOWN, null, null, null, new Serializable[0]);
     }
 
     public HyracksDataException(String message) {
@@ -136,6 +135,10 @@ public class HyracksDataException extends HyracksException {
             }
             fmt.format(message == null ? "null" : message, (Object[]) params);
             return fmt.out().toString();
+        } catch (Exception e) {
+            // Do not throw further exceptions during exception processing.
+            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
+            return e.getMessage();
         }
     }
 }

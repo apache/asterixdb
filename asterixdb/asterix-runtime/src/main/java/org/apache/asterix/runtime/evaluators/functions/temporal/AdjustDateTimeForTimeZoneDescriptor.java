@@ -19,22 +19,24 @@
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem.Fields;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -58,14 +60,12 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
      */
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -82,7 +82,7 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -95,15 +95,13 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
 
                         try {
                             if (bytes0[offset0] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects type DATETIME/NULL for parameter 0 but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]));
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                             }
 
                             if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects type STRING/NULL for parameter 1 but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]));
+                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
@@ -111,7 +109,7 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                                     utf8Ptr.getCharStartOffset());
 
                             if (!calInstance.validateTimeZone(timezone)) {
-                                throw new AlgebricksException(FID.getName() + ": wrong format for a time zone string!");
+                                throw new InvalidDataFormatException(getIdentifier(), "timezone");
                             }
 
                             long chronon = ADateTimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
@@ -124,8 +122,8 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             utf8Writer.writeUTF8(sbder.toString(), out);
-                        } catch (Exception e1) {
-                            throw new AlgebricksException(e1);
+                        } catch (IOException e1) {
+                            throw new HyracksDataException(e1);
                         }
                         result.set(resultStorage);
                     }

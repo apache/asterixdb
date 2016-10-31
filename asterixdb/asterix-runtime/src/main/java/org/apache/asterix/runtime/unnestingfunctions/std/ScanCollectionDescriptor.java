@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -22,20 +22,20 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -71,10 +71,8 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
         }
 
         @Override
-        public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
-
+        public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
             return new IUnnestingEvaluator() {
-
                 private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                 private final AsterixListAccessor listAccessor = new AsterixListAccessor();
                 private final IPointable inputVal = new VoidPointable();
@@ -83,25 +81,26 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                 private boolean metUnknown = false;
 
                 @Override
-                public void init(IFrameTupleReference tuple) throws AlgebricksException {
-                    try {
-                        metUnknown = false;
-                        argEval.evaluate(tuple, inputVal);
-                        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
-                        if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
-                            metUnknown = true;
-                            return;
-                        }
-                        listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
-                        itemIndex = 0;
-                    } catch (AsterixException e) {
-                        throw new AlgebricksException(e);
+                public void init(IFrameTupleReference tuple) throws HyracksDataException {
+                    metUnknown = false;
+                    argEval.evaluate(tuple, inputVal);
+                    byte typeTag = inputVal.getByteArray()[inputVal.getStartOffset()];
+                    if (typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
+                            || typeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                        metUnknown = true;
+                        return;
                     }
+                    if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                            && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.SCAN_COLLECTION, 0, typeTag,
+                                ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                    }
+                    listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
+                    itemIndex = 0;
                 }
 
                 @Override
-                public boolean step(IPointable result) throws AlgebricksException {
+                public boolean step(IPointable result) throws HyracksDataException {
                     try {
                         if (!metUnknown) {
                             if (itemIndex < listAccessor.size()) {
@@ -113,13 +112,12 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                             }
                         }
                     } catch (IOException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     } catch (AsterixException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     }
                     return false;
                 }
-
             };
         }
 

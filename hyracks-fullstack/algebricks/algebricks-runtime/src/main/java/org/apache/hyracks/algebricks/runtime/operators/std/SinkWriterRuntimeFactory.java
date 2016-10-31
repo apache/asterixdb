@@ -20,11 +20,10 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
@@ -32,6 +31,7 @@ import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SinkWriterRuntimeFactory implements IPushRuntimeFactory {
 
@@ -67,14 +67,13 @@ public class SinkWriterRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException {
-        PrintStream filePrintStream = null;
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
-            filePrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
-        } catch (FileNotFoundException e) {
-            throw new AlgebricksException(e);
+            PrintStream filePrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
+            IAWriter w = writerFactory.createWriter(fields, filePrintStream, printerFactories, inputRecordDesc);
+            return new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
-        IAWriter w = writerFactory.createWriter(fields, filePrintStream, printerFactories, inputRecordDesc);
-        return new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true);
     }
 }

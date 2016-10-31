@@ -30,6 +30,7 @@ import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
@@ -42,10 +43,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * initializing extensions for App and Compilation purposes
  */
 public class CompilerExtensionManager implements IAlgebraExtensionManager {
-
-    private static final String ERROR_MESSAGE_ID_CONFLICT = "Two Extensions share the same Id: %1$s";
-    public static final String ERROR_MESSAGE_COMPONENT_CONFLICT =
-            "Extension Conflict between %1$s and %2$s both extensions extend %3$s";
 
     private final Map<ExtensionId, IExtension> extensions = new HashMap<>();
 
@@ -75,8 +72,7 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
                 extension.configure(extensionConf.getArgs());
                 if (extensions.containsKey(extension.getId())) {
-                    throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_EXTENSION_CONFLICT,
-                            ERROR_MESSAGE_ID_CONFLICT, extension.getId());
+                    throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_ID_CONFLICT, extension.getId());
                 }
                 extensions.put(extension.getId(), extension);
                 switch (extension.getExtensionKind()) {
@@ -101,8 +97,8 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
     private Pair<ExtensionId, ILangCompilationProvider> extendLangCompilationProvider(Language lang,
             Pair<ExtensionId, ILangCompilationProvider> cp, ILangExtension le) throws HyracksDataException {
         if (cp != null && le.getLangCompilationProvider(lang) != null) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_EXTENSION_CONFLICT,
-                    ERROR_MESSAGE_COMPONENT_CONFLICT, le.getId(), cp.first, lang.toString());
+            throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.first,
+                    lang.toString());
         }
         return (le.getLangCompilationProvider(lang) != null)
                 ? new Pair<>(le.getId(), le.getLangCompilationProvider(lang)) : cp;
@@ -111,8 +107,7 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
     private IStatementExecutorExtension extendStatementExecutor(IStatementExecutorExtension qte,
             IStatementExecutorExtension extension) throws HyracksDataException {
         if (qte != null) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_EXTENSION_CONFLICT,
-                    ERROR_MESSAGE_COMPONENT_CONFLICT, qte.getId(), extension.getId(),
+            throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_COMPONENT_CONFLICT, qte.getId(), extension.getId(),
                     IStatementExecutorFactory.class.getSimpleName());
         }
         return extension;

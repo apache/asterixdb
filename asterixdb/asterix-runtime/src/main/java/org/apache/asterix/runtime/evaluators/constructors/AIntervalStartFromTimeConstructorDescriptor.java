@@ -29,23 +29,24 @@ import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -68,7 +69,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -77,7 +78,6 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                     private IPointable argPtr1 = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
-                    private String errorMessage = "This can not be an instance of interval (from Date)";
 
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     private AMutableDuration aDuration = new AMutableDuration(0, 0L);
@@ -87,7 +87,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -111,9 +111,8 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 intervalStart = ATimeParserFactory.parseTimePart(bytes0, utf8Ptr.getCharStartOffset(),
                                         stringLength);
                             } else {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects NULL/STRING/TIME for the first argument, but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]));
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_TIME_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             if (intervalStart < 0) {
@@ -122,8 +121,8 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
 
                             if (bytes1[offset1] == ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 if (ADurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1) != 0) {
-                                    throw new AlgebricksException(
-                                            FID.getName() + ": cannot add a year-month duration to a time value.");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
@@ -138,14 +137,17 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 ADurationParserFactory.parseDuration(bytes1, utf8Ptr.getCharStartOffset(), stringLength,
                                         aDuration, ADurationParseOption.All);
                                 if (aDuration.getMonths() != 0) {
-                                    throw new AlgebricksException(
-                                            FID.getName() + ": cannot add a year-month duration to a time value.");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
                                         aDuration.getMilliseconds(), false);
                             } else {
-                                throw new AlgebricksException("Wrong format for interval constructor from time.");
+                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        ATypeTag.SERIALIZED_DURATION_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             if (intervalEnd > GregorianCalendarSystem.CHRONON_OF_DAY) {
@@ -153,17 +155,15 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": interval end must not be less than the interval start.");
+                                throw new InvalidDataFormatException(getIdentifier(),
+                                        ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
 
                             aInterval.setValue(intervalStart, intervalEnd, ATypeTag.SERIALIZED_TIME_TYPE_TAG);
                             intervalSerde.serialize(aInterval, out);
-
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
-                        } catch (Exception e2) {
-                            throw new AlgebricksException(e2);
+                        } catch (IOException e) {
+                            throw new InvalidDataFormatException(getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         result.set(resultStorage);
                     }

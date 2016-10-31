@@ -29,7 +29,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -54,14 +53,13 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -76,19 +74,14 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                     AMutableDuration aDuration = new AMutableDuration(0, 0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
-
                         byte[] bytes = argPtr0.getByteArray();
                         int offset = argPtr0.getStartOffset();
-
-                        try {
-                            aDuration.setValue(ATypeHierarchy.getIntegerValue(bytes, offset), 0);
-                            durationSerde.serialize(aDuration, out);
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
-                        }
+                        aDuration.setValue(ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0, bytes, offset),
+                                0);
+                        durationSerde.serialize(aDuration, out);
                         result.set(resultStorage);
                     }
                 };

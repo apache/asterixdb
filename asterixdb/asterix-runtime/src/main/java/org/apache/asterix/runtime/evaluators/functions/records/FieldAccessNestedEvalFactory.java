@@ -28,6 +28,7 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -36,7 +37,8 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -65,7 +67,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
 
             private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -92,24 +94,20 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
             }
 
             @SuppressWarnings("unchecked")
-            private void generateFieldsPointables() throws AlgebricksException {
+            private void generateFieldsPointables() throws HyracksDataException {
                 for (int i = 0; i < fieldPath.size(); i++) {
                     ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
                     DataOutput out = storage.getDataOutput();
                     AString as = new AString(fieldPath.get(i));
-                    try {
-                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
+                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
                                 out);
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
-                    }
                     fieldPointables[i] = new VoidPointable();
                     fieldPointables[i].set(storage);
                 }
             }
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 try {
                     resultStorage.reset();
                     eval0.evaluate(tuple, inputArg0);
@@ -119,8 +117,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     int len = inputArg0.getLength();
 
                     if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new AlgebricksException("Field accessor is not defined for values of type "
-                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED, 0,
+                                serRecord[start], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
 
                     int subFieldIndex = -1;
@@ -140,9 +138,11 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                             //enforced SubType
                             subType = ((AUnionType) subType).getActualType();
-                            if (subType.getTypeTag().serialize() != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        "Field accessor is not defined for values of type " + subTypeTag);
+                            byte serializedTypeTag = subType.getTypeTag().serialize();
+                            if (serializedTypeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                                throw new UnsupportedTypeException(
+                                        AsterixBuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
+                                        serializedTypeTag);
                             }
                             if (subType.getTypeTag() == ATypeTag.RECORD) {
                                 recTypeInfos[pathIndex].reset((ARecordType) subType);
@@ -197,8 +197,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         // type check
                         if (pathIndex < fieldPointables.length - 1
                                 && serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new AlgebricksException("Field accessor is not defined for values of type "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
+                            throw new UnsupportedTypeException(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
+                                    serRecord[start]);
                         }
                     }
 
@@ -231,8 +231,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             return;
                         }
                         if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new AlgebricksException("Field accessor is not defined for values of type "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[start]));
+                                throw new UnsupportedTypeException(
+                                    AsterixBuiltinFunctions.FIELD_ACCESS_NESTED.getName(), serRecord[start]);
                         }
                     }
                     // emit the final result.
@@ -243,10 +243,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         out.write(serRecord, subFieldOffset, subFieldLength);
                         result.set(resultStorage);
                     }
-                } catch (IOException e) {
-                    throw new AlgebricksException(e);
-                } catch (AsterixException e) {
-                    throw new AlgebricksException(e);
+                } catch (IOException | AsterixException e) {
+                    throw new HyracksDataException(e);
                 }
             }
         };

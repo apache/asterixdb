@@ -27,11 +27,13 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -51,13 +53,12 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new ABinaryConstructorEvaluator(args[0], ByteArrayHexParserFactory.INSTANCE, ctx);
             }
         };
@@ -77,23 +78,22 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
         public ABinaryConstructorEvaluator(IScalarEvaluatorFactory copyEvaluatorFactory,
-                IValueParserFactory valueParserFactory, IHyracksTaskContext context) throws AlgebricksException {
+                IValueParserFactory valueParserFactory, IHyracksTaskContext context) throws HyracksDataException {
             eval = copyEvaluatorFactory.createScalarEvaluator(context);
             byteArrayParser = valueParserFactory.createValueParser();
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             try {
                 eval.evaluate(tuple, inputArg);
                 byte[] binary = inputArg.getByteArray();
                 int startOffset = inputArg.getStartOffset();
                 int len = inputArg.getLength();
 
-                ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[binary[startOffset]];
-                if (tt == ATypeTag.BINARY) {
+                if (binary[startOffset] == ATypeTag.SERIALIZED_BINARY_TYPE_TAG) {
                     result.set(inputArg);
-                } else if (tt == ATypeTag.STRING) {
+                } else if (binary[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                     resultStorage.reset();
                     utf8Ptr.set(inputArg.getByteArray(), startOffset + 1, len - 1);
                     char[] buffer = utf8Ptr.toString().toCharArray();
@@ -101,10 +101,13 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                     byteArrayParser.parse(buffer, 0, buffer.length, out);
                     result.set(resultStorage);
                 } else {
-                    throw new AlgebricksException("binary type of " + tt + "haven't implemented yet.");
+                    throw new TypeMismatchException(AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0,
+                            binary[startOffset], ATypeTag.SERIALIZED_BINARY_TYPE_TAG,
+                            ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                 }
             } catch (IOException e) {
-                throw new AlgebricksException(e);
+                throw new InvalidDataFormatException(AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR, e,
+                        ATypeTag.SERIALIZED_BINARY_TYPE_TAG);
             }
         }
     }

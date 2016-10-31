@@ -30,12 +30,14 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -58,14 +60,13 @@ public class APoint3DConstructorDescriptor extends AbstractScalarFunctionDynamic
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private String errorMessage = "This can not be an instance of point3d";
                     private AMutablePoint3D aPoint3D = new AMutablePoint3D(0, 0, 0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<APoint3D> point3DSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -73,7 +74,7 @@ public class APoint3DConstructorDescriptor extends AbstractScalarFunctionDynamic
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
@@ -91,11 +92,13 @@ public class APoint3DConstructorDescriptor extends AbstractScalarFunctionDynamic
                                         Double.parseDouble(s.substring(secondCommaIndex + 1, s.length())));
                                 point3DSerde.serialize(aPoint3D, out);
                             } else {
-                                throw new AlgebricksException(errorMessage);
+                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                        } catch (IOException e) {
+                            throw new InvalidDataFormatException(getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                         }
                     }
                 };

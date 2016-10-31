@@ -21,12 +21,13 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.DataOutput;
 
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -39,7 +40,7 @@ public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator 
     protected IScalarEvaluator[] evaluators;
 
     public AbstractBinaryScalarEvaluator(final IHyracksTaskContext context,
-            final IScalarEvaluatorFactory[] evaluatorFactories) throws AlgebricksException {
+            final IScalarEvaluatorFactory[] evaluatorFactories) throws HyracksDataException {
         pointables = new IPointable[evaluatorFactories.length];
         evaluators = new IScalarEvaluator[evaluatorFactories.length];
         for (int i = 0; i < evaluators.length; ++i) {
@@ -71,13 +72,12 @@ public abstract class AbstractBinaryScalarEvaluator implements IScalarEvaluator 
     }
 
     protected void checkTypeMachingThrowsIfNot(String title, ATypeTag[] expected, ATypeTag... actual)
-            throws AlgebricksException {
+            throws HyracksDataException {
         for (int i = 0; i < expected.length; i++) {
             if (expected[i] != actual[i]) {
                 if (!ATypeHierarchy.canPromote(actual[i], expected[i])
                         && !ATypeHierarchy.canPromote(expected[i], actual[i])) {
-                    throw new AlgebricksException(title + ": expects " + expected[i] + " at " + rankToString(i + 1)
-                            + " argument, but got " + actual[i]);
+                    throw new TypeMismatchException(title, i, actual[i].serialize(), expected[i].serialize());
                 }
             }
         }

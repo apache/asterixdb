@@ -37,6 +37,8 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -47,6 +49,7 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 
 public class ComparisonHelper implements Serializable {
     private static final long serialVersionUID = 1L;
+    static final String COMPARISON = "comparison operations (>, >=, <, and <=)";
 
     private final IBinaryComparator strBinaryComp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
             .createBinaryComparator();
@@ -98,10 +101,9 @@ public class ComparisonHelper implements Serializable {
     private int compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag, IPointable arg1,
             IPointable arg2) throws HyracksDataException {
         if (expectedTypeTag != actualTypeTag) {
-            throw new HyracksDataException(
-                    "Comparison is undefined between " + expectedTypeTag + " and " + actualTypeTag + ".");
+            throw new IncompatibleTypeException(COMPARISON, actualTypeTag.serialize(), expectedTypeTag.serialize());
         }
-        int result = 0;
+        int result;
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         int leftLen = arg1.getLength() - 1;
@@ -109,64 +111,56 @@ public class ComparisonHelper implements Serializable {
         int rightOffset = arg2.getStartOffset();
         int rightLen = arg2.getLength() - 1;
 
-        try {
-            switch (actualTypeTag) {
-                case YEARMONTHDURATION:
-                case TIME:
-                case DATE:
-                    result = Integer.compare(AInt32SerializerDeserializer.getInt(leftBytes, leftOffset),
-                            AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
-                    break;
-                case DAYTIMEDURATION:
-                case DATETIME:
-                    result = Long.compare(AInt64SerializerDeserializer.getLong(leftBytes, leftOffset),
-                            AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
-                    break;
-                case CIRCLE:
-                    result = circleBinaryComp.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case LINE:
-                    result = lineBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case POINT:
-                    result = pointBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case POINT3D:
-                    result = point3DBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case POLYGON:
-                    result = polygonBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case DURATION:
-                    result = durationBinaryComp.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case INTERVAL:
-                    result = intervalBinaryComp.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case RECTANGLE:
-                    result = rectangleBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case BINARY:
-                    result = byteArrayComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                case UUID:
-                    result = uuidBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
-                            rightLen);
-                    break;
-                default:
-                    throw new HyracksDataException("Comparison for " + actualTypeTag + " is not supported.");
-            }
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(e);
+        switch (actualTypeTag) {
+            case YEARMONTHDURATION:
+            case TIME:
+            case DATE:
+                result = Integer.compare(AInt32SerializerDeserializer.getInt(leftBytes, leftOffset),
+                        AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+                break;
+            case DAYTIMEDURATION:
+            case DATETIME:
+                result = Long.compare(AInt64SerializerDeserializer.getLong(leftBytes, leftOffset),
+                        AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+                break;
+            case CIRCLE:
+                result = circleBinaryComp.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset, rightLen);
+                break;
+            case LINE:
+                result = lineBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
+                        rightLen);
+                break;
+            case POINT:
+                result = pointBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
+                        rightLen);
+                break;
+            case POINT3D:
+                result = point3DBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
+                        rightLen);
+                break;
+            case POLYGON:
+                result = polygonBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
+                        rightLen);
+                break;
+            case DURATION:
+                result = durationBinaryComp.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset, rightLen);
+                break;
+            case INTERVAL:
+                result = intervalBinaryComp.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset, rightLen);
+                break;
+            case RECTANGLE:
+                result = rectangleBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
+                        rightLen);
+                break;
+            case BINARY:
+                result = byteArrayComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset, rightLen);
+                break;
+            case UUID:
+                result = uuidBinaryComparator.compare(leftBytes, leftOffset, leftLen, rightBytes, rightOffset,
+                        rightLen);
+                break;
+            default:
+                throw new UnsupportedTypeException(COMPARISON, actualTypeTag.serialize());
         }
         return result;
     }
@@ -177,21 +171,15 @@ public class ComparisonHelper implements Serializable {
             byte b1 = arg2.getByteArray()[arg2.getStartOffset()];
             return compareByte(b0, b1);
         }
-        throw new HyracksDataException("Comparison is undefined between types ABoolean and " + typeTag2 + " .");
+        throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG, typeTag2.serialize());
     }
 
     private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         if (typeTag2 == ATypeTag.STRING) {
-            int result;
-            try {
-                result = strBinaryComp.compare(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength() - 1,
+            return strBinaryComp.compare(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength() - 1,
                         arg2.getByteArray(), arg2.getStartOffset(), arg2.getLength() - 1);
-            } catch (HyracksDataException e) {
-                throw new HyracksDataException(e);
-            }
-            return result;
         }
-        throw new HyracksDataException("Comparison is undefined between types AString and " + typeTag2 + " .");
+        throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_STRING_TYPE_TAG, typeTag2.serialize());
     }
 
     private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
@@ -202,32 +190,21 @@ public class ComparisonHelper implements Serializable {
 
         double s = ADoubleSerializerDeserializer.getDouble(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
+            case INT8:
+                return compareDouble(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
+            case INT16:
+                return compareDouble(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
+            case INT32:
+                return compareDouble(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+            case INT64:
+                return compareDouble(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+            case FLOAT:
+                return compareDouble(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
+            case DOUBLE:
+                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
             default: {
-                throw new HyracksDataException("Comparison is undefined between types ADouble and " + typeTag2 + " .");
+                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
+                        typeTag2.serialize());
             }
         }
     }
@@ -240,33 +217,21 @@ public class ComparisonHelper implements Serializable {
 
         float s = FloatPointable.getFloat(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            default: {
-                throw new HyracksDataException("Comparison is undefined between types AFloat and " + typeTag2 + " .");
-            }
+            case INT8:
+                return compareFloat(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
+            case INT16:
+                return compareFloat(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
+            case INT32:
+                return compareFloat(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+            case INT64:
+                return compareFloat(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+            case FLOAT:
+                return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
+            case DOUBLE:
+                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
+            default:
+                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+                        typeTag2.serialize());
         }
     }
 
@@ -278,33 +243,21 @@ public class ComparisonHelper implements Serializable {
 
         long s = AInt64SerializerDeserializer.getLong(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
-                return compareLong(s, v2);
-            }
-            case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
-                return compareLong(s, v2);
-            }
-            case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
-                return compareLong(s, v2);
-            }
-            case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
-                return compareLong(s, v2);
-            }
-            case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            default: {
-                throw new HyracksDataException("Comparison is undefined between types AInt64 and " + typeTag2 + " .");
-            }
+            case INT8:
+                return compareLong(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
+            case INT16:
+                return compareLong(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
+            case INT32:
+                return compareLong(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+            case INT64:
+                return compareLong(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+            case FLOAT:
+                return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
+            case DOUBLE:
+                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
+            default:
+                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
+                        typeTag2.serialize());
         }
     }
 
@@ -340,9 +293,9 @@ public class ComparisonHelper implements Serializable {
                 double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset);
                 return compareDouble(s, v2);
             }
-            default: {
-                throw new HyracksDataException("Comparison is undefined between types AInt32 and " + typeTag2 + " .");
-            }
+            default:
+                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
+                        typeTag2.serialize());
         }
     }
 
@@ -379,7 +332,8 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new HyracksDataException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
+                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                        typeTag2.serialize());
             }
         }
     }
@@ -392,33 +346,21 @@ public class ComparisonHelper implements Serializable {
 
         byte s = AInt8SerializerDeserializer.getByte(leftBytes, leftStart);
         switch (typeTag2) {
-            case INT8: {
-                byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightStart);
-                return compareByte(s, v2);
-            }
-            case INT16: {
-                short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightStart);
-                return compareShort(s, v2);
-            }
-            case INT32: {
-                int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightStart);
-                return compareInt(s, v2);
-            }
-            case INT64: {
-                long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightStart);
-                return compareLong(s, v2);
-            }
-            case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(rightBytes, rightStart);
-                return compareFloat(s, v2);
-            }
-            case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightStart);
-                return compareDouble(s, v2);
-            }
-            default: {
-                throw new HyracksDataException("Comparison is undefined between types AInt16 and " + typeTag2 + " .");
-            }
+            case INT8:
+                return compareByte(s, AInt8SerializerDeserializer.getByte(rightBytes, rightStart));
+            case INT16:
+                return compareShort(s, AInt16SerializerDeserializer.getShort(rightBytes, rightStart));
+            case INT32:
+                return compareInt(s, AInt32SerializerDeserializer.getInt(rightBytes, rightStart));
+            case INT64:
+                return compareLong(s, AInt64SerializerDeserializer.getLong(rightBytes, rightStart));
+            case FLOAT:
+                return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightStart));
+            case DOUBLE:
+                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightStart));
+            default:
+                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+                        typeTag2.serialize());
         }
     }
 

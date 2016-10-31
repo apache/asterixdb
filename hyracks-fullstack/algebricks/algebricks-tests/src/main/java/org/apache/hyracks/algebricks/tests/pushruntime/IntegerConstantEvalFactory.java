@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.algebricks.tests.pushruntime;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -43,21 +42,17 @@ public class IntegerConstantEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
 
             private ArrayBackedValueStorage buf = new ArrayBackedValueStorage();
 
             {
-                try {
                     IntegerSerializerDeserializer.INSTANCE.serialize(value, buf.getDataOutput());
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
             }
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 result.set(buf);
             }
         };

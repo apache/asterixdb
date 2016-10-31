@@ -28,7 +28,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -56,13 +55,12 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     // For inputs.
                     private final IPointable leftPtr = new VoidPointable();
@@ -81,23 +79,19 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            resultStorage.reset();
-                            evalLeft.evaluate(tuple, leftPtr);
-                            evalRight.evaluate(tuple, rightPtr);
-                            for (int i = 0; i < args.length; i++) {
-                                IPointable argPtr = i == 0 ? leftPtr : rightPtr;
-                                byte[] data = argPtr.getByteArray();
-                                int offset = argPtr.getStartOffset();
-                                operands[i] = ATypeHierarchy.getDoubleValue(data, offset);
-                            }
-                            aDouble.setValue(Math.atan2(operands[0], operands[1]));
-                            outputSerde.serialize(aDouble, out);
-                            result.set(resultStorage);
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        evalLeft.evaluate(tuple, leftPtr);
+                        evalRight.evaluate(tuple, rightPtr);
+                        for (int i = 0; i < args.length; i++) {
+                            IPointable argPtr = i == 0 ? leftPtr : rightPtr;
+                            byte[] data = argPtr.getByteArray();
+                            int offset = argPtr.getStartOffset();
+                            operands[i] = ATypeHierarchy.getDoubleValue(getIdentifier().getName(), i, data, offset);
                         }
+                        aDouble.setValue(Math.atan2(operands[0], operands[1]));
+                        outputSerde.serialize(aDouble, out);
+                        result.set(resultStorage);
                     }
                 };
             }

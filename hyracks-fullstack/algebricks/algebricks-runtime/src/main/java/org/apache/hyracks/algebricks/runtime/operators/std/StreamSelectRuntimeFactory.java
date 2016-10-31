@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -92,11 +91,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
             public void open() throws HyracksDataException {
                 if (eval == null) {
                     initAccessAppendFieldRef(ctx);
-                    try {
-                        eval = cond.createScalarEvaluator(ctx);
-                    } catch (AlgebricksException ae) {
-                        throw new HyracksDataException(ae);
-                    }
+                    eval = cond.createScalarEvaluator(ctx);
                 }
                 isOpen = true;
                 writer.open();
@@ -135,11 +130,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                 int nTuple = tAccess.getTupleCount();
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
-                    try {
-                        eval.evaluate(tRef, p);
-                    } catch (AlgebricksException ae) {
-                        throw new HyracksDataException(ae);
-                    }
+                    eval.evaluate(tRef, p);
                     if (bbi.getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength())) {
                         if (projectionList != null) {
                             appendProjectionToFrame(t, projectionList);

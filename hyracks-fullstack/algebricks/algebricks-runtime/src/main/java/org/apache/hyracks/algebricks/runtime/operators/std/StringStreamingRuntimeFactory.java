@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
@@ -55,14 +54,13 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws HyracksDataException {
         final IPrinter[] printers = new IPrinter[printerFactories.length];
         for (int i = 0; i < printerFactories.length; i++) {
             printers[i] = printerFactories[i].createPrinter();
         }
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
             final class ForwardScriptOutput implements Runnable {
 
                 private InputStream inStream;

@@ -22,10 +22,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -57,7 +57,7 @@ public class GramTokensEvaluator implements IScalarEvaluator {
     private final AOrderedListType listType;
 
     public GramTokensEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, IBinaryTokenizer tokenizer,
-            BuiltinType itemType) throws AlgebricksException {
+            BuiltinType itemType) throws HyracksDataException {
         stringEval = args[0].createScalarEvaluator(context);
         gramLengthEval = args[1].createScalarEvaluator(context);
         prePostEval = args[2].createScalarEvaluator(context);
@@ -66,19 +66,14 @@ public class GramTokensEvaluator implements IScalarEvaluator {
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         stringEval.evaluate(tuple, stringArg);
         gramLengthEval.evaluate(tuple, gramLengthArg);
         prePostEval.evaluate(tuple, prePostArg);
 
-        int gramLength = 0;
-        try {
-            gramLength = ATypeHierarchy.getIntegerValue(gramLengthArg.getByteArray(), gramLengthArg.getStartOffset());
-        } catch (HyracksDataException e1) {
-            throw new AlgebricksException(e1);
-        }
-
+        int gramLength = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.GRAM_TOKENS.getName(), 1,
+                gramLengthArg.getByteArray(), gramLengthArg.getStartOffset());
         tokenizer.setGramlength(gramLength);
         boolean prePost = BooleanPointable.getBoolean(prePostArg.getByteArray(),
                 prePostArg.getStartOffset() + typeIndicatorSize);
@@ -93,7 +88,7 @@ public class GramTokensEvaluator implements IScalarEvaluator {
             }
             listBuilder.write(out, true);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }

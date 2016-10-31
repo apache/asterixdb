@@ -132,19 +132,19 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
-        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
+        <expected-error>Type incompatibility: function agg-avg gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="sum_mixed">
         <output-dir compare="Text">sum_mixed</output-dir>
-        <expected-error>Unexpected type STRING in aggregation input stream. Expected type (or a promotable type to)FLOAT</expected-error>
+        <expected-error>Type incompatibility: function agg-sum gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
       <compilation-unit name="min_mixed">
         <output-dir compare="Text">min_mixed</output-dir>
-        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
+        <expected-error>Type incompatibility: function min/max gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -568,19 +568,19 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="avg_mixed">
         <output-dir compare="Text">avg_mixed</output-dir>
-        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
+        <expected-error>Type incompatibility: function agg-avg gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="sum_mixed">
         <output-dir compare="Text">sum_mixed</output-dir>
-        <expected-error>Unexpected type STRING in aggregation input stream. Expected type (or a promotable type to)FLOAT</expected-error>
+        <expected-error>Type incompatibility: function agg-sum gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="min_mixed">
         <output-dir compare="Text">min_mixed</output-dir>
-        <expected-error>Unexpected type STRING in aggregation input stream. Expected type FLOAT</expected-error>
+        <expected-error>Type incompatibility: function min/max gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1112,43 +1112,43 @@
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_duration">
         <output-dir compare="Text">issue363_inequality_duration</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type duration</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_interval">
         <output-dir compare="Text">issue363_inequality_interval</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type interval</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_point">
         <output-dir compare="Text">issue363_inequality_point</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type point</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_line">
         <output-dir compare="Text">issue363_inequality_line</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type line</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_polygon">
         <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type polygon</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_rectangle">
         <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type rectangle</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
       <compilation-unit name="issue363_inequality_circle">
         <output-dir compare="Text">issue363_inequality_circle</output-dir>
-        <expected-error>Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
+        <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type circle</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
@@ -2440,7 +2440,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q06_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>Unsupported type: STRING</expected-error>
+        <expected-error>Type mismatch: function scan-collection expects its 1st input parameter to be type orderedlist or unorderedlist, but the actual input type is string</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -3171,7 +3171,7 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="enforced-field-type-collision">
           <output-dir compare="Text">enforced-field-type-collision</output-dir>
-          <expected-error>A field &quot;[value]&quot; is already defined with the type &quot;STRING&quot;</expected-error>
+          <expected-error>A field &quot;[value]&quot; is already defined with the type &quot;string&quot;</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
@@ -4640,7 +4640,7 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue410">
         <output-dir compare="Text">query-issue410</output-dir>
-        <expected-error>ASX0000: Field type DOUBLE can't be promoted to type STRING</expected-error>
+        <expected-error>Field type double can't be promoted to type string</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">
@@ -5433,7 +5433,7 @@
     <test-case FilePath="string">
       <compilation-unit name="repeat_error">
         <output-dir compare="Text">repeat</output-dir>
-        <expected-error>repeat: expects a non-negative repeating number but got -1</expected-error>
+        <expected-error>Invalid value: function asterix:repeat expects its 1 input parameter to be a non-negative value, but gets -1</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">

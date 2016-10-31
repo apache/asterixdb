@@ -40,8 +40,8 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.DoubleArray;
 import org.apache.asterix.runtime.evaluators.common.SpatialUtils;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -65,13 +65,12 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -123,8 +122,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                    + ": polygon must have at least 3 points.");
+                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
 
                         int counter = 0;
@@ -233,8 +231,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                    + ": polygon must have at least 3 points.");
+                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
                         for (int i = 0; i < numOfPoints1; i++) {
                             double startX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
@@ -386,8 +383,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                         int v = middleVertex;
                         while (!foundEar) {
                             if (0 >= (nonSimplePolygonDetection--)) {
-                                throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                        + ": non-simple polygons are not supported.");
+                                throw new InvalidDataFormatException(getIdentifier(),
+                                        ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                             }
                             int u = v;
                             if (numOfPoints <= u) {
@@ -674,13 +671,12 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     }
 
                     private boolean rectanglePolygonIntersection(byte[] bytes0, int offset0, byte[] bytes1, int offset1)
-                            throws HyracksDataException, AlgebricksException {
+                            throws HyracksDataException {
                         int numOfPoints1 = AInt16SerializerDeserializer.getShort(bytes1,
                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                    + ": polygon must have at least 3 points.");
+                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
 
                         getCounterClockWisePolygon(bytes1, offset1, pointsOffsets1, numOfPoints1);
@@ -727,13 +723,12 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     }
 
                     private boolean polygonCircleIntersection(byte[] bytes0, int offset0, byte[] bytes1, int offset1)
-                            throws HyracksDataException, AlgebricksException {
+                            throws HyracksDataException {
                         int numOfPoints = AInt16SerializerDeserializer.getShort(bytes0,
                                 offset0 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints < 3) {
-                            throw new HyracksDataException(AsterixBuiltinFunctions.SPATIAL_INTERSECT.getName()
-                                    + ": polygon must have at least 3 points.");
+                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
 
                         getCounterClockWisePolygon(bytes0, offset0, pointsOffsets0, numOfPoints);
@@ -765,7 +760,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     }
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, inputArg0);
                         eval1.evaluate(tuple, inputArg1);
@@ -775,305 +770,313 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                         int offset0 = inputArg0.getStartOffset();
                         int offset1 = inputArg1.getStartOffset();
 
-                        try {
-                            boolean res = false;
-                            ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
-                            ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
+                        boolean res = false;
+                        ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
+                        ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
 
-                            switch (tag0) {
-                                case POINT:
-                                    switch (tag1) {
-                                        case POINT:
+                        switch (tag0) {
+                            case POINT:
+                                switch (tag1) {
+                                    case POINT:
+                                        if (ascDoubleComp.compare(bytes0,
+                                                offset0 + APointSerializerDeserializer
+                                                        .getCoordinateOffset(Coordinate.X),
+                                                8, bytes1, offset1 + APointSerializerDeserializer
+                                                        .getCoordinateOffset(Coordinate.X),
+                                                8) == 0) {
                                             if (ascDoubleComp.compare(bytes0,
                                                     offset0 + APointSerializerDeserializer
-                                                            .getCoordinateOffset(Coordinate.X),
+                                                            .getCoordinateOffset(Coordinate.Y),
                                                     8, bytes1, offset1 + APointSerializerDeserializer
-                                                            .getCoordinateOffset(Coordinate.X),
+                                                            .getCoordinateOffset(Coordinate.Y),
                                                     8) == 0) {
-                                                if (ascDoubleComp.compare(bytes0,
-                                                        offset0 + APointSerializerDeserializer
-                                                                .getCoordinateOffset(Coordinate.Y),
-                                                        8, bytes1, offset1 + APointSerializerDeserializer
-                                                                .getCoordinateOffset(Coordinate.Y),
-                                                        8) == 0) {
-                                                    res = true;
-                                                }
+                                                res = true;
                                             }
-                                            break;
-                                        case LINE:
-                                            double pX = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
-                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                            double pY = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
-                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                        }
+                                        break;
+                                    case LINE:
+                                        double pX = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                                + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                        double pY = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                                + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                            double startX = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.Y));
+                                        double startX = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.X));
+                                        double startY = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.Y));
+                                        double endX = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.X));
+                                        double endY = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.Y));
 
-                                            res = pointOnLine(pX, pY, startX, startY, endX, endY);
-                                            break;
-                                        case POLYGON:
-                                            res = pointInPolygon(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case CIRCLE:
-                                            res = pointInCircle(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case RECTANGLE:
-                                            res = pointInRectangle(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        default:
-                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
-                                                    .getName() + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
-                                    }
-                                    break;
-                                case LINE:
-                                    switch (tag1) {
-                                        case POINT:
-                                            double pX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
-                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
-                                            double pY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
-                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
+                                        res = pointOnLine(pX, pY, startX, startY, endX, endY);
+                                        break;
+                                    case POLYGON:
+                                        res = pointInPolygon(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case CIRCLE:
+                                        res = pointInCircle(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case RECTANGLE:
+                                        res = pointInRectangle(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    default:
+                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                                ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                }
+                                break;
+                            case LINE:
+                                switch (tag1) {
+                                    case POINT:
+                                        double pX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                                + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X));
+                                        double pY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                                + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
 
-                                            double startX = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.Y));
+                                        double startX = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.X));
+                                        double startY = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.Y));
+                                        double endX = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.X));
+                                        double endY = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.Y));
 
-                                            res = pointOnLine(pX, pY, startX, startY, endX, endY);
-                                            break;
-                                        case LINE:
-                                            double startX1 = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY1 = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX1 = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY1 = ADoubleSerializerDeserializer.getDouble(bytes0,
-                                                    offset0 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.Y));
+                                        res = pointOnLine(pX, pY, startX, startY, endX, endY);
+                                        break;
+                                    case LINE:
+                                        double startX1 = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.X));
+                                        double startY1 = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.Y));
+                                        double endX1 = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.X));
+                                        double endY1 = ADoubleSerializerDeserializer.getDouble(bytes0,
+                                                offset0 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.Y));
 
-                                            double startX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.X));
-                                            double startY2 = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getStartPointCoordinateOffset(Coordinate.Y));
-                                            double endX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.X));
-                                            double endY2 = ADoubleSerializerDeserializer.getDouble(bytes1,
-                                                    offset1 + ALineSerializerDeserializer
-                                                            .getEndPointCoordinateOffset(Coordinate.Y));
-                                            res = lineLineIntersection(startX1, startY1, endX1, endY1, startX2, startY2,
-                                                    endX2, endY2);
-                                            break;
-                                        case POLYGON:
-                                            res = linePolygonIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case CIRCLE:
-                                            res = lineCircleIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case RECTANGLE:
-                                            res = lineRectangleIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        default:
-                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
-                                                    .getName() + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
-                                    }
-                                    break;
-                                case POLYGON:
-                                    switch (tag1) {
-                                        case POINT:
-                                            res = pointInPolygon(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case LINE:
-                                            res = linePolygonIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case POLYGON:
-                                            int numOfPoints0 = AInt16SerializerDeserializer.getShort(bytes0,
-                                                    offset0 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
-                                            int numOfPoints1 = AInt16SerializerDeserializer.getShort(bytes1,
-                                                    offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
+                                        double startX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.X));
+                                        double startY2 = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getStartPointCoordinateOffset(Coordinate.Y));
+                                        double endX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.X));
+                                        double endY2 = ADoubleSerializerDeserializer.getDouble(bytes1,
+                                                offset1 + ALineSerializerDeserializer
+                                                        .getEndPointCoordinateOffset(Coordinate.Y));
+                                        res = lineLineIntersection(startX1, startY1, endX1, endY1, startX2, startY2,
+                                                endX2, endY2);
+                                        break;
+                                    case POLYGON:
+                                        res = linePolygonIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case CIRCLE:
+                                        res = lineCircleIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case RECTANGLE:
+                                        res = lineRectangleIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    default:
+                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                                ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                }
+                                break;
+                            case POLYGON:
+                                switch (tag1) {
+                                    case POINT:
+                                        res = pointInPolygon(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    case LINE:
+                                        res = linePolygonIntersection(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    case POLYGON:
+                                        int numOfPoints0 = AInt16SerializerDeserializer.getShort(bytes0,
+                                                offset0 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
+                                        int numOfPoints1 = AInt16SerializerDeserializer.getShort(bytes1,
+                                                offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
-                                            if (numOfPoints0 < 3 || numOfPoints1 < 3) {
-                                                throw new AlgebricksException("Polygon must have at least 3 points.");
+                                        if (numOfPoints0 < 3 || numOfPoints1 < 3) {
+                                            throw new InvalidDataFormatException(getIdentifier(),
+                                                    ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                                        }
+
+                                        getCounterClockWisePolygon(bytes0, offset0, pointsOffsets0, numOfPoints0);
+                                        getCounterClockWisePolygon(bytes1, offset1, pointsOffsets1, numOfPoints1);
+                                        int nonSimplePolygonDetection0 = 2 * numOfPoints0;
+                                        int nonSimplePolygonDetection1 = 2 * numOfPoints1;
+                                        boolean intersect = false;
+                                        int middleVertex0 = numOfPoints0 - 1;
+
+                                        int numOfTriangles1 = 0;
+                                        int middleVertex1 = numOfPoints1 - 1;
+                                        trianglesX1.reset();
+                                        trianglesY1.reset();
+                                        while (true) {
+                                            middleVertex1 = triangulatePolygon(bytes1, offset1, numOfPoints1,
+                                                    pointsOffsets1, trianglesX1, trianglesY1, numOfTriangles1,
+                                                    nonSimplePolygonDetection1, middleVertex1);
+
+                                            if (middleVertex1 == -1) {
+                                                break;
                                             }
 
-                                            getCounterClockWisePolygon(bytes0, offset0, pointsOffsets0, numOfPoints0);
-                                            getCounterClockWisePolygon(bytes1, offset1, pointsOffsets1, numOfPoints1);
-                                            int nonSimplePolygonDetection0 = 2 * numOfPoints0;
-                                            int nonSimplePolygonDetection1 = 2 * numOfPoints1;
-                                            boolean intersect = false;
-                                            int middleVertex0 = numOfPoints0 - 1;
+                                            numOfPoints1--;
+                                            nonSimplePolygonDetection1 = 2 * numOfPoints1;
+                                            numOfTriangles1++;
+                                        }
+                                        int numOfTriangles0 = 0;
+                                        trianglesX0.reset();
+                                        trianglesY0.reset();
+                                        while (true) {
+                                            middleVertex0 = triangulatePolygon(bytes0, offset0, numOfPoints0,
+                                                    pointsOffsets0, trianglesX0, trianglesY0, numOfTriangles0,
+                                                    nonSimplePolygonDetection0, middleVertex0);
 
-                                            int numOfTriangles1 = 0;
-                                            int middleVertex1 = numOfPoints1 - 1;
-                                            trianglesX1.reset();
-                                            trianglesY1.reset();
-                                            while (true) {
-                                                middleVertex1 = triangulatePolygon(bytes1, offset1, numOfPoints1,
-                                                        pointsOffsets1, trianglesX1, trianglesY1, numOfTriangles1,
-                                                        nonSimplePolygonDetection1, middleVertex1);
-
-                                                if (middleVertex1 == -1) {
-                                                    break;
-                                                }
-
-                                                numOfPoints1--;
-                                                nonSimplePolygonDetection1 = 2 * numOfPoints1;
-                                                numOfTriangles1++;
+                                            if (middleVertex0 == -1) {
+                                                break;
                                             }
-                                            int numOfTriangles0 = 0;
-                                            trianglesX0.reset();
-                                            trianglesY0.reset();
-                                            while (true) {
-                                                middleVertex0 = triangulatePolygon(bytes0, offset0, numOfPoints0,
-                                                        pointsOffsets0, trianglesX0, trianglesY0, numOfTriangles0,
-                                                        nonSimplePolygonDetection0, middleVertex0);
+                                            numOfPoints0--;
+                                            nonSimplePolygonDetection0 = 2 * numOfPoints0;
+                                            numOfTriangles0++;
+                                            int lastTriangle = (trianglesX0.length() / 3) - 1;
 
-                                                if (middleVertex0 == -1) {
-                                                    break;
-                                                }
-                                                numOfPoints0--;
-                                                nonSimplePolygonDetection0 = 2 * numOfPoints0;
-                                                numOfTriangles0++;
-                                                int lastTriangle = (trianglesX0.length() / 3) - 1;
+                                            for (int i = 0; i < numOfTriangles1; i++) {
 
-                                                for (int i = 0; i < numOfTriangles1; i++) {
+                                                res = triangleTriangleIntersection(trianglesX0, trianglesY0,
+                                                        lastTriangle, trianglesX1, trianglesY1, i);
 
-                                                    res = triangleTriangleIntersection(trianglesX0, trianglesY0,
-                                                            lastTriangle, trianglesX1, trianglesY1, i);
-
-                                                    if (res) {
-                                                        res = triangleTriangleIntersection(trianglesX1, trianglesY1, i,
-                                                                trianglesX0, trianglesY0, lastTriangle);
-
-                                                        if (res) {
-                                                            intersect = true;
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                if (intersect) {
-                                                    break;
-                                                }
-                                            }
-                                            break;
-                                        case CIRCLE:
-                                            res = polygonCircleIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case RECTANGLE:
-                                            res = rectanglePolygonIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        default:
-                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
-                                                    .getName() + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
-                                    }
-                                    break;
-                                case CIRCLE:
-                                    switch (tag1) {
-                                        case POINT:
-                                            res = pointInCircle(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case LINE:
-                                            res = lineCircleIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case POLYGON:
-                                            res = polygonCircleIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case CIRCLE:
-                                            res = circleCircleIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case RECTANGLE:
-                                            res = rectangleCircleIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        default:
-                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
-                                                    .getName() + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
-                                    }
-                                    break;
-                                case RECTANGLE:
-                                    switch (tag1) {
-                                        case POINT:
-                                            res = pointInRectangle(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case LINE:
-                                            res = lineRectangleIntersection(bytes1, offset1, bytes0, offset0);
-                                            break;
-                                        case POLYGON:
-                                            res = rectanglePolygonIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case CIRCLE:
-                                            res = rectangleCircleIntersection(bytes0, offset0, bytes1, offset1);
-                                            break;
-                                        case RECTANGLE:
-                                            triangulateRectangle(bytes0, offset0, trianglesX0, trianglesY0);
-                                            triangulateRectangle(bytes1, offset1, trianglesX1, trianglesY1);
-
-                                            boolean intersect = false;
-                                            // 2 triangles in a rectangle
-                                            for (int j = 0; j < 2; j++) {
-                                                for (int i = 0; i < 2; i++) {
-
+                                                if (res) {
                                                     res = triangleTriangleIntersection(trianglesX1, trianglesY1, i,
-                                                            trianglesX0, trianglesY0, j);
+                                                            trianglesX0, trianglesY0, lastTriangle);
 
                                                     if (res) {
-                                                        res = triangleTriangleIntersection(trianglesX0, trianglesY0, j,
-                                                                trianglesX1, trianglesY1, i);
-
-                                                        if (res) {
-                                                            intersect = true;
-                                                            break;
-                                                        }
+                                                        intersect = true;
+                                                        break;
                                                     }
                                                 }
-                                                if (intersect) {
-                                                    break;
+                                            }
+                                            if (intersect) {
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    case CIRCLE:
+                                        res = polygonCircleIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case RECTANGLE:
+                                        res = rectanglePolygonIntersection(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    default:
+                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                                ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                }
+                                break;
+                            case CIRCLE:
+                                switch (tag1) {
+                                    case POINT:
+                                        res = pointInCircle(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case LINE:
+                                        res = lineCircleIntersection(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    case POLYGON:
+                                        res = polygonCircleIntersection(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    case CIRCLE:
+                                        res = circleCircleIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case RECTANGLE:
+                                        res = rectangleCircleIntersection(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    default:
+                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                                ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                }
+                                break;
+                            case RECTANGLE:
+                                switch (tag1) {
+                                    case POINT:
+                                        res = pointInRectangle(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    case LINE:
+                                        res = lineRectangleIntersection(bytes1, offset1, bytes0, offset0);
+                                        break;
+                                    case POLYGON:
+                                        res = rectanglePolygonIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case CIRCLE:
+                                        res = rectangleCircleIntersection(bytes0, offset0, bytes1, offset1);
+                                        break;
+                                    case RECTANGLE:
+                                        triangulateRectangle(bytes0, offset0, trianglesX0, trianglesY0);
+                                        triangulateRectangle(bytes1, offset1, trianglesX1, trianglesY1);
+
+                                        boolean intersect = false;
+                                        // 2 triangles in a rectangle
+                                        for (int j = 0; j < 2; j++) {
+                                            for (int i = 0; i < 2; i++) {
+
+                                                res = triangleTriangleIntersection(trianglesX1, trianglesY1, i,
+                                                        trianglesX0, trianglesY0, j);
+
+                                                if (res) {
+                                                    res = triangleTriangleIntersection(trianglesX0, trianglesY0, j,
+                                                            trianglesX1, trianglesY1, i);
+
+                                                    if (res) {
+                                                        intersect = true;
+                                                        break;
+                                                    }
                                                 }
                                             }
-                                            break;
-                                        default:
-                                            throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
-                                                    .getName() + ": does not support the type: " + tag1
-                                                    + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
-                                    }
-                                    break;
-                                default:
-                                    throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_INTERSECT
-                                            .getName() + ": does not support the type: " + tag1
-                                            + "; it is only implemented for POINT, ALINE, POLYGON, and CIRCLE.");
-                            }
-
-                            ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);
-                            aBooleanSerDer.serialize(aResult, out);
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
+                                            if (intersect) {
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                                ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                                ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                }
+                                break;
+                            default:
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_POLYGON_TYPE_TAG, ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                         }
+
+                        ABoolean aResult = res ? ABoolean.TRUE : ABoolean.FALSE;
+                        aBooleanSerDer.serialize(aResult, out);
                         result.set(resultStorage);
                     }
                 };

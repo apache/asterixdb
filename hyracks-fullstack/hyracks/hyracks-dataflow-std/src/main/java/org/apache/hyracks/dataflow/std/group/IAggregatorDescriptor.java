@@ -27,13 +27,14 @@ public interface IAggregatorDescriptor {
     /**
      * Create an aggregate state
      *
-     * @return
+     * @return an aggregate state
+     * @throws HyracksDataException
      */
-    AggregateState createAggregateStates();
+    AggregateState createAggregateStates() throws HyracksDataException;
 
     /**
      * Initialize the state based on the input tuple.
-     * 
+     *
      * @param tupleBuilder
      * @param accessor
      * @param tIndex

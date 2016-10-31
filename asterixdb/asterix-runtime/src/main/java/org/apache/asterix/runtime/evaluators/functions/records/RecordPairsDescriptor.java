@@ -26,6 +26,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -34,9 +35,7 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -74,7 +73,7 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 // For writing each individual output record.
                 final ArrayBackedValueStorage itemStorage = new ArrayBackedValueStorage();
                 final DataOutput itemOutput = itemStorage.getDataOutput();
@@ -94,7 +93,7 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
                     serde.serialize(new AString("name"), nameStorage.getDataOutput());
                     serde.serialize(new AString("value"), valueStorage.getDataOutput());
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
 
                 return new IScalarEvaluator() {
@@ -104,41 +103,36 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
                             recType);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            // Resets the result storage.
-                            resultStorage.reset();
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        // Resets the result storage.
+                        resultStorage.reset();
 
-                            // Gets the input record.
-                            argEvaluator.evaluate(tuple, argPtr);
-                            byte inputTypeTag = argPtr.getByteArray()[argPtr.getStartOffset()];
-                            if (inputTypeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new AlgebricksException("Function " + RecordPairsDescriptor.this.getIdentifier()
-                                        + " expects a record as the input, " + "but get a "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputTypeTag));
-                            }
-                            recordVisitablePointable.set(argPtr);
-
-                            listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
-                            List<IVisitablePointable> fieldNames = recordVisitablePointable.getFieldNames();
-                            List<IVisitablePointable> fieldValues = recordVisitablePointable.getFieldValues();
-                            // Adds each field of the input record as a key-value pair into the result.
-                            int numFields = recordVisitablePointable.getFieldNames().size();
-                            for (int fieldIndex = 0; fieldIndex < numFields; ++fieldIndex) {
-                                itemStorage.reset();
-                                recBuilder.init();
-                                recBuilder.addField(nameStorage, fieldNames.get(fieldIndex));
-                                recBuilder.addField(valueStorage, fieldValues.get(fieldIndex));
-                                recBuilder.write(itemOutput, true);
-                                listBuilder.addItem(itemStorage);
-                            }
-
-                            // Writes the result and sets the result pointable.
-                            listBuilder.write(resultOut, true);
-                            result.set(resultStorage);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                        // Gets the input record.
+                        argEvaluator.evaluate(tuple, argPtr);
+                        byte inputTypeTag = argPtr.getByteArray()[argPtr.getStartOffset()];
+                        if (inputTypeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, inputTypeTag,
+                                    ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                         }
+                        recordVisitablePointable.set(argPtr);
+
+                        listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+                        List<IVisitablePointable> fieldNames = recordVisitablePointable.getFieldNames();
+                        List<IVisitablePointable> fieldValues = recordVisitablePointable.getFieldValues();
+                        // Adds each field of the input record as a key-value pair into the result.
+                        int numFields = recordVisitablePointable.getFieldNames().size();
+                        for (int fieldIndex = 0; fieldIndex < numFields; ++fieldIndex) {
+                            itemStorage.reset();
+                            recBuilder.init();
+                            recBuilder.addField(nameStorage, fieldNames.get(fieldIndex));
+                            recBuilder.addField(valueStorage, fieldValues.get(fieldIndex));
+                            recBuilder.write(itemOutput, true);
+                            listBuilder.addItem(itemStorage);
+                        }
+
+                        // Writes the result and sets the result pointable.
+                        listBuilder.write(resultOut, true);
+                        result.set(resultStorage);
                     }
                 };
             }

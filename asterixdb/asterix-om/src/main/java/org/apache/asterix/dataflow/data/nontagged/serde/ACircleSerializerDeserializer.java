@@ -55,7 +55,7 @@ public class ACircleSerializerDeserializer implements ISerializerDeserializer<AC
             out.writeDouble(instance.getP().getY());
             out.writeDouble(instance.getRadius());
         } catch (IOException e) {
-            throw new HyracksDataException();
+            throw new HyracksDataException(e);
         }
     }
 

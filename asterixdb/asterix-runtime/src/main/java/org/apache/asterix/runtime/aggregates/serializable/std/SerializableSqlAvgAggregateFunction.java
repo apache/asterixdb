@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.aggregates.serializable.std;
 
 import java.io.DataOutput;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -28,22 +28,22 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SerializableSqlAvgAggregateFunction extends AbstractSerializableAvgAggregateFunction {
 
     public SerializableSqlAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         super(args, context);
     }
 
     @Override
-    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
+    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws HyracksDataException {
         processDataValues(tuple, state, start, len);
     }
 
     @Override
-    public void finish(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+    public void finish(byte[] state, int start, int len, DataOutput result) throws HyracksDataException {
         finishFinalResults(state, start, len, result);
     }
 
     @Override
-    public void finishPartial(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+    public void finishPartial(byte[] state, int start, int len, DataOutput result) throws HyracksDataException {
         finish(state, start, len, result);
     }
 

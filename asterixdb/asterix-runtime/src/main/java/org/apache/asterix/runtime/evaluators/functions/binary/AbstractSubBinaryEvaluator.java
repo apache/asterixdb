@@ -21,11 +21,12 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.IOException;
 
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -40,13 +41,13 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
     private static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INT32 };
 
     public AbstractSubBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            String functionName) throws AlgebricksException {
+            String functionName) throws HyracksDataException {
         super(context, copyEvaluatorFactories);
         this.functionName = functionName;
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         for (int i = 0; i < pointables.length; ++i) {
             evaluators[i].evaluate(tuple, pointables[i]);
@@ -67,7 +68,8 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
             int subStart;
 
             // strange SQL index convention
-            subStart = ATypeHierarchy.getIntegerValue(startBytes, offset) - 1;
+            subStart = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes,
+                    offset) - 1;
 
             int totalLength = byteArrayPointable.getContentLength();
             int subLength = getSubLength(tuple);
@@ -89,10 +91,10 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
             dataOutput.write(byteArrayPointable.getByteArray(), byteArrayPointable.getContentStartOffset() + subStart,
                     subLength);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }
 
-    protected abstract int getSubLength(IFrameTupleReference tuple) throws AlgebricksException;
+    protected abstract int getSubLength(IFrameTupleReference tuple) throws HyracksDataException;
 }

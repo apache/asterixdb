@@ -40,8 +40,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -69,13 +68,12 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -99,92 +97,82 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            resultStorage.reset();
-                            for (int i = 0; i < args.length; i++) {
-                                if (i == 0) {
-                                    evalLeft.evaluate(tuple, argPtr);
-                                } else {
-                                    evalRight.evaluate(tuple, argPtr);
-                                }
-                                byte[] data = argPtr.getByteArray();
-                                int offset = argPtr.getStartOffset();
-                                typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
-                                switch (typeTag) {
-                                    case INT8: {
-                                        metInt8 = true;
-                                        operands[i] = AInt8SerializerDeserializer.getByte(data, offset + 1);
-                                        break;
-                                    }
-                                    case INT16: {
-                                        metInt16 = true;
-                                        operands[i] = AInt16SerializerDeserializer.getShort(data, offset + 1);
-                                        break;
-                                    }
-                                    case INT32: {
-                                        metInt32 = true;
-                                        operands[i] = AInt32SerializerDeserializer.getInt(data, offset + 1);
-                                        break;
-                                    }
-                                    case INT64: {
-                                        metInt64 = true;
-                                        operands[i] = AInt64SerializerDeserializer.getLong(data, offset + 1);
-                                        break;
-                                    }
-                                    case FLOAT: {
-                                        metFloat = true;
-                                        operands[i] = AFloatSerializerDeserializer.getFloat(data, offset + 1);
-                                        break;
-                                    }
-                                    case DOUBLE: {
-                                        metDouble = true;
-                                        operands[i] = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
-                                        break;
-                                    }
-                                    default: {
-                                        throw new NotImplementedException(AsterixBuiltinFunctions.NUMERIC_SUBTRACT
-                                                .getName() + (i == 0 ? ": left" : ": right") + " operand can not be "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
-                                    }
-                                }
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        for (int i = 0; i < args.length; i++) {
+                            if (i == 0) {
+                                evalLeft.evaluate(tuple, argPtr);
+                            } else {
+                                evalRight.evaluate(tuple, argPtr);
                             }
-
-                            if (metDouble) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                aDouble.setValue(operands[0] - operands[1]);
-                                serde.serialize(aDouble, out);
-                            } else if (metFloat) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                aFloat.setValue((float) (operands[0] - operands[1]));
-                                serde.serialize(aFloat, out);
-                            } else if (metInt64) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT64);
-                                aInt64.setValue((long) (operands[0] - operands[1]));
-                                serde.serialize(aInt64, out);
-                            } else if (metInt32) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT32);
-                                aInt32.setValue((int) (operands[0] - operands[1]));
-                                serde.serialize(aInt32, out);
-                            } else if (metInt16) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT16);
-                                aInt16.setValue((short) (operands[0] - operands[1]));
-                                serde.serialize(aInt16, out);
-                            } else if (metInt8) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT8);
-                                aInt8.setValue((byte) (operands[0] - operands[1]));
-                                serde.serialize(aInt8, out);
+                            byte[] data = argPtr.getByteArray();
+                            int offset = argPtr.getStartOffset();
+                            typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
+                            switch (typeTag) {
+                                case INT8:
+                                    metInt8 = true;
+                                    operands[i] = AInt8SerializerDeserializer.getByte(data, offset + 1);
+                                    break;
+                                case INT16:
+                                    metInt16 = true;
+                                    operands[i] = AInt16SerializerDeserializer.getShort(data, offset + 1);
+                                    break;
+                                case INT32:
+                                    metInt32 = true;
+                                    operands[i] = AInt32SerializerDeserializer.getInt(data, offset + 1);
+                                    break;
+                                case INT64:
+                                    metInt64 = true;
+                                    operands[i] = AInt64SerializerDeserializer.getLong(data, offset + 1);
+                                    break;
+                                case FLOAT:
+                                    metFloat = true;
+                                    operands[i] = AFloatSerializerDeserializer.getFloat(data, offset + 1);
+                                    break;
+                                case DOUBLE:
+                                    metDouble = true;
+                                    operands[i] = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
+                                    break;
+                                default:
+                                    throw new TypeMismatchException(getIdentifier(), i, data[offset],
+                                            ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                             }
-                            result.set(resultStorage);
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
                         }
+
+                        if (metDouble) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ADOUBLE);
+                            aDouble.setValue(operands[0] - operands[1]);
+                            serde.serialize(aDouble, out);
+                        } else if (metFloat) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AFLOAT);
+                            aFloat.setValue((float) (operands[0] - operands[1]));
+                            serde.serialize(aFloat, out);
+                        } else if (metInt64) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT64);
+                            aInt64.setValue((long) (operands[0] - operands[1]));
+                            serde.serialize(aInt64, out);
+                        } else if (metInt32) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT32);
+                            aInt32.setValue((int) (operands[0] - operands[1]));
+                            serde.serialize(aInt32, out);
+                        } else if (metInt16) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT16);
+                            aInt16.setValue((short) (operands[0] - operands[1]));
+                            serde.serialize(aInt16, out);
+                        } else if (metInt8) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT8);
+                            aInt8.setValue((byte) (operands[0] - operands[1]));
+                            serde.serialize(aInt8, out);
+                        }
+                        result.set(resultStorage);
                     }
                 };
             }

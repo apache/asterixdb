@@ -30,9 +30,10 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ALineSerializerDeseriali
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -59,7 +60,7 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
             private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
             private final DataOutput out = resultStorage.getDataOutput();
@@ -72,7 +73,7 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
             private IScalarEvaluator eval2 = coordinateEvalFactory.createScalarEvaluator(ctx);
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 eval0.evaluate(tuple, inputArg0);
                 eval1.evaluate(tuple, inputArg1);
                 eval2.evaluate(tuple, inputArg2);
@@ -98,17 +99,18 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                         result.set(resultStorage);
                         return;
                     }
-
                     resultStorage.reset();
-                    // type-check: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32)
-                    if (data1[startOffset1] != ATypeTag.SERIALIZED_INT32_TYPE_TAG
-                            || data2[startOffset2] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                        throw new AlgebricksException(
-                                "Expects Types: (Point/Line/Polygon/Circle/Rectangle/Null, Int32, Int32).");
+                    if (data1[startOffset1] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.CREATE_MBR, 1, data1[startOffset1],
+                                ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                     }
-
                     int dimension = AInt32SerializerDeserializer.getInt(data1, startOffset1 + 1);
-                    int coordinate = AInt32SerializerDeserializer.getInt(inputArg2.getByteArray(), startOffset2 + 1);
+
+                    if (data2[startOffset2] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.CREATE_MBR, 2, data2[startOffset2],
+                                ATypeTag.SERIALIZED_INT32_TYPE_TAG);
+                    }
+                    int coordinate = AInt32SerializerDeserializer.getInt(data2, startOffset2 + 1);
                     double value;
                     if (dimension == 2) {
                         ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data0[startOffset0]);
@@ -293,7 +295,6 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                 }
                                 break;
                             case RECTANGLE:
-                                value = Double.MAX_VALUE;
                                 switch (coordinate) {
                                     case 0: {
                                         value = ADoubleSerializerDeserializer.getDouble(data0,
@@ -326,20 +327,18 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                 }
                                 break;
                             default:
-                                throw new NotImplementedException(
-                                        "create-mbr is only implemented for POINT, LINE, POLYGON, CIRCLE and RECTANGLE. Encountered type: "
-                                                + tag + ".");
-
+                                throw new TypeMismatchException(AsterixBuiltinFunctions.CREATE_MBR, 0,
+                                        data0[startOffset0], ATypeTag.SERIALIZED_POINT_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_LINE_TYPE_TAG, ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG, ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                         }
                     } else {
                         throw new NotImplementedException(dimension + "D is not supported");
                     }
                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                     out.writeDouble(value);
-                } catch (HyracksDataException hde) {
-                    throw new AlgebricksException(hde);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
                 result.set(resultStorage);
             }

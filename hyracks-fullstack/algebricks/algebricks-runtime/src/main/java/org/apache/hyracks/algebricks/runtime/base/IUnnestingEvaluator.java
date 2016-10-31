@@ -18,13 +18,13 @@
  */
 package org.apache.hyracks.algebricks.runtime.base;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public interface IUnnestingEvaluator {
-    public void init(IFrameTupleReference tuple) throws AlgebricksException;
+    public void init(IFrameTupleReference tuple) throws HyracksDataException;
 
-    public boolean step(IPointable result) throws AlgebricksException;
+    public boolean step(IPointable result) throws HyracksDataException;
 
 }

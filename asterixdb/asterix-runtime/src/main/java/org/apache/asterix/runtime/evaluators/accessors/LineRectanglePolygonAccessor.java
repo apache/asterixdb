@@ -38,7 +38,8 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -62,14 +63,12 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput out = resultStorage.getDataOutput();
@@ -85,7 +84,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         eval.evaluate(tuple, argPtr);
                         byte[] bytes = argPtr.getByteArray();
                         int startOffset = argPtr.getStartOffset();
@@ -138,7 +137,8 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                         startOffset + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                                 if (numOfPoints < 3) {
-                                    throw new HyracksDataException("Polygon must have at least 3 points.");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 }
                                 listBuilder.reset(pointListType);
                                 for (int i = 0; i < numOfPoints; ++i) {
@@ -153,12 +153,12 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 }
                                 listBuilder.write(out, true);
                             } else {
-                                throw new AlgebricksException(
-                                        "get-points does not support the type: " + bytes[startOffset]
-                                                + " It is only implemented for LINE, RECTANGLE, or POLYGON.");
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes[startOffset],
+                                        ATypeTag.SERIALIZED_LINE_TYPE_TAG, ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

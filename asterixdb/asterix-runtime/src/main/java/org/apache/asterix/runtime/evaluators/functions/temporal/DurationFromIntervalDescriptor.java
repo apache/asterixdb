@@ -25,14 +25,13 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.AMutableDayTimeDuration;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -57,14 +56,12 @@ public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynami
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -79,35 +76,28 @@ public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynami
                     private AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
 
                         byte[] bytes = argPtr.getByteArray();
                         int offset = argPtr.getStartOffset();
 
-                        try {
-                            if (bytes[offset] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects INTERVAL/NULL as the input but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]));
-                            }
-                            long chrononStart = AIntervalSerializerDeserializer.getIntervalStart(bytes, offset + 1);
-                            long chrononEnd = AIntervalSerializerDeserializer.getIntervalEnd(bytes, offset + 1);
-                            byte intervalTypeTag = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
-                                    offset + 1);
-
-                            if (intervalTypeTag == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                                chrononStart *= GregorianCalendarSystem.CHRONON_OF_DAY;
-                                chrononEnd *= GregorianCalendarSystem.CHRONON_OF_DAY;
-                            }
-
-                            aDayTimeDuration.setMilliseconds(chrononEnd - chrononStart);
-                            dayTimeDurationSerde.serialize(aDayTimeDuration, out);
-
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
+                        if (bytes[offset] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
+                        long chrononStart = AIntervalSerializerDeserializer.getIntervalStart(bytes, offset + 1);
+                        long chrononEnd = AIntervalSerializerDeserializer.getIntervalEnd(bytes, offset + 1);
+                        byte intervalTypeTag = AIntervalSerializerDeserializer.getIntervalTimeType(bytes, offset + 1);
+
+                        if (intervalTypeTag == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                            chrononStart *= GregorianCalendarSystem.CHRONON_OF_DAY;
+                            chrononEnd *= GregorianCalendarSystem.CHRONON_OF_DAY;
+                        }
+
+                        aDayTimeDuration.setMilliseconds(chrononEnd - chrononStart);
+                        dayTimeDurationSerde.serialize(aDayTimeDuration, out);
                         result.set(resultStorage);
                     }
                 };

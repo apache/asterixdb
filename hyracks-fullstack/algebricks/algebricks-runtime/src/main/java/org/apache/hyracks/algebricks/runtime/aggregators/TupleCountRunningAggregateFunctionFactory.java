@@ -20,10 +20,10 @@ package org.apache.hyracks.algebricks.runtime.aggregators;
 
 import java.io.IOException;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -34,26 +34,26 @@ public class TupleCountRunningAggregateFunctionFactory implements IRunningAggreg
 
     @Override
     public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws HyracksDataException {
         final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         return new IRunningAggregateEvaluator() {
 
             int cnt;
 
             @Override
-            public void step(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                ++cnt;
+            public void step(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 try {
+                    ++cnt;
                     abvs.reset();
                     abvs.getDataOutput().writeInt(cnt);
                     result.set(abvs);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
                 cnt = 0;
             }
         };

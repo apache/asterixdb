@@ -22,7 +22,7 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
@@ -49,13 +49,13 @@ public class SerializableSqlCountAggregateDescriptor extends AbstractSerializabl
 
     @Override
     public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
-            final IScalarEvaluatorFactory[] args) throws AlgebricksException {
+            final IScalarEvaluatorFactory[] args) {
         return new ISerializedAggregateEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
-                    throws AlgebricksException {
+                    throws HyracksDataException {
                 return new SerializableSqlCountAggregateFunction(args, ctx);
             }
         };

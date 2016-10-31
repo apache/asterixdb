@@ -22,10 +22,10 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.api.IMetadataExtension;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
@@ -76,8 +76,8 @@ public class NCExtensionManager {
     private MetadataTupleTranslatorProvider extendTupleTranslator(MetadataTupleTranslatorProvider ttp,
             IMetadataExtension tupleTranslatorExtension, IMetadataExtension mde) throws HyracksDataException {
         if (ttp != null) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_EXTENSION_CONFLICT,
-                    CompilerExtensionManager.ERROR_MESSAGE_COMPONENT_CONFLICT, tupleTranslatorExtension.getId(),
+            throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_COMPONENT_CONFLICT,
+                    tupleTranslatorExtension.getId(),
                     mde.getId(), IMetadataExtension.class.getSimpleName());
         }
         return mde.getMetadataTupleTranslatorProvider();

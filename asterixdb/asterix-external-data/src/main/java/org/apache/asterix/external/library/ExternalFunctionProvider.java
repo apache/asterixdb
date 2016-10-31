@@ -23,17 +23,17 @@ import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ExternalFunctionProvider {
 
     public static IExternalFunction getExternalFunctionEvaluator(IExternalFunctionInfo finfo,
-            IScalarEvaluatorFactory args[], IHyracksTaskContext context) throws AlgebricksException {
+            IScalarEvaluatorFactory args[], IHyracksTaskContext context) throws HyracksDataException {
         switch (finfo.getKind()) {
             case SCALAR:
                 return new ExternalScalarFunction(finfo, args, context);
@@ -49,17 +49,17 @@ public class ExternalFunctionProvider {
 class ExternalScalarFunction extends ExternalFunction implements IExternalScalarFunction, IScalarEvaluator {
 
     public ExternalScalarFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[],
-            IHyracksTaskContext context) throws AlgebricksException {
+            IHyracksTaskContext context) throws HyracksDataException {
         super(finfo, args, context);
         try {
             initialize(functionHelper);
         } catch (Exception e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         try {
             setArguments(tuple);
             evaluate(functionHelper);
@@ -67,22 +67,26 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
             functionHelper.reset();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void evaluate(IFunctionHelper argumentProvider) throws Exception {
-        resultBuffer.reset();
-        ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
+    public void evaluate(IFunctionHelper argumentProvider) throws HyracksDataException {
+        try {
+            resultBuffer.reset();
+            ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
         /*
          * Make sure that if "setResult" is not called,
          * or the result object is missing we let Hyracks storage manager know
          * we want to discard a missing object
          */
-        byte byteOutput = resultBuffer.getByteArray()[0];
-        if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-            resultBuffer.getDataOutput().writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+            byte byteOutput = resultBuffer.getByteArray()[0];
+            if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                resultBuffer.getDataOutput().writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+            }
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
     }
 

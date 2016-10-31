@@ -49,7 +49,7 @@ public class AYearMonthDurationSerializerDeserializer implements ISerializerDese
         try {
             out.writeInt(instance.getMonths());
         } catch (IOException e) {
-            throw new HyracksDataException();
+            throw new HyracksDataException(e);
         }
     }
 

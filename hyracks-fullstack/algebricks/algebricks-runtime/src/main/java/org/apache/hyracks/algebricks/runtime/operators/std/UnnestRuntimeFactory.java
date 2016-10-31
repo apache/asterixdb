@@ -24,7 +24,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
@@ -79,16 +78,12 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws HyracksDataException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutput output = new DataOutputStream(bos);
         if (missingWriterFactory != null) {
             IMissingWriter missingWriter = missingWriterFactory.createMissingWriter();
-            try {
-                missingWriter.writeMissing(output);
-            } catch (HyracksDataException e) {
-                throw new AlgebricksException(e);
-            }
+            missingWriter.writeMissing(output);
         }
         byte[] missingBytes = bos.toByteArray();
         int missingBytesLen = bos.size();
@@ -114,13 +109,13 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     try {
                         unnest.init(tRef);
                         unnesting(t);
-                    } catch (AlgebricksException | IOException ae) {
+                    } catch (IOException ae) {
                         throw new HyracksDataException(ae);
                     }
                 }
             }
 
-            private void unnesting(int t) throws AlgebricksException, IOException {
+            private void unnesting(int t) throws IOException {
                 // Assumes that when unnesting the tuple, each step() call for each element
                 // in the tuple will increase the positionIndex, and the positionIndex will
                 // be reset when a new tuple is to be processed.

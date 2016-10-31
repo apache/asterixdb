@@ -31,12 +31,14 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -59,13 +61,12 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput out = resultStorage.getDataOutput();
                     private final IPointable inputArg = new VoidPointable();
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private final String errorMessage = "This can not be an instance of circle";
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     private AMutableCircle aCircle = new AMutableCircle(null, 0);
                     @SuppressWarnings("unchecked")
@@ -75,7 +76,7 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
@@ -94,11 +95,13 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                 aCircle.setValue(aPoint, Double.parseDouble(s.substring(spaceIndex + 1, s.length())));
                                 circleSerde.serialize(aCircle, out);
                             } else {
-                                throw new AlgebricksException(errorMessage);
+                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                        } catch (IOException e) {
+                            throw new InvalidDataFormatException(getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG);
                         }
                     }
                 };

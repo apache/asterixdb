@@ -25,7 +25,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
@@ -112,7 +111,6 @@ public class PointableHelper {
      *            The storage buffer
      * @param writeTag
      *            Specifying whether a tag for the string should also be written
-     * @throws AlgebricksException
      */
     public void serializeString(String str, IMutableValueStorage vs, boolean writeTag) throws AsterixException {
         vs.reset();

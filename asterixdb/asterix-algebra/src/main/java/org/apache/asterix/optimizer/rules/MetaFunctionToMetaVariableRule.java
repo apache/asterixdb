@@ -225,7 +225,7 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         // The user query provides zero parameter for the meta function.
         if (variableRequired) {
             throw new AlgebricksException("Cannot resolve to ambiguity on the meta function call --"
-                    + " there are more than once dataset choices!");
+                    + " there are more than one dataset choices!");
         }
         exprRef.setValue(new VariableReferenceExpression(metaVar));
         return true;

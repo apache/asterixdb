@@ -22,14 +22,15 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -48,7 +49,7 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
 
             private final ARecordPointable recordPointable = (ARecordPointable) ARecordPointable.FACTORY
@@ -60,7 +61,7 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
             private RecordFieldsUtil rfu = new RecordFieldsUtil();
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 resultStorage.reset();
                 eval0.evaluate(tuple, inputArg0);
                 byte[] data = inputArg0.getByteArray();
@@ -68,17 +69,17 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
                 int len = inputArg0.getLength();
 
                 if (data[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new AlgebricksException("Field accessor is not defined for values of type "
-                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                    throw new TypeMismatchException(AsterixBuiltinFunctions.GET_RECORD_FIELDS, 0, data[offset],
+                            ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                 }
 
                 recordPointable.set(data, offset, len);
                 try {
                     rfu.processRecord(recordPointable, recordType, out, 0);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new HyracksDataException(e);
                 } catch (AsterixException e) {
-                    e.printStackTrace();
+                    throw new HyracksDataException(e);
                 }
                 result.set(resultStorage);
             }

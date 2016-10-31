@@ -56,7 +56,7 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
             out.writeDouble(instance.getP2().getX());
             out.writeDouble(instance.getP2().getY());
         } catch (IOException e) {
-            throw new HyracksDataException();
+            throw new HyracksDataException(e);
         }
     }
 

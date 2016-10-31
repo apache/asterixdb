@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.runtime.base;
 import java.io.DataOutput;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public interface ISerializedAggregateEvaluator {
@@ -30,16 +31,16 @@ public interface ISerializedAggregateEvaluator {
      * @param state
      * @throws AlgebricksException
      */
-    public void init(DataOutput state) throws AlgebricksException;
+    public void init(DataOutput state) throws HyracksDataException;
 
     /**
      * update the internal state
      *
-     * @param tuple
      * @param state
+     * @param tuple
      * @throws AlgebricksException
      */
-    public void step(IFrameTupleReference tuple, byte[] data, int start, int len) throws AlgebricksException;
+    public void step(IFrameTupleReference tuple, byte[] data, int start, int len) throws HyracksDataException;
 
     /**
      * output the state to result
@@ -48,7 +49,7 @@ public interface ISerializedAggregateEvaluator {
      * @param result
      * @throws AlgebricksException
      */
-    public void finish(byte[] data, int start, int len, DataOutput result) throws AlgebricksException;
+    public void finish(byte[] data, int start, int len, DataOutput result) throws HyracksDataException;
 
     /**
      * output the partial state to partial result
@@ -57,5 +58,5 @@ public interface ISerializedAggregateEvaluator {
      * @param partialResult
      * @throws AlgebricksException
      */
-    public void finishPartial(byte[] data, int start, int len, DataOutput partialResult) throws AlgebricksException;
+    public void finishPartial(byte[] data, int start, int len, DataOutput partialResult) throws HyracksDataException;
 }

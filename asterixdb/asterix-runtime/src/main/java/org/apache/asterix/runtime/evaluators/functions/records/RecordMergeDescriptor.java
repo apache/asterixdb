@@ -25,6 +25,8 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -40,11 +42,11 @@ import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -79,14 +81,12 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 final PointableAllocator pa = new PointableAllocator();
                 final IVisitablePointable vp0 = pa.allocateRecordValue(inRecType0);
                 final IVisitablePointable vp1 = pa.allocateRecordValue(inRecType1);
@@ -109,7 +109,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -124,14 +124,14 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                             mergeFields(outRecType, rp0, rp1, true, 0);
                             rbStack.get(0).write(out, true);
                         } catch (IOException | AsterixException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }
 
                     private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,
                             ARecordVisitablePointable rightRecord, boolean openFromParent, int nestedLevel)
-                            throws IOException, AsterixException, AlgebricksException {
+                            throws IOException, AsterixException, HyracksDataException {
                         if (rbStack.size() < (nestedLevel + 1)) {
                             rbStack.add(new RecordBuilder());
                         }
@@ -160,7 +160,8 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                                                 openFromParent, nestedLevel);
                                         foundMatch = true;
                                     } else {
-                                        throw new AlgebricksException("Duplicate field found");
+                                        throw new RuntimeDataException(ErrorCode.ERROR_DUPLICATE_FIELD,
+                                                getIdentifier());
                                     }
                                 }
                             }
@@ -197,7 +198,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                      */
                     private void addFieldToSubRecord(ARecordType combinedType, IVisitablePointable fieldNamePointable,
                             IVisitablePointable leftValue, IVisitablePointable rightValue, boolean openFromParent,
-                            int nestedLevel) throws IOException, AsterixException, AlgebricksException {
+                            int nestedLevel) throws IOException, AsterixException, HyracksDataException {
 
                         runtimeRecordTypeInfo.reset(combinedType);
                         int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),

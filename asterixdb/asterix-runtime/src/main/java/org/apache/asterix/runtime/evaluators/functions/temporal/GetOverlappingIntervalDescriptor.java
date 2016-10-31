@@ -30,9 +30,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -54,14 +54,12 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     protected final IntervalLogic il = new IntervalLogic();
@@ -88,45 +86,41 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
                         byte type0 = argPtr0.getTag();
                         byte type1 = argPtr1.getTag();
 
-                        try {
-                            if (type0 == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG && type0 == type1) {
-                                argPtr0.getValue(interval0);
-                                argPtr1.getValue(interval1);
-                                byte intervalType0 = interval0.getType();
-                                byte intervalType1 = interval1.getType();
 
-                                if (intervalType0 != intervalType1) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": expecting two (nullable) interval values with the same internal time type but got interval of "
-                                            + interval0.getTypeTag() + " and interval of " + interval1.getTypeTag());
-                                }
+                        if (type0 == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG && type0 == type1) {
+                            argPtr0.getValue(interval0);
+                            argPtr1.getValue(interval1);
+                            byte intervalType0 = interval0.getType();
+                            byte intervalType1 = interval1.getType();
 
-                                if (il.overlaps(interval0, interval1) || il.overlappedBy(interval0, interval1)
-                                        || il.covers(interval0, interval1) || il.coveredBy(interval0, interval1)) {
-                                    long start = Math.max(interval0.getStartValue(), interval1.getStartValue());
-                                    long end = Math.min(interval0.getEndValue(), interval1.getEndValue());
-                                    aInterval.setValue(start, end, intervalType0);
-                                    intervalSerde.serialize(aInterval, out);
-                                } else {
-                                    nullSerde.serialize(ANull.NULL, out);
-                                }
-                            } else {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expecting two (nullable) interval values but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(type0) + " and "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(type1));
+                            if (intervalType0 != intervalType1) {
+                                throw new IncompatibleTypeException(getIdentifier(), intervalType0, intervalType1);
                             }
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
+
+                            if (il.overlaps(interval0, interval1) || il.overlappedBy(interval0, interval1)
+                                    || il.covers(interval0, interval1) || il.coveredBy(interval0, interval1)) {
+                                long start = Math.max(interval0.getStartValue(), interval1.getStartValue());
+                                long end = Math.min(interval0.getEndValue(), interval1.getEndValue());
+                                aInterval.setValue(start, end, intervalType0);
+                                intervalSerde.serialize(aInterval, out);
+                            } else {
+                                nullSerde.serialize(ANull.NULL, out);
+                            }
+                            result.set(resultStorage);
+                            return;
+                        } else if (type0 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, type0,
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
+                        } else {
+                            throw new IncompatibleTypeException(getIdentifier(), type0, type1);
                         }
-                        result.set(resultStorage);
                     }
 
                 };

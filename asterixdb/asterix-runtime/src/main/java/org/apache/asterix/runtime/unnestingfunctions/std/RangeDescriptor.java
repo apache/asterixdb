@@ -26,7 +26,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -57,17 +56,15 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
     }
 
     @Override
-    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IUnnestingEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
             public IUnnestingEvaluator createUnnestingEvaluator(final IHyracksTaskContext ctx)
-                    throws AlgebricksException {
+                    throws HyracksDataException {
                 return new IUnnestingEvaluator() {
-
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
@@ -80,35 +77,25 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                     private long max;
 
                     @Override
-                    public void init(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void init(IFrameTupleReference tuple) throws HyracksDataException {
                         eval0.evaluate(tuple, inputVal);
-                        try {
-                            current = ATypeHierarchy.getLongValue(inputVal.getByteArray(), inputVal.getStartOffset());
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        current = ATypeHierarchy.getLongValue(getIdentifier().getName(), 0, inputVal.getByteArray(),
+                                inputVal.getStartOffset());
                         eval1.evaluate(tuple, inputVal);
-                        try {
-                            max = ATypeHierarchy.getLongValue(inputVal.getByteArray(), inputVal.getStartOffset());
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        max = ATypeHierarchy.getLongValue(getIdentifier().getName(), 1, inputVal.getByteArray(),
+                                inputVal.getStartOffset());
                     }
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public boolean step(IPointable result) throws AlgebricksException {
+                    public boolean step(IPointable result) throws HyracksDataException {
                         if (current > max) {
                             return false;
                         }
                         aInt64.setValue(current);
-                        try {
-                            resultStorage.reset();
-                            serde.serialize(aInt64, resultStorage.getDataOutput());
-                            result.set(resultStorage);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        resultStorage.reset();
+                        serde.serialize(aInt64, resultStorage.getDataOutput());
+                        result.set(resultStorage);
                         current++;
                         return true;
                     }

@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -58,20 +57,12 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
 
                 // initialize aggregate functions
                 for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].init();
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    agg[i].init();
                 }
 
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].step(ftr);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    agg[i].step(ftr);
                 }
             }
 
@@ -81,11 +72,7 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
                 IAggregateEvaluator[] agg = (IAggregateEvaluator[]) state.state;
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].step(ftr);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    agg[i].step(ftr);
                 }
             }
 
@@ -94,25 +81,17 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
                     int tIndex, AggregateState state) throws HyracksDataException {
                 IAggregateEvaluator[] agg = (IAggregateEvaluator[]) state.state;
                 for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].finish(p);
-                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    agg[i].finish(p);
+                    tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                 }
                 return true;
             }
 
             @Override
-            public AggregateState createAggregateStates() {
+            public AggregateState createAggregateStates() throws HyracksDataException {
                 IAggregateEvaluator[] agg = new IAggregateEvaluator[aggFactories.length];
                 for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i] = aggFactories[i].createAggregateEvaluator(ctx);
-                    } catch (AlgebricksException e) {
-                        throw new IllegalStateException(e);
-                    }
+                    agg[i] = aggFactories[i].createAggregateEvaluator(ctx);
                 }
                 return new AggregateState(agg);
             }
@@ -127,12 +106,8 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
                     int tIndex, AggregateState state) throws HyracksDataException {
                 IAggregateEvaluator[] agg = (IAggregateEvaluator[]) state.state;
                 for (int i = 0; i < agg.length; i++) {
-                    try {
-                        agg[i].finishPartial(p);
-                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    agg[i].finishPartial(p);
+                    tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                 }
                 return true;
             }

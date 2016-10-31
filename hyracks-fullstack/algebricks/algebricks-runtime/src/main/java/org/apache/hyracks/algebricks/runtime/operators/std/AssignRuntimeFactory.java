@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
@@ -87,7 +86,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws HyracksDataException {
         final int[] projectionToOutColumns = new int[projectionList.length];
         for (int j = 0; j < projectionList.length; j++) {
             projectionToOutColumns[j] = Arrays.binarySearch(outColumns, projectionList[j]);
@@ -108,11 +107,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     first = false;
                     int n = evalFactories.length;
                     for (int i = 0; i < n; i++) {
-                        try {
-                            eval[i] = evalFactories[i].createScalarEvaluator(ctx);
-                        } catch (AlgebricksException ae) {
-                            throw new HyracksDataException(ae);
-                        }
+                        eval[i] = evalFactories[i].createScalarEvaluator(ctx);
                     }
                 }
                 isOpen = true;
@@ -177,7 +172,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                             tb.addField(accessor, tIndex, projectionList[f]);
                         }
                     }
-                } catch (HyracksDataException | AlgebricksException e) {
+                } catch (HyracksDataException e) {
                     throw new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.ERROR_PROCESSING_TUPLE,
                             "Error evaluating tuple %1$s in AssignRuntime", (Throwable) e,
                             new Serializable[] { tupleIndex });

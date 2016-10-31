@@ -18,17 +18,17 @@
  */
 package org.apache.hyracks.algebricks.runtime.base;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public interface IAggregateEvaluator {
     /** should be called each time a new aggregate value is computed */
-    public void init() throws AlgebricksException;
+    public void init() throws HyracksDataException;
 
-    public void step(IFrameTupleReference tuple) throws AlgebricksException;
+    public void step(IFrameTupleReference tuple) throws HyracksDataException;
 
-    public void finish(IPointable result) throws AlgebricksException;
+    public void finish(IPointable result) throws HyracksDataException;
 
-    public void finishPartial(IPointable result) throws AlgebricksException;
+    public void finishPartial(IPointable result) throws HyracksDataException;
 }

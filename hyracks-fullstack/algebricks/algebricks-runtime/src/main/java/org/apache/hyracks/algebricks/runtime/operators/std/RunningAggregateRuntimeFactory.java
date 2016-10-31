@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
@@ -79,7 +78,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws HyracksDataException {
         final int[] projectionToOutColumns = new int[projectionList.length];
         for (int j = 0; j < projectionList.length; j++) {
             projectionToOutColumns[j] = Arrays.binarySearch(outColumns, projectionList[j]);
@@ -99,19 +98,11 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                     first = false;
                     int n = runningAggregates.length;
                     for (int i = 0; i < n; i++) {
-                        try {
-                            raggs[i] = runningAggregates[i].createRunningAggregateEvaluator(ctx);
-                        } catch (AlgebricksException ae) {
-                            throw new HyracksDataException(ae);
-                        }
+                        raggs[i] = runningAggregates[i].createRunningAggregateEvaluator(ctx);
                     }
                 }
                 for (int i = 0; i < runningAggregates.length; i++) {
-                    try {
-                        raggs[i].init();
-                    } catch (AlgebricksException ae) {
-                        throw new HyracksDataException(ae);
-                    }
+                    raggs[i].init();
                 }
                 isOpen = true;
                 writer.open();
@@ -148,11 +139,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
                 for (int f = 0; f < projectionList.length; f++) {
                     int k = projectionToOutColumns[f];
                     if (k >= 0) {
-                        try {
-                            raggs[k].step(tupleRef, p);
-                        } catch (AlgebricksException e) {
-                            throw new HyracksDataException(e);
-                        }
+                        raggs[k].step(tupleRef, p);
                         tb.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                     } else {
                         tb.addField(accessor, tIndex, projectionList[f]);

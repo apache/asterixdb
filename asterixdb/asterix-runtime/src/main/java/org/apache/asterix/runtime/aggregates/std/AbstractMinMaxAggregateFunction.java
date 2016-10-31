@@ -21,11 +21,11 @@ package org.apache.asterix.runtime.aggregates.std;
 import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -51,19 +51,19 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
     private final boolean isMin;
 
     public AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin)
-            throws AlgebricksException {
+            throws HyracksDataException {
         eval = args[0].createScalarEvaluator(context);
         this.isMin = isMin;
     }
 
     @Override
-    public void init() {
+    public void init() throws HyracksDataException {
         aggType = ATypeTag.SYSTEM_NULL;
         tempValForCasting.reset();
     }
 
     @Override
-    public void step(IFrameTupleReference tuple) throws AlgebricksException {
+    public void step(IFrameTupleReference tuple) throws HyracksDataException {
         if (skipStep()) {
             return;
         }
@@ -87,8 +87,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
             // Initialize min value.
             outputVal.assign(inputVal);
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new AlgebricksException(
-                    "Unexpected type " + typeTag + " in aggregation input stream. Expected type " + aggType + ".");
+            throw new IncompatibleTypeException("min/max", typeTag.serialize(), aggType.serialize());
         } else {
 
             // If a system_null is encountered locally, it would be an error; otherwise if it is seen
@@ -109,17 +108,13 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
                         tpc.convertType(outputVal.getByteArray(), outputVal.getStartOffset() + 1,
                                 outputVal.getLength() - 1, tempValForCasting.getDataOutput());
                     } catch (IOException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     }
                     outputVal.assign(tempValForCasting);
                 }
-                try {
-                    if (cmp.compare(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength(),
-                            outputVal.getByteArray(), outputVal.getStartOffset(), outputVal.getLength()) < 0) {
-                        outputVal.assign(inputVal);
-                    }
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
+                if (cmp.compare(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength(),
+                        outputVal.getByteArray(), outputVal.getStartOffset(), outputVal.getLength()) < 0) {
+                    outputVal.assign(inputVal);
                 }
 
             } else {
@@ -130,25 +125,17 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
                         tpc.convertType(inputVal.getByteArray(), inputVal.getStartOffset() + 1,
                                 inputVal.getLength() - 1, tempValForCasting.getDataOutput());
                     } catch (IOException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     }
-                    try {
-                        if (cmp.compare(tempValForCasting.getByteArray(), tempValForCasting.getStartOffset(),
-                                tempValForCasting.getLength(), outputVal.getByteArray(), outputVal.getStartOffset(),
-                                outputVal.getLength()) < 0) {
-                            outputVal.assign(tempValForCasting);
-                        }
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
+                    if (cmp.compare(tempValForCasting.getByteArray(), tempValForCasting.getStartOffset(),
+                            tempValForCasting.getLength(), outputVal.getByteArray(), outputVal.getStartOffset(),
+                            outputVal.getLength()) < 0) {
+                        outputVal.assign(tempValForCasting);
                     }
                 } else {
-                    try {
-                        if (cmp.compare(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength(),
-                                outputVal.getByteArray(), outputVal.getStartOffset(), outputVal.getLength()) < 0) {
-                            outputVal.assign(inputVal);
-                        }
-                    } catch (HyracksDataException e) {
-                        throw new AlgebricksException(e);
+                    if (cmp.compare(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength(),
+                            outputVal.getByteArray(), outputVal.getStartOffset(), outputVal.getLength()) < 0) {
+                        outputVal.assign(inputVal);
                     }
                 }
 
@@ -157,7 +144,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
     }
 
     @Override
-    public void finish(IPointable result) throws AlgebricksException {
+    public void finish(IPointable result) throws HyracksDataException {
         resultStorage.reset();
         try {
             switch (aggType) {
@@ -177,12 +164,12 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
                 }
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void finishPartial(IPointable result) throws AlgebricksException {
+    public void finishPartial(IPointable result) throws HyracksDataException {
         finish(result);
     }
 
@@ -192,7 +179,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
 
     protected abstract void processNull();
 
-    protected abstract void processSystemNull() throws AlgebricksException;
+    protected abstract void processSystemNull() throws HyracksDataException;
 
     protected abstract void finishSystemNull() throws IOException;
 }

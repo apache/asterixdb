@@ -20,10 +20,10 @@ package org.apache.hyracks.algebricks.tests.pushruntime;
 
 import java.io.IOException;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -39,19 +39,19 @@ public class IntArrayUnnester implements IUnnestingEvaluatorFactory {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
         final ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         return new IUnnestingEvaluator() {
 
             private int pos;
 
             @Override
-            public void init(IFrameTupleReference tuple) throws AlgebricksException {
+            public void init(IFrameTupleReference tuple) throws HyracksDataException {
                 pos = 0;
             }
 
             @Override
-            public boolean step(IPointable result) throws AlgebricksException {
+            public boolean step(IPointable result) throws HyracksDataException {
                 try {
                     if (pos < x.length) {
                         // Writes one byte to distinguish between null
@@ -66,7 +66,7 @@ public class IntArrayUnnester implements IUnnestingEvaluatorFactory {
                     }
 
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 

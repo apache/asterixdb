@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -31,9 +31,9 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -59,14 +59,12 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -84,7 +82,7 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -96,53 +94,50 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                         int offset1 = argPtr1.getStartOffset();
                         int len1 = argPtr1.getLength();
 
-                        try {
-                            if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                    || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects two strings but got  ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")");
-                            }
-                            utf8Ptr.set(bytes0, offset0 + 1, len0 - 1);
-                            int start0 = utf8Ptr.getCharStartOffset();
-                            int length0 = utf8Ptr.getUTF8Length();
-
-                            utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
-                            int start1 = utf8Ptr.getCharStartOffset();
-                            int length1 = utf8Ptr.getUTF8Length();
-                            long chronon = 0;
-
-                            int formatStart = start1;
-                            int formatLength = 0;
-                            boolean processSuccessfully = false;
-                            while (!processSuccessfully && formatStart < start1 + length1) {
-                                // search for "|"
-                                formatLength = 0;
-                                for (; formatStart + formatLength < start1 + length1; formatLength++) {
-                                    if (bytes1[formatStart + formatLength] == '|') {
-                                        break;
-                                    }
-                                }
-                                try {
-                                    chronon = DT_UTILS.parseDateTime(bytes0, start0, length0, bytes1, formatStart,
-                                            formatLength, DateTimeParseMode.DATETIME);
-                                } catch (AsterixTemporalTypeParseException ex) {
-                                    formatStart += formatLength + 1;
-                                    continue;
-                                }
-                                processSuccessfully = true;
-                            }
-
-                            if (!processSuccessfully) {
-                                throw new HyracksDataException(
-                                        "parse-datetime: Failed to match with any given format string!");
-                            }
-                            aDateTime.setValue(chronon);
-                            datetimeSerde.serialize(aDateTime, out);
-                        } catch (HyracksDataException ex) {
-                            throw new AlgebricksException(ex);
+                        if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
+                        if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                        }
+                        utf8Ptr.set(bytes0, offset0 + 1, len0 - 1);
+                        int start0 = utf8Ptr.getCharStartOffset();
+                        int length0 = utf8Ptr.getUTF8Length();
+
+                        utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
+                        int start1 = utf8Ptr.getCharStartOffset();
+                        int length1 = utf8Ptr.getUTF8Length();
+                        long chronon = 0;
+
+                        int formatStart = start1;
+                        int formatLength;
+                        boolean processSuccessfully = false;
+                        while (!processSuccessfully && formatStart < start1 + length1) {
+                            // search for "|"
+                            formatLength = 0;
+                            for (; formatStart + formatLength < start1 + length1; formatLength++) {
+                                if (bytes1[formatStart + formatLength] == '|') {
+                                    break;
+                                }
+                            }
+                            try {
+                                chronon = DT_UTILS.parseDateTime(bytes0, start0, length0, bytes1, formatStart,
+                                        formatLength, DateTimeParseMode.DATETIME);
+                            } catch (AsterixTemporalTypeParseException ex) {
+                                formatStart += formatLength + 1;
+                                continue;
+                            }
+                            processSuccessfully = true;
+                        }
+
+                        if (!processSuccessfully) {
+                            throw new InvalidDataFormatException(getIdentifier(),
+                                    ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
+                        }
+                        aDateTime.setValue(chronon);
+                        datetimeSerde.serialize(aDateTime, out);
                         result.set(resultStorage);
                     }
                 };

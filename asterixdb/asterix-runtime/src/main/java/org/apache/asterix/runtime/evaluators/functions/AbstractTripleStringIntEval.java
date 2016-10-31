@@ -24,11 +24,11 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
@@ -41,15 +41,14 @@ public abstract class AbstractTripleStringIntEval extends AbstractTripleStringEv
 
     public AbstractTripleStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID)
-            throws AlgebricksException {
+            throws HyracksDataException {
         super(context, eval0, eval1, eval2, funcID);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void process(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable thrid,
-            IPointable result)
- throws IOException {
+            IPointable result) throws IOException {
         resultValue.setValue(compute(first, second, thrid));
         intSerde.serialize(resultValue, dout);
         result.set(resultStorage);

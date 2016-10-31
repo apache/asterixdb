@@ -96,7 +96,8 @@ public class DeepEqualityVisitor implements IVisitablePointableVisitor<Void, Pai
                     if (domain == Domain.NUMERIC) {
                         int s1 = pointable.getStartOffset();
                         int s2 = arg.first.getStartOffset();
-                        arg.second = (ATypeHierarchy.getDoubleValue(b1, s1) == ATypeHierarchy.getDoubleValue(b2, s2));
+                        arg.second = Math.abs(ATypeHierarchy.getDoubleValue("deep-equal", 0, b1, s1)
+                                - ATypeHierarchy.getDoubleValue("deep-equal", 1, b2, s2)) < 1E-10;
                     } else {
                         arg.second = false;
                     }

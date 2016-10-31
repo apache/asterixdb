@@ -25,10 +25,13 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -64,15 +67,14 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     protected ATypeTag secondTypeTag;
 
     public EditDistanceEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         firstStringEval = args[0].createScalarEvaluator(context);
         secondStringEval = args[1].createScalarEvaluator(context);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
-
         firstStringEval.evaluate(tuple, argPtr1);
         firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                 .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
@@ -85,22 +87,17 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
             return;
         }
 
-        try {
-            editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
-        } catch (HyracksDataException e1) {
-            throw new AlgebricksException(e1);
-        }
-
+        editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
         try {
             writeResult(editDistance);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }
 
     protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
-            throws AlgebricksException, HyracksDataException {
+            throws HyracksDataException {
         byte[] leftBytes = left.getByteArray();
         int leftStartOffset = left.getStartOffset();
         byte[] rightBytes = right.getByteArray();
@@ -114,43 +111,38 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
             case ORDEREDLIST: {
                 firstOrdListIter.reset(leftBytes, leftStartOffset);
                 secondOrdListIter.reset(rightBytes, rightStartOffset);
-                try {
-                    return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
+                return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
             }
-
             default: {
-                throw new AlgebricksException(
-                        "Invalid type " + argType + " passed as argument to edit distance function.");
+                throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE, 0, argType.serialize(),
+                        ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 
         }
     }
 
-    protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws AlgebricksException {
+    protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
         if (typeTag1 != typeTag2) {
-            throw new AlgebricksException(
-                    "Incompatible argument types given in edit distance: " + typeTag1 + " " + typeTag2);
+            throw new IncompatibleTypeException(AsterixBuiltinFunctions.EDIT_DISTANCE, typeTag1.serialize(),
+                    typeTag2.serialize());
         }
 
         // Since they are equal, check one tag is enough.
         if (typeTag1 != ATypeTag.STRING && typeTag1 != ATypeTag.ORDEREDLIST) { // could be an list
-            throw new AlgebricksException(
-                    "Only String or OrderedList type are allowed in edit distance, but given : " + typeTag1);
+            throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE, 0, typeTag1.serialize(),
+                    ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
         }
 
         if (typeTag1 == ATypeTag.ORDEREDLIST) {
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {
-                throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
+                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
             }
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {
-                throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
+                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
             }
         }
         return true;

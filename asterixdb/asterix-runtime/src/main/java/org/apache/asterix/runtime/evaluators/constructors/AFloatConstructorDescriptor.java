@@ -31,13 +31,15 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -60,27 +62,17 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private String errorMessage = "This can not be an instance of float";
                     private final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
                     private final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
                     private final byte[] NAN = UTF8StringUtil.writeStringToBytes("NaN");
-
-                    // private int offset = 3, value = 0, pointIndex = 0, eIndex
-                    // = 1;
-                    // private int integerPart = 0, fractionPart = 0,
-                    // exponentPart = 0;
-                    // float floatValue = 0;
-                    // boolean positiveInteger = true, positiveExponent = true,
-                    // expectingInteger = true,
-                    // expectingFraction = false, expectingExponent = false;
-                    IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
-                            .createBinaryComparator();
+                    private IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.
+                            UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AFloat> floatSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -88,7 +80,7 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
@@ -112,11 +104,13 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 }
                                 floatSerde.serialize(aFloat, out);
                             } else {
-                                throw new AlgebricksException(errorMessage);
+                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                        } catch (IOException e) {
+                            throw new InvalidDataFormatException(getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
                         }
                     }
                 };

@@ -28,6 +28,8 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializer
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Utility class for accessing serialized unordered and ordered lists.
@@ -52,15 +54,18 @@ public class AsterixListAccessor {
         return itemType == ATypeTag.ANY;
     }
 
-    public void reset(byte[] listBytes, int start) throws AsterixException {
+    public void reset(byte[] listBytes, int start) throws HyracksDataException {
         this.listBytes = listBytes;
         this.start = start;
-        listType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[start]);
-        if (listType != ATypeTag.UNORDEREDLIST && listType != ATypeTag.ORDEREDLIST) {
-            throw new AsterixException("Unsupported type: " + listType);
+        byte typeTag = listBytes[start];
+        if (typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG
+                && typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+            throw new TypeMismatchException("list-accessor", 0, listBytes[start],
+                    ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
         }
+        listType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[start]);
         itemType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[start + 1]);
-        if (listType == ATypeTag.UNORDEREDLIST) {
+        if (listBytes[start] == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
             size = AUnorderedListSerializerDeserializer.getNumberOfItems(listBytes, start);
         } else {
             size = AOrderedListSerializerDeserializer.getNumberOfItems(listBytes, start);

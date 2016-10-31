@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -52,7 +51,7 @@ public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         eval.evaluate(tuple, argPtr);
         Value match = isMatch(argPtr.getByteArray()[argPtr.getStartOffset()]);
         if (match == Value.MISSING) {
@@ -60,13 +59,9 @@ public abstract class AbstractTypeCheckEvaluator implements IScalarEvaluator {
             return;
         }
         ABoolean res = match == Value.TRUE ? ABoolean.TRUE : ABoolean.FALSE;
-        try {
-            resultStorage.reset();
-            aObjSerDer.serialize(res, out);
-            result.set(resultStorage);
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
+        resultStorage.reset();
+        aObjSerDer.serialize(res, out);
+        result.set(resultStorage);
     }
 
     protected abstract Value isMatch(byte typeTag);

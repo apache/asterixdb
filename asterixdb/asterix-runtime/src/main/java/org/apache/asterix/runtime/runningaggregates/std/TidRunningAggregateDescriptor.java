@@ -26,7 +26,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
@@ -49,17 +48,14 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
     };
 
     @Override
-    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
-
+    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IRunningAggregateEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @SuppressWarnings("unchecked")
             @Override
             public IRunningAggregateEvaluator createRunningAggregateEvaluator(IHyracksTaskContext ctx)
-                    throws AlgebricksException {
+                    throws HyracksDataException {
 
                 return new IRunningAggregateEvaluator() {
 
@@ -70,20 +66,16 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
                     private int cnt;
 
                     @Override
-                    public void step(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void step(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
-                        try {
-                            m.setValue(cnt);
-                            serde.serialize(m, resultStorage.getDataOutput());
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        m.setValue(cnt);
+                        serde.serialize(m, resultStorage.getDataOutput());
                         result.set(resultStorage);
                         ++cnt;
                     }
 
                     @Override
-                    public void init() throws AlgebricksException {
+                    public void init() throws HyracksDataException {
                         cnt = 1;
                     }
                 };

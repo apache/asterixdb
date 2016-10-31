@@ -22,13 +22,13 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -52,22 +52,21 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
     private final FunctionIdentifier funcID;
 
     AbstractUnaryStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
-            FunctionIdentifier funcID) throws AlgebricksException {
+            FunctionIdentifier funcID) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
         argEval.evaluate(tuple, argPtr);
         byte[] argBytes = argPtr.getByteArray();
         int offset = argPtr.getStartOffset();
         byte inputTypeTag = argBytes[offset];
         if (inputTypeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new AlgebricksException(funcID.getName() + ": expects input type to be STRING, but got ("
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputTypeTag) + ".");
+            throw new TypeMismatchException(funcID, 0, argBytes[offset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         stringPtr.set(argBytes, offset + 1, argPtr.getLength() - 1);
         resultArray.reset();
@@ -75,7 +74,7 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
             process(stringPtr, resultPointable);
             writeResult(resultPointable);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

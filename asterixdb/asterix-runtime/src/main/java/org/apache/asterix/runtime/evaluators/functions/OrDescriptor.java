@@ -31,7 +31,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -58,14 +58,12 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
-
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 final IPointable argPtr = new VoidPointable();
                 final IScalarEvaluator[] evals = new IScalarEvaluator[args.length];
                 for (int i = 0; i < evals.length; i++) {
@@ -86,49 +84,49 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            resultStorage.reset();
-                            int n = args.length;
-                            boolean res = false;
-                            boolean metNull = false;
-                            boolean metMissing = false;
-                            for (int i = 0; i < n; i++) {
-                                evals[i].evaluate(tuple, argPtr);
-                                byte[] data = argPtr.getByteArray();
-                                int offset = argPtr.getStartOffset();
-                                if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-                                    metMissing = true;
-                                    continue;
-                                }
-                                if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                                    metNull = true;
-                                    continue;
-                                }
-                                boolean argResult = ABooleanSerializerDeserializer.getBoolean(data, offset + 1);
-                                if (argResult == true) {
-                                    // anything OR TRUE = TRUE
-                                    booleanSerde.serialize(ABoolean.TRUE, output);
-                                    result.set(resultStorage);
-                                    return;
-                                }
-                                res |= argResult;
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        int n = args.length;
+                        boolean res = false;
+                        boolean metNull = false;
+                        boolean metMissing = false;
+                        for (int i = 0; i < n; i++) {
+                            evals[i].evaluate(tuple, argPtr);
+                            byte[] data = argPtr.getByteArray();
+                            int offset = argPtr.getStartOffset();
+                            if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                                metMissing = true;
+                                continue;
                             }
-                            if (metNull) {
-                                // NULL OR FALSE = NULL
-                                // NULL OR MISSING = NULL
-                                nullSerde.serialize(ANull.NULL, output);
-                            } else if (metMissing) {
-                                // MISSING OR FALSE = MISSING
-                                missingSerde.serialize(AMissing.MISSING, output);
-                            } else {
-                                ABoolean aResult = res ? ABoolean.TRUE : ABoolean.FALSE;
-                                booleanSerde.serialize(aResult, output);
+                            if (data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+                                metNull = true;
+                                continue;
                             }
-                            result.set(resultStorage);
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
+                            if (data[offset] != ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
+                                throw new TypeMismatchException(getIdentifier(), i, data[offset],
+                                        ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
+                            }
+                            boolean argResult = ABooleanSerializerDeserializer.getBoolean(data, offset + 1);
+                            if (argResult == true) {
+                                // anything OR TRUE = TRUE
+                                booleanSerde.serialize(ABoolean.TRUE, output);
+                                result.set(resultStorage);
+                                return;
+                            }
+                            res |= argResult;
                         }
+                        if (metNull) {
+                            // NULL OR FALSE = NULL
+                            // NULL OR MISSING = NULL
+                            nullSerde.serialize(ANull.NULL, output);
+                        } else if (metMissing) {
+                            // MISSING OR FALSE = MISSING
+                            missingSerde.serialize(AMissing.MISSING, output);
+                        } else {
+                            ABoolean aResult = res ? ABoolean.TRUE : ABoolean.FALSE;
+                            booleanSerde.serialize(aResult, output);
+                        }
+                        result.set(resultStorage);
                     }
                 };
             }

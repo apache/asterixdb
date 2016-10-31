@@ -21,7 +21,8 @@ package org.apache.asterix.runtime.aggregates.std;
 import java.io.IOException;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
@@ -29,7 +30,7 @@ public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction 
     private final boolean isLocalAgg;
 
     public SqlMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
-            boolean isLocalAgg) throws AlgebricksException {
+            boolean isLocalAgg) throws HyracksDataException {
         super(args, context, isMin);
         this.isLocalAgg = isLocalAgg;
     }
@@ -39,9 +40,9 @@ public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction 
     }
 
     @Override
-    protected void processSystemNull() throws AlgebricksException {
+    protected void processSystemNull() throws HyracksDataException {
         if (isLocalAgg) {
-            throw new AlgebricksException("Type SYSTEM_NULL encountered in local aggregate.");
+            throw new UnsupportedItemTypeException("min/max", ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         }
     }
 

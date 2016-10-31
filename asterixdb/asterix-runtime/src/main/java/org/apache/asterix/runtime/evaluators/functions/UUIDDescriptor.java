@@ -29,7 +29,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -52,7 +51,7 @@ public class UUIDDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
@@ -62,22 +61,18 @@ public class UUIDDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     .getSerializerDeserializer(BuiltinType.AUUID);
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput output = resultStorage.getDataOutput();
                     private final AGeneratedUUID uuid = new AGeneratedUUID();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         uuid.nextUUID();
-                        try {
-                            resultStorage.reset();
-                            uuidSerDe.serialize(uuid, output);
-                            result.set(resultStorage);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        resultStorage.reset();
+                        uuidSerDe.serialize(uuid, output);
+                        result.set(resultStorage);
                     }
                 };
             }

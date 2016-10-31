@@ -25,21 +25,24 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -62,7 +65,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
@@ -74,25 +77,24 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.
+                            INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             evalList.evaluate(tuple, inputArgList);
                             byte[] listBytes = inputArgList.getByteArray();
                             int offset = inputArgList.getStartOffset();
 
-                            if (listBytes[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_POLYGON.getName()
-                                        + ": expects input type ORDEREDLIST, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[offset]));
+                            if (listBytes[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                    && listBytes[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                                throw new TypeMismatchException(getIdentifier(), 0, listBytes[offset],
+                                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
-                            try {
-                                listAccessor.reset(listBytes, offset);
-                            } catch (AsterixException e) {
-                                throw new AlgebricksException(e);
-                            }
+                            listAccessor.reset(listBytes, offset);
                             try {
                                 // First check the list consists of a valid items
                                 for (int i = 0; i < listAccessor.size(); i++) {
@@ -103,17 +105,21 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                                             nullSerde.serialize(ANull.NULL, out);
                                             return;
                                         }
-                                        throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_POLYGON.getName()
-                                                + ": expects type DOUBLE/NULL for the list item but got " + itemType);
+                                        if (itemType == ATypeTag.MISSING) {
+                                            missingSerde.serialize(AMissing.MISSING, out);
+                                            return;
+                                        }
+                                        throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.CREATE_POLYGON,
+                                                itemType.serialize());
                                     }
 
                                 }
                                 if (listAccessor.size() < 6) {
-                                    throw new AlgebricksException(
-                                            "A polygon instance must consists of at least 3 points");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 } else if (listAccessor.size() % 2 != 0) {
-                                    throw new AlgebricksException(
-                                            "There must be an even number of double values in the list to form a polygon");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 }
                                 out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 out.writeShort(listAccessor.size() / 2);
@@ -130,10 +136,10 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                                 }
                                 result.set(resultStorage);
                             } catch (AsterixException ex) {
-                                throw new AlgebricksException(ex);
+                                throw new HyracksDataException(ex);
                             }
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1.getMessage());
+                            throw new HyracksDataException(e1);
                         }
                     }
                 };

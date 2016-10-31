@@ -20,10 +20,10 @@
 package org.apache.asterix.algebra.operators.physical;
 
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CommitRuntimeFactory implements IPushRuntimeFactory {
 
@@ -56,7 +56,7 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         if (upsertVarIdx >= 0) {
             return new UpsertCommitRuntime(ctx, jobId, datasetId, primaryKeyFields, isTemporaryDatasetWriteJob,
                     isWriteTransaction, datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()],

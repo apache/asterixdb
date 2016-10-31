@@ -36,6 +36,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -44,13 +45,14 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.AccessibleByteArrayEval;
 import org.apache.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
@@ -89,34 +91,34 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
             .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractSerializableAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
-    public void init(DataOutput state) throws AlgebricksException {
+    public void init(DataOutput state) throws HyracksDataException {
         try {
             state.writeDouble(0.0);
             state.writeLong(0);
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public abstract void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException;
+    public abstract void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws HyracksDataException;
 
     @Override
-    public abstract void finish(byte[] state, int start, int len, DataOutput result) throws AlgebricksException;
+    public abstract void finish(byte[] state, int start, int len, DataOutput result) throws HyracksDataException;
 
     @Override
-    public abstract void finishPartial(byte[] state, int start, int len, DataOutput result) throws AlgebricksException;
+    public abstract void finishPartial(byte[] state, int start, int len, DataOutput result) throws HyracksDataException;
 
     protected abstract void processNull(byte[] state, int start);
 
     protected void processDataValues(IFrameTupleReference tuple, byte[] state, int start, int len)
-            throws AlgebricksException {
+            throws HyracksDataException {
         if (skipStep(state, start)) {
             return;
         }
@@ -134,8 +136,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new AlgebricksException(
-                    "Unexpected type " + typeTag + " in aggregation input stream. Expected type " + aggType + ".");
+            throw new IncompatibleTypeException(AsterixBuiltinFunctions.AVG, bytes[offset], aggType.serialize());
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
@@ -171,9 +172,8 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 sum += val;
                 break;
             }
-            default: {
-                throw new NotImplementedException("Cannot compute AVG for values of type " + typeTag);
-            }
+            default:
+                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.AVG, bytes[offset]);
         }
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
         BufferSerDeUtil.writeLong(count, state, start + COUNT_OFFSET);
@@ -181,7 +181,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
     }
 
     protected void finishPartialResults(byte[] state, int start, int len, DataOutput result)
-            throws AlgebricksException {
+            throws HyracksDataException {
         double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
@@ -210,19 +210,17 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 result.write(avgBytes.getByteArray(), avgBytes.getStartOffset(), avgBytes.getLength());
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     protected void processPartialResults(IFrameTupleReference tuple, byte[] state, int start, int len)
-            throws AlgebricksException {
+            throws HyracksDataException {
         if (skipStep(state, start)) {
             return;
         }
         double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
-        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
-
         eval.evaluate(tuple, inputVal);
         byte[] serBytes = inputVal.getByteArray();
         int offset = inputVal.getStartOffset();
@@ -239,7 +237,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
             }
             case RECORD: {
                 // Expected.
-                aggType = ATypeTag.DOUBLE;
+                ATypeTag aggType = ATypeTag.DOUBLE;
                 int nullBitmapSize = 0;
                 int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, offset, SUM_FIELD_ID,
                         nullBitmapSize, false);
@@ -253,14 +251,12 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 state[start + AGG_TYPE_OFFSET] = aggType.serialize();
                 break;
             }
-            default: {
-                throw new AlgebricksException("Global-Avg is not defined for values of type "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[offset]));
-            }
+            default:
+                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.AVG, serBytes[offset]);
         }
     }
 
-    protected void finishFinalResults(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+    protected void finishFinalResults(byte[] state, int start, int len, DataOutput result) throws HyracksDataException {
         double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
@@ -272,7 +268,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 doubleSerde.serialize(aDouble, result);
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 

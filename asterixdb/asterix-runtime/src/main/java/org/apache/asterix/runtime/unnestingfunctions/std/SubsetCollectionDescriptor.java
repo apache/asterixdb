@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -31,13 +33,13 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -53,14 +55,12 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
     };
 
     @Override
-    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IUnnestingEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
-
+            public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IUnnestingEvaluator() {
                     private IPointable inputVal = new VoidPointable();
                     private IScalarEvaluator evalList = args[0].createScalarEvaluator(ctx);
@@ -76,15 +76,16 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                     private boolean metUnknown = false;
 
                     @Override
-                    public void init(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void init(IFrameTupleReference tuple) throws HyracksDataException {
                         try {
                             evalStart.evaluate(tuple, inputVal);
-                            posStart = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(),
+                            posStart = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0,
+                                    inputVal.getByteArray(),
                                     inputVal.getStartOffset());
 
                             evalLen.evaluate(tuple, inputVal);
-                            numItems = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(),
-                                    inputVal.getStartOffset());
+                            numItems = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1,
+                                    inputVal.getByteArray(), inputVal.getStartOffset());
 
                             evalList.evaluate(tuple, inputVal);
                             byte[] serList = inputVal.getByteArray();
@@ -100,8 +101,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
                             if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new AlgebricksException("Subset-collection is not defined for values of type"
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTag));
+                                throw new RuntimeDataException(ErrorCode.ERROR_COERCION, getIdentifier());
                             }
                             if (typeTag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
                                 numItemsMax = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);
@@ -116,12 +116,12 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
                             posCrt = posStart;
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                     }
 
                     @Override
-                    public boolean step(IPointable result) throws AlgebricksException {
+                    public boolean step(IPointable result) throws HyracksDataException {
                         if (!metUnknown && posCrt < posStart + numItems && posCrt < numItemsMax) {
                             resultStorage.reset();
                             byte[] serList = inputVal.getByteArray();
@@ -141,9 +141,9 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                                 resultStorage.getDataOutput().write(serList, itemOffset,
                                         itemLength + (!selfDescList ? 0 : 1));
                             } catch (IOException e) {
-                                throw new AlgebricksException(e);
+                                throw new HyracksDataException(e);
                             } catch (AsterixException e) {
-                                throw new AlgebricksException(e);
+                                throw new HyracksDataException(e);
                             }
                             result.set(resultStorage);
                             ++posCrt;

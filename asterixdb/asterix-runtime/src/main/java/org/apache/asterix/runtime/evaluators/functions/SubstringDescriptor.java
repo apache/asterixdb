@@ -21,13 +21,15 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -53,13 +55,12 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -76,49 +77,43 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private final UTF8StringPointable string = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evalString.evaluate(tuple, argString);
                         evalStart.evaluate(tuple, argStart);
                         evalLen.evaluate(tuple, argLen);
 
-                        int start = 0;
                         byte[] bytes = argStart.getByteArray();
                         int offset = argStart.getStartOffset();
-                        try {
-                            start = ATypeHierarchy.getIntegerValue(bytes, offset) - 1;
-                        } catch (HyracksDataException e1) {
-                            throw new AlgebricksException(e1);
-                        }
+                        int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0, bytes, offset) - 1;
 
-                        int len = 0;
                         bytes = argLen.getByteArray();
                         offset = argLen.getStartOffset();
-                        try {
-                            len = ATypeHierarchy.getIntegerValue(bytes, offset);
-                        } catch (HyracksDataException e1) {
-                            throw new AlgebricksException(e1);
-                        }
+                        int len = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);
 
                         bytes = argString.getByteArray();
                         offset = argString.getStartOffset();
                         int length = argString.getLength();
+                        if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                        }
                         string.set(bytes, offset + 1, length - 1);
                         array.reset();
                         try {
                             UTF8StringPointable.substr(string, start, len, builder, array);
                         } catch (StringIndexOutOfBoundsException e) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName() + ": start="
-                                    + start + "\tgoing past the input length.");
+                            throw new RuntimeDataException(ErrorCode.ERROR_OUT_OF_BOUND, getIdentifier(), 1,
+                                    start + len - 1);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
 
                         try {
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

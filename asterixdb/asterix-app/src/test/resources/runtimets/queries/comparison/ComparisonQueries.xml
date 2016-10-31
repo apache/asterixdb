@@ -172,43 +172,43 @@
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_duration">
       <output-dir compare="Text">issue363_inequality_duration</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the DURATION type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type duration</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_interval">
       <output-dir compare="Text">issue363_inequality_interval</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the INTERVAL type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type interval</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_point">
       <output-dir compare="Text">issue363_inequality_point</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POINT type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type point</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_line">
       <output-dir compare="Text">issue363_inequality_line</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the LINE type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type line</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_polygon">
       <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the POLYGON type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type polygon</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_rectangle">
       <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the RECTANGLE type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type rectangle</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
     <compilation-unit name="issue363_inequality_circle">
       <output-dir compare="Text">issue363_inequality_circle</output-dir>
-      <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: Comparison operations (GT, GE, LT, and LE) for the CIRCLE type are not defined</expected-error>
+      <expected-error>Unsupported type: comparison operations (&gt;, &gt;=, &lt;, and &lt;=) cannot process input type circle</expected-error>
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">

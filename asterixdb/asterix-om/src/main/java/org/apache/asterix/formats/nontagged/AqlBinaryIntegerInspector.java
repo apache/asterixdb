@@ -40,6 +40,6 @@ public class AqlBinaryIntegerInspector implements IBinaryIntegerInspector {
 
     @Override
     public int getIntegerValue(byte[] bytes, int offset, int length) throws HyracksDataException {
-        return ATypeHierarchy.getIntegerValue(bytes, offset);
+        return ATypeHierarchy.getIntegerValue("integer-inspector", 0, bytes, offset);
     }
 }

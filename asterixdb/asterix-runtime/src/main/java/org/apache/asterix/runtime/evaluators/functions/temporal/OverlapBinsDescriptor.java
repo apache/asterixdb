@@ -36,18 +36,22 @@ import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.typecomputer.impl.ADateTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.OverflowException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnderflowException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -65,14 +69,13 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -99,7 +102,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final GregorianCalendarSystem gregCalSys = GregorianCalendarSystem.getInstance();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -122,8 +125,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 intervalStart = intervalStart * GregorianCalendarSystem.CHRONON_OF_DAY;
                             }
                         } else {
-                            throw new AlgebricksException(getIdentifier().getName()
-                                    + ": the first argument should be INTERVAL/NULL/MISSING but got " + type0);
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                    ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
 
                         // get the anchor instance time
@@ -131,8 +134,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         int offset1 = argPtr1.getStartOffset();
                         ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         if (intervalTypeTag != bytes1[offset1]) {
-                            throw new AlgebricksException(getIdentifier().getName() + ": expecting compatible type to "
-                                    + type0 + "(" + intervalTypeTag + ") for the second argument but got " + type1);
+                            throw new IncompatibleTypeException(getIdentifier(), intervalTypeTag, bytes1[offset1]);
                         }
 
                         long anchorTime;
@@ -148,9 +150,9 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 anchorTime = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                 break;
                             default:
-                                throw new AlgebricksException(
-                                        getIdentifier().getName() + ": expecting compatible type to " + type0 + "("
-                                                + intervalTypeTag + ") for the second argument but got " + type1);
+                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
 
                         byte[] bytes2 = argPtr2.getByteArray();
@@ -176,13 +178,11 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalMonths < 0 && totalMonths % yearMonth != 0) ? -1 : 0);
 
                                 if (firstBinIndex > Integer.MAX_VALUE) {
-                                    throw new AlgebricksException(
-                                            getIdentifier().getName() + ": Overflowing time value to be binned!");
+                                    throw new OverflowException(getIdentifier());
                                 }
 
                                 if (firstBinIndex < Integer.MIN_VALUE) {
-                                    throw new AlgebricksException(
-                                            getIdentifier().getName() + ": Underflowing time value to be binned!");
+                                    throw new UnderflowException(getIdentifier());
                                 }
                                 break;
 
@@ -195,17 +195,15 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalChronon < 0 && totalChronon % dayTime != 0) ? -1 : 0);
                                 break;
                             default:
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expecting YEARMONTHDURATION/DAYTIMEDURATION for the thrid argument but got "
-                                        + type2);
+                                throw new TypeMismatchException(getIdentifier(), 2, bytes2[offset2],
+                                        ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
                         }
 
                         long binStartChronon;
                         long binEndChronon;
                         int binOffset;
-
                         listBuilder.reset(intListType);
-
                         try {
                             if (intervalTypeTag == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
 
@@ -235,8 +233,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
 
                             } else if (intervalTypeTag == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                 if (yearMonth != 0) {
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": cannot create year-month bin for a time value");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
                                 binOffset = 0;
@@ -250,8 +248,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
 
                                 if (binStartChronon < 0 || binStartChronon >= GregorianCalendarSystem.CHRONON_OF_DAY) {
                                     // avoid the case where a time bin is before 00:00:00 or no early than 24:00:00
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": reaches a bin with the end earlier than the start; probably the window is beyond the time scope. Maybe use DATETIME?");
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
                                 while (!((binStartChronon < intervalStart && binEndChronon <= intervalStart)
@@ -274,8 +272,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                     }
 
                                     if (binEndChronon < binStartChronon) {
-                                        throw new AlgebricksException(getIdentifier().getName()
-                                                + ": reaches a bin with the end earlier than the start; probably the window is beyond the time scope. Maybe use DATETIME?");
+                                        throw new InvalidDataFormatException(getIdentifier(),
+                                                ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                     }
                                 }
                             } else if (intervalTypeTag == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
@@ -294,12 +292,13 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                     binOffset++;
                                 } while (binEndChronon < intervalEnd);
                             } else {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": the first argument should be DATE/TIME/DATETIME/NULL but got " + type0);
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                             }
                             listBuilder.write(out, true);
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1.getMessage());
+                            throw new HyracksDataException(e1);
                         }
                         result.set(resultStorage);
                     }

@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.meta;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -45,7 +44,7 @@ public class PipelineAssembler {
         this.outputArity = outputArity;
     }
 
-    public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws AlgebricksException,
+    public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws
             HyracksDataException {
         // plug the operators
         IFrameWriter start = writer;// this.writer;

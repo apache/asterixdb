@@ -39,15 +39,13 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -80,7 +78,7 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
 
@@ -99,7 +97,7 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde;
 
-                    private int getPrecision() throws AlgebricksException {
+                    private int getPrecision() throws HyracksDataException {
                         byte[] bytes = argPrecision.getByteArray();
                         int offset = argPrecision.getStartOffset();
 
@@ -112,81 +110,76 @@ public class NumericRoundHalfToEven2Descriptor extends AbstractScalarFunctionDyn
                         } else if (bytes[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
                             return (int) AInt64SerializerDeserializer.getLong(bytes, offset + 1);
                         } else {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2.getName()
-                                    + ": the precision argument should be an INT8/INT16/INT32/INT64.");
+                            throw new TypeMismatchException(getIdentifier(), 1, bytes[offset],
+                                    ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                         }
                     }
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval.evaluate(tuple, argValue);
                         precision.evaluate(tuple, argPrecision);
                         byte[] data = argValue.getByteArray();
                         int offset = argValue.getStartOffset();
 
-                        try {
-                            if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT8);
-                                byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
-                                aInt8.setValue(val);
-                                serde.serialize(aInt8, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT16);
-                                short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
-                                aInt16.setValue(val);
-                                serde.serialize(aInt16, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT32);
-                                int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
-                                aInt32.setValue(val);
-                                serde.serialize(aInt32, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AINT64);
-                                long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
-                                aInt64.setValue(val);
-                                serde.serialize(aInt64, out);
-                            } else if (data[offset] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.AFLOAT);
-                                float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
-                                if (Float.isNaN(val) || Float.isInfinite(val) || Float.compare(val, -0.0F) == 0
-                                        || Float.compare(val, 0.0F) == 0) {
-                                    aFloat.setValue(val);
-                                    serde.serialize(aFloat, out);
-                                } else {
-                                    BigDecimal r = new BigDecimal(Float.toString(val));
-                                    aFloat.setValue(
-                                            r.setScale(getPrecision(), BigDecimal.ROUND_HALF_EVEN).floatValue());
-                                    serde.serialize(aFloat, out);
-                                }
-                            } else if (data[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
-                                        .getSerializerDeserializer(BuiltinType.ADOUBLE);
-                                double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
-                                if (Double.isNaN(val) || Double.isInfinite(val) || Double.compare(val, -0.0D) == 0
-                                        || Double.compare(val, 0.0D) == 0) {
-                                    aDouble.setValue(val);
-                                    serde.serialize(aDouble, out);
-                                } else {
-                                    BigDecimal r = new BigDecimal(Double.toString(val));
-                                    aDouble.setValue(
-                                            r.setScale(getPrecision(), BigDecimal.ROUND_HALF_EVEN).doubleValue());
-                                    serde.serialize(aDouble, out);
-                                }
+                        if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT8);
+                            byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
+                            aInt8.setValue(val);
+                            serde.serialize(aInt8, out);
+                        } else if (data[offset] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT16);
+                            short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
+                            aInt16.setValue(val);
+                            serde.serialize(aInt16, out);
+                        } else if (data[offset] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT32);
+                            int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
+                            aInt32.setValue(val);
+                            serde.serialize(aInt32, out);
+                        } else if (data[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AINT64);
+                            long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
+                            aInt64.setValue(val);
+                            serde.serialize(aInt64, out);
+                        } else if (data[offset] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AFLOAT);
+                            float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
+                            if (Float.isNaN(val) || Float.isInfinite(val) || Float.compare(val, -0.0F) == 0
+                                    || Float.compare(val, 0.0F) == 0) {
+                                aFloat.setValue(val);
+                                serde.serialize(aFloat, out);
                             } else {
-                                throw new NotImplementedException(
-                                        AsterixBuiltinFunctions.NUMERIC_ROUND_HALF_TO_EVEN2.getName()
-                                                + ": not implemented for "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]));
+                                BigDecimal r = new BigDecimal(Float.toString(val));
+                                aFloat.setValue(r.setScale(getPrecision(), BigDecimal.ROUND_HALF_EVEN).floatValue());
+                                serde.serialize(aFloat, out);
                             }
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                        } else if (data[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ADOUBLE);
+                            double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
+                            if (Double.isNaN(val) || Double.isInfinite(val) || Double.compare(val, -0.0D) == 0
+                                    || Double.compare(val, 0.0D) == 0) {
+                                aDouble.setValue(val);
+                                serde.serialize(aDouble, out);
+                            } else {
+                                BigDecimal r = new BigDecimal(Double.toString(val));
+                                aDouble.setValue(r.setScale(getPrecision(), BigDecimal.ROUND_HALF_EVEN).doubleValue());
+                                serde.serialize(aDouble, out);
+                            }
+                        } else {
+                            throw new TypeMismatchException(getIdentifier(), 0, data[offset],
+                                    ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
                         result.set(resultStorage);
                     }

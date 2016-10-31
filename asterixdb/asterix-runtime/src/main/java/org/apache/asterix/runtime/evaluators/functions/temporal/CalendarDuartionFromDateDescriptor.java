@@ -32,9 +32,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -57,18 +56,14 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
         }
     };
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
-     */
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new IScalarEvaluator() {
 
@@ -80,15 +75,15 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADURATION);
+                    private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.
+                            INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
 
                     private AMutableDuration aDuration = new AMutableDuration(0, 0);
 
                     private GregorianCalendarSystem calInstanct = GregorianCalendarSystem.getInstance();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -98,119 +93,114 @@ public class CalendarDuartionFromDateDescriptor extends AbstractScalarFunctionDy
                         byte[] bytes1 = argPtr1.getByteArray();
                         int offset1 = argPtr1.getStartOffset();
 
-                        try {
-                            if (bytes0[offset0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects type DATE/NULL for parameter 0 but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]));
-                            }
-
-                            if (bytes1[offset1] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
-                                throw new AlgebricksException(
-                                        FID.getName() + ": expects type DURATION/NULL for parameter 1 but got "
-                                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]));
-                            }
-
-                            int yearMonthDurationInMonths = ADurationSerializerDeserializer.getYearMonth(bytes1,
-                                    offset1 + 1);
-                            long dayTimeDurationInMs = ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1);
-
-                            long startingTimePoint = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
-                                    * GregorianCalendarSystem.CHRONON_OF_DAY;
-
-                            long endingTimePoint = DurationArithmeticOperations.addDuration(startingTimePoint,
-                                    yearMonthDurationInMonths, dayTimeDurationInMs, false);
-
-                            if (startingTimePoint == endingTimePoint) {
-                                aDuration.setValue(0, 0);
-                            } else {
-
-                                boolean negative = false;
-
-                                if (endingTimePoint < startingTimePoint) {
-                                    negative = true;
-                                    // swap the starting and ending time, so that ending time is always larger than the starting time.
-                                    long tmpTime = endingTimePoint;
-                                    endingTimePoint = startingTimePoint;
-                                    startingTimePoint = tmpTime;
-                                }
-
-                                int year0 = calInstanct.getYear(startingTimePoint);
-                                int month0 = calInstanct.getMonthOfYear(startingTimePoint, year0);
-
-                                int year1 = calInstanct.getYear(endingTimePoint);
-                                int month1 = calInstanct.getMonthOfYear(endingTimePoint, year1);
-
-                                int year = year1 - year0;
-                                int month = month1 - month0;
-                                int day = calInstanct.getDayOfMonthYear(endingTimePoint, year1, month1)
-                                        - calInstanct.getDayOfMonthYear(startingTimePoint, year0, month0);
-                                int hour = calInstanct.getHourOfDay(endingTimePoint)
-                                        - calInstanct.getHourOfDay(startingTimePoint);
-                                int min = calInstanct.getMinOfHour(endingTimePoint)
-                                        - calInstanct.getMinOfHour(startingTimePoint);
-                                int sec = calInstanct.getSecOfMin(endingTimePoint)
-                                        - calInstanct.getSecOfMin(startingTimePoint);
-                                int ms = calInstanct.getMillisOfSec(endingTimePoint)
-                                        - calInstanct.getMillisOfSec(startingTimePoint);
-
-                                if (ms < 0) {
-                                    ms += GregorianCalendarSystem.CHRONON_OF_SECOND;
-                                    sec -= 1;
-                                }
-
-                                if (sec < 0) {
-                                    sec += GregorianCalendarSystem.CHRONON_OF_MINUTE
-                                            / GregorianCalendarSystem.CHRONON_OF_SECOND;
-                                    min -= 1;
-                                }
-
-                                if (min < 0) {
-                                    min += GregorianCalendarSystem.CHRONON_OF_HOUR
-                                            / GregorianCalendarSystem.CHRONON_OF_MINUTE;
-                                    hour -= 1;
-                                }
-
-                                if (hour < 0) {
-                                    hour += GregorianCalendarSystem.CHRONON_OF_DAY
-                                            / GregorianCalendarSystem.CHRONON_OF_HOUR;
-                                    day -= 1;
-                                }
-
-                                if (day < 0) {
-                                    boolean isLeapYear = calInstanct.isLeapYear(year1);
-                                    // need to "borrow" the days in previous month to make the day positive; when month is 1 (Jan), Dec will be borrowed
-                                    day += (isLeapYear)
-                                            ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
-                                            : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[(12 + month1 - 2) % 12]);
-                                    month -= 1;
-                                }
-
-                                if (month < 0) {
-                                    month += GregorianCalendarSystem.MONTHS_IN_A_YEAR;
-                                    year -= 1;
-                                }
-
-                                if (negative) {
-                                    aDuration.setValue(-1 * (year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month),
-                                            -1 * (day * GregorianCalendarSystem.CHRONON_OF_DAY
-                                                    + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
-                                                    + min * GregorianCalendarSystem.CHRONON_OF_MINUTE
-                                                    + sec * GregorianCalendarSystem.CHRONON_OF_SECOND + ms));
-                                } else {
-                                    aDuration.setValue(year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month,
-                                            day * GregorianCalendarSystem.CHRONON_OF_DAY
-                                                    + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
-                                                    + min * GregorianCalendarSystem.CHRONON_OF_MINUTE
-                                                    + sec * GregorianCalendarSystem.CHRONON_OF_SECOND + ms);
-                                }
-                            }
-
-                            durationSerde.serialize(aDuration, out);
-
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
+                        if (bytes0[offset0] != ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                    ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
+
+                        if (bytes1[offset1] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                    ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
+                        }
+
+                        int yearMonthDurationInMonths = ADurationSerializerDeserializer.getYearMonth(bytes1,
+                                offset1 + 1);
+                        long dayTimeDurationInMs = ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1);
+
+                        long startingTimePoint = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
+                                * GregorianCalendarSystem.CHRONON_OF_DAY;
+
+                        long endingTimePoint = DurationArithmeticOperations.addDuration(startingTimePoint,
+                                yearMonthDurationInMonths, dayTimeDurationInMs, false);
+
+                        if (startingTimePoint == endingTimePoint) {
+                            aDuration.setValue(0, 0);
+                        } else {
+
+                            boolean negative = false;
+
+                            if (endingTimePoint < startingTimePoint) {
+                                negative = true;
+                                // swap the starting and ending time, so that ending time is always larger than the
+                                // starting time.
+                                long tmpTime = endingTimePoint;
+                                endingTimePoint = startingTimePoint;
+                                startingTimePoint = tmpTime;
+                            }
+
+                            int year0 = calInstanct.getYear(startingTimePoint);
+                            int month0 = calInstanct.getMonthOfYear(startingTimePoint, year0);
+
+                            int year1 = calInstanct.getYear(endingTimePoint);
+                            int month1 = calInstanct.getMonthOfYear(endingTimePoint, year1);
+
+                            int year = year1 - year0;
+                            int month = month1 - month0;
+                            int day = calInstanct.getDayOfMonthYear(endingTimePoint, year1, month1)
+                                    - calInstanct.getDayOfMonthYear(startingTimePoint, year0, month0);
+                            int hour = calInstanct.getHourOfDay(endingTimePoint)
+                                    - calInstanct.getHourOfDay(startingTimePoint);
+                            int min = calInstanct.getMinOfHour(endingTimePoint)
+                                    - calInstanct.getMinOfHour(startingTimePoint);
+                            int sec = calInstanct.getSecOfMin(endingTimePoint)
+                                    - calInstanct.getSecOfMin(startingTimePoint);
+                            int ms = calInstanct.getMillisOfSec(endingTimePoint)
+                                    - calInstanct.getMillisOfSec(startingTimePoint);
+
+                            if (ms < 0) {
+                                ms += GregorianCalendarSystem.CHRONON_OF_SECOND;
+                                sec -= 1;
+                            }
+
+                            if (sec < 0) {
+                                sec += GregorianCalendarSystem.CHRONON_OF_MINUTE
+                                        / GregorianCalendarSystem.CHRONON_OF_SECOND;
+                                min -= 1;
+                            }
+
+                            if (min < 0) {
+                                min += GregorianCalendarSystem.CHRONON_OF_HOUR
+                                        / GregorianCalendarSystem.CHRONON_OF_MINUTE;
+                                hour -= 1;
+                            }
+
+                            if (hour < 0) {
+                                hour += GregorianCalendarSystem.CHRONON_OF_DAY
+                                        / GregorianCalendarSystem.CHRONON_OF_HOUR;
+                                day -= 1;
+                            }
+
+                            if (day < 0) {
+                                boolean isLeapYear = calInstanct.isLeapYear(year1);
+                                // need to "borrow" the days in previous month to make the day positive; when month is
+                                // 1 (Jan), Dec will be borrowed
+                                day += isLeapYear
+                                        ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
+                                        : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[(12 + month1 - 2) % 12]);
+                                month -= 1;
+                            }
+
+                            if (month < 0) {
+                                month += GregorianCalendarSystem.MONTHS_IN_A_YEAR;
+                                year -= 1;
+                            }
+
+                            if (negative) {
+                                aDuration.setValue(-1 * (year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month),
+                                        -1 * (day * GregorianCalendarSystem.CHRONON_OF_DAY
+                                                + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
+                                                + min * GregorianCalendarSystem.CHRONON_OF_MINUTE
+                                                + sec * GregorianCalendarSystem.CHRONON_OF_SECOND + ms));
+                            } else {
+                                aDuration.setValue(year * GregorianCalendarSystem.MONTHS_IN_A_YEAR + month,
+                                        day * GregorianCalendarSystem.CHRONON_OF_DAY
+                                                + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
+                                                + min * GregorianCalendarSystem.CHRONON_OF_MINUTE
+                                                + sec * GregorianCalendarSystem.CHRONON_OF_SECOND + ms);
+                            }
+                        }
+
+                        durationSerde.serialize(aDuration, out);
                         result.set(resultStorage);
                     }
                 };

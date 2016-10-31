@@ -26,7 +26,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -60,13 +60,12 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
     public final static ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.STRING };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     private StringBuilder stringBuilder = new StringBuilder();
@@ -75,7 +74,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final UTF8StringWriter writer = new UTF8StringWriter();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evaluators[0].evaluate(tuple, pointables[0]);
                         evaluators[1].evaluate(tuple, pointables[1]);
@@ -102,15 +101,12 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                                 Base64Printer.printBase64Binary(byteArrayPtr.getByteArray(),
                                         byteArrayPtr.getContentStartOffset(), lengthBinary, stringBuilder);
                             } else {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects format indicator of \"hex\" or \"base64\" in the 2nd argument");
+                                throw new UnsupportedItemTypeException(getIdentifier(), arg1Tag.serialize());
                             }
                             dataOutput.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(stringBuilder.toString(), dataOutput);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

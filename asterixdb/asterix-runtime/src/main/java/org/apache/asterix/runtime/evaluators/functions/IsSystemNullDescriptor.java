@@ -27,7 +27,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -49,14 +48,13 @@ public class IsSystemNullDescriptor extends AbstractScalarFunctionDynamicDescrip
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -66,16 +64,12 @@ public class IsSystemNullDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private final AObjectSerializerDeserializer aObjSerDer = AObjectSerializerDeserializer.INSTANCE;
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         eval.evaluate(tuple, argPtr);
                         boolean isSystemNull = argPtr.getByteArray()[argPtr
                                 .getStartOffset()] == ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG;
                         ABoolean res = isSystemNull ? ABoolean.TRUE : ABoolean.FALSE;
-                        try {
-                            aObjSerDer.serialize(res, out);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        aObjSerDer.serialize(res, out);
                     }
                 };
             }

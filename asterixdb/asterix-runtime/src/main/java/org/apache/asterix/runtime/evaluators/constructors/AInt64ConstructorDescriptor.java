@@ -30,12 +30,13 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -57,7 +58,7 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -67,7 +68,6 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private long value;
                     private int offset;
                     private boolean positive;
-                    private String errorMessage = "This can not be an instance of int64";
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
@@ -75,7 +75,7 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
@@ -102,11 +102,13 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                             && serString[offset + 2] == '4' && offset + 3 == end) {
                                         break;
                                     } else {
-                                        throw new AlgebricksException(errorMessage);
+                                        throw new InvalidDataFormatException(getIdentifier(),
+                                                ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                                     }
                                 }
-                                if (value < 0 && value != -9223372036854775808L) {
-                                    throw new AlgebricksException(errorMessage);
+                                if (value < 0 && value != Long.MIN_VALUE) {
+                                    throw new InvalidDataFormatException(getIdentifier(),
+                                            ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                                 }
                                 if (value > 0 && !positive) {
                                     value *= -1;
@@ -115,11 +117,13 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 aInt64.setValue(value);
                                 int64Serde.serialize(aInt64, out);
                             } else {
-                                throw new AlgebricksException(errorMessage);
+                                throw new InvalidDataFormatException(getIdentifier(),
+                                        ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                             }
                             result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(errorMessage);
+                        } catch (IOException e) {
+                            throw new InvalidDataFormatException(getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                         }
                     }
                 };

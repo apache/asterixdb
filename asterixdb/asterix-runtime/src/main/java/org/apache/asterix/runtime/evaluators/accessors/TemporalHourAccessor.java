@@ -29,18 +29,19 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -63,14 +64,13 @@ public class TemporalHourAccessor extends AbstractScalarFunctionDynamicDescripto
      * @see org.apache.asterix.om.function.IFunctionDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory[])
      */
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput out = resultStorage.getDataOutput();
@@ -86,7 +86,7 @@ public class TemporalHourAccessor extends AbstractScalarFunctionDynamicDescripto
                     private final AMutableInt64 aMutableInt64 = new AMutableInt64(0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         eval.evaluate(tuple, argPtr);
                         byte[] bytes = argPtr.getByteArray();
                         int startOffset = argPtr.getStartOffset();
@@ -114,14 +114,17 @@ public class TemporalHourAccessor extends AbstractScalarFunctionDynamicDescripto
                             } else if (bytes[startOffset] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                 chrononTimeInMs = AInt64SerializerDeserializer.getLong(bytes, startOffset + 1);
                             } else {
-                                throw new AlgebricksException("Inapplicable input type: " + bytes[startOffset]);
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes[startOffset],
+                                        ATypeTag.SERIALIZED_DURATION_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_TIME_TYPE_TAG, ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                             }
 
                             int hour = calSystem.getHourOfDay(chrononTimeInMs);
                             aMutableInt64.setValue(hour);
                             intSerde.serialize(aMutableInt64, out);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

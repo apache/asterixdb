@@ -25,7 +25,6 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy.Domain;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.evaluators.visitors.DeepEqualityVisitor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -39,11 +38,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 
 public class DeepEqualAssessor {
+    private static final String DEEP_EQUAL = "deep-equal";
+    private static final double EPSILON = 1E-10;
     private final DeepEqualityVisitor equalityVisitor = new DeepEqualityVisitor();
 
     public boolean isEqual(IVisitablePointable leftPointable, IVisitablePointable rightPointable)
-            throws AlgebricksException, AsterixException {
-
+            throws HyracksDataException, AsterixException {
         if (leftPointable == null || rightPointable == null) {
             return false;
         }
@@ -59,16 +59,11 @@ public class DeepEqualAssessor {
             // If types are numeric compare their real values instead
             if (ATypeHierarchy.isSameTypeDomain(leftTypeTag, rightTypeTag, false)
                     && ATypeHierarchy.getTypeDomain(leftTypeTag) == Domain.NUMERIC) {
-                try {
-                    double leftVal = ATypeHierarchy.getDoubleValue(leftPointable.getByteArray(),
+                double leftVal = ATypeHierarchy.getDoubleValue(DEEP_EQUAL, 0, leftPointable.getByteArray(),
                             leftPointable.getStartOffset());
-                    double rightVal = ATypeHierarchy.getDoubleValue(rightPointable.getByteArray(),
+                double rightVal = ATypeHierarchy.getDoubleValue(DEEP_EQUAL, 1, rightPointable.getByteArray(),
                             rightPointable.getStartOffset());
-                    return (leftVal == rightVal);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
-
+                return Math.abs(leftVal - rightVal) < EPSILON;
             } else {
                 return false;
             }

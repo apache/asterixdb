@@ -29,7 +29,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -52,7 +52,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         super(args, context);
         edThreshEval = args[2].createScalarEvaluator(context);
         listBuilder = new OrderedListBuilder();
@@ -60,9 +60,8 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
-
         firstStringEval.evaluate(tuple, argPtr1);
         firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                 .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
@@ -76,18 +75,19 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             return;
         }
         try {
-            edThresh = ATypeHierarchy.getIntegerValue(argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
+            edThresh = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK.getName(), 2,
+                    argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
             editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
             writeResult(editDistance);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }
 
     @Override
     protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
-            throws AlgebricksException, HyracksDataException {
+            throws HyracksDataException {
         byte[] leftBytes = left.getByteArray();
         int leftStartOffset = left.getStartOffset();
         byte[] rightBytes = right.getByteArray();
@@ -105,8 +105,8 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             }
 
             default: {
-                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK.getName()
-                        + ": expects input type as STRING or ORDEREDLIST but got " + argType + ".");
+                throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK, 0, argType.serialize(),
+                        ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 
         }

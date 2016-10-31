@@ -23,7 +23,6 @@ import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
@@ -43,6 +42,7 @@ import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -214,20 +214,20 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
             IScalarEvaluatorFactory fact = _jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
                     _emptyTypeEnv, _emptySchemas, _jobGenCtx);
-            IScalarEvaluator eval = fact.createScalarEvaluator(null);
-            eval.evaluate(null, p);
-            Object t = _emptyTypeEnv.getType(expr);
-
-            @SuppressWarnings("rawtypes")
-            ISerializerDeserializer serde = _jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(t);
-            bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
-            IAObject o;
             try {
-                o = (IAObject) serde.deserialize(dis);
+                IScalarEvaluator eval = fact.createScalarEvaluator(null);
+                eval.evaluate(null, p);
+                Object t = _emptyTypeEnv.getType(expr);
+
+                @SuppressWarnings("rawtypes")
+                ISerializerDeserializer serde = _jobGenCtx.getSerializerDeserializerProvider()
+                        .getSerializerDeserializer(t);
+                bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
+                IAObject o = (IAObject) serde.deserialize(dis);
+                return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            return new Pair<Boolean, ILogicalExpression>(true, new ConstantExpression(new AsterixConstantValue(o)));
         }
 
         @Override

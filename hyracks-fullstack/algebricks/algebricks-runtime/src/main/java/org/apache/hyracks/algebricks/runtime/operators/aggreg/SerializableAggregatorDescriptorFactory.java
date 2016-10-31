@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import java.io.DataOutput;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -67,30 +66,22 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                 DataOutput output = tb.getDataOutput();
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < aggs.length; i++) {
-                    try {
-                        int begin = tb.getSize();
-                        if (aggs[i] == null) {
-                            aggs[i] = aggFactories[i].createAggregateEvaluator(ctx);
-                        }
-                        aggs[i].init(output);
-                        tb.addFieldEndOffset();
-                        stateFieldLength[i] = tb.getSize() - begin;
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
+                    int begin = tb.getSize();
+                    if (aggs[i] == null) {
+                        aggs[i] = aggFactories[i].createAggregateEvaluator(ctx);
                     }
+                    aggs[i].init(output);
+                    tb.addFieldEndOffset();
+                    stateFieldLength[i] = tb.getSize() - begin;
                 }
 
                 // doing initial aggregate
                 ftr.reset(accessor, tIndex);
                 for (int i = 0; i < aggs.length; i++) {
-                    try {
-                        byte[] data = tb.getByteArray();
-                        int prevFieldPos = i + keys.length - 1;
-                        int start = prevFieldPos >= 0 ? tb.getFieldEndOffsets()[prevFieldPos] : 0;
-                        aggs[i].step(ftr, data, start, stateFieldLength[i]);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    byte[] data = tb.getByteArray();
+                    int prevFieldPos = i + keys.length - 1;
+                    int start = prevFieldPos >= 0 ? tb.getFieldEndOffsets()[prevFieldPos] : 0;
+                    aggs[i].step(ftr, data, start, stateFieldLength[i]);
                 }
             }
 
@@ -101,14 +92,10 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                 int stateTupleStart = stateAccessor.getTupleStartOffset(stateTupleIndex);
                 int fieldSlotLength = stateAccessor.getFieldSlotsLength();
                 for (int i = 0; i < aggs.length; i++) {
-                    try {
-                        byte[] data = stateAccessor.getBuffer().array();
-                        int start = stateAccessor.getFieldStartOffset(stateTupleIndex, i + keys.length)
-                                + stateTupleStart + fieldSlotLength;
-                        aggs[i].step(ftr, data, start, stateFieldLength[i]);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    byte[] data = stateAccessor.getBuffer().array();
+                    int start = stateAccessor.getFieldStartOffset(stateTupleIndex, i + keys.length)
+                            + stateTupleStart + fieldSlotLength;
+                    aggs[i].step(ftr, data, start, stateFieldLength[i]);
                 }
             }
 
@@ -121,13 +108,9 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                 int refOffset = startOffset + stateAccessor.getFieldSlotsLength() + aggFieldOffset;
                 int start = refOffset;
                 for (int i = 0; i < aggs.length; i++) {
-                    try {
-                        aggs[i].finishPartial(data, start, stateFieldLength[i], tb.getDataOutput());
-                        start += stateFieldLength[i];
-                        tb.addFieldEndOffset();
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    aggs[i].finishPartial(data, start, stateFieldLength[i], tb.getDataOutput());
+                    start += stateFieldLength[i];
+                    tb.addFieldEndOffset();
                 }
                 return true;
             }
@@ -141,13 +124,9 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                 int refOffset = startOffset + stateAccessor.getFieldSlotsLength() + aggFieldOffset;
                 int start = refOffset;
                 for (int i = 0; i < aggs.length; i++) {
-                    try {
-                        aggs[i].finish(data, start, stateFieldLength[i], tb.getDataOutput());
-                        start += stateFieldLength[i];
-                        tb.addFieldEndOffset();
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    aggs[i].finish(data, start, stateFieldLength[i], tb.getDataOutput());
+                    start += stateFieldLength[i];
+                    tb.addFieldEndOffset();
                 }
                 return true;
             }

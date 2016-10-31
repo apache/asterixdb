@@ -25,20 +25,20 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -62,7 +62,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     protected final DataOutput out = resultStorage.getDataOutput();
@@ -79,7 +79,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                     private final AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             stringEval.evaluate(tuple, argPtr);
@@ -103,13 +103,12 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                                 }
                                 listBuilder.write(out, true);
                             } else {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_TO_CODEPOINT.getName()
-                                        + ": expects input type STRING but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serString[offset]));
+                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1.getMessage());
+                            throw new HyracksDataException(e1);
                         }
                     }
                 };

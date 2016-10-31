@@ -23,19 +23,19 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -60,7 +60,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     // Argument evaluators.
                     private final IScalarEvaluator stringEval = args[0].createScalarEvaluator(ctx);
@@ -84,7 +84,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final DataOutput out = resultStorage.getDataOutput();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             // Calls argument evaluators.
@@ -97,9 +97,8 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             int srcLen = argString.getLength();
                             // Type check for the first argument.
                             if (srcString[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(StringSplitDescriptor.this.getIdentifier().getName()
-                                        + ": expects input type STRING for the first argument but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(srcString[srcOffset]));
+                                throw new TypeMismatchException(getIdentifier(), 0, srcString[srcOffset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             // Gets the bytes of the pattern string.
@@ -108,10 +107,8 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             int patternLen = argPattern.getLength();
                             // Type check for the second argument.
                             if (patternString[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(StringSplitDescriptor.this.getIdentifier().getName()
-                                        + ": expects input type STRING for the second argument but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                .deserialize(patternString[patternOffset]));
+                                throw new TypeMismatchException(getIdentifier(), 1, patternString[patternOffset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             // Sets the UTF8 String pointables.
@@ -144,7 +141,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             listBuilder.write(out, true);
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1);
+                            throw new HyracksDataException(e1);
                         }
                     }
 

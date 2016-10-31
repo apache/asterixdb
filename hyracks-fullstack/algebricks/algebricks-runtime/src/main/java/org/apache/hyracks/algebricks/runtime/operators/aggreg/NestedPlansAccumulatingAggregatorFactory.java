@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -57,11 +56,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length, decorFieldIdx.length);
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
-            try {
-                pipelines[i] = (NestedTupleSourceRuntime) assemblePipeline(subplans[i], outputWriter, ctx);
-            } catch (AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
+            pipelines[i] = (NestedTupleSourceRuntime) assemblePipeline(subplans[i], outputWriter, ctx);
         }
 
         return new IAggregatorDescriptor() {
@@ -144,7 +139,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
     }
 
     private IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer, IHyracksTaskContext ctx)
-            throws AlgebricksException, HyracksDataException {
+            throws HyracksDataException {
         // plug the operators
         IFrameWriter start = writer;
         IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();

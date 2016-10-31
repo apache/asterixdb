@@ -27,14 +27,15 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -58,7 +59,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -72,16 +73,16 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                     private final byte stringTypeTag = ATypeTag.SERIALIZED_STRING_TYPE_TAG;
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
                             resultStorage.reset();
                             evalList.evaluate(tuple, inputArgList);
                             byte[] serOrderedList = inputArgList.getByteArray();
                             int offset = inputArgList.getStartOffset();
-                            int size = 0;
+                            int size;
 
                             if (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset]] != ATypeTag.ORDEREDLIST) {
-                                cannotProcessException(serOrderedList[offset], serOrderedList[offset + 1]);
+                                throw new TypeMismatchException(getIdentifier().getName(), 0, serOrderedList[offset]);
                             } else {
                                 switch (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset + 1]]) {
                                     case INT8:
@@ -95,7 +96,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                                 offset);
                                         break;
                                     default:
-                                        cannotProcessException(serOrderedList[offset], serOrderedList[offset + 1]);
+                                        throw new UnsupportedTypeException(getIdentifier(), serOrderedList[offset]);
                                 }
                             }
 
@@ -107,6 +108,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                             offset, i);
                                     int codePoint = 0;
                                     codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                                            getIdentifier().getName(), 0,
                                             serOrderedList, itemOffset, offset + 1);
                                     utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
                                 }
@@ -117,6 +119,7 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                             offset, i);
                                     int codePoint = 0;
                                     codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                                            getIdentifier().getName(), 0,
                                             serOrderedList, itemOffset, offset + 1);
                                     utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
                                     for (int j = 0; j < utf_8_len; j++) {
@@ -125,10 +128,10 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                 }
                                 result.set(resultStorage);
                             } catch (AsterixException ex) {
-                                throw new AlgebricksException(ex);
+                                throw new HyracksDataException(ex);
                             }
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1.getMessage());
+                            throw new HyracksDataException(e1);
                         }
                     }
                 };
@@ -139,13 +142,6 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
     @Override
     public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.CODEPOINT_TO_STRING;
-    }
-
-    private void cannotProcessException(byte tag1, byte tag2) throws AlgebricksException {
-        throw new AlgebricksException(AsterixBuiltinFunctions.CODEPOINT_TO_STRING.getName()
-                + ": expects input type ORDEREDLIST/[INT8|INT16|INT32|INT64|FLOAT|DOUBLE] but got "
-                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tag1) + "/"
-                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tag2));
     }
 
 }

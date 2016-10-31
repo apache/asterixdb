@@ -27,11 +27,11 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
 public class NumericFloorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -54,7 +54,7 @@ public class NumericFloorDescriptor extends AbstractScalarFunctionDynamicDescrip
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new NumericFloorEvaluator(ctx, args[0]);
             }
         };
@@ -63,38 +63,38 @@ public class NumericFloorDescriptor extends AbstractScalarFunctionDynamicDescrip
     private class NumericFloorEvaluator extends AbstractUnaryNumericFunctionEval {
 
         NumericFloorEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
-                throws AlgebricksException {
+                throws HyracksDataException {
             super(context, argEvalFactory, NumericFloorDescriptor.this.getIdentifier());
         }
 
         @Override
-        protected void processInt8(byte arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processInt8(byte arg, IPointable resultPointable) throws HyracksDataException {
             resultPointable.set(argPtr);
         }
 
         @Override
-        protected void processInt16(short arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processInt16(short arg, IPointable resultPointable) throws HyracksDataException {
             resultPointable.set(argPtr);
         }
 
         @Override
-        protected void processInt32(int arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processInt32(int arg, IPointable resultPointable) throws HyracksDataException {
             resultPointable.set(argPtr);
         }
 
         @Override
-        protected void processInt64(long arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processInt64(long arg, IPointable resultPointable) throws HyracksDataException {
             resultPointable.set(argPtr);
         }
 
         @Override
-        protected void processFloat(float arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processFloat(float arg, IPointable resultPointable) throws HyracksDataException {
             aFloat.setValue((float) Math.floor(arg));
             serialize(aFloat, floatSerde, resultPointable);
         }
 
         @Override
-        protected void processDouble(double arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processDouble(double arg, IPointable resultPointable) throws HyracksDataException {
             aDouble.setValue(Math.floor(arg));
             serialize(aDouble, doubleSerde, resultPointable);
         }

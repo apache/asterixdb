@@ -28,11 +28,11 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -84,7 +84,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
         }
 
         @Override
-        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+        public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
             final IPointable inputVal = new VoidPointable();
             final IScalarEvaluator[] argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
@@ -97,7 +97,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                 private UnorderedListBuilder builder = new UnorderedListBuilder();
 
                 @Override
-                public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                     try {
                         builder.reset(unorderedlistType);
                         if (selfDescList) {
@@ -110,11 +110,11 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                         builder.write(out, true);
                         result.set(resultStorage);
                     } catch (IOException ioe) {
-                        throw new AlgebricksException(ioe);
+                        throw new HyracksDataException(ioe);
                     }
                 }
 
-                private void writeUntypedItems(IFrameTupleReference tuple) throws AlgebricksException {
+                private void writeUntypedItems(IFrameTupleReference tuple) throws HyracksDataException {
 
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
@@ -122,11 +122,11 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                             builder.addItem(inputVal);
                         }
                     } catch (IOException ioe) {
-                        throw new AlgebricksException(ioe);
+                        throw new HyracksDataException(ioe);
                     }
                 }
 
-                private void writeTypedItems(IFrameTupleReference tuple) throws AlgebricksException {
+                private void writeTypedItems(IFrameTupleReference tuple) throws HyracksDataException {
 
                     try {
                         for (int i = 0; i < argEvals.length; i++) {
@@ -134,7 +134,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                             builder.addItem(inputVal);
                         }
                     } catch (IOException ioe) {
-                        throw new AlgebricksException(ioe);
+                        throw new HyracksDataException(ioe);
                     }
                 }
 

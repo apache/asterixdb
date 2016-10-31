@@ -27,13 +27,13 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeseriali
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -59,14 +59,12 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -81,35 +79,32 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
                     AMutableDuration aDuration = new AMutableDuration(0, 0);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         byte[] bytes = argPtr0.getByteArray();
                         int offset = argPtr0.getStartOffset();
 
-                        try {
-                            ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-                            switch (argPtrTypeTag) {
-                                case INT8:
-                                    aDuration.setValue(0, AInt8SerializerDeserializer.getByte(bytes, offset + 1));
-                                    break;
-                                case INT16:
-                                    aDuration.setValue(0, AInt16SerializerDeserializer.getShort(bytes, offset + 1));
-                                    break;
-                                case INT32:
-                                    aDuration.setValue(0, AInt32SerializerDeserializer.getInt(bytes, offset + 1));
-                                    break;
-                                case INT64:
-                                    aDuration.setValue(0, AInt64SerializerDeserializer.getLong(bytes, offset + 1));
-                                    break;
-                                default:
-                                    throw new AlgebricksException(FID.getName()
-                                            + ": expects type INT8/INT16/INT32/INT64/NULL but got " + argPtrTypeTag);
-                            }
-                            durationSerde.serialize(aDuration, out);
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
+                        ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
+                        switch (argPtrTypeTag) {
+                            case INT8:
+                                aDuration.setValue(0, AInt8SerializerDeserializer.getByte(bytes, offset + 1));
+                                break;
+                            case INT16:
+                                aDuration.setValue(0, AInt16SerializerDeserializer.getShort(bytes, offset + 1));
+                                break;
+                            case INT32:
+                                aDuration.setValue(0, AInt32SerializerDeserializer.getInt(bytes, offset + 1));
+                                break;
+                            case INT64:
+                                aDuration.setValue(0, AInt64SerializerDeserializer.getLong(bytes, offset + 1));
+                                break;
+                            default:
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                        ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                         }
+                        durationSerde.serialize(aDuration, out);
                         result.set(resultStorage);
                     }
                 };

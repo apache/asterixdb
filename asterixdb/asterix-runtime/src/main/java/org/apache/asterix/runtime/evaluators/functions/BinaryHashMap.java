@@ -109,7 +109,6 @@ public class BinaryHashMap {
      * Retrieves value for given key. Returns null if key doesn't exist.
      *
      * @param key
-     * @param value
      * @return
      * @throws HyracksDataException
      */

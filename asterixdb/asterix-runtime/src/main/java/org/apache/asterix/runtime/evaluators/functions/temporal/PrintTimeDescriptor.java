@@ -24,17 +24,17 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -56,16 +56,13 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
-
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private IPointable argPtr0 = new VoidPointable();
@@ -78,7 +75,7 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         eval1.evaluate(tuple, argPtr1);
@@ -90,12 +87,13 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         int len1 = argPtr1.getLength();
 
                         try {
-                            if (bytes0[offset0] != ATypeTag.SERIALIZED_TIME_TYPE_TAG
-                                    || bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(getIdentifier().getName()
-                                        + ": expects (TIME, STRING) but got  ("
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ")");
+                            if (bytes0[offset0] != ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
+                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                        ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+                            }
+                            if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             long chronon = ATimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
@@ -108,7 +106,7 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(sbder.toString(), out);
                         } catch (IOException ex) {
-                            throw new AlgebricksException(ex);
+                            throw new HyracksDataException(ex);
                         }
                         result.set(resultStorage);
                     }

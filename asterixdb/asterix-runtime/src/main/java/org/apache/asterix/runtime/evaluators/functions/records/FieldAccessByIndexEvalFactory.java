@@ -23,17 +23,18 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -58,7 +59,7 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
             private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
             private DataOutput out = resultStorage.getDataOutput();
@@ -80,7 +81,7 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
              * This method outputs into IHyracksTaskContext context [field type tag (1 byte)][the field data]
              */
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 try {
                     resultStorage.reset();
                     eval0.evaluate(tuple, inputArg0);
@@ -88,16 +89,15 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                     int offset = inputArg0.getStartOffset();
 
                     if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new AlgebricksException("Field accessor is not defined for values of type "
-                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[offset]));
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, 0,
+                                serRecord[offset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
                     eval1.evaluate(tuple, inputArg1);
                     byte[] indexBytes = inputArg1.getByteArray();
                     int indexOffset = inputArg1.getStartOffset();
                     if (indexBytes[indexOffset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                        throw new AlgebricksException("Field accessor is not defined for "
-                                + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(indexBytes[indexOffset])
-                                + " as the second argument.");
+                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, 1,
+                                indexBytes[offset], ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                     }
                     fieldIndex = IntegerPointable.getInteger(indexBytes, indexOffset + 1);
                     fieldValueType = recordType.getFieldTypes()[fieldIndex];
@@ -136,9 +136,9 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                     out.write(serRecord, fieldValueOffset, fieldValueLength);
                     result.set(resultStorage);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 } catch (AsterixException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
         };

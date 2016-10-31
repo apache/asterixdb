@@ -22,18 +22,24 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -53,91 +59,102 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
-
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IScalarEvaluatorFactory listEvalFactory = args[0];
-                    private IScalarEvaluatorFactory sepEvalFactory = args[1];
-                    private IPointable inputArgList = new VoidPointable();
-                    private IPointable inputArgSep = new VoidPointable();
-                    private IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
-                    private IScalarEvaluator evalSep = sepEvalFactory.createScalarEvaluator(ctx);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final AsterixListAccessor listAccessor = new AsterixListAccessor();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IScalarEvaluatorFactory listEvalFactory = args[0];
+                    private final IScalarEvaluatorFactory sepEvalFactory = args[1];
+                    private final IPointable inputArgList = new VoidPointable();
+                    private final IPointable inputArgSep = new VoidPointable();
+                    private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
+                    private final IScalarEvaluator evalSep = sepEvalFactory.createScalarEvaluator(ctx);
+                    @SuppressWarnings("unchecked")
+                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-                        try {
-                            resultStorage.reset();
-                            evalList.evaluate(tuple, inputArgList);
-                            byte[] serOrderedList = inputArgList.getByteArray();
-                            int serOrderedListOffset = inputArgList.getStartOffset();
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                        resultStorage.reset();
+                        evalList.evaluate(tuple, inputArgList);
+                        evalSep.evaluate(tuple, inputArgSep);
 
-                            evalSep.evaluate(tuple, inputArgSep);
-                            byte[] serSep = inputArgSep.getByteArray();
-                            int serSepOffset = inputArgSep.getStartOffset();
-
-                            if (serOrderedList[serOrderedListOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                                    && serOrderedList[serOrderedListOffset
-                                            + 1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_JOIN.getName()
-                                        + ": expects input type ORDEREDLIST but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER
-                                                .deserialize(serOrderedList[serOrderedListOffset]));
-                            }
-
-                            if (serSep[serSepOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new AlgebricksException(AsterixBuiltinFunctions.STRING_JOIN.getName()
-                                        + ": expects STRING type for the seperator but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serSep[serSepOffset]));
-                            }
-
-                            int size = AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList,
-                                    serOrderedListOffset);
-                            try {
-                                // calculate length first
-                                int utf_8_len = 0;
-                                int sep_len = UTF8StringUtil.getUTFLength(serSep, serSepOffset + 1);
-                                int sep_meta_len = UTF8StringUtil.getNumBytesToStoreLength(sep_len);
-
-                                for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList,
-                                            serOrderedListOffset, i);
-
-                                    int currentSize = UTF8StringUtil.getUTFLength(serOrderedList, itemOffset);
-                                    if (i != size - 1 && currentSize != 0) {
-                                        utf_8_len += sep_len;
-                                    }
-                                    utf_8_len += currentSize;
-                                }
-                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                                int length = UTF8StringUtil.encodeUTF8Length(utf_8_len, tempLengthArray, 0);
-                                out.write(tempLengthArray, 0, length);
-                                for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList,
-                                            serOrderedListOffset, i);
-                                    utf_8_len = UTF8StringUtil.getUTFLength(serOrderedList, itemOffset);
-                                    out.write(serOrderedList,
-                                            itemOffset + UTF8StringUtil.getNumBytesToStoreLength(utf_8_len), utf_8_len);
-                                    if (i == size - 1 || utf_8_len == 0) {
-                                        continue;
-                                    }
-                                    for (int j = 0; j < sep_len; j++) {
-                                        out.writeByte(serSep[serSepOffset + 1 + sep_meta_len + j]);
-                                    }
-                                }
-                            } catch (AsterixException ex) {
-                                throw new AlgebricksException(ex);
-                            }
-                            result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw new AlgebricksException(e1.getMessage());
+                        byte[] listBytes = inputArgList.getByteArray();
+                        int listOffset = inputArgList.getStartOffset();
+                        if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, listBytes[listOffset],
+                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                         }
+                        byte[] sepBytes = inputArgSep.getByteArray();
+                        int sepOffset = inputArgSep.getStartOffset();
+                        if (sepBytes[sepOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, sepBytes[sepOffset],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                        }
+                        int sepLen = UTF8StringUtil.getUTFLength(sepBytes, sepOffset + 1);
+                        int sepMetaLen = UTF8StringUtil.getNumBytesToStoreLength(sepLen);
+
+                        listAccessor.reset(listBytes, listOffset);
+                        try {
+                            // calculate length first
+                            int utf8Len = 0;
+                            int size = listAccessor.size();
+                            for (int i = 0; i < size; i++) {
+                                int itemOffset = listAccessor.getItemOffset(i);
+                                ATypeTag itemType = listAccessor.getItemType(itemOffset);
+                                // Increase the offset by 1 if the give list has heterogeneous elements,
+                                // since the item itself has a typetag.
+                                if (listAccessor.itemsAreSelfDescribing()) {
+                                    itemOffset += 1;
+                                }
+                                if (itemType != ATypeTag.STRING) {
+                                    if (itemType == ATypeTag.NULL) {
+                                        nullSerde.serialize(ANull.NULL, out);
+                                        result.set(resultStorage);
+                                        return;
+                                    }
+                                    if (itemType == ATypeTag.MISSING) {
+                                        missingSerde.serialize(AMissing.MISSING, out);
+                                        result.set(resultStorage);
+                                        return;
+                                    }
+                                    throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
+                                }
+                                int currentSize = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
+                                if (i != size - 1 && currentSize != 0) {
+                                    utf8Len += sepLen;
+                                }
+                                utf8Len += currentSize;
+                            }
+
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);
+                            out.write(tempLengthArray, 0, cbytes);
+                            for (int i = 0; i < listAccessor.size(); i++) {
+                                int itemOffset = listAccessor.getItemOffset(i);
+                                if (listAccessor.itemsAreSelfDescribing()) {
+                                    itemOffset += 1;
+                                }
+                                utf8Len = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
+                                out.write(listBytes, UTF8StringUtil.getNumBytesToStoreLength(utf8Len) + itemOffset,
+                                        utf8Len);
+                                for (int j = 0; j < sepLen; j++) {
+                                    out.writeByte(sepBytes[sepOffset + 1 + sepMetaLen + j]);
+                                }
+                            }
+                        } catch (IOException | AsterixException ex) {
+                            throw new HyracksDataException(ex);
+                        }
+                        result.set(resultStorage);
                     }
                 };
             }

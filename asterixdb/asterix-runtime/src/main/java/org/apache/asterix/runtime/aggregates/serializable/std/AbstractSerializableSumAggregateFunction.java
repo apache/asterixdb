@@ -35,17 +35,19 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -66,22 +68,22 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
     public ISerializerDeserializer serde;
 
     public AbstractSerializableSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
-    public void init(DataOutput state) throws AlgebricksException {
+    public void init(DataOutput state) throws HyracksDataException {
         try {
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             state.writeDouble(0.0);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
+    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws HyracksDataException {
         if (skipStep(state, start)) {
             return;
         }
@@ -98,8 +100,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new AlgebricksException("Unexpected type " + typeTag
-                    + " in aggregation input stream. Expected type (or a promotable type to)" + aggType + ".");
+            throw new IncompatibleTypeException(AsterixBuiltinFunctions.SUM, bytes[offset], aggType.serialize());
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {
@@ -145,9 +146,8 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                 processSystemNull();
                 break;
             }
-            default: {
-                throw new NotImplementedException("Cannot compute SUM for values of type " + typeTag + ".");
-            }
+            default:
+                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM, bytes[offset]);
         }
         state[start + AGG_TYPE_OFFSET] = aggType.serialize();
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
@@ -155,7 +155,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
 
     @SuppressWarnings("unchecked")
     @Override
-    public void finish(byte[] state, int start, int len, DataOutput out) throws AlgebricksException {
+    public void finish(byte[] state, int start, int len, DataOutput out) throws HyracksDataException {
         ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
         double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         try {
@@ -206,16 +206,15 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                     break;
                 }
                 default:
-                    throw new AlgebricksException(
-                            "SumAggregationFunction: incompatible type for the result (" + aggType + "). ");
+                    throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void finishPartial(byte[] state, int start, int len, DataOutput out) throws AlgebricksException {
+    public void finishPartial(byte[] state, int start, int len, DataOutput out) throws HyracksDataException {
         finish(state, start, len, out);
     }
 
@@ -225,7 +224,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
 
     protected abstract void processNull(byte[] state, int start);
 
-    protected abstract void processSystemNull() throws AlgebricksException;
+    protected abstract void processSystemNull() throws HyracksDataException;
 
     protected abstract void finishSystemNull(DataOutput out) throws IOException;
 

@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -76,13 +75,9 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 writer.open();
                 if (evalMaxObjects == null) {
                     initAccessAppendRef(ctx);
-                    try {
-                        evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(ctx);
-                        if (offsetEvalFactory != null) {
-                            evalOffset = offsetEvalFactory.createScalarEvaluator(ctx);
-                        }
-                    } catch (AlgebricksException ae) {
-                        throw new HyracksDataException(ae);
+                    evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(ctx);
+                    if (offsetEvalFactory != null) {
+                        evalOffset = offsetEvalFactory.createScalarEvaluator(ctx);
                     }
                 }
                 afterLastTuple = false;
@@ -138,11 +133,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
             private int evaluateInteger(IScalarEvaluator eval, int tIdx) throws HyracksDataException {
                 tRef.reset(tAccess, tIdx);
-                try {
-                    eval.evaluate(tRef, p);
-                } catch (AlgebricksException ae) {
-                    throw new HyracksDataException(ae);
-                }
+                eval.evaluate(tRef, p);
                 int lim = bii.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
                 return lim;
             }

@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.algebricks.tests.pushruntime;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -40,7 +40,7 @@ public class IntegerGreaterThanEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private IScalarEvaluator eval1 = evalFact1.createScalarEvaluator(ctx);
@@ -48,7 +48,7 @@ public class IntegerGreaterThanEvalFactory implements IScalarEvaluatorFactory {
             private byte[] rBytes = new byte[1];
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 eval1.evaluate(tuple, p);
                 int v1 = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                 eval2.evaluate(tuple, p);

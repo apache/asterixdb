@@ -24,6 +24,8 @@ import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ListItemBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.hash.ListItemBinaryHashFunctionFactory;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -38,13 +40,13 @@ import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -82,14 +84,12 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 final PointableAllocator allocator = new PointableAllocator();
                 final IVisitablePointable vp0 = allocator.allocateRecordValue(inRecType);
                 final IVisitablePointable vp1 = allocator.allocateListValue(inListType);
@@ -107,7 +107,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                     pointableHelper.serializeString("field-name", fieldNamePointable, true);
                     pointableHelper.serializeString("field-value", fieldValuePointer, true);
                 } catch (AsterixException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
 
                 return new IScalarEvaluator() {
@@ -131,7 +131,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         recordBuilder.reset(outRecType);
                         requiredRecordTypeInfo.reset(outRecType);
@@ -139,46 +139,42 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                         eval1.evaluate(tuple, argPtr1);
 
                         // Make sure we get a valid record
-                        if (argPtr0.getByteArray()[argPtr0.getStartOffset()] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new AlgebricksException("Expected an ordederlist of type " + inRecType + " but "
-                                    + "got " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                            .deserialize(argPtr0.getByteArray()[argPtr0.getStartOffset()]));
+                        byte typeTag0 = argPtr0.getByteArray()[argPtr0.getStartOffset()];
+                        if (typeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, typeTag0,
+                                    ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                         }
 
                         // Make sure we get a valid list
-                        if (argPtr1.getByteArray()[argPtr1
-                                .getStartOffset()] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            throw new AlgebricksException("Expected an ordederlist of type " + inListType + " but "
-                                    + "got " + EnumDeserializer.ATYPETAGDESERIALIZER
-                                            .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]));
+                        byte typeTag1 = argPtr1.getByteArray()[argPtr1.getStartOffset()];
+                        if (typeTag1 != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, typeTag1,
+                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
 
                         vp0.set(argPtr0);
                         vp1.set(argPtr1);
 
-                        try {
-                            ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) vp0;
-                            AListVisitablePointable listPointable = (AListVisitablePointable) vp1;
 
-                            // Initialize our hashmap
-                            int tableSize = recordPointable.getFieldNames().size() + listPointable.getItems().size();
-                            // Construct a new hash table only if table size is larger than the default
-                            // Thus avoiding unnecessary object construction
-                            if (hashMap == null || tableSize > TABLE_SIZE) {
-                                hashMap = new BinaryHashMap(tableSize, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
-                            } else {
-                                hashMap.clear();
-                            }
-                            addFields(recordPointable, listPointable);
-                            recordBuilder.write(out, true);
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                        ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) vp0;
+                        AListVisitablePointable listPointable = (AListVisitablePointable) vp1;
+
+                        // Initialize our hashmap
+                        int tableSize = recordPointable.getFieldNames().size() + listPointable.getItems().size();
+                        // Construct a new hash table only if table size is larger than the default
+                        // Thus avoiding unnecessary object construction
+                        if (hashMap == null || tableSize > TABLE_SIZE) {
+                            hashMap = new BinaryHashMap(tableSize, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
+                        } else {
+                            hashMap.clear();
                         }
+                        addFields(recordPointable, listPointable);
+                        recordBuilder.write(out, true);
                         result.set(resultStorage);
                     }
 
                     private void addFields(ARecordVisitablePointable inputRecordPointer,
-                            AListVisitablePointable listPointable) throws AlgebricksException {
+                            AListVisitablePointable listPointable) throws HyracksDataException {
                         List<IVisitablePointable> inputRecordFieldNames = inputRecordPointer.getFieldNames();
                         List<IVisitablePointable> inputRecordFieldValues = inputRecordPointer.getFieldValues();
                         List<IVisitablePointable> inputFields = listPointable.getItems();
@@ -228,7 +224,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                 }
 
                                 if (namePointable == null || valuePointable == null) {
-                                    throw new AlgebricksException("Trying to add a null field name or field value");
+                                    throw new InvalidDataFormatException(getIdentifier(), "fields to be added");
                                 }
 
                                 // Check that the field being added is a valid field
@@ -243,7 +239,8 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                     tempValReference.set(entry.buf, entry.off, entry.len);
                                     // If value is not equal throw conflicting duplicate field, otherwise ignore
                                     if (!PointableHelper.byteArrayEqual(valuePointable, tempValReference)) {
-                                        throw new AlgebricksException("Conflicting duplicate field found.");
+                                        throw new RuntimeDataException(ErrorCode.ERROR_DUPLICATE_FIELD,
+                                                getIdentifier());
                                     }
                                 } else {
                                     if (pos > -1) {
@@ -256,8 +253,8 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                     hashMap.put(keyEntry, valEntry);
                                 }
                             }
-                        } catch (AsterixException | HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                        } catch (AsterixException e) {
+                            throw new HyracksDataException(e);
                         }
                     }
                 };

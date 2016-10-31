@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -31,7 +32,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -59,13 +61,12 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
@@ -73,33 +74,36 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    @SuppressWarnings("unchecked")
+                    private ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evaluators[0].evaluate(tuple, pointables[0]);
-                        ATypeTag typeTag = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
-                                .getStartOffset()]];
-                        if (typeTag != ATypeTag.UNORDEREDLIST && typeTag != ATypeTag.ORDEREDLIST) {
-                            throw new AlgebricksException(getIdentifier().getName()
-                                    + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got " + typeTag);
+
+                        byte[] data = pointables[0].getByteArray();
+                        int offset = pointables[0].getStartOffset();
+                        byte typeTag = data[offset];
+                        if (typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG
+                                && typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, typeTag,
+                                    ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
                         try {
-                            byte[] data = pointables[0].getByteArray();
-                            int offset = pointables[0].getStartOffset();
-
                             listAccessor.reset(data, offset);
                             int concatLength = 0;
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
                                 if (itemType != ATypeTag.BINARY) {
-                                    if (serializeNullIfAnyNull(itemType)) {
+                                    if (serializeUnknownIfAnyUnknown(itemType)) {
                                         result.set(resultStorage);
                                         return;
                                     }
-                                    throw new AlgebricksException(getIdentifier().getName()
-                                            + ": expects type STRING/NULL for the list item but got " + itemType);
+                                    throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
                                 }
                                 concatLength += ByteArrayPointable.getContentLength(data, itemOffset);
                             }
@@ -113,20 +117,22 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 dataOutput.write(data,
                                         itemOffset + ByteArrayPointable.getNumberBytesToStoreMeta(length), length);
                             }
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         } catch (AsterixException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }
 
-                    private boolean serializeNullIfAnyNull(ATypeTag... tags) throws HyracksDataException {
+                    private boolean serializeUnknownIfAnyUnknown(ATypeTag... tags) throws HyracksDataException {
                         for (ATypeTag typeTag : tags) {
                             if (typeTag == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, dataOutput);
+                                return true;
+                            }
+                            if (typeTag == ATypeTag.MISSING) {
+                                missingSerde.serialize(AMissing.MISSING, dataOutput);
                                 return true;
                             }
                         }

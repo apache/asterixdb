@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
@@ -61,9 +60,8 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
 
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
-            throws AlgebricksException {
+            throws HyracksDataException {
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-
             private IAggregateEvaluator[] aggregs = new IAggregateEvaluator[aggregFactories.length];
             private IPointable result = VoidPointable.FACTORY.createPointable();
             private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(aggregs.length);
@@ -73,19 +71,15 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
 
             @Override
             public void open() throws HyracksDataException {
-                try {
-                    if (first) {
-                        first = false;
-                        initAccessAppendRef(ctx);
-                        for (int i = 0; i < aggregFactories.length; i++) {
-                            aggregs[i] = aggregFactories[i].createAggregateEvaluator(ctx);
-                        }
-                    }
+                if (first) {
+                    first = false;
+                    initAccessAppendRef(ctx);
                     for (int i = 0; i < aggregFactories.length; i++) {
-                        aggregs[i].init();
+                        aggregs[i] = aggregFactories[i].createAggregateEvaluator(ctx);
                     }
-                } catch (AlgebricksException e) {
-                    throw new HyracksDataException(e);
+                }
+                for (int i = 0; i < aggregFactories.length; i++) {
+                    aggregs[i].init();
                 }
                 isOpen = true;
                 writer.open();
@@ -117,22 +111,14 @@ public class AggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFac
             private void computeAggregate() throws HyracksDataException {
                 tupleBuilder.reset();
                 for (int f = 0; f < aggregs.length; f++) {
-                    try {
-                        aggregs[f].finish(result);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    aggregs[f].finish(result);
                     tupleBuilder.addField(result.getByteArray(), result.getStartOffset(), result.getLength());
                 }
             }
 
             private void processTuple(FrameTupleReference tupleRef) throws HyracksDataException {
                 for (int f = 0; f < aggregs.length; f++) {
-                    try {
-                        aggregs[f].step(tupleRef);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
+                    aggregs[f].step(tupleRef);
                 }
             }
 

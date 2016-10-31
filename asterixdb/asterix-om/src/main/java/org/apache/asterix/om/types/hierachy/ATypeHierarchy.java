@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt16;
@@ -181,11 +183,11 @@ public class ATypeHierarchy {
             ATypeTag targetTypeTag) throws AlgebricksException {
         ATypeTag sourceTypeTag = sourceObject.getType().getTypeTag();
         AsterixConstantValue asterixNewConstantValue = null;
-        short tmpShortValue = 0;
-        int tmpIntValue = 0;
-        long tmpLongValue = 0;
-        float tmpFloatValue = 0.0f;
-        double tmpDoubleValue = 0.0;
+        short tmpShortValue;
+        int tmpIntValue;
+        long tmpLongValue;
+        float tmpFloatValue;
+        double tmpDoubleValue;
 
         // if the constant type and target type does not match, we do a type conversion
         if (sourceTypeTag != targetTypeTag) {
@@ -645,18 +647,21 @@ public class ATypeHierarchy {
 
     }
 
+
     // Get an INT value from numeric types array. We assume the first byte contains the type tag.
-    public static int getIntegerValue(byte[] bytes, int offset) throws HyracksDataException {
-        return getIntegerValueWithDifferentTypeTagPosition(bytes, offset + 1, offset);
+    public static int getIntegerValue(String name, int argIndex, byte[] bytes, int offset) throws HyracksDataException {
+        return getIntegerValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset);
     }
 
     // Get an INT value from numeric types array. We assume the specific location of a byte array contains the type tag.
-    public static int getIntegerValueWithDifferentTypeTagPosition(byte[] bytes, int offset, int typeTagPosition)
-            throws HyracksDataException {
-        int value = 0;
-
+    public static int getIntegerValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes, int offset,
+            int typeTagPosition) throws HyracksDataException {
+        int value;
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
 
+        if (sourceTypeTag == null) {
+            throw new RuntimeDataException(ErrorCode.ERROR_INVALID_FORMAT, name, argIndex);
+        }
         switch (sourceTypeTag) {
             case INT64:
                 value = (int) LongPointable.getLong(bytes, offset);
@@ -677,26 +682,27 @@ public class ATypeHierarchy {
                 value = (int) DoublePointable.getDouble(bytes, offset);
                 break;
             default:
-                throw new HyracksDataException(
-                        "Type casting error while getting an INT32 value: expected INT8/16/32/64/FLOAT/DOUBLE but got "
-                                + sourceTypeTag + ".");
+                throw new RuntimeDataException(ErrorCode.ERROR_TYPE_MISMATCH, name, argIndex, sourceTypeTag,
+                        ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+
         }
 
         return value;
     }
 
     // Get a LONG (INT64) value from numeric types array. We assume the first byte contains the type tag.
-    public static long getLongValue(byte[] bytes, int offset) throws HyracksDataException {
-        return getLongValueWithDifferentTypeTagPosition(bytes, offset + 1, offset);
+    public static long getLongValue(String name, int argIndex, byte[] bytes, int offset) throws HyracksDataException {
+        return getLongValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset);
     }
 
     // Get a LONG (INT64) value from numeric types array. We assume the specific location of a byte array contains the type tag.
-    public static long getLongValueWithDifferentTypeTagPosition(byte[] bytes, int offset, int typeTagPosition)
-            throws HyracksDataException {
-        long value = 0;
-
+    private static long getLongValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes, int offset,
+            int typeTagPosition) throws HyracksDataException {
+        long value;
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
-
+        if (sourceTypeTag == null) {
+            throw new RuntimeDataException(ErrorCode.ERROR_INVALID_FORMAT, name, argIndex);
+        }
         switch (sourceTypeTag) {
             case INT64:
                 value = LongPointable.getLong(bytes, offset);
@@ -717,66 +723,28 @@ public class ATypeHierarchy {
                 value = (long) DoublePointable.getDouble(bytes, offset);
                 break;
             default:
-                throw new HyracksDataException(
-                        "Type casting error while getting an INT64 value: expected INT8/16/32/64/FLOAT/DOUBLE but got "
-                                + sourceTypeTag + ".");
-        }
-
-        return value;
-    }
-
-    // Get a FLOAT value from numeric types array. We assume the first byte contains the type tag.
-    public static float getFloatValue(byte[] bytes, int offset) throws HyracksDataException {
-        return getFloatValueWithDifferentTypeTagPosition(bytes, offset + 1, offset);
-    }
-
-    // Get a FLOAT value from numeric types array. We assume the specific location of a byte array contains the type tag.
-    public static float getFloatValueWithDifferentTypeTagPosition(byte[] bytes, int offset, int typeTagPosition)
-            throws HyracksDataException {
-        float value = 0;
-
-        ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
-
-        switch (sourceTypeTag) {
-            case INT64:
-                value = LongPointable.getLong(bytes, offset);
-                break;
-            case INT32:
-                value = IntegerPointable.getInteger(bytes, offset);
-                break;
-            case INT8:
-                value = bytes[offset];
-                break;
-            case INT16:
-                value = ShortPointable.getShort(bytes, offset);
-                break;
-            case FLOAT:
-                value = FloatPointable.getFloat(bytes, offset);
-                break;
-            case DOUBLE:
-                value = (float) DoublePointable.getDouble(bytes, offset);
-                break;
-            default:
-                throw new HyracksDataException(
-                        "Type casting error while getting a FLOAT value: expected INT8/16/32/64/FLOAT/DOUBLE but got "
-                                + sourceTypeTag + ".");
+                throw new RuntimeDataException(ErrorCode.ERROR_TYPE_MISMATCH, name, argIndex, sourceTypeTag,
+                        ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
 
         return value;
     }
 
     // Get a DOUBLE value from numeric types array. We assume the first byte contains the type tag.
-    public static double getDoubleValue(byte[] bytes, int offset) throws HyracksDataException {
-        return getDoubleValueWithDifferentTypeTagPosition(bytes, offset + 1, offset);
+    public static double getDoubleValue(String name, int argIndex, byte[] bytes, int offset)
+            throws HyracksDataException {
+        return getDoubleValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset);
     }
 
     // Get a DOUBLE value from numeric types array. We assume the specific location of a byte array contains the type tag.
-    public static double getDoubleValueWithDifferentTypeTagPosition(byte[] bytes, int offset, int typeTagPosition)
+    private static double getDoubleValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes,
+            int offset, int typeTagPosition)
             throws HyracksDataException {
-        double value = 0;
-
+        double value;
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
-
+        if (sourceTypeTag == null) {
+            throw new RuntimeDataException(ErrorCode.ERROR_INVALID_FORMAT, name, argIndex);
+        }
         switch (sourceTypeTag) {
             case INT64:
                 value = LongPointable.getLong(bytes, offset);
@@ -797,9 +765,8 @@ public class ATypeHierarchy {
                 value = DoublePointable.getDouble(bytes, offset);
                 break;
             default:
-                throw new HyracksDataException(
-                        "Type casting error while getting a DOUBLE value: expected INT8/16/32/64/FLOAT/DOUBLE but got "
-                                + sourceTypeTag + ".");
+                throw new RuntimeDataException(ErrorCode.ERROR_TYPE_MISMATCH, name, argIndex, sourceTypeTag,
+                        ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
 
         return value;

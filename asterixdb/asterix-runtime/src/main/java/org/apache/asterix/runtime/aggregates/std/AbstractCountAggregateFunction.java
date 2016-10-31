@@ -26,7 +26,7 @@ import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -52,17 +52,17 @@ public abstract class AbstractCountAggregateFunction implements IAggregateEvalua
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
 
     public AbstractCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         eval = args[0].createScalarEvaluator(context);
     }
 
     @Override
-    public void init() {
+    public void init() throws HyracksDataException {
         cnt = 0;
     }
 
     @Override
-    public void step(IFrameTupleReference tuple) throws AlgebricksException {
+    public void step(IFrameTupleReference tuple) throws HyracksDataException {
         eval.evaluate(tuple, inputVal);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                 .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
@@ -75,19 +75,19 @@ public abstract class AbstractCountAggregateFunction implements IAggregateEvalua
     }
 
     @Override
-    public void finish(IPointable resultPointable) throws AlgebricksException {
+    public void finish(IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
         try {
             result.setValue(cnt);
             int64Serde.serialize(result, resultStorage.getDataOutput());
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         resultPointable.set(resultStorage);
     }
 
     @Override
-    public void finishPartial(IPointable resultPointable) throws AlgebricksException {
+    public void finishPartial(IPointable resultPointable) throws HyracksDataException {
         finish(resultPointable);
     }
 

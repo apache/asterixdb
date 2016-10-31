@@ -33,8 +33,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.SpatialUtils;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -56,13 +56,12 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -71,7 +70,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
 
@@ -86,8 +85,8 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     int numOfPoints = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
 
                                     if (numOfPoints < 3) {
-                                        throw new AlgebricksException(AsterixBuiltinFunctions.SPATIAL_AREA.getName()
-                                                + ": polygon must have at least 3 points");
+                                        throw new InvalidDataFormatException(getIdentifier(),
+                                                ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                     }
                                     area = Math.abs(SpatialUtils.polygonArea(bytes, offset, numOfPoints));
                                     out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
@@ -119,14 +118,12 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     out.writeDouble(area);
                                     break;
                                 default:
-                                    throw new NotImplementedException(AsterixBuiltinFunctions.SPATIAL_AREA.getName()
-                                            + ": does not support the type: " + tag
-                                            + "; it is only implemented for POLYGON, CIRCLE and RECTANGLE.");
+                                    throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG, ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                            ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                             }
-                        } catch (HyracksDataException hde) {
-                            throw new AlgebricksException(hde);
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

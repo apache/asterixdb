@@ -28,19 +28,19 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
 import org.apache.asterix.om.base.ARectangle;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -58,13 +58,12 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
@@ -80,7 +79,7 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
                             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         eval0.evaluate(tuple, inputArg0);
                         eval1.evaluate(tuple, inputArg1);
 
@@ -90,12 +89,13 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
                         int offset1 = inputArg1.getStartOffset();
 
                         resultStorage.reset();
-                        if (bytes0[offset0] != ATypeTag.SERIALIZED_POINT_TYPE_TAG
-                                || bytes1[offset1] != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_RECTANGLE.getName()
-                                    + ": expects input type: (POINT, POINT) but got ("
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]) + ", "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]) + ".");
+                        if (bytes0[offset0] != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                    ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                        }
+                        if (bytes1[offset1] != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                    ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                         }
 
                         try {
@@ -124,7 +124,7 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
                             rectangle2DSerde.serialize(aRectangle, out);
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new AlgebricksException(e1);
+                            throw new HyracksDataException(e1);
                         }
                     }
                 };

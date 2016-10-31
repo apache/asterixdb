@@ -24,6 +24,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -43,7 +44,7 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IScalarEvaluator() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
@@ -52,7 +53,7 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
             private IScalarEvaluator evalRight = evalRightFactory.createScalarEvaluator(ctx);
 
             @Override
-            public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+            public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                 evalLeft.evaluate(tuple, p);
                 int v1 = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                 evalRight.evaluate(tuple, p);
@@ -62,7 +63,7 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
                     argOut.getDataOutput().writeInt(v1 + v2);
                     result.set(argOut);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
         };

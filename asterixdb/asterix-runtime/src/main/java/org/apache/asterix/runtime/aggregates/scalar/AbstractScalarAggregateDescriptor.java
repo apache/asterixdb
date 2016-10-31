@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -39,7 +40,6 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-
         // The aggregate function will get a SingleFieldFrameTupleReference that points to the result of the ScanCollection.
         // The list-item will always reside in the first field (column) of the SingleFieldFrameTupleReference.
         IScalarEvaluatorFactory[] aggFuncArgs = new IScalarEvaluatorFactory[1];
@@ -55,7 +55,7 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 // Use ScanCollection to iterate over list items.
                 ScanCollectionUnnestingFunctionFactory scanCollectionFactory = new ScanCollectionUnnestingFunctionFactory(
                         args[0]);

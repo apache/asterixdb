@@ -23,11 +23,11 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
 public class NumericSqrtDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -50,7 +50,7 @@ public class NumericSqrtDescriptor extends AbstractScalarFunctionDynamicDescript
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new NumericSqrtEvaluator(ctx, args[0]);
             }
         };
@@ -59,12 +59,12 @@ public class NumericSqrtDescriptor extends AbstractScalarFunctionDynamicDescript
     private class NumericSqrtEvaluator extends AbstractUnaryNumericDoubleFunctionEval {
 
         NumericSqrtEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
-                throws AlgebricksException {
+                throws HyracksDataException {
             super(context, argEvalFactory, NumericSqrtDescriptor.this.getIdentifier());
         }
 
         @Override
-        protected void processDouble(double arg, IPointable resultPointable) throws AlgebricksException {
+        protected void processDouble(double arg, IPointable resultPointable) throws HyracksDataException {
             aDouble.setValue(Math.sqrt(arg));
             serialize(aDouble, doubleSerde, resultPointable);
         }

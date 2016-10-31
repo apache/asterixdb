@@ -22,12 +22,12 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -45,8 +45,7 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
     }
 
     @Override
-    public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
-
+    public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new IAggregateEvaluator() {
 
             private IPointable inputVal = new VoidPointable();
@@ -55,33 +54,33 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
             private OrderedListBuilder builder = new OrderedListBuilder();
 
             @Override
-            public void init() throws AlgebricksException {
+            public void init() throws HyracksDataException {
                 builder.reset(orderedlistType);
             }
 
             @Override
-            public void step(IFrameTupleReference tuple) throws AlgebricksException {
+            public void step(IFrameTupleReference tuple) throws HyracksDataException {
                 try {
                     eval.evaluate(tuple, inputVal);
                     builder.addItem(inputVal);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
             }
 
             @Override
-            public void finish(IPointable result) throws AlgebricksException {
+            public void finish(IPointable result) throws HyracksDataException {
                 resultStorage.reset();
                 try {
                     builder.write(resultStorage.getDataOutput(), true);
                 } catch (IOException e) {
-                    throw new AlgebricksException(e);
+                    throw new HyracksDataException(e);
                 }
                 result.set(resultStorage);
             }
 
             @Override
-            public void finishPartial(IPointable result) throws AlgebricksException {
+            public void finishPartial(IPointable result) throws HyracksDataException {
                 finish(result);
             }
 

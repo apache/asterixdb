@@ -31,11 +31,12 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -76,7 +77,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
         }
 
         @Override
-        public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+        public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
             return new IScalarEvaluator() {
 
                 private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -91,8 +92,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                 private int itemLength;
 
                 @Override
-                public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-
+                public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                     try {
                         evalList.evaluate(tuple, inputArgList);
                         evalIdx.evaluate(tuple, inputArgIdx);
@@ -103,14 +103,11 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         int indexOffset = inputArgIdx.getStartOffset();
 
                         if (serOrderedList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            itemIndex = ATypeHierarchy.getIntegerValue(indexBytes, indexOffset);
+                            itemIndex = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.GET_ITEM.getName(), 0,
+                                    indexBytes, indexOffset);
                         } else {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.GET_ITEM.getName()
-                                    + ": expects input type (NULL/ORDEREDLIST, [INT8/16/32/64/FLOAT/DOUBLE]), but got ("
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset]) + ", "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER
-                                            .deserialize(inputArgIdx.getByteArray()[offset])
-                                    + ").");
+                            throw new TypeMismatchException(AsterixBuiltinFunctions.GET_ITEM,
+                                    0, serOrderedList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
 
                         if (itemIndex < 0 || itemIndex >= AOrderedListSerializerDeserializer
@@ -144,9 +141,9 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             result.set(resultStorage);
                         }
                     } catch (IOException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     } catch (AsterixException e) {
-                        throw new AlgebricksException(e);
+                        throw new HyracksDataException(e);
                     }
                 }
             };

@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -47,7 +46,7 @@ public class ClosedRecordConstructorEvalFactory implements IScalarEvaluatorFacto
     }
 
     @Override
-    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+    public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
         int n = args.length / 2;
         IScalarEvaluator[] evalFields = new IScalarEvaluator[n];
         for (int i = 0; i < n; i++) {
@@ -71,23 +70,19 @@ public class ClosedRecordConstructorEvalFactory implements IScalarEvaluatorFacto
         }
 
         @Override
-        public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
-            try {
-                resultStorage.reset();
-                if (first) {
-                    first = false;
-                    recBuilder.reset(this.recType);
-                }
-                recBuilder.init();
-                for (int i = 0; i < evalFields.length; i++) {
-                    evalFields[i].evaluate(tuple, fieldValuePointable);
-                    recBuilder.addField(i, fieldValuePointable);
-                }
-                recBuilder.write(out, true);
-                result.set(resultStorage);
-            } catch (HyracksDataException e) {
-                throw new AlgebricksException(e);
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+            resultStorage.reset();
+            if (first) {
+                first = false;
+                recBuilder.reset(this.recType);
             }
+            recBuilder.init();
+            for (int i = 0; i < evalFields.length; i++) {
+                evalFields[i].evaluate(tuple, fieldValuePointable);
+                recBuilder.addField(i, fieldValuePointable);
+            }
+            recBuilder.write(out, true);
+            result.set(resultStorage);
         }
     }
 

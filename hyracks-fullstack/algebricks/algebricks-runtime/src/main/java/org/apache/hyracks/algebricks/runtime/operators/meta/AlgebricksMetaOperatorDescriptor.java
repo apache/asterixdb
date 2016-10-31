@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -100,17 +99,11 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
 
                 PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity, null,
                         pipelineOutputRecordDescriptor);
-                try {
-                    startOfPipeline = pa.assemblePipeline(writer, ctx);
-                } catch (AlgebricksException e) {
-                    throw new HyracksDataException(e);
-                }
+                startOfPipeline = pa.assemblePipeline(writer, ctx);
                 try {
                     startOfPipeline.open();
-                } catch (HyracksDataException e) {
-                    // Tell the downstream the job fails.
+                } catch (Exception e) {
                     startOfPipeline.fail();
-                    // Throws the exception.
                     throw e;
                 } finally {
                     startOfPipeline.close();
@@ -134,11 +127,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                             .getInputRecordDescriptor(AlgebricksMetaOperatorDescriptor.this.getActivityId(), 0);
                     PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity,
                             pipelineInputRecordDescriptor, pipelineOutputRecordDescriptor);
-                    try {
-                        startOfPipeline = pa.assemblePipeline(writer, ctx);
-                    } catch (AlgebricksException ae) {
-                        throw new HyracksDataException(ae);
-                    }
+                    startOfPipeline = pa.assemblePipeline(writer, ctx);
                 }
                 startOfPipeline.open();
             }

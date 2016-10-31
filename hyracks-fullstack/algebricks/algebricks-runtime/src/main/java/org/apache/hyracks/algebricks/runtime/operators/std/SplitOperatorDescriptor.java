@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -93,11 +92,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
             final FrameTupleReference tRef = new FrameTupleReference();;
             final IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);
             final IScalarEvaluator eval;
-            try {
-                eval = brachingExprEvalFactory.createScalarEvaluator(ctx);
-            } catch (AlgebricksException ae) {
-                throw new HyracksDataException(ae);
-            }
+            eval = brachingExprEvalFactory.createScalarEvaluator(ctx);
             for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                 appenders[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
             }
@@ -122,11 +117,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
                     for (int i = 0; i < tupleCount; i++) {
                         // Get the output branch number from the field in the given tuple.
                         tRef.reset(accessor, i);
-                        try {
-                            eval.evaluate(tRef, p);
-                        } catch (AlgebricksException ae) {
-                            throw new HyracksDataException(ae);
-                        }
+                        eval.evaluate(tRef, p);
                         outputBranch = intInsepctor.getIntegerValue(p.getByteArray(), p.getStartOffset(),
                                 p.getLength());
 

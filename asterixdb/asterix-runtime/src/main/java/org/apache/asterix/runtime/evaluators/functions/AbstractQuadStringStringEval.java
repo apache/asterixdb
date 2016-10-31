@@ -27,15 +27,15 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -69,7 +69,7 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
 
     public AbstractQuadStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
-            FunctionIdentifier funcID) throws AlgebricksException {
+            FunctionIdentifier funcID) throws HyracksDataException {
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
         this.eval2 = eval2.createScalarEvaluator(context);
@@ -79,40 +79,53 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         eval0.evaluate(tuple, array0);
         eval1.evaluate(tuple, array1);
         eval2.evaluate(tuple, array2);
         eval3.evaluate(tuple, array3);
 
+        byte[] bytes0 = array0.getByteArray();
+        byte[] bytes1 = array1.getByteArray();
+        byte[] bytes2 = array2.getByteArray();
+        byte[] bytes3 = array3.getByteArray();
+
+        int start0 = array0.getStartOffset();
+        int start1 = array1.getStartOffset();
+        int start2 = array2.getStartOffset();
+        int start3 = array3.getStartOffset();
+
+        int len0 = array0.getLength();
+        int len1 = array1.getLength();
+        int len2 = array2.getLength();
+        int len3 = array3.getLength();
+
         resultStorage.reset();
-        if (array0.getByteArray()[array0.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || array1.getByteArray()[array1.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || array2.getByteArray()[array2.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                || array3.getByteArray()[array3.getStartOffset()] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new AlgebricksException(funcID.getName()
-                    + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL, STRING/NULL), but got ("
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[array0.getStartOffset()])
-                    + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[array1.getStartOffset()])
-                    + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[array2.getStartOffset()])
-                    + ", "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array3.getByteArray()[array3.getStartOffset()])
-                    + ".");
+        // Type check.
+        if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        if (bytes3[start3] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(funcID, 3, bytes1[start3], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
 
-        strPtr1st.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());
-        strPtr2nd.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
-        strPtr3rd.set(array2.getByteArray(), array2.getStartOffset() + 1, array2.getLength());
-        strPtr4th.set(array3.getByteArray(), array3.getStartOffset() + 1, array3.getLength());
+        strPtr1st.set(bytes0, start0 + 1, len0);
+        strPtr2nd.set(bytes1, start1 + 1, len1);
+        strPtr3rd.set(bytes2, start2 + 1, len2);
+        strPtr4th.set(bytes3, start3 + 1, len3);
 
         try {
             String res = compute(strPtr1st, strPtr2nd, strPtr3rd, strPtr4th);
             resultBuffer.setValue(res);
             strSerde.serialize(resultBuffer, dout);
         } catch (IOException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
         result.set(resultStorage);
     }

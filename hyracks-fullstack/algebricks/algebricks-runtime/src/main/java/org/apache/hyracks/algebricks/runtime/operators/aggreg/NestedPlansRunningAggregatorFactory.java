@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.aggreg;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -63,11 +62,7 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
                 decorFieldIdx.length, writer);
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
-            try {
                 pipelines[i] = (NestedTupleSourceRuntime) assemblePipeline(subplans[i], outputWriter, ctx);
-            } catch (AlgebricksException e) {
-                throw new HyracksDataException(e);
-            }
         }
 
         final ArrayTupleBuilder gbyTb = outputWriter.getGroupByTupleBuilder();
@@ -140,7 +135,7 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
     }
 
     private IFrameWriter assemblePipeline(AlgebricksPipeline subplan, IFrameWriter writer, IHyracksTaskContext ctx)
-            throws AlgebricksException, HyracksDataException {
+            throws HyracksDataException {
         // plug the operators
         IFrameWriter start = writer;
         IPushRuntimeFactory[] runtimeFactories = subplan.getRuntimeFactories();

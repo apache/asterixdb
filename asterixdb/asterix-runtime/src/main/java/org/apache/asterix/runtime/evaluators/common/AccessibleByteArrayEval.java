@@ -21,8 +21,8 @@ package org.apache.asterix.runtime.evaluators.common;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -42,12 +42,8 @@ public class AccessibleByteArrayEval implements IScalarEvaluator {
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         result.set(baaos.getByteArray(), 0, baaos.size());
-    }
-
-    public ByteArrayAccessibleOutputStream getBaaos() {
-        return baaos;
     }
 
     public void reset() {

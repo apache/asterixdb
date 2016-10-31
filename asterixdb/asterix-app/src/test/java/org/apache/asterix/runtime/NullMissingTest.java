@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -43,19 +44,26 @@ public class NullMissingTest {
     @Test
     public void test() throws Exception {
         List<IFunctionDescriptorFactory> functions = FunctionCollection.getFunctionDescriptorFactories();
+        int testedFunctions = 0;
         for (IFunctionDescriptorFactory func : functions) {
             String className = func.getClass().getName();
             // We test all generated functions except
-            // record functions, which requires type settings (we test them in runtime tests);
-            if (className.contains("generated") && !className.contains("record") && !className.contains("Cast")) {
+            // record and cast functions, which requires type settings (we test them in runtime tests).
+            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")) {
                 testFunction(func);
+                ++testedFunctions;
             }
         }
+        // 208 is the current number of functions with generated code.
+        Assert.assertTrue(testedFunctions >= 208);
     }
 
     private void testFunction(IFunctionDescriptorFactory funcFactory) throws Exception {
-        AbstractScalarFunctionDynamicDescriptor funcDesc =
-                (AbstractScalarFunctionDynamicDescriptor) funcFactory.createFunctionDescriptor();
+        IFunctionDescriptor functionDescriptor = funcFactory.createFunctionDescriptor();
+        if (!(functionDescriptor instanceof AbstractScalarFunctionDynamicDescriptor)) {
+            return;
+        }
+        AbstractScalarFunctionDynamicDescriptor funcDesc = (AbstractScalarFunctionDynamicDescriptor) functionDescriptor;
         int inputArity = funcDesc.getIdentifier().getArity();
         Iterator<IScalarEvaluatorFactory[]> argEvalFactoryIterator = getArgCombinations(inputArity);
         int index = 0;
@@ -76,7 +84,8 @@ public class NullMissingTest {
         }
     }
 
-    private Iterator<IScalarEvaluatorFactory[]> getArgCombinations(int argSize) {
+    private Iterator<IScalarEvaluatorFactory[]> getArgCombinations(int inputArity) {
+        int argSize = inputArity >= 0 ? inputArity : 3;
         final int numCombinations = 1 << argSize;
         return new Iterator<IScalarEvaluatorFactory[]>() {
             private int index = 0;

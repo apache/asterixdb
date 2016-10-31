@@ -25,7 +25,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
@@ -50,15 +49,14 @@ public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDyn
     };
 
     @Override
-    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IAggregateEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
-                    throws AlgebricksException {
+                    throws HyracksDataException {
 
                 return new IAggregateEvaluator() {
 
@@ -70,30 +68,26 @@ public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDyn
                     boolean res = true;
 
                     @Override
-                    public void init() throws AlgebricksException {
+                    public void init() throws HyracksDataException {
                         res = true;
                     }
 
                     @Override
-                    public void step(IFrameTupleReference tuple) throws AlgebricksException {
+                    public void step(IFrameTupleReference tuple) throws HyracksDataException {
                         res = false;
                     }
 
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void finish(IPointable result) throws AlgebricksException {
+                    public void finish(IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         ABoolean b = res ? ABoolean.TRUE : ABoolean.FALSE;
-                        try {
-                            serde.serialize(b, resultStorage.getDataOutput());
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
-                        }
+                        serde.serialize(b, resultStorage.getDataOutput());
                         result.set(resultStorage);
                     }
 
                     @Override
-                    public void finishPartial(IPointable result) throws AlgebricksException {
+                    public void finishPartial(IPointable result) throws HyracksDataException {
                         finish(result);
                     }
                 };

@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -31,35 +31,35 @@ import org.apache.hyracks.data.std.api.IPointable;
 abstract class AbstractUnaryNumericDoubleFunctionEval extends AbstractUnaryNumericFunctionEval {
 
     public AbstractUnaryNumericDoubleFunctionEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
-            FunctionIdentifier funcID) throws AlgebricksException {
+            FunctionIdentifier funcID) throws HyracksDataException {
         super(context, argEvalFactory, funcID);
     }
 
     @Override
-    protected void processInt8(byte arg, IPointable resultPointable) throws AlgebricksException {
+    protected void processInt8(byte arg, IPointable resultPointable) throws HyracksDataException {
         processDouble(arg, resultPointable);
     }
 
     @Override
-    protected void processInt16(short arg, IPointable resultPointable) throws AlgebricksException {
+    protected void processInt16(short arg, IPointable resultPointable) throws HyracksDataException {
         processDouble(arg, resultPointable);
     }
 
     @Override
-    protected void processInt32(int arg, IPointable resultPointable) throws AlgebricksException {
+    protected void processInt32(int arg, IPointable resultPointable) throws HyracksDataException {
         processDouble(arg, resultPointable);
     }
 
     @Override
-    protected void processInt64(long arg, IPointable resultPointable) throws AlgebricksException {
+    protected void processInt64(long arg, IPointable resultPointable) throws HyracksDataException {
         processDouble(arg, resultPointable);
     }
 
     @Override
-    protected void processFloat(float arg, IPointable resultPointable) throws AlgebricksException {
+    protected void processFloat(float arg, IPointable resultPointable) throws HyracksDataException {
         processDouble(arg, resultPointable);
     }
 
     @Override
-    protected abstract void processDouble(double arg, IPointable resultPointable) throws AlgebricksException;
+    protected abstract void processDouble(double arg, IPointable resultPointable) throws HyracksDataException;
 }

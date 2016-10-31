@@ -21,17 +21,17 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -50,13 +50,12 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
@@ -70,7 +69,7 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                     private final UTF8StringPointable patternPtr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         evalString.evaluate(tuple, array0);
                         byte[] src = array0.getByteArray();
@@ -81,13 +80,15 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                         int patternOffset = array1.getStartOffset();
                         int patternLen = array1.getLength();
 
-                        if (src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG
-                                || pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING_AFTER.getName()
-                                    + ": expects input type (STRING/NULL, STRING/NULL) but got ("
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(src[srcOffset]) + ", "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pattern[patternOffset]) + ").");
+                        if (src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 0, src[srcOffset],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
+                        if (pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            throw new TypeMismatchException(getIdentifier(), 1, pattern[patternOffset],
+                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                        }
+
                         try {
                             stringPtr.set(src, srcOffset + 1, srcLen - 1);
                             patternPtr.set(pattern, patternOffset + 1, patternLen - 1);
@@ -97,7 +98,7 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
-                            throw new AlgebricksException(e);
+                            throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
                     }

@@ -29,7 +29,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -54,14 +53,12 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
     };
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
@@ -77,16 +74,12 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
                             .getSerializerDeserializer(BuiltinType.ADATE);
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         eval.evaluate(tuple, argPtr);
-                        try {
-                            aDate.setValue(
-                                    ATypeHierarchy.getIntegerValue(argPtr.getByteArray(), argPtr.getStartOffset()));
-                            dateSerde.serialize(aDate, out);
-                        } catch (HyracksDataException hex) {
-                            throw new AlgebricksException(hex);
-                        }
+                        aDate.setValue(ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0,
+                                argPtr.getByteArray(), argPtr.getStartOffset()));
+                        dateSerde.serialize(aDate, out);
                         result.set(resultStorage);
                     }
                 };

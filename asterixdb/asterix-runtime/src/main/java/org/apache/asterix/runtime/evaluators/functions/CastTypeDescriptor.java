@@ -31,12 +31,12 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -86,7 +86,7 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws AlgebricksException {
+            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new CastTypeEvaluator(reqType, inputType, recordEvalFactory.createScalarEvaluator(ctx));
             }
         };
@@ -106,26 +106,26 @@ class CastTypeEvaluator implements IScalarEvaluator {
     private final Triple<IVisitablePointable, IAType, Boolean> arg;
 
     public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator)
-            throws AlgebricksException {
+            throws HyracksDataException {
         try {
             this.argEvaluator = argEvaluator;
             this.inputPointable = allocatePointable(inputType, reqType);
             this.resultPointable = allocatePointable(reqType, inputType);
             this.arg = new Triple<>(resultPointable, reqType, Boolean.FALSE);
         } catch (AsterixException e) {
-            throw new AlgebricksException(e);
+            throw new HyracksDataException(e);
         }
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         try {
             argEvaluator.evaluate(tuple, argPointable);
             inputPointable.set(argPointable);
             inputPointable.accept(castVisitor, arg);
             result.set(resultPointable);
         } catch (Exception ioe) {
-            throw new AlgebricksException(ioe);
+            throw new HyracksDataException(ioe);
         }
     }
 

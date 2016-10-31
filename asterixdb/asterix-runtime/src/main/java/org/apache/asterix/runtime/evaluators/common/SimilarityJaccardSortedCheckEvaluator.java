@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricJaccard;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -29,16 +28,12 @@ public class SimilarityJaccardSortedCheckEvaluator extends SimilarityJaccardChec
     protected final SimilarityMetricJaccard jaccard = new SimilarityMetricJaccard();
 
     public SimilarityJaccardSortedCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws AlgebricksException {
+            throws HyracksDataException {
         super(args, context);
     }
 
     @Override
-    protected float computeResult() throws AlgebricksException {
-        try {
-            return jaccard.getSimilarity(firstListIter, secondListIter, jaccThresh);
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
-        }
+    protected float computeResult() throws HyracksDataException {
+        return jaccard.getSimilarity(firstListIter, secondListIter, jaccThresh);
     }
 }
