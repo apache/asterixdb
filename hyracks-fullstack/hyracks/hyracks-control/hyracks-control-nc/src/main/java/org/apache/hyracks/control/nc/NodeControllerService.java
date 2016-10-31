@@ -116,7 +116,7 @@ public class NodeControllerService implements IControllerService {
 
     private DatasetNetworkManager datasetNetworkManager;
 
-    private final WorkQueue queue;
+    private final WorkQueue workQueue;
 
     private final Timer timer;
 
@@ -179,7 +179,7 @@ public class NodeControllerService implements IControllerService {
                 FullFrameChannelInterfaceFactory.INSTANCE);
 
         lccm = new LifeCycleComponentManager();
-        queue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
+        workQueue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
         jobletMap = new Hashtable<>();
         timer = new Timer(true);
         serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER,
@@ -303,7 +303,7 @@ public class NodeControllerService implements IControllerService {
         }
         appCtx.setDistributedState(nodeParameters.getDistributedState());
 
-        queue.start();
+        workQueue.start();
 
         heartbeatTask = new HeartbeatTask(ccs);
 
@@ -354,7 +354,7 @@ public class NodeControllerService implements IControllerService {
             if (messagingNetManager != null) {
                 messagingNetManager.stop();
             }
-            queue.stop();
+            workQueue.stop();
             if (ncAppEntryPoint != null) {
                 ncAppEntryPoint.stop();
             }
@@ -409,7 +409,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     public WorkQueue getWorkQueue() {
-        return queue;
+        return workQueue;
     }
 
     public ThreadMXBean getThreadMXBean() {
@@ -492,7 +492,7 @@ public class NodeControllerService implements IControllerService {
             try {
                 FutureValue<List<JobProfile>> fv = new FutureValue<>();
                 BuildJobProfilesWork bjpw = new BuildJobProfilesWork(NodeControllerService.this, fv);
-                queue.scheduleAndSync(bjpw);
+                workQueue.scheduleAndSync(bjpw);
                 List<JobProfile> profiles = fv.get();
                 if (!profiles.isEmpty()) {
                     cc.reportProfile(id, profiles);
@@ -512,30 +512,32 @@ public class NodeControllerService implements IControllerService {
                 case SEND_APPLICATION_MESSAGE:
                     CCNCFunctions.SendApplicationMessageFunction amf =
                             (CCNCFunctions.SendApplicationMessageFunction) fn;
-                    queue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(),
+                    workQueue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(),
                             amf.getDeploymentId(), amf.getNodeId()));
                     return;
 
                 case START_TASKS:
                     CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
-                    queue.schedule(new StartTasksWork(NodeControllerService.this, stf.getDeploymentId(), stf.getJobId(),
-                            stf.getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags()));
+                    workQueue.schedule(new StartTasksWork(NodeControllerService.this, stf.getDeploymentId(),
+                            stf.getJobId(), stf.getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(),
+                            stf.getFlags()));
                     return;
 
                 case ABORT_TASKS:
                     CCNCFunctions.AbortTasksFunction atf = (CCNCFunctions.AbortTasksFunction) fn;
-                    queue.schedule(new AbortTasksWork(NodeControllerService.this, atf.getJobId(), atf.getTasks()));
+                    workQueue.schedule(new AbortTasksWork(NodeControllerService.this, atf.getJobId(), atf.getTasks()));
                     return;
 
                 case CLEANUP_JOBLET:
                     CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
-                    queue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(), cjf.getStatus()));
+                    workQueue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(),
+                            cjf.getStatus()));
                     return;
 
                 case REPORT_PARTITION_AVAILABILITY:
                     CCNCFunctions.ReportPartitionAvailabilityFunction rpaf =
                             (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
-                    queue.schedule(new ReportPartitionAvailabilityWork(NodeControllerService.this,
+                    workQueue.schedule(new ReportPartitionAvailabilityWork(NodeControllerService.this,
                             rpaf.getPartitionId(), rpaf.getNetworkAddress()));
                     return;
 
@@ -552,18 +554,18 @@ public class NodeControllerService implements IControllerService {
 
                 case DEPLOY_BINARY:
                     CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                    queue.schedule(new DeployBinaryWork(NodeControllerService.this, dbf.getDeploymentId(),
+                    workQueue.schedule(new DeployBinaryWork(NodeControllerService.this, dbf.getDeploymentId(),
                             dbf.getBinaryURLs()));
                     return;
 
                 case UNDEPLOY_BINARY:
                     CCNCFunctions.UnDeployBinaryFunction ndbf = (CCNCFunctions.UnDeployBinaryFunction) fn;
-                    queue.schedule(new UnDeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId()));
+                    workQueue.schedule(new UnDeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId()));
                     return;
 
                 case STATE_DUMP_REQUEST:
                     final CCNCFunctions.StateDumpRequestFunction dsrf = (StateDumpRequestFunction) fn;
-                    queue.schedule(new StateDumpWork(NodeControllerService.this, dsrf.getStateDumpId()));
+                    workQueue.schedule(new StateDumpWork(NodeControllerService.this, dsrf.getStateDumpId()));
                     return;
 
                 case SHUTDOWN_REQUEST:

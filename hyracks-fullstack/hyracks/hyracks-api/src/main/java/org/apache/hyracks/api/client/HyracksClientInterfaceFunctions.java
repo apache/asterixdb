@@ -33,13 +33,11 @@ public class HyracksClientInterfaceFunctions {
     public enum FunctionId {
         GET_CLUSTER_CONTROLLER_INFO,
         GET_CLUSTER_TOPOLOGY,
-        CREATE_JOB,
         GET_JOB_STATUS,
         GET_JOB_INFO,
         START_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
         GET_DATASET_RESULT_STATUS,
-        GET_DATASET_RECORD_DESCRIPTOR,
         GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
         GET_NODE_CONTROLLERS_INFO,
