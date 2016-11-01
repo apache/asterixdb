@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.controllers;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -161,10 +162,19 @@ public class NCConfig implements Serializable {
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
 
+    public URL configFileUrl = null;
+
     private transient Ini ini = null;
 
     private void loadINIFile() throws IOException {
-        ini = IniUtils.loadINIFile(configFile);
+        if (configFile != null) {
+            ini = IniUtils.loadINIFile(configFile);
+        } else if (configFileUrl != null) {
+            ini = IniUtils.loadINIFile(configFileUrl);
+        } else {
+            return;
+        }
+
         // QQQ This should default to cc/address if cluster.address not set, but
         // that logic really should be handled by the ini file sent from the CC
         ccHost = IniUtils.getString(ini, "cc", "cluster.address", ccHost);
@@ -215,9 +225,7 @@ public class NCConfig implements Serializable {
      *    clusterNetIpAddress to ipAddress
      */
     public void loadConfigAndApplyDefaults() throws IOException {
-        if (configFile != null) {
-            loadINIFile();
-        }
+        loadINIFile();
 
         // "address" is the default for all IP addresses
         if (clusterNetIPAddress == null) {

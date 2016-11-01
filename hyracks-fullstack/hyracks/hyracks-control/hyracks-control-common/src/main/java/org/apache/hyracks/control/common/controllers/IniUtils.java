@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.net.URL;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -91,6 +92,12 @@ public class IniUtils {
             throw new FileNotFoundException(configFile);
         }
         ini.load(conffile);
+        return ini;
+    }
+
+    public static Ini loadINIFile(URL configURL) throws IOException {
+        Ini ini = new Ini();
+        ini.load(configURL);
         return ini;
     }
 }

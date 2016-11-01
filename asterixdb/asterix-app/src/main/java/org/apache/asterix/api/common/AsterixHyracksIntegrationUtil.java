@@ -21,6 +21,7 @@ package org.apache.asterix.api.common;
 import static org.apache.asterix.api.common.AsterixHyracksIntegrationUtil.LoggerHolder.LOGGER;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,20 +65,22 @@ public class AsterixHyracksIntegrationUtil {
 
     public void init(boolean deleteOldInstanceData) throws Exception {
         ncs = new NodeControllerService[0]; // ensure that ncs is not null
-        propertiesAccessor = AsterixPropertiesAccessor.getInstance();
+        final CCConfig ccConfig = createCCConfig();
+        propertiesAccessor = AsterixPropertiesAccessor.getInstance(ccConfig.getAppConfig());
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
         }
 
-        cc = new ClusterControllerService(createCCConfig());
+        cc = new ClusterControllerService(ccConfig);
         cc.start();
 
         // Starts ncs.
         List<String> nodes = propertiesAccessor.getNodeNames();
         List<NodeControllerService> nodeControllers = new ArrayList<>();
         for (String ncName : nodes) {
-            NodeControllerService nodeControllerService = new NodeControllerService(createNCConfig(ncName));
+            NodeControllerService nodeControllerService =
+                    new NodeControllerService(fixupIODevices(createNCConfig(ncName)));
             nodeControllers.add(nodeControllerService);
             Thread ncStartThread = new Thread("IntegrationUtil-" + ncName) {
                 @Override
@@ -96,7 +99,7 @@ public class AsterixHyracksIntegrationUtil {
         ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
     }
 
-    protected CCConfig createCCConfig() {
+    protected CCConfig createCCConfig() throws IOException {
         CCConfig ccConfig = new CCConfig();
         ccConfig.clusterNetIpAddress = Inet4Address.getLoopbackAddress().getHostAddress();
         ccConfig.clientNetIpAddress = Inet4Address.getLoopbackAddress().getHostAddress();
@@ -109,7 +112,7 @@ public class AsterixHyracksIntegrationUtil {
         return ccConfig;
     }
 
-    protected NCConfig createNCConfig(String ncName) throws AsterixException {
+    protected NCConfig createNCConfig(String ncName) throws AsterixException, IOException {
         NCConfig ncConfig = new NCConfig();
         ncConfig.ccHost = "localhost";
         ncConfig.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
@@ -121,15 +124,20 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.resultTTL = 30000;
         ncConfig.resultSweepThreshold = 1000;
         ncConfig.appArgs = Collections.singletonList("-virtual-NC");
+        ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
+        return ncConfig;
+    }
+
+    private NCConfig fixupIODevices(NCConfig ncConfig) throws AsterixException {
         String tempPath = System.getProperty(IO_DIR_KEY);
         if (tempPath.endsWith(File.separator)) {
             tempPath = tempPath.substring(0, tempPath.length() - 1);
         }
         LOGGER.info("Using the temp path: " + tempPath);
         // get initial partitions from properties
-        String[] nodeStores = propertiesAccessor.getStores().get(ncName);
+        String[] nodeStores = propertiesAccessor.getStores().get(ncConfig.nodeId);
         if (nodeStores == null) {
-            throw new AsterixException("Coudn't find stores for NC: " + ncName);
+            throw new AsterixException("Couldn't find stores for NC: " + ncConfig.nodeId);
         }
         String tempDirPath = System.getProperty(IO_DIR_KEY);
         if (!tempDirPath.endsWith(File.separator)) {
@@ -146,9 +154,9 @@ public class AsterixHyracksIntegrationUtil {
                 ncConfig.ioDevices += "," + iodevicePath;
             }
         }
-        ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
         return ncConfig;
     }
+
 
     public String[] getNcNames() {
         return propertiesAccessor.getNodeNames().toArray(new String[propertiesAccessor.getNodeNames().size()]);
@@ -208,7 +216,7 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
-    private void deleteTransactionLogs() throws Exception {
+    private void deleteTransactionLogs() throws IOException {
         for (String ncId : propertiesAccessor.getNodeNames()) {
             File log = new File(propertiesAccessor.getTransactionLogDirs().get(ncId));
             if (log.exists()) {
@@ -224,33 +232,32 @@ public class AsterixHyracksIntegrationUtil {
      * @param args
      *            unused
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
-        run(integrationUtil, Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"));
+        try {
+            integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Unexpected exception", e);
+            System.exit(1);
+        }
     }
 
-    protected static void run(final AsterixHyracksIntegrationUtil integrationUtil, boolean cleanupOnStart,
-            boolean cleanupOnShutdown) {
+    protected void run(boolean cleanupOnStart, boolean cleanupOnShutdown) throws Exception {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    integrationUtil.deinit(cleanupOnShutdown);
+                    deinit(cleanupOnShutdown);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Unexpected exception on shutdown", e);
                 }
             }
         });
-        try {
-            System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
+        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
 
-            integrationUtil.init(cleanupOnStart);
-            while (true) {
-                Thread.sleep(10000);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
+        init(cleanupOnStart);
+        while (true) {
+            Thread.sleep(10000);
         }
     }
 }

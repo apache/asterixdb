@@ -218,7 +218,7 @@ public class ClusterControllerService implements IControllerService {
 
     private void connectNCs() throws Exception {
         Ini ini = ccConfig.getIni();
-        if (ini == null) {
+        if (ini == null || Boolean.parseBoolean(ini.get("cc", "virtual.cluster"))) {
             return;
         }
         for (String section : ini.keySet()) {
@@ -237,7 +237,7 @@ public class ClusterControllerService implements IControllerService {
 
     private void terminateNCServices() throws Exception {
         Ini ini = ccConfig.getIni();
-        if (ini == null) {
+        if (ini == null || Boolean.parseBoolean(ini.get("cc", "virtual.cluster"))) {
             return;
         }
         List<ShutdownNCServiceWork> shutdownNCServiceWorks = new ArrayList<>();

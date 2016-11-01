@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.controllers;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URL;
 import java.util.List;
 
 import org.apache.hyracks.api.application.IApplicationConfig;
@@ -105,12 +106,20 @@ public class CCConfig {
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;
 
+    public URL configFileUrl = null;
+
     private Ini ini = null;
 
     private void loadINIFile() throws IOException {
         // This method simply maps from the ini parameters to the CCConfig's fields.
         // It does not apply defaults or any logic.
-        ini = IniUtils.loadINIFile(configFile);
+        if (configFile != null) {
+            ini = IniUtils.loadINIFile(configFile);
+        } else if (configFileUrl != null) {
+            ini = IniUtils.loadINIFile(configFileUrl);
+        } else {
+            return;
+        }
 
         ipAddress = IniUtils.getString(ini, "cc", "address", ipAddress);
         clientNetIpAddress = IniUtils.getString(ini, "cc", "client.address", clientNetIpAddress);
@@ -139,8 +148,8 @@ public class CCConfig {
      *    clusterNetIpAddress to ipAddress
      */
     public void loadConfigAndApplyDefaults() throws IOException {
-        if (configFile != null) {
-            loadINIFile();
+        loadINIFile();
+        if (ini != null) {
             // QQQ This way of passing overridden/defaulted values back into
             // the ini feels clunky, and it's clearly incomplete
             ini.add("cc", "cluster.address", clusterNetIpAddress);
