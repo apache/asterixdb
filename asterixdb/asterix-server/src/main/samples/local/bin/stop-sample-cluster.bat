@@ -18,6 +18,46 @@
 @REM ------------------------------------------------------------
 @echo off
 setlocal
+
+goto opts
+
+:usage
+echo.
+echo Usage: %~nx0 [-f[orce]]
+echo.
+echo   -f[orce]  : Forcibly terminates any running ${PRODUCT} processes (after shutting down cluster, if running)
+exit /B 0
+
+:kill
+echo    Killing %1...
+TASKKILL /F /PID %1
+echo    %1...killed
+exit /B 0
+
+:opts
+if "%1" == "" goto postopts
+
+if "%1" == "-f" (
+  set force=1
+) else if "%1" == "-force" (
+  set force=1
+) else if "%1" == "-usage" (
+  goto :usage
+) else if "%1" == "-help" (
+  goto :usage
+) else if "%1" == "--help" (
+  goto :usage
+) else if "%1" == "--usage" (
+  goto :usage
+) else (
+  echo ERROR: unknown argument '%1'
+  call :usage
+  exit /B 1
+)
+shift
+goto opts
+:postopts
+
 if NOT DEFINED JAVA_HOME (
   echo ERROR: JAVA_HOME not defined
   goto :ERROR
@@ -36,22 +76,55 @@ set CLUSTERDIR=%cd%
 cd %CLUSTERDIR%\..\..
 set INSTALLDIR=%cd%
 
+set tempfile="%TEMP%\stop-sample-cluster-%random%"
+
 call %INSTALLDIR%\bin\${HELPER_COMMAND} get_cluster_state -quiet
-if %ERRORLEVEL% NEQ 1 (
-  call %INSTALLDIR%\bin\${HELPER_COMMAND} shutdown_cluster_all
-) else (
-  echo WARNING: sample cluster does not appear to be running, will attempt to wait for
-  echo          CCDriver to terminate if running.
+if %ERRORLEVEL% EQU 1 (
+  echo WARNING: sample cluster does not appear to be running
+  goto :post_shutdown
 )
+call %INSTALLDIR%\bin\${HELPER_COMMAND} shutdown_cluster_all
+echo INFO: Waiting up for cluster to shutdown...
+
+set tries=0
+:wait_loop
+set /A tries=%tries% + 1
+if "%tries%" == "60" goto :post_shutdown
+wmic process where ^
+  "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and CommandLine like '%%app.name=\"%%cc\"%%'" ^
+  GET processid >%tempfile% 2>/dev/null
+
+set found=
+for /F "skip=1" %%P in ('type %tempfile%') DO set found=1
+if "%found%" == "1" (
+  timeout /T 1 /NOBREAK >/dev/null
+  goto :wait_loop
+)
+:post_shutdown
 echo.
-powershell "Write-Host "Waiting for CCDriver to terminate..." -nonewline; do { if ($running) { Start-Sleep 1 }; %JAVA_HOME%\bin\jps.exe -v | select-string -pattern ${CC_COMMAND} -quiet -outvariable running | Out-Null; Write-Host "." -nonewline } while ($running)"
-echo .done.
+
+wmic process where ^
+  "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
+  GET processid > %tempfile% 2>/dev/null
+
+set found=
+for /F "skip=1" %%P in ('type %tempfile%') DO set found=1
+
+if "%found%" == "1" (
+  if "%force%" == "1" (
+    echo WARNING: ${PRODUCT} processes remain after cluster shutdown; -f[orce] specified, forcibly terminating ${PRODUCT} processes:
+    for /F "skip=1" %%P in ('type %tempfile%') DO call :kill %%P
+  ) else (
+    echo WARNING: ${PRODUCT} processes remain after cluster shutdown; re-run with -f[orce] to forcibly terminate all ${PRODUCT} processes:
+    for /F "skip=1" %%P in ('type %tempfile%') DO @echo     - %%P
+  )
+)
+del %tempfile%
+
 goto :END
 :ERROR
-echo.
 popd
 exit /B 1
 
 :END
-echo.
 popd
