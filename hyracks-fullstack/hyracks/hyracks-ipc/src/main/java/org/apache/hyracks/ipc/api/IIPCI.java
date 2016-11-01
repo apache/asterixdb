@@ -18,6 +18,24 @@
  */
 package org.apache.hyracks.ipc.api;
 
+/**
+ * The interprocess communication interface that handles communication between different processes across the cluster
+ */
+@FunctionalInterface
 public interface IIPCI {
-    public void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception);
+
+    /**
+     * handles the incoming message
+     * @param handle
+     *            the message IPC handle
+     * @param mid
+     *            the message id
+     * @param rmid
+     *            the request message id (if the message is a response to a request)
+     * @param payload
+     *            the message payload
+     * @param exception
+     *            an exception if the message was an error message
+     */
+    void deliverIncomingMessage(IIPCHandle handle, long mid, long rmid, Object payload, Exception exception);
 }

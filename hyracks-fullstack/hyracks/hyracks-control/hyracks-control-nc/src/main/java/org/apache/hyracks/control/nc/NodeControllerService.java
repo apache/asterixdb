@@ -61,7 +61,6 @@ import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions;
-import org.apache.hyracks.control.common.ipc.CCNCFunctions.StateDumpRequestFunction;
 import org.apache.hyracks.control.common.ipc.ClusterControllerRemoteProxy;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.utils.PidHelper;
@@ -77,19 +76,8 @@ import org.apache.hyracks.control.nc.net.MessagingNetworkManager;
 import org.apache.hyracks.control.nc.net.NetworkManager;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
-import org.apache.hyracks.control.nc.task.ShutdownTask;
-import org.apache.hyracks.control.nc.task.ThreadDumpTask;
-import org.apache.hyracks.control.nc.work.AbortTasksWork;
-import org.apache.hyracks.control.nc.work.ApplicationMessageWork;
 import org.apache.hyracks.control.nc.work.BuildJobProfilesWork;
-import org.apache.hyracks.control.nc.work.CleanupJobletWork;
-import org.apache.hyracks.control.nc.work.DeployBinaryWork;
-import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
-import org.apache.hyracks.control.nc.work.StartTasksWork;
-import org.apache.hyracks.control.nc.work.StateDumpWork;
-import org.apache.hyracks.control.nc.work.UnDeployBinaryWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
-import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.api.IPCPerformanceCounters;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
@@ -165,8 +153,8 @@ public class NodeControllerService implements IControllerService {
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
-        NodeControllerIPCI ipci = new NodeControllerIPCI();
-        ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, ncConfig.clusterNetPort), ipci,
+        ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, ncConfig.clusterNetPort),
+                new NodeControllerIPCI(this),
                 new CCNCFunctions.SerializerDeserializer());
 
         ioManager = new IOManager(getDevices(ncConfig.ioDevices));
@@ -217,7 +205,7 @@ public class NodeControllerService implements IControllerService {
         return devices;
     }
 
-    private synchronized void setNodeRegistrationResult(NodeParameters parameters, Exception exception) {
+    synchronized void setNodeRegistrationResult(NodeParameters parameters, Exception exception) {
         this.nodeParameters = parameters;
         this.registrationException = exception;
         this.registrationPending = false;
@@ -236,7 +224,7 @@ public class NodeControllerService implements IControllerService {
         return fv.get();
     }
 
-    private void setNodeControllersInfo(Map<String, NodeControllerInfo> ncInfos) {
+    void setNodeControllersInfo(Map<String, NodeControllerInfo> ncInfos) {
         FutureValue<Map<String, NodeControllerInfo>> fv;
         synchronized (getNodeControllerInfosAcceptor) {
             fv = getNodeControllerInfosAcceptor.getValue();
@@ -500,88 +488,6 @@ public class NodeControllerService implements IControllerService {
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Exception reporting profile", e);
             }
-        }
-    }
-
-    private final class NodeControllerIPCI implements IIPCI {
-        @Override
-        public void deliverIncomingMessage(final IIPCHandle handle, long mid, long rmid, Object payload,
-                Exception exception) {
-            CCNCFunctions.Function fn = (CCNCFunctions.Function) payload;
-            switch (fn.getFunctionId()) {
-                case SEND_APPLICATION_MESSAGE:
-                    CCNCFunctions.SendApplicationMessageFunction amf =
-                            (CCNCFunctions.SendApplicationMessageFunction) fn;
-                    workQueue.schedule(new ApplicationMessageWork(NodeControllerService.this, amf.getMessage(),
-                            amf.getDeploymentId(), amf.getNodeId()));
-                    return;
-
-                case START_TASKS:
-                    CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
-                    workQueue.schedule(new StartTasksWork(NodeControllerService.this, stf.getDeploymentId(),
-                            stf.getJobId(), stf.getPlanBytes(), stf.getTaskDescriptors(), stf.getConnectorPolicies(),
-                            stf.getFlags()));
-                    return;
-
-                case ABORT_TASKS:
-                    CCNCFunctions.AbortTasksFunction atf = (CCNCFunctions.AbortTasksFunction) fn;
-                    workQueue.schedule(new AbortTasksWork(NodeControllerService.this, atf.getJobId(), atf.getTasks()));
-                    return;
-
-                case CLEANUP_JOBLET:
-                    CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
-                    workQueue.schedule(new CleanupJobletWork(NodeControllerService.this, cjf.getJobId(),
-                            cjf.getStatus()));
-                    return;
-
-                case REPORT_PARTITION_AVAILABILITY:
-                    CCNCFunctions.ReportPartitionAvailabilityFunction rpaf =
-                            (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
-                    workQueue.schedule(new ReportPartitionAvailabilityWork(NodeControllerService.this,
-                            rpaf.getPartitionId(), rpaf.getNetworkAddress()));
-                    return;
-
-                case NODE_REGISTRATION_RESULT:
-                    CCNCFunctions.NodeRegistrationResult nrrf = (CCNCFunctions.NodeRegistrationResult) fn;
-                    setNodeRegistrationResult(nrrf.getNodeParameters(), nrrf.getException());
-                    return;
-
-                case GET_NODE_CONTROLLERS_INFO_RESPONSE:
-                    CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf =
-                            (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
-                    setNodeControllersInfo(gncirf.getNodeControllerInfos());
-                    return;
-
-                case DEPLOY_BINARY:
-                    CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                    workQueue.schedule(new DeployBinaryWork(NodeControllerService.this, dbf.getDeploymentId(),
-                            dbf.getBinaryURLs()));
-                    return;
-
-                case UNDEPLOY_BINARY:
-                    CCNCFunctions.UnDeployBinaryFunction ndbf = (CCNCFunctions.UnDeployBinaryFunction) fn;
-                    workQueue.schedule(new UnDeployBinaryWork(NodeControllerService.this, ndbf.getDeploymentId()));
-                    return;
-
-                case STATE_DUMP_REQUEST:
-                    final CCNCFunctions.StateDumpRequestFunction dsrf = (StateDumpRequestFunction) fn;
-                    workQueue.schedule(new StateDumpWork(NodeControllerService.this, dsrf.getStateDumpId()));
-                    return;
-
-                case SHUTDOWN_REQUEST:
-                    final CCNCFunctions.ShutdownRequestFunction sdrf = (CCNCFunctions.ShutdownRequestFunction) fn;
-                    executor.submit(new ShutdownTask(NodeControllerService.this, sdrf.isTerminateNCService()));
-                    return;
-
-                case THREAD_DUMP_REQUEST:
-                    final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
-                    executor.submit(new ThreadDumpTask(NodeControllerService.this, tdrf.getRequestId()));
-                    return;
-
-                default:
-                    throw new IllegalArgumentException("Unknown function: " + fn.getFunctionId());
-            }
-
         }
     }
 
