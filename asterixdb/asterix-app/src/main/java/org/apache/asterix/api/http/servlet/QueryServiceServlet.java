@@ -36,6 +36,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.app.translator.QueryTranslator;
@@ -59,8 +63,6 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class QueryServiceServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -417,6 +419,16 @@ public class QueryServiceServlet extends HttpServlet {
         }
     }
 
+    private String getOptText(JsonNode node, String fieldName) {
+        final JsonNode value = node.get(fieldName);
+        return value != null ? value.asText() : null;
+    }
+
+    private boolean getOptBoolean(JsonNode node, String fieldName, boolean defaultValue) {
+        final JsonNode value = node.get(fieldName);
+        return value != null ? value.asBoolean() : defaultValue;
+    }
+
     private RequestParameters getRequestParameters(HttpServletRequest request) throws IOException {
         final String contentTypeParam = request.getContentType();
         int sep = contentTypeParam.indexOf(';');
@@ -424,12 +436,12 @@ public class QueryServiceServlet extends HttpServlet {
         RequestParameters param = new RequestParameters();
         if (MediaType.JSON.str().equals(contentType)) {
             try {
-                JSONObject jsonRequest = new JSONObject(getRequestBody(request));
-                param.statement = jsonRequest.getString(Parameter.STATEMENT.str());
-                param.format = toLower(jsonRequest.optString(Parameter.FORMAT.str()));
-                param.pretty = jsonRequest.optBoolean(Parameter.PRETTY.str());
-                param.clientContextID = jsonRequest.optString(Parameter.CLIENT_ID.str());
-            } catch (JSONException e) {
+                JsonNode jsonRequest = new ObjectMapper().readTree(getRequestBody(request));
+                param.statement = jsonRequest.get(Parameter.STATEMENT.str()).asText();
+                param.format = toLower(getOptText(jsonRequest, Parameter.FORMAT.str()));
+                param.pretty = getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false);
+                param.clientContextID = getOptText(jsonRequest, Parameter.CLIENT_ID.str());
+            } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
