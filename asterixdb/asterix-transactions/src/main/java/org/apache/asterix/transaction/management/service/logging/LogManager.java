@@ -203,6 +203,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     protected void prepareNextLogFile() {
+        // Make sure to flush whatever left in the log tail.
+        appendPage.isFull(true);
         //wait until all log records have been flushed in the current file
         synchronized (flushLSN) {
             try {
