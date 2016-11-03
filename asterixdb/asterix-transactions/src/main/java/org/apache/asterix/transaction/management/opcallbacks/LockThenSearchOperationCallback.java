@@ -42,6 +42,7 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
     private final LSMIndexInsertUpdateDeleteOperatorNodePushable operatorNodePushable;
     private final ILogManager logManager;
     private final ILogRecord logRecord;
+    private int pkHash;
 
     public LockThenSearchOperationCallback(int datasetId, int[] entityIdFields, ITransactionSubsystem txnSubsystem,
             ITransactionContext txnCtx, IOperatorNodePushable operatorNodePushable) {
@@ -75,7 +76,7 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
 
     @Override
     public void before(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
+        pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
             if (operatorNodePushable != null) {
 
@@ -121,5 +122,9 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
 
     private void logWait() throws ACIDException {
         logManager.log(logRecord);
+    }
+
+    public void release() throws ACIDException {
+        lockManager.unlock(datasetId, pkHash, LockMode.X, txnCtx);
     }
 }

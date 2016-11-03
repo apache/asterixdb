@@ -24,12 +24,14 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
@@ -80,6 +82,7 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
     private final boolean hasMeta;
     private final int filterFieldIndex;
     private final int metaFieldIndex;
+    private LockThenSearchOperationCallback searchCallback;
 
     public AsterixLSMPrimaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
@@ -140,8 +143,9 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
             modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
                     indexHelper.getResourcePath(), indexHelper.getResourceID(), indexHelper.getResourcePartition(),
                     index, ctx, this);
-            indexAccessor = index.createAccessor(modCallback, opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexHelper.getResourceID(), ctx, this));
+            searchCallback = (LockThenSearchOperationCallback) opDesc.getSearchOpCallbackFactory()
+                    .createSearchOperationCallback(indexHelper.getResourceID(), ctx, this);
+            indexAccessor = index.createAccessor(modCallback, searchCallback);
             cursor = indexAccessor.createSearchCursor(false);
             frameTuple = new FrameTupleReference();
             IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
@@ -167,6 +171,12 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
         }
         if (recordWasInserted || recordWasDeleted) {
             FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+        } else {
+            try {
+                searchCallback.release();
+            } catch (ACIDException e) {
+                throw new HyracksDataException(e);
+            }
         }
     }
 
@@ -185,6 +195,7 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
         accessor.reset(buffer);
         LSMTreeIndexAccessor lsmAccessor = (LSMTreeIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
+        boolean firstModification = true;
         int i = 0;
         try {
             while (i < tupleCount) {
@@ -217,8 +228,9 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
                         tb.addFieldEndOffset();
                     }
                     modCallback.setOp(Operation.DELETE);
-                    if (i == 0) {
+                    if (firstModification) {
                         lsmAccessor.delete(prevTuple);
+                        firstModification = false;
                     } else {
                         lsmAccessor.forceDelete(prevTuple);
                     }
@@ -236,8 +248,9 @@ public class AsterixLSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertU
                 }
                 if (!isNull(tuple, numOfPrimaryKeys)) {
                     modCallback.setOp(Operation.INSERT);
-                    if ((prevTuple == null) && (i == 0)) {
+                    if (firstModification) {
                         lsmAccessor.insert(tuple);
+                        firstModification = false;
                     } else {
                         lsmAccessor.forceInsert(tuple);
                     }
