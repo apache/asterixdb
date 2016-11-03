@@ -49,7 +49,8 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     public static final int LSN_OFFSET = ADDITIONAL_FILTERING_PAGE_OFFSET + 4; // 33
     private static final int LAST_MARKER_LSN_OFFSET = LSN_OFFSET + 8; // 41
     public static final int STORAGE_VERSION_OFFSET = LAST_MARKER_LSN_OFFSET + 4; //45
-    private static final int HEADER_END_OFFSET = LAST_MARKER_LSN_OFFSET + 4; //49
+    public static final int ROOT_PAGE_NUMBER = STORAGE_VERSION_OFFSET + 4; //49
+    private static final int HEADER_END_OFFSET = ROOT_PAGE_NUMBER + 4; // 53
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -126,6 +127,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
         buf.putInt(NEXT_PAGE_OFFSET, -1);
         buf.putInt(ADDITIONAL_FILTERING_PAGE_OFFSET, -1);
         buf.putLong(LAST_MARKER_LSN_OFFSET, -1L);
+        buf.putInt(ROOT_PAGE_NUMBER, 0);
         buf.putInt(STORAGE_VERSION_OFFSET, VERSION);
         setValid(false);
     }
@@ -191,5 +193,15 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     @Override
     public void setLSMComponentFilterPageId(int filterPage) {
         buf.putInt(ADDITIONAL_FILTERING_PAGE_OFFSET, filterPage);
+    }
+
+    @Override
+    public void setRootPageNumber(int rootPage) {
+        buf.putInt(ROOT_PAGE_NUMBER, rootPage);
+    }
+
+    @Override
+    public int getRootPageNumber() {
+        return buf.getInt(ROOT_PAGE_NUMBER);
     }
 }

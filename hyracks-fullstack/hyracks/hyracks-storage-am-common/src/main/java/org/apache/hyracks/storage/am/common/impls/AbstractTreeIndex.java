@@ -114,7 +114,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         }
 
         freePageManager.open(fileId);
-        setRootAndMetadataPages(appendOnly);
         if (!appendOnly) {
             initEmptyTree();
             freePageManager.close();
@@ -122,6 +121,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             this.appendOnly = true;
             initCachedMetadataPage();
         }
+        setRootPage(appendOnly);
         bufferCache.closeFile(fileId);
     }
 
@@ -140,25 +140,14 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         }
     }
 
-    private void setRootAndMetadataPages(boolean appendOnly) throws HyracksDataException {
+    private void setRootPage(boolean appendOnly) throws HyracksDataException {
         if (!appendOnly) {
             // regular or empty tree
             rootPage = 1;
             bulkloadLeafStart = 2;
         } else {
-            //the root page is either page n-2 (no filter) or n-3 (filter)
-            int numPages = bufferCache.getNumPagesOfFile(fileId);
-            if (numPages > MINIMAL_TREE_PAGE_COUNT) {
-                int filterPageId = freePageManager.getFilterPageId();
-                if (filterPageId > 0) {
-                    rootPage = numPages - MINIMAL_TREE_PAGE_COUNT_WITH_FILTER;
-                } else {
-                    rootPage = numPages - MINIMAL_TREE_PAGE_COUNT;
-                }
-            } else {
-                rootPage = 0;
-            }
-
+            //root page is stored in MD page
+            rootPage = freePageManager.getRootPage();
             //leaves start from the very beginning of the file.
             bulkloadLeafStart = 0;
         }
@@ -201,7 +190,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         } else {
             appendOnly = false;
         }
-        setRootAndMetadataPages(appendOnly);
+        setRootPage(appendOnly);
 
         // TODO: Should probably have some way to check that the tree is physically consistent
         // or that the file we just opened actually is a tree
@@ -424,6 +413,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
                 }
             }
+            freePageManager.setRootPage(rootPage);
         }
 
         protected void addLevel() throws HyracksDataException {

@@ -25,7 +25,7 @@ public interface ITreeIndexMetaDataFrame {
 
     //Storage version #. Change this if you alter any tree frame formats to stop
     // possible corruption from old versions reading new formats.
-    public static final int VERSION = 2;
+    public static final int VERSION = 3;
 
     public void initBuffer(byte level);
 
@@ -74,4 +74,8 @@ public interface ITreeIndexMetaDataFrame {
     public long getLastMarkerLSN();
 
     public void setLastMarkerLSN(long lsn);
+
+    void setRootPageNumber(int rootPage);
+
+    int getRootPageNumber();
 }

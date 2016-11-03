@@ -184,4 +184,17 @@ public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
         // Method doesn't make sense for this free page manager.
         return -1L;
     }
+
+    @Override
+    public void setRootPage(int rootPage) throws HyracksDataException {
+        // This won't get called for an in-place index. The root page
+        // is maintained at a fixed location as in the below method.
+    }
+
+    @Override
+    public int getRootPage() throws HyracksDataException {
+        // This also won't be called but the correct answer for an
+        // In-place index is always 1.
+        return 1;
+    }
 }

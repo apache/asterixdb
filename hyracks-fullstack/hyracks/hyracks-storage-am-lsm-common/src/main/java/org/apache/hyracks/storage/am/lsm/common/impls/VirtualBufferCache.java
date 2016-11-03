@@ -248,8 +248,8 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         } else {
             largePages.getAndAdd(multiplier - origMultiplier);
         }
-        ((VirtualPage)cPage).buffer = newBuffer;
-        ((VirtualPage)cPage).multiplier = multiplier;
+        ((VirtualPage) cPage).buffer = newBuffer;
+        ((VirtualPage) cPage).multiplier = multiplier;
     }
 
     @Override
@@ -266,6 +266,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public int getPageSize() {
+        return pageSize;
+    }
+
+    @Override
+    public int getPageSizeWithHeader() {
         return pageSize;
     }
 
@@ -335,7 +340,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public boolean isFull() {
-        return (nextFree  + largePages.get()) >= numPages;
+        return (nextFree + largePages.get()) >= numPages;
     }
 
     private static class CacheBucket {
@@ -390,6 +395,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         public void releaseWriteLatch(boolean markDirty) {
             latch.writeLock().unlock();
         }
+
         public boolean confiscated() {
             return false;
         }

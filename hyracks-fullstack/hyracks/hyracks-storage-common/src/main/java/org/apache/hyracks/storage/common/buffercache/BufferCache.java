@@ -132,6 +132,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         return pageSize;
     }
 
+    @Override
     public int getPageSizeWithHeader() {
         return pageSize + RESERVED_HEADER_BYTES;
     }

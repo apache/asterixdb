@@ -172,4 +172,8 @@ public interface IMetaDataPageManager {
     long getLSNOffset() throws HyracksDataException;
 
     public long getLastMarkerLSN() throws HyracksDataException;
+
+    void setRootPage(int rootPage) throws HyracksDataException;
+
+    int getRootPage() throws HyracksDataException;
 }

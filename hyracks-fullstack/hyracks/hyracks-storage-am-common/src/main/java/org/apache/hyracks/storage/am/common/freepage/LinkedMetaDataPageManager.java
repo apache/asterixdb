@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.storage.am.common.freepage;
 
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -64,7 +63,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
                 int newPage = metaFrame.getFreePage();
                 if (newPage < 0) {
                     throw new HyracksDataException(
-                              "Inconsistent Meta Page State. It has no space, but it also has no entries.");
+                            "Inconsistent Meta Page State. It has no space, but it also has no entries.");
                 }
 
                 ICachedPage newNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newPage), false);
@@ -471,7 +470,7 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
     public long getLSNOffset() throws HyracksDataException {
         int metadataPageNum = getFirstMetadataPage();
         if (metadataPageNum != IBufferCache.INVALID_PAGEID) {
-            return ((long)metadataPageNum * bufferCache.getPageSize()) + LIFOMetaDataFrame.LSN_OFFSET;
+            return ((long) metadataPageNum * bufferCache.getPageSizeWithHeader()) + LIFOMetaDataFrame.LSN_OFFSET;
         }
         return IMetaDataPageManager.INVALID_LSN_OFFSET;
     }
@@ -492,6 +491,50 @@ public class LinkedMetaDataPageManager implements IMetaDataPageManager {
         } finally {
             metaNode.releaseReadLatch();
             if (!appendOnly || (appendOnly && confiscatedMetaNode == null)) {
+                bufferCache.unpin(metaNode);
+            }
+        }
+    }
+
+    @Override
+    public void setRootPage(int rootPage) throws HyracksDataException {
+        ICachedPage metaNode;
+        if (!appendOnly) {
+            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getFirstMetadataPage()), false);
+        } else {
+            metaNode = confiscatedMetaNode;
+        }
+        ITreeIndexMetaDataFrame metaFrame = metaDataFrameFactory.createFrame();
+        metaNode.acquireWriteLatch();
+        try {
+            metaFrame.setPage(metaNode);
+            metaFrame.setRootPageNumber(rootPage);
+        } finally {
+            if (!appendOnly) {
+                metaNode.releaseWriteLatch(true);
+                bufferCache.unpin(metaNode);
+            } else {
+                metaNode.releaseWriteLatch(false);
+            }
+        }
+    }
+
+    @Override
+    public int getRootPage() throws HyracksDataException {
+        ICachedPage metaNode;
+        if (!appendOnly || confiscatedMetaNode == null) {
+            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getFirstMetadataPage()), false);
+        } else {
+            metaNode = confiscatedMetaNode;
+        }
+        ITreeIndexMetaDataFrame metaFrame = metaDataFrameFactory.createFrame();
+        metaNode.acquireReadLatch();
+        try {
+            metaFrame.setPage(metaNode);
+            return metaFrame.getRootPageNumber();
+        } finally {
+            metaNode.releaseReadLatch();
+            if (!appendOnly || confiscatedMetaNode == null) {
                 bufferCache.unpin(metaNode);
             }
         }

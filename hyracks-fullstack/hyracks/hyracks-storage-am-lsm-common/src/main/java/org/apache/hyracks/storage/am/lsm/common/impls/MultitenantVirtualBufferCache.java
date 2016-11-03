@@ -91,6 +91,10 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
         return vbc.getPageSize();
     }
 
+    public int getPageSizeWithHeader() {
+        return vbc.getPageSizeWithHeader();
+    }
+
     @Override
     public int getNumPages() {
         return vbc.getNumPages();
@@ -103,7 +107,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
             vbc.close();
         }
     }
-
 
     @Override
     public synchronized void open() throws HyracksDataException {
@@ -194,7 +197,7 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public int getFileReferenceCount(int fileId){
+    public int getFileReferenceCount(int fileId) {
         return 0;
     }
 
