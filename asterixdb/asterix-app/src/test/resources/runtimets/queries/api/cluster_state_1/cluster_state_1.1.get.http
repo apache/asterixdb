@@ -17,9 +17,9 @@
  * under the License.
  */
 /*
- * Test case Name  : cluster_state_4
- * Description     : cluster state api valid node
- * Expected Result : Positive
- * Date            : 8th September 2016
+ * Test case Name  : cluster_state_1
+ * Description     : test cluster state api
+ * Expected Result : Success
+ * Date            : 7th September 2016
  */
-/node/asterix_nc1
+/admin/cluster

@@ -39,6 +39,12 @@ public class TestFileContext implements Comparable<TestFileContext> {
         return type;
     }
 
+    public String extension() {
+        final String name = file.getName();
+        int lastDot = name.lastIndexOf('.');
+        return lastDot == -1 ? name : name.substring(lastDot + 1);
+    }
+
     public void setType(String type) {
         this.type = type;
     }

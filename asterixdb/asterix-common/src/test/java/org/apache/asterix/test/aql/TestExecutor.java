@@ -371,6 +371,9 @@ public class TestExecutor {
 
     // For tests where you simply want the byte-for-byte output.
     private static void writeOutputToFile(File actualFile, InputStream resultStream) throws Exception {
+        if (!actualFile.getParentFile().mkdirs()) {
+            LOGGER.warning("Unable to create actual file parent dir: " + actualFile.getParentFile());
+        }
         try (FileOutputStream out = new FileOutputStream(actualFile)) {
             IOUtils.copy(resultStream, out);
         }
@@ -454,11 +457,21 @@ public class TestExecutor {
         params.add(formatParam);
     }
 
+    private List<CompilationUnit.Parameter> injectStatement(String statement, String stmtParamName,
+                                                            List<CompilationUnit.Parameter> otherParams) {
+        CompilationUnit.Parameter stmtParam = new CompilationUnit.Parameter();
+        stmtParam.setName(stmtParamName);
+        stmtParam.setValue(statement);
+        List<CompilationUnit.Parameter> params = new ArrayList<>(otherParams);
+        params.add(stmtParam);
+        return params;
+    }
+
     private HttpUriRequest constructHttpMethod(String statement, String endpoint, String stmtParam,
             boolean postStmtAsParam, List<CompilationUnit.Parameter> otherParams) {
         if (statement.length() + endpoint.length() < MAX_URL_LENGTH) {
             // Use GET for small-ish queries
-            return constructGetMethod(statement, endpoint, stmtParam, otherParams);
+            return constructGetMethod(endpoint, injectStatement(statement, stmtParam, otherParams));
         } else {
             // Use POST for bigger ones to avoid 413 FULL_HEAD
             String stmtParamName = (postStmtAsParam ? stmtParam : null);
@@ -466,21 +479,47 @@ public class TestExecutor {
         }
     }
 
-    private HttpUriRequest constructGetMethod(String statement, String endpoint, String stmtParam,
-            List<CompilationUnit.Parameter> otherParams) {
-        RequestBuilder builder = RequestBuilder.get(endpoint).addParameter(stmtParam, statement);
-        for (CompilationUnit.Parameter param : otherParams) {
+    private HttpUriRequest constructGetMethod(String endpoint, List<CompilationUnit.Parameter> params) {
+        RequestBuilder builder = RequestBuilder.get(endpoint);
+        for (CompilationUnit.Parameter param : params) {
             builder.addParameter(param.getName(), param.getValue());
         }
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
     }
 
+    private HttpUriRequest constructGetMethod(String endpoint, OutputFormat fmt,
+                                              List<CompilationUnit.Parameter> params) {
+
+        HttpUriRequest method = constructGetMethod(endpoint, params);
+        // Set accepted output response type
+        method.setHeader("Accept", fmt.mimeType());
+        return method;
+    }
+
+    private HttpUriRequest constructPostMethod(String endpoint, List<CompilationUnit.Parameter> params) {
+        RequestBuilder builder = RequestBuilder.post(endpoint);
+        for (CompilationUnit.Parameter param : params) {
+            builder.addParameter(param.getName(), param.getValue());
+        }
+        builder.setCharset(StandardCharsets.UTF_8);
+        return builder.build();
+    }
+
+    private HttpUriRequest constructPostMethod(String endpoint, OutputFormat fmt,
+                                              List<CompilationUnit.Parameter> params) {
+
+        HttpUriRequest method = constructPostMethod(endpoint, params);
+        // Set accepted output response type
+        method.setHeader("Accept", fmt.mimeType());
+        return method;
+    }
+
     protected HttpUriRequest constructPostMethodUrl(String statement, String endpoint, String stmtParam,
             List<CompilationUnit.Parameter> otherParams) {
         RequestBuilder builder = RequestBuilder.post(endpoint);
         if (stmtParam != null) {
-            for (CompilationUnit.Parameter param : otherParams) {
+            for (CompilationUnit.Parameter param : injectStatement(statement, stmtParam, otherParams)) {
                 builder.addParameter(param.getName(), param.getValue());
             }
             builder.addParameter(stmtParam, statement);
@@ -500,8 +539,7 @@ public class TestExecutor {
         RequestBuilder builder = RequestBuilder.post(endpoint);
         JSONObject content = new JSONObject();
         try {
-            content.put(stmtParam, statement);
-            for (CompilationUnit.Parameter param : otherParams) {
+            for (CompilationUnit.Parameter param : injectStatement(statement, stmtParam, otherParams)) {
                 content.put(param.getName(), param.getValue());
             }
         } catch (JSONException e) {
@@ -513,8 +551,13 @@ public class TestExecutor {
     }
 
     public InputStream executeJSONGet(OutputFormat fmt, String url) throws Exception {
-        HttpUriRequest request = RequestBuilder.get(url).setHeader("Accept", fmt.mimeType()).build();
+        HttpUriRequest request = constructGetMethod(url, fmt, new ArrayList<>());
+        HttpResponse response = executeAndCheckHttpRequest(request);
+        return response.getEntity().getContent();
+    }
 
+    public InputStream executeJSONPost(OutputFormat fmt, String url) throws Exception {
+        HttpUriRequest request = constructPostMethod(url, fmt, new ArrayList<>());
         HttpResponse response = executeAndCheckHttpRequest(request);
         return response.getEntity().getContent();
     }
@@ -765,7 +808,6 @@ public class TestExecutor {
 
                 File actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile,
                         new File(actualPath));
-                actualResultFile.getParentFile().mkdirs();
                 writeOutputToFile(actualResultFile, resultStream);
 
                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
@@ -782,7 +824,6 @@ public class TestExecutor {
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
                         getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
-                qbcFile.getParentFile().mkdirs();
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
@@ -791,7 +832,6 @@ public class TestExecutor {
                 File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
-                qarFile.getParentFile().mkdirs();
                 writeOutputToFile(qarFile, resultStream);
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
@@ -859,36 +899,26 @@ public class TestExecutor {
                     throw new Exception(output);
                 }
                 break;
-            case "cstate": // cluster state query
+            case "get":
+            case "post":
+                if (!"http".equals(ctx.extension())) {
+                    throw new IllegalArgumentException("Unexpected format for method " + ctx.getType() + ": "
+                            + ctx.extension());
+                }
                 fmt = OutputFormat.forCompilationUnit(cUnit);
-                String extra = stripJavaComments(statement).trim();
-                resultStream = executeJSONGet(fmt, getEndpoint(Servlets.CLUSTER_STATE) + extra);
+                String endpoint = stripJavaComments(statement).trim();
+                switch (ctx.getType()) {
+                    case "get":
+                        resultStream = executeJSONGet(fmt, "http://" + host + ":" + port + endpoint);
+                        break;
+                    case "post":
+                        resultStream = executeJSONPost(fmt, "http://" + host + ":" + port + endpoint);
+                        break;
+                    default:
+                        throw new IllegalStateException("NYI: " + ctx.getType());
+                }
                 expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                actualResultFile.getParentFile().mkdirs();
-                writeOutputToFile(actualResultFile, resultStream);
-                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                        actualResultFile);
-                queryCount.increment();
-                break;
-            case "version": // version servlet
-                fmt = OutputFormat.forCompilationUnit(cUnit);
-                resultStream = executeJSONGet(fmt, getEndpoint(Servlets.VERSION));
-                expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
-                actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                actualResultFile.getParentFile().mkdirs();
-                writeOutputToFile(actualResultFile, resultStream);
-                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                        actualResultFile);
-                queryCount.increment();
-                break;
-            case "httpapi": // http api
-                fmt = OutputFormat.forCompilationUnit(cUnit);
-                extra = stripJavaComments(statement).trim();
-                resultStream = executeJSONGet(fmt, "http://" + host + ":" + port + extra);
-                expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
-                actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                actualResultFile.getParentFile().mkdirs();
                 writeOutputToFile(actualResultFile, resultStream);
                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
                         actualResultFile);

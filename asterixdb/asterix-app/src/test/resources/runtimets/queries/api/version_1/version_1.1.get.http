@@ -17,9 +17,9 @@
  * under the License.
  */
 /*
- * Test case Name  : cluster_state_cc_stats_1
- * Description     : cluster cc stas
- * Expected Result : Positive
+ * Test case Name  : version_1
+ * Description     : version api
+ * Expected Result : Success
  * Date            : 8th September 2016
  */
-/cc/stats
+/admin/version
