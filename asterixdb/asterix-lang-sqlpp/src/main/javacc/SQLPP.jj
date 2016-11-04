@@ -1791,14 +1791,6 @@ Expression RelExpr()throws ParseException:
 }
 {
     operand = BetweenExpr()
-    {
-      if (operand instanceof VariableExpr) {
-        String hint = getHint(token);
-        if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
-          broadcast = true;
-        }
-      }
-    }
 
     (
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? (<LIKE>|<IN>))
@@ -1809,8 +1801,11 @@ Expression RelExpr()throws ParseException:
                 annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
             } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
+            } else if (mhint.equals(BROADCAST_JOIN_HINT)) {
+                broadcast = true;
             }
           }
+
           String operator = token.image.toLowerCase();
           if (operator.equals("<>")){
               operator = "!=";
@@ -1820,9 +1815,8 @@ Expression RelExpr()throws ParseException:
           }
           if (op == null) {
             op = new OperatorExpr();
-            op.addOperand(operand, broadcast);
+            op.addOperand(operand, false); // broadcast is always for the right branch
             op.setCurrentop(true);
-            broadcast = false;
           }
           try{
             op.addOperator(operator);
@@ -1832,16 +1826,9 @@ Expression RelExpr()throws ParseException:
         }
 
        operand = BetweenExpr()
-      {
-         broadcast = false;
-         if (operand instanceof VariableExpr) {
-           String hint = getHint(token);
-           if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
-             broadcast = true;
-           }
-         }
+       {
          op.addOperand(operand, broadcast);
-      }
+       }
     )?
 
      {

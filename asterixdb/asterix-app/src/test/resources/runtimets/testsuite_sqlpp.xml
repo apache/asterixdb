@@ -6617,6 +6617,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q12_shipping_broadcast">
+        <output-dir compare="Text">q12_shipping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
       <compilation-unit name="q13_customer_distribution">
         <output-dir compare="Text">q13_customer_distribution</output-dir>
       </compilation-unit>
