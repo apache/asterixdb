@@ -74,15 +74,15 @@
     <name>storage.buffercache.pagesize</name>
     <value>32KB</value>
     <description>The page size in bytes for pages in the buffer cache.
-      (Default = "32768" // 32KB)
+      (Default = "128KB")
     </description>
   </property>
   <property>
     <name>storage.buffercache.size</name>
-    <value>32MB</value>
+    <value>48MB</value>
     <description>The size of memory allocated to the disk buffer cache.
-      The value should be a multiple of the buffer cache page size(Default
-      = "33554432" // 32MB)
+      The value should be a multiple of the buffer cache page size
+      (Default = "512MB")
     </description>
   </property>
   <property>

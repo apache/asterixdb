@@ -55,7 +55,7 @@
         "plot.activate": false,
         "storage.buffercache.maxopenfiles": 2147483647,
         "storage.buffercache.pagesize": 32768,
-        "storage.buffercache.size": 33554432,
+        "storage.buffercache.size": 50331648,
         "storage.lsm.bloomfilter.falsepositiverate": 0.01,
         "storage.memorycomponent.globalbudget": 536870912,
         "storage.memorycomponent.numcomponents": 2,

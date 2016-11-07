@@ -185,8 +185,7 @@ public class TestExecutor {
             }
             lineActual = readerActual.readLine();
             if (lineActual != null) {
-                throw new ComparisonException(
-                        "Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
+                throwLineChanged(scriptFile, "<EOF>", lineActual, num);
             }
         } catch (Exception e) {
             System.err.println("Actual results file: " + actualFile.toString());

@@ -1248,7 +1248,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     private ICachedPage getPageLoop(long dpid, int multiplier, boolean confiscate)
             throws HyracksDataException {
-        final long startingPinCount = masterPinCount.get();
+        final long startingPinCount = DEBUG ? masterPinCount.get() : -1;
         int cycleCount = 0;
         try {
             while (true) {
@@ -1291,15 +1291,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 if (cycleCount > MAX_PIN_ATTEMPT_CYCLES) {
                     cycleCount = 0; // suppress warning below
                     throw new HyracksDataException("Unable to find free page in buffer cache after "
-                            + MAX_PIN_ATTEMPT_CYCLES + " cycles (buffer cache undersized?); "
-                            + (masterPinCount.get() - startingPinCount) + " successful pins since start of cycle");
+                            + MAX_PIN_ATTEMPT_CYCLES + " cycles (buffer cache undersized?)" + (DEBUG ? " ; "
+                            + (masterPinCount.get() - startingPinCount) + " successful pins since start of cycle"
+                            : ""));
                 }
             }
         } finally {
             if (cycleCount > PIN_ATTEMPT_CYCLES_WARNING_THRESHOLD && LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Took " + cycleCount + " cycles to find free page in buffer cache.  (buffer cache " +
-                        "undersized?); " + (masterPinCount.get() - startingPinCount) +
-                        " successful pins since start of cycle");
+                        "undersized?)" + (DEBUG ? " ; " + (masterPinCount.get() - startingPinCount) +
+                        " successful pins since start of cycle" : ""));
             }
         }
     }
