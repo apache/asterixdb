@@ -24,5 +24,12 @@
         </compilation-unit>
       </test-case>
   </test-group>
+  <test-group name="restart">
+      <test-case FilePath="storage-restart">
+          <compilation-unit name="issue-1725">
+              <output-dir compare="Text">issue-1725</output-dir>
+          </compilation-unit>
+      </test-case>
+  </test-group>
 </test-suite>
 
