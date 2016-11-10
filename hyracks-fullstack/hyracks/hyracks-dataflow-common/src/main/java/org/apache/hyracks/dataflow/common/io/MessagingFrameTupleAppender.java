@@ -104,6 +104,12 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
     }
 
     @Override
+    public int getTupleCount() {
+        // if message is set, there is always a message. that message could be a null message (TODO: optimize)
+        return tupleCount + ((message == null) ? 0 : 1);
+    }
+
+    @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         if (!initialized) {
             message = TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
