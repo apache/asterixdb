@@ -1,0 +1,2 @@
+{ "o_orderkey": 200, "price": 5000, "o_class": "A", "o_priority": 20 }
+{ "o_orderkey": 100, "price": 3000, "o_class": "A", "o_priority": 10 }

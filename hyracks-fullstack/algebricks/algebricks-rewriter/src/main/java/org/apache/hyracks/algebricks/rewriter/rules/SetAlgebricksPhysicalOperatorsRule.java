@@ -438,6 +438,16 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         if (r0Logical.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
+
+        // Check whether there are multiple aggregates in the sub plan.
+        ILogicalOperator r1Logical = r0Logical;
+        while (r1Logical.hasInputs()) {
+            r1Logical = r1Logical.getInputs().get(0).getValue();
+            if (r1Logical.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                return false;
+            }
+        }
+
         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
         List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
         List<LogicalVariable> originalAggVars = aggOp.getVariables();

@@ -613,6 +613,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="query-ASTERIXDB-1727">
+        <output-dir compare="Text">query-ASTERIXDB-1727</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="group_only">
         <output-dir compare="Text">group_only</output-dir>
       </compilation-unit>

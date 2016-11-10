@@ -139,7 +139,19 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                     }
                                 }
 
-                                if (hasIntermediateAgg) {
+                                // Check whether there are multiple aggregates in the sub plan.
+                                // Currently, we don't support multiple aggregates in one external group-by.
+                                boolean multipleAggOpsFound = false;
+                                ILogicalOperator r1Logical = aggOp;
+                                while (r1Logical.hasInputs()) {
+                                    r1Logical = r1Logical.getInputs().get(0).getValue();
+                                    if (r1Logical.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                                        multipleAggOpsFound = true;
+                                        break;
+                                    }
+                                }
+
+                                if (hasIntermediateAgg && !multipleAggOpsFound) {
                                     for (int i = 0; i < aggNum; i++) {
                                         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) aggExprs
                                                 .get(i).getValue();
