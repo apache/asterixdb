@@ -89,9 +89,9 @@ echo INFO: Waiting up for cluster to shutdown...
 set tries=0
 :wait_loop
 set /A tries=%tries% + 1
-if "%tries%" == "60" goto :post_shutdown
+if "%tries%" == "60" goto :timed_out
 wmic process where ^
-  "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and CommandLine like '%%app.name=\"%%cc\"%%'" ^
+  "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
   GET processid >%tempfile% 2>/dev/null
 
 set found=
@@ -100,6 +100,11 @@ if "%found%" == "1" (
   timeout /T 1 /NOBREAK >/dev/null
   goto :wait_loop
 )
+goto :post_shutdown
+
+:timed_out
+echo timed out!
+
 :post_shutdown
 echo.
 

@@ -62,7 +62,11 @@ if [ $? -ne 1 ]; then
   first=1
   tries=0
   echo -n "INFO: Waiting up to 60s for cluster to shutdown"
-  while [ -n "$($JAVA_HOME/bin/jps | awk '/CCDriver/')" -a $tries -lt 60 ]; do
+  while [ -n "$($JAVA_HOME/bin/jps | awk '/ (CCDriver|NCDriver|NCService)$/')" ]; do
+    if [ $tries -ge 60 ]; then
+      echo "...timed out!"
+      break
+    fi
     sleep 1s
     echo -n .
     tries=$(expr $tries + 1)
