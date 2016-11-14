@@ -93,6 +93,8 @@ import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
+    private static final String HASH_MERGE = "hash_merge";
+    private static final String TRUE_CONSTANT = "true";
     private PhysicalOptimizationConfig physicalOptimizationConfig;
 
     @Override
@@ -552,6 +554,11 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 }
                 case UNORDERED_PARTITIONED: {
                     List<LogicalVariable> varList = new ArrayList<>(((UnorderedPartitionedProperty) pp).getColumnSet());
+                    String hashMergeHint = context.getMetadataProvider().getConfig().get(HASH_MERGE);
+                    if (hashMergeHint == null || !hashMergeHint.equalsIgnoreCase(TRUE_CONSTANT)) {
+                        pop = new HashPartitionExchangePOperator(varList, domain);
+                        break;
+                    }
                     List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
                     List<ILocalStructuralProperty> reqdLocals = required.getLocalProperties();
                     boolean propWasSet = false;

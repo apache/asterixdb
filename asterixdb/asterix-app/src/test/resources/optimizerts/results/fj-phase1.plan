@@ -31,12 +31,12 @@
                                 -- SORT_MERGE_EXCHANGE [$$23(DESC) ]  |PARTITIONED|
                                   -- STABLE_SORT [$$23(DESC)]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- PRE_CLUSTERED_GROUP_BY[$$30]  |PARTITIONED|
+                                      -- SORT_GROUP_BY[$$30]  |PARTITIONED|
                                               {
                                                 -- AGGREGATE  |LOCAL|
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                               }
-                                        -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$30(ASC)] HASH:[$$30]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$30]  |PARTITIONED|
                                           -- SORT_GROUP_BY[$$3]  |PARTITIONED|
                                                   {
                                                     -- AGGREGATE  |LOCAL|

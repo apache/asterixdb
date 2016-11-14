@@ -8,12 +8,12 @@
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- STABLE_SORT [topK: 100] [$$12(DESC), $$11(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- PRE_CLUSTERED_GROUP_BY[$$72, $$73]  |PARTITIONED|
+                    -- SORT_GROUP_BY[$$72, $$73]  |PARTITIONED|
                             {
                               -- AGGREGATE  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                             }
-                      -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$72(ASC), $$73(ASC)] HASH:[$$72, $$73]  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$72, $$73]  |PARTITIONED|
                         -- SORT_GROUP_BY[$$56, $$57]  |PARTITIONED|
                                 {
                                   -- AGGREGATE  |LOCAL|
@@ -49,12 +49,12 @@
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- STREAM_SELECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- PRE_CLUSTERED_GROUP_BY[$$69]  |PARTITIONED|
+                                                  -- SORT_GROUP_BY[$$69]  |PARTITIONED|
                                                           {
                                                             -- AGGREGATE  |LOCAL|
                                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                           }
-                                                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$69(ASC)] HASH:[$$69]  |PARTITIONED|
+                                                    -- HASH_PARTITION_EXCHANGE [$$69]  |PARTITIONED|
                                                       -- PRE_CLUSTERED_GROUP_BY[$$58]  |PARTITIONED|
                                                               {
                                                                 -- AGGREGATE  |LOCAL|

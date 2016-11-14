@@ -69,12 +69,12 @@
                                                                                           -- SORT_MERGE_EXCHANGE [$$102(ASC), $$18(ASC) ]  |PARTITIONED|
                                                                                             -- STABLE_SORT [$$102(ASC), $$18(ASC)]  |PARTITIONED|
                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                -- PRE_CLUSTERED_GROUP_BY[$$130]  |PARTITIONED|
+                                                                                                -- SORT_GROUP_BY[$$130]  |PARTITIONED|
                                                                                                         {
                                                                                                           -- AGGREGATE  |LOCAL|
                                                                                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                         }
-                                                                                                  -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$130(ASC)] HASH:[$$130]  |PARTITIONED|
+                                                                                                  -- HASH_PARTITION_EXCHANGE [$$130]  |PARTITIONED|
                                                                                                     -- SORT_GROUP_BY[$$17]  |PARTITIONED|
                                                                                                             {
                                                                                                               -- AGGREGATE  |LOCAL|
@@ -126,12 +126,12 @@
                                                                                     -- SORT_MERGE_EXCHANGE [$$102(ASC), $$18(ASC) ]  |PARTITIONED|
                                                                                       -- STABLE_SORT [$$102(ASC), $$18(ASC)]  |PARTITIONED|
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          -- PRE_CLUSTERED_GROUP_BY[$$130]  |PARTITIONED|
+                                                                                          -- SORT_GROUP_BY[$$130]  |PARTITIONED|
                                                                                                   {
                                                                                                     -- AGGREGATE  |LOCAL|
                                                                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                   }
-                                                                                            -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$130(ASC)] HASH:[$$130]  |PARTITIONED|
+                                                                                            -- HASH_PARTITION_EXCHANGE [$$130]  |PARTITIONED|
                                                                                               -- SORT_GROUP_BY[$$17]  |PARTITIONED|
                                                                                                       {
                                                                                                         -- AGGREGATE  |LOCAL|

@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.metadata;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -205,4 +206,5 @@ public interface IMetadataProvider<S, I> {
             List<LogicalVariable> prevSecondaryKeys, LogicalVariable prevAdditionalFilteringKeys,
             RecordDescriptor inputDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException;
 
+    public Map<String, String> getConfig();
 }

@@ -1,5 +1,5 @@
 DataverseUse tpch
-Set import-private-functions=true
+Set hash_merge=true
 Query:
 SELECT ELEMENT [
 RecordConstructor [

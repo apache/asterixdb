@@ -3,12 +3,12 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$13]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$13]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$13(ASC)] HASH:[$$13]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$13]  |PARTITIONED|
               -- SORT_GROUP_BY[$$10]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|

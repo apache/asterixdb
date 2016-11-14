@@ -19,8 +19,7 @@
 
 use tpch;
 
-
-set `import-private-functions` `true`;
+set hash_merge "true"
 
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':COLL_SUM((
         select element i.l_quantity

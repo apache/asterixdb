@@ -253,4 +253,9 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public Map<String, String> getConfig() {
+        return Collections.emptyMap();
+    }
 }

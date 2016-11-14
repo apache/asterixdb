@@ -10,12 +10,12 @@
                   -- STREAM_SELECT  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- PRE_CLUSTERED_GROUP_BY[$$129, $$130]  |PARTITIONED|
+                        -- SORT_GROUP_BY[$$129, $$130]  |PARTITIONED|
                                 {
                                   -- AGGREGATE  |LOCAL|
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                                 }
-                          -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$129(ASC), $$130(ASC)] HASH:[$$129, $$130]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$129, $$130]  |PARTITIONED|
                             -- PRE_CLUSTERED_GROUP_BY[$$117, $$118]  |PARTITIONED|
                                     {
                                       -- AGGREGATE  |LOCAL|
@@ -29,12 +29,12 @@
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- HYBRID_HASH_JOIN [$$117][$$99]  |PARTITIONED|
                                           -- HASH_PARTITION_EXCHANGE [$$117]  |PARTITIONED|
-                                            -- PRE_CLUSTERED_GROUP_BY[$$126, $$127]  |PARTITIONED|
+                                            -- SORT_GROUP_BY[$$126, $$127]  |PARTITIONED|
                                                     {
                                                       -- AGGREGATE  |LOCAL|
                                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                     }
-                                              -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$126(ASC), $$127(ASC)] HASH:[$$126, $$127]  |PARTITIONED|
+                                              -- HASH_PARTITION_EXCHANGE [$$126, $$127]  |PARTITIONED|
                                                 -- PRE_CLUSTERED_GROUP_BY[$$114, $$115]  |PARTITIONED|
                                                         {
                                                           -- AGGREGATE  |LOCAL|
@@ -51,12 +51,12 @@
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- STREAM_SELECT  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- PRE_CLUSTERED_GROUP_BY[$$123, $$124]  |PARTITIONED|
+                                                                      -- SORT_GROUP_BY[$$123, $$124]  |PARTITIONED|
                                                                               {
                                                                                 -- AGGREGATE  |LOCAL|
                                                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                               }
-                                                                        -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$123(ASC), $$124(ASC)] HASH:[$$123, $$124]  |PARTITIONED|
+                                                                        -- HASH_PARTITION_EXCHANGE [$$123, $$124]  |PARTITIONED|
                                                                           -- PRE_CLUSTERED_GROUP_BY[$$78, $$79]  |PARTITIONED|
                                                                                   {
                                                                                     -- AGGREGATE  |LOCAL|
