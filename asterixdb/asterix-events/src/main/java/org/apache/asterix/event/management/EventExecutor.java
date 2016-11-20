@@ -44,7 +44,7 @@ public class EventExecutor {
 
     public void executeEvent(Node node, String script, List<String> args, boolean isDaemon, Cluster cluster,
             Pattern pattern, IOutputHandler outputHandler, AsterixEventServiceClient client) throws IOException {
-        List<String> pargs = new ArrayList<String>();
+        List<String> pargs = new ArrayList<>();
         pargs.add("/bin/bash");
         pargs.add(client.getEventsHomeDir() + File.separator + AsterixEventServiceUtil.EVENT_DIR + File.separator
                 + EXECUTE_SCRIPT);
@@ -88,7 +88,6 @@ public class EventExecutor {
         pb.environment().put(SCRIPT, script);
         pb.environment().put(ARGS, argBuffer.toString());
         pb.environment().put(DAEMON, Boolean.toString(isDaemon));
-
         Process p = pb.start();
         if (!isDaemon) {
             BufferedInputStream bis = new BufferedInputStream(p.getInputStream());

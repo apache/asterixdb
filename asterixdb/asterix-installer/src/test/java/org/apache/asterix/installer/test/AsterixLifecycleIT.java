@@ -72,7 +72,7 @@ public class AsterixLifecycleIT {
 
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
-        Collection<Object[]> testArgs = new ArrayList<Object[]>();
+        Collection<Object[]> testArgs = new ArrayList<>();
         return testArgs;
     }
 

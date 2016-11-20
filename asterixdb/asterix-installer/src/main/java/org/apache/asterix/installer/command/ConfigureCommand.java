@@ -72,7 +72,11 @@ public class ConfigureCommand extends AbstractCommand {
         cluster.setIodevices(configureIoDevices(cluster.getIodevices(), workingDir));
         cluster.setLogDir(configureDirectory(cluster.getLogDir(), workingDir));
         cluster.setTxnLogDir(configureDirectory(cluster.getTxnLogDir(), workingDir));
-        cluster.setJavaHome(System.getProperty("java.home"));
+        String javaHome = System.getProperty("java.home");
+        if (javaHome.endsWith(File.separator + "jre")) {
+            javaHome = javaHome.substring(0, javaHome.indexOf(File.separator + "jre"));
+        }
+        cluster.setJavaHome(javaHome);
 
         for (Node node : cluster.getNode()) {
             node.setIodevices(configureIoDevices(node.getIodevices(), workingDir));

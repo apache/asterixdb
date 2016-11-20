@@ -74,4 +74,4 @@ cat <<EOF >> $LOG_DIR/cc.log
 LOG START: $DATE
 --------------------------------------------------------------------------------
 EOF
-$ASTERIX_HOME/bin/asterixcc echo $ccArgs &>> $LOG_DIR/cc.log
+$ASTERIX_HOME/bin/asterixcc echo $ccArgs >> $LOG_DIR/cc.log 2>&1

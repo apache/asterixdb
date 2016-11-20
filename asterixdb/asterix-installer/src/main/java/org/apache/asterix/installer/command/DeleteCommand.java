@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.installer.command;
 
-import org.kohsuke.args4j.Option;
-
 import org.apache.asterix.event.model.AsterixInstance;
 import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.event.schema.pattern.Patterns;
@@ -28,6 +26,7 @@ import org.apache.asterix.event.service.AsterixEventServiceUtil;
 import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.event.util.PatternCreator;
 import org.apache.asterix.installer.driver.InstallerDriver;
+import org.kohsuke.args4j.Option;
 
 public class DeleteCommand extends AbstractCommand {
 
