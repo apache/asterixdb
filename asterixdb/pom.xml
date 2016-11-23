@@ -666,6 +666,16 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>algebricks-common</artifactId>
+        <version>${algebricks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>algebricks-core</artifactId>
+        <version>${algebricks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>algebricks-compiler</artifactId>
         <version>${algebricks.version}</version>
       </dependency>
@@ -721,12 +731,27 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-dataflow-common</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-dataflow-hadoop</artifactId>
         <version>${hyracks.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-storage-common</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-storage-am-btree</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-storage-am-bloomfilter</artifactId>
         <version>${hyracks.version}</version>
       </dependency>
       <dependency>
@@ -811,6 +836,16 @@
         <groupId>args4j</groupId>
         <artifactId>args4j</artifactId>
         <version>2.33</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
