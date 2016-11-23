@@ -45,7 +45,7 @@ import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.ComparisonException;
@@ -123,20 +123,20 @@ public class ParserTestExecutor extends TestExecutor {
             List<Statement> statements = parser.parse();
             List<FunctionDecl> functions = getDeclaredFunctions(statements);
             String dvName = getDefaultDataverse(statements);
-            AqlMetadataProvider aqlMetadataProvider = mock(AqlMetadataProvider.class);
+            MetadataProvider metadataProvider = mock(MetadataProvider.class);
 
             @SuppressWarnings("unchecked")
             Map<String, String> config = mock(Map.class);
-            when(aqlMetadataProvider.getDefaultDataverseName()).thenReturn(dvName);
-            when(aqlMetadataProvider.getConfig()).thenReturn(config);
+            when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
+            when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
-            when(aqlMetadataProvider.findDataset(anyString(), anyString())).thenReturn(mock(Dataset.class));
+            when(metadataProvider.findDataset(anyString(), anyString())).thenReturn(mock(Dataset.class));
 
             for (Statement st : statements) {
                 if (st.getKind() == Statement.Kind.QUERY) {
                     Query query = (Query) st;
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
-                    rewrite(rewriter, functions, query, aqlMetadataProvider,
+                    rewrite(rewriter, functions, query, metadataProvider,
                             new LangRewritingContext(query.getVarCounter()));
 
                     // Tests deep copy and deep equality.
@@ -183,9 +183,9 @@ public class ParserTestExecutor extends TestExecutor {
     // Note: we do not do inline function rewriting here because this needs real
     // metadata access.
     private void rewrite(IQueryRewriter rewriter, List<FunctionDecl> declaredFunctions, Query topExpr,
-            AqlMetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
+            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
         PA.invokeMethod(rewriter,
-                "setup(java.util.List, org.apache.asterix.lang.common.statement.Query, org.apache.asterix.metadata.declared.AqlMetadataProvider, "
+                "setup(java.util.List, org.apache.asterix.lang.common.statement.Query, org.apache.asterix.metadata.declared.MetadataProvider, "
                         + "org.apache.asterix.lang.common.rewrites.LangRewritingContext)",
                 declaredFunctions, topExpr, metadataProvider, context);
         PA.invokeMethod(rewriter, "inlineColumnAlias()");

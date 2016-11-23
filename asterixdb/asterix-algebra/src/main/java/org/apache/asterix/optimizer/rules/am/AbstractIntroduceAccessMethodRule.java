@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
+import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.AOrderedList;
@@ -70,7 +70,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
 
-    private AqlMetadataProvider metadataProvider;
+    private MetadataProvider metadataProvider;
 
     // Function Identifier sets that retain the original field variable through each function's arguments
     private final ImmutableSet<FunctionIdentifier> funcIDSetThatRetainFieldName = ImmutableSet.of(
@@ -104,7 +104,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     protected void setMetadataDeclarations(IOptimizationContext context) {
-        metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        metadataProvider = (MetadataProvider) context.getMetadataProvider();
     }
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
@@ -246,13 +246,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     }
 
                     if (matchedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1) {
-                        matchedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(
+                        matchedTypes.add((IAType) ExpressionTypeComputer.INSTANCE.getType(
                                 optFuncExpr.getConstantAtRuntimeExpr(0), context.getMetadataProvider(),
                                 typeEnvironment));
                     }
 
                     //infer type of logicalExpr based on index keyType
-                    matchedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(
+                    matchedTypes.add((IAType) ExpressionTypeComputer.INSTANCE.getType(
                             optFuncExpr.getLogicalExpr(exprAndVarIdx.second), null, new IVariableTypeEnvironment() {
 
                                 @Override
@@ -280,7 +280,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
                                 @Override
                                 public Object getType(ILogicalExpression expr) throws AlgebricksException {
-                                    return AqlExpressionTypeComputer.INSTANCE.getType(expr, null, this);
+                                    return ExpressionTypeComputer.INSTANCE.getType(expr, null, this);
                                 }
 
                                 @Override

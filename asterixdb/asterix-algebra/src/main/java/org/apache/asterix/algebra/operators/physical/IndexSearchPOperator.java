@@ -20,7 +20,7 @@ package org.apache.asterix.algebra.operators.physical;
 
 import java.util.List;
 
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -42,11 +42,11 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
  */
 public abstract class IndexSearchPOperator extends AbstractScanPOperator {
 
-    protected final IDataSourceIndex<String, AqlSourceId> idx;
+    protected final IDataSourceIndex<String, DataSourceId> idx;
     protected final boolean requiresBroadcast;
     protected final INodeDomain domain;
 
-    public IndexSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, INodeDomain domain,
+    public IndexSearchPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
             boolean requiresBroadcast) {
         this.idx = idx;
         this.requiresBroadcast = requiresBroadcast;

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -68,7 +68,7 @@ public class MetadataBuiltinFunctions {
                 if (datasetArg == null) {
                     return BuiltinType.ANY;
                 }
-                AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
+                MetadataProvider metadata = (MetadataProvider) mp;
                 Pair<String, String> datasetInfo = getDatasetInfo(metadata, datasetArg);
                 String dataverseName = datasetInfo.first;
                 String datasetName = datasetInfo.second;
@@ -111,7 +111,7 @@ public class MetadataBuiltinFunctions {
                 if (typeArg == null) {
                     return BuiltinType.ANY;
                 }
-                AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
+                MetadataProvider metadata = (MetadataProvider) mp;
                 Pair<String, String> argInfo = getDatasetInfo(metadata, typeArg);
                 String dataverseName = argInfo.first;
                 String typeName = argInfo.second;
@@ -147,7 +147,7 @@ public class MetadataBuiltinFunctions {
                 if (datasetArg == null) {
                     return BuiltinType.ANY;
                 }
-                AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
+                MetadataProvider metadata = (MetadataProvider) mp;
                 Pair<String, String> datasetInfo = getDatasetInfo(metadata, datasetArg);
                 String dataverseName = datasetInfo.first;
                 String datasetName = datasetInfo.second;
@@ -169,7 +169,7 @@ public class MetadataBuiltinFunctions {
         }, true);
     }
 
-    private static Pair<String, String> getDatasetInfo(AqlMetadataProvider metadata, String datasetArg) {
+    private static Pair<String, String> getDatasetInfo(MetadataProvider metadata, String datasetArg) {
         String[] nameComponents = datasetArg.split("\\.");
         String first;
         String second;

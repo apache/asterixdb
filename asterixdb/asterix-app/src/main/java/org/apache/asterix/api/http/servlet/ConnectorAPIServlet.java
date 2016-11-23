@@ -33,7 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -83,7 +83,7 @@ public class ConnectorAPIServlet extends HttpServlet {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
 
             // Retrieves file splits of the dataset.
-            AqlMetadataProvider metadataProvider = new AqlMetadataProvider(null);
+            MetadataProvider metadataProvider = new MetadataProvider(null);
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
             if (dataset == null) {

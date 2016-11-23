@@ -27,12 +27,12 @@ import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.formats.FormatUtils;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -95,7 +95,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
     @Override
     @SuppressWarnings("rawtypes")
     protected void setSecondaryRecDescAndComparators(IndexType indexType, List<List<String>> secondaryKeyFields,
-            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadata)
+            List<IAType> secondaryKeyTypes, int gramLength, MetadataProvider metadata)
             throws AlgebricksException, AsterixException {
         // Sanity checks.
         if (numPrimaryKeys > 1) {

@@ -24,12 +24,12 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
+    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
             LangRewritingContext context) throws AsterixException {
         // Sets up parameters.
         setup(declaredFunctions, topExpr, metadataProvider, context);

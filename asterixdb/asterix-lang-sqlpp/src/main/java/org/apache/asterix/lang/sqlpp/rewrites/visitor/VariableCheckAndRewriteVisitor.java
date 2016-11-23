@@ -37,7 +37,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -46,7 +46,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     protected final FunctionSignature datasetFunction =
             new FunctionSignature(MetadataConstants.METADATA_DATAVERSE_NAME, "dataset", 1);
     protected final boolean overwrite;
-    protected final AqlMetadataProvider metadataProvider;
+    protected final MetadataProvider metadataProvider;
 
     /**
      * @param context,
@@ -57,7 +57,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
      *            It should be false for rewriting the body expression of a user-defined function.
      */
     public VariableCheckAndRewriteVisitor(LangRewritingContext context, boolean overwrite,
-            AqlMetadataProvider metadataProvider) {
+            MetadataProvider metadataProvider) {
         super(context);
         this.overwrite = overwrite;
         this.metadataProvider = metadataProvider;

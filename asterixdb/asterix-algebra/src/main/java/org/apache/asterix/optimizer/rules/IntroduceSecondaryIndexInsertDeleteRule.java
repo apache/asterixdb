@@ -29,9 +29,9 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlIndex;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSourceIndex;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
@@ -141,8 +141,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
          * The current primaryIndexModificationOp is of the first type
          */
 
-        AqlDataSource datasetSource = (AqlDataSource) primaryIndexModificationOp.getDataSource();
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+        DataSource datasetSource = (DataSource) primaryIndexModificationOp.getDataSource();
+        MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         String dataverseName = datasetSource.getId().getDataverseName();
         String datasetName = datasetSource.getId().getDatasourceName();
         Dataset dataset = mp.findDataset(dataverseName, datasetName);
@@ -290,7 +290,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         .getOperation() == Kind.UPSERT) ? null
                                 : createFilterExpression(secondaryKeyVars, context.getOutputTypeEnvironment(currentTop),
                                         index.isEnforcingKeyFileds());
-                AqlIndex dataSourceIndex = new AqlIndex(index, dataverseName, datasetName, mp);
+                DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
 
                 // Introduce the TokenizeOperator only when doing bulk-load,
                 // and index type is keyword or n-gram.
@@ -448,7 +448,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     filterExpression = createFilterExpression(keyVarList,
                             context.getOutputTypeEnvironment(assignCoordinates), forceFilter);
                 }
-                AqlIndex dataSourceIndex = new AqlIndex(index, dataverseName, datasetName, mp);
+                DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
                 indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
                         primaryIndexModificationOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),

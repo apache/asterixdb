@@ -20,13 +20,13 @@ package org.apache.asterix.translator;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class AqlExpressionToPlanTranslatorFactory implements ILangExpressionToPlanTranslatorFactory {
 
     @Override
-    public ILangExpressionToPlanTranslator createExpressionToPlanTranslator(AqlMetadataProvider metadataProvider,
+    public ILangExpressionToPlanTranslator createExpressionToPlanTranslator(MetadataProvider metadataProvider,
             int currentVarCounter) throws AlgebricksException {
         return new AqlExpressionToPlanTranslator(metadataProvider, currentVarCounter);
     }

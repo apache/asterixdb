@@ -33,7 +33,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallb
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalDataScanOperatorDescriptor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
 import org.apache.asterix.om.types.ARecordType;
@@ -306,7 +306,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
     @Override
     @SuppressWarnings("rawtypes")
     protected void setSecondaryRecDescAndComparators(IndexType indexType, List<List<String>> secondaryKeyFields,
-            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadataProvider)
+            List<IAType> secondaryKeyTypes, int gramLength, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         secondaryFieldAccessEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeys + numFilterFields];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];

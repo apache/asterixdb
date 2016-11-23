@@ -34,14 +34,14 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         implements IAQLVisitor<Boolean, List<FunctionDecl>> {
 
     public AQLInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
-            List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider) {
+            List<FunctionDecl> declaredFunctions, MetadataProvider metadataProvider) {
         super(context, rewriterFactory, declaredFunctions, metadataProvider,
                 new AQLCloneAndSubstituteVariablesVisitor(context));
     }

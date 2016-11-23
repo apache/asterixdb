@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -111,7 +111,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         }
 
         // Set dataset and type metadata.
-        if (!subTree.setDatasetAndTypeMetadata((AqlMetadataProvider) context.getMetadataProvider())) {
+        if (!subTree.setDatasetAndTypeMetadata((MetadataProvider) context.getMetadataProvider())) {
             return false;
         }
 

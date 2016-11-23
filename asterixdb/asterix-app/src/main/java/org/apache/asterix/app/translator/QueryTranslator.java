@@ -134,7 +134,7 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -288,7 +288,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 validateOperation(activeDefaultDataverse, stmt);
                 rewriteStatement(stmt); // Rewrite the statement's AST.
-                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse);
+                MetadataProvider metadataProvider = new MetadataProvider(activeDefaultDataverse);
                 metadataProvider.setWriterFactory(writerFactory);
                 metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
                 metadataProvider.setOutputFile(outputFile);
@@ -428,7 +428,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return new Pair<>(writerFactory, outputFile);
     }
 
-    protected Dataverse handleUseDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+    protected Dataverse handleUseDataverseStatement(MetadataProvider metadataProvider, Statement stmt)
             throws Exception {
         DataverseDecl dvd = (DataverseDecl) stmt;
         String dvName = dvd.getDataverseName().getValue();
@@ -450,7 +450,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateDataverseStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+    protected void handleCreateDataverseStatement(MetadataProvider metadataProvider, Statement stmt)
             throws Exception {
 
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
@@ -511,7 +511,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public void handleCreateDatasetStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    public void handleCreateDatasetStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws AsterixException, Exception {
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
         DatasetDecl dd = (DatasetDecl) stmt;
@@ -783,7 +783,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     }
 
-    protected void handleCreateIndexStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleCreateIndexStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         ProgressState progress = ProgressState.NO_PROGRESS;
         CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
@@ -1143,7 +1143,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateTypeStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleCreateTypeStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         TypeDecl stmtCreateType = (TypeDecl) stmt;
         String dataverseName = getActiveDataverse(stmtCreateType.getDataverseName());
         String typeName = stmtCreateType.getIdent().getValue();
@@ -1180,7 +1180,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleDataverseDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleDataverseDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         DataverseDropStatement stmtDelete = (DataverseDropStatement) stmt;
         String dataverseName = stmtDelete.getDataverseName().getValue();
@@ -1330,7 +1330,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void disconnectFeedBeforeDelete(Identifier dvId, EntityId activeEntityId, FeedConnectionId conn,
-            AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc) {
+            MetadataProvider metadataProvider, IHyracksClientConnection hcc) {
         DisconnectFeedStatement disStmt = new DisconnectFeedStatement(dvId,
                 new Identifier(activeEntityId.getEntityName()), new Identifier(conn.getDatasetName()));
         try {
@@ -1352,7 +1352,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
     }
 
-    public void handleDatasetDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
         String dataverseName = getActiveDataverse(stmtDelete.getDataverseName());
@@ -1417,7 +1417,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doDropDataset(Dataset ds, String datasetName, AqlMetadataProvider metadataProvider,
+    protected void doDropDataset(Dataset ds, String datasetName, MetadataProvider metadataProvider,
             MutableObject<MetadataTransactionContext> mdTxnCtx, List<JobSpecification> jobsToExecute,
             String dataverseName, MutableBoolean bActiveTxn, MutableObject<ProgressState> progress,
             IHyracksClientConnection hcc) throws Exception {
@@ -1521,7 +1521,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleIndexDropStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleIndexDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
         IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
@@ -1715,7 +1715,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleTypeDropStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleTypeDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
 
         TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
         String dataverseName = getActiveDataverse(stmtTypeDrop.getDataverseName());
@@ -1743,7 +1743,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleNodegroupDropStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleNodegroupDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         NodeGroupDropStatement stmtDelete = (NodeGroupDropStatement) stmt;
         String nodegroupName = stmtDelete.getNodeGroupName().getValue();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1768,7 +1768,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateFunctionStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+    protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt)
             throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         String dataverse = getActiveDataverseName(cfs.getSignature().getNamespace());
@@ -1798,7 +1798,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleFunctionDropStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
         signature.setNamespace(getActiveDataverseName(signature.getNamespace()));
@@ -1825,7 +1825,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleLoadStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleLoadStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         LoadStatement loadStmt = (LoadStatement) stmt;
         String dataverseName = getActiveDataverse(loadStmt.getDataverseName());
@@ -1855,7 +1855,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public JobSpecification handleInsertUpsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
             IStatementExecutor.Stats stats, boolean compileOnly) throws Exception {
 
@@ -1925,7 +1925,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return compiled;
     }
 
-    public void handleDeleteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    public void handleDeleteStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
@@ -1964,7 +1964,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     @Override
-    public JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
+    public JobSpecification rewriteCompileQuery(MetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement stmt)
             throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException {
 
@@ -1980,7 +1980,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     }
 
-    protected void handleCreateFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleCreateFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         CreateFeedStatement cfs = (CreateFeedStatement) stmt;
         String dataverseName = getActiveDataverse(cfs.getDataverseName());
         String feedName = cfs.getFeedName().getValue();
@@ -2025,7 +2025,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateFeedPolicyStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+    protected void handleCreateFeedPolicyStatement(MetadataProvider metadataProvider, Statement stmt)
             throws AlgebricksException, HyracksDataException {
         String dataverse;
         String policy;
@@ -2087,7 +2087,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleDropFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleDropFeedStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         FeedDropStatement stmtFeedDrop = (FeedDropStatement) stmt;
         String dataverseName = getActiveDataverse(stmtFeedDrop.getDataverseName());
@@ -2136,7 +2136,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleDropFeedPolicyStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+    protected void handleDropFeedPolicyStatement(MetadataProvider metadataProvider, Statement stmt)
             throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2164,7 +2164,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleConnectFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleConnectFeedStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         ConnectFeedStatement cfs = (ConnectFeedStatement) stmt;
         String dataverseName = getActiveDataverse(cfs.getDataverseName());
@@ -2352,7 +2352,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return new FeedJointKey(sourceFeed.getFeedId(), appliedFunctions);
     }
 
-    protected void handleDisconnectFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleDisconnectFeedStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         DisconnectFeedStatement cfs = (DisconnectFeedStatement) stmt;
         String dataverseName = getActiveDataverse(cfs.getDataverseName());
@@ -2400,7 +2400,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleSubscribeFeedStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleSubscribeFeedStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -2464,7 +2464,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCompactStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleCompactStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         CompactStatement compactStatement = (CompactStatement) stmt;
         String dataverseName = getActiveDataverse(compactStatement.getDataverseName());
@@ -2537,7 +2537,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void prepareCompactJobsForExternalDataset(List<Index> indexes, String dataverseName, String datasetName,
             Dataset ds, List<JobSpecification> jobsToExecute, ARecordType aRecordType, ARecordType metaRecordType,
-            AqlMetadataProvider metadataProvider, ARecordType enforcedType) throws AlgebricksException {
+            MetadataProvider metadataProvider, ARecordType enforcedType) throws AlgebricksException {
         for (int j = 0; j < indexes.size(); j++) {
             if (!ExternalIndexingOperations.isFileIndex(indexes.get(j))) {
                 CompiledIndexCompactStatement cics = new CompiledIndexCompactStatement(dataverseName, datasetName,
@@ -2556,7 +2556,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         jobsToExecute.add(ExternalIndexingOperations.compactFilesIndexJobSpec(ds, metadataProvider));
     }
 
-    protected JobSpecification handleQuery(AqlMetadataProvider metadataProvider, Query query,
+    protected JobSpecification handleQuery(MetadataProvider metadataProvider, Query query,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats)
             throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -2590,7 +2590,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return compiled;
     }
 
-    private void handleQueryResult(AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc,
+    private void handleQueryResult(MetadataProvider metadataProvider, IHyracksClientConnection hcc,
             IHyracksDataset hdc, JobSpecification compiled, ResultDelivery resultDelivery, Stats stats)
             throws Exception {
         if (GlobalConfig.ASTERIX_LOGGER.isLoggable(Level.FINE)) {
@@ -2630,7 +2630,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateNodeGroupStatement(AqlMetadataProvider metadataProvider, Statement stmt)
+    protected void handleCreateNodeGroupStatement(MetadataProvider metadataProvider, Statement stmt)
             throws Exception {
 
         NodegroupDecl stmtCreateNodegroup = (NodegroupDecl) stmt;
@@ -2663,7 +2663,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleExternalDatasetRefreshStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleExternalDatasetRefreshStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         RefreshExternalDatasetStatement stmtRefresh = (RefreshExternalDatasetStatement) stmt;
         String dataverseName = getActiveDataverse(stmtRefresh.getDataverseName());
@@ -2888,7 +2888,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleRunStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handleRunStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws AsterixException, Exception {
         RunStatement runStmt = (RunStatement) stmt;
         switch (runStmt.getSystem()) {
@@ -2903,7 +2903,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     }
 
-    protected void handlePregelixStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+    protected void handlePregelixStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         RunStatement pregelixStmt = (RunStatement) stmt;
         boolean bActiveTxn = true;
@@ -2970,7 +2970,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     // Prepares to run a program on external runtime.
-    protected void prepareRunExternalRuntime(AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc,
+    protected void prepareRunExternalRuntime(MetadataProvider metadataProvider, IHyracksClientConnection hcc,
             RunStatement pregelixStmt, String dataverseNameFrom, String dataverseNameTo, String datasetNameFrom,
             String datasetNameTo, MetadataTransactionContext mdTxnCtx) throws Exception {
         // Validates the source/sink dataverses and datasets.

@@ -31,15 +31,15 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -68,7 +68,7 @@ public class DatasetOperations {
     private static Logger LOGGER = Logger.getLogger(DatasetOperations.class.getName());
 
     public static JobSpecification createDropDatasetJobSpec(CompiledDatasetDropStatement datasetDropStmt,
-            AqlMetadataProvider metadataProvider)
+            MetadataProvider metadataProvider)
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException, AsterixException {
 
         String dataverseName = null;
@@ -136,7 +136,7 @@ public class DatasetOperations {
     }
 
     public static JobSpecification createDatasetJobSpec(Dataverse dataverse, String datasetName,
-            AqlMetadataProvider metadata) throws AsterixException, AlgebricksException {
+            MetadataProvider metadata) throws AsterixException, AlgebricksException {
         String dataverseName = dataverse.getDataverseName();
         IDataFormat format;
         try {
@@ -209,7 +209,7 @@ public class DatasetOperations {
     }
 
     public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,
-            AqlMetadataProvider metadata) throws AsterixException, AlgebricksException {
+            MetadataProvider metadata) throws AsterixException, AlgebricksException {
         String dataverseName = dataverse.getDataverseName();
         IDataFormat format;
         try {

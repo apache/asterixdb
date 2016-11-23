@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 
 /**
@@ -57,7 +57,7 @@ public class ExternalDatasetsRegistry {
         return datasetAccessMgr.getVersion();
     }
 
-    public int getAndLockDatasetVersion(Dataset dataset, AqlMetadataProvider metadataProvider) {
+    public int getAndLockDatasetVersion(Dataset dataset, MetadataProvider metadataProvider) {
 
         Map<String, Integer> locks = null;
         String lockKey = dataset.getDataverseName() + "." + dataset.getDatasetName();
@@ -122,7 +122,7 @@ public class ExternalDatasetsRegistry {
         globalRegister.get(key).buildIndexEnd(firstIndex);
     }
 
-    public void releaseAcquiredLocks(AqlMetadataProvider metadataProvider) {
+    public void releaseAcquiredLocks(MetadataProvider metadataProvider) {
         Map<String, Integer> locks = metadataProvider.getLocks();
         if (locks == null) {
             return;

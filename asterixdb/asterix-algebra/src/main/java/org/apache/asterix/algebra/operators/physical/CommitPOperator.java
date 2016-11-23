@@ -22,7 +22,7 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.List;
 
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -87,7 +87,7 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
                     throws AlgebricksException {
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
                 context);
         int[] primaryKeyFields = JobGenHelper.variablesToFieldIndexes(primaryKeyLogicalVars, inputSchemas[0]);

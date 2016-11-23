@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSource.Type;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AString;
@@ -109,7 +109,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        if (((AqlDataSource) insertOp.getDataSource()).getDatasourceType() != AqlDataSourceType.INTERNAL_DATASET) {
+        if (((DataSource) insertOp.getDataSource()).getDatasourceType() != Type.INTERNAL_DATASET) {
             return false;
         }
 

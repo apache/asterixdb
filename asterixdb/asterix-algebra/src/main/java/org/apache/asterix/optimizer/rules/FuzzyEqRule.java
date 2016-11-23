@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -66,7 +66,7 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AqlMetadataProvider metadataProvider = ((AqlMetadataProvider) context.getMetadataProvider());
+        MetadataProvider metadataProvider = ((MetadataProvider) context.getMetadataProvider());
 
         IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
         if (expandFuzzyEq(expRef, context, env, metadataProvider)) {
@@ -77,7 +77,7 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
     }
 
     private boolean expandFuzzyEq(Mutable<ILogicalExpression> expRef, IOptimizationContext context,
-            IVariableTypeEnvironment env, AqlMetadataProvider metadataProvider) throws AlgebricksException {
+            IVariableTypeEnvironment env, MetadataProvider metadataProvider) throws AlgebricksException {
         ILogicalExpression exp = expRef.getValue();
 
         if (exp.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {

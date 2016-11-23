@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
-import org.apache.asterix.metadata.declared.AqlDataSource;
+import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.rules.typecast.StaticTypeCastUtil;
@@ -111,7 +111,7 @@ public class IntroduceStaticTypeCastForInsertRule implements IAlgebraicRewriteRu
          * get required record type
          */
         InsertDeleteUpsertOperator insertDeleteOperator = (InsertDeleteUpsertOperator) op2;
-        AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
+        DataSource dataSource = (DataSource) insertDeleteOperator.getDataSource();
         IAType requiredRecordType = dataSource.getItemType();
 
         List<LogicalVariable> usedVariables = new ArrayList<LogicalVariable>();

@@ -21,7 +21,7 @@ package org.apache.asterix.optimizer.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -128,7 +128,7 @@ public class AnalysisUtil {
     }
 
     public static Pair<String, String> getDatasetInfo(AbstractDataSourceOperator op) throws AlgebricksException {
-        AqlSourceId srcId = (AqlSourceId) op.getDataSource().getId();
+        DataSourceId srcId = (DataSourceId) op.getDataSource().getId();
         return new Pair<String, String>(srcId.getDataverseName(), srcId.getDatasourceName());
     }
 

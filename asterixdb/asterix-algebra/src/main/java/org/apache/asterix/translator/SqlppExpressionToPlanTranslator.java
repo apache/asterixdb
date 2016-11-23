@@ -62,7 +62,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
@@ -113,7 +113,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     private static final String ERR_MSG = "Translator should never enter this method!";
     private Deque<Mutable<ILogicalOperator>> uncorrelatedLeftBranchStack = new ArrayDeque<>();
 
-    public SqlppExpressionToPlanTranslator(AqlMetadataProvider metadataProvider, int currentVarCounter)
+    public SqlppExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter)
             throws AlgebricksException {
         super(metadataProvider, currentVarCounter);
     }

@@ -41,9 +41,9 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
+public abstract class DataSource implements IDataSource<DataSourceId> {
 
-    protected final AqlSourceId id;
+    protected final DataSourceId id;
     protected final IAType itemType;
     protected final IAType metaItemType;
     protected final byte datasourceType;
@@ -51,7 +51,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
     protected INodeDomain domain;
     protected Map<String, Serializable> properties = new HashMap<>();
 
-    public static class AqlDataSourceType {
+    public static class Type {
         // positive range is reserved for core datasource types
         public static final byte INTERNAL_DATASET = 0x00;
         public static final byte EXTERNAL_DATASET = 0x01;
@@ -59,11 +59,11 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         public static final byte LOADABLE = 0x03;
 
         // Hide implicit public constructor
-        private AqlDataSourceType() {
+        private Type() {
         }
     }
 
-    public AqlDataSource(AqlSourceId id, IAType itemType, IAType metaItemType, byte datasourceType,
+    public DataSource(DataSourceId id, IAType itemType, IAType metaItemType, byte datasourceType,
             INodeDomain domain) throws AlgebricksException {
         this.id = id;
         this.itemType = itemType;
@@ -88,7 +88,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
     }
 
     @Override
-    public AqlSourceId getId() {
+    public DataSourceId getId() {
         return id;
     }
 
@@ -99,7 +99,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
     @Override
     public IDataSourcePropertiesProvider getPropertiesProvider() {
-        return new AqlDataSourcePartitioningProvider(this, domain);
+        return new DataSourcePartitioningProvider(this, domain);
     }
 
     @Override
@@ -156,7 +156,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
     }
 
     public abstract Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDatasourceScanRuntime(
-            AqlMetadataProvider aqlMetadataProvider, IDataSource<AqlSourceId> dataSource,
+            MetadataProvider metadataProvider, IDataSource<DataSourceId> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)

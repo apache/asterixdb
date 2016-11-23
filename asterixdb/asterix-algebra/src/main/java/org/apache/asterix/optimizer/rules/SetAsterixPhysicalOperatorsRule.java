@@ -25,8 +25,8 @@ import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.InvertedIndexPOperator;
 import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
@@ -227,12 +227,12 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                         }
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                         jobGenParams.readFromFuncArgs(f.getArguments());
-                        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-                        AqlSourceId dataSourceId = new AqlSourceId(jobGenParams.getDataverseName(),
+                        MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
+                        DataSourceId dataSourceId = new DataSourceId(jobGenParams.getDataverseName(),
                                 jobGenParams.getDatasetName());
                         Dataset dataset = mp.findDataset(jobGenParams.getDataverseName(),
                                 jobGenParams.getDatasetName());
-                        IDataSourceIndex<String, AqlSourceId> dsi = mp.findDataSourceIndex(jobGenParams.getIndexName(),
+                        IDataSourceIndex<String, DataSourceId> dsi = mp.findDataSourceIndex(jobGenParams.getIndexName(),
                                 dataSourceId);
                         INodeDomain storageDomain = mp.findNodeDomain(dataset.getNodeGroupName());
                         if (dsi == null) {

@@ -26,11 +26,10 @@ import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -43,8 +42,9 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexJobGenParams;
+import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -90,7 +90,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 public class InvertedIndexPOperator extends IndexSearchPOperator {
     private final boolean isPartitioned;
 
-    public InvertedIndexPOperator(IDataSourceIndex<String, AqlSourceId> idx, INodeDomain domain,
+    public InvertedIndexPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
             boolean requiresBroadcast, boolean isPartitioned) {
         super(idx, domain, requiresBroadcast);
         this.isPartitioned = isPartitioned;
@@ -121,7 +121,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams();
         jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
 
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset;
         try {
             dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(),
@@ -153,7 +153,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInvertedIndexRuntime(
-            AqlMetadataProvider metadataProvider, JobGenContext context, JobSpecification jobSpec,
+            MetadataProvider metadataProvider, JobGenContext context, JobSpecification jobSpec,
             AbstractUnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainMissing,
             String datasetName, Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold,

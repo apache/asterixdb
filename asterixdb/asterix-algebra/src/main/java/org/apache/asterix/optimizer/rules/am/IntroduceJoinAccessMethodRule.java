@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -120,7 +120,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
 
         // Set dataset and type metadata.
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         boolean checkLeftSubTreeMetadata = false;
         boolean checkRightSubTreeMetadata = false;
         if (matchInLeftSubTree) {

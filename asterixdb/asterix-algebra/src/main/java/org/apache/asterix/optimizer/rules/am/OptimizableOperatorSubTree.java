@@ -21,9 +21,9 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSource.Type;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -201,7 +201,7 @@ public class OptimizableOperatorSubTree {
      * Find the dataset corresponding to the datasource scan in the metadata.
      * Also sets recordType to be the type of that dataset.
      */
-    public boolean setDatasetAndTypeMetadata(AqlMetadataProvider metadataProvider) throws AlgebricksException {
+    public boolean setDatasetAndTypeMetadata(MetadataProvider metadataProvider) throws AlgebricksException {
         String dataverseName = null;
         String datasetName = null;
 
@@ -227,10 +227,10 @@ public class OptimizableOperatorSubTree {
                 case DATASOURCE_SCAN:
                     DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) sourceOpRefs.get(i).getValue();
                     IDataSource<?> datasource = dataSourceScan.getDataSource();
-                    if (datasource instanceof AqlDataSource) {
-                        byte dsType = ((AqlDataSource) datasource).getDatasourceType();
-                        if (dsType != AqlDataSourceType.INTERNAL_DATASET
-                                && dsType != AqlDataSourceType.EXTERNAL_DATASET) {
+                    if (datasource instanceof DataSource) {
+                        byte dsType = ((DataSource) datasource).getDatasourceType();
+                        if (dsType != DataSource.Type.INTERNAL_DATASET
+                                && dsType != DataSource.Type.EXTERNAL_DATASET) {
                             return false;
                         }
                     }

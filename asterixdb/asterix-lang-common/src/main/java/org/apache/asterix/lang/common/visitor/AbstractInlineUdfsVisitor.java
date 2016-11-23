@@ -54,7 +54,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionVisitor<Boolean, List<FunctionDecl>> {
@@ -63,10 +63,10 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     protected final CloneAndSubstituteVariablesVisitor cloneVisitor;
     private final IRewriterFactory rewriterFactory;
     private final List<FunctionDecl> declaredFunctions;
-    private final AqlMetadataProvider metadataProvider;
+    private final MetadataProvider metadataProvider;
 
     public AbstractInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
-            List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
+            List<FunctionDecl> declaredFunctions, MetadataProvider metadataProvider,
             CloneAndSubstituteVariablesVisitor cloneVisitor) {
         this.context = context;
         this.cloneVisitor = cloneVisitor;

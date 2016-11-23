@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSource.Type;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
@@ -104,9 +104,9 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
-                AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
-                if ((ds.getDatasourceType() == AqlDataSourceType.INTERNAL_DATASET
-                        || ds.getDatasourceType() == AqlDataSourceType.EXTERNAL_DATASET)
+                DataSource ds = (DataSource) dataSourceScanOp.getDataSource();
+                if ((ds.getDatasourceType() == Type.INTERNAL_DATASET
+                        || ds.getDatasourceType() == Type.EXTERNAL_DATASET)
                         && ((DatasetDataSource) ds).getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
                     return true;
                 }

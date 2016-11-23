@@ -29,7 +29,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactor
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataException;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -56,7 +56,7 @@ public class IndexOperations {
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(CompiledCreateIndexStatement createIndexStmt,
             ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
-            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+            MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
                         createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
@@ -68,7 +68,7 @@ public class IndexOperations {
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
-            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+            MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
                         createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
@@ -80,7 +80,7 @@ public class IndexOperations {
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
             ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
-            AqlMetadataProvider metadataProvider, List<ExternalFile> files)
+            MetadataProvider metadataProvider, List<ExternalFile> files)
             throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
@@ -93,7 +93,7 @@ public class IndexOperations {
     }
 
     public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement indexDropStmt,
-            AqlMetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException, MetadataException {
+            MetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException, MetadataException {
         String dataverseName = indexDropStmt.getDataverseName() == null ? metadataProvider.getDefaultDataverseName()
                 : indexDropStmt.getDataverseName();
         String datasetName = indexDropStmt.getDatasetName();
@@ -125,7 +125,7 @@ public class IndexOperations {
 
     public static JobSpecification buildSecondaryIndexCompactJobSpec(CompiledIndexCompactStatement indexCompactStmt,
             ARecordType recType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType,
-            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+            MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(indexCompactStmt.getIndexType(), indexCompactStmt.getDataverseName(),
                         indexCompactStmt.getDatasetName(), indexCompactStmt.getIndexName(),

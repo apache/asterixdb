@@ -26,9 +26,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
 public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
 
     private ILogicalPlan plan;
-    private AqlMetadataProvider metadataProvider;
+    private MetadataProvider metadataProvider;
 
-    public AqlLogicalPlanAndMetadataImpl(ILogicalPlan plan, AqlMetadataProvider metadataProvider) {
+    public AqlLogicalPlanAndMetadataImpl(ILogicalPlan plan, MetadataProvider metadataProvider) {
         this.plan = plan;
         this.metadataProvider = metadataProvider;
     }
@@ -39,7 +39,7 @@ public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
     }
 
     @Override
-    public AqlMetadataProvider getMetadataProvider() {
+    public MetadataProvider getMetadataProvider() {
         return metadataProvider;
     }
 

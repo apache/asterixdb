@@ -25,7 +25,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -151,17 +150,16 @@ public class MetadataManagerUtil {
         }
     }
 
-    public static AqlDataSource findDataSource(MetadataTransactionContext mdTxnCtx, AqlSourceId id)
+    public static DataSource findDataSource(MetadataTransactionContext mdTxnCtx, DataSourceId id)
             throws AlgebricksException {
-        AqlSourceId aqlId = id;
         try {
-            return lookupSourceInMetadata(mdTxnCtx, aqlId);
+            return lookupSourceInMetadata(mdTxnCtx, id);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
     }
 
-    public static AqlDataSource lookupSourceInMetadata(MetadataTransactionContext mdTxnCtx, AqlSourceId aqlId)
+    public static DataSource lookupSourceInMetadata(MetadataTransactionContext mdTxnCtx, DataSourceId aqlId)
             throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, aqlId.getDataverseName(), aqlId.getDatasourceName());
         if (dataset == null) {
@@ -170,8 +168,8 @@ public class MetadataManagerUtil {
         IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         INodeDomain domain = findNodeDomain(mdTxnCtx, dataset.getNodeGroupName());
-        byte datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL) ? AqlDataSourceType.EXTERNAL_DATASET
-                : AqlDataSourceType.INTERNAL_DATASET;
+        byte datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL) ? DataSource.Type.EXTERNAL_DATASET
+                : DataSource.Type.INTERNAL_DATASET;
         return new DatasetDataSource(aqlId, dataset, itemType, metaItemType, datasourceType,
                 dataset.getDatasetDetails(), domain);
     }

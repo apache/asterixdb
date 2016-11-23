@@ -29,7 +29,7 @@ import org.apache.asterix.aqlplus.parser.ParseException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.IAType;
@@ -205,7 +205,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         //
         // -- - FIRE - --
         //
-        AqlMetadataProvider metadataProvider = ((AqlMetadataProvider) context.getMetadataProvider());
+        MetadataProvider metadataProvider = ((MetadataProvider) context.getMetadataProvider());
         FunctionIdentifier funcId = FuzzyUtils.getTokenizer(leftType.getTypeTag());
         String tokenizer;
         if (funcId == null) {

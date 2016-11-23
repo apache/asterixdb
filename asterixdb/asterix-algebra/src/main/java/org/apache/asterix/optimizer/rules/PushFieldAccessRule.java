@@ -25,10 +25,9 @@ import java.util.List;
 
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -122,8 +121,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (recVar != var) {
             return false;
         }
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        AqlSourceId asid = ((IDataSource<AqlSourceId>) scan.getDataSource()).getId();
+        MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
+        DataSourceId asid = ((IDataSource<DataSourceId>) scan.getDataSource()).getId();
 
         Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
@@ -297,13 +296,13 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     if (varRef.getVariableReference() == scanRecordVar) {
                         ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
                         if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                            IDataSource<AqlSourceId> dataSource = (IDataSource<AqlSourceId>) scan.getDataSource();
-                            byte dsType = ((AqlDataSource) dataSource).getDatasourceType();
-                            if (dsType == AqlDataSourceType.FEED || dsType == AqlDataSourceType.LOADABLE) {
+                            IDataSource<DataSourceId> dataSource = (IDataSource<DataSourceId>) scan.getDataSource();
+                            byte dsType = ((DataSource) dataSource).getDatasourceType();
+                            if (dsType == DataSource.Type.FEED || dsType == DataSource.Type.LOADABLE) {
                                 return false;
                             }
-                            AqlSourceId asid = dataSource.getId();
-                            AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+                            DataSourceId asid = dataSource.getId();
+                            MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
                             Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
                             if (dataset == null) {
                                 throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");

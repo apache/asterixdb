@@ -24,10 +24,9 @@ import java.util.List;
 import java.util.Queue;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -93,7 +92,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         ARecordType recType = null;
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterFieldName = DatasetUtils.getFilterField(dataset);
-            IAType itemType = ((AqlMetadataProvider) context.getMetadataProvider())
+            IAType itemType = ((MetadataProvider) context.getMetadataProvider())
                     .findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             if (itemType.getTypeTag() == ATypeTag.RECORD) {
                 recType = (ARecordType) itemType;
@@ -102,7 +101,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         if (filterFieldName == null || recType == null) {
             return false;
         }
-        List<Index> datasetIndexes = ((AqlMetadataProvider) context.getMetadataProvider())
+        List<Index> datasetIndexes = ((MetadataProvider) context.getMetadataProvider())
                 .getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
 
         List<IOptimizableFuncExpr> optFuncExprs = new ArrayList<>();
@@ -159,7 +158,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             }
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
-                AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
+                DataSource ds = (DataSource) dataSourceScanOp.getDataSource();
                 if (dataset.getDatasetName().compareTo(((DatasetDataSource) ds).getDataset().getDatasetName()) == 0) {
                     List<LogicalVariable> minFilterVars = new ArrayList<>();
                     List<LogicalVariable> maxFilterVars = new ArrayList<>();
@@ -223,8 +222,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
-                AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
-                if (ds.getDatasourceType() != AqlDataSourceType.INTERNAL_DATASET) {
+                DataSource ds = (DataSource) dataSourceScanOp.getDataSource();
+                if (ds.getDatasourceType() != DataSource.Type.INTERNAL_DATASET) {
                     return null;
                 }
                 return ((DatasetDataSource) ds).getDataset();
@@ -247,7 +246,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     } else {
                         throw new AlgebricksException("Unexpected function for Unnest Map: " + fid);
                     }
-                    return ((AqlMetadataProvider) context.getMetadataProvider()).findDataset(dataverseName,
+                    return ((MetadataProvider) context.getMetadataProvider()).findDataset(dataverseName,
                             datasetName);
                 }
             }
@@ -373,7 +372,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         }
                     }
 
-                    IAType metaItemType = ((AqlMetadataProvider) context.getMetadataProvider())
+                    IAType metaItemType = ((MetadataProvider) context.getMetadataProvider())
                             .findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
                     ARecordType metaRecType = (ARecordType) metaItemType;
                     int numSecondaryKeys = KeyFieldTypeUtils.getNumSecondaryKeys(index, recType, metaRecType);

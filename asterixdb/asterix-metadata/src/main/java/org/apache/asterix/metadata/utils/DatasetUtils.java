@@ -34,7 +34,7 @@ import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
@@ -274,7 +274,7 @@ public class DatasetUtils {
         propertyRecordBuilder.write(out, true);
     }
 
-    public static ARecordType getMetaType(AqlMetadataProvider metadataProvider, Dataset dataset)
+    public static ARecordType getMetaType(MetadataProvider metadataProvider, Dataset dataset)
             throws AlgebricksException {
         if (dataset.hasMetaPart()) {
             return (ARecordType) metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),

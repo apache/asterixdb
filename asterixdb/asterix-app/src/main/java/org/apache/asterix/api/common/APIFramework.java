@@ -34,7 +34,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
-import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
+import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
 import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
@@ -48,7 +48,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
@@ -134,7 +134,7 @@ public class APIFramework {
         }
     }
 
-    public Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
+    public Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, MetadataProvider metadataProvider,
             Query q, SessionConfig conf) throws AsterixException {
         if (q == null) {
             return null;
@@ -151,7 +151,7 @@ public class APIFramework {
     }
 
     public JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
-            AqlMetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
+            MetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
             SessionConfig conf, ICompiledDmlStatement statement)
             throws AlgebricksException, JSONException, RemoteException, ACIDException {
 
@@ -216,7 +216,7 @@ public class APIFramework {
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
         builder.setIMergeAggregationExpressionFactory(new AqlMergeAggregationExpressionFactory());
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
-        builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
+        builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
         builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
         builder.setClusterLocations(queryMetadataProvider.getClusterLocations());

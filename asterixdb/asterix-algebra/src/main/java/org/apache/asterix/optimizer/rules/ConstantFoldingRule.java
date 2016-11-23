@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
+import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
@@ -117,7 +117,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
         @Override
         public Object getType(ILogicalExpression expr) throws AlgebricksException {
-            return AqlExpressionTypeComputer.INSTANCE.getType(expr, null, this);
+            return ExpressionTypeComputer.INSTANCE.getType(expr, null, this);
         }
     };
 
@@ -127,7 +127,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             AqlTypeTraitProvider.INSTANCE, AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
             AqlADMPrinterFactoryProvider.INSTANCE, AqlMissingWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE),
-            AqlExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
+            ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
 
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
 

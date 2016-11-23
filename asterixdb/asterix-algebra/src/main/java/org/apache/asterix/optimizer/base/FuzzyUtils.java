@@ -21,7 +21,7 @@ package org.apache.asterix.optimizer.base;
 import java.util.ArrayList;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
@@ -59,7 +59,7 @@ public class FuzzyUtils {
         }
     }
 
-    public static IAObject getSimThreshold(AqlMetadataProvider metadata, String simFuncName) {
+    public static IAObject getSimThreshold(MetadataProvider metadata, String simFuncName) {
         String simThresholValue = metadata.getPropertyValue(SIM_THRESHOLD_PROP_NAME);
         IAObject ret = null;
         if (simFuncName.equals(JACCARD_FUNCTION_NAME)) {
@@ -101,7 +101,7 @@ public class FuzzyUtils {
         return null;
     }
 
-    public static float getSimThreshold(AqlMetadataProvider metadata) {
+    public static float getSimThreshold(MetadataProvider metadata) {
         float simThreshold = JACCARD_DEFAULT_SIM_THRESHOLD;
         String simThresholValue = metadata.getPropertyValue(SIM_THRESHOLD_PROP_NAME);
         if (simThresholValue != null) {
@@ -111,7 +111,7 @@ public class FuzzyUtils {
     }
 
     // TODO: The default function depend on the input types.
-    public static String getSimFunction(AqlMetadataProvider metadata) {
+    public static String getSimFunction(MetadataProvider metadata) {
         String simFunction = metadata.getPropertyValue(SIM_FUNCTION_PROP_NAME);
         if (simFunction == null) {
             simFunction = DEFAULT_SIM_FUNCTION;

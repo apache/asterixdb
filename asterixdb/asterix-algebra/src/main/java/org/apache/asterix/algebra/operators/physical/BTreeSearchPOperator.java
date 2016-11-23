@@ -21,9 +21,9 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.metadata.declared.AqlIndex;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.DataSourceIndex;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -72,7 +72,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
     private final boolean isEqCondition;
     private Object implConfig;
 
-    public BTreeSearchPOperator(IDataSourceIndex<String, AqlSourceId> idx, INodeDomain domain,
+    public BTreeSearchPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
             boolean requiresBroadcast, boolean isPrimaryIndex, boolean isEqCondition,
             List<LogicalVariable> lowKeyVarList, List<LogicalVariable> highKeyVarList) {
         super(idx, domain, requiresBroadcast);
@@ -117,7 +117,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         int[] minFilterFieldIndexes = getKeyIndexes(unnestMap.getMinFilterVars(), inputSchemas);
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         List<LogicalVariable> outputVars = unnestMap.getVariables();
@@ -150,7 +150,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
             if (isPrimaryIndex && isEqCondition) {
 
                 // If this is a composite primary index, then all of the keys should be provided.
-                Index searchIndex = ((AqlIndex) idx).getIndex();
+                Index searchIndex = ((DataSourceIndex) idx).getIndex();
                 int numberOfKeyFields = searchIndex.getKeyFieldNames().size();
 
                 if (numberOfKeyFields < 2

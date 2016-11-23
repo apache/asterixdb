@@ -36,11 +36,11 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
+public class ExpressionTypeComputer implements IExpressionTypeComputer {
 
-    public static final AqlExpressionTypeComputer INSTANCE = new AqlExpressionTypeComputer();
+    public static final ExpressionTypeComputer INSTANCE = new ExpressionTypeComputer();
 
-    private AqlExpressionTypeComputer() {
+    private ExpressionTypeComputer() {
     }
 
     @Override

@@ -24,7 +24,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 public interface IQueryRewriter {
 
@@ -40,6 +40,6 @@ public interface IQueryRewriter {
      * @param context,
      *            manages ids of variables and guarantees uniqueness of variables.
      */
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
+    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
             LangRewritingContext context) throws AsterixException;
 }

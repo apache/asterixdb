@@ -34,7 +34,7 @@ import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -64,7 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator implements ILangExpressionToPlanTranslator,
         IAQLVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
 
-    public AqlExpressionToPlanTranslator(AqlMetadataProvider metadataProvider, int currentVarCounter)
+    public AqlExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter)
             throws AlgebricksException {
         super(metadataProvider, currentVarCounter);
     }

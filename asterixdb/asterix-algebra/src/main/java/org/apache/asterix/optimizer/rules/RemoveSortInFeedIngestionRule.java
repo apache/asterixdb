@@ -18,8 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
+import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -50,8 +49,8 @@ public class RemoveSortInFeedIngestionRule implements IAlgebraicRewriteRule {
         boolean isSourceAFeed = false;
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                AqlDataSource dataSource = (AqlDataSource) ((DataSourceScanOperator) descendantOp).getDataSource();
-                if (dataSource.getDatasourceType() == AqlDataSourceType.FEED) {
+                DataSource dataSource = (DataSource) ((DataSourceScanOperator) descendantOp).getDataSource();
+                if (dataSource.getDatasourceType() == DataSource.Type.FEED) {
                     isSourceAFeed = true;
                 }
                 break;

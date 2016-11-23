@@ -57,7 +57,6 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
-import org.apache.asterix.lang.common.expression.ListConstructor.Type;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
@@ -75,11 +74,11 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.LoadableDataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.ResultSetDataSink;
 import org.apache.asterix.metadata.declared.ResultSetSinkId;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -174,12 +173,12 @@ class LangExpressionToPlanTranslator
         extends AbstractQueryExpressionVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>>
         implements ILangExpressionToPlanTranslator {
 
-    protected final AqlMetadataProvider metadataProvider;
+    protected final MetadataProvider metadataProvider;
     protected final TranslationContext context;
     private static final AtomicLong outputFileID = new AtomicLong(0);
     private static final String OUTPUT_FILE_PREFIX = "OUTPUT_";
 
-    public LangExpressionToPlanTranslator(AqlMetadataProvider metadataProvider, int currentVarCounter)
+    public LangExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter)
             throws AlgebricksException {
         this.context = new TranslationContext(new Counter(currentVarCounter));
         this.metadataProvider = metadataProvider;
@@ -715,7 +714,7 @@ class LangExpressionToPlanTranslator
         return leafOperator;
     }
 
-    private DatasetDataSource validateDatasetInfo(AqlMetadataProvider metadataProvider, String dataverseName,
+    private DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, String dataverseName,
             String datasetName) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
@@ -724,12 +723,12 @@ class LangExpressionToPlanTranslator
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("Cannot write output to an external dataset.");
         }
-        AqlSourceId sourceId = new AqlSourceId(dataverseName, datasetName);
+        DataSourceId sourceId = new DataSourceId(dataverseName, datasetName);
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
                 dataset.getMetaItemTypeName());
         INodeDomain domain = metadataProvider.findNodeDomain(dataset.getNodeGroupName());
-        return new DatasetDataSource(sourceId, dataset, itemType, metaItemType, AqlDataSourceType.INTERNAL_DATASET,
+        return new DatasetDataSource(sourceId, dataset, itemType, metaItemType, DataSource.Type.INTERNAL_DATASET,
                 dataset.getDatasetDetails(), domain);
     }
 
@@ -1233,7 +1232,7 @@ class LangExpressionToPlanTranslator
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(ListConstructor lc, Mutable<ILogicalOperator> tupSource)
             throws AsterixException {
-        FunctionIdentifier fid = (lc.getType() == Type.ORDERED_LIST_CONSTRUCTOR)
+        FunctionIdentifier fid = (lc.getType() == ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR)
                 ? AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR : AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR;
         AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
         LogicalVariable v1 = context.newVar();

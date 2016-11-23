@@ -21,12 +21,12 @@ package org.apache.asterix.metadata.declared;
 
 import java.io.File;
 
-public class AqlSourceId {
+public class DataSourceId {
 
     private String dataverseName;
     private String datasourceName;
 
-    public AqlSourceId(String dataverseName, String datasourceName) {
+    public DataSourceId(String dataverseName, String datasourceName) {
         this.dataverseName = dataverseName;
         this.datasourceName = datasourceName;
     }

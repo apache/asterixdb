@@ -167,7 +167,7 @@ import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterTu
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
-public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
+public class MetadataProvider implements IMetadataProvider<DataSourceId, String> {
 
     private final AsterixStorageProperties storageProperties;
     private final ILibraryManager libraryManager;
@@ -185,7 +185,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Map<String, Integer> locks;
     private boolean isTemporaryDatasetWriteJob = true;
 
-    public AqlMetadataProvider(Dataverse defaultDataverse) {
+    public MetadataProvider(Dataverse defaultDataverse) {
         this.defaultDataverse = defaultDataverse;
         this.storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
         this.libraryManager = AsterixAppContextInfo.INSTANCE.getLibraryManager();
@@ -331,30 +331,31 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     @Override
-    public AqlDataSource findDataSource(AqlSourceId id) throws AlgebricksException {
+    public DataSource findDataSource(DataSourceId id) throws AlgebricksException {
         return MetadataManagerUtil.findDataSource(mdTxnCtx, id);
     }
 
-    public AqlDataSource lookupSourceInMetadata(AqlSourceId aqlId) throws AlgebricksException {
+    public DataSource lookupSourceInMetadata(DataSourceId aqlId) throws AlgebricksException {
         return MetadataManagerUtil.lookupSourceInMetadata(mdTxnCtx, aqlId);
     }
 
     @Override
-    public IDataSourceIndex<String, AqlSourceId> findDataSourceIndex(String indexId, AqlSourceId dataSourceId)
+    public IDataSourceIndex<String, DataSourceId> findDataSourceIndex(String indexId, DataSourceId dataSourceId)
             throws AlgebricksException {
-        AqlDataSource ads = findDataSource(dataSourceId);
-        Dataset dataset = ((DatasetDataSource) ads).getDataset();
+        DataSource source = findDataSource(dataSourceId);
+        Dataset dataset = ((DatasetDataSource) source).getDataset();
         try {
             String indexName = indexId;
             Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                     dataset.getDatasetName(), indexName);
             if (secondaryIndex != null) {
-                return new AqlIndex(secondaryIndex, dataset.getDataverseName(), dataset.getDatasetName(), this);
+                return new DataSourceIndex(secondaryIndex, dataset.getDataverseName(), dataset.getDatasetName(), this);
             } else {
                 Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                         dataset.getDatasetName(), dataset.getDatasetName());
                 if (primaryIndex.getIndexName().equals(indexId)) {
-                    return new AqlIndex(primaryIndex, dataset.getDataverseName(), dataset.getDatasetName(), this);
+                    return new DataSourceIndex(primaryIndex, dataset.getDataverseName(), dataset.getDatasetName(),
+                            this);
                 } else {
                     return null;
                 }
@@ -375,12 +376,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(
-            IDataSource<AqlSourceId> dataSource, List<LogicalVariable> scanVariables,
+            IDataSource<DataSourceId> dataSource, List<LogicalVariable> scanVariables,
             List<LogicalVariable> projectVariables, boolean projectPushed, List<LogicalVariable> minFilterVars,
             List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
             JobGenContext context, JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
         try {
-            return ((AqlDataSource) dataSource).buildDatasourceScanRuntime(this, dataSource, scanVariables,
+            return ((DataSource) dataSource).buildDatasourceScanRuntime(this, dataSource, scanVariables,
                     projectVariables, projectPushed, minFilterVars, maxFilterVars, opSchema, typeEnv, context, jobSpec,
                     implConfig);
         } catch (AsterixException e) {
@@ -685,7 +686,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
                         compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                        AqlMetadataProvider.proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length),
+                        MetadataProvider.proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length),
                         rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, !temp, isPointMBR);
                 rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
@@ -752,7 +753,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(
-            IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
+            IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
             LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields, JobGenContext context,
             JobSpecification spec) throws AlgebricksException {
         String dataverseName = dataSource.getId().getDataverseName();
@@ -838,7 +839,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(
-            IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
+            IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
             List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor recordDesc, JobGenContext context,
             JobSpecification spec, boolean bulkload) throws AlgebricksException {
@@ -848,7 +849,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(
-            IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
+            IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
         return getInsertOrDeleteRuntime(IndexOperation.DELETE, dataSource, propagatedSchema, keys, payload,
@@ -857,7 +858,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
-            IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
+            IDataSourceIndex<String, DataSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
@@ -869,7 +870,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
-            IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
+            IDataSourceIndex<String, DataSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
@@ -881,7 +882,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexUpsertRuntime(
-            IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
+            IDataSourceIndex<String, DataSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalFilteringKeys,
             ILogicalExpression filterExpr, List<LogicalVariable> prevSecondaryKeys,
@@ -894,7 +895,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getTokenizerRuntime(
-            IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
+            IDataSourceIndex<String, DataSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
             JobGenContext context, JobSpecification spec, boolean bulkload) throws AlgebricksException {
@@ -1043,7 +1044,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
             JobSpecification jobSpec, Dataset dataset, Index secondaryIndex, int[] ridIndexes, boolean retainInput,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> outputVars, IOperatorSchema opSchema,
-            JobGenContext context, AqlMetadataProvider metadataProvider, boolean retainMissing)
+            JobGenContext context, MetadataProvider metadataProvider, boolean retainMissing)
             throws AlgebricksException {
         try {
             // Get data type
@@ -1097,7 +1098,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getUpsertRuntime(
-            IDataSource<AqlSourceId> dataSource, IOperatorSchema inputSchema, IVariableTypeEnvironment typeEnv,
+            IDataSource<DataSourceId> dataSource, IOperatorSchema inputSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, LogicalVariable payload, List<LogicalVariable> filterKeys,
             List<LogicalVariable> additionalNonFilterFields, RecordDescriptor recordDesc, JobGenContext context,
             JobSpecification spec) throws AlgebricksException {
@@ -1316,7 +1317,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertOrDeleteRuntime(IndexOperation indexOp,
-            IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
+            IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
             LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields, RecordDescriptor recordDesc,
             JobGenContext context, JobSpecification spec, boolean bulkload,
             List<LogicalVariable> additionalNonFilteringFields) throws AlgebricksException {
@@ -1418,7 +1419,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertOrDeleteOrUpsertRuntime(
-            IndexOperation indexOp, IDataSourceIndex<String, AqlSourceId> dataSourceIndex,
+            IndexOperation indexOp, IDataSourceIndex<String, DataSourceId> dataSourceIndex,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
@@ -1771,7 +1772,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
                     compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                    AqlMetadataProvider.proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length),
+                    MetadataProvider.proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length),
                     rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, !temp, isPointMBR);
             IOperatorDescriptor op;
             if (bulkload) {

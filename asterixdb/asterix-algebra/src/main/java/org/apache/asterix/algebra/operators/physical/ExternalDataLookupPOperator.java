@@ -21,11 +21,11 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.metadata.declared.AqlDataSource;
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.declared.AqlSourceId;
+import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.DataSource.Type;
+import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -60,7 +60,7 @@ import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 public class ExternalDataLookupPOperator extends AbstractScanPOperator {
 
     private final List<LogicalVariable> ridVarList;
-    private AqlSourceId datasetId;
+    private DataSourceId datasetId;
     private Dataset dataset;
     private ARecordType recordType;
     private Index secondaryIndex;
@@ -68,7 +68,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     private boolean retainInput;
     private boolean retainNull;
 
-    public ExternalDataLookupPOperator(AqlSourceId datasetId, Dataset dataset, ARecordType recordType,
+    public ExternalDataLookupPOperator(DataSourceId datasetId, Dataset dataset, ARecordType recordType,
             Index secondaryIndex, List<LogicalVariable> ridVarList, boolean requiresBroadcast, boolean retainInput,
             boolean retainNull) {
         this.datasetId = datasetId;
@@ -97,11 +97,11 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         this.recordType = recordType;
     }
 
-    public AqlSourceId getDatasetId() {
+    public DataSourceId getDatasetId() {
         return datasetId;
     }
 
-    public void setDatasetId(AqlSourceId datasetId) {
+    public void setDatasetId(DataSourceId datasetId) {
         this.datasetId = datasetId;
     }
 
@@ -113,8 +113,8 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        AqlDataSource ds = new DatasetDataSource(datasetId, dataset, recordType,
-                null /*external dataset doesn't have meta records.*/, AqlDataSourceType.EXTERNAL_DATASET,
+        DataSource ds = new DatasetDataSource(datasetId, dataset, recordType,
+                null /*external dataset doesn't have meta records.*/, Type.EXTERNAL_DATASET,
                 dataset.getDatasetDetails(), context.getComputationNodeDomain());
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
@@ -144,7 +144,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
             VariableUtilities.getProducedVariables(unnestMap, outputVars);
         }
 
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = metadataProvider
                 .buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, secondaryIndex, ridIndexes, retainInput,
                         typeEnv, outputVars, opSchema, context, metadataProvider, retainNull);

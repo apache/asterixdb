@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -168,7 +168,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
         } else if (numVarCandidates == 1) {
             resolveAsFieldAccess(funcRef, varAccessCandidates.iterator().next());
         } else {
-            AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
+            MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
             // Cannot find any resolution.
             throw new AlgebricksException("Cannot find dataset " + unresolvedVarName + " in dataverse "
                     + metadataProvider.getDefaultDataverseName() + " nor an alias with name " + unresolvedVarName);
@@ -282,14 +282,14 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
     // Checks whether the dataverse name and dataset name matche a dataset.
     private boolean hasMatchedDataverseDataset(String dataverseName, String datasetName, IOptimizationContext context)
             throws AlgebricksException {
-        AqlMetadataProvider mdp = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
         return mdp.findDataset(dataverseName, datasetName) != null;
     }
 
     // Checks whether the name matches a dataset.
     private boolean hasMatchedDatasetForVariableName(String varName, IOptimizationContext context)
             throws AlgebricksException {
-        AqlMetadataProvider mdp = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
         if (mdp.findDataset(mdp.getDefaultDataverseName(), varName) != null) {
             return true;
         }

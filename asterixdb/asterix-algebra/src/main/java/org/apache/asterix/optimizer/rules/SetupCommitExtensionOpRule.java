@@ -25,8 +25,8 @@ import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.algebra.operators.physical.CommitPOperator;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -146,7 +146,7 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
         }
 
         //get JobId(TransactorId)
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+        MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         JobId jobId = mp.getJobId();
 
         //create the logical and physical operator

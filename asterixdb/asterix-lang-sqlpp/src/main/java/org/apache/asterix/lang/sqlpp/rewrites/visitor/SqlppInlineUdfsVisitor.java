@@ -49,7 +49,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppCloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
@@ -66,7 +66,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
      *            providing the definition of created (i.e., stored) user-defined functions.
      */
     public SqlppInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
-            List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider) {
+            List<FunctionDecl> declaredFunctions, MetadataProvider metadataProvider) {
         super(context, rewriterFactory, declaredFunctions, metadataProvider,
                 new SqlppCloneAndSubstituteVariablesVisitor(context));
     }

@@ -58,7 +58,7 @@ import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
@@ -210,7 +210,7 @@ public class ExternalIndexingOperations {
     }
 
     public static JobSpecification buildFilesIndexReplicationJobSpec(Dataset dataset,
-            ArrayList<ExternalFile> externalFilesSnapshot, AqlMetadataProvider metadataProvider, boolean createIndex)
+            ArrayList<ExternalFile> externalFilesSnapshot, MetadataProvider metadataProvider, boolean createIndex)
             throws MetadataException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
@@ -262,7 +262,7 @@ public class ExternalIndexingOperations {
      */
     private static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>
             getExternalDataIndexingOperator(
-                    AqlMetadataProvider metadataProvider, JobSpecification jobSpec, IAType itemType, Dataset dataset,
+                    MetadataProvider metadataProvider, JobSpecification jobSpec, IAType itemType, Dataset dataset,
                     List<ExternalFile> files, RecordDescriptor indexerDesc)
                     throws HyracksDataException, AlgebricksException {
         ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
@@ -275,7 +275,7 @@ public class ExternalIndexingOperations {
     }
 
     public static Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint> createExternalIndexingOp(
-            JobSpecification spec, AqlMetadataProvider metadataProvider, Dataset dataset, ARecordType itemType,
+            JobSpecification spec, MetadataProvider metadataProvider, Dataset dataset, ARecordType itemType,
             RecordDescriptor indexerDesc, List<ExternalFile> files) throws HyracksDataException, AlgebricksException {
         if (files == null) {
             files = MetadataManager.INSTANCE.getDatasetExternalFiles(metadataProvider.getMetadataTxnContext(), dataset);
@@ -402,7 +402,7 @@ public class ExternalIndexingOperations {
     }
 
     public static JobSpecification buildDropFilesIndexJobSpec(CompiledIndexDropStatement indexDropStmt,
-            AqlMetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException, MetadataException {
+            MetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException, MetadataException {
         String dataverseName = indexDropStmt.getDataverseName() == null ? metadataProvider.getDefaultDataverseName()
                 : indexDropStmt.getDataverseName();
         String datasetName = indexDropStmt.getDatasetName();
@@ -431,7 +431,7 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification buildFilesIndexUpdateOp(Dataset ds, List<ExternalFile> metadataFiles,
             List<ExternalFile> deletedFiles, List<ExternalFile> addedFiles, List<ExternalFile> appendedFiles,
-            AqlMetadataProvider metadataProvider) throws MetadataException, AlgebricksException {
+            MetadataProvider metadataProvider) throws MetadataException, AlgebricksException {
         ArrayList<ExternalFile> files = new ArrayList<>();
         for (ExternalFile file : metadataFiles) {
             if (file.getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
@@ -455,7 +455,7 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification buildIndexUpdateOp(Dataset ds, Index index, List<ExternalFile> metadataFiles,
             List<ExternalFile> deletedFiles, List<ExternalFile> addedFiles, List<ExternalFile> appendedFiles,
-            AqlMetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+            MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         // Create files list
         ArrayList<ExternalFile> files = new ArrayList<>();
 
@@ -482,7 +482,7 @@ public class ExternalIndexingOperations {
         return IndexOperations.buildSecondaryIndexLoadingJobSpec(ccis, null, null, null, null, metadataProvider, files);
     }
 
-    public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, AqlMetadataProvider metadataProvider)
+    public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
@@ -561,7 +561,7 @@ public class ExternalIndexingOperations {
     @SuppressWarnings("rawtypes")
     private static ExternalRTreeDataflowHelperFactory getRTreeDataflowHelperFactory(Dataset ds, Index index,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyFactoryProperties,
-            AsterixStorageProperties storageProperties, AqlMetadataProvider metadataProvider, JobSpecification spec)
+            AsterixStorageProperties storageProperties, MetadataProvider metadataProvider, JobSpecification spec)
             throws AlgebricksException, AsterixException {
         int numPrimaryKeys = getRIDSize(ds);
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
@@ -612,12 +612,12 @@ public class ExternalIndexingOperations {
                 getBuddyBtreeComparatorFactories(), mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(ds.getDatasetId()),
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
+                MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                 storageProperties.getBloomFilterFalsePositiveRate(), new int[] { index.getKeyFieldNames().size() },
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true, isPointMBR);
     }
 
-    public static JobSpecification buildAbortOp(Dataset ds, List<Index> indexes, AqlMetadataProvider metadataProvider)
+    public static JobSpecification buildAbortOp(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
@@ -675,7 +675,7 @@ public class ExternalIndexingOperations {
 
     }
 
-    public static JobSpecification buildRecoverOp(Dataset ds, List<Index> indexes, AqlMetadataProvider metadataProvider)
+    public static JobSpecification buildRecoverOp(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
@@ -732,7 +732,7 @@ public class ExternalIndexingOperations {
         return spec;
     }
 
-    public static JobSpecification compactFilesIndexJobSpec(Dataset dataset, AqlMetadataProvider metadataProvider)
+    public static JobSpecification compactFilesIndexJobSpec(Dataset dataset, MetadataProvider metadataProvider)
             throws MetadataException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;

@@ -21,7 +21,7 @@ package org.apache.asterix.util;
 
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.std.FlushDatasetOperatorDescriptor;
@@ -42,7 +42,7 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class FlushDatasetUtils {
 
-    public static void flushDataset(IHyracksClientConnection hcc, AqlMetadataProvider metadataProvider,
+    public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider,
             MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName, String indexName)
             throws Exception {
         AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.INSTANCE.getCompilerProperties();

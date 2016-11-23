@@ -40,7 +40,7 @@ import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.file.JobSpecificationUtils;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -71,7 +71,7 @@ public class FeedOperations {
      * @throws Exception
      */
     public static Pair<JobSpecification, IAdapterFactory> buildFeedIntakeJobSpec(Feed primaryFeed,
-            AqlMetadataProvider metadataProvider, FeedPolicyAccessor policyAccessor) throws Exception {
+            MetadataProvider metadataProvider, FeedPolicyAccessor policyAccessor) throws Exception {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         spec.setFrameSize(FeedConstants.JobConstants.DEFAULT_FRAME_SIZE);
         IAdapterFactory adapterFactory = null;
@@ -94,7 +94,7 @@ public class FeedOperations {
      * Builds the job spec for sending message to an active feed to disconnect it from the
      * its source.
      */
-    public static Pair<JobSpecification, Boolean> buildDisconnectFeedJobSpec(AqlMetadataProvider metadataProvider,
+    public static Pair<JobSpecification, Boolean> buildDisconnectFeedJobSpec(MetadataProvider metadataProvider,
             FeedConnectionId connectionId) throws AsterixException, AlgebricksException {
 
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();

@@ -34,6 +34,7 @@ import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
@@ -46,7 +47,6 @@ import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.DatasetUtils;
@@ -103,7 +103,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected int numPrimaryKeys;
     protected int numSecondaryKeys;
-    protected AqlMetadataProvider metadataProvider;
+    protected MetadataProvider metadataProvider;
     protected String dataverseName;
     protected String datasetName;
     protected Dataset dataset;
@@ -155,7 +155,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(IndexType indexType, String dataverseName,
             String datasetName, String indexName, List<List<String>> secondaryKeyFields, List<IAType> secondaryKeyTypes,
-            boolean isEnforced, int gramLength, AqlMetadataProvider metadataProvider,
+            boolean isEnforced, int gramLength, MetadataProvider metadataProvider,
             PhysicalOptimizationConfig physOptConf, ARecordType recType, ARecordType metaType,
             List<Integer> keySourceIndicators, ARecordType enforcedType) throws AsterixException, AlgebricksException {
         IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
@@ -194,7 +194,7 @@ public abstract class SecondaryIndexOperationsHelper {
     public abstract JobSpecification buildCompactJobSpec() throws AsterixException, AlgebricksException;
 
     protected void init(IndexType indexType, String dvn, String dsn, String in, List<List<String>> secondaryKeyFields,
-            List<IAType> secondaryKeyTypes, boolean isEnforced, int gramLength, AqlMetadataProvider metadataProvider,
+            List<IAType> secondaryKeyTypes, boolean isEnforced, int gramLength, MetadataProvider metadataProvider,
             ARecordType aRecType, ARecordType metaType, List<Integer> keySourceIndicators, ARecordType enforcedType)
             throws AsterixException, AlgebricksException {
         this.metadataProvider = metadataProvider;
@@ -307,7 +307,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected abstract void setSecondaryRecDescAndComparators(IndexType indexType,
             List<List<String>> secondaryKeyFields, List<IAType> secondaryKeyTypes, int gramLength,
-            AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException;
+            MetadataProvider metadataProvider) throws AlgebricksException, AsterixException;
 
     protected AbstractOperatorDescriptor createDummyKeyProviderOp(JobSpecification spec)
             throws AsterixException, AlgebricksException {

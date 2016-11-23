@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.metadata.declared.AqlDataSource;
+import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -116,9 +116,9 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     // Remember this is the operator we need to modify
                     op = insertDeleteOp;
 
-                    // Derive the required ARecordType based on the schema of the AqlDataSource
+                    // Derive the required ARecordType based on the schema of the DataSource
                     InsertDeleteUpsertOperator insertDeleteOperator = (InsertDeleteUpsertOperator) op2;
-                    AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
+                    DataSource dataSource = (DataSource) insertDeleteOperator.getDataSource();
                     requiredRecordType = (ARecordType) dataSource.getItemType();
 
                     // Derive the Variable which we will potentially wrap with cast/null functions

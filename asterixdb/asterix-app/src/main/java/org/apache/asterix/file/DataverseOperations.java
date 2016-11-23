@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.file;
 
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -28,7 +28,7 @@ import org.apache.hyracks.dataflow.std.file.FileRemoveOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class DataverseOperations {
-    public static JobSpecification createDropDataverseJobSpec(Dataverse dataverse, AqlMetadataProvider metadata) {
+    public static JobSpecification createDropDataverseJobSpec(Dataverse dataverse, MetadataProvider metadata) {
         JobSpecification jobSpec = JobSpecificationUtils.createJobSpecification();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForDataverse(dataverse.getDataverseName());

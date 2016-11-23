@@ -30,19 +30,19 @@ import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalDataScanOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.ExternalRTreeLocalResourceMetadata;
 import org.apache.asterix.transaction.management.resource.LSMRTreeLocalResourceMetadata;
@@ -109,7 +109,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
             ILocalResourceMetadata localResourceMetadata = new LSMRTreeLocalResourceMetadata(secondaryTypeTraits,
                     secondaryComparatorFactories, btreeCompFactories, valueProviderFactories, RTreePolicyType.RTREE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                     dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits,
                     filterCmpFactories, rtreeFields, primaryKeyFields, secondaryFilterFields, isPointMBR);
             localResourceFactoryProvider =
@@ -119,7 +119,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), mergePolicyFactory,
                     mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length), rtreeFields,
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length), rtreeFields,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, !temp, isPointMBR);
         } else {
             // External dataset
@@ -127,7 +127,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             ILocalResourceMetadata localResourceMetadata = new ExternalRTreeLocalResourceMetadata(secondaryTypeTraits,
                     secondaryComparatorFactories, ExternalIndexingOperations.getBuddyBtreeComparatorFactories(),
                     valueProviderFactories, RTreePolicyType.RTREE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                     dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, primaryKeyFields,
                     isPointMBR);
             localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(localResourceMetadata,
@@ -138,7 +138,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     mergePolicyFactory, mergePolicyFactoryProperties,
                     new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                     storageProperties.getBloomFilterFalsePositiveRate(), new int[] { numNestedSecondaryKeyFields },
                     ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true, isPointMBR);
         }
@@ -174,7 +174,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
 
     @Override
     protected void setSecondaryRecDescAndComparators(IndexType indexType, List<List<String>> secondaryKeyFields,
-            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadata)
+            List<IAType> secondaryKeyTypes, int gramLength, MetadataProvider metadata)
             throws AlgebricksException, AsterixException {
         int numSecondaryKeys = secondaryKeyFields.size();
         if (numSecondaryKeys != 1) {
@@ -312,7 +312,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             // Sort by secondary keys.
             ExternalSortOperatorDescriptor sortOp =
                     createSortOp(spec,
-                            new IBinaryComparatorFactory[] { AqlMetadataProvider.proposeLinearizer(keyType,
+                            new IBinaryComparatorFactory[] { MetadataProvider.proposeLinearizer(keyType,
                                     secondaryComparatorFactories.length) },
                             isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc);
 
@@ -324,7 +324,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), mergePolicyFactory,
                     mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length), rtreeFields,
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length), rtreeFields,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, !temp, isPointMBR);;
 
             // Create secondary RTree bulk load op.
@@ -372,7 +372,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             // Sort by secondary keys.
             ExternalSortOperatorDescriptor sortOp =
                     createSortOp(spec,
-                            new IBinaryComparatorFactory[] { AqlMetadataProvider.proposeLinearizer(keyType,
+                            new IBinaryComparatorFactory[] { MetadataProvider.proposeLinearizer(keyType,
                                     secondaryComparatorFactories.length) },
                             isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc);
             AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
@@ -382,7 +382,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     valueProviderFactories, RTreePolicyType.RTREE, primaryComparatorFactories, mergePolicyFactory,
                     mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                     storageProperties.getBloomFilterFalsePositiveRate(), new int[] { numNestedSecondaryKeyFields },
                     ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true, isPointMBR);
             // Create secondary RTree bulk load op.
@@ -478,7 +478,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), mergePolicyFactory,
                     mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length), rtreeFields,
+                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length), rtreeFields,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, !temp, isPointMBR);
             compactOp =
                     new LSMTreeIndexCompactOperatorDescriptor(spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
@@ -496,7 +496,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                                     new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                                     LSMRTreeIOOperationCallbackFactory.INSTANCE,
-                                    AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
+                                    MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                                     storageProperties.getBloomFilterFalsePositiveRate(),
                                     new int[] { numNestedSecondaryKeyFields },
                                     ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true, isPointMBR),

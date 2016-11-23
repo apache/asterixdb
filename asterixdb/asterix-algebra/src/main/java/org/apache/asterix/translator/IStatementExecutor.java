@@ -23,7 +23,7 @@ import java.rmi.RemoteException;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -124,7 +124,7 @@ public interface IStatementExecutor {
      * @throws JSONException
      * @throws ACIDException
      */
-    JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
+    JobSpecification rewriteCompileQuery(MetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement dmlStatement)
                     throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException;
 

@@ -48,7 +48,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class AqlQueryRewriter implements IQueryRewriter {
 
@@ -56,9 +56,9 @@ class AqlQueryRewriter implements IQueryRewriter {
     private Query topExpr;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
-    private AqlMetadataProvider metadataProvider;
+    private MetadataProvider metadataProvider;
 
-    private void setup(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
+    private void setup(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
             LangRewritingContext context) {
         this.topExpr = topExpr;
         this.context = context;
@@ -67,7 +67,7 @@ class AqlQueryRewriter implements IQueryRewriter {
     }
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
+    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
             LangRewritingContext context) throws AsterixException {
         setup(declaredFunctions, topExpr, metadataProvider, context);
         if (topExpr.isTopLevel()) {

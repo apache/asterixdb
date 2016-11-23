@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
@@ -37,12 +36,12 @@ import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningP
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 
-public class AqlDataSourcePartitioningProvider implements IDataSourcePropertiesProvider {
+public class DataSourcePartitioningProvider implements IDataSourcePropertiesProvider {
 
-    private final AqlDataSource ds;
+    private final DataSource ds;
     private final INodeDomain domain;
 
-    public AqlDataSourcePartitioningProvider(AqlDataSource dataSource, INodeDomain domain) {
+    public DataSourcePartitioningProvider(DataSource dataSource, INodeDomain domain) {
         this.ds = dataSource;
         this.domain = domain;
     }
@@ -53,15 +52,15 @@ public class AqlDataSourcePartitioningProvider implements IDataSourcePropertiesP
         IPartitioningProperty pp;
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
         switch (ds.getDatasourceType()) {
-            case AqlDataSourceType.LOADABLE:
-            case AqlDataSourceType.EXTERNAL_DATASET:
+            case DataSource.Type.LOADABLE:
+            case DataSource.Type.EXTERNAL_DATASET:
                 pp = new RandomPartitioningProperty(domain);
                 ds.computeLocalStructuralProperties(propsLocal, scanVariables);
                 break;
-            case AqlDataSourceType.FEED:
+            case DataSource.Type.FEED:
                 pp = getFeedPartitioningProperty(ds, domain, scanVariables);
                 break;
-            case AqlDataSourceType.INTERNAL_DATASET:
+            case DataSource.Type.INTERNAL_DATASET:
                 Set<LogicalVariable> pvars = new ListSet<>();
                 pp = getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars);
                 propsLocal.add(new LocalOrderProperty(getOrderColumns(pvars)));
@@ -81,7 +80,7 @@ public class AqlDataSourcePartitioningProvider implements IDataSourcePropertiesP
         return orderColumns;
     }
 
-    private static IPartitioningProperty getInternalDatasetPartitioningProperty(AqlDataSource ds, INodeDomain domain,
+    private static IPartitioningProperty getInternalDatasetPartitioningProperty(DataSource ds, INodeDomain domain,
             List<LogicalVariable> scanVariables, Set<LogicalVariable> pvars) {
         IPartitioningProperty pp;
         if (scanVariables.size() < 2) {
@@ -93,7 +92,7 @@ public class AqlDataSourcePartitioningProvider implements IDataSourcePropertiesP
         return pp;
     }
 
-    public static IPartitioningProperty getFeedPartitioningProperty(AqlDataSource ds, INodeDomain domain,
+    public static IPartitioningProperty getFeedPartitioningProperty(DataSource ds, INodeDomain domain,
             List<LogicalVariable> scanVariables) {
         IPartitioningProperty pp;
         if (scanVariables.size() < 2) {

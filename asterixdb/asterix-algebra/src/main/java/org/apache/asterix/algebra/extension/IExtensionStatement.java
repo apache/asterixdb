@@ -19,7 +19,7 @@
 package org.apache.asterix.algebra.extension;
 
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -49,7 +49,7 @@ public interface IExtensionStatement extends Statement {
      * @param resultSetIdCounter
      * @throws Exception
      */
-    void handle(IStatementExecutor statementExecutor, AqlMetadataProvider metadataProvider,
+    void handle(IStatementExecutor statementExecutor, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats,
             int resultSetIdCounter) throws HyracksDataException, AlgebricksException;
 }

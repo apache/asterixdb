@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.algebra.base;
 
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface ILangExpressionToPlanTranslatorFactory {
@@ -31,7 +31,7 @@ public interface ILangExpressionToPlanTranslatorFactory {
      * @return a logical query plan.
      * @throws AlgebricksException
      */
-    ILangExpressionToPlanTranslator createExpressionToPlanTranslator(AqlMetadataProvider metadataProvider,
+    ILangExpressionToPlanTranslator createExpressionToPlanTranslator(MetadataProvider metadataProvider,
             int currentVarCountert) throws AlgebricksException;
 
 }

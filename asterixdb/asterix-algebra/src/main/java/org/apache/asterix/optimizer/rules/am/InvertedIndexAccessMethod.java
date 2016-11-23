@@ -28,7 +28,7 @@ import java.util.Map;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
+import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -254,7 +254,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr,
                 new LogicalVariable[] { fieldVarExpr1, fieldVarExpr2 }, new ILogicalExpression[] { arg3 },
-                new IAType[] { (IAType) AqlExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
+                new IAType[] { (IAType) ExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
@@ -303,8 +303,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVarExpr },
                 new ILogicalExpression[] { constArg, arg3 },
-                new IAType[] { (IAType) AqlExpressionTypeComputer.INSTANCE.getType(constArg, null, null),
-                        (IAType) AqlExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
+                new IAType[] { (IAType) ExpressionTypeComputer.INSTANCE.getType(constArg, null, null),
+                        (IAType) ExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr)) {

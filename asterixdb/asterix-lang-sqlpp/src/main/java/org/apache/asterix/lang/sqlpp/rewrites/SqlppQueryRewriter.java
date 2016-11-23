@@ -65,7 +65,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVis
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class SqlppQueryRewriter implements IQueryRewriter {
     private static final String INLINE_WITH = "inline_with";
@@ -74,9 +74,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
     private Query topExpr;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
-    private AqlMetadataProvider metadataProvider;
+    private MetadataProvider metadataProvider;
 
-    protected void setup(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
+    protected void setup(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
             LangRewritingContext context) {
         this.topExpr = topExpr;
         this.context = context;
@@ -85,7 +85,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, AqlMetadataProvider metadataProvider,
+    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
             LangRewritingContext context) throws AsterixException {
         // Marks the current variable counter.
         context.markCounter();
