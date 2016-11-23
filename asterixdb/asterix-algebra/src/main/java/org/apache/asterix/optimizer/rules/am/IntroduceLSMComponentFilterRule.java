@@ -19,7 +19,9 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.declared.AqlDataSource;
@@ -149,8 +151,12 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
     private void changePlan(List<IOptimizableFuncExpr> optFuncExprs, AbstractLogicalOperator op, Dataset dataset,
             IOptimizationContext context) throws AlgebricksException {
 
-        AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        while (descendantOp != null) {
+        Queue<Mutable<ILogicalOperator>> queue = new LinkedList<>(op.getInputs());
+        while (!queue.isEmpty()) {
+            AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) queue.poll().getValue();
+            if (descendantOp == null) {
+                continue;
+            }
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
@@ -208,10 +214,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     }
                 }
             }
-            if (descendantOp.getInputs().isEmpty()) {
-                break;
-            }
-            descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
+            queue.addAll(descendantOp.getInputs());
         }
     }
 
