@@ -784,8 +784,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         @Override
         public void add(long request, long resource, long job) {
             long upgrader = resArenaMgr.getFirstUpgrader(resource);
-            reqArenaMgr.setNextRequest(request, -1);
-            if (upgrader == -1) {
+            reqArenaMgr.setNextRequest(request, NILL);
+            if (upgrader == NILL) {
                 resArenaMgr.setFirstUpgrader(resource, request);
             } else {
                 appendToRequestQueue(upgrader, request);
@@ -906,8 +906,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     }
 
     private boolean resourceNotUsed(long resource) {
-        return resArenaMgr.getLastHolder(resource) == -1 && resArenaMgr.getFirstUpgrader(resource) == -1
-                && resArenaMgr.getFirstWaiter(resource) == -1;
+        return resArenaMgr.getLastHolder(resource) == NILL && resArenaMgr.getFirstUpgrader(resource) == NILL
+                && resArenaMgr.getFirstWaiter(resource) == NILL;
     }
 
     private void validateJob(ITransactionContext txnContext) throws ACIDException {
