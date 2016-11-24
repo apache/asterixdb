@@ -286,9 +286,8 @@ constructed instance of the data model (such as a newly constructed object, arra
     FloatLiteral   ::= <DIGITS> ( "f" | "F" )
                      | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
                      | "." <DIGITS> ( "f" | "F" )
-    DoubleLiteral  ::= <DIGITS>
-                     | <DIGITS> ( "." <DIGITS> )?
-                     | "." <DIGITS>
+    DoubleLiteral  ::= <DIGITS> "." <DIGITS>
+                       | "." <DIGITS>
 
 Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a object being accessed.
 

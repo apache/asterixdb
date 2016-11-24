@@ -96,6 +96,19 @@ The SQL++ `SELECT` clause always returns a collection value as its result (even 
 ### <a id="Select_element">SELECT VALUE Clause</a>
 The `SELECT VALUE` clause in SQL++ returns a collection that contains the results of evaluating the `VALUE` expression, with one evaluation being performed per "binding tuple" (i.e., per `FROM` clause item) satisfying the statement's selection criteria.
 For historical reasons SQL++ also allows the keywords `ELEMENT` or `RAW` to be used in place of `VALUE` (not recommended).
+
+The following example shows a standard-alone `SELECT VALUE`, which wraps a value into an array.
+
+##### Example
+
+    SELECT VALUE 1;
+
+This query return:
+
+    [
+      1
+    ]
+
 The following example shows a query that selects one user from the GleambookUsers collection.
 
 ##### Example
@@ -745,9 +758,10 @@ We can use a subquery in the `SELECT` clase to tunnel through the extra nesting 
 
 ##### Example
 
-    SELECT uid, (SELECT VALUE m.msg FROM msgs m) AS msgs
-    FROM GleambookMessages message
-    GROUP BY message.authorId AS uid GROUP AS msgs(message AS msg);
+    SELECT uid, (SELECT VALUE g.msg FROM g) AS msgs
+    FROM GleambookMessages gbm
+    GROUP BY gbm.authorId AS uid
+    GROUP AS g(gbm as msg);
 
 This variant of the example query returns:
 
@@ -836,8 +850,9 @@ Because this is a fairly common case, a third variant with output identical to t
 ##### Example
 
     SELECT uid, msg AS msgs
-    FROM GleambookMessages message
-    GROUP BY message.authorId AS uid GROUP AS msgs(message AS msg);
+    FROM GleambookMessages gbm
+    GROUP BY gbm.authorId AS uid
+    GROUP AS g(gbm as msg);
 
 This variant of the query exploits a bit of SQL-style "syntactic sugar" that SQL++ offers to shorten some user queries.
 In particular, in the `SELECT` list, the reference to the `GROUP` variable field `msg` -- because it references a field of the group variable -- is allowed but is "pluralized". As a result, the `msg` reference in the `SELECT` list is
@@ -849,13 +864,14 @@ Here the subquery further processes the groups.
 ##### Example
 
     SELECT uid,
-           (SELECT VALUE m.msg
-            FROM msgs m
-            WHERE m.msg.message LIKE '% like%'
-            ORDER BY m.msg.messageId
+           (SELECT VALUE g.msg
+            FROM g
+            WHERE g.msg.message LIKE '% like%'
+            ORDER BY g.msg.messageId
             LIMIT 2) AS msgs
-    FROM GleambookMessages message
-    GROUP BY message.authorId AS uid GROUP AS msgs(message AS msg);
+    FROM GleambookMessages gbm
+    GROUP BY gbm.authorId AS uid
+    GROUP AS g(gbm as msg);
 
 This example query returns:
 
@@ -913,13 +929,14 @@ The next example illustrates a query that doesn't provide binding variables for 
 ##### Example
 
     SELECT authorId,
-       (SELECT VALUE g.msg
-        FROM g
-        WHERE g.msg.message LIKE '% like%'
-        ORDER BY g.msg.messageId
-        LIMIT 2) AS msgs
+           (SELECT VALUE g.msg
+            FROM g
+            WHERE g.msg.message LIKE '% like%'
+            ORDER BY g.msg.messageId
+            LIMIT 2) AS msgs
     FROM GleambookMessages gbm
-    GROUP BY gbm.authorId GROUP AS g(gbm as msg);
+    GROUP BY gbm.authorId
+    GROUP AS g(gbm as msg);
 
 This query returns:
 
@@ -1020,7 +1037,7 @@ legal, executable, and returns the same result:
 
 ### <a id="Aggregation_functions">Aggregation functions</a>
 In traditional SQL, which doesn't support nested data, grouping always also involves the use of aggregation
-compute properties of the groups (e.g., the average number of messages per user rather than the actual set
+to compute properties of the groups (e.g., the average number of messages per user rather than the actual set
 of messages per user).
 Each aggregation function in SQL++ takes a collection (e.g., the group of messages) as its input and produces
 a scalar value as its output.
@@ -1548,6 +1565,7 @@ The following matrix is a quick "SQL-92 compatibility cheat sheet" for SQL++.
 | Feature |  SQL++ | SQL-92 |  Why different?  |
 |----------|--------|-------|------------------|
 | SELECT * | Returns nested objects | Returns flattened concatenated objects | Nested collections are 1st class citizens |
+| SELECT list | order not preserved | order preserved | Fields in a JSON object is not ordered |
 | Subquery | Returns a collection  | The returned collection is cast into a scalar value if the subquery appears in a SELECT list or on one side of a comparison or as input to a function | Nested collections are 1st class citizens |
 | LEFT OUTER JOIN |  Fills in `MISSING`(s) for non-matches  |   Fills in `NULL`(s) for non-matches    | "Absence" is more appropriate than "unknown" here.  |
 | UNION ALL       | Allows heterogeneous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream | Heterogenity and nested collections are common |
