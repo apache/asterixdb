@@ -18,11 +18,11 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import java.io.File;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
@@ -33,18 +33,20 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFactory {
 
-    public PartitionedOnDiskInvertedIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public PartitionedOnDiskInvertedIndexFactory(IIOManager ioManager, IBufferCache bufferCache,
+            IFileMapProvider fileMapProvider,
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper) {
-        super(bufferCache, fileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+        super(ioManager, bufferCache, fileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories,
+                tokenTypeTraits,
                 tokenCmpFactories, fileNameMapper);
     }
 
     @Override
-    public IInvertedIndex createIndexInstance(FileReference dictBTreeFile) throws IndexException {
-        String invListsFilePath = fileNameMapper.getInvListsFilePath(dictBTreeFile.getFile().getPath());
-        FileReference invListsFile = new FileReference(new File(invListsFilePath));
+    public IInvertedIndex createIndexInstance(FileReference dictBTreeFile) throws IndexException, HyracksDataException {
+        String invListsFilePath = fileNameMapper.getInvListsFilePath(dictBTreeFile.getFile().getAbsolutePath());
+        FileReference invListsFile = ioManager.getFileRef(invListsFilePath, false);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();
         return new PartitionedOnDiskInvertedIndex(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits,
                 invListCmpFactories, tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile);

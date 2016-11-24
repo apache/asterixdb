@@ -18,28 +18,28 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
+import java.util.Map;
+
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
-public abstract class AbstractLSMLocalResourceMetadata implements ILocalResourceMetadata {
+public class ExternalBTreeLocalResourceMetadataFactory extends LSMBTreeLocalResourceMetadataFactory {
 
     private static final long serialVersionUID = 1L;
 
-    protected final int datasetID;
-    protected final ITypeTraits[] filterTypeTraits;
-    protected final IBinaryComparatorFactory[] filterCmpFactories;
-    protected final int[] filterFields;
-
-    public AbstractLSMLocalResourceMetadata(int datasetID, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
-        this.datasetID = datasetID;
-        this.filterTypeTraits = filterTypeTraits;
-        this.filterCmpFactories = filterCmpFactories;
-        this.filterFields = filterFields;
+    public ExternalBTreeLocalResourceMetadataFactory(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            int[] bloomFilterKeyFields, boolean isPrimary, int datasetID,
+            ILSMMergePolicyFactory mergePolicyFactory,
+            Map<String, String> mergePolicyProperties) {
+        super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, mergePolicyFactory,
+                mergePolicyProperties, null, null, null, null);
     }
 
-    public int getDatasetID() {
-        return datasetID;
+    @Override
+    public Resource resource(int partition) {
+        return new ExternalBTreeLocalResourceMetadata(filterTypeTraits, filterCmpFactories, bloomFilterKeyFields,
+                isPrimary, datasetId, partition, mergePolicyFactory, mergePolicyProperties);
     }
 }

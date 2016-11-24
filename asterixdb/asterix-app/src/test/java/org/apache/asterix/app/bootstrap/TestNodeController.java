@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 import org.apache.asterix.algebra.operators.physical.CommitRuntime;
 import org.apache.asterix.app.external.TestLibrarian;
 import org.apache.asterix.app.nc.AsterixNCAppRuntimeContext;
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
@@ -34,6 +33,7 @@ import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePush
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
+import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -47,7 +47,7 @@ import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.asterix.transaction.management.service.logging.LogReader;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -65,12 +65,12 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.util.TaskUtils;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
@@ -156,7 +156,7 @@ public class TestNodeController {
     public AsterixLSMInsertDeleteOperatorNodePushable getInsertPipeline(IHyracksTaskContext ctx, Dataset dataset,
             IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] filterFields)
-            throws AlgebricksException {
+            throws AlgebricksException, HyracksDataException {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields);
         IndexOperation op = IndexOperation.INSERT;
@@ -251,7 +251,7 @@ public class TestNodeController {
 
     public ConstantFileSplitProvider getFileSplitProvider(Dataset dataset) {
         FileSplit fileSplit = new FileSplit(ExecutionTestUtil.integrationUtil.ncs[0].getId(),
-                dataset.getDataverseName() + File.separator + dataset.getDatasetName());
+                dataset.getDataverseName() + File.separator + dataset.getDatasetName(), true);
         return new ConstantFileSplitProvider(new FileSplit[] { fileSplit });
     }
 
@@ -260,7 +260,7 @@ public class TestNodeController {
             int[] primaryIndexBloomFilterKeyFields, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields) {
-        ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(primaryIndexTypeTraits,
+        IResourceFactory localResourceMetadata = new LSMBTreeLocalResourceMetadataFactory(primaryIndexTypeTraits,
                 primaryIndexComparatorFactories, primaryIndexBloomFilterKeyFields, true, dataset.getDatasetId(),
                 mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields,
                 filterFields);
@@ -271,7 +271,7 @@ public class TestNodeController {
 
     public LSMBTreeDataflowHelper getPrimaryIndexDataflowHelper(IHyracksTaskContext ctx,
             PrimaryIndexInfo primaryIndexInfo, TreeIndexCreateOperatorDescriptor indexOpDesc)
-            throws AlgebricksException {
+            throws AlgebricksException, HyracksDataException {
         LSMBTreeDataflowHelperFactory dataflowHelperFactory = new LSMBTreeDataflowHelperFactory(
                 new AsterixVirtualBufferCacheProvider(primaryIndexInfo.dataset.getDatasetId()),
                 primaryIndexInfo.mergePolicyFactory, primaryIndexInfo.mergePolicyProperties,

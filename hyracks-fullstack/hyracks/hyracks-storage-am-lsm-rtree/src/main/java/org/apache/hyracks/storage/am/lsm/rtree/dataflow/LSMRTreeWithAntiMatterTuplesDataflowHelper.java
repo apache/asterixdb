@@ -50,7 +50,8 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, boolean durable, boolean isPointMBR) {
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, boolean durable, boolean isPointMBR)
+            throws HyracksDataException {
         super(opDesc, ctx, partition, virtualBufferCaches, btreeComparatorFactories, valueProviderFactories,
                 rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory,
                 rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, durable, isPointMBR);
@@ -65,7 +66,8 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields)
             throws HyracksDataException {
         try {
-            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches, file, diskBufferCache,
+            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ctx.getIOManager(), virtualBufferCaches, file,
+                    diskBufferCache,
                     diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
                     rtreePolicyType, mergePolicy, opTracker, ioScheduler,
                     ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,

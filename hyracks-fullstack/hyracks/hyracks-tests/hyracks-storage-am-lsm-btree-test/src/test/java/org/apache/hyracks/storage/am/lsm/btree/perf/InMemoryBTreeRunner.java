@@ -19,14 +19,15 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.perf;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
@@ -44,6 +45,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.TransientFileMapManager;
+import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 
 public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected IBufferCache bufferCache;
@@ -58,10 +60,12 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected BTree btree;
 
     public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
+            IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksException {
         this.numBatches = numBatches;
+        TestStorageManagerComponentHolder.init(pageSize, numPages, numPages);
+        IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        file = new FileReference(new File(fileName));
+        file = ioManager.getFileRef(fileName, false);
         init(pageSize, numPages, typeTraits, cmpFactories);
     }
 

@@ -20,8 +20,6 @@ package org.apache.hyracks.tests.integration;
 
 import java.io.File;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -31,7 +29,7 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -40,13 +38,12 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
-import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.join.GraceHashJoinOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.join.HybridHashJoinOperatorDescriptor;
@@ -55,6 +52,7 @@ import org.apache.hyracks.dataflow.std.misc.MaterializingOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import org.apache.hyracks.tests.util.NoopMissingWriterFactory;
 import org.apache.hyracks.tests.util.ResultSerializerFactoryProvider;
+import org.junit.Test;
 
 public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
 
@@ -74,8 +72,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     public void customerOrderCIDJoin() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -83,8 +81,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -153,8 +151,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     public void customerOrderCIDGraceJoin() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -162,8 +160,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -236,8 +234,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     public void customerOrderCIDHybridHashJoin() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -245,8 +243,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -319,8 +317,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     public void customerOrderCIDInMemoryHashLeftOuterJoin() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -328,8 +326,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -403,8 +401,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     public void customerOrderCIDGraceHashLeftOuterJoin() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -412,8 +410,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -491,8 +489,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
     public void customerOrderCIDHybridHashLeftOuterJoin() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -500,8 +498,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -580,8 +578,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/customer-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/customer-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -590,8 +588,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/orders-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/orders-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -667,8 +665,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/customer-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/customer-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -677,8 +675,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/orders-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/orders-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -758,8 +756,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/customer-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/customer-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -768,8 +766,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/orders-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/orders-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -849,8 +847,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/customer-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/customer-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -859,8 +857,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/orders-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/orders-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -936,8 +934,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] custSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/customer-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/customer-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/customer-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/customer-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -946,8 +944,8 @@ public class TPCHCustomerOrderHashJoinTest extends AbstractIntegrationTest {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new FileReference(new File("data/tpch0.001/orders-part1.tbl"))),
-                new FileSplit(NC2_ID, new FileReference(new File("data/tpch0.001/orders-part2.tbl"))) };
+                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
+                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),

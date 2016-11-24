@@ -66,5 +66,15 @@ public interface IIOManager {
      * @param relativePath
      * @return A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code relativePath}
      */
-    public FileReference getAbsoluteFileRef(int ioDeviceId, String relativePath);
+    public FileReference getFileRef(int ioDeviceId, String relativePath);
+
+    /**
+     * A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code relativePath}
+     *
+     * @param path
+     * @param relative
+     * @return
+     * @throws HyracksDataException
+     */
+    public FileReference getFileRef(String path, boolean relative) throws HyracksDataException;
 }

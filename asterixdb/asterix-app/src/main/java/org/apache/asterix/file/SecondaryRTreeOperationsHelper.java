@@ -21,7 +21,6 @@ package org.apache.asterix.file;
 import java.util.List;
 
 import org.apache.asterix.app.external.ExternalIndexingOperations;
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -30,6 +29,7 @@ import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalDataScanOperatorDescriptor;
@@ -44,8 +44,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.resource.ExternalRTreeLocalResourceMetadata;
-import org.apache.asterix.transaction.management.resource.LSMRTreeLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.ExternalRTreeLocalResourceMetadataFactory;
+import org.apache.asterix.transaction.management.resource.LSMRTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -107,7 +107,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             IBinaryComparatorFactory[] btreeCompFactories = getComparatorFactoriesForDeletedKeyBTree();
 
             //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-            ILocalResourceMetadata localResourceMetadata = new LSMRTreeLocalResourceMetadata(secondaryTypeTraits,
+            IResourceFactory localResourceMetadata = new LSMRTreeLocalResourceMetadataFactory(secondaryTypeTraits,
                     secondaryComparatorFactories, btreeCompFactories, valueProviderFactories, RTreePolicyType.RTREE,
                     MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                     dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits,
@@ -124,7 +124,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
         } else {
             // External dataset
             // Prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-            ILocalResourceMetadata localResourceMetadata = new ExternalRTreeLocalResourceMetadata(secondaryTypeTraits,
+            IResourceFactory localResourceMetadata = new ExternalRTreeLocalResourceMetadataFactory(secondaryTypeTraits,
                     secondaryComparatorFactories, ExternalIndexingOperations.getBuddyBtreeComparatorFactories(),
                     valueProviderFactories, RTreePolicyType.RTREE,
                     MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),

@@ -21,20 +21,21 @@ package org.apache.hyracks.api.io;
 import java.io.File;
 import java.io.Serializable;
 
+/**
+ * A device handle and a relative path.
+ * Used to identify a file in the local Node Controller.
+ * Only used for files which are stored inside an IO device.
+ */
 public final class FileReference implements Serializable {
     private static final long serialVersionUID = 1L;
-
     private final File file;
     private final IODeviceHandle dev;
+    private final String path;
 
-    public FileReference(IODeviceHandle dev, String devRelPath) {
-        file = new File(dev.getPath(), devRelPath);
+    public FileReference(IODeviceHandle dev, String path) {
+        file = new File(dev.getMount(), path);
         this.dev = dev;
-    }
-
-    public FileReference(File file) {
-        this.file = file;
-        this.dev = null;
+        this.path = path;
     }
 
     public File getFile() {
@@ -63,7 +64,26 @@ public final class FileReference implements Serializable {
         return file.hashCode();
     }
 
-    public void delete() {
-        file.delete();
+    /**
+     * Delete the file
+     *
+     * @return true if file was deleted, false, otherwise
+     */
+    public boolean delete() {
+        return file.delete();
+    }
+
+    /**
+     * @return the relative path
+     */
+    public String getRelativePath() {
+        return path;
+    }
+
+    /**
+     * @return the absolute path
+     */
+    public String getAbsolutePath() {
+        return file.getAbsolutePath();
     }
 }

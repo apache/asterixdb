@@ -22,7 +22,11 @@ package org.apache.hyracks.tests.am.common;
 public interface ITreeIndexOperatorTestHelper {
     public String getPrimaryIndexName();
 
+    public boolean getPrimaryIndexNameRelative();
+
     public String getSecondaryIndexName();
+
+    public boolean getSecondaryIndexNameRelative();
 
     public void cleanup(String primaryFileName, String secondaryFileName);
 }

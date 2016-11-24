@@ -100,14 +100,14 @@ public class LSMRTreeTestHarness {
     public void setUp() throws HyracksException {
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
-        onDiskDir = ioManager.getIODevices().get(ioDeviceId).getPath() + sep + "lsm_rtree_"
+        onDiskDir = ioManager.getIODevices().get(ioDeviceId).getMount() + sep + "lsm_rtree_"
                 + simpleDateFormat.format(new Date()) + sep;
-        file = new FileReference(new File(onDiskDir));
+        file = ioManager.getFileRef(onDiskDir, false);
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
+        virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < numMutableComponents; i++) {
             IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
                     memNumPages / numMutableComponents);
@@ -119,8 +119,9 @@ public class LSMRTreeTestHarness {
     public void tearDown() throws HyracksDataException {
         diskBufferCache.close();
         IODeviceHandle dev = ioManager.getIODevices().get(ioDeviceId);
-        File dir = new File(dev.getPath(), onDiskDir);
+        File dir = new File(dev.getMount(), onDiskDir);
         FilenameFilter filter = new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return !name.startsWith(".");
             }

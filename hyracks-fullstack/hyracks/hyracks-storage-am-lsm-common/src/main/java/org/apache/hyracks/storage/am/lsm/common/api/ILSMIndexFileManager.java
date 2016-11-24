@@ -39,7 +39,7 @@ public interface ILSMIndexFileManager {
 
     public void deleteDirs();
 
-    public LSMComponentFileReferences getRelFlushFileReference();
+    public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException;
 
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException;

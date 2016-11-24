@@ -35,6 +35,7 @@ import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 
 public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescriptor {
 
+    private static final long serialVersionUID = 1L;
     private final int topK;
 
     public TopKSorterOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int topK, int[] sortFields,
@@ -47,6 +48,8 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
     @Override
     public SortActivity getSortActivity(ActivityId id) {
         return new SortActivity(id) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider) {
@@ -60,6 +63,8 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
     @Override
     public MergeActivity getMergeActivity(ActivityId id) {
         return new MergeActivity(id) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,

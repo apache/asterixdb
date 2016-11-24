@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
@@ -72,7 +73,8 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
         return lsmTree.getComparatorFactories();
     }
 
-    public static LSMRTreeWithAntiMatterTuplesTestContext create(List<IVirtualBufferCache> virtualBufferCaches,
+    public static LSMRTreeWithAntiMatterTuplesTestContext create(IIOManager ioManager,
+            List<IVirtualBufferCache> virtualBufferCaches,
             FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
             ISerializerDeserializer[] fieldSerdes, IPrimitiveValueProviderFactory[] valueProviderFactories,
             int numKeyFields, RTreePolicyType rtreePolicyType, ILSMMergePolicy mergePolicy,
@@ -83,7 +85,8 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
                 numKeyFields);
         IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
                 fieldSerdes.length);
-        LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches,
+        LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ioManager,
+                virtualBufferCaches,
                 file, diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallback,
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, null, null, null, true,

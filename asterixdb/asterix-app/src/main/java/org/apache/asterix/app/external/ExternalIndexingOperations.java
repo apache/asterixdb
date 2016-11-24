@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
@@ -38,6 +37,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -72,7 +72,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.resource.ExternalBTreeLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.ExternalBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.asterix.translator.CompiledStatements.CompiledCreateIndexStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledIndexDropStatement;
@@ -224,7 +224,7 @@ public class ExternalIndexingOperations {
                         getFilesIndexName(dataset.getDatasetName()), true);
         IFileSplitProvider secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
-        ILocalResourceMetadata localResourceMetadata = new ExternalBTreeLocalResourceMetadata(
+        IResourceFactory localResourceMetadata = new ExternalBTreeLocalResourceMetadataFactory(
                 filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS, filesIndexDescription.FILES_INDEX_COMP_FACTORIES,
                 new int[] { 0 }, false, dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties);
         PersistentLocalResourceFactoryProvider localResourceFactoryProvider =

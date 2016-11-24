@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.IndexException;
@@ -34,11 +35,11 @@ public class RTreeFactory extends TreeIndexFactory<RTree> {
 
     private final boolean isPointMBR;
 
-    public RTreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public RTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IMetadataManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount,
             boolean isPointMBR) {
-        super(bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
+        super(ioManager, bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
                 cmpFactories, fieldCount);
         this.isPointMBR = isPointMBR;
     }

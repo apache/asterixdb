@@ -49,7 +49,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
 
     public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IRecordDescriptorProvider recordDescProvider) {
+            boolean checkIfEmptyIndex, IRecordDescriptorProvider recordDescProvider) throws HyracksDataException {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);

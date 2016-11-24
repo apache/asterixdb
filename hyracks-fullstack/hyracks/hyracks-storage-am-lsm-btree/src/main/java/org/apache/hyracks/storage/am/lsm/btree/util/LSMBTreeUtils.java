@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
@@ -57,12 +59,14 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeUtils {
-    public static LSMBTree createLSMTree(List<IVirtualBufferCache> virtualBufferCaches, FileReference file,
+    public static LSMBTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields, boolean durable) {
+            IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields, boolean durable)
+            throws HyracksDataException {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
@@ -77,10 +81,10 @@ public class LSMBTreeUtils {
         IMetadataManagerFactory freePageManagerFactory = new LinkedListMetadataManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, copyTupleLeafFrameFactory, cmpFactories,
                 typeTraits.length);
-        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
 
         BloomFilterFactory bloomFilterFactory = needKeyDupCheck
@@ -98,10 +102,11 @@ public class LSMBTreeUtils {
         }
 
         //Primary LSMBTree index has a BloomFilter.
-        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(diskFileMapProvider, file, diskBTreeFactory,
+        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(ioManager, diskFileMapProvider, file,
+                diskBTreeFactory,
                 needKeyDupCheck);
 
-        LSMBTree lsmTree = new LSMBTree(virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
+        LSMBTree lsmTree = new LSMBTree(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory, bloomFilterFactory,
                 filterFactory, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, diskFileMapProvider,
                 typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, needKeyDupCheck,
@@ -109,7 +114,8 @@ public class LSMBTreeUtils {
         return lsmTree;
     }
 
-    public static ExternalBTree createExternalBTree(FileReference file, IBufferCache diskBufferCache,
+    public static ExternalBTree createExternalBTree(IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
@@ -134,32 +140,36 @@ public class LSMBTreeUtils {
         // can be used for both inserts and deletes
         ITreeIndexFrameFactory dualLeafFrameFactory = new BTreeNSMLeafFrameFactory(referencingTupleWriterFactory);
 
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, copyTupleLeafFrameFactory, cmpFactories,
                 typeTraits.length);
-        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
 
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
                 bloomFilterKeyFields);
 
         // This is the component factory for transactions
-        TreeIndexFactory<BTree> transactionBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> transactionBTreeFactory = new BTreeFactory(ioManager, diskBufferCache,
+                diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, dualLeafFrameFactory, cmpFactories, typeTraits.length);
 
         //TODO remove BloomFilter from external dataset's secondary LSMBTree index 
-        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(diskFileMapProvider, file, diskBTreeFactory,
+        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(ioManager, diskFileMapProvider, file,
+                diskBTreeFactory,
                 true);
 
         // the disk only index uses an empty ArrayList for virtual buffer caches
-        ExternalBTree lsmTree = new ExternalBTree(interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
+        ExternalBTree lsmTree = new ExternalBTree(ioManager, interiorFrameFactory, insertLeafFrameFactory,
+                deleteLeafFrameFactory,
                 fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory, bloomFilterFactory,
                 bloomFilterFalsePositiveRate, diskFileMapProvider, typeTraits.length, cmpFactories, mergePolicy,
                 opTracker, ioScheduler, ioOpCallback, transactionBTreeFactory, startWithVersion, durable);
         return lsmTree;
     }
 
-    public static ExternalBTreeWithBuddy createExternalBTreeWithBuddy(FileReference file, IBufferCache diskBufferCache,
+    public static ExternalBTreeWithBuddy createExternalBTreeWithBuddy(IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields,
@@ -189,11 +199,11 @@ public class LSMBTreeUtils {
         IMetadataManagerFactory freePageManagerFactory = new LinkedListMetadataManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, copyTupleLeafFrameFactory, cmpFactories,
                 typeTraits.length);
 
-        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
 
         int[] bloomFilterKeyFields = new int[buddyBtreeCmpFactories.length];
@@ -204,15 +214,17 @@ public class LSMBTreeUtils {
                 bloomFilterKeyFields);
 
         // buddy b-tree factory
-        TreeIndexFactory<BTree> diskBuddyBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> diskBuddyBTreeFactory = new BTreeFactory(ioManager, diskBufferCache,
+                diskFileMapProvider,
                 freePageManagerFactory, buddyBtreeInteriorFrameFactory, buddyBtreeLeafFrameFactory,
                 buddyBtreeCmpFactories, buddyBtreeTypeTraits.length);
 
-        ILSMIndexFileManager fileNameManager = new LSMBTreeWithBuddyFileManager(diskFileMapProvider, file,
+        ILSMIndexFileManager fileNameManager = new LSMBTreeWithBuddyFileManager(ioManager, diskFileMapProvider, file,
                 diskBTreeFactory, diskBuddyBTreeFactory);
 
         // the disk only index uses an empty ArrayList for virtual buffer caches
-        ExternalBTreeWithBuddy lsmTree = new ExternalBTreeWithBuddy(interiorFrameFactory, insertLeafFrameFactory,
+        ExternalBTreeWithBuddy lsmTree = new ExternalBTreeWithBuddy(ioManager, interiorFrameFactory,
+                insertLeafFrameFactory,
                 buddyBtreeLeafFrameFactory, diskBufferCache, fileNameManager, bulkLoadBTreeFactory, diskBTreeFactory,
                 diskBuddyBTreeFactory, bloomFilterFactory, diskFileMapProvider, bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallback, cmpFactories, buddyBtreeCmpFactories,

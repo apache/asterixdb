@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.input.stream.factory;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
@@ -40,8 +39,7 @@ import org.apache.asterix.external.util.NodeResolverFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 
 public class LocalFSInputStreamFactory implements IInputStreamFactory {
 
@@ -66,7 +64,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
             ArrayList<Path> inputResources = new ArrayList<>();
             for (int i = 0; i < inputFileSplits.length; i++) {
                 if (inputFileSplits[i].getNodeName().equals(nodeName)) {
-                    inputResources.add(inputFileSplits[i].getLocalFile().getFile().toPath());
+                    inputResources.add(inputFileSplits[i].getFile(ctx.getIOManager()).toPath());
                 }
             }
             watcher = new FileSystemWatcher(inputResources, expression, isFeed);
@@ -115,7 +113,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
                 }
                 nodeName = resolver.resolveNode(trimmedValue.split(":")[0]);
                 nodeLocalPath = trimmedValue.split("://")[1];
-                FileSplit fileSplit = new FileSplit(nodeName, new FileReference(new File(nodeLocalPath)));
+                FileSplit fileSplit = new FileSplit(nodeName, nodeLocalPath, false);
                 inputFileSplits[count++] = fileSplit;
             }
         }

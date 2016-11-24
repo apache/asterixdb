@@ -24,7 +24,9 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
@@ -71,7 +73,8 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeUtils {
-    public static LSMRTree createLSMTree(List<IVirtualBufferCache> virtualBufferCaches, FileReference file,
+    public static LSMRTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
@@ -79,7 +82,7 @@ public class LSMRTreeUtils {
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] buddyBTreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            boolean durable, boolean isPointMBR) throws TreeIndexException {
+            boolean durable, boolean isPointMBR) throws TreeIndexException, HyracksDataException {
 
         int valueFieldCount = buddyBTreeFields.length;
         int keyFieldCount = typeTraits.length - valueFieldCount;
@@ -113,10 +116,10 @@ public class LSMRTreeUtils {
         LinkedListMetadataManagerFactory freePageManagerFactory = new LinkedListMetadataManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
                 typeTraits.length, isPointMBR);
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories,
                 btreeTypeTraits.length);
 
@@ -140,9 +143,11 @@ public class LSMRTreeUtils {
                     diskBufferCache.getPageSize());
             filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
         }
-        ILSMIndexFileManager fileNameManager = new LSMRTreeFileManager(diskFileMapProvider, file, diskRTreeFactory,
+        ILSMIndexFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, file,
+                diskRTreeFactory,
                 diskBTreeFactory);
-        LSMRTree lsmTree = new LSMRTree(virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+        LSMRTree lsmTree = new LSMRTree(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory,
+                rtreeLeafFrameFactory,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
                 bloomFilterFactory, filterFactory, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate,
                 diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory,
@@ -151,7 +156,7 @@ public class LSMRTreeUtils {
         return lsmTree;
     }
 
-    public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(
+    public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(IIOManager ioManager,
             List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
@@ -159,11 +164,11 @@ public class LSMRTreeUtils {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, ILinearizeComparatorFactory linearizerCmpFactory, int[] rtreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            boolean durable, boolean isPointMBR) throws TreeIndexException {
+            boolean durable, boolean isPointMBR) throws TreeIndexException, HyracksDataException {
         ITreeIndexTupleWriterFactory rtreeInteriorFrameTupleWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits,
                 false);
-        ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
-        ITreeIndexTupleWriterFactory rtreeLeafFrameCopyTupleWriterFactory = null;
+        ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory;
+        ITreeIndexTupleWriterFactory rtreeLeafFrameCopyTupleWriterFactory;
         if (isPointMBR) {
             int keyFieldCount = rtreeCmpFactories.length;
             int valueFieldCount = btreeCmpFactories.length - keyFieldCount;
@@ -193,11 +198,11 @@ public class LSMRTreeUtils {
         LinkedListMetadataManagerFactory freePageManagerFactory = new LinkedListMetadataManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, rtreeInteriorFrameFactory, copyTupleLeafFrameFactory, rtreeCmpFactories,
                 typeTraits.length, isPointMBR);
 
-        TreeIndexFactory<RTree> bulkLoadRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<RTree> bulkLoadRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
                 typeTraits.length, isPointMBR);
 
@@ -228,9 +233,10 @@ public class LSMRTreeUtils {
                     diskBufferCache.getPageSize());
             filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
         }
-        ILSMIndexFileManager fileNameManager = new LSMRTreeWithAntiMatterTuplesFileManager(diskFileMapProvider, file,
+        ILSMIndexFileManager fileNameManager = new LSMRTreeWithAntiMatterTuplesFileManager(ioManager,
+                diskFileMapProvider, file,
                 diskRTreeFactory);
-        LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(virtualBufferCaches,
+        LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(ioManager, virtualBufferCaches,
                 rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager, diskRTreeFactory, bulkLoadRTreeFactory, filterFactory, filterFrameFactory,
                 filterManager, diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeCmpFactories,
@@ -239,7 +245,8 @@ public class LSMRTreeUtils {
         return lsmTree;
     }
 
-    public static ExternalRTree createExternalRTree(FileReference file, IBufferCache diskBufferCache,
+    public static ExternalRTree createExternalRTree(IIOManager ioManager, FileReference file,
+            IBufferCache diskBufferCache,
             IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
@@ -280,10 +287,10 @@ public class LSMRTreeUtils {
         LinkedListMetadataManagerFactory freePageManagerFactory = new LinkedListMetadataManagerFactory(diskBufferCache,
                 metaFrameFactory);
 
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
                 typeTraits.length, isPointMBR);
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories,
                 btreeTypeTraits.length);
         int[] comparatorFields = { 0 };
@@ -296,9 +303,10 @@ public class LSMRTreeUtils {
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
                 bloomFilterKeyFields);
 
-        ILSMIndexFileManager fileNameManager = new LSMRTreeFileManager(diskFileMapProvider, file, diskRTreeFactory,
+        ILSMIndexFileManager fileNameManager = new LSMRTreeFileManager(ioManager, diskFileMapProvider, file,
+                diskRTreeFactory,
                 diskBTreeFactory);
-        ExternalRTree lsmTree = new ExternalRTree(rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+        ExternalRTree lsmTree = new ExternalRTree(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
                 bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, typeTraits.length,
                 rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray,

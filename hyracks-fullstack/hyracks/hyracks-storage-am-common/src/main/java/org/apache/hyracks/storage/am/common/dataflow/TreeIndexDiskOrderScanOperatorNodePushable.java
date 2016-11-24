@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final AbstractTreeIndexOperatorDescriptor opDesc;
@@ -42,7 +43,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
     private ITreeIndex treeIndex;
 
     public TreeIndexDiskOrderScanOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition) {
+            IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
@@ -56,8 +57,9 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
         try {
             ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
             ITreeIndexCursor cursor = treeIndexHelper.createDiskOrderScanCursor(cursorFrame);
+            LocalResource resource = treeIndexHelper.getResource();
             ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(treeIndexHelper.getResourceID(), ctx, null);
+                    .createSearchOperationCallback(resource.getId(), ctx, null);
             ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex
                     .createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
             try {

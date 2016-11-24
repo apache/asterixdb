@@ -27,12 +27,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -101,19 +101,19 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     public int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
-        LocalResource lr = resourceRepository.getResourceByPath(resourcePath);
+        LocalResource lr = resourceRepository.get(resourcePath);
         if (lr == null) {
             return -1;
         }
-        return ((ILocalResourceMetadata) lr.getResourceObject()).getDatasetID();
+        return ((Resource) lr.getResource()).datasetId();
     }
 
     public long getResourceIDfromResourcePath(String resourcePath) throws HyracksDataException {
-        LocalResource lr = resourceRepository.getResourceByPath(resourcePath);
+        LocalResource lr = resourceRepository.get(resourcePath);
         if (lr == null) {
             return -1;
         }
-        return lr.getResourceId();
+        return lr.getId();
     }
 
     @Override
@@ -166,34 +166,34 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
     @Override
     public synchronized void open(String resourcePath) throws HyracksDataException {
-        validateDatasetLifecycleManagerState();
-        int did = getDIDfromResourcePath(resourcePath);
-        long resourceID = getResourceIDfromResourcePath(resourcePath);
+            validateDatasetLifecycleManagerState();
+            int did = getDIDfromResourcePath(resourcePath);
+            long resourceID = getResourceIDfromResourcePath(resourcePath);
 
-        DatasetResource dsr = datasets.get(did);
-        DatasetInfo dsInfo = dsr.getDatasetInfo();
-        if (dsInfo == null || !dsInfo.isRegistered()) {
-            throw new HyracksDataException(
-                    "Failed to open index with resource ID " + resourceID + " since it does not exist.");
-        }
-
-        IndexInfo iInfo = dsInfo.getIndexes().get(resourceID);
-        if (iInfo == null) {
-            throw new HyracksDataException(
-                    "Failed to open index with resource ID " + resourceID + " since it does not exist.");
-        }
-
-        dsr.open(true);
-        dsr.touch();
-
-        if (!iInfo.isOpen()) {
-            ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
-            synchronized (opTracker) {
-                iInfo.getIndex().activate();
+            DatasetResource dsr = datasets.get(did);
+            DatasetInfo dsInfo = dsr.getDatasetInfo();
+            if (dsInfo == null || !dsInfo.isRegistered()) {
+                throw new HyracksDataException(
+                        "Failed to open index with resource ID " + resourceID + " since it does not exist.");
             }
-            iInfo.setOpen(true);
-        }
-        iInfo.touch();
+
+            IndexInfo iInfo = dsInfo.getIndexes().get(resourceID);
+            if (iInfo == null) {
+                throw new HyracksDataException(
+                        "Failed to open index with resource ID " + resourceID + " since it does not exist.");
+            }
+
+            dsr.open(true);
+            dsr.touch();
+
+            if (!iInfo.isOpen()) {
+                ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
+                synchronized (opTracker) {
+                    iInfo.getIndex().activate();
+                }
+                iInfo.setOpen(true);
+            }
+            iInfo.touch();
     }
 
     private boolean evictCandidateDataset() throws HyracksDataException {
@@ -282,7 +282,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     @Override
     public synchronized List<IIndex> getOpenResources() {
         List<IndexInfo> openIndexesInfo = getOpenIndexesInfo();
-        List<IIndex> openIndexes = new ArrayList<IIndex>();
+        List<IIndex> openIndexes = new ArrayList<>();
         for (IndexInfo iInfo : openIndexesInfo) {
             openIndexes.add(iInfo.getIndex());
         }

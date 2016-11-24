@@ -28,12 +28,14 @@ public class TreeOperatorTestHelper implements ITreeIndexOperatorTestHelper {
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final String sep = System.getProperty("file.separator");
 
+    @Override
     public String getPrimaryIndexName() {
-        return System.getProperty("java.io.tmpdir") + sep + "primary" + simpleDateFormat.format(new Date());
+        return System.getProperty("java.io.tmpdir") + "primary" + simpleDateFormat.format(new Date());
     }
 
+    @Override
     public String getSecondaryIndexName() {
-        return System.getProperty("java.io.tmpdir") + sep + "secondary" + simpleDateFormat.format(new Date());
+        return System.getProperty("java.io.tmpdir") + "secondary" + simpleDateFormat.format(new Date());
     }
 
     @Override
@@ -46,5 +48,15 @@ public class TreeOperatorTestHelper implements ITreeIndexOperatorTestHelper {
         if (secondary.exists()) {
             secondary.deleteOnExit();
         }
+    }
+
+    @Override
+    public boolean getPrimaryIndexNameRelative() {
+        return false;
+    }
+
+    @Override
+    public boolean getSecondaryIndexNameRelative() {
+        return false;
     }
 }

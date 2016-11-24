@@ -197,10 +197,9 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -420,7 +419,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         WriteStatement ws = (WriteStatement) stmt;
         File f = new File(ws.getFileName());
-        FileSplit outputFile = new FileSplit(ws.getNcName().getValue(), new FileReference(f));
+        FileSplit outputFile = new FileSplit(ws.getNcName().getValue(), f.getPath(), false);
         IAWriterFactory writerFactory = null;
         if (ws.getWriterClassName() != null) {
             writerFactory = (IAWriterFactory) Class.forName(ws.getWriterClassName()).newInstance();
@@ -3178,7 +3177,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 int j;
                 // Build the stack for the enforced type
                 for (j = 1; j < splits.size(); j++) {
-                    nestedTypeStack.push(new Pair<ARecordType, String>(nestedFieldType, splits.get(j - 1)));
+                    nestedTypeStack.push(new Pair<>(nestedFieldType, splits.get(j - 1)));
                     bridgeName = nestedFieldType.getTypeName();
                     nestedFieldType = (ARecordType) enforcedType.getSubFieldType(splits.subList(0, j));
                     if (nestedFieldType == null) {

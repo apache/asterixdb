@@ -44,8 +44,9 @@ public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeEx
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException {
-        return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getVirtualBufferCaches(),
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException,
+            HyracksDataException {
+        return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),

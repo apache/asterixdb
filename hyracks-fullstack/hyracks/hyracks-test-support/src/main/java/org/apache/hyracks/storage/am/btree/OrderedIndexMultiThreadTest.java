@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -39,6 +37,7 @@ import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexMultiThreadTest {
@@ -58,7 +57,7 @@ public abstract class OrderedIndexMultiThreadTest {
     protected abstract void tearDown() throws HyracksDataException;
 
     protected abstract IIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields) throws TreeIndexException;
+            int[] bloomFilterKeyFields) throws TreeIndexException, HyracksDataException;
 
     protected abstract IIndexTestWorkerFactory getWorkerFactory();
 

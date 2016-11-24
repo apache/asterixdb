@@ -36,6 +36,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -52,7 +53,6 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.group.HashSpillableTableFactory;
@@ -155,13 +155,13 @@ public class Join {
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(customerSplits);
         long custFileSize = 0;
         for (int i = 0; i < customerSplits.length; i++) {
-            custFileSize += customerSplits[i].getLocalFile().getFile().length();
+            custFileSize += customerSplits[i].getFile(null).length();
         }
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(orderSplits);
         long orderFileSize = 0;
         for (int i = 0; i < orderSplits.length; i++) {
-            orderFileSize += orderSplits[i].getLocalFile().getFile().length();
+            orderFileSize += orderSplits[i].getFile(null).length();
         }
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,

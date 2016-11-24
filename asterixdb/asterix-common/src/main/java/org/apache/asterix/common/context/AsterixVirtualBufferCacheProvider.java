@@ -22,6 +22,11 @@ import java.util.List;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
@@ -36,11 +41,23 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
     }
 
     @Override
-    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx, IFileSplitProvider fileSplitProvider) {
+    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx,
+            IFileSplitProvider fileSplitProvider) throws HyracksDataException {
         final int partition = ctx.getTaskAttemptId().getTaskId().getPartition();
-        final int ioDeviceNum = fileSplitProvider.getFileSplits()[partition].getIODeviceId();
+        IIOManager ioManager = ctx.getIOManager();
+        FileSplit fileSplit = fileSplitProvider.getFileSplits()[partition];
+        FileReference fileRef = ioManager.getFileRef(fileSplit.getPath(), fileSplit.isManaged());
+        IODeviceHandle device = fileRef.getDeviceHandle();
+        List<IODeviceHandle> devices = ioManager.getIODevices();
+        int deviceId = 0;
+        for (int i = 0; i < devices.size(); i++) {
+            IODeviceHandle next = devices.get(i);
+            if (next == device) {
+                deviceId = i;
+            }
+        }
         return ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
-                .getDatasetLifecycleManager().getVirtualBufferCaches(datasetID, ioDeviceNum);
+                .getDatasetLifecycleManager().getVirtualBufferCaches(datasetID, deviceId);
     }
 
 }

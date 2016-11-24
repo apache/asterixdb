@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDescriptor {
@@ -59,6 +60,6 @@ public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDe
 
     @Override
     protected IRecordWriter createRecordWriter(FileSplit fileSplit, int index) throws Exception {
-        return new LineWriterImpl(fileSplit.getLocalFile().getFile(), columns, separator);
+        return new LineWriterImpl(fileSplit.getFile(null), columns, separator);
     }
 }

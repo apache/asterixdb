@@ -29,6 +29,8 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -72,6 +74,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
             throws HyracksDataException {
         // Output files
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
+        IIOManager ioManager = ctx.getIOManager();
         // Frame accessor
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
@@ -87,7 +90,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    out = new BufferedWriter(new FileWriter(splits[partition].getLocalFile().getFile()));
+                    out = new BufferedWriter(new FileWriter(splits[partition].getFile(ioManager)));
                     bbis = new ByteBufferInputStream();
                     di = new DataInputStream(bbis);
                 } catch (Exception e) {

@@ -24,9 +24,11 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -50,7 +52,8 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, int[] invertedIndexFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable) {
+            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable)
+            throws HyracksDataException {
         this(opDesc, ctx, partition, virtualBufferCache, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy,
                 opTrackerFactory, ioScheduler, ioOpCallbackFactory, invertedIndexFields, filterTypeTraits,
                 filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps,
@@ -63,7 +66,7 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             int[] invertedIndexFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
             int[] filterFields, int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps,
-            boolean durable) {
+            boolean durable) throws HyracksDataException {
         super(opDesc, ctx, partition, virtualBufferCaches, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory,
                 ioScheduler, ioOpCallbackFactory, filterTypeTraits, filterCmpFactories, filterFields, durable);
         this.invertedIndexFields = invertedIndexFields;
@@ -77,11 +80,14 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
         try {
             IBufferCache diskBufferCache = opDesc.getStorageManager().getBufferCache(ctx);
             IFileMapProvider diskFileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
-            PartitionedLSMInvertedIndex invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(
+            FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(invIndexOpDesc, ctx.getTaskAttemptId()
+                    .getTaskId().getPartition(), ctx.getIOManager());
+            PartitionedLSMInvertedIndex invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(ctx
+                    .getIOManager(),
                     virtualBufferCaches, diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(),
                     invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
                     invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
-                    diskBufferCache, file.getFile().getPath(), bloomFilterFalsePositiveRate, mergePolicy,
+                    diskBufferCache, fileRef.getFile().getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
                     opTrackerFactory.getOperationTracker(ctx), ioScheduler,
                     ioOpCallbackFactory.createIOOperationCallback(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,

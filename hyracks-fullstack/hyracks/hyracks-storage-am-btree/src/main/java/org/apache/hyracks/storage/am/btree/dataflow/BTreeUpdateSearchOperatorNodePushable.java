@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.btree.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -36,7 +37,7 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
 
     public BTreeUpdateSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields, int[] highKeyFields,
-            boolean lowKeyInclusive, boolean highKeyInclusive, ITupleUpdater tupleUpdater) {
+            boolean lowKeyInclusive, boolean highKeyInclusive, ITupleUpdater tupleUpdater) throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive,
                 highKeyInclusive, null, null);
         this.tupleUpdater = tupleUpdater;

@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
@@ -94,7 +95,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     private final List<ILSMComponent> secondDiskComponents;
     private int version = -1;
 
-    public ExternalBTreeWithBuddy(ITreeIndexFrameFactory btreeInteriorFrameFactory,
+    public ExternalBTreeWithBuddy(IIOManager ioManager, ITreeIndexFrameFactory btreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, ITreeIndexFrameFactory buddyBtreeLeafFrameFactory,
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager,
             TreeIndexFactory<BTree> bulkLoadBTreeFactory, TreeIndexFactory<BTree> copyBtreeFactory,
@@ -103,7 +104,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             IBinaryComparatorFactory[] btreeCmpFactories, IBinaryComparatorFactory[] buddyBtreeCmpFactories,
             int[] buddyBTreeFields, int version, boolean durable) {
-        super(diskBufferCache, fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
+        super(ioManager, diskBufferCache, fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate, mergePolicy,
+                opTracker,
                 ioScheduler, ioOpCallback, durable);
         this.btreeCmpFactories = btreeCmpFactories;
         this.buddyBtreeCmpFactories = buddyBtreeCmpFactories;
@@ -115,7 +117,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 bloomFilterFactory);
         this.bulkComponentFactory = new LSMBTreeWithBuddyDiskComponentFactory(bulkLoadBTreeFactory, buddyBtreeFactory,
                 bloomFilterFactory);
-        this.secondDiskComponents = new LinkedList<ILSMComponent>();
+        this.secondDiskComponents = new LinkedList<>();
         this.version = version;
     }
 
@@ -876,7 +878,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
-        Set<String> files = new HashSet<String>();
+        Set<String> files = new HashSet<>();
         LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) lsmComponent;
         files.add(component.getBTree().getFileReference().getFile().getAbsolutePath());
         files.add(component.getBuddyBTree().getFileReference().getFile().getAbsolutePath());

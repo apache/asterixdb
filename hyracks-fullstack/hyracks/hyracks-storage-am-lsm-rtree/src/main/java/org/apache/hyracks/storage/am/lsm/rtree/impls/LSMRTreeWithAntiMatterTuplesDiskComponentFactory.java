@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
@@ -39,7 +40,8 @@ public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMCom
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
+    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
+            HyracksDataException {
         return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()), null,
                 null, filterFactory == null ? null : filterFactory.createLSMComponentFilter());
     }

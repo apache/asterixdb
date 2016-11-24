@@ -20,9 +20,6 @@ package org.apache.hyracks.examples.btree.client;
 
 import java.io.DataOutput;
 
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -50,6 +47,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 // This example will perform range search on the secondary index
 // and then retrieve the corresponding source records from the primary index
@@ -73,6 +72,9 @@ public class SecondaryIndexSearchExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
+
+        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
+        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -168,7 +170,7 @@ public class SecondaryIndexSearchExample {
                                               // index search op
 
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
-                options.secondaryBTreeName);
+                options.secondaryBTreeName, options.relative);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
@@ -186,7 +188,8 @@ public class SecondaryIndexSearchExample {
                                             // going into primary index search
                                             // op
 
-        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
+        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName,
+                options.relative);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 null, primaryLowKeyFields, primaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null,

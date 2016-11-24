@@ -21,7 +21,9 @@ package org.apache.hyracks.storage.am.common.util;
 
 import java.io.File;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 
@@ -34,9 +36,9 @@ public class IndexFileNameUtil {
         return path + File.separator + IO_DEVICE_NAME_PREFIX + ioDeviceId;
     }
 
-    public static FileReference getIndexAbsoluteFileRef(IIndexOperatorDescriptor opDesc, int partition, IIOManager ioManager){
-        String indexName = opDesc.getFileSplitProvider().getFileSplits()[partition].getLocalFile().getFile().getPath();
-        int ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
-        return ioManager.getAbsoluteFileRef(ioDeviceId, indexName);
+    public static FileReference getIndexAbsoluteFileRef(IIndexOperatorDescriptor opDesc, int partition,
+            IIOManager ioManager) throws HyracksDataException {
+        FileSplit split = opDesc.getFileSplitProvider().getFileSplits()[partition];
+        return ioManager.getFileRef(split.getPath(), split.isManaged());
     }
 }

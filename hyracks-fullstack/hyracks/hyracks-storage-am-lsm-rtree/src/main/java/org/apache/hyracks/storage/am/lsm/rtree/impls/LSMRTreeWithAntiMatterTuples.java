@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
@@ -73,7 +74,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     // because it should have a different tuple writer in it's leaf frames.
     private final ILSMComponentFactory bulkLoaComponentFactory;
 
-    public LSMRTreeWithAntiMatterTuples(List<IVirtualBufferCache> virtualBufferCaches,
+    public LSMRTreeWithAntiMatterTuples(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMIndexFileManager fileManager, TreeIndexFactory<RTree> diskRTreeFactory,
@@ -83,8 +84,9 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            int[] rtreeFields, int[] filterFields, boolean durable, boolean isPointMBR) {
-        super(virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
+            int[] rtreeFields, int[] filterFields, boolean durable, boolean isPointMBR) throws HyracksDataException {
+        super(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+                btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, fileManager,
                 new LSMRTreeWithAntiMatterTuplesDiskComponentFactory(diskRTreeFactory, filterFactory),
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
@@ -462,8 +464,9 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
-        if (!appendOnly)
+        if (!appendOnly) {
             throw new UnsupportedOperationException("LSM indexes don't support in-place modification");
+        }
         return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
     }
 

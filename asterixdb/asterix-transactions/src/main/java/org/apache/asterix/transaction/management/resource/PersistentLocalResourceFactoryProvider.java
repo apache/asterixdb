@@ -18,23 +18,23 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
+import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public class PersistentLocalResourceFactoryProvider implements ILocalResourceFactoryProvider {
 
     private static final long serialVersionUID = 1L;
-    private final ILocalResourceMetadata localResourceMetadata;
-    private final int resourceType;
+    private final IResourceFactory factory;
+    private final int type;
 
-    public PersistentLocalResourceFactoryProvider(ILocalResourceMetadata localResourceMetadata, int resourceType) {
-        this.localResourceMetadata = localResourceMetadata;
-        this.resourceType = resourceType;
+    public PersistentLocalResourceFactoryProvider(IResourceFactory factory, int type) {
+        this.factory = factory;
+        this.type = type;
     }
 
     @Override
     public ILocalResourceFactory getLocalResourceFactory() {
-        return new PersistentLocalResourceFactory(localResourceMetadata, resourceType);
+        return new PersistentLocalResourceFactory(factory, type);
     }
 }

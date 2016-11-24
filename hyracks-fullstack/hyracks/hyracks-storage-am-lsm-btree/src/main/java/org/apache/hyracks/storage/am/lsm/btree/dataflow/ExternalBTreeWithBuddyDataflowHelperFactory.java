@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.btree.dataflow;
 import java.util.Map;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -47,7 +48,7 @@ public class ExternalBTreeWithBuddyDataflowHelperFactory extends AbstractLSMInde
 
     @Override
     public IIndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) {
+            int partition) throws HyracksDataException {
         return new ExternalBTreeWithBuddyDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, buddyBtreeFields, version, durable);

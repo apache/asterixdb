@@ -53,8 +53,9 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields) throws TreeIndexException {
-        return LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
+            int[] bloomFilterKeyFields) throws TreeIndexException, HyracksDataException {
+        return LSMBTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
+                .getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories,
                 bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true, null,
@@ -68,7 +69,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
-        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<>();
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };

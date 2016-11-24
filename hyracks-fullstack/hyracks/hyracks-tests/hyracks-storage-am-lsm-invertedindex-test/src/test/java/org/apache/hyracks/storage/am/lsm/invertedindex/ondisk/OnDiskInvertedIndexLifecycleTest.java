@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import java.io.File;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
@@ -61,8 +59,9 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
         IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        FileReference btreeFile = new FileReference(new File(harness.getInvListsFileRef().getFile().getPath()
-                + "_btree"));
+        FileReference btreeFile = harness.getIOManager().getFileRef(harness.getInvListsFileRef().getFile()
+                .getAbsolutePath()
+                + "_btree", false);
         index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListBuilder,
                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                 harness.getInvListsFileRef(), btreeFile);

@@ -25,6 +25,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -67,7 +68,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory extends AbstractL
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) {
+            int partition) throws HyracksDataException {
         return new LSMRTreeWithAntiMatterTuplesDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx, opDesc.getFileSplitProvider()),
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType,

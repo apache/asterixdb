@@ -29,7 +29,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 public class IndexCreateOperatorNodePushable extends AbstractOperatorNodePushable {
     private final IIndexDataflowHelper indexHelper;
 
-    public IndexCreateOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
+    public IndexCreateOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
     }
 

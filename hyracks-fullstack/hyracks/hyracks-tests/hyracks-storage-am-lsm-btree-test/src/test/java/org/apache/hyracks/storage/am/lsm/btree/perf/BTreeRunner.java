@@ -23,6 +23,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
@@ -35,7 +36,7 @@ public class BTreeRunner extends InMemoryBTreeRunner {
     protected static final int HYRACKS_FRAME_SIZE = 128;
 
     public BTreeRunner(int numTuples, int pageSize, int numPages, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException, BTreeException {
+            IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksException {
         super(numTuples, pageSize, numPages, typeTraits, cmpFactories);
     }
 

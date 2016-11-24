@@ -20,10 +20,11 @@ package org.apache.hyracks.storage.common.file;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@FunctionalInterface
 public interface IResourceIdFactory {
 
     /**
-     * @return A unique monotonically increasing id.
+     * @return A unique id
      * @throws Exception
      */
     long createId() throws HyracksDataException;

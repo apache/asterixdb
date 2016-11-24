@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
@@ -33,11 +34,12 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
 
-    public DummyLSMIndexFileManager(IFileMapProvider fileMapProvider, FileReference file,
+    public DummyLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
-        super(fileMapProvider, file, treeFactory);
+        super(ioManager, fileMapProvider, file, treeFactory);
     }
 
+    @Override
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
             throws HyracksDataException, IndexException {
@@ -45,7 +47,7 @@ public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
         String[] files = dir.list(filter);
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);
-            FileReference fileRef = new FileReference(file);
+            FileReference fileRef = ioManager.getFileRef(file.getAbsolutePath(), false);
             allFiles.add(new ComparableFileName(fileRef));
         }
     }

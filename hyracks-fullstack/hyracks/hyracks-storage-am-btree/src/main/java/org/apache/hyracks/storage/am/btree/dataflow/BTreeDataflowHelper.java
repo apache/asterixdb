@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.btree.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
@@ -28,11 +29,12 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 
 public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
 
     public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            boolean durable) {
+            boolean durable) throws HyracksDataException {
         super(opDesc, ctx, partition, durable);
     }
 
@@ -40,9 +42,11 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
         try {
+            FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(treeOpDesc, ctx.getTaskAttemptId()
+                    .getTaskId().getPartition(), ctx.getIOManager());
             return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
                     .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                    .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM, file);
+                            .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM, fileRef);
         } catch (BTreeException e) {
             throw new HyracksDataException(e);
         }

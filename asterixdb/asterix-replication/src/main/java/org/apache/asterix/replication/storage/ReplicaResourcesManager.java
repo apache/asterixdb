@@ -166,7 +166,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
                     File localResource = new File(
                             indexFolder + File.separator + PersistentLocalResourceRepository.METADATA_FILE_NAME);
                     LocalResource resource = PersistentLocalResourceRepository.readLocalResource(localResource);
-                    laggingReplicaIndexes.put(resource.getResourceId(), indexFolder.getAbsolutePath());
+                    laggingReplicaIndexes.put(resource.getId(), indexFolder.getAbsolutePath());
                 }
             }
         } catch (HyracksDataException e) {

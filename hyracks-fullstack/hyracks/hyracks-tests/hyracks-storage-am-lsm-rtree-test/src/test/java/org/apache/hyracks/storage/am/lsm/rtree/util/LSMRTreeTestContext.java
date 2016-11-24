@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
@@ -72,7 +73,8 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
         return lsmTree.getComparatorFactories();
     }
 
-    public static LSMRTreeTestContext create(List<IVirtualBufferCache> virtualBufferCaches, FileReference file,
+    public static LSMRTreeTestContext create(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
@@ -89,7 +91,8 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
         }
         IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(btreeFieldSerdes,
                 numBtreeFields);
-        LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, diskBufferCache, diskFileMapProvider,
+        LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache,
+                diskFileMapProvider,
                 typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback,
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, btreeFields, null,

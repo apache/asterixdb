@@ -41,20 +41,32 @@ public class LSMTreeOperatorTestHelper extends TreeOperatorTestHelper {
                 DEFAULT_MEM_NUM_PAGES);
     }
 
+    @Override
     public String getPrimaryIndexName() {
         return "primary" + simpleDateFormat.format(new Date());
     }
 
+    @Override
+    public boolean getPrimaryIndexNameRelative() {
+        return true;
+    }
+
+    @Override
     public String getSecondaryIndexName() {
         return "secondary" + simpleDateFormat.format(new Date());
     }
 
     @Override
+    public boolean getSecondaryIndexNameRelative() {
+        return true;
+    }
+
+    @Override
     public void cleanup(String primaryFileName, String secondaryFileName) {
         for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File primaryDir = new File(dev.getPath(), primaryFileName);
+            File primaryDir = new File(dev.getMount(), primaryFileName);
             cleanupDir(primaryDir);
-            File secondaryDir = new File(dev.getPath(), secondaryFileName);
+            File secondaryDir = new File(dev.getMount(), secondaryFileName);
             cleanupDir(secondaryDir);
         }
     }
@@ -64,6 +76,7 @@ public class LSMTreeOperatorTestHelper extends TreeOperatorTestHelper {
             return;
         }
         FilenameFilter filter = new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return !name.startsWith(".");
             }

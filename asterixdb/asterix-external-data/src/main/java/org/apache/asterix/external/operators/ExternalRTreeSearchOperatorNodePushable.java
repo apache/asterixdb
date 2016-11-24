@@ -38,7 +38,7 @@ import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorNodePusha
 public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperatorNodePushable {
 
     public ExternalRTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) {
+            int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, keyFields, null, null);
     }
 
@@ -72,7 +72,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx));
             ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexHelper.getResourceID(), ctx, null);
+                    .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
             // The next line is the reason we override this method
             indexAccessor = rTreeIndex.createAccessor(searchCallback, rTreeDataflowHelper.getTargetVersion());
             cursor = createCursor();

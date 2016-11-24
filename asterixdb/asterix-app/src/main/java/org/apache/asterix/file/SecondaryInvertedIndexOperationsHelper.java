@@ -20,13 +20,13 @@ package org.apache.asterix.file;
 
 import java.util.List;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
+import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.IAType;
@@ -34,7 +34,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -217,7 +217,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-        ILocalResourceMetadata localResourceMetadata = new LSMInvertedIndexLocalResourceMetadata(invListsTypeTraits,
+        IResourceFactory localResourceMetadata = new LSMInvertedIndexLocalResourceMetadataFactory(invListsTypeTraits,
                 primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory, isPartitioned,
                 dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits,
                 filterCmpFactories, invertedIndexFields, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,

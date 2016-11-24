@@ -25,9 +25,11 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -46,7 +48,7 @@ public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields,
-            int[] filterFields, boolean durable) {
+            int[] filterFields, boolean durable) throws HyracksDataException {
         this(opDesc, ctx, partition, virtualBufferCaches, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy,
                 opTrackerFactory, ioScheduler, ioOpCallbackFactory, needKeyDupCheck, filterTypeTraits,
                 filterCmpFactories, btreeFields, filterFields, durable);
@@ -57,7 +59,7 @@ public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] btreeFields, int[] filterFields, boolean durable) {
+            int[] btreeFields, int[] filterFields, boolean durable) throws HyracksDataException {
         super(opDesc, ctx, partition, virtualBufferCaches, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory,
                 ioScheduler, ioOpCallbackFactory, filterTypeTraits, filterCmpFactories, filterFields, durable);
         this.needKeyDupCheck = needKeyDupCheck;
@@ -67,7 +69,10 @@ public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
-        return LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, opDesc.getStorageManager().getBufferCache(ctx),
+        FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(treeOpDesc, ctx.getTaskAttemptId()
+                .getTaskId().getPartition(), ctx.getIOManager());
+        return LSMBTreeUtils.createLSMTree(ctx.getIOManager(), virtualBufferCaches, fileRef, opDesc.getStorageManager()
+                .getBufferCache(ctx),
                 opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 treeOpDesc.getTreeIndexComparatorFactories(), treeOpDesc.getTreeIndexBloomFilterKeyFields(),
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory.getOperationTracker(ctx), ioScheduler,

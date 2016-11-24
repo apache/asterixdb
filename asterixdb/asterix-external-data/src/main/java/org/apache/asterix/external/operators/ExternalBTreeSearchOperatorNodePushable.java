@@ -38,7 +38,7 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
 
     public ExternalBTreeSearchOperatorNodePushable(ExternalBTreeSearchOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields,
-            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
+            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive,
                 highKeyInclusive, null, null);
     }
@@ -73,7 +73,7 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx));
             ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexHelper.getResourceID(), ctx, null);
+                    .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
             // The next line is the reason we override this method
             indexAccessor = externalIndex.createAccessor(searchCallback, dataFlowHelper.getTargetVersion());
             cursor = createCursor();

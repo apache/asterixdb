@@ -18,24 +18,26 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
  * The local resource for disk only lsm btree with buddy tree
  */
-public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLocalResourceMetadata {
+public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
 
     private static final long serialVersionUID = 1L;
 
@@ -45,10 +47,11 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLoca
     private final Map<String, String> mergePolicyProperties;
     private final int[] buddyBtreeFields;
 
-    public ExternalBTreeWithBuddyLocalResourceMetadata(int datasetID, IBinaryComparatorFactory[] btreeCmpFactories,
+    public ExternalBTreeWithBuddyLocalResourceMetadata(int datasetID, int partition,
+            IBinaryComparatorFactory[] btreeCmpFactories,
             ITypeTraits[] typeTraits, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, int[] buddyBtreeFields) {
-        super(datasetID, null, null, null);
+        super(datasetID, partition, null, null, null);
         this.btreeCmpFactories = btreeCmpFactories;
         this.typeTraits = typeTraits;
         this.mergePolicyFactory = mergePolicyFactory;
@@ -57,16 +60,17 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLoca
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-                                         int partition, int ioDeviceNum) throws HyracksDataException {
-        FileReference file = new FileReference(new File(filePath));
-        return LSMBTreeUtils.createExternalBTreeWithBuddy(file, runtimeContextProvider.getBufferCache(),
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+            LocalResource resource) throws HyracksDataException {
+        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        FileReference file = ioManager.getFileRef(resource.getPath(), true);
+        return LSMBTreeUtils.createExternalBTreeWithBuddy(ioManager, file, runtimeContextProvider.getBufferCache(),
                 runtimeContextProvider.getFileMapManager(), typeTraits, btreeCmpFactories,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getDatasetLifecycleManager()),
-                new BaseOperationTracker(datasetID,
-                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                new BaseOperationTracker(datasetId(),
+                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                 runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), buddyBtreeFields, -1,
                 true);

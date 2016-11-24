@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
@@ -48,7 +49,7 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     private final RTreeTestWorkerFactory workerFactory = new RTreeTestWorkerFactory();
 
     @Override
-    protected void setUp() throws HyracksDataException {
+    protected void setUp() throws HyracksException {
         harness.setUp();
     }
 
@@ -73,7 +74,7 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
-        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<>();
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };

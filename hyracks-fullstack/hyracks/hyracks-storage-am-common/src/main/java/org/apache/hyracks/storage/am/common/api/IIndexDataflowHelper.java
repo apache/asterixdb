@@ -18,11 +18,11 @@
  */
 package org.apache.hyracks.storage.am.common.api;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 public interface IIndexDataflowHelper {
+
     public void create() throws HyracksDataException;
 
     /*
@@ -39,16 +39,5 @@ public interface IIndexDataflowHelper {
 
     public IIndex getIndexInstance();
 
-    public FileReference getFileReference();
-
-    public long getResourceID() throws HyracksDataException;
-
-    public IHyracksTaskContext getTaskContext();
-
-    public String getResourcePath();
-
-    /**
-     * @return The resource unique storage partition id
-     */
-    public int getResourcePartition();
+    public LocalResource getResource() throws HyracksDataException;
 }

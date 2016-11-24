@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.dataflow.std.file;
 
+import org.apache.hyracks.api.io.FileSplit;
+
 public class ConstantFileSplitProvider implements IFileSplitProvider {
     private static final long serialVersionUID = 1L;
     private final FileSplit[] splits;

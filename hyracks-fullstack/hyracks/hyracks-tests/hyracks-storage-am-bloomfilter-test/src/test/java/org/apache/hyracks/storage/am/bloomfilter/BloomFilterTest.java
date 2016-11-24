@@ -24,10 +24,6 @@ import java.util.Random;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -41,11 +37,15 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.bloomfilter.util.AbstractBloomFilterTest;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public class BloomFilterTest extends AbstractBloomFilterTest {
     private final Random rnd = new Random(50);
 
+    @Override
     @Before
     public void setUp() throws HyracksDataException {
         super.setUp();
@@ -81,8 +81,8 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
         // generate keys
         int maxKey = 1000;
-        TreeSet<Integer> uniqueKeys = new TreeSet<Integer>();
-        ArrayList<Integer> keys = new ArrayList<Integer>();
+        TreeSet<Integer> uniqueKeys = new TreeSet<>();
+        ArrayList<Integer> keys = new ArrayList<>();
         while (uniqueKeys.size() < numElements) {
             int key = rnd.nextInt() % maxKey;
             uniqueKeys.add(key);
@@ -142,10 +142,10 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
         ArrayTupleReference tuple = new ArrayTupleReference();
 
         int maxLength = 20;
-        ArrayList<String> s1 = new ArrayList<String>();
-        ArrayList<String> s2 = new ArrayList<String>();
-        ArrayList<String> s3 = new ArrayList<String>();
-        ArrayList<String> s4 = new ArrayList<String>();
+        ArrayList<String> s1 = new ArrayList<>();
+        ArrayList<String> s2 = new ArrayList<>();
+        ArrayList<String> s3 = new ArrayList<>();
+        ArrayList<String> s4 = new ArrayList<>();
         for (int i = 0; i < numElements; ++i) {
             s1.add(randomString(rnd.nextInt() % maxLength, rnd));
             s2.add(randomString(rnd.nextInt() % maxLength, rnd));

@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 public class DummyTreeFactory extends TreeIndexFactory<ITreeIndex> {
 
     public DummyTreeFactory() {
-        super(null, null, null, null, null, null, 0);
+        super(null, null, null, null, null, null, null, 0);
     }
 
     @Override

@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.translator;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,8 +156,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 
 /**
  * Each visit returns a pair of an operator and a variable. The variable
@@ -702,7 +700,7 @@ class LangExpressionToPlanTranslator
         InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
                 varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
         insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-        insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+        insertOp.getInputs().add(new MutableObject<>(assign));
         CompiledInsertStatement compiledInsert = (CompiledInsertStatement) stmt;
         if (compiledInsert.getReturnQuery() != null) {
             leafOperator = createReturningQuery(compiledInsert, insertOp);
@@ -737,7 +735,7 @@ class LangExpressionToPlanTranslator
         String filePath = outputDir + System.getProperty("file.separator") + OUTPUT_FILE_PREFIX
                 + outputFileID.incrementAndGet();
         AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.INSTANCE.getMetadataProperties();
-        return new FileSplit(metadataProperties.getMetadataNodeName(), new FileReference(new File(filePath)));
+        return new FileSplit(metadataProperties.getMetadataNodeName(), filePath, true);
     }
 
     @Override
@@ -1723,7 +1721,7 @@ class LangExpressionToPlanTranslator
             UnnestOperator unnestOp = new UnnestOperator(unnestVar,
                     new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
                             FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), args)));
-            unnestOp.getInputs().add(new MutableObject<ILogicalOperator>(opAndVar.first));
+            unnestOp.getInputs().add(new MutableObject<>(opAndVar.first));
             inputOpRefsToUnion.add(new MutableObject<ILogicalOperator>(unnestOp));
             vars.add(unnestVar);
         }

@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -27,8 +28,9 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeWithAntiMatterTuplesFileManager extends AbstractLSMIndexFileManager {
 
-    public LSMRTreeWithAntiMatterTuplesFileManager(IFileMapProvider fileMapProvider, FileReference file,
+    public LSMRTreeWithAntiMatterTuplesFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider,
+            FileReference file,
             TreeIndexFactory<? extends ITreeIndex> rtreeFactory) {
-        super(fileMapProvider, file, rtreeFactory);
+        super(ioManager, fileMapProvider, file, rtreeFactory);
     }
 }

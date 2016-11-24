@@ -20,8 +20,6 @@ package org.apache.hyracks.tests.integration;
 
 import java.io.File;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -30,7 +28,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -41,13 +39,12 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
-import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.aggregators.CountFieldAggregatorFactory;
@@ -57,13 +54,15 @@ import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 import org.apache.hyracks.tests.util.ResultSerializerFactoryProvider;
+import org.junit.Test;
 
 public class CountOfCountsTest extends AbstractIntegrationTest {
     @Test
     public void countOfCountsSingleNC() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) };
+        FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new File("data/words.txt").getAbsolutePath(),
+                false) };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         RecordDescriptor desc = new RecordDescriptor(
                 new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
@@ -135,7 +134,8 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
     public void countOfCountsMultiNC() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) };
+        FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new File("data/words.txt").getAbsolutePath(),
+                false) };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         RecordDescriptor desc = new RecordDescriptor(
                 new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
@@ -208,7 +208,8 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
     public void countOfCountsExternalSortMultiNC() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) };
+        FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new File("data/words.txt").getAbsolutePath(),
+                false) };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         RecordDescriptor desc = new RecordDescriptor(
                 new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });

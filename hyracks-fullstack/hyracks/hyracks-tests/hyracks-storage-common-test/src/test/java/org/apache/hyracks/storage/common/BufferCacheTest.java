@@ -27,22 +27,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class BufferCacheTest {
-    protected static final List<String> openedFiles = new ArrayList<String>();
+    protected static final List<String> openedFiles = new ArrayList<>();
     protected static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected static final String tmpDir = System.getProperty("java.io.tmpdir");
     protected static final String sep = System.getProperty("file.separator");
@@ -62,12 +64,13 @@ public class BufferCacheTest {
     }
 
     @Test
-    public void simpleOpenPinCloseTest() throws HyracksDataException {
+    public void simpleOpenPinCloseTest() throws HyracksException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         String fileName = getFileName();
-        FileReference file = new FileReference(new File(fileName));
+        FileReference file = ioManager.getFileRef(fileName, false);
         bufferCache.createFile(file);
         int fileId = fmp.lookupFileId(file);
         int num = 10;
@@ -143,16 +146,18 @@ public class BufferCacheTest {
     }
 
     @Test
-    public void simpleMaxOpenFilesTest() throws HyracksDataException {
+    public void simpleMaxOpenFilesTest() throws HyracksException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
-        List<Integer> fileIds = new ArrayList<Integer>();
+        List<Integer> fileIds = new ArrayList<>();
 
         for (int i = 0; i < MAX_OPEN_FILES; i++) {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -164,7 +169,7 @@ public class BufferCacheTest {
         // since all files are open, next open should fail
         try {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -182,7 +187,7 @@ public class BufferCacheTest {
         exceptionThrown = false;
         try {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -201,20 +206,21 @@ public class BufferCacheTest {
     }
 
     @Test
-    public void contentCheckingMaxOpenFilesTest() throws HyracksDataException {
+    public void contentCheckingMaxOpenFilesTest() throws HyracksException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
-        List<Integer> fileIds = new ArrayList<Integer>();
-        Map<Integer, ArrayList<Integer>> pageContents = new HashMap<Integer, ArrayList<Integer>>();
+        List<Integer> fileIds = new ArrayList<>();
+        Map<Integer, ArrayList<Integer>> pageContents = new HashMap<>();
         int num = 10;
         int testPageId = 0;
 
         // open max number of files and write some stuff into their first page
         for (int i = 0; i < MAX_OPEN_FILES; i++) {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -224,7 +230,7 @@ public class BufferCacheTest {
             page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), true);
             page.acquireWriteLatch();
             try {
-                ArrayList<Integer> values = new ArrayList<Integer>();
+                ArrayList<Integer> values = new ArrayList<>();
                 for (int j = 0; j < num; j++) {
                     int x = Math.abs(rnd.nextInt());
                     page.getBuffer().putInt(j * 4, x);
@@ -242,7 +248,7 @@ public class BufferCacheTest {
         // since all files are open, next open should fail
         try {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -252,7 +258,7 @@ public class BufferCacheTest {
         Assert.assertTrue(exceptionThrown);
 
         // close a few random files
-        ArrayList<Integer> closedFileIds = new ArrayList<Integer>();
+        ArrayList<Integer> closedFileIds = new ArrayList<>();
         int filesToClose = 5;
         for (int i = 0; i < filesToClose; i++) {
             int ix = Math.abs(rnd.nextInt()) % fileIds.size();
@@ -264,7 +270,7 @@ public class BufferCacheTest {
         // now open a few new files
         for (int i = 0; i < filesToClose; i++) {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -274,7 +280,7 @@ public class BufferCacheTest {
         // since all files are open, next open should fail
         try {
             String fileName = getFileName();
-            FileReference file = new FileReference(new File(fileName));
+            FileReference file = ioManager.getFileRef(fileName, false);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);

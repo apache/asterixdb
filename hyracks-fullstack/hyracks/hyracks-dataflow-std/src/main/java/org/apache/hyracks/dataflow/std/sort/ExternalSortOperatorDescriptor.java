@@ -64,6 +64,8 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
     @Override
     public AbstractSorterOperatorDescriptor.SortActivity getSortActivity(ActivityId id) {
         return new AbstractSorterOperatorDescriptor.SortActivity(id) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider) throws HyracksDataException {
@@ -76,6 +78,8 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
     @Override
     public AbstractSorterOperatorDescriptor.MergeActivity getMergeActivity(ActivityId id) {
         return new AbstractSorterOperatorDescriptor.MergeActivity(id) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             protected ExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider, IFrameWriter writer, ISorter sorter,

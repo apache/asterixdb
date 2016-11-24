@@ -20,32 +20,114 @@ package org.apache.hyracks.api.io;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+/**
+ * Represents an IO device
+ */
 public class IODeviceHandle implements Serializable {
     private static final long serialVersionUID = 1L;
+    /**
+     * Absolute mount point
+     */
+    private final File mount;
+    /**
+     * relative workspace
+     */
+    private final String workspace;
 
-    private final File path;
-
-    private final String workAreaPath;
-
-    public IODeviceHandle(File path, String workAreaPath) {
-        this.path = path;
-        workAreaPath = workAreaPath.trim();
-        if (workAreaPath.endsWith(File.separator)) {
-            workAreaPath = workAreaPath.substring(0, workAreaPath.length() - 1);
-        }
-        this.workAreaPath = workAreaPath;
+    /**
+     * @param mount
+     *            The device root
+     * @param workspace
+     *            The relative workspace inside the device
+     */
+    public IODeviceHandle(File mount, String workspace) {
+        this.mount = mount;
+        this.workspace = workspace == null ? null
+                : workspace.endsWith(File.separator) ? workspace.substring(0, workspace.length() - 1)
+                        : workspace;
     }
 
-    public File getPath() {
-        return path;
+    public File getMount() {
+        return mount;
     }
 
-    public String getWorkAreaPath() {
-        return workAreaPath;
+    public String getWorkspace() {
+        return workspace;
     }
 
-    public FileReference createFileReference(String relPath) {
+    /**
+     * Create a file reference
+     *
+     * @param relPath
+     *            the relative path
+     * @return
+     */
+    public FileReference createFileRef(String relPath) {
         return new FileReference(this, relPath);
+    }
+
+    /**
+     * Get handles for IO devices
+     *
+     * @param ioDevices
+     *            comma separated list of devices
+     * @return
+     */
+    public static List<IODeviceHandle> getDevices(String ioDevices) {
+        List<IODeviceHandle> devices = new ArrayList<>();
+        StringTokenizer tok = new StringTokenizer(ioDevices, ",");
+        while (tok.hasMoreElements()) {
+            String devPath = tok.nextToken().trim();
+            devices.add(new IODeviceHandle(new File(devPath), "."));
+        }
+        return devices;
+    }
+
+    /**
+     * @param absolutePath
+     * @return the relative path
+     * @throws HyracksDataException
+     */
+    public String getRelativePath(String absolutePath) throws HyracksDataException {
+        if (absolutePath.indexOf(mount.getAbsolutePath()) != 0) {
+            throw new HyracksDataException(
+                    "Passed path: " + absolutePath + " is not inside the device " + mount.getAbsolutePath());
+        }
+        return absolutePath.substring(mount.getAbsolutePath().length());
+    }
+
+    /**
+     * determinea if the device contains a file with the passed relative path
+     * @param relPath
+     * @return true if it contains, false, otherwise
+     */
+    public boolean contains(String relPath) {
+        return new File(mount, relPath).exists();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o instanceof IODeviceHandle) {
+            return mount.getAbsolutePath().equals(((IODeviceHandle) o).getMount().getAbsolutePath());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return mount.getAbsolutePath().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "mount: " + mount.getAbsolutePath() + ((workspace == null) ? "" : ", workspace: " + workspace);
     }
 }

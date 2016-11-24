@@ -20,16 +20,16 @@ package org.apache.asterix.transaction.management.resource;
 
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 
 public class PersistentLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
-    private final IIOManager ioManager;
+    private final IOManager ioManager;
     private final String nodeId;
     private final AsterixMetadataProperties metadataProperties;
 
-    public PersistentLocalResourceRepositoryFactory(IIOManager ioManager, String nodeId,
+    public PersistentLocalResourceRepositoryFactory(IOManager ioManager, String nodeId,
             AsterixMetadataProperties metadataProperties) {
         this.ioManager = ioManager;
         this.nodeId = nodeId;
@@ -38,6 +38,6 @@ public class PersistentLocalResourceRepositoryFactory implements ILocalResourceR
 
     @Override
     public ILocalResourceRepository createRepository() throws HyracksDataException {
-        return new PersistentLocalResourceRepository(ioManager.getIODevices(), nodeId, metadataProperties);
+        return new PersistentLocalResourceRepository(ioManager, ioManager.getIODevices(), nodeId, metadataProperties);
     }
 }

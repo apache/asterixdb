@@ -58,7 +58,7 @@ public class ReportMaxResourceIdMessage implements IApplicationMessage {
         NodeControllerService ncs = cs;
         IAsterixAppRuntimeContext appContext =
                 (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        long maxResourceId = Math.max(appContext.getLocalResourceRepository().getMaxResourceID(),
+        long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
         ReportMaxResourceIdMessage maxResourceIdMsg = new ReportMaxResourceIdMessage(ncs.getId(), maxResourceId);
         try {

@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
@@ -26,35 +25,39 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactor
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMetadata {
 
     private static final long serialVersionUID = 1L;
 
     public ExternalBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
+            int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, int partition,
+            ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties) {
-        super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, mergePolicyFactory,
+        super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, partition, mergePolicyFactory,
                 mergePolicyProperties, null, null, null, null);
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition, int ioDeviceNum) {
-        FileReference file = new FileReference(new File(filePath));
-
-        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(file, runtimeContextProvider.getBufferCache(),
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+            LocalResource resource) throws HyracksDataException {
+        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        FileReference file = ioManager.getFileRef(resource.getPath(), true);
+        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(ioManager, file, runtimeContextProvider.getBufferCache(),
                 runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getDatasetLifecycleManager()),
-                new BaseOperationTracker(datasetID,
-                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                new BaseOperationTracker(datasetId(),
+                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                 runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true);
         return lsmBTree;

@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 
 public class FileSplitDomain implements INodeDomain {
 
@@ -44,7 +44,7 @@ public class FileSplitDomain implements INodeDomain {
             } else {
                 sb.append(", ");
             }
-            sb.append(fs.getNodeName() + ":" + fs.getLocalFile());
+            sb.append(fs.getNodeName() + ":" + fs.getPath());
         }
         sb.append(']');
         return sb.toString();

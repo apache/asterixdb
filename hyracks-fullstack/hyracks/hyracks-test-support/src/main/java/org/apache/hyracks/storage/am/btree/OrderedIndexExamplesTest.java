@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.btree;
 
+import static org.junit.Assert.fail;
+
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +28,7 @@ import java.util.logging.Logger;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -51,8 +54,6 @@ import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.junit.Test;
 
-import static org.junit.Assert.fail;
-
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexExamplesTest {
     protected static final Logger LOGGER = Logger.getLogger(OrderedIndexExamplesTest.class.getName());
@@ -60,7 +61,7 @@ public abstract class OrderedIndexExamplesTest {
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] btreeFields, int[] filterFields) throws TreeIndexException;
+            int[] btreeFields, int[] filterFields) throws TreeIndexException, HyracksDataException;
 
     /**
      * Fixed-Length Key,Value Example. Create a tree index with one fixed-length
@@ -101,7 +102,7 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
@@ -181,7 +182,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
 
         String key = "111";
@@ -262,7 +263,7 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < 10000; i++) {
@@ -345,7 +346,7 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
         // Max string length to be generated.
         int maxLength = 10;
@@ -425,7 +426,7 @@ public abstract class OrderedIndexExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
         // Max string length to be generated.
         int runs = 3;
@@ -532,7 +533,7 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
         }
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
@@ -639,7 +640,7 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info(ins + " tuples loaded in " + (end - start) + "ms");
         }
 
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
 
         // Build low key.
@@ -741,7 +742,7 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ordered Scan:");
         }
-        IIndexCursor scanCursor = (IIndexCursor) indexAccessor.createSearchCursor(false);
+        IIndexCursor scanCursor = indexAccessor.createSearchCursor(false);
         RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {

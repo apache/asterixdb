@@ -66,7 +66,7 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
 
     public AsterixLSMInsertDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op,
-            boolean isPrimary) {
+            boolean isPrimary) throws HyracksDataException {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, op);
         this.isPrimary = isPrimary;
     }
@@ -86,12 +86,11 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
             }
             writer.open();
             modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
-                    indexHelper.getResourcePath(), indexHelper.getResourceID(), indexHelper.getResourcePartition(),
-                    lsmIndex, ctx, this);
+                    indexHelper.getResource(), ctx, this);
             indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
-                tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
+                tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
             IAsterixAppRuntimeContext runtimeCtx =

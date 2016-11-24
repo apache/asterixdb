@@ -21,8 +21,6 @@ package org.apache.hyracks.tests.integration;
 import java.io.File;
 import java.util.Arrays;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -30,7 +28,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
@@ -42,12 +40,12 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.join.JoinComparatorFactory;
 import org.apache.hyracks.dataflow.std.join.OptimizedHybridHashJoinOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
+import org.junit.Test;
 
 public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegrationTest {
 
@@ -88,7 +86,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     private IOperatorDescriptor getPrinter(JobSpecification spec, File file) {
         IFileSplitProvider outputSplitProvider = new ConstantFileSplitProvider(
                 new FileSplit[] {
-                        new FileSplit(NC1_ID, file.getAbsolutePath()) });
+                        new FileSplit(NC1_ID, file.getAbsolutePath(), false) });
 
         return DEBUG ? new PlainFileWriterOperatorDescriptor(spec, outputSplitProvider, "|")
                 : new NullSinkOperatorDescriptor(spec);
@@ -97,12 +95,12 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     @Test
     public void customerOrderCIDHybridHashJoin_Case1() throws Exception {
         JobSpecification spec = new JobSpecification();
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer4.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer4.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders4.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders4.tbl").getAbsolutePath(), false) };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
@@ -146,12 +144,12 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     public void customerOrderCIDHybridHashJoin_Case2() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer3.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer3.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders4.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders4.tbl").getAbsolutePath(), false) };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
 
@@ -197,12 +195,12 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/tpch0.001/customer3.tbl"))) };
+        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/tpch0.001/customer3.tbl").getAbsolutePath(), false) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
-                "data/tpch0.001/orders1.tbl"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
+                "data/tpch0.001/orders1.tbl").getAbsolutePath(), false) };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
 

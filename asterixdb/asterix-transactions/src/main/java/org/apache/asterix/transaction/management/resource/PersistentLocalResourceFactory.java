@@ -18,24 +18,24 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
+import org.apache.asterix.common.transactions.IResourceFactory;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class PersistentLocalResourceFactory implements ILocalResourceFactory {
 
-    private final ILocalResourceMetadata localResourceMetadata;
+    private final IResourceFactory applicationResourceFactory;
     private final int resourceType;
 
-    public PersistentLocalResourceFactory(ILocalResourceMetadata localResourceMetadata, int resourceType) {
-        this.localResourceMetadata = localResourceMetadata;
+    public PersistentLocalResourceFactory(IResourceFactory applicationResourceFactory, int resourceType) {
+        this.applicationResourceFactory = applicationResourceFactory;
         this.resourceType = resourceType;
     }
 
     @Override
-    public LocalResource createLocalResource(long resourceId, String resourceName, int partition, int storageVersion,
-            String resourcePath) {
-        return new LocalResource(resourceId, resourceName, partition, resourcePath, resourceType, storageVersion,
-                localResourceMetadata);
+    public LocalResource createLocalResource(long id, String name, int version, int partition) {
+        Resource resource = applicationResourceFactory.resource(partition);
+        return new LocalResource(id, name, resourceType, version, resource);
     }
 }

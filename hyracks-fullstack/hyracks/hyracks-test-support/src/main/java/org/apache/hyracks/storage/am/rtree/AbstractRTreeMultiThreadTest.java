@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -45,6 +43,7 @@ import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeExamplesTest.RTreeType;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeMultiThreadTest {
@@ -74,7 +73,7 @@ public abstract class AbstractRTreeMultiThreadTest {
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, int[] btreeFields)
-            throws TreeIndexException;
+            throws TreeIndexException, HyracksDataException;
 
     protected abstract IIndexTestWorkerFactory getWorkerFactory();
 

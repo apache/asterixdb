@@ -44,8 +44,10 @@ public class LSMRTreeExamplesTest extends AbstractLSMRTreeExamplesTest {
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException {
-        return LSMRTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException,
+            HyracksDataException {
+        return LSMRTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
+                .getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories,
                 btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),

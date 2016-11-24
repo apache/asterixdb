@@ -40,7 +40,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.util.FlushDatasetUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -139,8 +139,9 @@ public class ConnectorAPIServlet extends HttpServlet {
         // Generates file partitions.
         for (FileSplit split : fileSplits) {
             String ipAddress = nodeMap.get(split.getNodeName()).getNetworkAddress().getAddress().toString();
-            String path = split.getLocalFile().getFile().getAbsolutePath();
-            FilePartition partition = new FilePartition(ipAddress, path, split.getIODeviceId());
+            String path = split.getPath();
+            boolean relative = split.isManaged();
+            FilePartition partition = new FilePartition(ipAddress, path, relative);
             partititons.put(partition.toJSONObject());
         }
         // Generates the response object which contains the splits.
@@ -151,12 +152,12 @@ public class ConnectorAPIServlet extends HttpServlet {
 class FilePartition {
     private final String ipAddress;
     private final String path;
-    private final int ioDeviceId;
+    private final boolean relative;
 
-    public FilePartition(String ipAddress, String path, int ioDeviceId) {
+    public FilePartition(String ipAddress, String path, boolean relative) {
         this.ipAddress = ipAddress;
         this.path = path;
-        this.ioDeviceId = ioDeviceId;
+        this.relative = relative;
     }
 
     public String getIPAddress() {
@@ -167,8 +168,8 @@ class FilePartition {
         return path;
     }
 
-    public int getIODeviceId() {
-        return ioDeviceId;
+    public boolean isRelative() {
+        return relative;
     }
 
     @Override
@@ -180,7 +181,7 @@ class FilePartition {
         JSONObject partition = new JSONObject();
         partition.put("ip", ipAddress);
         partition.put("path", path);
-        partition.put("ioDeviceId", ioDeviceId);
+        partition.put("relative", relative);
         return partition;
     }
 }

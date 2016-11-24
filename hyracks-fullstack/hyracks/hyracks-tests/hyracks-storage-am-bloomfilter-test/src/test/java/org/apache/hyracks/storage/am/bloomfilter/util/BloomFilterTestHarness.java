@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.bloomfilter.util;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
@@ -27,6 +26,7 @@ import java.util.Random;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -42,6 +42,7 @@ public class BloomFilterTestHarness {
     protected final int maxOpenFiles;
     protected final int hyracksFrameSize;
 
+    protected IIOManager ioManager;
     protected IHyracksTaskContext ctx;
     protected IBufferCache bufferCache;
     protected IFileMapProvider fileMapProvider;
@@ -49,9 +50,6 @@ public class BloomFilterTestHarness {
 
     protected final Random rnd = new Random();
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-    protected final String tmpDir = System.getProperty("java.io.tmpdir");
-    protected final String sep = System.getProperty("file.separator");
-    protected String fileName;
 
     public BloomFilterTestHarness() {
         this.pageSize = AccessMethodTestsConfig.BLOOM_FILTER_PAGE_SIZE;
@@ -68,12 +66,12 @@ public class BloomFilterTestHarness {
     }
 
     public void setUp() throws HyracksDataException {
-        fileName = tmpDir + sep + simpleDateFormat.format(new Date());
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
+        ioManager = ctx.getIOManager();
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        file = new FileReference(new File(fileName));
+        file = ioManager.getFileRef(0, simpleDateFormat.format(new Date()));
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -94,14 +92,6 @@ public class BloomFilterTestHarness {
         return fileMapProvider;
     }
 
-    public FileReference getFileReference() {
-        return file;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
     public Random getRandom() {
         return rnd;
     }
@@ -120,5 +110,9 @@ public class BloomFilterTestHarness {
 
     public int getMaxOpenFiles() {
         return maxOpenFiles;
+    }
+
+    public FileReference getFileReference() {
+        return file;
     }
 }

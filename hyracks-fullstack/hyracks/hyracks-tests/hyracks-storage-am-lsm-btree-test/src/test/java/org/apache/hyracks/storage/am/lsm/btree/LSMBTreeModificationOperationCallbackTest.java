@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree;
 
-import org.junit.Test;
-
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.dataflow.common.util.TupleUtils;
 import org.apache.hyracks.storage.am.btree.AbstractModificationOperationCallbackTest;
@@ -31,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerProvider;
+import org.junit.Test;
 
 public class LSMBTreeModificationOperationCallbackTest extends AbstractModificationOperationCallbackTest {
     private static final int NUM_TUPLES = 11;
@@ -46,7 +45,8 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
 
     @Override
     protected void createIndexInstance() throws Exception {
-        index = LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
+        index = LSMBTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
+                .getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,

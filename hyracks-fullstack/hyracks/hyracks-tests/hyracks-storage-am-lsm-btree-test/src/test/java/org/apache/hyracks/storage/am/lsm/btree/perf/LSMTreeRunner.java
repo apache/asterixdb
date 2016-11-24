@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.perf;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -93,16 +92,15 @@ public class LSMTreeRunner implements IExperimentRunner {
         this.onDiskNumPages = onDiskNumPages;
 
         onDiskDir = classDir + sep + simpleDateFormat.format(new Date()) + sep;
-        file = new FileReference(new File(onDiskDir));
         ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
-
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
+        file = ioManager.getFileRef(onDiskDir, false);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
 
-        List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<IVirtualBufferCache>();
+        List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
             IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
                     inMemNumPages / 2);
@@ -112,7 +110,8 @@ public class LSMTreeRunner implements IExperimentRunner {
         this.ioScheduler = AsynchronousScheduler.INSTANCE;
         AsynchronousScheduler.INSTANCE.init(threadFactory);
 
-        lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fmp, typeTraits, cmpFactories,
+        lsmtree = LSMBTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, fmp, typeTraits,
+                cmpFactories,
                 bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(), new ThreadCountingTracker(),
                 ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null, null, true);
     }

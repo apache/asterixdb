@@ -18,11 +18,11 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import java.io.File;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
@@ -41,11 +41,11 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
     protected final IInvertedIndexFileNameMapper fileNameMapper;
 
-    public OnDiskInvertedIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public OnDiskInvertedIndexFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper) {
-        super(bufferCache, fileMapProvider, null);
+        super(ioManager, bufferCache, fileMapProvider, null);
         this.invListBuilderFactory = invListBuilderFactory;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
@@ -55,9 +55,9 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
     }
 
     @Override
-    public IInvertedIndex createIndexInstance(FileReference dictBTreeFile) throws IndexException {
+    public IInvertedIndex createIndexInstance(FileReference dictBTreeFile) throws IndexException, HyracksDataException {
         String invListsFilePath = fileNameMapper.getInvListsFilePath(dictBTreeFile.getFile().getPath());
-        FileReference invListsFile = new FileReference(new File(invListsFilePath));
+        FileReference invListsFile = ioManager.getFileRef(invListsFilePath, false);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();
         return new OnDiskInvertedIndex(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits,
                 invListCmpFactories, tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile);

@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public class RecordFileScanOperatorDescriptor extends AbstractDeserializedFileScanOperatorDescriptor {

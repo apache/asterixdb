@@ -28,7 +28,7 @@ public class ResourceIdFactoryProvider {
     }
 
     public ResourceIdFactory createResourceIdFactory() throws HyracksDataException {
-        long largestResourceId = localResourceRepository.getMaxResourceID();
+        long largestResourceId = localResourceRepository.maxId();
         return new ResourceIdFactory(largestResourceId);
     }
 }

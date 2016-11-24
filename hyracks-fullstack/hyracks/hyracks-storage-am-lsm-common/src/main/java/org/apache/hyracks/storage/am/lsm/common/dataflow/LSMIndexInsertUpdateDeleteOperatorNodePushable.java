@@ -43,7 +43,8 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
     }
 
     public LSMIndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op) {
+            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op)
+            throws HyracksDataException {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, op);
     }
 

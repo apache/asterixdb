@@ -20,14 +20,12 @@ package org.apache.hyracks.tests.integration;
 
 import java.io.File;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -36,11 +34,11 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.union.UnionAllOperatorDescriptor;
 import org.apache.hyracks.tests.util.ResultSerializerFactoryProvider;
+import org.junit.Test;
 
 public class UnionTest extends AbstractIntegrationTest {
     @Test
@@ -48,8 +46,8 @@ public class UnionTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
-                new FileSplit(NC2_ID, new FileReference(new File("data/words.txt"))),
-                new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) });
+                new FileSplit(NC2_ID, new File("data/words.txt").getAbsolutePath(), false),
+                new FileSplit(NC1_ID, new File("data/words.txt").getAbsolutePath(), false) });
 
         RecordDescriptor desc = new RecordDescriptor(
                 new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });

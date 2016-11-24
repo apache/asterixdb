@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.dataflow;
 
-import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,7 +37,8 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
 
     public LSMInvertedIndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int queryFieldIndex,
-            IInvertedIndexSearchModifier searchModifier, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
+            IInvertedIndexSearchModifier searchModifier, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes)
+            throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, minFilterFieldIndexes, maxFilterFieldIndexes);
         this.searchModifier = searchModifier;
         this.queryFieldIndex = queryFieldIndex;

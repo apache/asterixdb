@@ -22,9 +22,10 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 
 public interface IIndexDataflowHelperFactory extends Serializable {
     public IIndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc,
-            final IHyracksTaskContext ctx, int partition);
+            final IHyracksTaskContext ctx, int partition) throws HyracksDataException;
 }

@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.examples.btree.client;
 
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
@@ -54,6 +51,8 @@ import org.apache.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDelete
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 // This example will insert tuples into the primary and secondary index using an insert pipeline
 
@@ -79,6 +78,9 @@ public class InsertPipelineExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
+
+        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
+        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -148,7 +150,8 @@ public class InsertPipelineExample {
         int[] primaryFieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input
                                                         // tuple to field 0 of
                                                         // B-Tree tuple, etc.
-        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
+        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName,
+                options.relative);
 
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
 
@@ -175,7 +178,7 @@ public class InsertPipelineExample {
         // tuple
         int[] secondaryFieldPermutation = { 1, 2 };
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
-                options.secondaryBTreeName);
+                options.secondaryBTreeName, true);
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,

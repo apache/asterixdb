@@ -73,7 +73,8 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected PermutingFrameTupleReference maxFilterKey;
 
     public IndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            IRecordDescriptorProvider recordDescProvider, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
+            IRecordDescriptorProvider recordDescProvider, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes)
+            throws HyracksDataException {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
@@ -133,7 +134,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
             ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexHelper.getResourceID(), ctx, null);
+                    .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
             indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
             cursor = createCursor();
             if (retainInput) {

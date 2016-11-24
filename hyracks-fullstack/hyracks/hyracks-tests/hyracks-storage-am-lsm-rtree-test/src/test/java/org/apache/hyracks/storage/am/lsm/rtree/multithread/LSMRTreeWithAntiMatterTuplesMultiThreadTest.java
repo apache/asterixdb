@@ -61,8 +61,8 @@ public class LSMRTreeWithAntiMatterTuplesMultiThreadTest extends AbstractRTreeMu
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
-        return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getVirtualBufferCaches(),
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException, HyracksDataException {
+        return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
@@ -78,7 +78,7 @@ public class LSMRTreeWithAntiMatterTuplesMultiThreadTest extends AbstractRTreeMu
 
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
-        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<>();
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };

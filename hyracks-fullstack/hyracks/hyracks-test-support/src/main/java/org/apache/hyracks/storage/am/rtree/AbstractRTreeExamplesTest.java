@@ -23,11 +23,10 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -53,6 +52,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeExamplesTest {
@@ -71,7 +71,8 @@ public abstract class AbstractRTreeExamplesTest {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException;
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException,
+            HyracksDataException;
 
     /**
      * Two Dimensions Example. Create an RTree index of two dimensions, where
@@ -149,7 +150,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
@@ -257,7 +258,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
 
         int p1x = rnd.nextInt();
@@ -396,7 +397,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(TestOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
 
         int p1x = rnd.nextInt();
@@ -549,7 +550,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
@@ -652,7 +653,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
 
         int runs = 3;
@@ -816,7 +817,7 @@ public abstract class AbstractRTreeExamplesTest {
             LOGGER.info(numInserts + " tuples loaded in " + (end - start) + "ms");
         }
 
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
 
         // Build key.

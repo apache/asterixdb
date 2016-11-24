@@ -33,7 +33,7 @@ import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class SplitsAndConstraintsUtil {
@@ -48,13 +48,9 @@ public class SplitsAndConstraintsUtil {
         ClusterPartition[] clusterPartition = ClusterStateManager.INSTANCE.getClusterPartitons();
         String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         for (int j = 0; j < clusterPartition.length; j++) {
-            int nodePartitions =
-                    ClusterStateManager.INSTANCE.getNodePartitionsCount(clusterPartition[j].getNodeId());
-            for (int i = 0; i < nodePartitions; i++) {
                 File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                        clusterPartition[i].getPartitionId()) + File.separator + relPathFile);
-                splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition[j], f));
-            }
+                    clusterPartition[j].getPartitionId()) + File.separator + relPathFile);
+                splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition[j], f.getPath()));
         }
         return splits.toArray(new FileSplit[] {});
     }
@@ -87,7 +83,7 @@ public class SplitsAndConstraintsUtil {
                             nodePartitions[k].getPartitionId())
                             + (temp ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER) : "")
                             + File.separator + relPathFile);
-                    splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f));
+                    splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
                 }
             }
             return splits.toArray(new FileSplit[] {});
@@ -118,12 +114,14 @@ public class SplitsAndConstraintsUtil {
                     // Only the first partition when create
                     File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
                             nodePartitions[firstPartition].getPartitionId()) + File.separator + relPathFile);
-                    splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[firstPartition], f));
+                    splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[firstPartition], f
+                            .getPath()));
                 } else {
                     for (int k = 0; k < nodePartitions.length; k++) {
                         File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
                                 nodePartitions[firstPartition].getPartitionId()) + File.separator + relPathFile);
-                        splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[firstPartition], f));
+                        splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[firstPartition], f
+                                .getPath()));
                     }
                 }
             }

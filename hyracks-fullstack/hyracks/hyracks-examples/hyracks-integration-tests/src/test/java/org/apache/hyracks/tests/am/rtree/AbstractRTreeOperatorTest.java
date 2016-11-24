@@ -22,9 +22,6 @@ package org.apache.hyracks.tests.am.rtree;
 import java.io.DataOutput;
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -32,7 +29,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
@@ -47,7 +44,6 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
@@ -74,6 +70,8 @@ import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestStorageManagerInterface;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
+import org.junit.After;
+import org.junit.Before;
 
 public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest {
     static {
@@ -108,6 +106,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     // to be set by subclasses
     protected String primaryFileName;
+    protected boolean primaryFileNameRelative;
     protected IFileSplitProvider primarySplitProvider;
 
     // field, type and key declarations for secondary indexes
@@ -127,6 +126,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected IBinaryComparatorFactory[] btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
 
     protected String secondaryFileName;
+    protected boolean secondaryFileNameRelative;
     protected IFileSplitProvider secondarySplitProvider;
 
     protected ITreeIndexOperatorTestHelper testHelper;
@@ -140,11 +140,13 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         testHelper = createTestHelper();
 
         primaryFileName = testHelper.getPrimaryIndexName();
-        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID, new FileReference(
-                new File(primaryFileName))) });
+        primaryFileNameRelative = testHelper.getPrimaryIndexNameRelative();
+        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID, primaryFileName,
+                primaryFileNameRelative) });
         secondaryFileName = testHelper.getSecondaryIndexName();
+        secondaryFileNameRelative = testHelper.getSecondaryIndexNameRelative();
         secondarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                new FileReference(new File(secondaryFileName))) });
+                secondaryFileName, secondaryFileNameRelative) });
 
         // field, type and key declarations for primary index
         primaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
@@ -216,8 +218,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void loadPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/orders-with-locations-part1.txt"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/orders-with-locations-part1.txt").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -327,8 +329,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data/orders-with-locations-part2.txt"))) };
+        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
+                "data/orders-with-locations-part2.txt").getAbsolutePath(), false) };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),

@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.btree.util;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
@@ -54,7 +53,6 @@ public class BTreeTestHarness {
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final String tmpDir = System.getProperty("java.io.tmpdir");
     protected final String sep = System.getProperty("file.separator");
-    protected String fileName;
 
     public BTreeTestHarness() {
         this.pageSize = AccessMethodTestsConfig.BTREE_PAGE_SIZE;
@@ -71,12 +69,11 @@ public class BTreeTestHarness {
     }
 
     public void setUp() throws HyracksDataException {
-        fileName = tmpDir + sep + simpleDateFormat.format(new Date());
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        file = new FileReference(new File(fileName));
+        file = ctx.getIOManager().getFileRef(0, simpleDateFormat.format(new Date()));
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -99,10 +96,6 @@ public class BTreeTestHarness {
 
     public FileReference getFileReference() {
         return file;
-    }
-
-    public String getFileName() {
-        return fileName;
     }
 
     public Random getRandom() {

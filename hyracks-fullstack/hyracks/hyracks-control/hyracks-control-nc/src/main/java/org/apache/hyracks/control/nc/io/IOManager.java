@@ -31,17 +31,29 @@ import java.util.concurrent.Executor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileDeviceComputer;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOFuture;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 
 public class IOManager implements IIOManager {
+    /*
+     * Constants
+     */
     private static final String WORKSPACE_FILE_SUFFIX = ".waf";
+    private static final FilenameFilter WORKSPACE_FILES_FILTER = (dir, name) -> name.endsWith(WORKSPACE_FILE_SUFFIX);
+    /*
+     * Finals
+     */
     private final List<IODeviceHandle> ioDevices;
+    private final List<IODeviceHandle> workspaces;
+    /*
+     * Mutables
+     */
     private Executor executor;
-    private final List<IODeviceHandle> workAreaIODevices;
-    private int workAreaDeviceIndex;
+    private int workspaceIndex;
+    private IFileDeviceComputer deviceComputer;
 
     public IOManager(List<IODeviceHandle> devices, Executor executor) throws HyracksException {
         this(devices);
@@ -50,19 +62,21 @@ public class IOManager implements IIOManager {
 
     public IOManager(List<IODeviceHandle> devices) throws HyracksException {
         this.ioDevices = Collections.unmodifiableList(devices);
-        workAreaIODevices = new ArrayList<>();
+        workspaces = new ArrayList<>();
         for (IODeviceHandle d : ioDevices) {
-            if (d.getWorkAreaPath() != null) {
-                new File(d.getPath(), d.getWorkAreaPath()).mkdirs();
-                workAreaIODevices.add(d);
+            if (d.getWorkspace() != null) {
+                new File(d.getMount(), d.getWorkspace()).mkdirs();
+                workspaces.add(d);
             }
         }
-        if (workAreaIODevices.isEmpty()) {
+        if (workspaces.isEmpty()) {
             throw new HyracksException("No devices with work areas found");
         }
-        workAreaDeviceIndex = 0;
+        workspaceIndex = 0;
+        deviceComputer = new DefaultDeviceComputer(this);
     }
 
+    @Override
     public void setExecutor(Executor executor) {
         this.executor = executor;
     }
@@ -200,16 +214,16 @@ public class IOManager implements IIOManager {
     }
 
     public synchronized FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
-        IODeviceHandle dev = workAreaIODevices.get(workAreaDeviceIndex);
-        workAreaDeviceIndex = (workAreaDeviceIndex + 1) % workAreaIODevices.size();
-        String waPath = dev.getWorkAreaPath();
+        IODeviceHandle dev = workspaces.get(workspaceIndex);
+        workspaceIndex = (workspaceIndex + 1) % workspaces.size();
+        String waPath = dev.getWorkspace();
         File waf;
         try {
-            waf = File.createTempFile(prefix, WORKSPACE_FILE_SUFFIX, new File(dev.getPath(), waPath));
+            waf = File.createTempFile(prefix, WORKSPACE_FILE_SUFFIX, new File(dev.getMount(), waPath));
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
-        return dev.createFileReference(waPath + File.separator + waf.getName());
+        return dev.createFileRef(waPath + File.separator + waf.getName());
     }
 
     private abstract class AsyncRequest implements IIOFuture, Runnable {
@@ -302,8 +316,8 @@ public class IOManager implements IIOManager {
 
     @Override
     public void deleteWorkspaceFiles() {
-        for (IODeviceHandle ioDevice : workAreaIODevices) {
-            File workspaceFolder = new File(ioDevice.getPath(), ioDevice.getWorkAreaPath());
+        for (IODeviceHandle ioDevice : workspaces) {
+            File workspaceFolder = new File(ioDevice.getMount(), ioDevice.getWorkspace());
             if (workspaceFolder.exists() && workspaceFolder.isDirectory()) {
                 File[] workspaceFiles = workspaceFolder.listFiles(WORKSPACE_FILES_FILTER);
                 for (File workspaceFile : workspaceFiles) {
@@ -313,15 +327,31 @@ public class IOManager implements IIOManager {
         }
     }
 
-    private static final FilenameFilter WORKSPACE_FILES_FILTER = new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-            return name.endsWith(WORKSPACE_FILE_SUFFIX);
-        }
-    };
-
     @Override
-    public FileReference getAbsoluteFileRef(int ioDeviceId, String relativePath) {
+    public FileReference getFileRef(int ioDeviceId, String relativePath) {
         IODeviceHandle devHandle = ioDevices.get(ioDeviceId);
         return new FileReference(devHandle, relativePath);
+    }
+
+    @Override
+    public FileReference getFileRef(String path, boolean relative) throws HyracksDataException {
+        if (relative) {
+            return new FileReference(deviceComputer.compute(path), path);
+        }
+        IODeviceHandle devHandle = getDevice(path);
+        if (devHandle == null) {
+            throw new HyracksDataException("The file with absolute path: " + path + " is outside all io devices");
+        }
+        String relativePath = devHandle.getRelativePath(path);
+        return new FileReference(devHandle, relativePath);
+    }
+
+    public IODeviceHandle getDevice(String fullPath) {
+        for (IODeviceHandle d : ioDevices) {
+            if (fullPath.startsWith(d.getMount().getAbsolutePath())) {
+                return d;
+            }
+        }
+        return null;
     }
 }

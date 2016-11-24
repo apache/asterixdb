@@ -20,9 +20,6 @@ package org.apache.hyracks.examples.btree.client;
 
 import java.io.DataOutput;
 
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -50,6 +47,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 // This example will perform an ordered scan on the primary index
 // i.e. a range-search for [-infinity, +infinity]
@@ -70,6 +69,9 @@ public class PrimaryIndexSearchExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
+
+        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
+        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -142,7 +144,8 @@ public class PrimaryIndexSearchExample {
         int[] highKeyFields = { 1 }; // low key is in field 1 of tuples going
                                      // into search op
 
-        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
+        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName,
+                options.relative);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, storageManager,
                 lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories, null, lowKeyFields,

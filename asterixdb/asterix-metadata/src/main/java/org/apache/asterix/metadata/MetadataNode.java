@@ -406,7 +406,7 @@ public class MetadataNode implements IMetadataNode {
     private void insertTupleIntoIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException, IndexException {
         long resourceID = metadataIndex.getResourceID();
-        String resourceName = metadataIndex.getFile().toString();
+        String resourceName = metadataIndex.getFile().getRelativePath();
         ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
         try {
             datasetLifecycleManager.open(resourceName);
@@ -673,7 +673,7 @@ public class MetadataNode implements IMetadataNode {
     private void deleteTupleFromIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException, IndexException {
         long resourceID = metadataIndex.getResourceID();
-        String resourceName = metadataIndex.getFile().toString();
+        String resourceName = metadataIndex.getFile().getRelativePath();
         ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
         try {
             datasetLifecycleManager.open(resourceName);
@@ -1148,7 +1148,7 @@ public class MetadataNode implements IMetadataNode {
         if (index.getFile() == null) {
             throw new MetadataException("No file for Index " + index.getDataverseName() + "." + index.getIndexName());
         }
-        String resourceName = index.getFile().toString();
+        String resourceName = index.getFile().getRelativePath();
         IIndex indexInstance = datasetLifecycleManager.get(resourceName);
         datasetLifecycleManager.open(resourceName);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
@@ -1186,7 +1186,7 @@ public class MetadataNode implements IMetadataNode {
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException {
         int mostRecentDatasetId = MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID;
         try {
-            String resourceName = MetadataPrimaryIndexes.DATASET_DATASET.getFile().toString();
+            String resourceName = MetadataPrimaryIndexes.DATASET_DATASET.getFile().getRelativePath();
             IIndex indexInstance = datasetLifecycleManager.get(resourceName);
             datasetLifecycleManager.open(resourceName);
             try {

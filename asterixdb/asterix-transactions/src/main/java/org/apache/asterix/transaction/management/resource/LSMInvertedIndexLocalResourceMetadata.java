@@ -24,17 +24,22 @@ import java.util.Map;
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
-public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResourceMetadata {
+public class LSMInvertedIndexLocalResourceMetadata extends Resource {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,11 +58,11 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
     public LSMInvertedIndexLocalResourceMetadata(ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
-            boolean isPartitioned, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
+            boolean isPartitioned, int datasetID, int partition, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] invertedIndexFields, int[] filterFields,
             int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps) {
-        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
+        super(datasetID, partition, filterTypeTraits, filterCmpFactories, filterFields);
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
@@ -72,33 +77,44 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-                                         int partition, int ioDeviceNum) throws HyracksDataException {
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+            LocalResource resource) throws HyracksDataException {
+        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        FileReference file = ioManager.getFileRef(resource.getPath(), true);
+        List<IODeviceHandle> ioDevices = ioManager.getIODevices();
+        int ioDeviceNum = 0;
+        for (int i = 0; i < ioDevices.size(); i++) {
+            IODeviceHandle device = ioDevices.get(i);
+            if (device == file.getDeviceHandle()) {
+                ioDeviceNum = i;
+                break;
+            }
+        }
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getDatasetLifecycleManager()
-                .getVirtualBufferCaches(datasetID, ioDeviceNum);
+                .getVirtualBufferCaches(datasetId(), ioDeviceNum);
         try {
             if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCaches,
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
                         tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                        filePath, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                        file.getAbsolutePath(), runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getDatasetLifecycleManager()),
-                        new BaseOperationTracker(datasetID,
-                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                        new BaseOperationTracker(datasetId(),
+                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                         runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                         filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
             } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCaches,
+                return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
                         tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
-                        filePath, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                        file.getAbsolutePath(), runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getDatasetLifecycleManager()),
-                        new BaseOperationTracker(datasetID,
-                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                        new BaseOperationTracker(datasetId(),
+                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                         runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,

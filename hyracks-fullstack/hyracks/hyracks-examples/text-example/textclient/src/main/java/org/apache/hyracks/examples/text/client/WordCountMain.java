@@ -31,7 +31,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -47,7 +47,6 @@ import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescr
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.FrameFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
@@ -128,7 +127,7 @@ public class WordCountMain {
                 throw new IllegalArgumentException("File split " + s + " not well formed");
             }
             File file = new File(s.substring(idx + 1));
-            fSplits[i] = new FileSplit(s.substring(0, idx), new FileReference(file));
+            fSplits[i] = new FileSplit(s.substring(0, idx), file.getAbsolutePath(), false);
             fileSize += file.length();
         }
         return fSplits;

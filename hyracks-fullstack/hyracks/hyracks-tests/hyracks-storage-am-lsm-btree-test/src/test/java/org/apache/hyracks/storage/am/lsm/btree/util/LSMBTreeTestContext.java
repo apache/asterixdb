@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.common.CheckTuple;
@@ -67,7 +68,8 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         upsertCheckTuple(checkTuple, checkTuples);
     }
 
-    public static LSMBTreeTestContext create(List<IVirtualBufferCache> virtualBufferCaches, FileReference file,
+    public static LSMBTreeTestContext create(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            FileReference file,
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
             int numKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback)
@@ -78,7 +80,8 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         for (int i = 0; i < numKeyFields; ++i) {
             bloomFilterKeyFields[i] = i;
         }
-        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, diskBufferCache, diskFileMapProvider,
+        LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache,
+                diskFileMapProvider,
                 typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                 ioScheduler, ioOpCallback, true, null, null, null, null, true);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);

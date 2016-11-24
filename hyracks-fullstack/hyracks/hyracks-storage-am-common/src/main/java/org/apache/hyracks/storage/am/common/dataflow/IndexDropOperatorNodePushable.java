@@ -30,7 +30,7 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
     private final IIndexDataflowHelper indexHelper;
 
     public IndexDropOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) {
+            int partition) throws HyracksDataException {
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
     }
 

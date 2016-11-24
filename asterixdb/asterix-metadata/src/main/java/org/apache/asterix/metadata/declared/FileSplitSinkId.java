@@ -19,7 +19,7 @@
 
 package org.apache.asterix.metadata.declared;
 
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 
 public class FileSplitSinkId {
 
@@ -31,7 +31,7 @@ public class FileSplitSinkId {
 
     @Override
     public String toString() {
-        return fileSplit.getNodeName() + ":" + fileSplit.getLocalFile();
+        return fileSplit.getNodeName() + ":" + fileSplit.getPath();
     }
 
     public FileSplit getFileSplit() {

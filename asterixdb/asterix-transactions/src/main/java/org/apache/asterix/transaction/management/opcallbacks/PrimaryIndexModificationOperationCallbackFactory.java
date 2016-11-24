@@ -26,14 +26,17 @@ import org.apache.asterix.common.transactions.AbstractOperationCallbackFactory;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
  * Assumes LSM-BTrees as primary indexes.
@@ -54,24 +57,23 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
     }
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(String resourcePath, long resourceId,
-            int resourcePartition, Object resource, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
-            throws HyracksDataException {
-
+    public IModificationOperationCallback createModificationOperationCallback(LocalResource resource,
+            IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        IResourceLifecycleManager indexLifeCycleManager =
+        IResourceLifecycleManager<IIndex> indexLifeCycleManager =
                 txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
-        ILSMIndex index = (ILSMIndex) indexLifeCycleManager.get(resourcePath);
+        ILSMIndex index = (ILSMIndex) indexLifeCycleManager.get(resource.getPath());
         if (index == null) {
-            throw new HyracksDataException("Index(id:" + resourceId + ") is not registered.");
+            throw new HyracksDataException("Index(id:" + resource.getId() + ") is not registered.");
         }
 
         try {
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+            Resource aResource = (Resource) resource.getResource();
             IModificationOperationCallback modCallback = new PrimaryIndexModificationOperationCallback(datasetId,
-                    primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resourceId,
-                    resourcePartition, resourceType, indexOp, operatorNodePushable, logBeforeImage);
-            txnCtx.registerIndexAndCallback(resourceId, index, (AbstractOperationCallback) modCallback, true);
+                    primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resource.getId(),
+                    aResource.partition(), resourceType, indexOp, operatorNodePushable, logBeforeImage);
+            txnCtx.registerIndexAndCallback(resource.getId(), index, (AbstractOperationCallback) modCallback, true);
             return modCallback;
         } catch (ACIDException e) {
             throw new HyracksDataException(e);

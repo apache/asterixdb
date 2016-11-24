@@ -25,37 +25,37 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TransientLocalResourceRepository implements ILocalResourceRepository {
 
-    private Map<String, LocalResource> path2ResourceMap = new HashMap<String, LocalResource>();
-    private Map<Long, LocalResource> id2ResourceMap = new HashMap<Long, LocalResource>();
+    private Map<String, LocalResource> name2ResourceMap = new HashMap<>();
+    private Map<Long, LocalResource> id2ResourceMap = new HashMap<>();
 
     @Override
-    public LocalResource getResourceByPath(String path) throws HyracksDataException {
-        return path2ResourceMap.get(path);
+    public LocalResource get(String path) throws HyracksDataException {
+        return name2ResourceMap.get(path);
     }
 
     @Override
     public synchronized void insert(LocalResource resource) throws HyracksDataException {
-        long id = resource.getResourceId();
+        long id = resource.getId();
 
         if (id2ResourceMap.containsKey(id)) {
             throw new HyracksDataException("Duplicate resource");
         }
         id2ResourceMap.put(id, resource);
-        path2ResourceMap.put(resource.getResourcePath(), resource);
+        name2ResourceMap.put(resource.getPath(), resource);
     }
 
     @Override
-    public synchronized void deleteResourceByPath(String path) throws HyracksDataException {
-        LocalResource resource = path2ResourceMap.get(path);
+    public synchronized void delete(String path) throws HyracksDataException {
+        LocalResource resource = name2ResourceMap.get(path);
         if (resource == null) {
             throw new HyracksDataException("Resource doesn't exist");
         }
-        id2ResourceMap.remove(resource.getResourceId());
-        path2ResourceMap.remove(path);
+        id2ResourceMap.remove(resource.getId());
+        name2ResourceMap.remove(path);
     }
 
     @Override
-    public long getMaxResourceID() throws HyracksDataException {
+    public long maxId() throws HyracksDataException {
         long maxResourceId = 0;
 
         for (Long resourceId : id2ResourceMap.keySet()) {

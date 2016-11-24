@@ -48,6 +48,7 @@ import org.apache.hyracks.dataflow.std.sort.ISorter;
  */
 public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescriptor {
 
+    private static final long serialVersionUID = 1L;
     private final int[] groupFields;
     private final IAggregatorDescriptorFactory mergeAggregatorFactory;
     private final IAggregatorDescriptorFactory partialAggregatorFactory;
@@ -102,6 +103,8 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
     @Override
     public AbstractSorterOperatorDescriptor.SortActivity getSortActivity(ActivityId id) {
         return new AbstractSorterOperatorDescriptor.SortActivity(id) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescriptorProvider) throws HyracksDataException {
@@ -116,6 +119,7 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
     @Override
     public AbstractSorterOperatorDescriptor.MergeActivity getMergeActivity(ActivityId id) {
         return new AbstractSorterOperatorDescriptor.MergeActivity(id) {
+            private static final long serialVersionUID = 1L;
 
             @Override
             protected AbstractExternalSortRunMerger getSortRunMerger(IHyracksTaskContext ctx,

@@ -37,7 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirement
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 
 public class CommitPOperator extends AbstractPhysicalOperator {
 
@@ -97,7 +97,7 @@ public class CommitPOperator extends AbstractPhysicalOperator {
                 dataverse, dataset, dataset, metadataProvider.isTemporaryDatasetWriteJob());
         int[] datasetPartitions = new int[splitsForDataset.length];
         for (int i = 0; i < splitsForDataset.length; i++) {
-            datasetPartitions[i] = splitsForDataset[i].getPartition();
+            datasetPartitions[i] = i;
         }
 
         int upsertVarIdx = -1;

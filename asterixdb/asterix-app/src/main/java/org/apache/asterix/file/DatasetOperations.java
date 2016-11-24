@@ -24,13 +24,13 @@ import java.rmi.RemoteException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -41,7 +41,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.asterix.translator.CompiledStatements.CompiledDatasetDropStatement;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -51,8 +51,8 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
@@ -182,7 +182,7 @@ public class DatasetOperations {
                 metadata.getMetadataTxnContext());
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-        ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
+        IResourceFactory localResourceMetadata = new LSMBTreeLocalResourceMetadataFactory(typeTraits,
                 comparatorFactories, bloomFilterKeyFields, true, dataset.getDatasetId(), compactionInfo.first,
                 compactionInfo.second, filterTypeTraits, filterCmpFactories, btreeFields, filterFields);
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
@@ -205,7 +205,7 @@ public class DatasetOperations {
     }
 
     private static String stringOf(FileSplit fs) {
-        return fs.getNodeName() + ":" + fs.getLocalFile().toString();
+        return fs.getNodeName() + ":" + fs.getPath();
     }
 
     public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,

@@ -83,10 +83,7 @@ public class DatasetResource implements Comparable<DatasetResource> {
 
     public IIndex getIndex(long resourceID) {
         IndexInfo iInfo = getIndexInfo(resourceID);
-        if (iInfo == null) {
-            return null;
-        }
-        return iInfo.getIndex();
+        return (iInfo == null) ? null : iInfo.getIndex();
     }
 
     public void register(long resourceID, IIndex index) throws HyracksDataException {
@@ -101,6 +98,9 @@ public class DatasetResource implements Comparable<DatasetResource> {
         }
         if (datasetInfo.getIndexes().containsKey(resourceID)) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " already exists.");
+        }
+        if (index == null) {
+            throw new HyracksDataException("Attempt to register a null index");
         }
         datasetInfo.getIndexes().put(resourceID,
                 new IndexInfo((ILSMIndex) index, datasetInfo.getDatasetID(), resourceID));

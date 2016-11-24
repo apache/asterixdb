@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -31,10 +32,10 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeFactory extends TreeIndexFactory<BTree> {
 
-    public BTreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public BTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IMetadataManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
-        super(bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
+        super(ioManager, bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
                 cmpFactories, fieldCount);
     }
 

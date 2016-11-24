@@ -26,6 +26,8 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -78,8 +80,10 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
             @Override
             public void initialize() throws HyracksDataException {
                 try {
+                    FileSplit fileSplit = fileIndexInfo.getFileSplitProvider().getFileSplits()[partition];
+                    FileReference fileRef = fileSplit.getFileRef(ctx.getIOManager());
                     // only in partition of device id = 0, we perform the operation on the files index
-                    if (fileIndexInfo.getFileSplitProvider().getFileSplits()[partition].getIODeviceId() == 0) {
+                    if (fileRef.getDeviceHandle() == ctx.getIOManager().getIODevices().get(0)) {
                         performOpOnIndex(filesIndexDataflowHelperFactory, ctx, fileIndexInfo, partition);
                     }
                     // perform operation on btrees

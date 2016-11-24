@@ -18,18 +18,20 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -37,8 +39,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
-public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetadata {
+public class LSMRTreeLocalResourceMetadata extends Resource {
 
     private static final long serialVersionUID = 1L;
 
@@ -57,10 +60,10 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
-            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            int partition, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] rtreeFields,
             int[] btreeFields, int[] filterFields, boolean isPointMBR) {
-        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
+        super(datasetID, partition, filterTypeTraits, filterCmpFactories, filterFields);
         this.typeTraits = typeTraits;
         this.rtreeCmpFactories = rtreeCmpFactories;
         this.btreeCmpFactories = btreeCmpFactories;
@@ -75,19 +78,29 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition, int ioDeviceNum) throws HyracksDataException {
-        FileReference file = new FileReference(new File(filePath));
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+            LocalResource resource) throws HyracksDataException {
+        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        FileReference file = ioManager.getFileRef(resource.getPath(), true);
+        List<IODeviceHandle> ioDevices = ioManager.getIODevices();
+        int ioDeviceNum = 0;
+        for (int i = 0; i < ioDevices.size(); i++) {
+            IODeviceHandle device = ioDevices.get(i);
+            if (device == file.getDeviceHandle()) {
+                ioDeviceNum = i;
+                break;
+            }
+        }
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getDatasetLifecycleManager()
-                .getVirtualBufferCaches(datasetID, ioDeviceNum);
+                .getVirtualBufferCaches(datasetId(), ioDeviceNum);
         try {
-            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches, file,
+            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, file,
                     runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
                     rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
-                    new BaseOperationTracker(datasetID,
-                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                    new BaseOperationTracker(datasetId(),
+                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                     runtimeContextProvider.getLSMIOScheduler(),
                     LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
                     rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, isPointMBR);

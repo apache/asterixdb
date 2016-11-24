@@ -19,7 +19,6 @@
 package org.apache.hyracks.storage.am.lsm.btree;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import org.apache.hyracks.storage.am.common.AbstractIndexLifecycleTest;
@@ -43,7 +42,7 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     protected boolean persistentStateExists() throws Exception {
         // make sure all of the directories exist
-        if (!new FileReference(harness.getFileReference().getFile()).getFile().exists()) {
+        if (!harness.getFileReference().getFile().exists()) {
             return false;
         }
         return true;
@@ -57,7 +56,8 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMBTreeTestContext.create(harness.getVirtualBufferCaches(), harness.getFileReference(),
+        testCtx = LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
+                .getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, fieldSerdes.length,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallback());

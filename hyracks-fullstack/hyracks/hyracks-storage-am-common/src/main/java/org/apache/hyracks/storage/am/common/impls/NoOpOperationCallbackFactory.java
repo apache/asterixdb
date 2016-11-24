@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
  * Dummy NoOp callback factory used primarily for testing. Always returns the {@link NoOpOperationCallback} instance.
@@ -40,9 +41,8 @@ public enum NoOpOperationCallbackFactory
     }
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(String resourcePath, long resourceId,
-            int resourcePartition, Object resource, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
-            throws HyracksDataException {
+    public IModificationOperationCallback createModificationOperationCallback(LocalResource resource,
+            IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
         return NoOpOperationCallback.INSTANCE;
     }
 }

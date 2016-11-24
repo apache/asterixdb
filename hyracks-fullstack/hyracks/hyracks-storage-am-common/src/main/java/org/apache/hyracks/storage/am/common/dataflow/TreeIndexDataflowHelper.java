@@ -28,7 +28,7 @@ import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 public abstract class TreeIndexDataflowHelper extends IndexDataflowHelper {
 
     public TreeIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            boolean durable) {
+            boolean durable) throws HyracksDataException {
         super(opDesc, ctx, partition, durable);
     }
 

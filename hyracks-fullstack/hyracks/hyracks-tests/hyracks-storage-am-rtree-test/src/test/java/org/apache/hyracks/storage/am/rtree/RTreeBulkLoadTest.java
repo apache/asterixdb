@@ -21,16 +21,16 @@ package org.apache.hyracks.storage.am.rtree;
 
 import java.util.Random;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.utils.RTreeTestContext;
 import org.apache.hyracks.storage.am.rtree.utils.RTreeTestHarness;
+import org.junit.After;
+import org.junit.Before;
 
 @SuppressWarnings("rawtypes")
 public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
@@ -42,7 +42,7 @@ public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
     private final RTreeTestHarness harness = new RTreeTestHarness();
 
     @Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         harness.setUp();
     }
 

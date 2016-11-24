@@ -19,9 +19,10 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 
 public class AbortRecoverLSMIndexFileManager extends AbstractLSMIndexFileManager {
-    public AbortRecoverLSMIndexFileManager(FileReference file) {
-        super(null, file, null);
+    public AbortRecoverLSMIndexFileManager(IIOManager ioManager, FileReference file) {
+        super(ioManager, null, file, null);
     }
 }

@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
@@ -89,7 +90,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     private final ITreeIndexFrameFactory interiorFrameFactory;
 
     //TODO remove BloomFilter from external dataset's secondary LSMBTree index
-    public ExternalBTree(ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
+    public ExternalBTree(IIOManager ioManager, ITreeIndexFrameFactory interiorFrameFactory,
+            ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
             BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
@@ -97,12 +99,13 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, TreeIndexFactory<BTree> transactionBTreeFactory, int version,
             boolean durable) {
-        super(interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager, diskBTreeFactory,
+        super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager,
+                diskBTreeFactory,
                 bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, fieldCount,
                 cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
         this.transactionComponentFactory = new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory,
                 null);
-        this.secondDiskComponents = new LinkedList<ILSMComponent>();
+        this.secondDiskComponents = new LinkedList<>();
         this.interiorFrameFactory = interiorFrameFactory;
         this.version = version;
     }

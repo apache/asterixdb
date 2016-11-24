@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +27,7 @@ import java.util.Set;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
@@ -100,7 +100,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     // Primary LSMBTree has a Bloomfilter, but Secondary one doesn't have. 
     private final boolean hasBloomFilter;
 
-    public LSMBTree(List<IVirtualBufferCache> virtualBufferCaches, ITreeIndexFrameFactory interiorFrameFactory,
+    public LSMBTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
             ILSMIndexFileManager fileManager, TreeIndexFactory<BTree> diskBTreeFactory,
             TreeIndexFactory<BTree> bulkLoadBTreeFactory, BloomFilterFactory bloomFilterFactory,
@@ -109,8 +110,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, int[] btreeFields, int[] filterFields,
-            boolean durable) {
-        super(virtualBufferCaches, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
+            boolean durable) throws HyracksDataException {
+        super(ioManager, virtualBufferCaches, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
                 filterManager, filterFields, durable);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
@@ -122,7 +123,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     new BTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
                             new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), interiorFrameFactory,
                             insertLeafFrameFactory, cmpFactories, fieldCount,
-                            new FileReference(new File(fileManager.getBaseDir() + "_virtual_" + i))),
+                            ioManager.getFileRef(fileManager.getBaseDir() + "_virtual_" + i, false)),
                     virtualBufferCache, i == 0 ? true : false,
                     filterFactory == null ? null : filterFactory.createLSMComponentFilter());
             memoryComponents.add(mutableComponent);
@@ -137,14 +138,16 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     // Without memory components
-    public LSMBTree(ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
+    public LSMBTree(IIOManager ioManager,
+            ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
             TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
             BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, boolean durable) {
-        super(diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate,
+        super(ioManager, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
+                bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallback, durable);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
@@ -483,7 +486,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
 
         if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
             filterManager.updateFilterInfo(component.getLSMComponentFilter(), filterTuples);
@@ -565,7 +568,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             }
         }
         if (mergedComponent.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple());
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
@@ -882,7 +885,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
-        Set<String> files = new HashSet<String>();
+        Set<String> files = new HashSet<>();
         LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) lsmComponent;
         files.add(component.getBTree().getFileReference().getFile().getAbsolutePath());
         if (hasBloomFilter) {

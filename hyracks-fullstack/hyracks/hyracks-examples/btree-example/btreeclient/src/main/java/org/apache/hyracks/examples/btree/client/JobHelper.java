@@ -19,25 +19,22 @@
 
 package org.apache.hyracks.examples.btree.client;
 
-import java.io.File;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class JobHelper {
-    public static IFileSplitProvider createFileSplitProvider(String[] splitNCs, String btreeFileName) {
+    public static IFileSplitProvider createFileSplitProvider(String[] splitNCs, String btreeFileName,
+            boolean relative) {
         FileSplit[] fileSplits = new FileSplit[splitNCs.length];
         for (int i = 0; i < splitNCs.length; ++i) {
             String fileName = btreeFileName + "." + splitNCs[i];
-            fileSplits[i] = new FileSplit(splitNCs[i], new FileReference(new File(fileName)));
+            fileSplits[i] = new FileSplit(splitNCs[i], fileName, relative);
         }
-        IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
-        return splitProvider;
+        return new ConstantFileSplitProvider(fileSplits);
     }
 
     public static void createPartitionConstraint(JobSpecification spec, IOperatorDescriptor op, String[] splitNCs) {

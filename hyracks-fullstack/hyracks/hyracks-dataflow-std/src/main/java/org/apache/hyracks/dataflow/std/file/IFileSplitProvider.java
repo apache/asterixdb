@@ -20,6 +20,8 @@ package org.apache.hyracks.dataflow.std.file;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.io.FileSplit;
+
 public interface IFileSplitProvider extends Serializable {
     public FileSplit[] getFileSplits();
 }

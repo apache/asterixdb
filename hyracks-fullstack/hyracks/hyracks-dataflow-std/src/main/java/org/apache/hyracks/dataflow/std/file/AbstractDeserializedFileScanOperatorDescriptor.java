@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
@@ -69,7 +70,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
             RecordDescriptor desc = recordDescriptors[0];
             IRecordReader reader;
             try {
-                reader = createRecordReader(split.getLocalFile().getFile(), desc);
+                reader = createRecordReader(split.getFile(null), desc);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }

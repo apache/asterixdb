@@ -33,7 +33,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePushable {
     private final IIndexDataflowHelper indexHelper;
 
-    public LSMIndexCompactOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
+    public LSMIndexCompactOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition)
+            throws HyracksDataException {
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
     }
 
@@ -56,7 +57,7 @@ public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePus
     public void initialize() throws HyracksDataException {
         indexHelper.open();
         ILSMIndex index = (ILSMIndex) indexHelper.getIndexInstance();
-        ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+        ILSMIndexAccessor accessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         try {
             accessor.scheduleFullMerge(NoOpIOOperationCallback.INSTANCE);

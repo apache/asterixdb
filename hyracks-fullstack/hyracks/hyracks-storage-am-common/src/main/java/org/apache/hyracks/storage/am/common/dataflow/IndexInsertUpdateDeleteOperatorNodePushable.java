@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyEx
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     protected final IIndexOperatorDescriptor opDesc;
@@ -58,7 +59,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     protected IIndex index;
 
     public IndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op) {
+            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op)
+            throws HyracksDataException {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
@@ -76,13 +78,13 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         index = indexHelper.getIndexInstance();
         try {
             writer.open();
-            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
-                    indexHelper.getResourcePath(), indexHelper.getResourceID(), indexHelper.getResourcePartition(),
-                    index, ctx, this);
+            LocalResource resource = indexHelper.getResource();
+            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(resource, ctx,
+                    this);
             indexAccessor = index.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
-                tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
+                tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {

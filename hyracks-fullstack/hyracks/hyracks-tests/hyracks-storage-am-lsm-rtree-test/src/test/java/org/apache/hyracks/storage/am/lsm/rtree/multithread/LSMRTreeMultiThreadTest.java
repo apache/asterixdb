@@ -61,8 +61,9 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
-        return LSMRTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException, HyracksDataException {
+        return LSMRTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
+                .getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories,
                 btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
@@ -78,7 +79,7 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
-        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<>();
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };

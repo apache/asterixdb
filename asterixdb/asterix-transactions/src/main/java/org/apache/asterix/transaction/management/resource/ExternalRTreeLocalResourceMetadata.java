@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
@@ -29,12 +28,14 @@ import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
  * The local resource class for disk only lsm r-tree
@@ -46,25 +47,26 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
     public ExternalRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
-            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] btreeFields,
-            boolean isPointMBR) {
+            int partition, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            int[] btreeFields, boolean isPointMBR) {
         super(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                linearizeCmpFactory, datasetID, mergePolicyFactory, mergePolicyProperties, null, null, null,
+                linearizeCmpFactory, datasetID, partition, mergePolicyFactory, mergePolicyProperties, null, null, null,
                 btreeFields, null, isPointMBR);
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-            int partition, int ioDeviceNum) throws HyracksDataException {
-        FileReference file = new FileReference(new File(filePath));
+    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+            LocalResource resource) throws HyracksDataException {
+        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        FileReference file = ioManager.getFileRef(resource.getPath(), true);
         try {
-            return LSMRTreeUtils.createExternalRTree(file, runtimeContextProvider.getBufferCache(),
+            return LSMRTreeUtils.createExternalRTree(ioManager, file, runtimeContextProvider.getBufferCache(),
                     runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
-                    new BaseOperationTracker(datasetID,
-                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                    new BaseOperationTracker(datasetId(),
+                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                     runtimeContextProvider.getLSMIOScheduler(),
                     LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
                     btreeFields, -1, true, isPointMBR);
@@ -72,5 +74,4 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
             throw new HyracksDataException(e);
         }
     }
-
 }

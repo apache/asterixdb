@@ -47,6 +47,8 @@ import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -58,7 +60,6 @@ import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import org.apache.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
@@ -66,7 +67,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
     private static final Map<FunctionIdentifier, PigletFunction> FN_MAP;
 
     static {
-        Map<FunctionIdentifier, PigletFunction> map = new HashMap<FunctionIdentifier, PigletFunction>();
+        Map<FunctionIdentifier, PigletFunction> map = new HashMap<>();
 
         map.put(AlgebricksBuiltinFunctions.EQ, new PigletFunction(AlgebricksBuiltinFunctions.EQ));
 
@@ -129,7 +130,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
 
         IOperatorDescriptor scanner = new FileScanOperatorDescriptor(jobSpec, fsp, tpf, rDesc);
         AlgebricksAbsolutePartitionConstraint constraint = new AlgebricksAbsolutePartitionConstraint(locations);
-        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(scanner, constraint);
+        return new Pair<>(scanner, constraint);
     }
 
     @Override
@@ -142,10 +143,15 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         for (int i = 0; i < fileSplits.length; ++i) {
             locations[i] = fileSplits[i].getNodeName();
         }
-        IPushRuntimeFactory prf = new SinkWriterRuntimeFactory(printColumns, printerFactories,
-                fileSplits[0].getLocalFile().getFile(), PrinterBasedWriterFactory.INSTANCE, inputDesc);
+        IPushRuntimeFactory prf;
+        try {
+            prf = new SinkWriterRuntimeFactory(printColumns, printerFactories,
+                    fileSplits[0].getFile(null), PrinterBasedWriterFactory.INSTANCE, inputDesc);
         AlgebricksAbsolutePartitionConstraint constraint = new AlgebricksAbsolutePartitionConstraint(locations);
-        return new Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint>(prf, constraint);
+        return new Pair<>(prf, constraint);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
     }
 
     @Override

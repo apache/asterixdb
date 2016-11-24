@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -66,19 +67,20 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         }
     };
 
-    public LSMInvertedIndexFileManager(IFileMapProvider fileMapProvider, FileReference file, BTreeFactory btreeFactory) {
-        super(fileMapProvider, file, null);
+    public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+            BTreeFactory btreeFactory) {
+        super(ioManager, fileMapProvider, file, null);
         this.btreeFactory = btreeFactory;
     }
 
     @Override
-    public LSMComponentFileReferences getRelFlushFileReference() {
+    public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), createFlushFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, false),
+                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX, false), createFlushFile(baseName
+                        + SPLIT_STRING + BLOOM_FILTER_STRING, false));
     }
 
     @Override
@@ -89,22 +91,22 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), createMergeFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, false),
+                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX, false), createMergeFile(baseName
+                        + SPLIT_STRING + BLOOM_FILTER_STRING, false));
     }
 
     @Override
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
-        List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
-        ArrayList<ComparableFileName> allDictBTreeFiles = new ArrayList<ComparableFileName>();
-        ArrayList<ComparableFileName> allInvListsFiles = new ArrayList<ComparableFileName>();
-        ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
-        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
+        List<LSMComponentFileReferences> validFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allDictBTreeFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allInvListsFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<>();
 
         // Gather files.
         cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
-        HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
+        HashSet<String> deletedKeysBTreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
             int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
             deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
@@ -141,15 +143,15 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         Collections.sort(allDictBTreeFiles);
         Collections.sort(allBloomFilterFiles);
 
-        List<ComparableFileName> validComparableDictBTreeFiles = new ArrayList<ComparableFileName>();
+        List<ComparableFileName> validComparableDictBTreeFiles = new ArrayList<>();
         ComparableFileName lastDictBTree = allDictBTreeFiles.get(0);
         validComparableDictBTreeFiles.add(lastDictBTree);
 
-        List<ComparableFileName> validComparableDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
+        List<ComparableFileName> validComparableDeletedKeysBTreeFiles = new ArrayList<>();
         ComparableFileName lastDeletedKeysBTree = allDeletedKeysBTreeFiles.get(0);
         validComparableDeletedKeysBTreeFiles.add(lastDeletedKeysBTree);
 
-        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<ComparableFileName>();
+        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<>();
         ComparableFileName lastBloomFilter = allBloomFilterFiles.get(0);
         validComparableBloomFilterFiles.add(lastBloomFilter);
 

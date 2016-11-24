@@ -37,9 +37,9 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 public class FeedUtils {
@@ -82,7 +82,7 @@ public class FeedUtils {
         // Note: feed adapter instances in a single node share the feed logger
         // format: 'storage dir name'/partition_#/dataverse/feed/node
         File f = new File(storagePartitionPath + File.separator + relPathFile + File.separator + nodeName);
-        return StoragePathUtil.getFileSplitForClusterPartition(partition, f);
+        return StoragePathUtil.getFileSplitForClusterPartition(partition, f.getPath());
     }
 
     public static FileSplit[] splitsForAdapter(String dataverseName, String feedName,
@@ -100,20 +100,19 @@ public class FeedUtils {
     }
 
     public static FileReference getAbsoluteFileRef(String relativePath, int ioDeviceId, IIOManager ioManager) {
-        return ioManager.getAbsoluteFileRef(ioDeviceId, relativePath);
+        return ioManager.getFileRef(ioDeviceId, relativePath);
     }
 
     public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, int partition,
             FileSplit[] feedLogFileSplits) throws HyracksDataException {
         return new FeedLogManager(
-                FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getLocalFile().getFile().getPath(),
-                        feedLogFileSplits[partition].getIODeviceId(), ctx.getIOManager()).getFile());
+                FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getPath(), 0, ctx.getIOManager()).getFile());
     }
 
     public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, FileSplit feedLogFileSplit)
             throws HyracksDataException {
-        return new FeedLogManager(FeedUtils.getAbsoluteFileRef(feedLogFileSplit.getLocalFile().getFile().getPath(),
-                feedLogFileSplit.getIODeviceId(), ctx.getIOManager()).getFile());
+        return new FeedLogManager(FeedUtils.getAbsoluteFileRef(feedLogFileSplit.getPath(),
+                0, ctx.getIOManager()).getFile());
     }
 
     public static void processFeedMessage(ByteBuffer input, VSizeFrame message, FrameTupleAccessor fta)

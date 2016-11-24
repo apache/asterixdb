@@ -48,7 +48,7 @@ import org.apache.asterix.test.runtime.ExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
-import org.apache.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileSplit;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -68,7 +68,7 @@ public class ConnectorAPIServletTest {
         ConnectorAPIServlet servlet = spy(new ConnectorAPIServlet());
         ServletConfig mockServletConfig = mock(ServletConfig.class);
         servlet.init(mockServletConfig);
-        Map<String, NodeControllerInfo> nodeMap = new HashMap<String, NodeControllerInfo>();
+        Map<String, NodeControllerInfo> nodeMap = new HashMap<>();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintWriter outputWriter = new PrintWriter(outputStream);
 
@@ -123,9 +123,9 @@ public class ConnectorAPIServletTest {
         ConnectorAPIServlet servlet = new ConnectorAPIServlet();
         JSONObject actualResponse = new JSONObject();
         FileSplit[] splits = new FileSplit[2];
-        splits[0] = new FileSplit("asterix_nc1", "foo1");
-        splits[1] = new FileSplit("asterix_nc2", "foo2");
-        Map<String, NodeControllerInfo> nodeMap = new HashMap<String, NodeControllerInfo>();
+        splits[0] = new FileSplit("asterix_nc1", "foo1", true);
+        splits[1] = new FileSplit("asterix_nc2", "foo2", true);
+        Map<String, NodeControllerInfo> nodeMap = new HashMap<>();
         NodeControllerInfo mockInfo1 = mock(NodeControllerInfo.class);
         NodeControllerInfo mockInfo2 = mock(NodeControllerInfo.class);
 
@@ -142,8 +142,9 @@ public class ConnectorAPIServletTest {
         nodeMap.put("asterix_nc1", mockInfo1);
         nodeMap.put("asterix_nc2", mockInfo2);
         PA.invokeMethod(servlet,
-                "formResponseObject(org.json.JSONObject, org.apache.hyracks.dataflow.std.file.FileSplit[], "
-                        + "org.apache.asterix.om.types.ARecordType, java.lang.String, boolean, java.util.Map)",
+                "formResponseObject(" + JSONObject.class.getName() + ", " + FileSplit.class.getName() + "[], "
+                        + ARecordType.class.getName() + ", " + String.class.getName() + ", boolean, " + Map.class
+                                .getName() + ")",
                 actualResponse, splits, recordType, primaryKey, true, nodeMap);
 
         // Constructs expected response.
@@ -154,12 +155,12 @@ public class ConnectorAPIServletTest {
         JSONArray splitsArray = new JSONArray();
         JSONObject element1 = new JSONObject();
         element1.put("ip", "127.0.0.1");
-        element1.put("path", splits[0].getLocalFile().getFile().getAbsolutePath());
-        element1.put("ioDeviceId", 0);
+        element1.put("path", splits[0].getPath());
+        element1.put("relative", true);
         JSONObject element2 = new JSONObject();
         element2.put("ip", "127.0.0.2");
-        element2.put("path", splits[1].getLocalFile().getFile().getAbsolutePath());
-        element2.put("ioDeviceId", 0);
+        element2.put("path", splits[1].getPath());
+        element2.put("relative", true);
         splitsArray.put(element1);
         splitsArray.put(element2);
         expectedResponse.put("splits", splitsArray);

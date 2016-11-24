@@ -20,7 +20,6 @@ package org.apache.asterix.file;
 
 import java.util.List;
 
-import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -30,7 +29,6 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalDataScanOperatorDescriptor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -38,9 +36,10 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
-import org.apache.asterix.transaction.management.resource.ExternalBTreeWithBuddyLocalResourceMetadata;
-import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.ExternalBTreeWithBuddyLocalResourceMetadataFactory;
+import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -91,7 +90,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
         IIndexDataflowHelperFactory indexDataflowHelperFactory;
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-            ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(secondaryTypeTraits,
+            LSMBTreeLocalResourceMetadataFactory localResourceMetadata = new LSMBTreeLocalResourceMetadataFactory(
+                    secondaryTypeTraits,
                     secondaryComparatorFactories, secondaryBloomFilterKeyFields, false, dataset.getDatasetId(),
                     mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits, filterCmpFactories,
                     secondaryBTreeFields, secondaryFilterFields);
@@ -106,7 +106,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
         } else {
             // External dataset local resource and dataflow helper
             int[] buddyBreeFields = new int[] { numSecondaryKeys };
-            ILocalResourceMetadata localResourceMetadata = new ExternalBTreeWithBuddyLocalResourceMetadata(
+            ExternalBTreeWithBuddyLocalResourceMetadataFactory localResourceMetadata =
+                    new ExternalBTreeWithBuddyLocalResourceMetadataFactory(
                     dataset.getDatasetId(), secondaryComparatorFactories, secondaryTypeTraits, mergePolicyFactory,
                     mergePolicyFactoryProperties, buddyBreeFields);
             localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(localResourceMetadata,

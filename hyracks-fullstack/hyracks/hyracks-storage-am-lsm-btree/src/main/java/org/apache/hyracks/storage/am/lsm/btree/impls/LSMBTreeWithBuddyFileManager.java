@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
@@ -59,22 +60,23 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         }
     };
 
-    public LSMBTreeWithBuddyFileManager(IFileMapProvider fileMapProvider, FileReference file,
+    public LSMBTreeWithBuddyFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> btreeFactory,
             TreeIndexFactory<? extends ITreeIndex> buddyBtreeFactory) {
-        super(fileMapProvider, file, null);
+        super(ioManager, fileMapProvider, file, null);
         this.buddyBtreeFactory = buddyBtreeFactory;
         this.btreeFactory = btreeFactory;
     }
 
     @Override
-    public LSMComponentFileReferences getRelFlushFileReference() {
+    public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING), createFlushFile(baseName + SPLIT_STRING
-                        + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING, false),
+                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING, false), createFlushFile(baseName
+                        + SPLIT_STRING
+                        + BLOOM_FILTER_STRING, false));
     }
 
     @Override
@@ -86,17 +88,18 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest
         // timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING), createMergeFile(baseName + SPLIT_STRING
-                        + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + BTREE_STRING, false),
+                createMergeFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING, false), createMergeFile(baseName
+                        + SPLIT_STRING
+                        + BLOOM_FILTER_STRING, false));
     }
 
     @Override
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
-        List<LSMComponentFileReferences> validFiles = new ArrayList<LSMComponentFileReferences>();
-        ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
-        ArrayList<ComparableFileName> allBuddyBTreeFiles = new ArrayList<ComparableFileName>();
-        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
+        List<LSMComponentFileReferences> validFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allBuddyBTreeFiles = new ArrayList<>();
+        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<>();
 
         // Create transaction file filter
         FilenameFilter transactionFilefilter = getTransactionFileFilter(false);
@@ -104,7 +107,7 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         // Gather files.
         cleanupAndGetValidFilesInternal(getCompoundFilter(btreeFilter, transactionFilefilter), btreeFactory,
                 allBTreeFiles);
-        HashSet<String> btreeFilesSet = new HashSet<String>();
+        HashSet<String> btreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allBTreeFiles) {
             int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
             btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
@@ -136,15 +139,15 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         Collections.sort(allBuddyBTreeFiles);
         Collections.sort(allBloomFilterFiles);
 
-        List<ComparableFileName> validComparableBTreeFiles = new ArrayList<ComparableFileName>();
+        List<ComparableFileName> validComparableBTreeFiles = new ArrayList<>();
         ComparableFileName lastBTree = allBTreeFiles.get(0);
         validComparableBTreeFiles.add(lastBTree);
 
-        List<ComparableFileName> validComparableBuddyBTreeFiles = new ArrayList<ComparableFileName>();
+        List<ComparableFileName> validComparableBuddyBTreeFiles = new ArrayList<>();
         ComparableFileName lastBuddyBTree = allBuddyBTreeFiles.get(0);
         validComparableBuddyBTreeFiles.add(lastBuddyBTree);
 
-        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<ComparableFileName>();
+        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<>();
         ComparableFileName lastBloomFilter = allBloomFilterFiles.get(0);
         validComparableBloomFilterFiles.add(lastBloomFilter);
 
@@ -208,9 +211,10 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         Files.createFile(Paths.get(baseDir + TRANSACTION_PREFIX + ts));
 
         String baseName = baseDir + ts + SPLIT_STRING + ts;
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING), createFlushFile(baseName + SPLIT_STRING
-                        + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING, false),
+                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING, false), createFlushFile(baseName
+                        + SPLIT_STRING
+                        + BLOOM_FILTER_STRING, false));
     }
 
     @Override
@@ -252,9 +256,9 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
                 throw new HyracksDataException("unrecognized file found = " + fileName);
             }
         }
-        FileReference bTreeFileRef = new FileReference(bTreeFile);
-        FileReference buddyBTreeFileRef = new FileReference(buddyBTreeFile);
-        FileReference bloomFilterFileRef = new FileReference(bloomFilterFile);
+        FileReference bTreeFileRef = ioManager.getFileRef(bTreeFile.getAbsolutePath(), false);
+        FileReference buddyBTreeFileRef = ioManager.getFileRef(buddyBTreeFile.getAbsolutePath(), false);
+        FileReference bloomFilterFileRef = ioManager.getFileRef(bloomFilterFile.getAbsolutePath(), false);
         return new LSMComponentFileReferences(bTreeFileRef, buddyBTreeFileRef, bloomFilterFileRef);
     }
 

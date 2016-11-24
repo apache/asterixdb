@@ -20,20 +20,20 @@ package org.apache.hyracks.storage.am.lsm.common;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
+import org.junit.Test;
 
 public class VirtualBufferCacheTest {
     private static final long SEED = 123456789L;
@@ -46,6 +46,7 @@ public class VirtualBufferCacheTest {
     private final FileState[] fileStates;
 
     private VirtualBufferCache vbc;
+    private IOManager ioManager;
 
     public VirtualBufferCacheTest() {
         fileStates = new FileState[NUM_FILES];
@@ -66,7 +67,7 @@ public class VirtualBufferCacheTest {
             fileId = -1;
             fileRef = null;
             pinCount = 0;
-            pinnedPages = new HashSet<ICachedPage>();
+            pinnedPages = new HashSet<>();
         }
     }
 
@@ -79,6 +80,8 @@ public class VirtualBufferCacheTest {
      */
     @Test
     public void test01() throws Exception {
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, NUM_FILES);
+        ioManager = TestStorageManagerComponentHolder.getIOManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         vbc = new VirtualBufferCache(allocator, PAGE_SIZE, NUM_PAGES);
         vbc.open();
@@ -110,7 +113,7 @@ public class VirtualBufferCacheTest {
         for (int i = 0; i < NUM_FILES; i++) {
             FileState f = fileStates[i];
             String fName = String.format("f%d", i);
-            f.fileRef = new FileReference(new File(fName));
+            f.fileRef = ioManager.getFileRef(fName, true);
             vbc.createFile(f.fileRef);
             f.fileId = vbc.getFileMapProvider().lookupFileId(f.fileRef);
         }

@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
@@ -78,7 +79,8 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class LSMRTree extends AbstractLSMRTree {
     protected int[] buddyBTreeFields;
 
-    public LSMRTree(List<IVirtualBufferCache> virtualBufferCaches, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+    public LSMRTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileNameManager,
             TreeIndexFactory<RTree> diskRTreeFactory, TreeIndexFactory<BTree> diskBTreeFactory,
@@ -89,8 +91,9 @@ public class LSMRTree extends AbstractLSMRTree {
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, int[] rtreeFields, int[] buddyBTreeFields, int[] filterFields,
-            boolean durable, boolean isPointMBR) {
-        super(virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
+            boolean durable, boolean isPointMBR) throws HyracksDataException {
+        super(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+                btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, fileNameManager,
                 new LSMRTreeDiskComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, filterFactory),
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
@@ -102,7 +105,8 @@ public class LSMRTree extends AbstractLSMRTree {
     /*
      * For External indexes with no memory components
      */
-    public LSMRTree(ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
+    public LSMRTree(IIOManager ioManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+            ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMIndexFileManager fileNameManager, TreeIndexFactory<RTree> diskRTreeFactory,
             TreeIndexFactory<BTree> diskBTreeFactory, BloomFilterFactory bloomFilterFactory,
@@ -111,7 +115,8 @@ public class LSMRTree extends AbstractLSMRTree {
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields, boolean durable, boolean isPointMBR) {
-        super(rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
+        super(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
+                btreeLeafFrameFactory,
                 fileNameManager,
                 new LSMRTreeDiskComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, null),
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
@@ -316,7 +321,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
             filterManager.updateFilterInfo(component.getLSMComponentFilter(), filterTuples);
@@ -392,7 +397,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         if (mergedComponent.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple());
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
@@ -633,14 +638,15 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
-        if (!appendOnly)
+        if (!appendOnly) {
             throw new UnsupportedOperationException("LSM indexes don't support in-place modification");
+        }
         return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
     }
 
     @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
-        Set<String> files = new HashSet<String>();
+        Set<String> files = new HashSet<>();
         LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) lsmComponent;
         files.add(component.getBTree().getFileReference().getFile().getAbsolutePath());
         files.add(component.getRTree().getFileReference().getFile().getAbsolutePath());

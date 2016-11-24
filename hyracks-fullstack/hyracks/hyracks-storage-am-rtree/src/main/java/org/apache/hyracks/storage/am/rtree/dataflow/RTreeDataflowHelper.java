@@ -21,11 +21,13 @@ package org.apache.hyracks.storage.am.rtree.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 
@@ -35,7 +37,8 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
     private final RTreePolicyType rtreePolicyType;
 
     public RTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, boolean durable) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, boolean durable)
+            throws HyracksDataException {
         super(opDesc, ctx, partition, durable);
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
@@ -44,9 +47,11 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
+        FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(treeOpDesc, ctx.getTaskAttemptId()
+                .getTaskId().getPartition(), ctx.getIOManager());
         return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx),
                 treeOpDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
-                valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, file, durable,
-                false);
+                valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, fileRef,
+                durable, false);
     }
 }

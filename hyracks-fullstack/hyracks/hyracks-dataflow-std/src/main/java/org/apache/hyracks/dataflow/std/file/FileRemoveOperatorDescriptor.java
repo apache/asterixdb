@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
@@ -61,8 +62,6 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         final FileSplit split = fileSplitProvider.getFileSplits()[partition];
-        final String path = split.getLocalFile().getFile().getPath();
-        final int deviceId = split.getIODeviceId();
         final IIOManager ioManager = ctx.getIOManager();
         return new AbstractOperatorNodePushable() {
 
@@ -73,7 +72,8 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
 
             @Override
             public void initialize() throws HyracksDataException {
-                File f = ioManager.getAbsoluteFileRef(deviceId, path).getFile();
+                // will only work for files inside the io devices
+                File f = ioManager.getFileRef(split.getPath(), split.isManaged()).getFile();
                 if (quietly) {
                     FileUtils.deleteQuietly(f);
                 } else {

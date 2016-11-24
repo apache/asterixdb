@@ -51,6 +51,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputOperatorNodePusha
  */
 public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
 
+    private static final long serialVersionUID = 1L;
     private final int[][] projectFields;
     private final INormalizedKeyComputerFactory firstKeyNormalizerFactory;
     private final IBinaryComparatorFactory[] comparatorFactory;
@@ -109,6 +110,8 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     private class IntersectActivity extends AbstractActivityNode {
+
+        private static final long serialVersionUID = 1L;
 
         public IntersectActivity(ActivityId activityId) {
             super(activityId);

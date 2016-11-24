@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -69,8 +69,9 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         this.rTreeTestUtils = new RTreeTestUtils();
     }
 
+    @Override
     @Before
-    public void setUp() throws HyracksDataException {
+    public void setUp() throws HyracksException {
         super.setUp();
     }
 
@@ -130,7 +131,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         ITreeIndexAccessor indexAccessor = rtree.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
-        ArrayList<RTreeCheckTuple> checkTuples = new ArrayList<RTreeCheckTuple>();
+        ArrayList<RTreeCheckTuple> checkTuples = new ArrayList<>();
         for (int i = 0; i < numInserts; i++) {
             int p1x = rnd.nextInt();
             int p1y = rnd.nextInt();

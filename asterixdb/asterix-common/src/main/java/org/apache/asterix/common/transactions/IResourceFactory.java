@@ -16,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.api;
+package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-
-public interface ILocalResourceMetadata extends Serializable {
-
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
-                                         int partition, int ioDeviceNum) throws HyracksDataException;
-
-    public int getDatasetID();
+@FunctionalInterface
+public interface IResourceFactory extends Serializable {
+    /**
+     * Create a serializable resource for the task partition
+     * @param partition
+     *            Hyracks task partition
+     * @return the serializable resource
+     */
+    Resource resource(int partition);
 }

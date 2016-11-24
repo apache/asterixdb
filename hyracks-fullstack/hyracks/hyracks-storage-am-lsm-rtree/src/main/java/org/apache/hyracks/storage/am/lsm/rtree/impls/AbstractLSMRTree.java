@@ -19,13 +19,13 @@
 
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
-import java.io.File;
 import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
@@ -83,7 +83,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
     protected final int[] rtreeFields;
 
-    public AbstractLSMRTree(List<IVirtualBufferCache> virtualBufferCaches,
+    public AbstractLSMRTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMIndexFileManager fileManager, ILSMComponentFactory componentFactory,
@@ -93,8 +93,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, ILSMComponentFilterFactory filterFactory,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
-            int[] rtreeFields, int[] filterFields, boolean durable, boolean isPointMBR) {
-        super(virtualBufferCaches, componentFactory.getBufferCache(), fileManager, diskFileMapProvider,
+            int[] rtreeFields, int[] filterFields, boolean durable, boolean isPointMBR) throws HyracksDataException {
+        super(ioManager, virtualBufferCaches, componentFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
                 filterManager, filterFields, durable);
         int i = 0;
@@ -102,11 +102,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             RTree memRTree = new RTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
                     new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), rtreeInteriorFrameFactory,
                     rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
-                    new FileReference(new File(fileManager.getBaseDir() + "_virtual_r_" + i)), isPointMBR);
+                    ioManager.getFileRef(fileManager.getBaseDir() + "_virtual_r_" + i, false), isPointMBR);
             BTree memBTree = new BTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
                     new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), btreeInteriorFrameFactory,
                     btreeLeafFrameFactory, btreeCmpFactories, btreeCmpFactories.length,
-                    new FileReference(new File(fileManager.getBaseDir() + "_virtual_b_" + i)));
+                    ioManager.getFileRef(fileManager.getBaseDir() + "_virtual_b_" + i, false));
             LSMRTreeMemoryComponent mutableComponent = new LSMRTreeMemoryComponent(memRTree, memBTree,
                     virtualBufferCache, i == 0 ? true : false,
                     filterFactory == null ? null : filterFactory.createLSMComponentFilter());
@@ -131,7 +131,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     /*
      * For External indexes with no memory components
      */
-    public AbstractLSMRTree(ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+    public AbstractLSMRTree(IIOManager ioManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileManager,
             ILSMComponentFactory componentFactory, IFileMapProvider diskFileMapProvider, int fieldCount,
@@ -140,7 +140,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, boolean durable,
             boolean isPointMBR) {
-        super(componentFactory.getBufferCache(), fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate,
+        super(ioManager, componentFactory.getBufferCache(), fileManager, diskFileMapProvider,
+                bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallback, durable);
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;

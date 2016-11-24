@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.rtree.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
@@ -43,7 +44,7 @@ public class RTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) {
+            int partition) throws HyracksDataException {
         return new RTreeDataflowHelper(opDesc, ctx, partition, valueProviderFactories, rtreePolicyType, durable);
     }
 }

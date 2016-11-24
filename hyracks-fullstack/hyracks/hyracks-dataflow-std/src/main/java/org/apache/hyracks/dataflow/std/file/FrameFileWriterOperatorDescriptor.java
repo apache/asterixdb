@@ -28,6 +28,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
@@ -46,13 +48,14 @@ public class FrameFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
+        final IIOManager ioManager = ctx.getIOManager();
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private OutputStream out;
 
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    out = new FileOutputStream(splits[partition].getLocalFile().getFile());
+                    out = new FileOutputStream(splits[partition].getFile(ioManager));
                 } catch (FileNotFoundException e) {
                     throw new HyracksDataException(e);
                 }

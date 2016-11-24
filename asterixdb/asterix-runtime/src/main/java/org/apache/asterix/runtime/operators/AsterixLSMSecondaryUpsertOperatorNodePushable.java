@@ -56,7 +56,7 @@ public class AsterixLSMSecondaryUpsertOperatorNodePushable extends LSMIndexInser
 
     public AsterixLSMSecondaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider,
-            int[] prevValuePermutation) {
+            int[] prevValuePermutation) throws HyracksDataException {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
         this.prevValueTuple.setFieldPermutation(prevValuePermutation);
         this.numberOfFields = prevValuePermutation.length;

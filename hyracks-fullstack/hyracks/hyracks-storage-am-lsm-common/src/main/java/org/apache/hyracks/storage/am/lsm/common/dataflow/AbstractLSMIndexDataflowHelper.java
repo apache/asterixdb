@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -51,7 +52,8 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
             List<IVirtualBufferCache> virtualBufferCaches, ILSMMergePolicy mergePolicy,
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, boolean durable) {
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, boolean durable)
+            throws HyracksDataException {
         this(opDesc, ctx, partition, virtualBufferCaches, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, mergePolicy,
                 opTrackerFactory, ioScheduler, ioOpCallbackFactory, filterTypeTraits, filterCmpFactories, filterFields,
                 durable);
@@ -62,7 +64,7 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            boolean durable) {
+            boolean durable) throws HyracksDataException {
         super(opDesc, ctx, partition, durable);
         this.virtualBufferCaches = virtualBufferCaches;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
