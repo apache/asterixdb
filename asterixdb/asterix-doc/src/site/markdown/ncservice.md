@@ -17,7 +17,12 @@
  ! under the License.
  !-->
 
-# Starting a small cluster using the NCService
+## <a id="toc">Table of Contents</a> ##
+
+* [Starting a small cluster using the NCService](#Small_cluster)
+* [Parameter setting](#Parameters)
+
+#  <a id="Small_cluster">Starting a small cluster using the NCService</a>
 
 When running a cluster using the `NCService` there are 3 different kind of
 processes involved:
@@ -109,3 +114,57 @@ To stop the cluster again simply run
     $ kill `jps | egrep '(CDriver|NCService)' | awk '{print $1}'`
 
 to kill all processes.
+
+# <a id="Parameters">Parameter settings</a>
+
+The following parameters are for the master process, under the "[cc]" section.
+
+| Parameter | Meaning |  Default |
+|----------|--------|-------|
+| compiler.framesize |  The page size (in bytes) for computation  | 32768 |
+| compiler.groupmemory |  The memory budget (in bytes) for a group by operator instance in a partition | 33554432 |
+| compiler.joinmemory | The memory budget (in bytes) for a join operator instance in a partition  | 33554432 |
+| compiler.sortmemory | The memory budget (in bytes) for a sort operator instance in a partition | 33554432 |
+| instance.name  |  The name of the AsterixDB instance   | "DEFAULT_INSTANCE" |
+| max.wait.active.cluster | The max pending time (in seconds) for cluster startup. After the threshold, if the cluster still is not up and running, it is considered unavailable.    | 60 |
+| metadata.callback.port | The port for metadata communication | 0 |
+| cluster.address | The binding IP address for the AsterixDB instance | N/A |
+
+The following parameters for slave processes, under "[nc]" sections.
+
+| Parameter | Meaning |  Default |
+|----------|--------|-------|
+| address | The binding IP address for the slave process |  N/A   |
+| command | The command for the slave process | N/A (for AsterixDB, it should be "asterixnc") |
+| coredumpdir | The path for core dump | N/A |
+| iodevices | Comma separated directory paths for both storage files and temporary files | N/A |
+| jvm.args | The JVM arguments | -Xmx1536m |
+| metadata.port | The metadata communication port on the metadata node. This parameter should only be present in the section of the metadata NC | 0 |
+| metadata.registration.timeout.secs | The time out threshold (in seconds) for metadata node registration | 60 |
+| port | The port for the NCService that starts the slave process |  N/A |
+| storagedir | The directory for storage files  |  N/A |
+| storage.buffercache.maxopenfiles | The maximum number of open files for the buffer cache.  Note that this is the parameter for the AsterixDB <br/> and setting the operating system parameter is still required. | 2147483647 |
+| storage.buffercache.pagesize |  The page size (in bytes) for the disk buffer cache (for reads) | 131072 |
+| storage.buffercache.size | The overall budget (in bytes) of the disk buffer cache (for reads) | 536870912 |
+| storage.lsm.bloomfilter.falsepositiverate | The false positive rate for the bloom filter for each memory/disk components | 0.01 |
+| storage.memorycomponent.globalbudget | The global budget (in bytes) for all memory components of all datasets and indexes (for writes) |  536870912 |
+| storage.memorycomponent.numcomponents | The number of memory components per data partition per index  | 2 |
+| storage.memorycomponent.numpages | The number of pages for all memory components of a dataset, including those for secondary indexes | 256 |
+| storage.memorycomponent.pagesize | The page size (in bytes) of memory components | 131072 |
+| storage.metadata.memorycomponent.numpages | The number of pages for all memory components of a metadata dataset | 256 |
+| txnlogdir  | The directory for transaction logs | N/A |
+| txn.commitprofiler.reportinterval |  The interval for reporting commit statistics | 5 |
+| txn.job.recovery.memorysize  | The memory budget (in bytes) used for recovery | 67108864 |
+| txn.lock.timeout.sweepthreshold | Interval (in milliseconds) for checking lock timeout | 10000 |
+| txn.lock.timeout.waitthreshold | Time out (in milliseconds) of waiting for a lock | 60000 |
+| txn.log.buffer.numpages | The number of pages in the transaction log tail | 8 |
+| txn.log.buffer.pagesize | The page size (in bytes) for transaction log buffer. | 131072 |
+| txn.log.checkpoint.history |  The number of checkpoints to keep in the transaction log | 0 |
+| txn.log.checkpoint.lsnthreshold | The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the transaction log, i.e., the length of the transaction log) for transection logs | 67108864 |
+
+
+The following parameter is for both master and slave processes, under the "[app]" section.
+
+| Parameter | Meaning |  Default |
+|----------|--------|-------|
+| log.level | The logging level for master and slave processes | "INFO" |
