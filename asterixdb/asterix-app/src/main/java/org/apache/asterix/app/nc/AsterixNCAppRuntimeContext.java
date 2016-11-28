@@ -80,7 +80,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -125,7 +124,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
 
     private ILSMIOOperationScheduler lsmIOScheduler;
     private PersistentLocalResourceRepository localResourceRepository;
-    private IOManager ioManager;
+    private IIOManager ioManager;
     private boolean isShuttingdown;
 
     private ActiveManager activeManager;
@@ -168,7 +167,7 @@ public class AsterixNCAppRuntimeContext implements IAsterixAppRuntimeContext, IA
         Logger.getLogger("org.apache.asterix").setLevel(externalProperties.getLogLevel());
         Logger.getLogger("org.apache.hyracks").setLevel(externalProperties.getLogLevel());
 
-        ioManager = (IOManager) ncApplicationContext.getIoManager();
+        ioManager = ncApplicationContext.getIoManager();
         threadExecutor = new AsterixThreadExecutor(ncApplicationContext.getThreadFactory());
         fileMapManager = new AsterixFileMapManager(ioManager);
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();

@@ -69,9 +69,6 @@ public class PrimaryIndexSearchExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
-
-        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
-        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -144,8 +141,7 @@ public class PrimaryIndexSearchExample {
         int[] highKeyFields = { 1 }; // low key is in field 1 of tuples going
                                      // into search op
 
-        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName,
-                options.relative);
+        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, storageManager,
                 lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories, null, lowKeyFields,

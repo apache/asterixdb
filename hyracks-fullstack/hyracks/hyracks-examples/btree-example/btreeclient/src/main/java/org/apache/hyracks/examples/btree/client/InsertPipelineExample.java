@@ -78,9 +78,6 @@ public class InsertPipelineExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
-
-        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
-        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -150,8 +147,7 @@ public class InsertPipelineExample {
         int[] primaryFieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input
                                                         // tuple to field 0 of
                                                         // B-Tree tuple, etc.
-        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName,
-                options.relative);
+        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
 
@@ -178,7 +174,7 @@ public class InsertPipelineExample {
         // tuple
         int[] secondaryFieldPermutation = { 1, 2 };
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
-                options.secondaryBTreeName, true);
+                options.secondaryBTreeName);
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, recDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,

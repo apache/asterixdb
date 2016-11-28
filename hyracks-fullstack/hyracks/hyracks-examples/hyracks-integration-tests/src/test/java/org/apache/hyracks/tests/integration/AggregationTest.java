@@ -30,6 +30,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -73,8 +74,8 @@ import org.junit.Test;
 public class AggregationTest extends AbstractIntegrationTest {
 
     final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(
-            new FileSplit[] { new FileSplit(NC2_ID, new File("data/tpch0.001/lineitem.tbl").getAbsolutePath(),
-                    false) });
+            new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.002" + File.separator
+                    + "lineitem.tbl") });
 
     final RecordDescriptor desc = new RecordDescriptor(new ISerializerDeserializer[] {
             new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,

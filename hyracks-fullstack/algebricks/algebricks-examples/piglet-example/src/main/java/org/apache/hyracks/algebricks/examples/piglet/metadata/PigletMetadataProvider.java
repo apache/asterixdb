@@ -147,8 +147,8 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
         try {
             prf = new SinkWriterRuntimeFactory(printColumns, printerFactories,
                     fileSplits[0].getFile(null), PrinterBasedWriterFactory.INSTANCE, inputDesc);
-        AlgebricksAbsolutePartitionConstraint constraint = new AlgebricksAbsolutePartitionConstraint(locations);
-        return new Pair<>(prf, constraint);
+            AlgebricksAbsolutePartitionConstraint constraint = new AlgebricksAbsolutePartitionConstraint(locations);
+            return new Pair<>(prf, constraint);
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }

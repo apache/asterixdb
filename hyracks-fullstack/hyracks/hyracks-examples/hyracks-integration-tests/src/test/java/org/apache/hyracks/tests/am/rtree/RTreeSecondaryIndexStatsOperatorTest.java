@@ -55,16 +55,13 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
     @Test
     public void showPrimaryIndexStats() throws Exception {
         JobSpecification spec = new JobSpecification();
-
         TreeIndexStatsOperatorDescriptor secondaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
                 lcManagerProvider, secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories, null,
                 rtreeDataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryStatsOp, NC1_ID);
-        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                createTempFile().getAbsolutePath(), false) });
+        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-
         spec.connect(new OneToOneConnectorDescriptor(spec), secondaryStatsOp, 0, printer, 0);
         spec.addRoot(printer);
         runTest(spec);

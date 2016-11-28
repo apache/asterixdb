@@ -29,7 +29,6 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
@@ -85,7 +84,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields,
-            double bloomFilterFalsePositiveRate) throws BTreeException, HyracksException {
+            double bloomFilterFalsePositiveRate) throws BTreeException, HyracksDataException {
         this.numBatches = numBatches;
 
         this.onDiskPageSize = onDiskPageSize;
@@ -97,7 +96,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
-        file = ioManager.getFileRef(onDiskDir, false);
+        file = ioManager.resolveAbsolutePath(onDiskDir);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
 
         List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<>();

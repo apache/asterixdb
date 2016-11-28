@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
@@ -36,6 +37,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
+import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
@@ -83,10 +85,10 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
         Arrays.fill(orderValueParserFactories, UTF8StringParserFactory.INSTANCE);
     }
 
-    private IOperatorDescriptor getPrinter(JobSpecification spec, File file) {
+    private IOperatorDescriptor getPrinter(JobSpecification spec, String path) {
         IFileSplitProvider outputSplitProvider = new ConstantFileSplitProvider(
                 new FileSplit[] {
-                        new FileSplit(NC1_ID, file.getAbsolutePath(), false) });
+                        new ManagedFileSplit(NC1_ID, path) });
 
         return DEBUG ? new PlainFileWriterOperatorDescriptor(spec, outputSplitProvider, "|")
                 : new NullSinkOperatorDescriptor(spec);
@@ -95,17 +97,17 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     @Test
     public void customerOrderCIDHybridHashJoin_Case1() throws Exception {
         JobSpecification spec = new JobSpecification();
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/tpch0.001/customer4.tbl").getAbsolutePath(), false) };
+        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "customer4.tbl") };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
-                "data/tpch0.001/orders4.tbl").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "orders4.tbl") };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
                 new DelimitedDataTupleParserFactory(orderValueParserFactories, '|'), ordersDesc);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(custValueParserFactories, '|'), custDesc);
@@ -122,14 +124,14 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
-        File file = File.createTempFile(getClass().getName(), "case1");
-        IOperatorDescriptor printer = getPrinter(spec, file);
+        String path = getClass().getName() + File.separator + "case1";
+        IOperatorDescriptor printer = getPrinter(spec, path);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 0);
 
-        IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
+        IConnectorDescriptor ordJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
 
         IConnectorDescriptor joinPrinterConn = new OneToOneConnectorDescriptor(spec);
@@ -137,25 +139,25 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         spec.addRoot(printer);
         runTest(spec);
-        System.out.println("output to " + file.getAbsolutePath());
+        System.out.println("output to " + path);
     }
 
     @Test
     public void customerOrderCIDHybridHashJoin_Case2() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/tpch0.001/customer3.tbl").getAbsolutePath(), false) };
+        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "customer3.tbl") };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
-                "data/tpch0.001/orders4.tbl").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "orders4.tbl") };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
                 new DelimitedDataTupleParserFactory(orderValueParserFactories, '|'), ordersDesc);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(custValueParserFactories, '|'), custDesc);
@@ -172,14 +174,14 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
-        File file = File.createTempFile(getClass().getName(), "case2");
-        IOperatorDescriptor printer = getPrinter(spec, file);
+        String path = getClass().getName() + File.separator + "case2";
+        IOperatorDescriptor printer = getPrinter(spec, path);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 0);
 
-        IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
+        IConnectorDescriptor ordJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
 
         IConnectorDescriptor joinPrinterConn = new OneToOneConnectorDescriptor(spec);
@@ -187,7 +189,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         spec.addRoot(printer);
         runTest(spec);
-        System.out.println("output to " + file.getAbsolutePath());
+        System.out.println("output to " + path);
     }
 
     @Test
@@ -195,18 +197,18 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/tpch0.001/customer3.tbl").getAbsolutePath(), false) };
+        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "customer3.tbl") };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new File(
-                "data/tpch0.001/orders1.tbl").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "orders1.tbl") };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
                 new DelimitedDataTupleParserFactory(orderValueParserFactories, '|'), ordersDesc);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC2_ID);
 
         FileScanOperatorDescriptor custScanner = new FileScanOperatorDescriptor(spec, custSplitsProvider,
                 new DelimitedDataTupleParserFactory(custValueParserFactories, '|'), custDesc);
@@ -223,14 +225,14 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, join, NC1_ID);
 
-        File file = File.createTempFile(getClass().getName(), "case3");
-        IOperatorDescriptor printer = getPrinter(spec, file);
+        String path = getClass().getName() + File.separator + "case3";
+        IOperatorDescriptor printer = getPrinter(spec, path);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor custJoinConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(custJoinConn, custScanner, 0, join, 0);
 
-        IConnectorDescriptor ordJoinConn = new OneToOneConnectorDescriptor(spec);
+        IConnectorDescriptor ordJoinConn = new MToNBroadcastConnectorDescriptor(spec);
         spec.connect(ordJoinConn, ordScanner, 0, join, 1);
 
         IConnectorDescriptor joinPrinterConn = new OneToOneConnectorDescriptor(spec);
@@ -238,7 +240,7 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         spec.addRoot(printer);
         runTest(spec);
-        System.out.println("output to " + file.getAbsolutePath());
+        System.out.println("output to " + path);
     }
 
 }

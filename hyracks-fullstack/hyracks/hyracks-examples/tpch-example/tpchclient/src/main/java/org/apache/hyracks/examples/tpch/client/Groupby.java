@@ -187,16 +187,10 @@ public class Groupby {
         spec.connect(scanGroupConnDef2, fileScanner, 0, grouper, 0);
 
         IFileSplitProvider outSplitProvider = new ConstantFileSplitProvider(outSplits);
-
-        AbstractSingleActivityOperatorDescriptor writer;
-
-        if (outPlain)
-            writer = new PlainFileWriterOperatorDescriptor(spec, outSplitProvider, "|");
-        else
-            writer = new FrameFileWriterOperatorDescriptor(spec, outSplitProvider);
-
+        AbstractSingleActivityOperatorDescriptor writer = outPlain ? new PlainFileWriterOperatorDescriptor(spec,
+                outSplitProvider, "|")
+                : new FrameFileWriterOperatorDescriptor(spec, outSplitProvider);
         createPartitionConstraint(spec, writer, outSplits);
-
         IConnectorDescriptor groupOutConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(groupOutConn, grouper, 0, writer, 0);
 

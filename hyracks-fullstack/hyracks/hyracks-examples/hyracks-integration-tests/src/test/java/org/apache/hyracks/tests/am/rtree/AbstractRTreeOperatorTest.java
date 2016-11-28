@@ -28,8 +28,9 @@ import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
@@ -106,7 +107,6 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     // to be set by subclasses
     protected String primaryFileName;
-    protected boolean primaryFileNameRelative;
     protected IFileSplitProvider primarySplitProvider;
 
     // field, type and key declarations for secondary indexes
@@ -126,12 +126,11 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected IBinaryComparatorFactory[] btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
 
     protected String secondaryFileName;
-    protected boolean secondaryFileNameRelative;
     protected IFileSplitProvider secondarySplitProvider;
 
     protected ITreeIndexOperatorTestHelper testHelper;
 
-    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
+    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksDataException {
         return new RTreeOperatorTestHelper();
     }
 
@@ -140,13 +139,11 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         testHelper = createTestHelper();
 
         primaryFileName = testHelper.getPrimaryIndexName();
-        primaryFileNameRelative = testHelper.getPrimaryIndexNameRelative();
-        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID, primaryFileName,
-                primaryFileNameRelative) });
+        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                primaryFileName) });
         secondaryFileName = testHelper.getSecondaryIndexName();
-        secondaryFileNameRelative = testHelper.getSecondaryIndexNameRelative();
-        secondarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                secondaryFileName, secondaryFileNameRelative) });
+        secondarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                secondaryFileName) });
 
         // field, type and key declarations for primary index
         primaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
@@ -218,8 +215,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void loadPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/orders-with-locations-part1.txt").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "orders-with-locations-part1.txt") };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -329,8 +326,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/orders-with-locations-part2.txt").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "orders-with-locations-part2.txt") };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),

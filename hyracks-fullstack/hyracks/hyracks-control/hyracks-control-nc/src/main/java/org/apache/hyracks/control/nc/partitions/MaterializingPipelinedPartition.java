@@ -33,7 +33,6 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionState;
-import org.apache.hyracks.control.nc.io.IOManager;
 
 public class MaterializingPipelinedPartition implements IFrameWriter, IPartition {
     private static final Logger LOGGER = Logger.getLogger(MaterializingPipelinedPartition.class.getName());
@@ -42,7 +41,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     private final Executor executor;
 
-    private final IOManager ioManager;
+    private final IIOManager ioManager;
 
     private final PartitionManager manager;
 
@@ -68,7 +67,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
             TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.executor = executor;
-        this.ioManager = (IOManager) ctx.getIOManager();
+        this.ioManager = ctx.getIOManager();
         this.manager = manager;
         this.pid = pid;
         this.taId = taId;

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileDeviceComputer;
 import org.apache.hyracks.api.io.IFileHandle;
@@ -55,12 +54,12 @@ public class IOManager implements IIOManager {
     private int workspaceIndex;
     private IFileDeviceComputer deviceComputer;
 
-    public IOManager(List<IODeviceHandle> devices, Executor executor) throws HyracksException {
+    public IOManager(List<IODeviceHandle> devices, Executor executor) throws HyracksDataException {
         this(devices);
         this.executor = executor;
     }
 
-    public IOManager(List<IODeviceHandle> devices) throws HyracksException {
+    public IOManager(List<IODeviceHandle> devices) throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);
         workspaces = new ArrayList<>();
         for (IODeviceHandle d : ioDevices) {
@@ -70,7 +69,7 @@ public class IOManager implements IIOManager {
             }
         }
         if (workspaces.isEmpty()) {
-            throw new HyracksException("No devices with work areas found");
+            throw new HyracksDataException("No devices with workspace found");
         }
         workspaceIndex = 0;
         deviceComputer = new DefaultDeviceComputer(this);
@@ -165,7 +164,7 @@ public class IOManager implements IIOManager {
      * @param offset
      * @param data
      * @return The number of bytes read, possibly zero, or -1 if the given offset is greater than or equal to the file's
-     * current size
+     *         current size
      * @throws HyracksDataException
      */
     @Override
@@ -213,6 +212,7 @@ public class IOManager implements IIOManager {
         }
     }
 
+    @Override
     public synchronized FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
         IODeviceHandle dev = workspaces.get(workspaceIndex);
         workspaceIndex = (workspaceIndex + 1) % workspaces.size();
@@ -328,16 +328,18 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public FileReference getFileRef(int ioDeviceId, String relativePath) {
+    public synchronized FileReference getFileReference(int ioDeviceId, String relativePath) {
         IODeviceHandle devHandle = ioDevices.get(ioDeviceId);
         return new FileReference(devHandle, relativePath);
     }
 
     @Override
-    public FileReference getFileRef(String path, boolean relative) throws HyracksDataException {
-        if (relative) {
-            return new FileReference(deviceComputer.compute(path), path);
-        }
+    public FileReference resolve(String path) throws HyracksDataException {
+        return new FileReference(deviceComputer.compute(path), path);
+    }
+
+    @Override
+    public FileReference resolveAbsolutePath(String path) throws HyracksDataException {
         IODeviceHandle devHandle = getDevice(path);
         if (devHandle == null) {
             throw new HyracksDataException("The file with absolute path: " + path + " is outside all io devices");

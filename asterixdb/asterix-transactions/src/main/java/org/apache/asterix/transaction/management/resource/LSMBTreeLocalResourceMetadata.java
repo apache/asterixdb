@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -31,7 +30,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -76,16 +74,8 @@ public class LSMBTreeLocalResourceMetadata extends Resource {
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException {
         IIOManager ioManager = runtimeContextProvider.getIOManager();
-        FileReference file = ioManager.getFileRef(resource.getPath(), true);
-        List<IODeviceHandle> ioDevices = ioManager.getIODevices();
-        int ioDeviceNum = 0;
-        for (int i = 0; i < ioDevices.size(); i++) {
-            IODeviceHandle device = ioDevices.get(i);
-            if (device == file.getDeviceHandle()) {
-                ioDeviceNum = i;
-                break;
-            }
-        }
+        FileReference file = ioManager.resolve(resource.getPath());
+        int ioDeviceNum = Resource.getIoDeviceNum(ioManager, file.getDeviceHandle());
         final IDatasetLifecycleManager datasetLifecycleManager = runtimeContextProvider.getDatasetLifecycleManager();
         LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(ioManager, datasetLifecycleManager.getVirtualBufferCaches(
                 datasetId(),

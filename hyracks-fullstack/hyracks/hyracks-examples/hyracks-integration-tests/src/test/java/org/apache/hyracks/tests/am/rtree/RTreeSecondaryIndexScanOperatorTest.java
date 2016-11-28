@@ -63,11 +63,9 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
     @Test
     public void scanPrimaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
-
         // build dummy tuple
         ArrayTupleBuilder tb = new ArrayTupleBuilder(secondaryKeyFieldCount);
         DataOutput dos = tb.getDataOutput();
-
         tb.reset();
         DoubleSerializerDeserializer.INSTANCE.serialize(0.0, dos);
         tb.addFieldEndOffset();
@@ -77,32 +75,24 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
         tb.addFieldEndOffset();
         DoubleSerializerDeserializer.INSTANCE.serialize(0.0, dos);
         tb.addFieldEndOffset();
-
         ISerializerDeserializer[] keyRecDescSers = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
-
         int[] keyFields = null;
-
         RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory, false, false, null,
                 NoOpOperationCallbackFactory.INSTANCE, null, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
-
-        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                createTempFile().getAbsolutePath(), false) });
+        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, secondarySearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), secondarySearchOp, 0, printer, 0);
-
         spec.addRoot(printer);
         runTest(spec);
     }

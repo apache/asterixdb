@@ -19,6 +19,7 @@
 package org.apache.hyracks.tests.comm;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -47,7 +48,8 @@ import org.junit.Test;
 
 public class SerializationDeserializationTest {
     private static final Logger LOGGER = Logger.getLogger(SerializationDeserializationTest.class.getName());
-    private static final String DBLP_FILE = "data/dblp.txt";
+    private static final String DBLP_FILE = "data" + File.separator + "device1" + File.separator + "data"
+            + File.separator + "dblp.txt";
 
     private static class SerDeserRunner {
         private final IHyracksTaskContext ctx;

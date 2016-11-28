@@ -18,12 +18,12 @@
  */
 package org.apache.hyracks.dataflow.std.file;
 
-import java.io.File;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordWriter {
 
     public void close();
 
-    public void write(Object[] record) throws Exception;
+    public void write(Object[] record) throws HyracksDataException;
 
 }

@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.tests.am.lsm.btree;
 
-import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.btree.BTreePrimaryIndexScanOperatorTest;
@@ -27,7 +27,8 @@ import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 
 public class LSMBTreePrimaryIndexScanOperatorTest extends BTreePrimaryIndexScanOperatorTest {
 
-    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
+    @Override
+    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksDataException {
         return new LSMBTreeOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }
 

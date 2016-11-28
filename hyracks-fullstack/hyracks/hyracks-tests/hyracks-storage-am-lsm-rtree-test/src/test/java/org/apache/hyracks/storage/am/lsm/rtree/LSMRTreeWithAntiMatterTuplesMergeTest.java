@@ -23,7 +23,6 @@ import java.util.Random;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
@@ -43,7 +42,7 @@ public class LSMRTreeWithAntiMatterTuplesMergeTest extends LSMRTreeMergeTestDriv
     }
 
     @Before
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         harness.setUp();
     }
 

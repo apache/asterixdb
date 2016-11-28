@@ -87,7 +87,7 @@ public class FeedOperations {
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, nullSink, ingesterPc);
         spec.connect(new OneToOneConnectorDescriptor(spec), feedIngestor, 0, nullSink, 0);
         spec.addRoot(nullSink);
-        return new Pair<JobSpecification, IAdapterFactory>(spec, adapterFactory);
+        return new Pair<>(spec, adapterFactory);
     }
 
     /**
@@ -131,7 +131,7 @@ public class FeedOperations {
             AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, nullSink, messengerPc);
             spec.connect(new OneToOneConnectorDescriptor(spec), feedMessenger, 0, nullSink, 0);
             spec.addRoot(nullSink);
-            return new Pair<JobSpecification, Boolean>(spec, terminateIntakeJob);
+            return new Pair<>(spec, terminateIntakeJob);
 
         } catch (AlgebricksException e) {
             throw new AsterixException(e);
@@ -146,7 +146,7 @@ public class FeedOperations {
                 new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[] {}));
         FeedMessageOperatorDescriptor feedMessenger =
                 new FeedMessageOperatorDescriptor(jobSpec, feedConenctionId, feedMessage);
-        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedMessenger, partitionConstraint);
+        return new Pair<>(feedMessenger, partitionConstraint);
     }
 
     private static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDisconnectFeedMessengerRuntime(

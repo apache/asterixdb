@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.io.FileSplit;
 
+@FunctionalInterface
 public interface IFileSplitProvider extends Serializable {
-    public FileSplit[] getFileSplits();
+    FileSplit[] getFileSplits();
 }

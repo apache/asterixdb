@@ -50,7 +50,7 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException {
         IIOManager ioManager = runtimeContextProvider.getIOManager();
-        FileReference file = ioManager.getFileRef(resource.getPath(), true);
+        FileReference file = ioManager.resolve(resource.getPath());
         LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(ioManager, file, runtimeContextProvider.getBufferCache(),
                 runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),

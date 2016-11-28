@@ -37,10 +37,10 @@ public class MaterializedPartition implements IPartition {
 
     private final Executor executor;
 
-    private final IOManager ioManager;
+    private final IIOManager ioManager;
 
     public MaterializedPartition(IHyracksTaskContext ctx, FileReference partitionFile, Executor executor,
-            IOManager ioManager) {
+            IIOManager ioManager) {
         this.ctx = ctx;
         this.partitionFile = partitionFile;
         this.executor = executor;

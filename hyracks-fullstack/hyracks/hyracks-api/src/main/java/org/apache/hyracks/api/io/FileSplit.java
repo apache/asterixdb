@@ -24,31 +24,24 @@ import java.io.Serializable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * A node and a path (Can be relative: inside the IO device or absolute inside or outside IO devices)
+ * A node and a path (Can be managed: inside the IO device or absolute inside or outside IO devices)
  * Used to identify a file/dir across the cluster.
  */
-public class FileSplit implements Serializable {
+public abstract class FileSplit implements Serializable {
+
     private static final long serialVersionUID = 1L;
     private final String node;
     private final String path;
-    private final boolean managed;
 
     /**
      * Constructor
      *
      * @param node
      * @param path
-     * @param maanged
      */
-    public FileSplit(String node, String path, boolean relative) {
+    protected FileSplit(String node, String path) {
         this.node = node;
         this.path = path;
-        this.managed = relative;
-    }
-
-    @Override
-    public String toString() {
-        return "Node: " + node + " " + (managed ? "managed" : "absolute") + " path: " + path;
     }
 
     /**
@@ -59,33 +52,13 @@ public class FileSplit implements Serializable {
     }
 
     /**
-     * @return true if relative
-     */
-    public boolean isManaged() {
-        return managed;
-    }
-
-    /**
      * Get the local file represented by this split
      *
      * @param ioManager
      * @return
      * @throws HyracksDataException
      */
-    public File getFile(IIOManager ioManager) throws HyracksDataException {
-        return managed ? getFileRef(ioManager).getFile() : new File(path);
-    }
-
-    /**
-     * Get the file reference for the split
-     *
-     * @param ioManager
-     * @return
-     * @throws HyracksDataException
-     */
-    public FileReference getFileRef(IIOManager ioManager) throws HyracksDataException {
-        return ioManager.getFileRef(path, managed);
-    }
+    public abstract File getFile(IIOManager ioManager) throws HyracksDataException;
 
     /**
      * @return the node
@@ -93,4 +66,8 @@ public class FileSplit implements Serializable {
     public String getNodeName() {
         return node;
     }
+
+    // TODO(amoudi): This method should be removed from this class and moved to ManagedFileSplit since it is only
+    // applicable for that subclass
+    public abstract FileReference getFileReference(IIOManager ioManager) throws HyracksDataException;
 }

@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -100,9 +101,9 @@ public class TestStorageManagerComponentHolder {
         return fileMapProvider;
     }
 
-    public synchronized static IOManager getIOManager() throws HyracksException {
+    public synchronized static IOManager getIOManager() throws HyracksDataException {
         if (ioManager == null) {
-            List<IODeviceHandle> devices = new ArrayList<IODeviceHandle>();
+            List<IODeviceHandle> devices = new ArrayList<>();
             devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "iodev_test_wa"));
             ioManager = new IOManager(devices, Executors.newCachedThreadPool());
         }

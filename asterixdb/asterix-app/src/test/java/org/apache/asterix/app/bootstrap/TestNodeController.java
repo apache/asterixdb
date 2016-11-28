@@ -66,6 +66,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.util.HyracksConstants;
@@ -250,8 +251,8 @@ public class TestNodeController {
     }
 
     public ConstantFileSplitProvider getFileSplitProvider(Dataset dataset) {
-        FileSplit fileSplit = new FileSplit(ExecutionTestUtil.integrationUtil.ncs[0].getId(),
-                dataset.getDataverseName() + File.separator + dataset.getDatasetName(), true);
+        FileSplit fileSplit = new ManagedFileSplit(ExecutionTestUtil.integrationUtil.ncs[0].getId(),
+                dataset.getDataverseName() + File.separator + dataset.getDatasetName());
         return new ConstantFileSplitProvider(new FileSplit[] { fileSplit });
     }
 

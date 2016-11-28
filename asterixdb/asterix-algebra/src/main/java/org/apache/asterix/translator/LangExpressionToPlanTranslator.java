@@ -157,6 +157,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 
 /**
  * Each visit returns a pair of an operator and a variable. The variable
@@ -735,7 +736,7 @@ class LangExpressionToPlanTranslator
         String filePath = outputDir + System.getProperty("file.separator") + OUTPUT_FILE_PREFIX
                 + outputFileID.incrementAndGet();
         AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.INSTANCE.getMetadataProperties();
-        return new FileSplit(metadataProperties.getMetadataNodeName(), filePath, true);
+        return new ManagedFileSplit(metadataProperties.getMetadataNodeName(), filePath);
     }
 
     @Override

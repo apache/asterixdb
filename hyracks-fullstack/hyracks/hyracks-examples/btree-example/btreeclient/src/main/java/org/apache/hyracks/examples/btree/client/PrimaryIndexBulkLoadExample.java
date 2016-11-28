@@ -76,9 +76,6 @@ public class PrimaryIndexBulkLoadExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
-
-        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
-        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -154,8 +151,7 @@ public class PrimaryIndexBulkLoadExample {
         int[] fieldPermutation = { 2, 1, 3, 4 }; // map field 2 of input tuple
                                                  // to field 0 of B-Tree tuple,
                                                  // etc.
-        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName,
-                options.relative);
+        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, recDesc,
                 storageManager, lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories, null,

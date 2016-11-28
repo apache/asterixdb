@@ -56,7 +56,6 @@ import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
@@ -115,7 +114,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         taskMap = new HashMap<>();
         counterMap = new HashMap<>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
-        fileFactory = new WorkspaceFileFactory(this, (IOManager) appCtx.getIoManager());
+        fileFactory = new WorkspaceFileFactory(this, appCtx.getIoManager());
         cleanupPending = false;
         IJobletEventListenerFactory jelf = acg.getJobletEventListenerFactory();
         if (jelf != null) {

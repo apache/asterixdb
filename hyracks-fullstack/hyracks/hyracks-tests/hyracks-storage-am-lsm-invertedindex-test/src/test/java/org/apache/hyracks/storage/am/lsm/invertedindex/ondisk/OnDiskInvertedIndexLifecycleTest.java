@@ -59,9 +59,9 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
         IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                 .of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        FileReference btreeFile = harness.getIOManager().getFileRef(harness.getInvListsFileRef().getFile()
+        FileReference btreeFile = harness.getIOManager().resolveAbsolutePath(harness.getInvListsFileRef().getFile()
                 .getAbsolutePath()
-                + "_btree", false);
+                + "_btree");
         index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListBuilder,
                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                 harness.getInvListsFileRef(), btreeFile);

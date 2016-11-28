@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
@@ -49,7 +48,7 @@ public class LSMRTreeWithAntiMatterTuplesMultiThreadTest extends AbstractRTreeMu
     }
 
     @Override
-    protected void setUp() throws HyracksException {
+    protected void setUp() throws HyracksDataException {
         harness.setUp();
     }
 

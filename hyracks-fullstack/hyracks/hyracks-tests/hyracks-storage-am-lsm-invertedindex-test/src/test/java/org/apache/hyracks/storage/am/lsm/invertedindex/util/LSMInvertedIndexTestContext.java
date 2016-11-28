@@ -131,14 +131,14 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCaches().get(0),
                         new VirtualMetaDataPageManager(harness.getVirtualBufferCaches().get(0).getNumPages()),
                         invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
-                        ioManager.getFileRef(harness.getOnDiskDir(), false));
+                        ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
                 break;
             }
             case PARTITIONED_INMEMORY: {
                 invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness
                         .getVirtualBufferCaches().get(0), new VirtualMetaDataPageManager(harness.getVirtualBufferCaches()
                         .get(0).getNumPages()), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, ioManager.getFileRef(harness.getOnDiskDir(), false));
+                        tokenCmpFactories, tokenizerFactory, ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
                 break;
             }
             case ONDISK: {

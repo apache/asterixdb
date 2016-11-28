@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.MappedFileSplit;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.log4j.Level;
@@ -50,7 +51,7 @@ public class StoragePathUtil {
     }
 
     public static FileSplit getFileSplitForClusterPartition(ClusterPartition partition, String relativePath) {
-        return new FileSplit(partition.getActiveNodeId(), relativePath, true);
+        return new MappedFileSplit(partition.getActiveNodeId(), relativePath, partition.getIODeviceNum());
     }
 
     public static String prepareStoragePartitionPath(String storageDirName, int partitonId) {

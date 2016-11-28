@@ -58,7 +58,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
         this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
         FileSplit fileSplit = opDesc.getFileSplitProvider().getFileSplits()[partition];
-        this.resourceRef = ioManager.getFileRef(fileSplit.getPath(), fileSplit.isManaged());
+        this.resourceRef = fileSplit.getFileReference(ioManager);
         this.resourceName = resourceRef.getRelativePath();
         this.durable = durable;
         this.partition = partition;

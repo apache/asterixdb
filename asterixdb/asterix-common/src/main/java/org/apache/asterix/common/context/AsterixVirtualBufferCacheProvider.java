@@ -46,7 +46,7 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
         final int partition = ctx.getTaskAttemptId().getTaskId().getPartition();
         IIOManager ioManager = ctx.getIOManager();
         FileSplit fileSplit = fileSplitProvider.getFileSplits()[partition];
-        FileReference fileRef = ioManager.getFileRef(fileSplit.getPath(), fileSplit.isManaged());
+        FileReference fileRef = fileSplit.getFileReference(ioManager);
         IODeviceHandle device = fileRef.getDeviceHandle();
         List<IODeviceHandle> devices = ioManager.getIODevices();
         int deviceId = 0;

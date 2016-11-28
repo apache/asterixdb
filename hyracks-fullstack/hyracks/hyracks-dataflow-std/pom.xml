@@ -84,7 +84,6 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

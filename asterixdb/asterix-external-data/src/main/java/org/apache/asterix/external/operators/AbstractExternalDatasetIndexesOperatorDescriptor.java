@@ -81,7 +81,7 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
             public void initialize() throws HyracksDataException {
                 try {
                     FileSplit fileSplit = fileIndexInfo.getFileSplitProvider().getFileSplits()[partition];
-                    FileReference fileRef = fileSplit.getFileRef(ctx.getIOManager());
+                    FileReference fileRef = fileSplit.getFileReference(ctx.getIOManager());
                     // only in partition of device id = 0, we perform the operation on the files index
                     if (fileRef.getDeviceHandle() == ctx.getIOManager().getIODevices().get(0)) {
                         performOpOnIndex(filesIndexDataflowHelperFactory, ctx, fileIndexInfo, partition);

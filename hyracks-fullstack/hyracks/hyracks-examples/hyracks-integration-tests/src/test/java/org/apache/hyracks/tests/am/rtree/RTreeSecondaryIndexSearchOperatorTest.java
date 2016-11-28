@@ -64,11 +64,9 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractRTreeOperator
     @Test
     public void searchSecondaryIndexTest() throws Exception {
         JobSpecification spec = new JobSpecification();
-
         // build tuple
         ArrayTupleBuilder tb = new ArrayTupleBuilder(secondaryKeyFieldCount);
         DataOutput dos = tb.getDataOutput();
-
         tb.reset();
         DoubleSerializerDeserializer.INSTANCE.serialize(61.2894, dos);
         tb.addFieldEndOffset();
@@ -78,45 +76,35 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractRTreeOperator
         tb.addFieldEndOffset();
         DoubleSerializerDeserializer.INSTANCE.serialize(-149.024, dos);
         tb.addFieldEndOffset();
-
         ISerializerDeserializer[] keyRecDescSers = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
-
         int[] keyFields = { 0, 1, 2, 3 };
-
         RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory, false, false, null,
                 NoOpOperationCallbackFactory.INSTANCE, null, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
-
         // fifth field from the tuples coming from secondary index
         int[] primaryLowKeyFields = { 4 };
         // fifth field from the tuples coming from secondary index
         int[] primaryHighKeyFields = { 4 };
-
         // search primary index
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 null, primaryLowKeyFields, primaryHighKeyFields, true, true, btreeDataflowHelperFactory, false, false,
                 null, NoOpOperationCallbackFactory.INSTANCE, null, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primarySearchOp, NC1_ID);
-
-        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                createTempFile().getAbsolutePath(), false) });
+        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
-
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, secondarySearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), secondarySearchOp, 0, primarySearchOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), primarySearchOp, 0, printer, 0);
-
         spec.addRoot(printer);
         runTest(spec);
     }

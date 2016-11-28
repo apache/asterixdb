@@ -83,7 +83,7 @@ public class BufferCacheRegressionTest {
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         IOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
-        FileReference firstFileRef = ioManager.getFileRef(fileName, false);
+        FileReference firstFileRef = ioManager.resolveAbsolutePath(fileName);
         bufferCache.createFile(firstFileRef);
         int firstFileId = fmp.lookupFileId(firstFileRef);
         bufferCache.openFile(firstFileId);
@@ -107,7 +107,7 @@ public class BufferCacheRegressionTest {
         }
 
         // Create a file with the same name.
-        FileReference secondFileRef = ioManager.getFileRef(fileName, false);
+        FileReference secondFileRef = ioManager.resolveAbsolutePath(fileName);
         bufferCache.createFile(secondFileRef);
         int secondFileId = fmp.lookupFileId(secondFileRef);
 
@@ -123,7 +123,7 @@ public class BufferCacheRegressionTest {
         // ask the BufferCache to pin the page, because it would return the same
         // physical memory again, and for performance reasons pages are never
         // reset with 0's.
-        FileReference testFileRef = ioManager.getFileRef(fileName, false);
+        FileReference testFileRef = ioManager.resolveAbsolutePath(fileName);
         IFileHandle testFileHandle = ioManager.open(testFileRef, FileReadWriteMode.READ_ONLY,
                 FileSyncMode.METADATA_SYNC_DATA_SYNC);
         ByteBuffer testBuffer = ByteBuffer.allocate(PAGE_SIZE + BufferCache.RESERVED_HEADER_BYTES);

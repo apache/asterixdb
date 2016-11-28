@@ -44,7 +44,7 @@ public class TestJobletContext implements IHyracksJobletContext {
         this.frameSize = frameSize;
         this.appContext = appContext;
         this.jobId = jobId;
-        fileFactory = new WorkspaceFileFactory(this, (IOManager) getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, (IIOManager) getIOManager());
         this.frameManger = new FrameManager(frameSize);
     }
 

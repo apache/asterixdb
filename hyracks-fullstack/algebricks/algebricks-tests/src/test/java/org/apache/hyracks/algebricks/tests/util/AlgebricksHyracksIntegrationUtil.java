@@ -18,8 +18,10 @@
  */
 package org.apache.hyracks.algebricks.tests.util;
 
+import java.io.File;
 import java.util.EnumSet;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -40,11 +42,13 @@ public class AlgebricksHyracksIntegrationUtil {
     public static final int TEST_HYRACKS_CC_CLIENT_NET_PORT = 4321;
 
     private static ClusterControllerService cc;
-    private static NodeControllerService nc1;
-    private static NodeControllerService nc2;
+    public static NodeControllerService nc1;
+    public static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
 
     public static void init() throws Exception {
+        FileUtils.deleteQuietly(new File("target" + File.separator + "data"));
+        FileUtils.copyDirectory(new File("data"), new File("target" + File.separator + "data"));
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = "127.0.0.1";
         ccConfig.clientNetPort = TEST_HYRACKS_CC_CLIENT_NET_PORT;
@@ -60,6 +64,9 @@ public class AlgebricksHyracksIntegrationUtil {
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.resultIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
+        ncConfig1.ioDevices = System.getProperty("user.dir") + File.separator + "target" + File.separator + "data"
+                + File.separator + "device0";
+        FileUtils.forceMkdir(new File(ncConfig1.ioDevices));
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
@@ -70,6 +77,9 @@ public class AlgebricksHyracksIntegrationUtil {
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.resultIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
+        ncConfig1.ioDevices = System.getProperty("user.dir") + File.separator + "target" + File.separator + "data"
+                + File.separator + "device1";
+        FileUtils.forceMkdir(new File(ncConfig1.ioDevices));
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 

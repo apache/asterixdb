@@ -27,7 +27,6 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
@@ -52,7 +51,7 @@ public abstract class OrderedIndexMultiThreadTest {
 
     protected ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
 
-    protected abstract void setUp() throws HyracksException;
+    protected abstract void setUp() throws HyracksDataException;
 
     protected abstract void tearDown() throws HyracksDataException;
 
@@ -66,7 +65,7 @@ public abstract class OrderedIndexMultiThreadTest {
     protected abstract String getIndexTypeName();
 
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf,
-            String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
+            String dataMsg) throws InterruptedException, TreeIndexException, HyracksDataException {
         setUp();
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -104,7 +103,7 @@ public abstract class OrderedIndexMultiThreadTest {
     }
 
     @Test
-    public void oneIntKeyAndValue() throws InterruptedException, TreeIndexException, HyracksException {
+    public void oneIntKeyAndValue() throws InterruptedException, TreeIndexException, HyracksDataException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
         int numKeys = 1;
@@ -117,7 +116,7 @@ public abstract class OrderedIndexMultiThreadTest {
     }
 
     @Test
-    public void oneStringKeyAndValue() throws InterruptedException, TreeIndexException, HyracksException {
+    public void oneStringKeyAndValue() throws InterruptedException, TreeIndexException, HyracksDataException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         int numKeys = 1;

@@ -109,7 +109,7 @@ public class InvertedIndexUtils {
 
     public static FileReference getBTreeFile(IIOManager ioManager, FileReference invListsFile)
             throws HyracksDataException {
-        return ioManager.getFileRef(invListsFile.getFile().getPath() + "_btree", false);
+        return ioManager.resolveAbsolutePath(invListsFile.getFile().getPath() + "_btree");
     }
 
     public static BTreeFactory createDeletedKeysBTreeFactory(IIOManager ioManager, IFileMapProvider diskFileMapProvider,
@@ -150,7 +150,7 @@ public class InvertedIndexUtils {
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
                 bloomFilterKeyFields);
 
-        FileReference onDiskDirFileRef = ioManager.getFileRef(absoluteOnDiskDir, false);
+        FileReference onDiskDirFileRef = ioManager.resolveAbsolutePath(absoluteOnDiskDir);
         LSMInvertedIndexFileManager fileManager = new LSMInvertedIndexFileManager(ioManager, diskFileMapProvider,
                 onDiskDirFileRef, deletedKeysBTreeFactory);
 
@@ -202,7 +202,7 @@ public class InvertedIndexUtils {
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, diskFileMapProvider,
                 bloomFilterKeyFields);
 
-        FileReference onDiskDirFileRef = ioManager.getFileRef(absoluteOnDiskDir, false);
+        FileReference onDiskDirFileRef = ioManager.resolveAbsolutePath(absoluteOnDiskDir);
         LSMInvertedIndexFileManager fileManager = new LSMInvertedIndexFileManager(ioManager, diskFileMapProvider,
                 onDiskDirFileRef, deletedKeysBTreeFactory);
 

@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.rtree.utils;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.junit.After;
 import org.junit.Before;
 
@@ -39,7 +38,7 @@ public abstract class AbstractRTreeTest {
     }
 
     @Before
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         harness.setUp();
     }
 

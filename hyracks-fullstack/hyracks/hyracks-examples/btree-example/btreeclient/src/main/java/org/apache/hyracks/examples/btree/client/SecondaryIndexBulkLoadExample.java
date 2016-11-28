@@ -72,9 +72,6 @@ public class SecondaryIndexBulkLoadExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
-
-        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
-        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -125,8 +122,7 @@ public class SecondaryIndexBulkLoadExample {
         comparatorFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // use a disk-order scan to read primary index
-        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName,
-                options.relative);
+        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         TreeIndexDiskOrderScanOperatorDescriptor btreeScanOp = new TreeIndexDiskOrderScanOperatorDescriptor(spec,
                 recDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
@@ -149,8 +145,7 @@ public class SecondaryIndexBulkLoadExample {
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple
         int[] fieldPermutation = { 1, 0 };
-        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName,
-                options.relative);
+        IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, null,
                 storageManager, lcManagerProvider, btreeSplitProvider, secondaryTypeTraits, comparatorFactories, null,
                 fieldPermutation, 0.7f, false, 1000L, true, dataflowHelperFactory);

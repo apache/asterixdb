@@ -73,7 +73,7 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
             @Override
             public void initialize() throws HyracksDataException {
                 // will only work for files inside the io devices
-                File f = ioManager.getFileRef(split.getPath(), split.isManaged()).getFile();
+                File f = split.getFile(ioManager);
                 if (quietly) {
                     FileUtils.deleteQuietly(f);
                 } else {

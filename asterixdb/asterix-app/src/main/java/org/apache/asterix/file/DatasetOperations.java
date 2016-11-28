@@ -174,7 +174,7 @@ public class DatasetOperations {
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
-            sb.append(stringOf(fs[i]) + " ");
+            sb.append(fs[i] + " ");
         }
         LOGGER.info("CREATING File Splits: " + sb.toString());
 
@@ -202,10 +202,6 @@ public class DatasetOperations {
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);
         return spec;
-    }
-
-    private static String stringOf(FileSplit fs) {
-        return fs.getNodeName() + ":" + fs.getPath();
     }
 
     public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,

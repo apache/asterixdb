@@ -39,6 +39,6 @@ public class IndexFileNameUtil {
     public static FileReference getIndexAbsoluteFileRef(IIndexOperatorDescriptor opDesc, int partition,
             IIOManager ioManager) throws HyracksDataException {
         FileSplit split = opDesc.getFileSplitProvider().getFileSplits()[partition];
-        return ioManager.getFileRef(split.getPath(), split.isManaged());
+        return split.getFileReference(ioManager);
     }
 }

@@ -29,7 +29,6 @@ import java.util.Random;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -98,7 +97,7 @@ public class LSMInvertedIndexTestHarness {
         this.numMutableComponents = AccessMethodTestsConfig.LSM_INVINDEX_NUM_MUTABLE_COMPONENTS;
     }
 
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
         onDiskDir = ioManager.getIODevices().get(ioDeviceId).getMount() + sep + "lsm_invertedindex_"
@@ -115,7 +114,7 @@ public class LSMInvertedIndexTestHarness {
             virtualBufferCache.open();
         }
         rnd.setSeed(RANDOM_SEED);
-        invIndexFileRef = ioManager.getFileRef(onDiskDir + invIndexFileName, false);
+        invIndexFileRef = ioManager.resolveAbsolutePath(onDiskDir + invIndexFileName);
     }
 
     public void tearDown() throws HyracksDataException {

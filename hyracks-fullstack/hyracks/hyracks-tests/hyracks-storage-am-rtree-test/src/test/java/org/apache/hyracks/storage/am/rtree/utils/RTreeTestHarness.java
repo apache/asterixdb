@@ -26,7 +26,6 @@ import java.util.Random;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -70,11 +69,11 @@ public class RTreeTestHarness {
         this.hyracksFrameSize = hyracksFrameSize;
     }
 
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        file = ioManager.getFileRef(fileName, false);
+        file = ioManager.resolveAbsolutePath(fileName);
         ctx = TestUtils.create(getHyracksFrameSize());
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);

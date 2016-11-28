@@ -23,7 +23,6 @@ import java.util.Random;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.btree.OrderedIndexBulkLoadTest;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
@@ -42,7 +41,7 @@ public class LSMBTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
 
     @Before
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         harness.setUp();
     }
 

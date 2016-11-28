@@ -71,7 +71,7 @@ public class BloomFilterTestHarness {
         ioManager = ctx.getIOManager();
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        file = ioManager.getFileRef(0, simpleDateFormat.format(new Date()));
+        file = ioManager.getFileReference(0, simpleDateFormat.format(new Date()));
         rnd.setSeed(RANDOM_SEED);
     }
 

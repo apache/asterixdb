@@ -139,8 +139,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             BTree deleteKeysBTree = BTreeUtils.createBTree(virtualBufferCache,
                     new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()),
                     virtualBufferCache.getFileMapProvider(), invListTypeTraits, invListCmpFactories,
-                    BTreeLeafFrameType.REGULAR_NSM, ioManager.getFileRef(fileManager.getBaseDir() + "_virtual_del_" + i,
-                            false));
+                    BTreeLeafFrameType.REGULAR_NSM, ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_"
+                            + i));
             LSMInvertedIndexMemoryComponent mutableComponent = new LSMInvertedIndexMemoryComponent(memInvIndex,
                     deleteKeysBTree, virtualBufferCache, i == 0 ? true : false,
                     filterFactory == null ? null : filterFactory.createLSMComponentFilter());
@@ -804,7 +804,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             IVirtualMetaDataPageManager virtualFreePageManager, int id) throws IndexException, HyracksDataException {
         return InvertedIndexUtils.createInMemoryBTreeInvertedindex(virtualBufferCache, virtualFreePageManager,
                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, ioManager
-                        .getFileRef(fileManager.getBaseDir() + "_virtual_vocab_" + id, false));
+                        .resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_vocab_" + id));
     }
 
     protected LSMInvertedIndexDiskComponent createDiskInvIndexComponent(ILSMComponentFactory factory,

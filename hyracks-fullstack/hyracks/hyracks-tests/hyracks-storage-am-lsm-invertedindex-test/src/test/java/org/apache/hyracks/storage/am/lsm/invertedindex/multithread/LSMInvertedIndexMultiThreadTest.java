@@ -24,10 +24,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.IndexException;
@@ -39,6 +36,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTe
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.junit.Test;
 
 public class LSMInvertedIndexMultiThreadTest {
 
@@ -54,7 +52,7 @@ public class LSMInvertedIndexMultiThreadTest {
     protected final LSMInvertedIndexWorkerFactory workerFactory = new LSMInvertedIndexWorkerFactory();
     protected final ArrayList<TestWorkloadConf> workloadConfs = getTestWorkloadConf();
 
-    protected void setUp() throws HyracksException {
+    protected void setUp() throws HyracksDataException {
         harness.setUp();
     }
 
@@ -63,7 +61,8 @@ public class LSMInvertedIndexMultiThreadTest {
     }
 
     protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numThreads,
-            TestWorkloadConf conf, String dataMsg) throws InterruptedException, TreeIndexException, HyracksException {
+            TestWorkloadConf conf, String dataMsg) throws InterruptedException, TreeIndexException,
+            HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("LSMInvertedIndex MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads
                     + "; Workload: " + conf.toString() + ".");
@@ -85,7 +84,7 @@ public class LSMInvertedIndexMultiThreadTest {
     }
 
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
-        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<>();
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };

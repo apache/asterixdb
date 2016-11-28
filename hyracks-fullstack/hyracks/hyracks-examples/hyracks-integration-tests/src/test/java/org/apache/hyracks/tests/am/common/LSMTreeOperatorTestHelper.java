@@ -19,11 +19,6 @@
 
 package org.apache.hyracks.tests.am.common;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.Date;
-
-import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import org.apache.hyracks.test.support.TestVirtualBufferCacheProvider;
@@ -39,55 +34,5 @@ public class LSMTreeOperatorTestHelper extends TreeOperatorTestHelper {
         this.ioManager = ioManager;
         this.virtualBufferCacheProvider = new TestVirtualBufferCacheProvider(DEFAULT_MEM_PAGE_SIZE,
                 DEFAULT_MEM_NUM_PAGES);
-    }
-
-    @Override
-    public String getPrimaryIndexName() {
-        return "primary" + simpleDateFormat.format(new Date());
-    }
-
-    @Override
-    public boolean getPrimaryIndexNameRelative() {
-        return true;
-    }
-
-    @Override
-    public String getSecondaryIndexName() {
-        return "secondary" + simpleDateFormat.format(new Date());
-    }
-
-    @Override
-    public boolean getSecondaryIndexNameRelative() {
-        return true;
-    }
-
-    @Override
-    public void cleanup(String primaryFileName, String secondaryFileName) {
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File primaryDir = new File(dev.getMount(), primaryFileName);
-            cleanupDir(primaryDir);
-            File secondaryDir = new File(dev.getMount(), secondaryFileName);
-            cleanupDir(secondaryDir);
-        }
-    }
-
-    private void cleanupDir(File dir) {
-        if (!dir.exists()) {
-            return;
-        }
-        FilenameFilter filter = new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return !name.startsWith(".");
-            }
-        };
-        String[] files = dir.list(filter);
-        if (files != null) {
-            for (String fileName : files) {
-                File file = new File(dir.getPath() + File.separator + fileName);
-                file.delete();
-            }
-        }
-        dir.delete();
     }
 }

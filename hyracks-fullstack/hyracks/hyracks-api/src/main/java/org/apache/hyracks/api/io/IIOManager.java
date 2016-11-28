@@ -63,18 +63,36 @@ public interface IIOManager {
 
     /**
      * @param ioDeviceId
-     * @param relativePath
+     * @param path
      * @return A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code relativePath}
      */
-    public FileReference getFileRef(int ioDeviceId, String relativePath);
+    FileReference getFileReference(int ioDeviceId, String path);
 
     /**
-     * A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code relativePath}
+     * determine which IO device holds the path and returns a FileReference based on that
      *
      * @param path
-     * @param relative
-     * @return
+     * @return A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code Path}
      * @throws HyracksDataException
      */
-    public FileReference getFileRef(String path, boolean relative) throws HyracksDataException;
+    FileReference resolve(String path) throws HyracksDataException;
+
+    /**
+     * Gets a file reference from an absolute path
+     * @deprecated
+     *             use getFileRef(int ioDeviceId, String path) instead
+     * @param path
+     * @return A file reference based on the mounting point of {@code ioDeviceId} and the passed {@code relativePath}
+     * @throws HyracksDataException
+     */
+    @Deprecated
+    FileReference resolveAbsolutePath(String path) throws HyracksDataException;
+
+    /**
+     * Create a workspace file with the given prefix
+     * @param prefix
+     * @return A FileReference for the created workspace file
+     * @throws HyracksDataException
+     */
+    FileReference createWorkspaceFile(String prefix) throws HyracksDataException;
 }

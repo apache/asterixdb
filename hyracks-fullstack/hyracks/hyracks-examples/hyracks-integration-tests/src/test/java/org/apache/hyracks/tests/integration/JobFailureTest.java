@@ -32,7 +32,7 @@ public class JobFailureTest extends AbstractMultiNCIntegrationTest {
 
     @Test
     public void failureOnCreatePushRuntime() throws Exception {
-        for (int round = 0; round < 100; ++round) {
+        for (int round = 0; round < 1000; ++round) {
             execTest();
         }
     }

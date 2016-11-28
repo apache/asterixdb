@@ -49,11 +49,11 @@ import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.LocalResource;
@@ -74,7 +74,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final FilenameFilter METADATA_FILES_FILTER = (File dir, String name) -> name.equalsIgnoreCase(
             METADATA_FILE_NAME);
     // Finals
-    private final IOManager ioManager;
+    private final IIOManager ioManager;
     private final String[] mountPoints;
     private final String nodeId;
     private final Cache<String, LocalResource> resourceCache;
@@ -87,7 +87,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private IReplicationManager replicationManager;
     private Set<Integer> nodeInactivePartitions;
 
-    public PersistentLocalResourceRepository(IOManager ioManager, List<IODeviceHandle> devices, String nodeId,
+    public PersistentLocalResourceRepository(IIOManager ioManager, List<IODeviceHandle> devices, String nodeId,
             AsterixMetadataProperties metadataProperties) throws HyracksDataException {
         this.ioManager = ioManager;
         mountPoints = new String[devices.size()];
@@ -187,7 +187,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     @Override
     public synchronized void insert(LocalResource resource) throws HyracksDataException {
         String relativePath = getFileName(resource.getPath(), resource.getId());
-        FileReference resourceFile = ioManager.getFileRef(relativePath, true);
+        FileReference resourceFile = ioManager.resolve(relativePath);
         if (resourceFile.getFile().exists()) {
             throw new HyracksDataException("Duplicate resource: " + resourceFile.getAbsolutePath());
         } else {
@@ -230,10 +230,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    private static FileReference getLocalResourceFileByName(IOManager ioManager, String resourcePath)
+    private static FileReference getLocalResourceFileByName(IIOManager ioManager, String resourcePath)
             throws HyracksDataException {
         String fileName = resourcePath + File.separator + METADATA_FILE_NAME;
-        return ioManager.getFileRef(fileName, true);
+        return ioManager.resolve(fileName);
     }
 
     public Map<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
@@ -420,7 +420,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      * @param ioDeviceId
      * @return A file reference to the storage metadata file.
      */
-    private static FileReference getStorageMetadataFile(IOManager ioManager, String nodeId,
+    private static FileReference getStorageMetadataFile(IIOManager ioManager, String nodeId,
             int ioDeviceId) {
         String storageMetadataFileName = STORAGE_METADATA_DIRECTORY + File.separator + nodeId + "_" + "iodevice"
                 + ioDeviceId + File.separator
@@ -435,7 +435,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      * @return A file reference to the storage root directory if exists, otherwise null.
      * @throws HyracksDataException
      */
-    public static File getStorageRootDirectoryIfExists(IOManager ioManager, String nodeId,
+    public static File getStorageRootDirectoryIfExists(IIOManager ioManager, String nodeId,
             int ioDeviceId)
             throws HyracksDataException {
         File storageRootDir = null;

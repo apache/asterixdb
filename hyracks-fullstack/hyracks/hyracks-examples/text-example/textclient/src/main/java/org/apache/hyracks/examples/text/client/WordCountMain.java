@@ -32,6 +32,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -127,7 +128,7 @@ public class WordCountMain {
                 throw new IllegalArgumentException("File split " + s + " not well formed");
             }
             File file = new File(s.substring(idx + 1));
-            fSplits[i] = new FileSplit(s.substring(0, idx), file.getAbsolutePath(), false);
+            fSplits[i] = new UnmanagedFileSplit(s.substring(0, idx), file.getAbsolutePath());
             fileSize += file.length();
         }
         return fSplits;

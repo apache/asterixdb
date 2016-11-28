@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -46,8 +47,8 @@ public class UnionTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
-                new FileSplit(NC2_ID, new File("data/words.txt").getAbsolutePath(), false),
-                new FileSplit(NC1_ID, new File("data/words.txt").getAbsolutePath(), false) });
+                new ManagedFileSplit(NC2_ID, "data" + File.separator + "words.txt"),
+                new ManagedFileSplit(NC1_ID, "data" + File.separator + "nc1" + File.separator + "words.txt") });
 
         RecordDescriptor desc = new RecordDescriptor(
                 new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });

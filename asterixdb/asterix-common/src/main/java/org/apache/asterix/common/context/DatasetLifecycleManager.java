@@ -166,34 +166,34 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
     @Override
     public synchronized void open(String resourcePath) throws HyracksDataException {
-            validateDatasetLifecycleManagerState();
-            int did = getDIDfromResourcePath(resourcePath);
-            long resourceID = getResourceIDfromResourcePath(resourcePath);
+        validateDatasetLifecycleManagerState();
+        int did = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
 
-            DatasetResource dsr = datasets.get(did);
-            DatasetInfo dsInfo = dsr.getDatasetInfo();
-            if (dsInfo == null || !dsInfo.isRegistered()) {
-                throw new HyracksDataException(
-                        "Failed to open index with resource ID " + resourceID + " since it does not exist.");
+        DatasetResource dsr = datasets.get(did);
+        DatasetInfo dsInfo = dsr.getDatasetInfo();
+        if (dsInfo == null || !dsInfo.isRegistered()) {
+            throw new HyracksDataException(
+                    "Failed to open index with resource ID " + resourceID + " since it does not exist.");
+        }
+
+        IndexInfo iInfo = dsInfo.getIndexes().get(resourceID);
+        if (iInfo == null) {
+            throw new HyracksDataException(
+                    "Failed to open index with resource ID " + resourceID + " since it does not exist.");
+        }
+
+        dsr.open(true);
+        dsr.touch();
+
+        if (!iInfo.isOpen()) {
+            ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
+            synchronized (opTracker) {
+                iInfo.getIndex().activate();
             }
-
-            IndexInfo iInfo = dsInfo.getIndexes().get(resourceID);
-            if (iInfo == null) {
-                throw new HyracksDataException(
-                        "Failed to open index with resource ID " + resourceID + " since it does not exist.");
-            }
-
-            dsr.open(true);
-            dsr.touch();
-
-            if (!iInfo.isOpen()) {
-                ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
-                synchronized (opTracker) {
-                    iInfo.getIndex().activate();
-                }
-                iInfo.setOpen(true);
-            }
-            iInfo.touch();
+            iInfo.setOpen(true);
+        }
+        iInfo.touch();
     }
 
     private boolean evictCandidateDataset() throws HyracksDataException {

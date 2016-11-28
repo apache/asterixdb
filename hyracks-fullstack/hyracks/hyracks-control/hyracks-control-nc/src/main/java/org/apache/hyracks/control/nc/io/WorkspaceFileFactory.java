@@ -21,15 +21,16 @@ package org.apache.hyracks.control.nc.io;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
 public final class WorkspaceFileFactory implements IWorkspaceFileFactory {
     private final IDeallocatableRegistry registry;
-    private final IOManager ioManager;
+    private final IIOManager ioManager;
 
-    public WorkspaceFileFactory(IDeallocatableRegistry registry, IOManager ioManager) {
+    public WorkspaceFileFactory(IDeallocatableRegistry registry, IIOManager ioManager) {
         this.registry = registry;
         this.ioManager = ioManager;
     }

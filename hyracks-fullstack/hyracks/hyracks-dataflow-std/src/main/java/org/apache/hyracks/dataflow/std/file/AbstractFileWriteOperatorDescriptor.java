@@ -24,6 +24,7 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
@@ -31,10 +32,12 @@ import org.apache.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
 
 public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     protected class FileWriteOperator implements IOpenableDataWriterOperator {
+        private final IIOManager ioManager;
         private int index;
         private IRecordWriter writer;
 
-        FileWriteOperator(int index) {
+        FileWriteOperator(IIOManager ioManager, int index) {
+            this.ioManager = ioManager;
             this.index = index;
         }
 
@@ -46,11 +49,7 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
         @Override
         public void open() throws HyracksDataException {
             FileSplit split = splits[index];
-            try {
-                writer = createRecordWriter(split, index);
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
+            writer = createRecordWriter(ioManager, split, index);
         }
 
         @Override
@@ -64,12 +63,7 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
 
         @Override
         public void writeData(Object[] data) throws HyracksDataException {
-            try {
-                writer.write(data);
-
-            } catch (Exception e) {
-                throw new HyracksDataException(e);
-            }
+            writer.write(data);
         }
 
         @Override
@@ -95,12 +89,13 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
         this.splits = splits;
     }
 
-    protected abstract IRecordWriter createRecordWriter(FileSplit fileSplit, int index) throws Exception;
+    protected abstract IRecordWriter createRecordWriter(IIOManager ioManager, FileSplit fileSplit, int index)
+            throws HyracksDataException;
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new FileWriteOperator(partition),
-                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
+        return new DeserializedOperatorNodePushable(ctx, new FileWriteOperator(ctx.getIOManager(),
+                partition), recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
     }
 }

@@ -113,7 +113,7 @@ public class VirtualBufferCacheTest {
         for (int i = 0; i < NUM_FILES; i++) {
             FileState f = fileStates[i];
             String fName = String.format("f%d", i);
-            f.fileRef = ioManager.getFileRef(fName, true);
+            f.fileRef = ioManager.resolve(fName);
             vbc.createFile(f.fileRef);
             f.fileId = vbc.getFileMapProvider().lookupFileId(f.fileRef);
         }

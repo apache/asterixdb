@@ -39,7 +39,7 @@ import org.apache.asterix.external.util.NodeResolverFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.UnmanagedFileSplit;
 
 public class LocalFSInputStreamFactory implements IInputStreamFactory {
 
@@ -49,7 +49,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     protected static final Logger LOGGER = Logger.getLogger(LocalFSInputStreamFactory.class.getName());
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
-    protected FileSplit[] inputFileSplits;
+    protected UnmanagedFileSplit[] inputFileSplits;
     protected boolean isFeed;
     protected String expression;
     // transient fields (They don't need to be serialized and transferred)
@@ -64,7 +64,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
             ArrayList<Path> inputResources = new ArrayList<>();
             for (int i = 0; i < inputFileSplits.length; i++) {
                 if (inputFileSplits[i].getNodeName().equals(nodeName)) {
-                    inputResources.add(inputFileSplits[i].getFile(ctx.getIOManager()).toPath());
+                    inputResources.add(inputFileSplits[i].getFile().toPath());
                 }
             }
             watcher = new FileSystemWatcher(inputResources, expression, isFeed);
@@ -100,9 +100,9 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     private void configureFileSplits(String[] splits) throws AsterixException {
         INodeResolver resolver = getNodeResolver();
         if (inputFileSplits == null) {
-            inputFileSplits = new FileSplit[splits.length];
-            String nodeName;
-            String nodeLocalPath;
+            inputFileSplits = new UnmanagedFileSplit[splits.length];
+            String node;
+            String path;
             int count = 0;
             String trimmedValue;
             for (String splitPath : splits) {
@@ -111,10 +111,9 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
                     throw new AsterixException(
                             "Invalid path: " + splitPath + "\nUsage- path=\"Host://Absolute File Path\"");
                 }
-                nodeName = resolver.resolveNode(trimmedValue.split(":")[0]);
-                nodeLocalPath = trimmedValue.split("://")[1];
-                FileSplit fileSplit = new FileSplit(nodeName, nodeLocalPath, false);
-                inputFileSplits[count++] = fileSplit;
+                node = resolver.resolveNode(trimmedValue.split(":")[0]);
+                path = trimmedValue.split("://")[1];
+                inputFileSplits[count++] = new UnmanagedFileSplit(node, path);
             }
         }
     }
@@ -122,8 +121,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     private void configurePartitionConstraint() throws AsterixException {
         Set<String> locs = new TreeSet<>();
         for (int i = 0; i < inputFileSplits.length; i++) {
-            String location = inputFileSplits[i].getNodeName();
-            locs.add(location);
+            locs.add(inputFileSplits[i].getNodeName());
         }
         constraints = new AlgebricksAbsolutePartitionConstraint(locs.toArray(new String[locs.size()]));
     }

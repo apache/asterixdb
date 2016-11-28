@@ -36,7 +36,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 
 public class TestNCApplicationContext implements INCApplicationContext {
     private final ILifeCycleComponentManager lccm;
-    private final IOManager ioManager;
+    private final IIOManager ioManager;
     private final String nodeId;
 
     private Serializable distributedState;
@@ -44,7 +44,7 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     private final IMemoryManager mm;
 
-    public TestNCApplicationContext(IOManager ioManager, String nodeId) {
+    public TestNCApplicationContext(IIOManager ioManager, String nodeId) {
         this.lccm = new LifeCycleComponentManager();
         this.ioManager = ioManager;
         this.nodeId = nodeId;

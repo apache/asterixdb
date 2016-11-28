@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.rtree;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
@@ -41,7 +40,7 @@ public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
     }
 
     @Before
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         harness.setUp();
     }
 

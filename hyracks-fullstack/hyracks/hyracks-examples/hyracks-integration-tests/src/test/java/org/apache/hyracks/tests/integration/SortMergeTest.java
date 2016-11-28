@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -55,8 +56,10 @@ public class SortMergeTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
-                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
+                new ManagedFileSplit(NC1_ID, "data" + File.separator + "tpch0.001" + File.separator
+                        + "orders-part1.tbl"),
+                new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.001" + File.separator
+                        + "orders-part2.tbl") };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -103,8 +106,10 @@ public class SortMergeTest extends AbstractIntegrationTest {
         JobSpecification spec = new JobSpecification();
 
         FileSplit[] ordersSplits = new FileSplit[] {
-                new FileSplit(NC1_ID, new File("data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false),
-                new FileSplit(NC2_ID, new File("data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
+                new ManagedFileSplit(NC1_ID, "data" + File.separator + "tpch0.001" + File.separator
+                        + "orders-part1.tbl"),
+                new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.001" + File.separator
+                        + "orders-part2.tbl") };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),

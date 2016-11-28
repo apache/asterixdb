@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.util.StringSerializationUtils;
 
 public abstract class RecordWriter implements IRecordWriter {
@@ -44,7 +45,7 @@ public abstract class RecordWriter implements IRecordWriter {
         this.separator = COMMA;
     }
 
-    public RecordWriter(int[] columns, char separator, Object[] args) throws Exception {
+    public RecordWriter(int[] columns, char separator, Object[] args) throws HyracksDataException {
         OutputStream outputStream = createOutputStream(args);
         if (outputStream != null) {
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
@@ -65,25 +66,29 @@ public abstract class RecordWriter implements IRecordWriter {
     }
 
     @Override
-    public void write(Object[] record) throws Exception {
-        if (columns == null) {
-            for (int i = 0; i < record.length; ++i) {
-                if (i != 0) {
-                    bufferedWriter.write(separator);
+    public void write(Object[] record) throws HyracksDataException {
+        try {
+            if (columns == null) {
+                for (int i = 0; i < record.length; ++i) {
+                    if (i != 0) {
+                        bufferedWriter.write(separator);
+                    }
+                    bufferedWriter.write(StringSerializationUtils.toString(record[i]));
                 }
-                bufferedWriter.write(StringSerializationUtils.toString(record[i]));
-            }
-        } else {
-            for (int i = 0; i < columns.length; ++i) {
-                if (i != 0) {
-                    bufferedWriter.write(separator);
+            } else {
+                for (int i = 0; i < columns.length; ++i) {
+                    if (i != 0) {
+                        bufferedWriter.write(separator);
+                    }
+                    bufferedWriter.write(StringSerializationUtils.toString(record[columns[i]]));
                 }
-                bufferedWriter.write(StringSerializationUtils.toString(record[columns[i]]));
             }
+            bufferedWriter.write("\n");
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
-        bufferedWriter.write("\n");
     }
 
-    public abstract OutputStream createOutputStream(Object[] args) throws Exception;
+    public abstract OutputStream createOutputStream(Object[] args) throws HyracksDataException;
 
 }

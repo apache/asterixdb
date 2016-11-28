@@ -22,7 +22,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.impl.BinaryBooleanInspectorImpl;
 import org.apache.hyracks.algebricks.data.impl.BinaryIntegerInspectorImpl;
@@ -64,8 +66,11 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -100,6 +105,7 @@ public class PushRuntimeTest {
     private static final int FRAME_SIZE = 32768;
 
     private static final String[] DEFAULT_NODES = new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID };
+    private static final AtomicInteger aInteger = new AtomicInteger(0);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -180,8 +186,8 @@ public class PushRuntimeTest {
 
         // the scanner
         FileSplit[] intFileSplits = new FileSplit[1];
-        intFileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, new File("data/simple/int-part1.tbl")
-                .getAbsolutePath(), false);
+        intFileSplits[0] = new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, "data" + File.separator
+                + "simple" + File.separator + "int-part1.tbl");
         IFileSplitProvider intSplitProvider = new ConstantFileSplitProvider(intFileSplits);
         RecordDescriptor intScannerDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
@@ -263,8 +269,8 @@ public class PushRuntimeTest {
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
-        fileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, new File("data/tpch0.001/customer.tbl")
-                .getAbsolutePath(), false);
+        fileSplits[0] = new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "customer.tbl");
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
 
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -345,8 +351,8 @@ public class PushRuntimeTest {
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
-        fileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID,
-                new File("data/tpch0.001/customer-part1.tbl").getAbsolutePath(), false);
+        fileSplits[0] = new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID,
+                "data" + File.separator + "tpch0.001" + File.separator + "customer-part1.tbl");
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
@@ -397,8 +403,8 @@ public class PushRuntimeTest {
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
-        fileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID,
-                new File("data/tpch0.001/customer.tbl").getAbsolutePath(), false);
+        fileSplits[0] = new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "customer.tbl");
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
@@ -575,15 +581,10 @@ public class PushRuntimeTest {
 
         JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
-        String inputFileName = "data/tpch0.001/customer.tbl";
-        File inputFile = new File(inputFileName);
-        File[] outputFile = new File[outputArity];
-        for (int i = 0; i < outputArity; i++) {
-            outputFile[i] = File.createTempFile("splitop", null);
-        }
+        String inputFileName = "data" + File.separator + "tpch0.001" + File.separator + "customer.tbl";
 
         FileSplit[] inputSplits = new FileSplit[] {
-                new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, inputFile.getAbsolutePath(), false) };
+                new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, inputFileName) };
 
         DelimitedDataTupleParserFactory stringParser = new DelimitedDataTupleParserFactory(
                 new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, '\u0000');
@@ -601,10 +602,12 @@ public class PushRuntimeTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, replicateOp,
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
 
-        IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputFile.length];
+        IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputArity];
+        File[] outputFile = new File[outputArity];
         for (int i = 0; i < outputArity; i++) {
-            outputOp[i] = new LineFileWriteOperatorDescriptor(spec, new FileSplit[] {
-                    new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, outputFile[i].getAbsolutePath(), false) });
+            FileSplit fileSplit = createFile(AlgebricksHyracksIntegrationUtil.nc1);
+            outputFile[i] = fileSplit.getFile(AlgebricksHyracksIntegrationUtil.nc1.getIoManager());
+            outputOp[i] = new LineFileWriteOperatorDescriptor(spec, new FileSplit[] { fileSplit });
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i],
                     new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
         }
@@ -620,8 +623,17 @@ public class PushRuntimeTest {
         AlgebricksHyracksIntegrationUtil.runJob(spec);
 
         for (int i = 0; i < outputArity; i++) {
-            compareFiles(inputFileName, outputFile[i].getAbsolutePath());
+            compareFiles("data" + File.separator + "device0" + File.separator + inputFileName, outputFile[i]
+                    .getAbsolutePath());
         }
+    }
+
+    public FileSplit createFile(NodeControllerService ncs) throws IOException {
+        String fileName = "f" + aInteger.getAndIncrement() + ".tmp";
+        FileReference fileRef = ncs.getIoManager().getFileReference(0, fileName);
+        FileUtils.deleteQuietly(fileRef.getFile());
+        fileRef.getFile().createNewFile();
+        return new ManagedFileSplit(ncs.getId(), fileName);
     }
 
     @Test
@@ -630,19 +642,22 @@ public class PushRuntimeTest {
 
         JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
-        String inputFileName[] = { "data/simple/int-string-part1.tbl", "data/simple/int-string-part1-split-0.tbl",
-                "data/simple/int-string-part1-split-1.tbl" };
+        String inputFileName[] = { "data" + File.separator + "simple" + File.separator + "int-string-part1.tbl", "data"
+                + File.separator + "simple" + File.separator + "int-string-part1-split-0.tbl",
+                "data" + File.separator + "simple" + File.separator + "int-string-part1-split-1.tbl" };
         File[] inputFiles = new File[inputFileName.length];
-        for (int i=0; i<inputFileName.length; i++) {
+        for (int i = 0; i < inputFileName.length; i++) {
             inputFiles[i] = new File(inputFileName[i]);
         }
         File[] outputFile = new File[outputArity];
+        FileSplit[] outputFileSplit = new FileSplit[outputArity];
         for (int i = 0; i < outputArity; i++) {
-            outputFile[i] = File.createTempFile("splitop", null);
+            outputFileSplit[i] = createFile(AlgebricksHyracksIntegrationUtil.nc1);
+            outputFile[i] = outputFileSplit[i].getFile(AlgebricksHyracksIntegrationUtil.nc1.getIoManager());
         }
 
         FileSplit[] inputSplits = new FileSplit[] {
-                new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, inputFiles[0].getAbsolutePath(), false) };
+                new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, inputFileName[0]) };
         IFileSplitProvider intSplitProvider = new ConstantFileSplitProvider(inputSplits);
 
         RecordDescriptor scannerDesc = new RecordDescriptor(
@@ -665,8 +680,7 @@ public class PushRuntimeTest {
 
         IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputFile.length];
         for (int i = 0; i < outputArity; i++) {
-            outputOp[i] = new LineFileWriteOperatorDescriptor(spec, new FileSplit[] {
-                    new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, outputFile[i].getAbsolutePath(), false) });
+            outputOp[i] = new LineFileWriteOperatorDescriptor(spec, new FileSplit[] { outputFileSplit[i] });
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i],
                     new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
         }
@@ -682,7 +696,8 @@ public class PushRuntimeTest {
         AlgebricksHyracksIntegrationUtil.runJob(spec);
 
         for (int i = 0; i < outputArity; i++) {
-            compareFiles(inputFileName[i + 1], outputFile[i].getAbsolutePath());
+            compareFiles("data" + File.separator + "device0" + File.separator + inputFileName[i + 1], outputFile[i]
+                    .getAbsolutePath());
         }
     }
 
@@ -692,8 +707,8 @@ public class PushRuntimeTest {
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
-        fileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, new File("data/tpch0.001/nation.tbl")
-                .getAbsolutePath(), false);
+        fileSplits[0] = new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, "data" + File.separator
+                + "tpch0.001" + File.separator + "nation.tbl");
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
@@ -801,8 +816,8 @@ public class PushRuntimeTest {
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
-        fileSplits[0] = new FileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID,
-                new File("data/tpch0.001/customer.tbl").getAbsolutePath(), false);
+        fileSplits[0] = new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID,
+                "data" + File.separator + "tpch0.001" + File.separator + "customer.tbl");
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),

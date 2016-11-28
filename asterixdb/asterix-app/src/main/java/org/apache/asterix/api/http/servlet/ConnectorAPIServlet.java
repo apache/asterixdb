@@ -140,8 +140,7 @@ public class ConnectorAPIServlet extends HttpServlet {
         for (FileSplit split : fileSplits) {
             String ipAddress = nodeMap.get(split.getNodeName()).getNetworkAddress().getAddress().toString();
             String path = split.getPath();
-            boolean relative = split.isManaged();
-            FilePartition partition = new FilePartition(ipAddress, path, relative);
+            FilePartition partition = new FilePartition(ipAddress, path);
             partititons.put(partition.toJSONObject());
         }
         // Generates the response object which contains the splits.
@@ -152,12 +151,10 @@ public class ConnectorAPIServlet extends HttpServlet {
 class FilePartition {
     private final String ipAddress;
     private final String path;
-    private final boolean relative;
 
-    public FilePartition(String ipAddress, String path, boolean relative) {
+    public FilePartition(String ipAddress, String path) {
         this.ipAddress = ipAddress;
         this.path = path;
-        this.relative = relative;
     }
 
     public String getIPAddress() {
@@ -166,10 +163,6 @@ class FilePartition {
 
     public String getPath() {
         return path;
-    }
-
-    public boolean isRelative() {
-        return relative;
     }
 
     @Override
@@ -181,7 +174,6 @@ class FilePartition {
         JSONObject partition = new JSONObject();
         partition.put("ip", ipAddress);
         partition.put("path", path);
-        partition.put("relative", relative);
         return partition;
     }
 }

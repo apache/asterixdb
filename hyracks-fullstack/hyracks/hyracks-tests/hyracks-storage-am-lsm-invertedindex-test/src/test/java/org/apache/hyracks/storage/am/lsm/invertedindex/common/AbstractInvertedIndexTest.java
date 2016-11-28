@@ -23,11 +23,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
@@ -38,6 +34,8 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModif
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.junit.After;
+import org.junit.Before;
 
 public abstract class AbstractInvertedIndexTest {
     protected final Logger LOGGER = Logger.getLogger(AbstractInvertedIndexTest.class.getName());
@@ -61,7 +59,7 @@ public abstract class AbstractInvertedIndexTest {
     }
 
     @Before
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         harness.setUp();
     }
 

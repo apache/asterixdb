@@ -23,18 +23,18 @@ import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class AsterixFileMapManager implements IFileMapManager {
 
     private static final long serialVersionUID = 1L;
-    private final transient IOManager ioManager;
+    private final transient IIOManager ioManager;
     private final Map<Integer, String> id2nameMap = new HashMap<>();
     private final Map<String, Integer> name2IdMap = new HashMap<>();
     private int idCounter = 0;
 
-    public AsterixFileMapManager(IOManager ioManager) {
+    public AsterixFileMapManager(IIOManager ioManager) {
         this.ioManager = ioManager;
     }
 
@@ -44,7 +44,7 @@ public class AsterixFileMapManager implements IFileMapManager {
         if (fName == null) {
             throw new HyracksDataException("No mapping found for id: " + fileId);
         }
-        return ioManager.getFileRef(fName, false);
+        return ioManager.resolveAbsolutePath(fName);
     }
 
     @Override

@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -60,7 +59,7 @@ public class LSMIndexFileManagerTest {
     protected FileReference file;
 
     @Before
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(null);
@@ -68,7 +67,7 @@ public class LSMIndexFileManagerTest {
                 + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
         f.mkdirs();
-        file = ioManager.getFileRef(f.getAbsolutePath(), false);
+        file = ioManager.resolveAbsolutePath(f.getAbsolutePath());
     }
 
     @After
@@ -123,7 +122,7 @@ public class LSMIndexFileManagerTest {
                 + simpleDateFormat.format(new Date()) + sep;
         File f = new File(dirPath);
         f.mkdirs();
-        FileReference file = ioManager.getFileRef(f.getAbsolutePath(), false);
+        FileReference file = ioManager.resolveAbsolutePath(f.getAbsolutePath());
         ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(ioManager, fileMapProvider, file,
                 new DummyTreeFactory());
         fileManager.createDirs();
@@ -243,7 +242,7 @@ public class LSMIndexFileManagerTest {
 
     }
 
-    private IOManager createIOManager(int numDevices) throws HyracksException {
+    private IOManager createIOManager(int numDevices) throws HyracksDataException {
         List<IODeviceHandle> devices = new ArrayList<>();
         for (int i = 0; i < numDevices; i++) {
             String iodevPath = System.getProperty("java.io.tmpdir") + sep + "test_iodev" + i;

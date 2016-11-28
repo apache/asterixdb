@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.examples.piglet.metadata;
 import java.io.File;
 
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.UnmanagedFileSplit;
 
 public class FileSplitUtils {
     public static FileSplit[] parseFileSplits(String fileSplits) {
@@ -32,7 +33,7 @@ public class FileSplitUtils {
             if (idx < 0) {
                 throw new IllegalArgumentException("File split " + s + " not well formed");
             }
-            fSplits[i] = new FileSplit(s.substring(0, idx), new File(s.substring(idx + 1)).getAbsolutePath(), false);
+            fSplits[i] = new UnmanagedFileSplit(s.substring(0, idx), new File(s.substring(idx + 1)).getAbsolutePath());
         }
         return fSplits;
     }

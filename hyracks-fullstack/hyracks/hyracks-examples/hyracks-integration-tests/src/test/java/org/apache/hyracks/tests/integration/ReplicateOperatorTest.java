@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -65,15 +66,14 @@ public class ReplicateOperatorTest extends AbstractIntegrationTest {
 
         JobSpecification spec = new JobSpecification();
 
-        String inputFileName = "data/words.txt";
+        String inputFileName = "data" + File.separator + "nc1" + File.separator + "words.txt";
         File[] outputFile = new File[outputArity];
         for (int i = 0; i < outputArity; i++) {
             outputFile[i] = File.createTempFile("replicateop", null);
             outputFile[i].deleteOnExit();
         }
 
-        FileSplit[] inputSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(inputFileName).getAbsolutePath(),
-                false) };
+        FileSplit[] inputSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, inputFileName) };
 
         String[] locations = new String[] { NC1_ID };
 
@@ -109,7 +109,7 @@ public class ReplicateOperatorTest extends AbstractIntegrationTest {
         }
         String[] expectedResultsFileNames = new String[outputArity];
         for (int i = 0; i < outputArity; i++) {
-            expectedResultsFileNames[i] = inputFileName;
+            expectedResultsFileNames[i] = "data" + File.separator + "device0" + File.separator + inputFileName;
         }
         runTestAndCompareResults(spec, expectedResultsFileNames);
     }

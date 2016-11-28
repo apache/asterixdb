@@ -72,9 +72,6 @@ public class SecondaryIndexSearchExample {
 
         @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
         public int frameSize = 32768;
-
-        @Option(name = "-relative", usage = "Whether the tree file names are relative", required = false)
-        public boolean relative = true;
     }
 
     public static void main(String[] args) throws Exception {
@@ -170,7 +167,7 @@ public class SecondaryIndexSearchExample {
                                               // index search op
 
         IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
-                options.secondaryBTreeName, options.relative);
+                options.secondaryBTreeName);
         IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
@@ -188,8 +185,7 @@ public class SecondaryIndexSearchExample {
                                             // going into primary index search
                                             // op
 
-        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName,
-                options.relative);
+        IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 null, primaryLowKeyFields, primaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null,

@@ -198,6 +198,7 @@ import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -419,7 +420,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         WriteStatement ws = (WriteStatement) stmt;
         File f = new File(ws.getFileName());
-        FileSplit outputFile = new FileSplit(ws.getNcName().getValue(), f.getPath(), false);
+        FileSplit outputFile = new UnmanagedFileSplit(ws.getNcName().getValue(), f.getPath());
         IAWriterFactory writerFactory = null;
         if (ws.getWriterClassName() != null) {
             writerFactory = (IAWriterFactory) Class.forName(ws.getWriterClassName()).newInstance();

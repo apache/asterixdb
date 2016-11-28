@@ -78,9 +78,9 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         String ts = getCurrentTimestamp();
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, false),
-                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX, false), createFlushFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING, false));
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
+                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), createFlushFile(baseName
+                        + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -91,9 +91,9 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX, false),
-                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX, false), createMergeFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING, false));
+        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
+                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), createMergeFile(baseName
+                        + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override

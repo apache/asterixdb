@@ -21,7 +21,7 @@ package org.apache.hyracks.tests.am.lsm.rtree;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
-import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -34,7 +34,8 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest extend
         this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
     }
 
-    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
+    @Override
+    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksDataException {
         return new LSMRTreeWithAntiMatterTuplesOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }
 

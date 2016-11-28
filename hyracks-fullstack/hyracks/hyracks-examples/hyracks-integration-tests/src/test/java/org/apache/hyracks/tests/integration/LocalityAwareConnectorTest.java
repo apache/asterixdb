@@ -31,6 +31,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -69,11 +70,14 @@ import org.junit.Test;
 public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
 
     final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(
-            new FileSplit[] { new FileSplit("asterix-001", new File("data/tpch0.001/lineitem.tbl").getAbsolutePath(),
-                    false),
-                    new FileSplit("asterix-002", new File("data/tpch0.001/lineitem.tbl").getAbsolutePath(), false),
-                    new FileSplit("asterix-003", new File("data/tpch0.001/lineitem.tbl").getAbsolutePath(), false),
-                    new FileSplit("asterix-004", new File("data/tpch0.001/lineitem.tbl").getAbsolutePath(), false) });
+            new FileSplit[] { new ManagedFileSplit(ASTERIX_IDS[0], "data" + File.separator + "tpch0.001"
+                    + File.separator + "lineitem.tbl"),
+                    new ManagedFileSplit(ASTERIX_IDS[1], "data" + File.separator + "tpch0.001" + File.separator
+                            + "lineitem.tbl"),
+                    new ManagedFileSplit(ASTERIX_IDS[2], "data" + File.separator + "tpch0.001" + File.separator
+                            + "lineitem.tbl"),
+                    new ManagedFileSplit(ASTERIX_IDS[3], "data" + File.separator + "tpch0.001" + File.separator
+                            + "lineitem.tbl") });
 
     final int fileSize = 800 * 1024 * 4;
 

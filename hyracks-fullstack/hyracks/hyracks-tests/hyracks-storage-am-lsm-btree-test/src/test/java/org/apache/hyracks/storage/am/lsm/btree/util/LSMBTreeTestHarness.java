@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -100,14 +99,14 @@ public class LSMBTreeTestHarness {
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
     }
 
-    public void setUp() throws HyracksException {
+    public void setUp() throws HyracksDataException {
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         ioDeviceId = 0;
         onDiskDir = ioManager.getIODevices().get(ioDeviceId).getMount() + sep + "lsm_btree_"
                 + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
-        file = ioManager.getFileRef(onDiskDir, false);
+        file = ioManager.resolveAbsolutePath(onDiskDir);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         virtualBufferCaches = new ArrayList<>();

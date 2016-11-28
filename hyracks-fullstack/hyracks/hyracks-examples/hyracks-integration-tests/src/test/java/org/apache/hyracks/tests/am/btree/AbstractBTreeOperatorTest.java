@@ -27,8 +27,9 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
@@ -76,7 +77,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     protected final int primaryFieldCount = 6;
     protected final ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
     protected final int primaryKeyFieldCount = 1;
-    protected final IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
+    protected final IBinaryComparatorFactory[] primaryComparatorFactories =
+            new IBinaryComparatorFactory[primaryKeyFieldCount];
     protected final int[] primaryBloomFilterKeyFields = new int[primaryKeyFieldCount];
 
     protected final RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -86,26 +88,25 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
     // to be set by subclasses
     protected String primaryFileName;
-    protected boolean primaryRelative;
     protected IFileSplitProvider primarySplitProvider;
 
     // field, type and key declarations for secondary indexes
     protected final int secondaryFieldCount = 2;
     protected final ITypeTraits[] secondaryTypeTraits = new ITypeTraits[secondaryFieldCount];
     protected final int secondaryKeyFieldCount = 2;
-    protected final IBinaryComparatorFactory[] secondaryComparatorFactories = new IBinaryComparatorFactory[secondaryKeyFieldCount];
+    protected final IBinaryComparatorFactory[] secondaryComparatorFactories =
+            new IBinaryComparatorFactory[secondaryKeyFieldCount];
     protected final int[] secondaryBloomFilterKeyFields = new int[secondaryKeyFieldCount];
 
     protected final RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     protected String secondaryFileName;
-    protected boolean secondaryRelative;
     protected IFileSplitProvider secondarySplitProvider;
 
     protected ITreeIndexOperatorTestHelper testHelper;
 
-    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
+    protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksDataException {
         return new BTreeOperatorTestHelper();
     }
 
@@ -114,13 +115,11 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         testHelper = createTestHelper();
         dataflowHelperFactory = createDataFlowHelperFactory();
         primaryFileName = testHelper.getPrimaryIndexName();
-        primaryRelative = testHelper.getPrimaryIndexNameRelative();
-        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID, primaryFileName,
-                primaryRelative) });
+        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                primaryFileName) });
         secondaryFileName = testHelper.getSecondaryIndexName();
-        secondaryRelative = testHelper.getSecondaryIndexNameRelative();
-        secondarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,
-                secondaryFileName, secondaryRelative) });
+        secondarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                secondaryFileName) });
 
         // field, type and key declarations for primary index
         primaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
@@ -145,7 +144,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
     public void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        TransientLocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
+        TransientLocalResourceFactoryProvider localResourceFactoryProvider =
+                new TransientLocalResourceFactoryProvider();
         TreeIndexCreateOperatorDescriptor primaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec, storageManager,
                 lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 primaryBloomFilterKeyFields, dataflowHelperFactory, localResourceFactoryProvider,
@@ -158,8 +158,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     protected void loadPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/tpch0.001/orders-part1.tbl").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "tpch0.001" + File.separator + "orders-part1.tbl") };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -201,7 +201,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
     public void createSecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        TransientLocalResourceFactoryProvider localResourceFactoryProvider = new TransientLocalResourceFactoryProvider();
+        TransientLocalResourceFactoryProvider localResourceFactoryProvider =
+                new TransientLocalResourceFactoryProvider();
         TreeIndexCreateOperatorDescriptor secondaryCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryBloomFilterKeyFields, dataflowHelperFactory,
@@ -270,8 +271,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IndexOperation pipelineOperation = useUpsert ? IndexOperation.UPSERT : IndexOperation.INSERT;
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC1_ID, new File(
-                "data/tpch0.001/orders-part2.tbl").getAbsolutePath(), false) };
+        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "tpch0.002" + File.separator + "orders-part2.tbl") };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -290,7 +291,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
         // insert into primary index
         int[] primaryFieldPermutation = { 0, 1, 2, 4, 5, 7 };
-        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryBtreeInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryBtreeInsertOp =
+                new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, ordersDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, primaryBloomFilterKeyFields, primaryFieldPermutation, pipelineOperation,
                 dataflowHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
@@ -298,7 +300,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
         // first secondary index
         int[] fieldPermutationB = { 4, 0 };
-        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsertOp = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+        TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsertOp =
+                new TreeIndexInsertUpdateDeleteOperatorDescriptor(
                 spec, ordersDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryBloomFilterKeyFields, fieldPermutationB, pipelineOperation,
                 dataflowHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);

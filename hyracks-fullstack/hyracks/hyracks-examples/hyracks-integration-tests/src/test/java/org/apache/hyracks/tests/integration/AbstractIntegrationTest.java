@@ -27,15 +27,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
-
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -43,6 +39,9 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -54,6 +53,9 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 
 public abstract class AbstractIntegrationTest {
     private static final Logger LOGGER = Logger.getLogger(AbstractIntegrationTest.class.getName());
@@ -62,21 +64,19 @@ public abstract class AbstractIntegrationTest {
     public static final String NC2_ID = "nc2";
 
     private static ClusterControllerService cc;
-    private static NodeControllerService nc1;
-    private static NodeControllerService nc2;
+    protected static NodeControllerService nc1;
+    protected static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
 
     private final List<File> outputFiles;
+    private static AtomicInteger aInteger = new AtomicInteger(0);
 
     protected static int DEFAULT_MEM_PAGE_SIZE = 32768;
     protected static int DEFAULT_MEM_NUM_PAGES = 1000;
     protected static double DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.01;
 
-    @Rule
-    public TemporaryFolder outputFolder = new TemporaryFolder();
-
     public AbstractIntegrationTest() {
-        outputFiles = new ArrayList<File>();
+        outputFiles = new ArrayList<>();
     }
 
     @BeforeClass
@@ -87,6 +87,8 @@ public abstract class AbstractIntegrationTest {
         ccConfig.clusterNetIpAddress = "127.0.0.1";
         ccConfig.clusterNetPort = 39001;
         ccConfig.profileDumpPeriod = 10000;
+        FileUtils.deleteQuietly(new File("target" + File.separator + "data"));
+        FileUtils.copyDirectory(new File("data"), new File("target" + File.separator + "data"));
         File outDir = new File("target" + File.separator + "ClusterController");
         outDir.mkdirs();
         File ccRoot = File.createTempFile(AbstractIntegrationTest.class.getName(), ".data", outDir);
@@ -103,6 +105,8 @@ public abstract class AbstractIntegrationTest {
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.resultIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
+        ncConfig1.ioDevices = System.getProperty("user.dir") + File.separator + "target" + File.separator + "data"
+                + File.separator + "device0";
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
@@ -113,6 +117,8 @@ public abstract class AbstractIntegrationTest {
         ncConfig2.dataIPAddress = "127.0.0.1";
         ncConfig2.resultIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
+        ncConfig2.ioDevices = System.getProperty("user.dir") + File.separator + "target" + File.separator + "data"
+                + File.separator + "device1";
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 
@@ -153,7 +159,7 @@ public abstract class AbstractIntegrationTest {
         IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
         IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, resultSetId);
 
-        List<String> resultRecords = new ArrayList<String>();
+        List<String> resultRecords = new ArrayList<>();
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
         FrameManager resultDisplayFrameMgr = new FrameManager(spec.getFrameSize());
@@ -225,12 +231,12 @@ public abstract class AbstractIntegrationTest {
         hcc.waitForCompletion(jobId);
     }
 
-    protected File createTempFile() throws IOException {
-        File tempFile = File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Output file: " + tempFile.getAbsolutePath());
-        }
-        outputFiles.add(tempFile);
-        return tempFile;
+    protected FileSplit createFile(NodeControllerService ncs) throws IOException {
+        String fileName = "f" + aInteger.getAndIncrement() + ".tmp";
+        FileReference fileRef = ncs.getIoManager().getFileReference(0, fileName);
+        FileUtils.deleteQuietly(fileRef.getFile());
+        fileRef.getFile().createNewFile();
+        outputFiles.add(fileRef.getFile());
+        return new ManagedFileSplit(ncs.getId(), fileName);
     }
 }

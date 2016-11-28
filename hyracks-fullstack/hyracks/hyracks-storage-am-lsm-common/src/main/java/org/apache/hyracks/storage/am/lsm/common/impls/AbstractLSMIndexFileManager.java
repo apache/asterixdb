@@ -124,7 +124,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         File dir = new File(baseDir);
         String[] files = dir.list(filter);
         for (String fileName : files) {
-            FileReference fileRef = ioManager.getFileRef(dir.getPath() + File.separator + fileName, false);
+            FileReference fileRef = ioManager.resolveAbsolutePath(dir.getPath() + File.separator + fileName);
             if (treeFactory == null) {
                 allFiles.add(new ComparableFileName(fileRef));
                 continue;
@@ -184,19 +184,19 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     };
 
-    protected FileReference createFlushFile(String relFlushFileName, boolean relative) throws HyracksDataException {
-        return ioManager.getFileRef(relFlushFileName, relative);
+    protected FileReference createFlushFile(String flushFileName) throws HyracksDataException {
+        return ioManager.resolveAbsolutePath(flushFileName);
     }
 
-    protected FileReference createMergeFile(String relMergeFileName, boolean relative) throws HyracksDataException {
-        return createFlushFile(relMergeFileName, relative);
+    protected FileReference createMergeFile(String mergeFileName) throws HyracksDataException {
+        return createFlushFile(mergeFileName);
     }
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseDir + ts + SPLIT_STRING + ts, false), null, null);
+        return new LSMComponentFileReferences(createFlushFile(baseDir + ts + SPLIT_STRING + ts), null, null);
     }
 
     @Override
@@ -206,7 +206,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(createMergeFile(baseDir + firstTimestampRange[0] + SPLIT_STRING
-                + lastTimestampRange[1], false), null, null);
+                + lastTimestampRange[1]), null, null);
     }
 
     @Override

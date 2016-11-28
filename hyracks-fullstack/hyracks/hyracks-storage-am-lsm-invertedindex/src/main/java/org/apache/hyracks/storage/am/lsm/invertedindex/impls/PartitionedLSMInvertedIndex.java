@@ -71,7 +71,7 @@ public class PartitionedLSMInvertedIndex extends LSMInvertedIndex {
             IVirtualMetaDataPageManager virtualFreePageManager, int id) throws IndexException, HyracksDataException {
         return InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(virtualBufferCache,
                 virtualFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
-                tokenizerFactory, ioManager.getFileRef(fileManager.getBaseDir() + "_virtual_vocab_" + id, false));
+                tokenizerFactory, ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_vocab_" + id));
     }
 
 }

@@ -19,10 +19,13 @@
 package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
@@ -58,4 +61,15 @@ public abstract class Resource implements Serializable {
 
     public abstract ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException;
+
+    public static int getIoDeviceNum(IIOManager ioManager, IODeviceHandle deviceHandle) {
+        List<IODeviceHandle> ioDevices = ioManager.getIODevices();
+        for (int i = 0; i < ioDevices.size(); i++) {
+            IODeviceHandle device = ioDevices.get(i);
+            if (device == deviceHandle) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

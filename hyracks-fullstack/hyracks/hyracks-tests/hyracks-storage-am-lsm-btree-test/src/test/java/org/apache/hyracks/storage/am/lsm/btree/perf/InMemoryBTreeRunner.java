@@ -25,7 +25,6 @@ import java.util.Date;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
@@ -60,12 +59,12 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected BTree btree;
 
     public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksException {
+            IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksDataException {
         this.numBatches = numBatches;
         TestStorageManagerComponentHolder.init(pageSize, numPages, numPages);
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        file = ioManager.getFileRef(fileName, false);
+        file = ioManager.resolveAbsolutePath(fileName);
         init(pageSize, numPages, typeTraits, cmpFactories);
     }
 

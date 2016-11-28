@@ -32,7 +32,6 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionState;
-import org.apache.hyracks.control.nc.io.IOManager;
 
 public class MaterializedPartitionWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(MaterializedPartitionWriter.class.getName());
@@ -98,7 +97,7 @@ public class MaterializedPartitionWriter implements IFrameWriter {
         }
         if (!failed) {
             manager.registerPartition(pid, taId,
-                    new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()),
+                    new MaterializedPartition(ctx, fRef, executor, ctx.getIOManager()),
                     PartitionState.COMMITTED, taId.getAttempt() == 0 ? false : true);
 
         }

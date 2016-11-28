@@ -28,11 +28,9 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -157,7 +155,7 @@ public class NodeControllerService implements IControllerService {
                 new NodeControllerIPCI(this),
                 new CCNCFunctions.SerializerDeserializer());
 
-        ioManager = new IOManager(getDevices(ncConfig.ioDevices));
+        ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.ioDevices));
         if (id == null) {
             throw new Exception("id not set");
         }
@@ -193,16 +191,6 @@ public class NodeControllerService implements IControllerService {
 
     public ILifeCycleComponentManager getLifeCycleComponentManager() {
         return lccm;
-    }
-
-    private static List<IODeviceHandle> getDevices(String ioDevices) {
-        List<IODeviceHandle> devices = new ArrayList<>();
-        StringTokenizer tok = new StringTokenizer(ioDevices, ",");
-        while (tok.hasMoreElements()) {
-            String devPath = tok.nextToken().trim();
-            devices.add(new IODeviceHandle(new File(devPath), "."));
-        }
-        return devices;
     }
 
     synchronized void setNodeRegistrationResult(NodeParameters parameters, Exception exception) {

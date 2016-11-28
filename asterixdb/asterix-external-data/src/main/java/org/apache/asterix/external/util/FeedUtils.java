@@ -100,7 +100,7 @@ public class FeedUtils {
     }
 
     public static FileReference getAbsoluteFileRef(String relativePath, int ioDeviceId, IIOManager ioManager) {
-        return ioManager.getFileRef(ioDeviceId, relativePath);
+        return ioManager.getFileReference(ioDeviceId, relativePath);
     }
 
     public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, int partition,

@@ -22,17 +22,17 @@ package org.apache.hyracks.examples.btree.client;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class JobHelper {
-    public static IFileSplitProvider createFileSplitProvider(String[] splitNCs, String btreeFileName,
-            boolean relative) {
+    public static IFileSplitProvider createFileSplitProvider(String[] splitNCs, String btreeFileName) {
         FileSplit[] fileSplits = new FileSplit[splitNCs.length];
         for (int i = 0; i < splitNCs.length; ++i) {
             String fileName = btreeFileName + "." + splitNCs[i];
-            fileSplits[i] = new FileSplit(splitNCs[i], fileName, relative);
+            fileSplits[i] = new ManagedFileSplit(splitNCs[i], fileName);
         }
         return new ConstantFileSplitProvider(fileSplits);
     }

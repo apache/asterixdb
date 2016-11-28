@@ -72,7 +72,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
             LocalResource resource = treeIndexHelper.getResource();
             IIOManager ioManager = ctx.getIOManager();
-            FileReference fileRef = ioManager.getFileRef(resource.getPath(), true);
+            FileReference fileRef = ioManager.resolve(resource.getPath());
             int indexFileId = fileMapProvider.lookupFileId(fileRef);
             statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getMetaManager(), indexFileId,
                     treeIndex.getRootPageId());

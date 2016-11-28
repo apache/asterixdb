@@ -70,7 +70,7 @@ public abstract class AbstractMultiNCIntegrationTest {
     public TemporaryFolder outputFolder = new TemporaryFolder();
 
     public AbstractMultiNCIntegrationTest() {
-        outputFiles = new ArrayList<File>();
+        outputFiles = new ArrayList<>();
     }
 
     @BeforeClass
@@ -92,6 +92,9 @@ public abstract class AbstractMultiNCIntegrationTest {
 
         asterixNCs = new NodeControllerService[ASTERIX_IDS.length];
         for (int i = 0; i < ASTERIX_IDS.length; i++) {
+            File ioDev = new File("target" + File.separator + ASTERIX_IDS[i] + File.separator + "ioDevice");
+            FileUtils.forceMkdir(ioDev);
+            FileUtils.copyDirectory(new File("data" + File.separator + "device0"), ioDev);
             NCConfig ncConfig = new NCConfig();
             ncConfig.ccHost = "localhost";
             ncConfig.ccPort = 39001;
@@ -99,6 +102,7 @@ public abstract class AbstractMultiNCIntegrationTest {
             ncConfig.dataIPAddress = "127.0.0.1";
             ncConfig.resultIPAddress = "127.0.0.1";
             ncConfig.nodeId = ASTERIX_IDS[i];
+            ncConfig.ioDevices = ioDev.getAbsolutePath();
             asterixNCs[i] = new NodeControllerService(ncConfig);
             asterixNCs[i].start();
         }

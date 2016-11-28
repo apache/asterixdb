@@ -58,7 +58,7 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException {
         IIOManager ioManager = runtimeContextProvider.getIOManager();
-        FileReference file = ioManager.getFileRef(resource.getPath(), true);
+        FileReference file = ioManager.resolve(resource.getPath());
         try {
             return LSMRTreeUtils.createExternalRTree(ioManager, file, runtimeContextProvider.getBufferCache(),
                     runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,

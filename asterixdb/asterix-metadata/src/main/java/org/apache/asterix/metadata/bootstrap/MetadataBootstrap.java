@@ -341,7 +341,7 @@ public class MetadataBootstrap {
         String metadataPartitionPath = StoragePathUtil.prepareStoragePartitionPath(
                 ClusterProperties.INSTANCE.getStorageDirectoryName(), metadataPartition.getPartitionId());
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
-        FileReference file = ioManager.getFileRef(metadataDeviceId, resourceName);
+        FileReference file = ioManager.getFileReference(metadataDeviceId, resourceName);
 
         // this should not be done this way. dataset lifecycle manager shouldn't return virtual buffer caches for
         // a dataset that was not yet created
@@ -388,7 +388,9 @@ public class MetadataBootstrap {
                         + " to intialize as a new instance. (WARNING: all data will be lost.)");
             }
             resourceID = resource.getId();
-            assert (index.getResourceID() == resource.getId());
+            if (index.getResourceID() != resource.getId()) {
+                throw new HyracksDataException("Resource Id doesn't match expected metadata index resource id");
+            }
             lsmBtree = (LSMBTree) dataLifecycleManager.get(file.getRelativePath());
             if (lsmBtree == null) {
                 lsmBtree = LSMBTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache,

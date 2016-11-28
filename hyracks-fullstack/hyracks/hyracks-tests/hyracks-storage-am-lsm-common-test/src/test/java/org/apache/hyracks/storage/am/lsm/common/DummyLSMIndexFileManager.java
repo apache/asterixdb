@@ -47,7 +47,7 @@ public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
         String[] files = dir.list(filter);
         for (String fileName : files) {
             File file = new File(dir.getPath() + File.separator + fileName);
-            FileReference fileRef = ioManager.getFileRef(file.getAbsolutePath(), false);
+            FileReference fileRef = ioManager.resolveAbsolutePath(file.getAbsolutePath());
             allFiles.add(new ComparableFileName(fileRef));
         }
     }

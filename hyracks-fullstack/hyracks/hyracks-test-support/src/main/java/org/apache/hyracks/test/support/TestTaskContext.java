@@ -48,7 +48,7 @@ public class TestTaskContext implements IHyracksTaskContext {
     public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId) {
         this.jobletContext = jobletContext;
         this.taskId = taskId;
-        fileFactory = new WorkspaceFileFactory(this, (IOManager) getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, (IIOManager) getIOManager());
     }
 
     @Override

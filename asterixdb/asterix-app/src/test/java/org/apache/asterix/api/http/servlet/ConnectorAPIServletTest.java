@@ -49,6 +49,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -123,8 +124,8 @@ public class ConnectorAPIServletTest {
         ConnectorAPIServlet servlet = new ConnectorAPIServlet();
         JSONObject actualResponse = new JSONObject();
         FileSplit[] splits = new FileSplit[2];
-        splits[0] = new FileSplit("asterix_nc1", "foo1", true);
-        splits[1] = new FileSplit("asterix_nc2", "foo2", true);
+        splits[0] = new ManagedFileSplit("asterix_nc1", "foo1");
+        splits[1] = new ManagedFileSplit("asterix_nc2", "foo2");
         Map<String, NodeControllerInfo> nodeMap = new HashMap<>();
         NodeControllerInfo mockInfo1 = mock(NodeControllerInfo.class);
         NodeControllerInfo mockInfo2 = mock(NodeControllerInfo.class);
@@ -141,12 +142,9 @@ public class ConnectorAPIServletTest {
         // Calls ConnectorAPIServlet.formResponseObject.
         nodeMap.put("asterix_nc1", mockInfo1);
         nodeMap.put("asterix_nc2", mockInfo2);
-        PA.invokeMethod(servlet,
-                "formResponseObject(" + JSONObject.class.getName() + ", " + FileSplit.class.getName() + "[], "
-                        + ARecordType.class.getName() + ", " + String.class.getName() + ", boolean, " + Map.class
-                                .getName() + ")",
-                actualResponse, splits, recordType, primaryKey, true, nodeMap);
-
+        PA.invokeMethod(servlet, "formResponseObject(" + JSONObject.class.getName() + ", " + FileSplit.class.getName()
+                + "[], " + ARecordType.class.getName() + ", " + String.class.getName() + ", boolean, " + Map.class
+                        .getName() + ")", actualResponse, splits, recordType, primaryKey, true, nodeMap);
         // Constructs expected response.
         JSONObject expectedResponse = new JSONObject();
         expectedResponse.put("temp", true);
@@ -156,11 +154,9 @@ public class ConnectorAPIServletTest {
         JSONObject element1 = new JSONObject();
         element1.put("ip", "127.0.0.1");
         element1.put("path", splits[0].getPath());
-        element1.put("relative", true);
         JSONObject element2 = new JSONObject();
         element2.put("ip", "127.0.0.2");
         element2.put("path", splits[1].getPath());
-        element2.put("relative", true);
         splitsArray.put(element1);
         splitsArray.put(element2);
         expectedResponse.put("splits", splitsArray);
