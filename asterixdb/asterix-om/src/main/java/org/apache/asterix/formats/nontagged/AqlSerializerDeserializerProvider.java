@@ -93,108 +93,78 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
         }
         switch (aqlType.getTypeTag()) {
             case ANY:
-            case UNION: { // we could do smth better for nullable fields
+            case UNION:
+                // we could do smth better for nullable fields
                 return AObjectSerializerDeserializer.INSTANCE;
-            }
-            default: {
+            default:
                 return addTag(getNonTaggedSerializerDeserializer(aqlType), aqlType.getTypeTag());
-            }
         }
     }
 
     @SuppressWarnings("rawtypes")
     public ISerializerDeserializer getNonTaggedSerializerDeserializer(IAType aqlType) {
         switch (aqlType.getTypeTag()) {
-            case CIRCLE: {
+            case CIRCLE:
                 return ACircleSerializerDeserializer.INSTANCE;
-            }
-            case DATE: {
+            case DATE:
                 return ADateSerializerDeserializer.INSTANCE;
-            }
-            case DATETIME: {
+            case DATETIME:
                 return ADateTimeSerializerDeserializer.INSTANCE;
-            }
-            case DOUBLE: {
+            case DOUBLE:
                 return ADoubleSerializerDeserializer.INSTANCE;
-            }
-            case FLOAT: {
+            case FLOAT:
                 return AFloatSerializerDeserializer.INSTANCE;
-            }
-            case BOOLEAN: {
+            case BOOLEAN:
                 return ABooleanSerializerDeserializer.INSTANCE;
-            }
-            case INT8: {
+            case INT8:
                 return AInt8SerializerDeserializer.INSTANCE;
-            }
-            case INT16: {
+            case INT16:
                 return AInt16SerializerDeserializer.INSTANCE;
-            }
-            case INT32: {
+            case INT32:
                 return AInt32SerializerDeserializer.INSTANCE;
-            }
-            case INT64: {
+            case INT64:
                 return AInt64SerializerDeserializer.INSTANCE;
-            }
-            case LINE: {
+            case LINE:
                 return ALineSerializerDeserializer.INSTANCE;
-            }
             case MISSING:
                 return AMissingSerializerDeserializer.INSTANCE;
-            case NULL: {
+            case NULL:
                 return ANullSerializerDeserializer.INSTANCE;
-            }
-            case STRING: {
+            case STRING:
                 return AStringSerializerDeserializer.INSTANCE;
-            }
-            case BINARY: {
+            case BINARY:
                 return ABinarySerializerDeserializer.INSTANCE;
-            }
-            case TIME: {
+            case TIME:
                 return ATimeSerializerDeserializer.INSTANCE;
-            }
-            case DURATION: {
+            case DURATION:
                 return ADurationSerializerDeserializer.INSTANCE;
-            }
-            case YEARMONTHDURATION: {
+            case YEARMONTHDURATION:
                 return AYearMonthDurationSerializerDeserializer.INSTANCE;
-            }
-            case DAYTIMEDURATION: {
+            case DAYTIMEDURATION:
                 return ADayTimeDurationSerializerDeserializer.INSTANCE;
-            }
-            case INTERVAL: {
+            case INTERVAL:
                 return AIntervalSerializerDeserializer.INSTANCE;
-            }
-            case ORDEREDLIST: {
+            case ORDEREDLIST:
                 return new AOrderedListSerializerDeserializer((AOrderedListType) aqlType);
-            }
-            case POINT: {
+            case POINT:
                 return APointSerializerDeserializer.INSTANCE;
-            }
-            case POINT3D: {
+            case POINT3D:
                 return APoint3DSerializerDeserializer.INSTANCE;
-            }
-            case RECTANGLE: {
+            case RECTANGLE:
                 return ARectangleSerializerDeserializer.INSTANCE;
-            }
-            case POLYGON: {
+            case POLYGON:
                 return APolygonSerializerDeserializer.INSTANCE;
-            }
-            case RECORD: {
+            case RECORD:
                 return new ARecordSerializerDeserializer((ARecordType) aqlType);
-            }
-            case UNORDEREDLIST: {
+            case UNORDEREDLIST:
                 return new AUnorderedListSerializerDeserializer((AUnorderedListType) aqlType);
-            }
-            case UUID: {
+            case UUID:
                 return AUUIDSerializerDeserializer.INSTANCE;
-            }
-            case SHORTWITHOUTTYPEINFO: {
+            case SHORTWITHOUTTYPEINFO:
                 return ShortSerializerDeserializer.INSTANCE;
-            }
-            default: {
+            default:
                 throw new NotImplementedException(
                         "No serializer/deserializer implemented for type " + aqlType.getTypeTag() + " .");
-            }
         }
     }
 

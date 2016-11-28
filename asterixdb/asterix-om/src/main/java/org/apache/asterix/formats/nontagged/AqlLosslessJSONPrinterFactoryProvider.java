@@ -123,16 +123,14 @@ public class AqlLosslessJSONPrinterFactoryProvider implements IPrinterFactoryPro
                     return new AOrderedlistPrinterFactory((AOrderedListType) aqlType);
                 case UNORDEREDLIST:
                     return new AUnorderedlistPrinterFactory((AUnorderedListType) aqlType);
-                case UNION: {
+                case UNION:
                     if (((AUnionType) aqlType).isUnknownableType()) {
                         return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
                     } else {
                         return new AUnionPrinterFactory((AUnionType) aqlType);
                     }
-                }
-                case UUID: {
+                case UUID:
                     return AUUIDPrinterFactory.INSTANCE;
-                }
                 case SHORTWITHOUTTYPEINFO:
                     return ShortWithoutTypeInfoPrinterFactory.INSTANCE;
                 case ANY:

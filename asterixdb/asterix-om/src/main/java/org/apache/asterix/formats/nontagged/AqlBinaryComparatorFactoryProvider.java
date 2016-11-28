@@ -102,9 +102,9 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     public IBinaryComparatorFactory getBinaryComparatorFactory(ATypeTag type, boolean ascending) {
         switch (type) {
             case ANY:
-            case UNION: { // we could do smth better for nullable fields
+            case UNION:
+                // we could do smth better for nullable fields
                 return anyBinaryComparatorFactory(ascending);
-            }
             case NULL:
             case MISSING:
                 return new IBinaryComparatorFactory() {
@@ -122,68 +122,49 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
                         };
                     }
                 };
-            case BOOLEAN: {
+            case BOOLEAN:
                 return addOffset(BooleanBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case INT8: {
+            case INT8:
                 return addOffset(BYTE_POINTABLE_INSTANCE, ascending);
-            }
-            case INT16: {
+            case INT16:
                 return addOffset(SHORT_POINTABLE_INSTANCE, ascending);
-            }
             case DATE:
             case TIME:
             case YEARMONTHDURATION:
-            case INT32: {
+            case INT32:
                 return addOffset(INTEGER_POINTABLE_INSTANCE, ascending);
-            }
             case DATETIME:
             case DAYTIMEDURATION:
-            case INT64: {
+            case INT64:
                 return addOffset(LONG_POINTABLE_INSTANCE, ascending);
-            }
-            case FLOAT: {
+            case FLOAT:
                 return addOffset(FLOAT_POINTABLE_INSTANCE, ascending);
-            }
-            case DOUBLE: {
+            case DOUBLE:
                 return addOffset(DOUBLE_POINTABLE_INSTANCE, ascending);
-            }
-            case STRING: {
+            case STRING:
                 return addOffset(UTF8STRING_POINTABLE_INSTANCE, ascending);
-            }
-            case RECTANGLE: {
+            case RECTANGLE:
                 return addOffset(ARectanglePartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case CIRCLE: {
+            case CIRCLE:
                 return addOffset(ACirclePartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case POINT: {
+            case POINT:
                 return addOffset(APointPartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case POINT3D: {
+            case POINT3D:
                 return addOffset(APoint3DPartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case LINE: {
+            case LINE:
                 return addOffset(ALinePartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case POLYGON: {
+            case POLYGON:
                 return addOffset(APolygonPartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case DURATION: {
+            case DURATION:
                 return addOffset(ADurationPartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case INTERVAL: {
+            case INTERVAL:
                 return addOffset(intervalBinaryComparatorFactory(ascending), ascending);
-            }
-            case UUID: {
+            case UUID:
                 return addOffset(AUUIDPartialBinaryComparatorFactory.INSTANCE, ascending);
-            }
-            case BINARY: {
+            case BINARY:
                 return addOffset(BINARY_POINTABLE_INSTANCE, ascending);
-            }
-            default: {
+            default:
                 return addOffset(RawBinaryComparatorFactory.INSTANCE, ascending);
-            }
         }
     }
 

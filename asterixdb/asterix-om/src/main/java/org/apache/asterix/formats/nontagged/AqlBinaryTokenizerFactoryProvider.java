@@ -51,22 +51,14 @@ public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactor
     @Override
     public IBinaryTokenizerFactory getWordTokenizerFactory(ATypeTag typeTag, boolean hashedTokens) {
         switch (typeTag) {
-            case STRING: {
-                if (hashedTokens) {
-                    return aqlHashingStringTokenizer;
-                } else {
-                    return aqlStringTokenizer;
-                }
-            }
-            case ORDEREDLIST: {
+            case STRING:
+                return hashedTokens ? aqlHashingStringTokenizer : aqlStringTokenizer;
+            case ORDEREDLIST:
                 return orderedListTokenizer;
-            }
-            case UNORDEREDLIST: {
+            case UNORDEREDLIST:
                 return unorderedListTokenizer;
-            }
-            default: {
+            default:
                 return null;
-            }
         }
     }
 
@@ -74,7 +66,7 @@ public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactor
     public IBinaryTokenizerFactory getNGramTokenizerFactory(ATypeTag typeTag, int gramLength, boolean usePrePost,
             boolean hashedTokens) {
         switch (typeTag) {
-            case STRING: {
+            case STRING:
                 if (hashedTokens) {
                     return null;
                 } else {
@@ -82,16 +74,12 @@ public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactor
                             new UTF8NGramTokenFactory(ATypeTag.SERIALIZED_STRING_TYPE_TAG,
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG));
                 }
-            }
-            case ORDEREDLIST: {
+            case ORDEREDLIST:
                 return orderedListTokenizer;
-            }
-            case UNORDEREDLIST: {
+            case UNORDEREDLIST:
                 return unorderedListTokenizer;
-            }
-            default: {
+            default:
                 return null;
-            }
         }
     }
 }

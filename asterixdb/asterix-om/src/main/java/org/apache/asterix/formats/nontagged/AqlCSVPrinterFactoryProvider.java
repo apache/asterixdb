@@ -117,16 +117,14 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     throw new NotImplementedException("'Orderedlist' type unsupported for CSV output");
                 case UNORDEREDLIST:
                     throw new NotImplementedException("'Unorderedlist' type unsupported for CSV output");
-                case UNION: {
+                case UNION:
                     if (((AUnionType) aqlType).isUnknownableType()) {
                         return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
                     } else {
                         return new AUnionPrinterFactory((AUnionType) aqlType);
                     }
-                }
-                case UUID: {
+                case UUID:
                     return AUUIDPrinterFactory.INSTANCE;
-                }
                 case SHORTWITHOUTTYPEINFO:
                     return ShortWithoutTypeInfoPrinterFactory.INSTANCE;
                 case ANY:
