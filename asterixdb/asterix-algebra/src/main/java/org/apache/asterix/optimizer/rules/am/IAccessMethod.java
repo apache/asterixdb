@@ -30,7 +30,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.data.std.api.IDataOutputProvider;
 
 /**
  * Interface that an access method should implement to work with the rewrite
@@ -38,7 +37,7 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
  * methods for analyzing a select/join condition, and for rewriting the plan
  * with a given index.
  */
-public interface IAccessMethod extends Comparable<IAccessMethod>{
+public interface IAccessMethod extends Comparable<IAccessMethod> {
 
     /**
      * @return A list of function identifiers that are optimizable by this
@@ -80,19 +79,17 @@ public interface IAccessMethod extends Comparable<IAccessMethod>{
 
     /**
      * Applies the plan transformation to use chosenIndex to optimize a selection query.
+     *
+     * @param afterSelectRefs
      */
-    public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
-            OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context) throws AlgebricksException;
+    public boolean applySelectPlanTransformation(List<Mutable<ILogicalOperator>> afterSelectRefs,
+            Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException;
 
     public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
-            OptimizableOperatorSubTree indexSubTree,
-            OptimizableOperatorSubTree probeSubTree,
-            Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx,
-            boolean retainInput, boolean retainNull, boolean requiresBroadcast,
-            IOptimizationContext context)
-                    throws AlgebricksException;
+            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context) throws AlgebricksException;
 
     /**
      * Applies the plan transformation to use chosenIndex to optimize a join query.

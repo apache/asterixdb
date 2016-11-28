@@ -74,6 +74,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
@@ -308,11 +309,18 @@ public class AccessMethodUtils {
             // Type Checking and type promotion is done here
             IAType fieldType = optFuncExpr.getFieldType(0);
 
+            if (optFuncExpr.getNumConstantExpr() == 0) {
+                //We are looking at a selection case, but using two variables
+                //This means that the second variable comes from a nonPure function call
+                //TODO: Right now we miss on type promotion for nonpure functions
+                return new Pair<>(new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
+            }
+
             ILogicalExpression constantAtRuntimeExpression = null;
             AsterixConstantValue constantValue = null;
             ATypeTag constantValueTag = null;
 
-            constantAtRuntimeExpression = optFuncExpr.getConstantAtRuntimeExpr(0);
+            constantAtRuntimeExpression = optFuncExpr.getConstantExpr(0);
 
             if (constantAtRuntimeExpression.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 constantValue = (AsterixConstantValue) ((ConstantExpression) constantAtRuntimeExpression).getValue();
@@ -355,19 +363,16 @@ public class AccessMethodUtils {
             }
 
             if (typeCastingApplied) {
-                return new Pair<ILogicalExpression, Boolean>(new ConstantExpression(replacedConstantValue),
-                        realTypeConvertedToIntegerType);
+                return new Pair<>(new ConstantExpression(replacedConstantValue), realTypeConvertedToIntegerType);
             } else {
-                return new Pair<ILogicalExpression, Boolean>(optFuncExpr.getConstantAtRuntimeExpr(0), false);
+                return new Pair<>(optFuncExpr.getConstantExpr(0), false);
             }
         } else {
             // We are optimizing a join query. Determine which variable feeds the secondary index.
             if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
-                return new Pair<ILogicalExpression, Boolean>(
-                        new VariableReferenceExpression(optFuncExpr.getLogicalVar(0)), false);
+                return new Pair<>(new VariableReferenceExpression(optFuncExpr.getLogicalVar(0)), false);
             } else {
-                return new Pair<ILogicalExpression, Boolean>(
-                        new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
+                return new Pair<>(new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
             }
         }
     }
@@ -645,7 +650,7 @@ public class AccessMethodUtils {
         return unnestOp;
     }
 
-    //If the expression is constant at runtime, runturn the type
+    //If the expression is constant at runtime, return the type
     public static IAType constantRuntimeResultType(ILogicalExpression expr, IOptimizationContext context,
             IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         Set<LogicalVariable> usedVariables = new HashSet<LogicalVariable>();
@@ -656,4 +661,24 @@ public class AccessMethodUtils {
         return (IAType) context.getExpressionTypeComputer().getType(expr, context.getMetadataProvider(),
                 typeEnvironment);
     }
+
+    //Get Variables used by afterSelectRefs that were created before the datasource
+    //If there are any, we should retain inputs
+    public static boolean retainInputs(List<LogicalVariable> dataSourceVariables, ILogicalOperator sourceOp,
+            List<Mutable<ILogicalOperator>> afterSelectRefs) throws AlgebricksException {
+        List<LogicalVariable> usedVars = new ArrayList<>();
+        List<LogicalVariable> producedVars = new ArrayList<>();
+        List<LogicalVariable> liveVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(sourceOp, liveVars);
+        for (Mutable<ILogicalOperator> opMutable : afterSelectRefs) {
+            ILogicalOperator op = opMutable.getValue();
+            VariableUtilities.getUsedVariables(op, usedVars);
+            VariableUtilities.getProducedVariables(op, producedVars);
+        }
+        usedVars.removeAll(producedVars);
+        usedVars.removeAll(dataSourceVariables);
+        usedVars.retainAll(liveVars);
+        return usedVars.isEmpty() ? false : true;
+    }
+
 }

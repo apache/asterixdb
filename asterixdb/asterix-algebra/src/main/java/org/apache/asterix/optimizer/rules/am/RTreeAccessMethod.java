@@ -95,12 +95,14 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean applySelectPlanTransformation(Mutable<ILogicalOperator> selectRef,
-            OptimizableOperatorSubTree subTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context) throws AlgebricksException {
+    public boolean applySelectPlanTransformation(List<Mutable<ILogicalOperator>> afterSelectRefs,
+            Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree, Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
         // TODO: We can probably do something smarter here based on selectivity or MBR area.
         ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(subTree, null, chosenIndex, analysisCtx,
-                false, false, false, context);
+                AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(), subTree.getDataSourceRef().getValue(),
+                        afterSelectRefs),
+                false, false, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }

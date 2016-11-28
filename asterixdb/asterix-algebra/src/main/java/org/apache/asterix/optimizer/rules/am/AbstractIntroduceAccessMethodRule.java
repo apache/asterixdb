@@ -243,11 +243,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         if (j != exprAndVarIdx.second) {
                             matchedTypes.add(optFuncExpr.getFieldType(j));
                         }
+
                     }
 
                     if (matchedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1) {
-                        matchedTypes.add((IAType) ExpressionTypeComputer.INSTANCE.getType(
-                                optFuncExpr.getConstantAtRuntimeExpr(0), context.getMetadataProvider(),
+                        matchedTypes
+                                .add((IAType) ExpressionTypeComputer.INSTANCE.getType(optFuncExpr.getConstantExpr(0),
+                                        context.getMetadataProvider(),
                                 typeEnvironment));
                     }
 
@@ -583,9 +585,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     subTree.getRecordType(), optVarIndex,
                     optFuncExpr.getFuncExpr().getArguments().get(optVarIndex).getValue(), datasetRecordVar,
                     subTree.getMetaRecordType(), datasetMetaVar);
-            if (fieldName == null) {
-                continue;
-            }
+
             IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp).getVarType(var);
             // Set the fieldName in the corresponding matched
             // function expression.

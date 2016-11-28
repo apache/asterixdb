@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -42,6 +43,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -79,10 +82,11 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     // Operators representing the patterns to be matched:
     // These ops are set in matchesPattern()
     protected Mutable<ILogicalOperator> selectRef = null;
-    protected SelectOperator select = null;
+    protected SelectOperator selectOp = null;
     protected AbstractFunctionCallExpression selectCond = null;
     protected IVariableTypeEnvironment typeEnvironment = null;
     protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
+    protected List<Mutable<ILogicalOperator>> afterSelectRefs = null;
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
@@ -93,46 +97,111 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
     }
 
+    /**
+     * Recursively check the given plan from the root operator to transform a plan
+     * with SELECT operator into an index-utilized plan.
+     */
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         clear();
         setMetadataDeclarations(context);
 
-        // Match operator pattern and initialize operator members.
-        if (!matchesOperatorPattern(opRef, context)) {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        if (context.checkIfInDontApplySet(this, op)) {
             return false;
         }
 
-        // Analyze select condition.
-        Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<IAccessMethod, AccessMethodAnalysisContext>();
-        if (!analyzeCondition(selectCond, subTree.getAssignsAndUnnests(), analyzedAMs, context, typeEnvironment)) {
+        //We start at the top of the plan
+        if (op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT
+                && op.getOperatorTag() != LogicalOperatorTag.SINK
+                && op.getOperatorTag() != LogicalOperatorTag.DELEGATE_OPERATOR) {
+            return false;
+        }
+        if (op.getOperatorTag() == LogicalOperatorTag.DELEGATE_OPERATOR
+                && !(((DelegateOperator) op).getDelegate() instanceof CommitOperator)) {
             return false;
         }
 
-        // Set dataset and type metadata.
-        if (!subTree.setDatasetAndTypeMetadata((MetadataProvider) context.getMetadataProvider())) {
-            return false;
+        afterSelectRefs = new ArrayList<>();
+
+        // Recursively check the given plan whether the desired pattern exists in it.
+        // If so, try to optimize the plan.
+        boolean planTransformed = checkAndApplyTheSelectTransformationRule(opRef, context);
+
+        if (selectOp != null) {
+            // We found an optimization here. Don't need to optimize this operator again.
+            context.addToDontApplySet(this, selectOp);
         }
 
-        fillSubTreeIndexExprs(subTree, analyzedAMs, context);
-        pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
-
-        // Choose index to be applied.
-        List<Pair<IAccessMethod, Index>> chosenIndexes = chooseAllIndex(analyzedAMs);
-        if (chosenIndexes == null || chosenIndexes.size() == 0) {
-            context.addToDontApplySet(this, select);
+        if (!planTransformed) {
+            // We found an optimization here. Don't need to optimize this operator again.
             return false;
-        }
-
-        // Apply plan transformation using chosen index.
-        boolean res = intersectAllSecondaryIndexes(chosenIndexes, analyzedAMs, context);
-
-        if (res) {
+        } else {
             OperatorPropertiesUtil.typeOpRec(opRef, context);
+
         }
-        context.addToDontApplySet(this, select);
-        return res;
+
+        return planTransformed;
+    }
+
+    protected boolean checkAndApplyTheSelectTransformationRule(Mutable<ILogicalOperator> opRef,
+            IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+
+        // Match operator pattern and initialize operator members.
+        if (matchesOperatorPattern(opRef, context)) {
+            // Analyze select condition.
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
+            if (!analyzeCondition(selectCond, subTree.getAssignsAndUnnests(), analyzedAMs, context, typeEnvironment)) {
+                return false;
+            }
+
+            // Set dataset and type metadata.
+            if (!subTree.setDatasetAndTypeMetadata((MetadataProvider) context.getMetadataProvider())) {
+                return false;
+            }
+
+            fillSubTreeIndexExprs(subTree, analyzedAMs, context);
+            pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
+
+            // Choose index to be applied.
+            List<Pair<IAccessMethod, Index>> chosenIndexes = chooseAllIndex(analyzedAMs);
+            if (chosenIndexes == null || chosenIndexes.isEmpty()) {
+                context.addToDontApplySet(this, selectOp);
+                return false;
+            }
+
+            // Apply plan transformation using chosen index.
+            boolean res = intersectAllSecondaryIndexes(chosenIndexes, analyzedAMs, context);
+
+            context.addToDontApplySet(this, selectOp);
+            if (res) {
+                OperatorPropertiesUtil.typeOpRec(opRef, context);
+                return res;
+            }
+            selectRef = null;
+            selectOp = null;
+            afterSelectRefs.add(opRef);
+
+        } else {
+            // This is not a SELECT operator. Remember operators
+            afterSelectRefs.add(opRef);
+
+        }
+        // Recursively check the plan and try to optimize it.
+        boolean selectFoundAndOptimizationApplied = false;
+        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
+            boolean foundHere = checkAndApplyTheSelectTransformationRule(inputOpRef, context);
+            if (foundHere) {
+                selectFoundAndOptimizationApplied = true;
+            }
+        }
+
+        // Clean the path after SELECT operator by removing the current operator in the list.
+        afterSelectRefs.remove(opRef);
+        return selectFoundAndOptimizationApplied;
+
     }
 
     private boolean intersectAllSecondaryIndexes(List<Pair<IAccessMethod, Index>> chosenIndexes,
@@ -149,18 +218,22 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         }
         if (chosenIndex != null) {
             AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
-            return chosenIndex.first.applySelectPlanTransformation(selectRef, subTree, chosenIndex.second, analysisCtx,
-                    context);
+            return chosenIndex.first.applySelectPlanTransformation(afterSelectRefs, selectRef, subTree,
+                    chosenIndex.second, analysisCtx, context);
         }
 
         // Intersect all secondary indexes, and postpone the primary index search.
-        Mutable<ILogicalExpression> conditionRef = select.getCondition();
+        Mutable<ILogicalExpression> conditionRef = selectOp.getCondition();
 
         List<ILogicalOperator> subRoots = new ArrayList<>();
         for (Pair<IAccessMethod, Index> pair : chosenIndexes) {
             AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(pair.first);
             subRoots.add(pair.first.createSecondaryToPrimaryPlan(conditionRef, subTree, null, pair.second, analysisCtx,
-                    false, false, false, context));
+                    AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
+                            subTree.getDataSourceRef().getValue(), afterSelectRefs),
+                    false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
+                            .getExecutionMode() == ExecutionMode.UNPARTITIONED,
+                    context));
         }
         ILogicalOperator primaryUnnest = connectAll2ndarySearchPlanWithIntersect(subRoots, context);
 
@@ -217,11 +290,11 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         }
         // Set and analyze select.
         selectRef = opRef;
-        select = (SelectOperator) op1;
+        selectOp = (SelectOperator) op1;
 
         typeEnvironment = context.getOutputTypeEnvironment(op1);
         // Check that the select's condition is a function call.
-        ILogicalExpression condExpr = select.getCondition().getValue();
+        ILogicalExpression condExpr = selectOp.getCondition().getValue();
         if (condExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
@@ -236,8 +309,9 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     }
 
     private void clear() {
+        afterSelectRefs = null;
         selectRef = null;
-        select = null;
+        selectOp = null;
         selectCond = null;
     }
 }

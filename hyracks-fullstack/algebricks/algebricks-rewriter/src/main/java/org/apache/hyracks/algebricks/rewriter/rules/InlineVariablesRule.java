@@ -118,25 +118,6 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    /**
-     * An expression will be constant at runtime if it has:
-     * 1. A type
-     * 2. No free variables
-     *
-     * @param op
-     * @param funcExpr
-     * @param context
-     * @return whether a function is constant
-     * @throws AlgebricksException
-     */
-    public static boolean functionIsConstantAtRuntime(AbstractFunctionCallExpression funcExpr)
-            throws AlgebricksException {
-        //make sure that there are no variables in the expression
-        Set<LogicalVariable> usedVariables = new HashSet<>();
-        funcExpr.getUsedVariables(usedVariables);
-        return usedVariables.isEmpty();
-    }
-
     protected boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
@@ -151,8 +132,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                 // Ignore functions that are either in the doNotInline set or are non-functional
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier()) || (!funcExpr.isFunctional()
-                            && !InlineVariablesRule.functionIsConstantAtRuntime(funcExpr))) {
+                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier()) || !funcExpr.isFunctional()) {
                         continue;
                     }
                 }

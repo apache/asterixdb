@@ -4139,8 +4139,20 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="nestrecords">
-      <compilation-unit name="query-ASTERIXDB-1025">
-        <output-dir compare="Text">query-ASTERIXDB-1025</output-dir>
+      <compilation-unit name="global-datetime-use-index">
+        <output-dir compare="Text">global-datetime-use-index</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="nonpure">
+    <test-case FilePath="nonpure">
+      <compilation-unit name="local-datetime-ignore-index">
+        <output-dir compare="Text">local-datetime-ignore-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="nonpure">
+      <compilation-unit name="global-datetime-use-index">
+        <output-dir compare="Text">global-datetime-use-index</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

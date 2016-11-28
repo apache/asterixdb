@@ -131,7 +131,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         for (IOptimizableFuncExpr optFuncExpr : optFuncExprs) {
             ComparisonKind ck = AlgebricksBuiltinFunctions
                     .getComparisonType(optFuncExpr.getFuncExpr().getFunctionIdentifier());
-            ILogicalExpression searchKeyExpr = optFuncExpr.getConstantAtRuntimeExpr(0);
+            ILogicalExpression searchKeyExpr = optFuncExpr.getConstantExpr(0);
             LogicalVariable var = context.newVar();
             assignKeyExprList.add(new MutableObject<ILogicalExpression>(searchKeyExpr));
             assignKeyVarList.add(var);

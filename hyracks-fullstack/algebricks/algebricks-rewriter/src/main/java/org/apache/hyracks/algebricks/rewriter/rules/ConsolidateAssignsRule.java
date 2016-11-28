@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -31,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class ConsolidateAssignsRule implements IAlgebraicRewriteRule {
@@ -53,6 +53,11 @@ public class ConsolidateAssignsRule implements IAlgebraicRewriteRule {
         if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
+
+        if (!OperatorPropertiesUtil.isMovable(op) || !OperatorPropertiesUtil.isMovable(op2)) {
+            return false;
+        }
+
         AssignOperator assign2 = (AssignOperator) op2;
 
         HashSet<LogicalVariable> used1 = new HashSet<LogicalVariable>();

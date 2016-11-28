@@ -50,6 +50,11 @@ public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteR
         if (!op1.isMap() || op1.getOperatorTag() == LogicalOperatorTag.LIMIT) {
             return false;
         }
+
+        if (!OperatorPropertiesUtil.isMovable(op1)) {
+            return false;
+        };
+
         Mutable<ILogicalOperator> op2Ref = op1.getInputs().get(0);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op2Ref.getValue();
         if (op2.getOperatorTag() != LogicalOperatorTag.INNERJOIN) {

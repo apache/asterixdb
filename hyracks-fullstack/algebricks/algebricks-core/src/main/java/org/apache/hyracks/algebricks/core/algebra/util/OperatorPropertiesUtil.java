@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -287,11 +288,35 @@ public class OperatorPropertiesUtil {
     public static boolean isMovable(ILogicalOperator op) {
         Object annotation = op.getAnnotations().get(MOVABLE);
         if (annotation == null) {
-            // By default, it is movable.
+            // Can't move nonPures!
+            if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                AssignOperator assign = (AssignOperator) op;
+                for (Mutable<ILogicalExpression> expr : assign.getExpressions()) {
+                    if (containsNonpureCall(expr.getValue())) {
+                        return false;
+                    }
+                }
+            }
             return true;
         }
         Boolean movable = (Boolean) annotation;
         return movable;
+    }
+
+    private static boolean containsNonpureCall(ILogicalExpression expr) {
+        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression fExpr = (AbstractFunctionCallExpression) expr;
+            if (!fExpr.getFunctionInfo().isFunctional()) {
+                return true;
+            }
+            for (Mutable<ILogicalExpression> subExpr : fExpr.getArguments()) {
+                if (containsNonpureCall(subExpr.getValue())) {
+                    return true;
+                }
+            }
+
+        }
+        return false;
     }
 
     /**

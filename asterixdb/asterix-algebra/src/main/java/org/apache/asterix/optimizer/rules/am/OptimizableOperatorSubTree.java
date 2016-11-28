@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -85,36 +86,50 @@ public class OptimizableOperatorSubTree {
         reset();
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
+        boolean passedSource = false;
+        boolean result = false;
+        Mutable<ILogicalOperator> searchOpRef = subTreeOpRef;
         // Examine the op's children to match the expected patterns.
-        AbstractLogicalOperator subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
+        AbstractLogicalOperator subTreeOp = (AbstractLogicalOperator) searchOpRef.getValue();
         do {
             // Skip select operator.
             if (subTreeOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
-                subTreeOpRef = subTreeOp.getInputs().get(0);
-                subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
+                searchOpRef = subTreeOp.getInputs().get(0);
+                subTreeOp = (AbstractLogicalOperator) searchOpRef.getValue();
             }
             // Check primary-index pattern.
             if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN
                     && subTreeOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
                 // Pattern may still match if we are looking for primary index matches as well.
-                return initializeDataSource(subTreeOpRef);
+                result = initializeDataSource(searchOpRef);
+                passedSource = true;
+                if (!subTreeOp.getInputs().isEmpty()) {
+                    searchOpRef = subTreeOp.getInputs().get(0);
+                    subTreeOp = (AbstractLogicalOperator) searchOpRef.getValue();
+                }
             }
             // Match (assign | unnest)+.
-            while ((subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN
-                    || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST)) {
-                if (!OperatorPropertiesUtil.isMovable(subTreeOp)) {
+            while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN
+                    || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                if (!passedSource && !OperatorPropertiesUtil.isMovable(subTreeOp)) {
                     return false;
-                } else {
-                    getAssignsAndUnnestsRefs().add(subTreeOpRef);
-                    getAssignsAndUnnests().add(subTreeOp);
                 }
-                subTreeOpRef = subTreeOp.getInputs().get(0);
-                subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
+                if (subTreeOp.getExecutionMode() != ExecutionMode.UNPARTITIONED) {
+                    //The unpartitioned ops should stay below the search
+                    assignsAndUnnestsRefs.add(searchOpRef);
+                }
+                assignsAndUnnests.add(subTreeOp);
+
+                searchOpRef = subTreeOp.getInputs().get(0);
+                subTreeOp = (AbstractLogicalOperator) searchOpRef.getValue();
+            }
+            if (passedSource) {
+                return result;
             }
         } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.SELECT);
 
         // Match data source (datasource scan or primary index search).
-        return initializeDataSource(subTreeOpRef);
+        return initializeDataSource(searchOpRef);
     }
 
     private boolean initializeDataSource(Mutable<ILogicalOperator> subTreeOpRef) {
@@ -395,8 +410,8 @@ public class OptimizableOperatorSubTree {
                 case DATASOURCE_SCAN:
                 case EXTERNAL_SCAN:
                 case PRIMARY_INDEX_LOOKUP:
-                    AbstractScanOperator scanOp =
-                            (AbstractScanOperator) getIxJoinOuterAdditionalDataSourceRefs().get(idx).getValue();
+                    AbstractScanOperator scanOp = (AbstractScanOperator) getIxJoinOuterAdditionalDataSourceRefs()
+                            .get(idx).getValue();
                     return scanOp.getVariables();
                 case COLLECTION_SCAN:
                     return new ArrayList<>();

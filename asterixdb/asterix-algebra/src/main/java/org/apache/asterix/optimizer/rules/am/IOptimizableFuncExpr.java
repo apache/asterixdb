@@ -35,7 +35,7 @@ public interface IOptimizableFuncExpr {
 
     public int getNumLogicalVars();
 
-    public int getNumConstantAtRuntimeExpr();
+    public int getNumConstantExpr();
 
     public LogicalVariable getLogicalVar(int index);
 
@@ -55,7 +55,7 @@ public interface IOptimizableFuncExpr {
 
     public OptimizableOperatorSubTree getOperatorSubTree(int index);
 
-    public ILogicalExpression getConstantAtRuntimeExpr(int index);
+    public ILogicalExpression getConstantExpr(int index);
 
     public int findLogicalVar(LogicalVariable var);
 
@@ -75,5 +75,7 @@ public interface IOptimizableFuncExpr {
 
     IAType getConstantType(int index);
 
-    void setConstantAtRuntimeExpr(int index, ILogicalExpression expr);
+    void setConstantExpr(int index, ILogicalExpression expr);
+
+    ILogicalExpression[] getConstantExpressions();
 }

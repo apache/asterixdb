@@ -241,19 +241,22 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             if (exprEqClass != null) {
                 // Replace common subexpression with existing variable.
                 if (exprEqClass.variableIsSet()) {
-                    Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
-                    List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
-                    VariableUtilities.getLiveVariables(op, liveVars);
-                    VariableUtilities.getUsedVariables(op, usedVars);
-                    // Check if the replacing variable is live at this op.
-                    // However, if the op is already using variables that are not live, then a replacement may enable fixing the plan.
-                    // This behavior is necessary to, e.g., properly deal with distinct by.
-                    // Also just replace the expr if we are replacing common exprs from within the same operator.
-                    if (liveVars.contains(exprEqClass.getVariable()) || !liveVars.containsAll(usedVars)
-                            || op == exprEqClass.getFirstOperator()) {
-                        exprRef.setValue(new VariableReferenceExpression(exprEqClass.getVariable()));
-                        // Do not descend into children since this expr has been completely replaced.
-                        return true;
+                    if (expr.isFunctional()) {
+                        Set<LogicalVariable> liveVars = new HashSet<>();
+                        List<LogicalVariable> usedVars = new ArrayList<>();
+                        VariableUtilities.getLiveVariables(op, liveVars);
+                        VariableUtilities.getUsedVariables(op, usedVars);
+                        // Check if the replacing variable is live at this op.
+                        // However, if the op is already using variables that are not live,
+                        // then a replacement may enable fixing the plan.
+                        // This behavior is necessary to, e.g., properly deal with distinct by.
+                        // Also just replace the expr if we are replacing common exprs from within the same operator.
+                        if (liveVars.contains(exprEqClass.getVariable()) || !liveVars.containsAll(usedVars)
+                                || op == exprEqClass.getFirstOperator()) {
+                            exprRef.setValue(new VariableReferenceExpression(exprEqClass.getVariable()));
+                            // Do not descend into children since this expr has been completely replaced.
+                            return true;
+                        }
                     }
                 } else {
                     if (expr.isFunctional() && assignCommonExpression(exprEqClass, expr)) {
