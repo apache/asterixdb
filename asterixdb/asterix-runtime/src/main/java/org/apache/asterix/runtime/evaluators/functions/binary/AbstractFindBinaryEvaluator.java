@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.ATypeTag;
@@ -41,7 +41,7 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
     protected final ByteArrayPointable wordPtr = new ByteArrayPointable();
 
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
 
     public AbstractFindBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,

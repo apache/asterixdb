@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
@@ -68,7 +68,7 @@ public class DayTimeDurationComparatorDescriptor extends AbstractScalarFunctionD
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> boolSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ABoolean> boolSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override

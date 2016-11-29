@@ -26,7 +26,7 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.fuzzyjoin.similarity.PartialIntersect;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
@@ -94,7 +94,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                     // result
                     private final AMutableDouble res = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     @Override

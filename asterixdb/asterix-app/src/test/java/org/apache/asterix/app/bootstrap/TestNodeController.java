@@ -35,9 +35,9 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactor
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.common.transactions.ITransactionManager;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -328,7 +328,7 @@ public class TestNodeController {
     private IBinaryComparatorFactory[] createPrimaryIndexComparatorFactories(IAType[] primaryKeyTypes) {
         IBinaryComparatorFactory[] primaryIndexComparatorFactories = new IBinaryComparatorFactory[primaryKeyTypes.length];
         for (int j = 0; j < primaryKeyTypes.length; ++j) {
-            primaryIndexComparatorFactories[j] = AqlBinaryComparatorFactoryProvider.INSTANCE
+            primaryIndexComparatorFactories[j] = BinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(primaryKeyTypes[j], true);
         }
         return primaryIndexComparatorFactories;
@@ -339,12 +339,12 @@ public class TestNodeController {
         int i = 0;
         ISerializerDeserializer<?>[] primaryIndexSerdes = new ISerializerDeserializer<?>[primaryIndexNumOfTupleFields];
         for (; i < primaryKeyTypes.length; i++) {
-            primaryIndexSerdes[i] = AqlSerializerDeserializerProvider.INSTANCE
+            primaryIndexSerdes[i] = SerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(primaryKeyTypes[i]);
         }
-        primaryIndexSerdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
+        primaryIndexSerdes[i++] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
         if (metaType != null) {
-            primaryIndexSerdes[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
+            primaryIndexSerdes[i] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
         }
         return primaryIndexSerdes;
     }
@@ -354,11 +354,11 @@ public class TestNodeController {
         ITypeTraits[] primaryIndexTypeTraits = new ITypeTraits[primaryIndexNumOfTupleFields];
         int i = 0;
         for (; i < primaryKeyTypes.length; i++) {
-            primaryIndexTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i]);
+            primaryIndexTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i]);
         }
-        primaryIndexTypeTraits[i++] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(recordType);
+        primaryIndexTypeTraits[i++] = TypeTraitProvider.INSTANCE.getTypeTrait(recordType);
         if (metaType != null) {
-            primaryIndexTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(metaType);
+            primaryIndexTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(metaType);
         }
         return primaryIndexTypeTraits;
     }
@@ -462,8 +462,8 @@ public class TestNodeController {
             ITypeTraits[] primaryKeyTypeTraits = new ITypeTraits[primaryKeyTypes.length];
             ISerializerDeserializer<?>[] primaryKeySerdes = new ISerializerDeserializer<?>[primaryKeyTypes.length];
             for (int i = 0; i < primaryKeyTypes.length; i++) {
-                primaryKeyTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i]);
-                primaryKeySerdes[i] = AqlSerializerDeserializerProvider.INSTANCE
+                primaryKeyTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i]);
+                primaryKeySerdes[i] = SerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(primaryKeyTypes[i]);
             }
             RecordDescriptor searcgRecDesc = new RecordDescriptor(primaryKeySerdes, primaryKeyTypeTraits);

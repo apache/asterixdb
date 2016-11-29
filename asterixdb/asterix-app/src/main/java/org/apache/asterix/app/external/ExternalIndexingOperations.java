@@ -53,9 +53,9 @@ import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.file.IndexOperations;
 import org.apache.asterix.file.JobSpecificationUtils;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -589,13 +589,13 @@ public class ExternalIndexingOperations {
 
         keyType = nestedKeyType.getTypeTag();
         for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
-            ISerializerDeserializer keySerde = AqlSerializerDeserializerProvider.INSTANCE
+            ISerializerDeserializer keySerde = SerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(nestedKeyType);
             secondaryRecFields[i] = keySerde;
 
-            secondaryComparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
+            secondaryComparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(nestedKeyType, true);
-            secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
+            secondaryTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
             valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
         }
         // Add serializers and comparators for primary index fields.

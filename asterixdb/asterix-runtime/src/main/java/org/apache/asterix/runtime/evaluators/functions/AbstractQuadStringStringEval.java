@@ -25,7 +25,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.types.ATypeTag;
@@ -59,7 +59,7 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
 
     private AMutableString resultBuffer = new AMutableString("");
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer strSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer strSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
 
     private final UTF8StringPointable strPtr1st = new UTF8StringPointable();

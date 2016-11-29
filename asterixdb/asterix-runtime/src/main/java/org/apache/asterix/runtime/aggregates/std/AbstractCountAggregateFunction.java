@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.ATypeTag;
@@ -43,7 +43,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractCountAggregateFunction implements IAggregateEvaluator {
     private AMutableInt64 result = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;

@@ -21,7 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
@@ -49,7 +49,7 @@ public class AUnionPrinterFactory implements IPrinterFactory {
                 unionList = unionType.getUnionList();
                 printers = new IPrinter[unionType.getUnionList().size()];
                 for (int i = 0; i < printers.length; i++) {
-                    printers[i] = (AqlADMPrinterFactoryProvider.INSTANCE
+                    printers[i] = (ADMPrinterFactoryProvider.INSTANCE
                             .getPrinterFactory(unionType.getUnionList().get(i))).createPrinter();
                     printers[i].init();
                 }

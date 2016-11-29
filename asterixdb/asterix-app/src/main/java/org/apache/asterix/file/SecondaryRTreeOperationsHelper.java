@@ -33,9 +33,9 @@ import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalDataScanOperatorDescriptor;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
@@ -206,11 +206,11 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
         keyType = nestedKeyType.getTypeTag();
         for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
             ISerializerDeserializer keySerde =
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(nestedKeyType);
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(nestedKeyType);
             secondaryRecFields[i] = keySerde;
             secondaryComparatorFactories[i] =
-                    AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(nestedKeyType, true);
-            secondaryTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
+                    BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(nestedKeyType, true);
+            secondaryTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
             valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
 
         }
@@ -231,7 +231,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             }
         }
         enforcedRecFields[numPrimaryKeys] =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);
         if (numFilterFields > 0) {
             rtreeFields = new int[numNestedSecondaryKeyFields + numPrimaryKeys];
@@ -241,7 +241,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
 
             Pair<IAType, Boolean> typePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
             IAType type = typePair.first;
-            ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type);
+            ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numNestedSecondaryKeyFields] = serde;
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields);

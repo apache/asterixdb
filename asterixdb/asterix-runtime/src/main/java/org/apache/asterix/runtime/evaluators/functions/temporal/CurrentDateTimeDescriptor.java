@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -67,7 +67,7 @@ public class CurrentDateTimeDescriptor extends AbstractScalarFunctionDynamicDesc
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
                     private AMutableDateTime aDateTime = new AMutableDateTime(0);
 

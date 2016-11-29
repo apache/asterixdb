@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
@@ -66,7 +66,7 @@ public class CurrentDateDescriptor extends AbstractScalarFunctionDynamicDescript
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
                     private AMutableDate aDate = new AMutableDate(0);
 

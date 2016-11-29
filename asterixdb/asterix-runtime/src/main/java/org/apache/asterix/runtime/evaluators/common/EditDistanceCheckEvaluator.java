@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.common;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -48,7 +48,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     protected final OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage listItemVal;
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)

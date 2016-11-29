@@ -30,11 +30,11 @@ import org.apache.hyracks.dataflow.common.data.normalizers.Integer64NormalizedKe
 import org.apache.hyracks.dataflow.common.data.normalizers.IntegerNormalizedKeyComputerFactory;
 import org.apache.hyracks.dataflow.common.data.normalizers.UTF8StringNormalizedKeyComputerFactory;
 
-public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyComputerFactoryProvider {
+public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyComputerFactoryProvider {
 
-    public static final AqlNormalizedKeyComputerFactoryProvider INSTANCE = new AqlNormalizedKeyComputerFactoryProvider();
+    public static final NormalizedKeyComputerFactoryProvider INSTANCE = new NormalizedKeyComputerFactoryProvider();
 
-    private AqlNormalizedKeyComputerFactoryProvider() {
+    private NormalizedKeyComputerFactoryProvider() {
     }
 
     @Override

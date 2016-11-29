@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -71,7 +71,7 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private boolean positive;
                     private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt16> int16Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInt16> int16Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT16);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

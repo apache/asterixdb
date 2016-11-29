@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -92,7 +92,7 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
         protected final IScalarEvaluator edThreshEval;
 
         @SuppressWarnings("unchecked")
-        private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+        private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
         public EditDistanceListIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)

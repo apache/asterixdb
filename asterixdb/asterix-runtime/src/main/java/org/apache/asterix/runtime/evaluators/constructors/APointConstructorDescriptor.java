@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -68,7 +68,7 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<APoint> pointSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

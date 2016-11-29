@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -57,7 +57,7 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
     public static final int FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.FUNCTION_RECORDTYPE);
 
     protected FunctionTupleTranslator(boolean getTuple) {

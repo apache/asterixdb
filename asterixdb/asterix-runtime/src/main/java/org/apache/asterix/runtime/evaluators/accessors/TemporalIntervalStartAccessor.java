@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDate;
@@ -75,15 +75,15 @@ public class TemporalIntervalStartAccessor extends AbstractScalarFunctionDynamic
 
                     // possible output
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
                     private final AMutableDate aDate = new AMutableDate(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATETIME);
+                    private final ISerializerDeserializer<ADateTime> datetimeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
                     private final AMutableDateTime aDateTime = new AMutableDateTime(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ATIME);
                     private final AMutableTime aTime = new AMutableTime(0);
 

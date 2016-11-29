@@ -26,14 +26,14 @@ import java.util.List;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryIntegerInspector;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFamilyProvider;
+import org.apache.asterix.formats.nontagged.BinaryIntegerInspector;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -122,10 +122,10 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     };
 
     private static final JobGenContext _jobGenCtx = new JobGenContext(null, null, null,
-            AqlSerializerDeserializerProvider.INSTANCE, AqlBinaryHashFunctionFactoryProvider.INSTANCE,
-            AqlBinaryHashFunctionFamilyProvider.INSTANCE, AqlBinaryComparatorFactoryProvider.INSTANCE,
-            AqlTypeTraitProvider.INSTANCE, AqlBinaryBooleanInspectorImpl.FACTORY, AqlBinaryIntegerInspector.FACTORY,
-            AqlADMPrinterFactoryProvider.INSTANCE, AqlMissingWriterFactory.INSTANCE, null,
+            SerializerDeserializerProvider.INSTANCE, BinaryHashFunctionFactoryProvider.INSTANCE,
+            BinaryHashFunctionFamilyProvider.INSTANCE, BinaryComparatorFactoryProvider.INSTANCE,
+            TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY, BinaryIntegerInspector.FACTORY,
+            ADMPrinterFactoryProvider.INSTANCE, AqlMissingWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE),
             ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
 

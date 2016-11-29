@@ -20,7 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.CSVPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -46,9 +46,9 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (AqlCSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
+                nullPrinter = (CSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
                         .createPrinter();
-                fieldPrinter = (AqlCSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
+                fieldPrinter = (CSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
                         .createPrinter();
             }
 

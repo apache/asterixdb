@@ -22,7 +22,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
@@ -56,7 +56,7 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
     protected final IScalarEvaluator usePrePostEval;
 
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();

@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
 import org.apache.asterix.om.base.ARectangle;
@@ -70,8 +70,8 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                     private AMutableRectangle aRectangle = new AMutableRectangle(null, null);
                     private AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ARectangle> rectangle2DSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ARECTANGLE);
+                    private ISerializerDeserializer<ARectangle> rectangle2DSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override

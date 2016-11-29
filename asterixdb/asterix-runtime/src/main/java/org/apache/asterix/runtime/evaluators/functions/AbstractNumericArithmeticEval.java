@@ -32,7 +32,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.AMutableDouble;
@@ -210,7 +210,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                         double dres;
                         switch (resultType) {
                             case typeInt8:
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                serde = SerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT8);
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 if (lres > Byte.MAX_VALUE) {
@@ -223,7 +223,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                 serde.serialize(aInt8, out);
                                 break;
                             case typeInt16:
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                serde = SerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT16);
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 if (lres > Short.MAX_VALUE) {
@@ -236,7 +236,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                 serde.serialize(aInt16, out);
                                 break;
                             case typeInt32:
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                serde = SerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT32);
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 if (lres > Integer.MAX_VALUE) {
@@ -249,14 +249,14 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                 serde.serialize(aInt32, out);
                                 break;
                             case typeInt64:
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                serde = SerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AINT64);
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 aInt64.setValue(lres);
                                 serde.serialize(aInt64, out);
                                 break;
                             case typeFloat:
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                serde = SerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.AFLOAT);
                                 dres = evaluateDouble(operandsFloating[0], operandsFloating[1]);
                                 if (dres > Float.MAX_VALUE) {
@@ -269,7 +269,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                 serde.serialize(aFloat, out);
                                 break;
                             case typeDouble:
-                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                serde = SerializerDeserializerProvider.INSTANCE
                                         .getSerializerDeserializer(BuiltinType.ADOUBLE);
                                 aDouble.setValue(evaluateDouble(operandsFloating[0], operandsFloating[1]));
                                 serde.serialize(aDouble, out);
@@ -289,7 +289,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
                         if (rightType == leftType) {
 
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.ADURATION);
 
                             long leftChronon = 0, rightChronon = 0, dayTime = 0;
@@ -342,7 +342,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
                             switch (leftType) {
                                 case TIME:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    serde = SerializerDeserializerProvider.INSTANCE
                                             .getSerializerDeserializer(BuiltinType.ATIME);
                                     chronon = ATimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
                                     isTimeOnly = true;
@@ -363,14 +363,14 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     }
                                     break;
                                 case DATE:
-                                    serde = AqlSerializerDeserializerProvider.INSTANCE
+                                    serde = SerializerDeserializerProvider.INSTANCE
                                             .getSerializerDeserializer(BuiltinType.ADATE);
                                     resultType = ATypeTag.DATE;
                                     chronon = ADateSerializerDeserializer.getChronon(bytes0, offset0 + 1)
                                             * GregorianCalendarSystem.CHRONON_OF_DAY;
                                 case DATETIME:
                                     if (leftType == ATypeTag.DATETIME) {
-                                        serde = AqlSerializerDeserializerProvider.INSTANCE
+                                        serde = SerializerDeserializerProvider.INSTANCE
                                                 .getSerializerDeserializer(BuiltinType.ADATETIME);
                                         resultType = ATypeTag.DATETIME;
                                         chronon = ADateTimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
@@ -399,13 +399,13 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                             offset0 + 1);
                                     switch (rightType) {
                                         case DATETIME:
-                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                            serde = SerializerDeserializerProvider.INSTANCE
                                                     .getSerializerDeserializer(BuiltinType.ADATETIME);
                                             resultType = ATypeTag.DATETIME;
                                             chronon = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                             break;
                                         case DATE:
-                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                            serde = SerializerDeserializerProvider.INSTANCE
                                                     .getSerializerDeserializer(BuiltinType.ADATE);
                                             resultType = ATypeTag.DATE;
                                             chronon = ADateSerializerDeserializer.getChronon(bytes1, offset1 + 1)
@@ -426,13 +426,13 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     }
                                     switch (rightType) {
                                         case DATETIME:
-                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                            serde = SerializerDeserializerProvider.INSTANCE
                                                     .getSerializerDeserializer(BuiltinType.ADATETIME);
                                             resultType = ATypeTag.DATETIME;
                                             chronon = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                             break;
                                         case DATE:
-                                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                                            serde = SerializerDeserializerProvider.INSTANCE
                                                     .getSerializerDeserializer(BuiltinType.ADATE);
                                             resultType = ATypeTag.DATE;
                                             chronon = ADateSerializerDeserializer.getChronon(bytes1, offset1 + 1)
@@ -440,7 +440,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                             break;
                                         case TIME:
                                             if (yearMonth == 0) {
-                                                serde = AqlSerializerDeserializerProvider.INSTANCE
+                                                serde = SerializerDeserializerProvider.INSTANCE
                                                         .getSerializerDeserializer(BuiltinType.ATIME);
                                                 resultType = ATypeTag.TIME;
                                                 chronon = ATimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);

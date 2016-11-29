@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.fuzzyjoin.similarity.IListIterator;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -108,40 +108,40 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[startOff + 1]);
         switch (tag) {
             case INT64: {
-                cmp = AqlBinaryComparatorFactoryProvider.LONG_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.LONG_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case INT32: {
-                cmp = AqlBinaryComparatorFactoryProvider.INTEGER_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.INTEGER_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case INT16: {
-                cmp = AqlBinaryComparatorFactoryProvider.SHORT_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.SHORT_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case INT8: {
-                cmp = AqlBinaryComparatorFactoryProvider.BYTE_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.BYTE_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case FLOAT: {
-                cmp = AqlBinaryComparatorFactoryProvider.FLOAT_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.FLOAT_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case DOUBLE: {
-                cmp = AqlBinaryComparatorFactoryProvider.DOUBLE_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.DOUBLE_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case STRING: {
                 if (ignoreCase) {
-                    cmp = AqlBinaryComparatorFactoryProvider.UTF8STRING_LOWERCASE_POINTABLE_INSTANCE
+                    cmp = BinaryComparatorFactoryProvider.UTF8STRING_LOWERCASE_POINTABLE_INSTANCE
                             .createBinaryComparator();
                 } else {
-                    cmp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+                    cmp = BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                 }
                 break;
             }
             case BINARY: {
-                cmp = AqlBinaryComparatorFactoryProvider.BINARY_POINTABLE_INSTANCE.createBinaryComparator();
+                cmp = BinaryComparatorFactoryProvider.BINARY_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             default: {

@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -72,7 +72,7 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
                     // For the output.
                     private final AMutableDouble aDouble = new AMutableDouble(0.0);
                     @SuppressWarnings("rawtypes")
-                    private final ISerializerDeserializer outputSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer outputSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final DataOutput out = resultStorage.getDataOutput();

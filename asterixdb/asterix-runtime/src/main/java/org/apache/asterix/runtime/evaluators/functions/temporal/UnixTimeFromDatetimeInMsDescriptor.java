@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -69,7 +69,7 @@ public class UnixTimeFromDatetimeInMsDescriptor extends AbstractScalarFunctionDy
                     // possible returning types
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override

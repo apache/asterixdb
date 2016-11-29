@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.temporal.ADateParserFactory;
@@ -69,7 +69,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableDateTime aDateTime = new AMutableDateTime(0L);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

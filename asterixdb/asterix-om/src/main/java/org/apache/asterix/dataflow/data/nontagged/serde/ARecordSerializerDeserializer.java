@@ -26,9 +26,9 @@ import java.util.List;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
@@ -79,8 +79,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 } else {
                     t2 = t;
                 }
-                serializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(t2);
-                deserializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(t2);
+                serializers[i] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(t2);
+                deserializers[i] = SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(t2);
             }
         } else {
             this.recordType = null;
@@ -193,7 +193,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput, boolean writeTypeTag)
             throws HyracksDataException {
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+        ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
         confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
@@ -204,7 +204,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             fieldValueBytes.reset();
             fieldNameBytes.reset();
             stringSerde.serialize(new AString(fieldName), fieldNameBytes.getDataOutput());
-            ISerializerDeserializer valueSerde = AqlSerializerDeserializerProvider.INSTANCE
+            ISerializerDeserializer valueSerde = SerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(record.getType().getFieldTypes()[i]);
             valueSerde.serialize(record.getValueByPos(i), fieldValueBytes.getDataOutput());
             confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
@@ -215,7 +215,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     @SuppressWarnings("unchecked")
     public static void serializeSimpleSchemalessRecord(List<Pair<String, String>> record, DataOutput dataOutput,
             boolean writeTypeTag) throws HyracksDataException {
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+        ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
         confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
@@ -326,10 +326,10 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, nstart + 1);
         int fieldUtfMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fieldUtflength);
 
-        IBinaryHashFunction utf8HashFunction = AqlBinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
+        IBinaryHashFunction utf8HashFunction = BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                 .createBinaryHashFunction();
 
-        IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
+        IBinaryComparator utf8BinaryComparator = BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                 .createBinaryComparator();
 
         int fieldNameHashCode = utf8HashFunction.hash(fieldName, nstart + 1, fieldUtflength + fieldUtfMetaLen);

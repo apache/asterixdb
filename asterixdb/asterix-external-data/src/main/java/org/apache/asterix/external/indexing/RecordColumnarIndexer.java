@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.IAObject;
@@ -45,10 +45,10 @@ public class RecordColumnarIndexer implements IExternalIndexer {
     protected RecordReader<?, Writable> recordReader;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<IAObject> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<IAObject> intSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<IAObject> longSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<IAObject> longSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
 
     @Override

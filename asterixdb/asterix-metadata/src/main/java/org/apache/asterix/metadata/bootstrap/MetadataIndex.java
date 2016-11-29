@@ -26,10 +26,10 @@ import java.util.List;
 
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.DatasetId;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
@@ -108,31 +108,31 @@ public class MetadataIndex implements IMetadataIndex {
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] serdes = new ISerializerDeserializer[numFields];
         for (int i = 0; i < keyTypes.length; i++) {
-            serdes[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(keyTypes[i]);
+            serdes[i] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(keyTypes[i]);
         }
         // For primary indexes, add payload field serde.
         if (fieldPermutation.length > keyTypes.length) {
-            serdes[numFields - 1] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(payloadType);
+            serdes[numFields - 1] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(payloadType);
         }
         recDesc = new RecordDescriptor(serdes);
         // Create type traits.
         typeTraits = new ITypeTraits[fieldPermutation.length];
         for (int i = 0; i < keyTypes.length; i++) {
-            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyTypes[i]);
+            typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyTypes[i]);
         }
         // For primary indexes, add payload field.
         if (fieldPermutation.length > keyTypes.length) {
-            typeTraits[fieldPermutation.length - 1] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(payloadType);
+            typeTraits[fieldPermutation.length - 1] = TypeTraitProvider.INSTANCE.getTypeTrait(payloadType);
         }
         // Create binary comparator factories.
         bcfs = new IBinaryComparatorFactory[keyTypes.length];
         for (int i = 0; i < keyTypes.length; i++) {
-            bcfs[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyTypes[i], true);
+            bcfs[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyTypes[i], true);
         }
         // Create binary hash function factories.
         bhffs = new IBinaryHashFunctionFactory[keyTypes.length];
         for (int i = 0; i < keyTypes.length; i++) {
-            bhffs[i] = AqlBinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(keyTypes[i]);
+            bhffs[i] = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(keyTypes[i]);
         }
 
         if (isPrimaryIndex) {

@@ -31,23 +31,24 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
-public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunctionFactoryProvider, Serializable {
+public class BinaryHashFunctionFactoryProvider implements IBinaryHashFunctionFactoryProvider, Serializable {
 
     private static final long serialVersionUID = 1L;
-    public static final AqlBinaryHashFunctionFactoryProvider INSTANCE = new AqlBinaryHashFunctionFactoryProvider();
-    public static final PointableBinaryHashFunctionFactory INTEGER_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
-            IntegerPointable.FACTORY);
-    public static final PointableBinaryHashFunctionFactory FLOAT_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
-            FloatPointable.FACTORY);
-    public static final PointableBinaryHashFunctionFactory DOUBLE_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
-            DoublePointable.FACTORY);
-    public static final PointableBinaryHashFunctionFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
-            UTF8StringPointable.FACTORY);
-    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive hashing.
-    public static final PointableBinaryHashFunctionFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
-            UTF8StringLowercasePointable.FACTORY);
+    public static final BinaryHashFunctionFactoryProvider INSTANCE = new BinaryHashFunctionFactoryProvider();
+    public static final PointableBinaryHashFunctionFactory INTEGER_POINTABLE_INSTANCE =
+            new PointableBinaryHashFunctionFactory(IntegerPointable.FACTORY);
+    public static final PointableBinaryHashFunctionFactory FLOAT_POINTABLE_INSTANCE =
+            new PointableBinaryHashFunctionFactory(FloatPointable.FACTORY);
+    public static final PointableBinaryHashFunctionFactory DOUBLE_POINTABLE_INSTANCE =
+            new PointableBinaryHashFunctionFactory(DoublePointable.FACTORY);
+    public static final PointableBinaryHashFunctionFactory UTF8STRING_POINTABLE_INSTANCE =
+            new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY);
+    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement
+    // case-insensitive hashing.
+    public static final PointableBinaryHashFunctionFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE =
+            new PointableBinaryHashFunctionFactory(UTF8StringLowercasePointable.FACTORY);
 
-    private AqlBinaryHashFunctionFactoryProvider() {
+    private BinaryHashFunctionFactoryProvider() {
     }
 
     @Override
@@ -63,5 +64,4 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
             }
         };
     }
-
 }

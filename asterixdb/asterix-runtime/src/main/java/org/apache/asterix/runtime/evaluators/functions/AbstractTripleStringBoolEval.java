@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -34,7 +34,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 public abstract class AbstractTripleStringBoolEval extends AbstractTripleStringEval {
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer boolSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractTripleStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,

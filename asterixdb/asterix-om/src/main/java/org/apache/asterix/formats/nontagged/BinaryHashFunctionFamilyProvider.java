@@ -30,12 +30,12 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
  * We use a binary hash function that promotes numeric types (INT8,INT16,INT32,INT64,FLOAT) to DOUBLE if requested.
  * Non-numeric types will be hashed without type promotion.
  */
-public class AqlBinaryHashFunctionFamilyProvider implements IBinaryHashFunctionFamilyProvider, Serializable {
+public class BinaryHashFunctionFamilyProvider implements IBinaryHashFunctionFamilyProvider, Serializable {
 
     private static final long serialVersionUID = 1L;
-    public static final AqlBinaryHashFunctionFamilyProvider INSTANCE = new AqlBinaryHashFunctionFamilyProvider();
+    public static final BinaryHashFunctionFamilyProvider INSTANCE = new BinaryHashFunctionFamilyProvider();
 
-    private AqlBinaryHashFunctionFamilyProvider() {
+    private BinaryHashFunctionFamilyProvider() {
 
     }
 

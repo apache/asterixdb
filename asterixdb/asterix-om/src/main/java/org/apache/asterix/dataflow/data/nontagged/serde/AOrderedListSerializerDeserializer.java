@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -58,10 +58,10 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     public AOrderedListSerializerDeserializer(AOrderedListType orderedlistType) {
         this.orderedlistType = orderedlistType;
         this.itemType = orderedlistType.getItemType();
-        serializer = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+        serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         deserializer = itemType.getTypeTag() == ATypeTag.ANY
-                ? AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
-                : AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
+                ? SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
+                : SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             ISerializerDeserializer currentDeserializer = deserializer;
             if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY) {
                 currentItemType = TypeTagUtil.getBuiltinTypeByTag(typeTag);
-                currentDeserializer = AqlSerializerDeserializerProvider.INSTANCE
+                currentDeserializer = SerializerDeserializerProvider.INSTANCE
                         .getNonTaggedSerializerDeserializer(currentItemType);
             }
 

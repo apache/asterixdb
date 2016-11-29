@@ -27,7 +27,7 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.om.base.ABoolean;
@@ -155,13 +155,13 @@ public class InternalDatasetDetails implements IDatasetDetails {
         AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
         @SuppressWarnings("unchecked")
         ISerializerDeserializer<ABoolean> booleanSerde =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
         @SuppressWarnings("unchecked")
         ISerializerDeserializer<AString> stringSerde =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         @SuppressWarnings("unchecked")
         ISerializerDeserializer<AInt8> int8Serde =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
 
         // write field 0
         fieldValue.reset();
@@ -281,7 +281,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         AMutableString aString = new AMutableString("");
         @SuppressWarnings("unchecked")
         ISerializerDeserializer<AString> stringSerde =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

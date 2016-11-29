@@ -28,7 +28,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -58,7 +58,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
     private transient ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
     private List<String> nodeNames;
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.NODEGROUP_RECORDTYPE);
 
     protected NodeGroupTupleTranslator(boolean getTuple) {

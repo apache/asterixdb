@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -66,7 +66,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override

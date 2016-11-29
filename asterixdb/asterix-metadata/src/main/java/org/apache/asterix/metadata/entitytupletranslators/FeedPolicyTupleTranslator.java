@@ -30,7 +30,7 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -62,14 +62,14 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     public static final int FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.FEED_POLICY_RECORDTYPE);
     protected ISerializerDeserializer<AInt32> aInt32Serde;
 
     @SuppressWarnings("unchecked")
     protected FeedPolicyTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FEED_POLICY_DATASET.getFieldCount());
-        aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+        aInt32Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
     @Override
@@ -174,7 +174,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         propertyRecordBuilder.reset(MetadataRecordTypes.POLICY_PARAMS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
         ISerializerDeserializer<AString> stringSerde =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

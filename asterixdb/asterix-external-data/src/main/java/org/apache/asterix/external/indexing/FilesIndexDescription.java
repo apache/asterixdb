@@ -21,9 +21,9 @@ package org.apache.asterix.external.indexing;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -59,25 +59,25 @@ public class FilesIndexDescription {
     public final ISerializerDeserializer[] EXTERNAL_FILE_BUDDY_BTREE_FIELDS = new ISerializerDeserializer[1];
     public final ISerializerDeserializer[] EXTERNAL_FILE_TUPLE_FIELDS = new ISerializerDeserializer[FILE_INDEX_TUPLE_SIZE];
     public final IBinaryComparatorFactory[] FILES_INDEX_COMP_FACTORIES = new IBinaryComparatorFactory[] {
-            AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true) };
+            BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true) };
 
     public FilesIndexDescription() {
         ARecordType type = new ARecordType("ExternalFileRecordType", payloadFieldNames, payloadFieldTypes, true);
         EXTERNAL_FILE_RECORD_TYPE = type;
-        EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_KEY_INDEX] = AqlTypeTraitProvider.INSTANCE
+        EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_KEY_INDEX] = TypeTraitProvider.INSTANCE
                 .getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
-        EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_PAYLOAD_INDEX] = AqlTypeTraitProvider.INSTANCE
+        EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_PAYLOAD_INDEX] = TypeTraitProvider.INSTANCE
                 .getTypeTrait(EXTERNAL_FILE_RECORD_TYPE);
-        EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS[FILE_KEY_INDEX] = AqlTypeTraitProvider.INSTANCE
+        EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS[FILE_KEY_INDEX] = TypeTraitProvider.INSTANCE
                 .getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
 
-        EXTERNAL_FILE_RECORD_SERDE = AqlSerializerDeserializerProvider.INSTANCE
+        EXTERNAL_FILE_RECORD_SERDE = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(EXTERNAL_FILE_RECORD_TYPE);
 
-        EXTERNAL_FILE_TUPLE_FIELDS[FILE_KEY_INDEX] = AqlSerializerDeserializerProvider.INSTANCE
+        EXTERNAL_FILE_TUPLE_FIELDS[FILE_KEY_INDEX] = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
         EXTERNAL_FILE_TUPLE_FIELDS[FILE_PAYLOAD_INDEX] = EXTERNAL_FILE_RECORD_SERDE;
-        EXTERNAL_FILE_BUDDY_BTREE_FIELDS[FILE_KEY_INDEX] = AqlSerializerDeserializerProvider.INSTANCE
+        EXTERNAL_FILE_BUDDY_BTREE_FIELDS[FILE_KEY_INDEX] = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
 
         FILE_INDEX_RECORD_DESCRIPTOR = new RecordDescriptor(EXTERNAL_FILE_TUPLE_FIELDS,

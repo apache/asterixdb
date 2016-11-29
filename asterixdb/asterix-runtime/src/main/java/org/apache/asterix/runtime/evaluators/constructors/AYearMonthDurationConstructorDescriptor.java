@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableYearMonthDuration;
 import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
@@ -70,8 +70,9 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableYearMonthDuration aYearMonthDuration = new AMutableYearMonthDuration(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
+                    private ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde =
+                            SerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override

@@ -24,7 +24,7 @@ import java.util.Arrays;
 
 import org.apache.asterix.dataflow.data.nontagged.comparators.ListItemBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.hash.ListItemBinaryHashFunctionFactory;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -73,7 +73,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     protected final AMutableFloat aFloat = new AMutableFloat(0);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AFloat> floatSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AFLOAT);
 
     protected ATypeTag firstTypeTag;

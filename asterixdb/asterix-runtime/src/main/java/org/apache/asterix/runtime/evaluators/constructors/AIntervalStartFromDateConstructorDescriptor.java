@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeseriali
 import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.AMutableInterval;
@@ -84,7 +84,7 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     private AMutableDuration aDuration = new AMutableDuration(0, 0L);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInterval> intervalSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

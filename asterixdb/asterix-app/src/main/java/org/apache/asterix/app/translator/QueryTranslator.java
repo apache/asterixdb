@@ -84,7 +84,7 @@ import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.file.DatasetOperations;
 import org.apache.asterix.file.DataverseOperations;
 import org.apache.asterix.file.IndexOperations;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
@@ -895,7 +895,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(ds);
                 for (List<String> partitioningKey : partitioningKeys) {
                     IAType keyType = aRecordType.getSubFieldType(partitioningKey);
-                    ITypeTraits typeTrait = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                    ITypeTraits typeTrait = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
 
                     // If it is not a fixed length
                     if (typeTrait.getFixedLength() < 0) {

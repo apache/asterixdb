@@ -38,7 +38,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -83,7 +83,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     public static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATASET_RECORDTYPE);
     protected final transient AMutableInt32 aInt32;
     protected final transient ISerializerDeserializer<AInt32> aInt32Serde;
@@ -93,7 +93,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     protected DatasetTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET.getFieldCount());
         aInt32 = new AMutableInt32(-1);
-        aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+        aInt32Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
     @Override
@@ -444,7 +444,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         propertyRecordBuilder.reset(MetadataRecordTypes.DATASET_HINTS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+        ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0

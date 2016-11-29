@@ -21,8 +21,8 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -71,11 +71,11 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
                     private final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
                     private final byte[] NAN = UTF8StringUtil.writeStringToBytes("NaN");
-                    private IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.
+                    private IBinaryComparator utf8BinaryComparator = BinaryComparatorFactoryProvider.
                             UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AFloat> floatSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AFLOAT);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

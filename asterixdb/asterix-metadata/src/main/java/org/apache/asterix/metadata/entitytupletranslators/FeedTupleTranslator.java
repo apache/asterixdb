@@ -34,7 +34,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.api.IFeed.FeedType;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -68,7 +68,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes =
-            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.FEED_RECORDTYPE);
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.FEED_RECORDTYPE);
 
     protected FeedTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FEED_DATASET.getFieldCount());
@@ -221,7 +221,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
                 AMutableString aString = new AMutableString("");
                 ISerializerDeserializer<AString> stringSerde =
-                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+                        SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
                 // write field 0
                 fieldValue.reset();
@@ -280,7 +280,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         propertyRecordBuilder.reset(MetadataRecordTypes.FEED_ADAPTER_CONFIGURATION_RECORDTYPE);
         AMutableString aString = new AMutableString("");
         ISerializerDeserializer<AString> stringSerde =
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
         // write field 0
         fieldValue.reset();

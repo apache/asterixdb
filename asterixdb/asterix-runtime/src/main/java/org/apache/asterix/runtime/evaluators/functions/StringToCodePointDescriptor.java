@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -74,7 +74,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 aInt64 = new AMutableInt64(0);
 

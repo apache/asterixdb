@@ -35,7 +35,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
@@ -51,7 +51,7 @@ public class ComparisonHelper implements Serializable {
     private static final long serialVersionUID = 1L;
     static final String COMPARISON = "comparison operations (>, >=, <, and <=)";
 
-    private final IBinaryComparator strBinaryComp = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
+    private final IBinaryComparator strBinaryComp = BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
             .createBinaryComparator();
     private final IBinaryComparator circleBinaryComp = ACirclePartialBinaryComparatorFactory.INSTANCE
             .createBinaryComparator();

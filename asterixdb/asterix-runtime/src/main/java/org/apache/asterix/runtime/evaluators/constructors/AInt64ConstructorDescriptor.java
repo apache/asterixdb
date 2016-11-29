@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -70,7 +70,7 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private boolean positive;
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

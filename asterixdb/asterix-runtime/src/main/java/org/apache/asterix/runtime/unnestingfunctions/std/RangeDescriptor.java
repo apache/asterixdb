@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -67,7 +67,7 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                 return new IUnnestingEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     @SuppressWarnings("rawtypes")
-                    private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private IPointable inputVal = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);

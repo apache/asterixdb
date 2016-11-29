@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -74,7 +74,7 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private final AMutableDouble aDouble = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     @Override

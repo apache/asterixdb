@@ -31,7 +31,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -86,13 +86,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     private transient List<IAType> searchKeyType;
     private transient AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt32> intSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt8> int8Serde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt8> int8Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT8);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.INDEX_RECORDTYPE);
     private final MetadataNode metadataNode;
     private final JobId jobId;

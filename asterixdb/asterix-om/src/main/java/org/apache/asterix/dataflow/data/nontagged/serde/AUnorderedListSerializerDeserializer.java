@@ -24,7 +24,7 @@ import java.util.ArrayList;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
@@ -59,10 +59,10 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
     public AUnorderedListSerializerDeserializer(AUnorderedListType unorderedlistType) {
         this.unorderedlistType = unorderedlistType;
         this.itemType = unorderedlistType.getItemType();
-        serializer = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+        serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         deserializer = itemType.getTypeTag() == ATypeTag.ANY
-                ? AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
-                : AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
+                ? SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
+                : SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
             ISerializerDeserializer currentDeserializer = deserializer;
             if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY) {
                 currentItemType = TypeTagUtil.getBuiltinTypeByTag(typeTag);
-                currentDeserializer = AqlSerializerDeserializerProvider.INSTANCE
+                currentDeserializer = SerializerDeserializerProvider.INSTANCE
                         .getNonTaggedSerializerDeserializer(currentItemType);
             }
 

@@ -29,7 +29,7 @@ import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionA
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
-import org.apache.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryTokenizerFactoryProvider;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -1131,14 +1131,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         switch (index.getIndexType()) {
             case SINGLE_PARTITION_WORD_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX: {
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false);
+                return BinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false);
             }
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 // Make sure not to use pre- and postfixing for conjunctive searches.
                 boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE
                         || searchModifierType == SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE) ? false : true;
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
+                return BinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
                         index.getGramLength(), prePost, false);
             }
             default: {

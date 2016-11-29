@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -34,7 +34,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 public abstract class AbstractTripleStringStringEval extends AbstractTripleStringEval {
 
     @SuppressWarnings("rawtypes")
-    private final ISerializerDeserializer stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer stringSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
     private final AMutableString resultValue = new AMutableString("");
 

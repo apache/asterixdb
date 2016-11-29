@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.base.temporal.AsterixTemporalTypeParseException;
@@ -76,7 +76,7 @@ public class ParseTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ATIME);
 
                     private AMutableTime aTime = new AMutableTime(0);

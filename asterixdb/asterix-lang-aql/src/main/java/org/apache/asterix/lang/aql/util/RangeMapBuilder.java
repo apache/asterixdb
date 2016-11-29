@@ -22,8 +22,8 @@ import java.io.DataOutput;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -109,31 +109,31 @@ public abstract class RangeMapBuilder {
             switch (l.getLiteralType()) {
                 case DOUBLE:
                     DoubleLiteral dl = (DoubleLiteral) l;
-                    serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
+                    serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
                     aDouble.setValue(dl.getValue());
                     serde.serialize(aDouble, out);
                     break;
                 case FLOAT:
                     FloatLiteral fl = (FloatLiteral) l;
-                    serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
+                    serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
                     aFloat.setValue(fl.getValue());
                     serde.serialize(aFloat, out);
                     break;
                 case INTEGER:
                     IntegerLiteral il = (IntegerLiteral) l;
-                    serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+                    serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
                     aInt32.setValue(il.getValue());
                     serde.serialize(aInt32, out);
                     break;
                 case LONG:
                     LongIntegerLiteral lil = (LongIntegerLiteral) l;
-                    serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+                    serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     aInt64.setValue(lil.getValue());
                     serde.serialize(aInt64, out);
                     break;
                 case STRING:
                     StringLiteral sl = (StringLiteral) l;
-                    serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+                    serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
                     aString.setValue(sl.getValue());
                     serde.serialize(aString, out);
                     break;
@@ -150,7 +150,7 @@ public abstract class RangeMapBuilder {
         // TODO Add support for composite fields.
         int fieldIndex = 0;
         int fieldType = rangeMap.getTag(0, 0);
-        AqlBinaryComparatorFactoryProvider comparatorFactory = AqlBinaryComparatorFactoryProvider.INSTANCE;
+        BinaryComparatorFactoryProvider comparatorFactory = BinaryComparatorFactoryProvider.INSTANCE;
         IBinaryComparatorFactory bcf =
                 comparatorFactory.getBinaryComparatorFactory(ATypeTag.VALUE_TYPE_MAPPING[fieldType], ascending);
         IBinaryComparator comparator = bcf.createBinaryComparator();

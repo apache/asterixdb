@@ -31,7 +31,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt16;
@@ -102,38 +102,38 @@ public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescrip
                         int offset = argPtr.getStartOffset();
 
                         if (data[offset] == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT8);
                             byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
                             aInt8.setValue(val);
                             serde.serialize(aInt8, out);
                         } else if (data[offset] == ATypeTag.SERIALIZED_INT16_TYPE_TAG) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT16);
                             short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
                             aInt16.setValue(val);
                             serde.serialize(aInt16, out);
                         } else if (data[offset] == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT32);
                             int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
                             aInt32.setValue(val);
                             serde.serialize(aInt32, out);
                         } else if (data[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT64);
                             long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
                             aInt64.setValue(val);
                             serde.serialize(aInt64, out);
                         } else if (data[offset] == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AFLOAT);
                             float val = AFloatSerializerDeserializer.getFloat(data, offset + 1);
                             val = Math.round(val);
                             aFloat.setValue(val);
                             serde.serialize(aFloat, out);
                         } else if (data[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.ADOUBLE);
                             double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
                             val = Math.round(val);

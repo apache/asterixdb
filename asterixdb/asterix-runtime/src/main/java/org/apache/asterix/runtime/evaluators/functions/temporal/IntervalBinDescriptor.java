@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeser
 import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
@@ -88,8 +88,8 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final AMutableInterval aInterval = new AMutableInterval(0, 0, (byte) -1);
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINTERVAL);
+                    private final ISerializerDeserializer<AInterval> intervalSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
 
                     private final GregorianCalendarSystem GREG_CAL = GregorianCalendarSystem.getInstance();
 

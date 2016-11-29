@@ -28,7 +28,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -80,7 +80,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                     private final AOrderedListType pointListType = new AOrderedListType(BuiltinType.APOINT, null);
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<APoint> pointSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override

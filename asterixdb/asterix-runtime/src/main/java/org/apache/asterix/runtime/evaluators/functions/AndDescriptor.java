@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
@@ -74,13 +74,13 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
                 return new IScalarEvaluator() {
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override

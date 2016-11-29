@@ -28,19 +28,19 @@ import java.util.Map;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryBooleanInspectorImpl;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryIntegerInspector;
-import org.apache.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlLosslessJSONPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlNormalizedKeyComputerFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlPredicateEvaluatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFamilyProvider;
+import org.apache.asterix.formats.nontagged.BinaryIntegerInspector;
+import org.apache.asterix.formats.nontagged.CSVPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.LosslessJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.NormalizedKeyComputerFactoryProvider;
+import org.apache.asterix.formats.nontagged.PredicateEvaluatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMissing;
@@ -162,27 +162,27 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
-        return AqlBinaryBooleanInspectorImpl.FACTORY;
+        return BinaryBooleanInspector.FACTORY;
     }
 
     @Override
     public IBinaryComparatorFactoryProvider getBinaryComparatorFactoryProvider() {
-        return AqlBinaryComparatorFactoryProvider.INSTANCE;
+        return BinaryComparatorFactoryProvider.INSTANCE;
     }
 
     @Override
     public IBinaryHashFunctionFactoryProvider getBinaryHashFunctionFactoryProvider() {
-        return AqlBinaryHashFunctionFactoryProvider.INSTANCE;
+        return BinaryHashFunctionFactoryProvider.INSTANCE;
     }
 
     @Override
     public ISerializerDeserializerProvider getSerdeProvider() {
-        return AqlSerializerDeserializerProvider.INSTANCE; // done
+        return SerializerDeserializerProvider.INSTANCE; // done
     }
 
     @Override
     public ITypeTraitProvider getTypeTraitProvider() {
-        return AqlTypeTraitProvider.INSTANCE;
+        return TypeTraitProvider.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")
@@ -202,7 +202,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     fieldFound = true;
                     try {
                         AInt32 ai = new AInt32(i);
-                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
+                        SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
                                 dos);
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -219,7 +219,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             if (fldName.size() == 1) {
                 AString as = new AString(fldName.get(0));
                 try {
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
                             dos);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
@@ -227,7 +227,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             } else {
                 AOrderedList as = new AOrderedList(fldName);
                 try {
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
                             dos);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
@@ -260,7 +260,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         DataOutput dos1 = abvs1.getDataOutput();
         try {
             AInt32 ai = new AInt32(dimension);
-            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai, dos1);
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai, dos1);
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
@@ -272,7 +272,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             DataOutput dos2 = abvs2.getDataOutput();
             try {
                 AInt32 ai = new AInt32(i);
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai, dos2);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai, dos2);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
@@ -302,7 +302,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     DataOutput dos = abvs.getDataOutput();
                     try {
                         AInt32 ai = new AInt32(i);
-                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
+                        SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
                                 dos);
                     } catch (HyracksDataException e) {
                         throw new AlgebricksException(e);
@@ -329,7 +329,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             DataOutput dos = abvs.getDataOutput();
             AOrderedList as = new AOrderedList(fldName);
             try {
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as, dos);
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as, dos);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
@@ -621,22 +621,22 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public IPrinterFactoryProvider getADMPrinterFactoryProvider() {
-        return AqlADMPrinterFactoryProvider.INSTANCE;
+        return ADMPrinterFactoryProvider.INSTANCE;
     }
 
     @Override
     public IPrinterFactoryProvider getLosslessJSONPrinterFactoryProvider() {
-        return AqlLosslessJSONPrinterFactoryProvider.INSTANCE;
+        return LosslessJSONPrinterFactoryProvider.INSTANCE;
     }
 
     @Override
     public IPrinterFactoryProvider getCleanJSONPrinterFactoryProvider() {
-        return AqlCleanJSONPrinterFactoryProvider.INSTANCE;
+        return CleanJSONPrinterFactoryProvider.INSTANCE;
     }
 
     @Override
     public IPrinterFactoryProvider getCSVPrinterFactoryProvider() {
-        return AqlCSVPrinterFactoryProvider.INSTANCE;
+        return CSVPrinterFactoryProvider.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")
@@ -656,7 +656,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         DataOutput dos = abvs.getDataOutput();
         try {
-            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(obj.getType()).serialize(obj, dos);
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(obj.getType()).serialize(obj, dos);
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
@@ -665,7 +665,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
-        return AqlBinaryIntegerInspector.FACTORY;
+        return BinaryIntegerInspector.FACTORY;
     }
 
     @Override
@@ -733,16 +733,16 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider() {
-        return AqlNormalizedKeyComputerFactoryProvider.INSTANCE;
+        return NormalizedKeyComputerFactoryProvider.INSTANCE;
     }
 
     @Override
     public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider() {
-        return AqlBinaryHashFunctionFamilyProvider.INSTANCE;
+        return BinaryHashFunctionFamilyProvider.INSTANCE;
     }
 
     @Override
     public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
-        return AqlPredicateEvaluatorFactoryProvider.INSTANCE;
+        return PredicateEvaluatorFactoryProvider.INSTANCE;
     }
 }

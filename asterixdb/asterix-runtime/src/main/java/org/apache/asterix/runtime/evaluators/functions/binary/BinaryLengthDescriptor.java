@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -60,7 +60,7 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                     private AMutableInt64 result = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override

@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
@@ -73,10 +73,10 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
         private final OrderedListBuilder listBuilder;
         private ArrayBackedValueStorage inputVal;
         @SuppressWarnings("unchecked")
-        private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+        private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
         @SuppressWarnings("unchecked")
-        private final ISerializerDeserializer<AFloat> floatSerde = AqlSerializerDeserializerProvider.INSTANCE
+        private final ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.AFLOAT);
         private final AMutableFloat aFloat = new AMutableFloat(0);
 

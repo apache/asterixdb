@@ -29,7 +29,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -79,8 +79,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     private final IPointable inputArg1 = new VoidPointable();
                     private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
-                    private final IBinaryComparator ascDoubleComp = AqlBinaryComparatorFactoryProvider.DOUBLE_POINTABLE_INSTANCE
-                            .createBinaryComparator();
+                    private final IBinaryComparator ascDoubleComp =
+                            BinaryComparatorFactoryProvider.DOUBLE_POINTABLE_INSTANCE.createBinaryComparator();
                     private final SpatialUtils spatialUtils = new SpatialUtils();
                     private final IntArray pointsOffsets0 = new IntArray();
                     private final IntArray pointsOffsets1 = new IntArray();

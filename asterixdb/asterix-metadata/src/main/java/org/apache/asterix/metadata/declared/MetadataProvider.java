@@ -61,9 +61,9 @@ import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlLinearizeComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -998,7 +998,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public static ILinearizeComparatorFactory proposeLinearizer(ATypeTag keyType, int numKeyFields)
             throws AlgebricksException {
-        return AqlLinearizeComparatorFactoryProvider.INSTANCE.getLinearizeComparatorFactory(keyType, true,
+        return LinearizeComparatorFactoryProvider.INSTANCE.getLinearizeComparatorFactory(keyType, true,
                 numKeyFields / 2);
     }
 
@@ -1285,9 +1285,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     sidxKeyFieldNames.get(i),
                     (hasMeta && secondaryIndexIndicators.get(i).intValue() == 1) ? metaType : recType);
             IAType keyType = keyPairType.first;
-            comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
+            comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
-            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
 
         for (int j = 0; j < pidxKeyFieldCount; ++j, ++i) {
@@ -1308,9 +1308,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             } catch (AsterixException e) {
                 throw new AlgebricksException(e);
             }
-            comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
+            comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                     true);
-            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+            typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
 
         return new Pair<>(comparatorFactories, typeTraits);
@@ -1561,16 +1561,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(i),
                         secondaryKeyNames.get(i), recType);
                 IAType keyType = keyPairType.first;
-                comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
+                comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                         true);
-                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
             }
             List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             for (List<String> partitioningKey : partitioningKeys) {
                 IAType keyType = recType.getSubFieldType(partitioningKey);
-                comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
+                comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
                         true);
-                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
                 ++i;
             }
 
@@ -1715,15 +1715,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IPrimitiveValueProviderFactory[] valueProviderFactories =
                     new IPrimitiveValueProviderFactory[numSecondaryKeys];
             for (i = 0; i < numSecondaryKeys; i++) {
-                comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE
+                comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE
                         .getBinaryComparatorFactory(nestedKeyType, true);
-                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
+                typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
                 valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
             }
             List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             for (List<String> partitioningKey : partitioningKeys) {
                 IAType keyType = recType.getSubFieldType(partitioningKey);
-                typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
                 ++i;
             }
             ARecordType metaItemType = DatasetUtils.getMetaType(this, dataset);
@@ -1930,7 +1930,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             i = 0;
             for (List<String> partitioningKey : partitioningKeys) {
                 IAType keyType = recType.getSubFieldType(partitioningKey);
-                invListsTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                invListsTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
                 ++i;
             }
 
@@ -2157,7 +2157,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             i = 0;
             for (List<String> partitioningKey : partitioningKeys) {
                 IAType keyType = recType.getSubFieldType(partitioningKey);
-                invListsTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                invListsTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
                 ++i;
             }
 

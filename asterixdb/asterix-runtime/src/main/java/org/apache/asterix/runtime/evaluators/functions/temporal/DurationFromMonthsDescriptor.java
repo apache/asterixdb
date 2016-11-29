@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -68,7 +68,7 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ADuration> durationSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADURATION);
 
                     AMutableDuration aDuration = new AMutableDuration(0, 0);

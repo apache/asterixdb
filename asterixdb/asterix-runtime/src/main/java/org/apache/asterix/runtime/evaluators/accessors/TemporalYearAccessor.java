@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeser
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
@@ -80,7 +80,7 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
 
                     // for output: type integer
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 aMutableInt64 = new AMutableInt64(0);
 

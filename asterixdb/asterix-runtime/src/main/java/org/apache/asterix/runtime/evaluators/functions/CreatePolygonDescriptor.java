@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -75,9 +75,9 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                     private final IPointable inputArgList = new VoidPointable();
                     private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
-                    private final ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.
+                    private final ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.
                             INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override

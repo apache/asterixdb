@@ -22,7 +22,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
@@ -92,7 +92,7 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.
+                    private ISerializerDeserializer<ADuration> durationSerde = SerializerDeserializerProvider.
                             INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
 
                     private AMutableDuration aDuration = new AMutableDuration(0, 0);

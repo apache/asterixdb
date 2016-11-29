@@ -22,7 +22,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 
-public class AqlTypeTraitProvider implements ITypeTraitProvider {
+public class TypeTraitProvider implements ITypeTraitProvider {
 
     // WARNING: the byte sizes depend on the serializer!
     // currently assuming a serializer that adds a 1-byte type indicator before
@@ -38,7 +38,7 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
 
     private static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false, -1);
 
-    public static final AqlTypeTraitProvider INSTANCE = new AqlTypeTraitProvider();
+    public static final TypeTraitProvider INSTANCE = new TypeTraitProvider();
 
     @Override
     public ITypeTraits getTypeTrait(Object type) {

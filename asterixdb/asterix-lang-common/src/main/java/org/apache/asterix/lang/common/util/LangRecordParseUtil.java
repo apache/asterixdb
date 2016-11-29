@@ -27,7 +27,7 @@ import java.util.Map;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.expression.FieldBinding;
@@ -56,15 +56,15 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 public class LangRecordParseUtil {
     private static final String NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE =
             "JSON record can only have expressions [%1$s, %2$s, %3$s]";
-    private static final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private static final ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
-    private static final ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private static final ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
-    private static final ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private static final ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
-    private static final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private static final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    private static final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private static final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
     private LangRecordParseUtil() {

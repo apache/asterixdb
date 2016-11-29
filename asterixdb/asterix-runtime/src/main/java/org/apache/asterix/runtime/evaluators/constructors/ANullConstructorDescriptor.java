@@ -21,8 +21,8 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -68,10 +68,10 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private final byte[] NULL = UTF8StringUtil.writeStringToBytes("null");
-                    IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
-                            .createBinaryComparator();
+                    IBinaryComparator utf8BinaryComparator =
+                            BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AMissing> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AMissing> nullSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override

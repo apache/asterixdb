@@ -39,8 +39,8 @@ import org.apache.asterix.external.input.record.reader.stream.SemiStructuredReco
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.library.ClassAdParser;
 import org.apache.asterix.external.util.FileSystemWatcher;
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -100,9 +100,9 @@ public class ClassAdToADMTest extends TestCase {
             ARecordType recordType = new ARecordType("value", recordFieldNames, recordFieldTypes, true);
             int numOfTupleFields = 1;
             ISerializerDeserializer[] serdes = new ISerializerDeserializer[1];
-            serdes[0] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
+            serdes[0] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
             IPrinterFactory[] printerFactories = new IPrinterFactory[1];
-            printerFactories[0] = AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(recordType);
+            printerFactories[0] = ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(recordType);
             // create output descriptor
             IPrinter[] printers = new IPrinter[printerFactories.length];
             for (int i = 0; i < printerFactories.length; i++) {

@@ -26,7 +26,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt16;
@@ -142,32 +142,32 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
                         }
 
                         if (metDouble) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.ADOUBLE);
                             aDouble.setValue(operands[0] - operands[1]);
                             serde.serialize(aDouble, out);
                         } else if (metFloat) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AFLOAT);
                             aFloat.setValue((float) (operands[0] - operands[1]));
                             serde.serialize(aFloat, out);
                         } else if (metInt64) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT64);
                             aInt64.setValue((long) (operands[0] - operands[1]));
                             serde.serialize(aInt64, out);
                         } else if (metInt32) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT32);
                             aInt32.setValue((int) (operands[0] - operands[1]));
                             serde.serialize(aInt32, out);
                         } else if (metInt16) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT16);
                             aInt16.setValue((short) (operands[0] - operands[1]));
                             serde.serialize(aInt16, out);
                         } else if (metInt8) {
-                            serde = AqlSerializerDeserializerProvider.INSTANCE
+                            serde = SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.AINT8);
                             aInt8.setValue((byte) (operands[0] - operands[1]));
                             serde.serialize(aInt8, out);

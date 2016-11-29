@@ -24,18 +24,18 @@ import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class AqlBinaryIntegerInspector implements IBinaryIntegerInspector {
+public class BinaryIntegerInspector implements IBinaryIntegerInspector {
 
     public static final IBinaryIntegerInspectorFactory FACTORY = new IBinaryIntegerInspectorFactory() {
         private static final long serialVersionUID = 1L;
 
         @Override
         public IBinaryIntegerInspector createBinaryIntegerInspector(IHyracksTaskContext ctx) {
-            return new AqlBinaryIntegerInspector();
+            return new BinaryIntegerInspector();
         }
     };
 
-    private AqlBinaryIntegerInspector() {
+    private BinaryIntegerInspector() {
     }
 
     @Override

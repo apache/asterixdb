@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ALine;
 import org.apache.asterix.om.base.AMutableLine;
 import org.apache.asterix.om.base.AMutablePoint;
@@ -75,7 +75,7 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private AMutableLine aLine = new AMutableLine(null, null);
                     private AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ALine> lineSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ALINE);
 
                     @Override

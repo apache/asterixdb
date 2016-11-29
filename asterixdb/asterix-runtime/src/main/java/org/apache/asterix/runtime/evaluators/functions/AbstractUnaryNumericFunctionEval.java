@@ -28,7 +28,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt16;
@@ -72,22 +72,22 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
     private final IScalarEvaluator argEval;
 
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int8Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer int8Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT8);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int16Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer int16Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT16);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int32Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer int32Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer int64Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer floatSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer floatSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AFLOAT);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer doubleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
 
     // The function identifier, used for error messages.

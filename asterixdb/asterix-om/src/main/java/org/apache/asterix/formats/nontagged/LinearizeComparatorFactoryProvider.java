@@ -31,12 +31,12 @@ import org.apache.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFact
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 
-public class AqlLinearizeComparatorFactoryProvider implements ILinearizeComparatorFactoryProvider, Serializable {
+public class LinearizeComparatorFactoryProvider implements ILinearizeComparatorFactoryProvider, Serializable {
 
     private static final long serialVersionUID = 1L;
-    public static final AqlLinearizeComparatorFactoryProvider INSTANCE = new AqlLinearizeComparatorFactoryProvider();
+    public static final LinearizeComparatorFactoryProvider INSTANCE = new LinearizeComparatorFactoryProvider();
 
-    private AqlLinearizeComparatorFactoryProvider() {
+    private LinearizeComparatorFactoryProvider() {
     }
 
     @Override

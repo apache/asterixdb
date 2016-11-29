@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.ANull;
@@ -79,11 +79,11 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                     private final AMutableInterval aInterval = new AMutableInterval(0, 0, (byte) -1);
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINTERVAL);
+                    private final ISerializerDeserializer<AInterval> intervalSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

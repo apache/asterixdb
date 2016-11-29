@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
@@ -52,10 +52,10 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     private ComparisonHelper ch = new ComparisonHelper();
 
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABoolean> serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<ABoolean> serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,

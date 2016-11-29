@@ -24,7 +24,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -73,7 +73,7 @@ public class TemporalIntervalStartDateAccessor extends AbstractScalarFunctionDyn
 
                     // possible output
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
                     private final AMutableDate aDate = new AMutableDate(0);
 

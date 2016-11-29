@@ -22,7 +22,7 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -72,10 +72,10 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
                     private final byte[] metaBuffer = new byte[5];
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override

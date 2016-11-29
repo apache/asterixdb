@@ -30,7 +30,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDouble;
@@ -84,13 +84,13 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
     private ClosedRecordConstructorEval recordEval;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt64> longSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt64> longSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)

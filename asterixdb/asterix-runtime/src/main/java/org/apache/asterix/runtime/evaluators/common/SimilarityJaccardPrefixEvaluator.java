@@ -25,7 +25,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.fuzzyjoin.similarity.PartialIntersect;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
@@ -72,7 +72,7 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
     // result
     protected final AMutableFloat res = new AMutableFloat(0);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AFloat> reusSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<AFloat> reusSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AFLOAT);
 
     public SimilarityJaccardPrefixEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)

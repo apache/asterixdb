@@ -30,10 +30,10 @@ import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 Provides PredicateEvaluator for equi-join cases to properly take care of NULL fields, being compared with each other.
 If any of the join keys, from either side, is NULL, record should not pass equi-join condition.
 */
-public class AqlPredicateEvaluatorFactoryProvider implements IPredicateEvaluatorFactoryProvider {
+public class PredicateEvaluatorFactoryProvider implements IPredicateEvaluatorFactoryProvider {
 
     private static final long serialVersionUID = 1L;
-    public static final AqlPredicateEvaluatorFactoryProvider INSTANCE = new AqlPredicateEvaluatorFactoryProvider();
+    public static final PredicateEvaluatorFactoryProvider INSTANCE = new PredicateEvaluatorFactoryProvider();
 
     @Override
     public IPredicateEvaluatorFactory getPredicateEvaluatorFactory(final int[] keys0, final int[] keys1) {

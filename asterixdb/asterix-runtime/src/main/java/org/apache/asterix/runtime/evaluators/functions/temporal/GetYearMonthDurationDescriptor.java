@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableYearMonthDuration;
 import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -68,8 +68,9 @@ public class GetYearMonthDurationDescriptor extends AbstractScalarFunctionDynami
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
+                    private ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
+                                    BuiltinType.AYEARMONTHDURATION);
 
                     AMutableYearMonthDuration aYearMonthDuration = new AMutableYearMonthDuration(0);
 

@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.AMutableDayTimeDuration;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
@@ -71,8 +71,9 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
+                    private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
+                                    BuiltinType.ADAYTIMEDURATION);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override

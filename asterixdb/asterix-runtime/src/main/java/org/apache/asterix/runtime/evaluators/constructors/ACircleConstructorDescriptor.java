@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.AMutableCircle;
 import org.apache.asterix.om.base.AMutablePoint;
@@ -70,7 +70,7 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     private AMutableCircle aCircle = new AMutableCircle(null, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ACircle> circleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ACircle> circleSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ACIRCLE);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();

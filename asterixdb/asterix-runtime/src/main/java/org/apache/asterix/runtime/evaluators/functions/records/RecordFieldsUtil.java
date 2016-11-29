@@ -28,7 +28,7 @@ import org.apache.asterix.builders.ListBuilderFactory;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
@@ -73,10 +73,10 @@ public class RecordFieldsUtil {
     private final static AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "fields");
     //Better not be a static object.
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final static ARecordType openType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;

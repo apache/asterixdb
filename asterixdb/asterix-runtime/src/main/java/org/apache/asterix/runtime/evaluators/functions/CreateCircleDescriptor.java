@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.AMutableCircle;
 import org.apache.asterix.om.base.AMutablePoint;
@@ -75,7 +75,7 @@ public class CreateCircleDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private AMutablePoint aPoint = new AMutablePoint(0, 0);
                     private AMutableCircle aCircle = new AMutableCircle(null, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ACircle> circleSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ACircle> circleSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ACIRCLE);
 
                     @Override

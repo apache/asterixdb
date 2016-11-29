@@ -30,16 +30,16 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8Strin
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 
-public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryProvider {
+public class BinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryProvider {
 
-    public static final AqlBinaryTokenizerFactoryProvider INSTANCE = new AqlBinaryTokenizerFactoryProvider();
+    public static final BinaryTokenizerFactoryProvider INSTANCE = new BinaryTokenizerFactoryProvider();
 
-    private static final IBinaryTokenizerFactory aqlStringTokenizer = new DelimitedUTF8StringBinaryTokenizerFactory(
-            true, true,
+    private static final IBinaryTokenizerFactory aqlStringTokenizer =
+            new DelimitedUTF8StringBinaryTokenizerFactory(true, true,
             new UTF8WordTokenFactory(ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
-    private static final IBinaryTokenizerFactory aqlHashingStringTokenizer = new DelimitedUTF8StringBinaryTokenizerFactory(
-            true, true,
+    private static final IBinaryTokenizerFactory aqlHashingStringTokenizer =
+            new DelimitedUTF8StringBinaryTokenizerFactory(true, true,
             new HashedUTF8WordTokenFactory(ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
     private static final IBinaryTokenizerFactory orderedListTokenizer = new AOrderedListBinaryTokenizerFactory(

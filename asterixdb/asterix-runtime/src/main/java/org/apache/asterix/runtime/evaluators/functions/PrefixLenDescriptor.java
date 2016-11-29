@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -80,7 +80,7 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     // result
                     private final AMutableInt32 res = new AMutableInt32(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override

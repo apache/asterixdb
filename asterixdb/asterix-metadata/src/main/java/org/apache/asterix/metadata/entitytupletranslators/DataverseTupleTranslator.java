@@ -25,7 +25,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Calendar;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -52,14 +52,14 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
     protected ISerializerDeserializer<AInt32> aInt32Serde;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATAVERSE_RECORDTYPE);
 
     @SuppressWarnings("unchecked")
     protected DataverseTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATAVERSE_DATASET.getFieldCount());
         aInt32 = new AMutableInt32(-1);
-        aInt32Serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+        aInt32Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     }
 
     @Override

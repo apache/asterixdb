@@ -27,7 +27,7 @@ import java.util.Calendar;
 
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -49,7 +49,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     public static final int ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE);
 
     protected DatasourceAdapterTupleTranslator(boolean getTuple) {

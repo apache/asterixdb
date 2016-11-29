@@ -46,7 +46,7 @@ import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -448,9 +448,9 @@ public class FeedMetadataUtil {
             }
             ISerializerDeserializer[] serdes = new ISerializerDeserializer[numOfOutputs];
             int i = 0;
-            serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(adapterOutputType);
+            serdes[i++] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(adapterOutputType);
             if (metaType != null) {
-                serdes[i++] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
+                serdes[i++] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
             }
             if (ExternalDataUtils.isChangeFeed(configuration)) {
                 getSerdesForPKs(serdes, configuration, metaType, adapterOutputType, i);
@@ -471,10 +471,10 @@ public class FeedMetadataUtil {
             for (int j = 0; j < pkIndexes.length; j++) {
                 int aInt = pkIndexes[j];
                 if (pkIndicators[j] == 0) {
-                    serdes[index++] = AqlSerializerDeserializerProvider.INSTANCE
+                    serdes[index++] = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
                 } else if (pkIndicators[j] == 1) {
-                    serdes[index++] = AqlSerializerDeserializerProvider.INSTANCE
+                    serdes[index++] = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(metaType.getFieldTypes()[aInt]);
                 } else {
                     throw new AlgebricksException("a key source indicator can only be 0 or 1");
@@ -482,7 +482,7 @@ public class FeedMetadataUtil {
             }
         } else {
             for (int aInt : pkIndexes) {
-                serdes[index++] = AqlSerializerDeserializerProvider.INSTANCE
+                serdes[index++] = SerializerDeserializerProvider.INSTANCE
                         .getSerializerDeserializer(adapterOutputType.getFieldTypes()[aInt]);
             }
         }

@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -81,7 +81,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
             // First value encountered. Set type, comparator, and initial value.
             aggType = typeTag;
             // Set comparator.
-            IBinaryComparatorFactory cmpFactory = AqlBinaryComparatorFactoryProvider.INSTANCE
+            IBinaryComparatorFactory cmpFactory = BinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(aggType, isMin);
             cmp = cmpFactory.createBinaryComparator();
             // Initialize min value.
@@ -100,7 +100,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
             if (ATypeHierarchy.canPromote(aggType, typeTag)) {
                 tpc = ATypeHierarchy.getTypePromoteComputer(aggType, typeTag);
                 aggType = typeTag;
-                cmp = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(aggType, isMin)
+                cmp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(aggType, isMin)
                         .createBinaryComparator();
                 if (tpc != null) {
                     tempValForCasting.reset();

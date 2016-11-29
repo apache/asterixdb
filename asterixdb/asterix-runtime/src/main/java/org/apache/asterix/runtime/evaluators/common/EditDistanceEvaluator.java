@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.common;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -59,7 +59,7 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     protected int editDistance = 0;
     protected final AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     protected ATypeTag itemTypeTag;
 

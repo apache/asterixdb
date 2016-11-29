@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
@@ -67,7 +67,7 @@ public class SumAggregateFunction extends AbstractSumAggregateFunction {
         if (isLocalAgg) {
             resultStorage.getDataOutput().writeByte(ATypeTag.SYSTEM_NULL.serialize());
         } else {
-            serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+            serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
             serde.serialize(ANull.NULL, resultStorage.getDataOutput());
         }
     }

@@ -26,7 +26,7 @@ import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
@@ -178,11 +178,11 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
             ArrayList<ISerializerDeserializer> serdes = new ArrayList<>();
             serdes.add(payloadSerde);
             if (metaItemType != null) {
-                serdes.add(AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaItemType));
+                serdes.add(SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaItemType));
             }
             if (pkTypes != null) {
                 for (IAType type : pkTypes) {
-                    serdes.add(AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type));
+                    serdes.add(SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type));
                 }
             }
             RecordDescriptor feedDesc = new RecordDescriptor(

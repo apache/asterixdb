@@ -24,8 +24,8 @@ import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-public class AqlBinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
-    private static final AqlBinaryBooleanInspectorImpl INSTANCE = new AqlBinaryBooleanInspectorImpl();
+public class BinaryBooleanInspector implements IBinaryBooleanInspector {
+    private static final BinaryBooleanInspector INSTANCE = new BinaryBooleanInspector();
     public static final IBinaryBooleanInspectorFactory FACTORY = new IBinaryBooleanInspectorFactory() {
         private static final long serialVersionUID = 1L;
 
@@ -36,7 +36,7 @@ public class AqlBinaryBooleanInspectorImpl implements IBinaryBooleanInspector {
         }
     };
 
-    private AqlBinaryBooleanInspectorImpl() {
+    private BinaryBooleanInspector() {
     }
 
     @Override

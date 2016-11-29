@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -70,7 +70,7 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private boolean positive;
                     private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt8> int8Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInt8> int8Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT8);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,7 +36,7 @@ public abstract class AbstractBinaryStringIntEval extends AbstractBinaryStringEv
 
     // For outputting results.
     @SuppressWarnings({ "rawtypes" })
-    private ISerializerDeserializer intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer intSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     private AMutableInt32 resultValue = new AMutableInt32(0);
 

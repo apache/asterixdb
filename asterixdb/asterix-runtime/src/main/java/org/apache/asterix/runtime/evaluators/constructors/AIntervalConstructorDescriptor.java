@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -74,7 +74,7 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<AInterval> intervalSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
                     @Override

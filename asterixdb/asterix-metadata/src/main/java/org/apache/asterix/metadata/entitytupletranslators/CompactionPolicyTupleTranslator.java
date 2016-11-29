@@ -24,7 +24,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -48,7 +48,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     public static final int COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE);
 
     protected CompactionPolicyTupleTranslator(boolean getTuple) {

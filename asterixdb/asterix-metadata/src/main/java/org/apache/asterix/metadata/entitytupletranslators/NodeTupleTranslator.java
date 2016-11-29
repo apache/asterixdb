@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -46,7 +46,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
 
     private transient AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
 
     // @SuppressWarnings("unchecked")

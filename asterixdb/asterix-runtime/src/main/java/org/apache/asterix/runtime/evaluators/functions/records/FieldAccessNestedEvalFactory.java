@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
@@ -79,10 +79,10 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
             private final IPointable[] fieldPointables = new VoidPointable[fieldPath.size()];
             private final RuntimeRecordTypeInfo[] recTypeInfos = new RuntimeRecordTypeInfo[fieldPath.size()];
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            private final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<AMissing> missingSerde = AqlSerializerDeserializerProvider.INSTANCE
+            private final ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.AMISSING);
 
             {
@@ -99,7 +99,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
                     DataOutput out = storage.getDataOutput();
                     AString as = new AString(fieldPath.get(i));
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
                                 out);
                     fieldPointables[i] = new VoidPointable();
                     fieldPointables[i].set(storage);

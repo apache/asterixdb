@@ -20,7 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -46,9 +46,9 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
+                nullPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
                         .createPrinter();
-                fieldPrinter = (AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
+                fieldPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
                         .createPrinter();
             }
 

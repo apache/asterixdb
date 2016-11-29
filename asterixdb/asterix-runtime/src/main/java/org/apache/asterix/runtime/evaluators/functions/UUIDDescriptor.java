@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AGeneratedUUID;
 import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -57,7 +57,7 @@ public class UUIDDescriptor extends AbstractScalarFunctionDynamicDescriptor {
             private static final long serialVersionUID = 1L;
 
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<AUUID> uuidSerDe = AqlSerializerDeserializerProvider.INSTANCE
+            private final ISerializerDeserializer<AUUID> uuidSerDe = SerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.AUUID);
 
             @Override

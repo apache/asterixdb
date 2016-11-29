@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -35,7 +35,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 public abstract class AbstractTripleStringIntEval extends AbstractTripleStringEval {
 
     @SuppressWarnings("rawtypes")
-    private final ISerializerDeserializer intSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer intSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     private final AMutableInt32 resultValue = new AMutableInt32(0);
 

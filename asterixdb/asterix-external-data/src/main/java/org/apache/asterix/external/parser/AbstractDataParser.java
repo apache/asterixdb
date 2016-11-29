@@ -21,7 +21,7 @@ package org.apache.asterix.external.parser;
 import java.io.DataOutput;
 
 import org.apache.asterix.external.api.IDataParser;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACircle;
@@ -110,34 +110,34 @@ public abstract class AbstractDataParser implements IDataParser {
 
     // Serializers
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
             .getAStringSerializerDeserializer();
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<ABinary> binarySerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABINARY);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AFloat> floatSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AFLOAT);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt8> int8Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AInt8> int8Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT8);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt16> int16Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AInt16> int16Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT16);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
     protected final HexParser hexParser = new HexParser();
@@ -147,46 +147,46 @@ public abstract class AbstractDataParser implements IDataParser {
     // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.
     // Thus, we need to call UUID.fromStringToAMutableUUID() to convert it to the internal representation (byte []).
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AUUID> uuidSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AUUID> uuidSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AUUID);
 
     // To avoid race conditions, the serdes for temporal and spatial data types needs to be one per parser
     // ^^^^^^^^^^^^^^^^^^^^^^^^ ??? then why all these serdes are static?
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected static final ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ATIME);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected static final ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADATE);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected static final ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADATETIME);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADuration> durationSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected static final ISerializerDeserializer<ADuration> durationSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADURATION);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
+    protected static final ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
+    protected static final ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final static ISerializerDeserializer<APoint> pointSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.APOINT);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<APoint3D> point3DSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final static ISerializerDeserializer<APoint3D> point3DSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.APOINT3D);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ACircle> circleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final static ISerializerDeserializer<ACircle> circleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ACIRCLE);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ARectangle> rectangleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final static ISerializerDeserializer<ARectangle> rectangleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ARECTANGLE);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final static ISerializerDeserializer<ALine> lineSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ALINE);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<AInterval> intervalSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected static final ISerializerDeserializer<AInterval> intervalSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINTERVAL);
 
     protected String filename;

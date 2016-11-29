@@ -25,9 +25,9 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeser
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.formats.nontagged.BinaryTokenizerFactoryProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -232,11 +232,11 @@ public final class NonTaggedFormatUtil {
         switch (indexType) {
             case SINGLE_PARTITION_WORD_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX: {
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
+                return BinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
             }
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
-                return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
+                return BinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(keyType, gramLength, true,
                         false);
             }
             default: {
@@ -262,11 +262,11 @@ public final class NonTaggedFormatUtil {
     public static IBinaryComparatorFactory getTokenBinaryComparatorFactory(IAType keyType) throws AlgebricksException {
         IAType type = getTokenType(keyType);
         // Ignore case for string types.
-        return AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true, true);
+        return BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true, true);
     }
 
     public static ITypeTraits getTokenTypeTrait(IAType keyType) throws AlgebricksException {
         IAType type = getTokenType(keyType);
-        return AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
+        return TypeTraitProvider.INSTANCE.getTypeTrait(type);
     }
 }

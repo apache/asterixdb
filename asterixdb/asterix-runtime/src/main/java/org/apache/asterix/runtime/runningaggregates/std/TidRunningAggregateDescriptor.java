@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.runningaggregates.std;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -60,7 +60,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
                 return new IRunningAggregateEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private final ISerializerDeserializer<AInt64> serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<AInt64> serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 m = new AMutableInt64(0);
                     private int cnt;

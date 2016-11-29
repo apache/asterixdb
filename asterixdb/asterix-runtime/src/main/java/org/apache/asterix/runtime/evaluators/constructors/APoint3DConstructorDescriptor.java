@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint3D;
 import org.apache.asterix.om.base.APoint3D;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -69,7 +69,7 @@ public class APoint3DConstructorDescriptor extends AbstractScalarFunctionDynamic
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutablePoint3D aPoint3D = new AMutablePoint3D(0, 0, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<APoint3D> point3DSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<APoint3D> point3DSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT3D);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 

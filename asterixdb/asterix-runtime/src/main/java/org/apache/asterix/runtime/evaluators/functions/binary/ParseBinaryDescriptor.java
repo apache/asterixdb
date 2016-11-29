@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
 import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -70,7 +70,7 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                 return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private ISerializerDeserializer<ABinary> binarySerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ABINARY);
 
                     private AMutableBinary aBinary = new AMutableBinary(new byte[0], 0, 0);

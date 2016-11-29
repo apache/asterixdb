@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -72,7 +72,7 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<APoint> pointSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<APoint> pointSerde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override

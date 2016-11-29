@@ -52,31 +52,32 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 import java.io.Serializable;
 
-public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
+public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
     private static final long serialVersionUID = 1L;
-    public static final AqlBinaryComparatorFactoryProvider INSTANCE = new AqlBinaryComparatorFactoryProvider();
-    public static final PointableBinaryComparatorFactory BYTE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            BytePointable.FACTORY);
-    public static final PointableBinaryComparatorFactory SHORT_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            ShortPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory INTEGER_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            IntegerPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory LONG_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            LongPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory FLOAT_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            FloatPointable.FACTORY);
-    public static final PointableBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            DoublePointable.FACTORY);
-    public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            UTF8StringPointable.FACTORY);
-    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive comparisons.
-    public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            UTF8StringLowercasePointable.FACTORY);
-    public static final PointableBinaryComparatorFactory BINARY_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
-            ByteArrayPointable.FACTORY);
+    public static final BinaryComparatorFactoryProvider INSTANCE = new BinaryComparatorFactoryProvider();
+    public static final PointableBinaryComparatorFactory BYTE_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(BytePointable.FACTORY);
+    public static final PointableBinaryComparatorFactory SHORT_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(ShortPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory INTEGER_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(IntegerPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory LONG_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(LongPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory FLOAT_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(FloatPointable.FACTORY);
+    public static final PointableBinaryComparatorFactory DOUBLE_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(DoublePointable.FACTORY);
+    public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY);
+    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement
+    // case-insensitive comparisons.
+    public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(UTF8StringLowercasePointable.FACTORY);
+    public static final PointableBinaryComparatorFactory BINARY_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY);
 
-    private AqlBinaryComparatorFactoryProvider() {
+    private BinaryComparatorFactoryProvider() {
     }
 
     // This method add the option of ignoring the case in string comparisons.

@@ -24,7 +24,7 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableOrderedList;
 import org.apache.asterix.om.base.AMutableRecord;
 import org.apache.asterix.om.base.AMutableUnorderedList;
@@ -99,7 +99,7 @@ public interface IDataParser {
             }
 
             default:
-                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(obj.getType()).serialize(obj,
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(obj.getType()).serialize(obj,
                         dataOutput);
                 break;
         }

@@ -34,8 +34,8 @@ import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.parser.RecordWithMetadataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FileSystemWatcher;
-import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -99,13 +99,13 @@ public class RecordWithMetaTest {
             ISerializerDeserializer[] serdes = new ISerializerDeserializer[keyTypes.length + 2];
             IPrinterFactory[] printerFactories = new IPrinterFactory[keyTypes.length + 2];
             for (int i = 0; i < keyTypes.length; i++) {
-                serdes[i + 2] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(keyTypes[i]);
-                printerFactories[i + 2] = AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(keyTypes[i]);
+                serdes[i + 2] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(keyTypes[i]);
+                printerFactories[i + 2] = ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(keyTypes[i]);
             }
-            serdes[0] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
-            serdes[1] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
-            printerFactories[0] = AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(recordType);
-            printerFactories[1] = AqlADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(metaType);
+            serdes[0] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(recordType);
+            serdes[1] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
+            printerFactories[0] = ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(recordType);
+            printerFactories[1] = ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(metaType);
             // create output descriptor 
             IPrinter[] printers = new IPrinter[printerFactories.length];
 

@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -78,7 +78,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                     // result
                     private final AMutableInt32 res = new AMutableInt32(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override

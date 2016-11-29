@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -48,7 +48,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
     protected OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage inputVal;
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
     protected final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");
 

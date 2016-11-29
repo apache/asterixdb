@@ -26,7 +26,7 @@ import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IExternalFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
 import org.apache.asterix.external.api.IFunctionHelper;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -91,7 +91,7 @@ public abstract class ExternalFunction implements IExternalFunction {
     }
 
     public static ISerializerDeserializer<?> getSerDe(Object typeInfo) {
-        return AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(typeInfo);
+        return SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(typeInfo);
     }
 
     public IExternalFunctionInfo getFinfo() {

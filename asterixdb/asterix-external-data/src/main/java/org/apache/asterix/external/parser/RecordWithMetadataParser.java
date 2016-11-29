@@ -28,7 +28,7 @@ import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordWithMetadataParser;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
@@ -49,7 +49,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     private final ArrayBackedValueStorage[] metaFieldsNamesBuffers;
     private final int numberOfMetaFields;
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
 
     public RecordWithMetadataParser(ARecordType metaType, IRecordDataParser<O> valueParser,

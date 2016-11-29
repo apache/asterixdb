@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
 import org.apache.asterix.om.base.ARectangle;
@@ -75,8 +75,8 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
                     private AMutableRectangle aRectangle = new AMutableRectangle(null, null);
                     private AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ARectangle> rectangle2DSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ARECTANGLE);
+                    private ISerializerDeserializer<ARectangle> rectangle2DSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

@@ -22,7 +22,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IResultCollector;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -120,7 +120,7 @@ public class ResultCollector implements IResultCollector {
     @SuppressWarnings("unchecked")
     private void serializeResult(IAObject object) throws AsterixException {
         try {
-            AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(finfo.getReturnType())
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(finfo.getReturnType())
                     .serialize(reusableResultObjectHolder, outputProvider.getDataOutput());
         } catch (HyracksDataException hde) {
             throw new AsterixException(hde);

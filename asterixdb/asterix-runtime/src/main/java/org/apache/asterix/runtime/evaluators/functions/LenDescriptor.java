@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -71,7 +71,7 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     // result
                     private final AMutableInt64 res = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override

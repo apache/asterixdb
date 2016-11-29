@@ -20,7 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -45,9 +45,9 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (AqlCleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
+                nullPrinter = (CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
                         .createPrinter();
-                fieldPrinter = (AqlCleanJSONPrinterFactoryProvider.INSTANCE
+                fieldPrinter = (CleanJSONPrinterFactoryProvider.INSTANCE
                         .getPrinterFactory(unionType.getActualType())).createPrinter();
             }
 

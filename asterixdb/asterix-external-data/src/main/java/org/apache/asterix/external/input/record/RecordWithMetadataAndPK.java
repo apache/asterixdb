@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
@@ -55,23 +55,23 @@ public class RecordWithMetadataAndPK<T> extends RecordWithPK<T> {
 
     // Serializers
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
     private final AMutableDouble mutableDouble = new AMutableDouble(0);
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
     private final AMutableString mutableString = new AMutableString(null);
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
     private final AMutableInt32 mutableInt = new AMutableInt32(0);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+    protected ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     private final AMutableInt64 mutableLong = new AMutableInt64(0);
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
     private final int[] keyIndicator;
 

@@ -69,12 +69,12 @@ import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeseri
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
-public class AqlSerializerDeserializerProvider implements ISerializerDeserializerProvider, Serializable {
+public class SerializerDeserializerProvider implements ISerializerDeserializerProvider, Serializable {
 
     private static final long serialVersionUID = 1L;
-    public static final AqlSerializerDeserializerProvider INSTANCE = new AqlSerializerDeserializerProvider();
+    public static final SerializerDeserializerProvider INSTANCE = new SerializerDeserializerProvider();
 
-    private AqlSerializerDeserializerProvider() {
+    private SerializerDeserializerProvider() {
     }
 
     // Can't be shared among threads <Stateful>
