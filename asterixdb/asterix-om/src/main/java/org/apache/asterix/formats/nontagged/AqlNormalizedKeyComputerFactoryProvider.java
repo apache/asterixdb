@@ -45,58 +45,44 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
                 case DATE:
                 case TIME:
                 case YEARMONTHDURATION:
-                case INT32: {
+                case INT32:
                     return new AWrappedAscNormalizedKeyComputerFactory(new IntegerNormalizedKeyComputerFactory());
-                }
                 case DATETIME:
                 case DAYTIMEDURATION:
-                case INT64: {
+                case INT64:
                     return new AWrappedAscNormalizedKeyComputerFactory(new Integer64NormalizedKeyComputerFactory());
-                }
-                case FLOAT: {
+                case FLOAT:
                     return new AWrappedAscNormalizedKeyComputerFactory(new FloatNormalizedKeyComputerFactory());
-                }
-                case DOUBLE: {
+                case DOUBLE:
                     return new AWrappedAscNormalizedKeyComputerFactory(new DoubleNormalizedKeyComputerFactory());
-                }
-                case STRING: {
+                case STRING:
                     return new AWrappedAscNormalizedKeyComputerFactory(new UTF8StringNormalizedKeyComputerFactory());
-                }
-                case BINARY: {
+                case BINARY:
                     return new AWrappedAscNormalizedKeyComputerFactory(new ByteArrayNormalizedKeyComputerFactory());
-                }
-                default: {
+                default:
                     return null;
-                }
             }
         } else {
             switch (aqlType.getTypeTag()) {
                 case DATE:
                 case TIME:
                 case YEARMONTHDURATION:
-                case INT32: {
+                case INT32:
                     return new AWrappedDescNormalizedKeyComputerFactory(new IntegerNormalizedKeyComputerFactory());
-                }
                 case DATETIME:
                 case DAYTIMEDURATION:
-                case INT64: {
+                case INT64:
                     return new AWrappedDescNormalizedKeyComputerFactory(new Integer64NormalizedKeyComputerFactory());
-                }
-                case FLOAT: {
+                case FLOAT:
                     return new AWrappedDescNormalizedKeyComputerFactory(new FloatNormalizedKeyComputerFactory());
-                }
-                case DOUBLE: {
+                case DOUBLE:
                     return new AWrappedDescNormalizedKeyComputerFactory(new DoubleNormalizedKeyComputerFactory());
-                }
-                case STRING: {
+                case STRING:
                     return new AWrappedDescNormalizedKeyComputerFactory(new UTF8StringNormalizedKeyComputerFactory());
-                }
-                case BINARY: {
+                case BINARY:
                     return new AWrappedDescNormalizedKeyComputerFactory(new ByteArrayNormalizedKeyComputerFactory());
-                }
-                default: {
+                default:
                     return null;
-                }
             }
         }
     }
