@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.utils.AsterixConstants;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.event.driver.EventDriver;
 import org.apache.asterix.event.error.VerificationUtil;
 import org.apache.asterix.event.model.AsterixInstance;
@@ -43,8 +43,6 @@ import org.apache.asterix.event.schema.pattern.Patterns;
 import org.apache.asterix.event.schema.pattern.Value;
 import org.apache.asterix.event.service.AsterixEventService;
 import org.apache.asterix.event.service.AsterixEventServiceUtil;
-import org.apache.asterix.event.service.ILookupService;
-import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.installer.schema.conf.Backup;
 
 public class PatternCreator {
@@ -145,7 +143,7 @@ public class PatternCreator {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
+                    + StorageConstants.METADATA_ROOT + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
                     + backupId + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " "
                     + hadoopVersion;
             Event event = new Event("backup", nodeid, pargs);
@@ -170,7 +168,7 @@ public class PatternCreator {
             iodevices = node.getIodevices() == null ? instance.getCluster().getIodevices() : node.getIodevices();
             txnLogDir = node.getTxnLogDir() == null ? instance.getCluster().getTxnLogDir() : node.getTxnLogDir();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + store + " "
-                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + txnLogDir + " " + backupId + " " + backupDir
+                    + StorageConstants.METADATA_ROOT + " " + txnLogDir + " " + backupId + " " + backupDir
                     + " " + "local" + " " + node.getId();
             Event event = new Event("backup", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
@@ -193,7 +191,7 @@ public class PatternCreator {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + clusterStore + " "
-                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
+                    + StorageConstants.METADATA_ROOT + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
                     + backupId + " " + " " + hdfsBackupDir + " " + "hdfs" + " " + node.getId() + " " + hdfsUrl + " "
                     + hadoopVersion;
             Event event = new Event("restore", nodeid, pargs);
@@ -214,7 +212,7 @@ public class PatternCreator {
             Nodeid nodeid = new Nodeid(new Value(null, node.getId()));
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             pargs = workingDir + " " + instance.getName() + " " + iodevices + " " + clusterStore + " "
-                    + AsterixConstants.ASTERIX_ROOT_METADATA_DIR + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
+                    + StorageConstants.METADATA_ROOT + " " + AsterixEventServiceUtil.TXN_LOG_DIR + " "
                     + backupId + " " + backupDir + " " + "local" + " " + node.getId();
             Event event = new Event("restore", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));
@@ -449,7 +447,7 @@ public class PatternCreator {
         for (Node node : cluster.getNode()) {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             String primaryIODevice = iodevices.split(",")[0].trim();
-            pargs = primaryIODevice + File.separator + AsterixConstants.ASTERIX_ROOT_METADATA_DIR;
+            pargs = primaryIODevice + File.separator + StorageConstants.METADATA_ROOT;
             nodeid = new Nodeid(new Value(null, node.getId()));
             event = new Event("file_delete", nodeid, pargs);
             patternList.add(new Pattern(null, 1, null, event));

@@ -45,6 +45,7 @@ import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.replication.AsterixReplicationJob;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -67,8 +68,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public static final String METADATA_FILE_NAME = ".metadata";
     // Private constants
     private static final Logger LOGGER = Logger.getLogger(PersistentLocalResourceRepository.class.getName());
-    private static final String STORAGE_METADATA_DIRECTORY = "root_metadata";
-    private static final String STORAGE_METADATA_FILE_NAME_PREFIX = ".root_metadata";
+    private static final String STORAGE_METADATA_DIRECTORY = StorageConstants.METADATA_ROOT;
+    private static final String STORAGE_METADATA_FILE_NAME_PREFIX = "." + StorageConstants.METADATA_ROOT;
     private static final long STORAGE_LOCAL_RESOURCE_ID = -4321;
     private static final int MAX_CACHED_RESOURCES = 1000;
     private static final FilenameFilter METADATA_FILES_FILTER = (File dir, String name) -> name.equalsIgnoreCase(

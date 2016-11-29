@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.event.schema.cluster.Property;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.event.schema.yarnCluster.Cluster;
 import org.apache.asterix.event.schema.yarnCluster.MasterNode;
 import org.apache.asterix.event.schema.yarnCluster.Node;
@@ -1288,7 +1288,7 @@ public class AsterixApplicationMaster {
                     FileStatus[] backups = fs.listStatus(new Path(src.toString()));
                     for (FileStatus b : backups) {
                         if (!b.getPath().toString().contains("txnLogs")
-                                && !b.getPath().toString().contains(File.separator + "asterix_root_metadata")) {
+                                && !b.getPath().toString().contains(File.separator + StorageConstants.METADATA_ROOT)) {
                             vargs.add(b.getPath() + "," + s + File.separator + clusterDesc.getStore());
                         }
                     }

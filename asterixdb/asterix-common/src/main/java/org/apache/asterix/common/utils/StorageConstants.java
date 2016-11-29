@@ -19,12 +19,11 @@
 package org.apache.asterix.common.utils;
 
 /**
- * A static class that stores asterix constants
+ * A static class that stores storage constants
  */
-public class AsterixConstants {
-    public static final String ASTERIX_ROOT_METADATA_DIR = "asterix_root_metadata";
+public class StorageConstants {
+    public static final String METADATA_ROOT = "root_metadata";
 
-    private AsterixConstants() {
+    private StorageConstants() {
     }
-
 }
