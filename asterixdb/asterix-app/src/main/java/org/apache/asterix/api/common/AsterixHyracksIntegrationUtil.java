@@ -78,9 +78,10 @@ public class AsterixHyracksIntegrationUtil {
         // Starts ncs.
         List<String> nodes = propertiesAccessor.getNodeNames();
         List<NodeControllerService> nodeControllers = new ArrayList<>();
+        List<Thread> startupThreads = new ArrayList<>();
         for (String ncName : nodes) {
-            NodeControllerService nodeControllerService =
-                    new NodeControllerService(fixupIODevices(createNCConfig(ncName)));
+            NodeControllerService nodeControllerService = new NodeControllerService(
+                    fixupIODevices(createNCConfig(ncName)));
             nodeControllers.add(nodeControllerService);
             Thread ncStartThread = new Thread("IntegrationUtil-" + ncName) {
                 @Override
@@ -93,7 +94,11 @@ public class AsterixHyracksIntegrationUtil {
                 }
             };
             ncStartThread.start();
-            ncStartThread.join();
+            startupThreads.add(ncStartThread);
+        }
+        //wait until all NCs complete their startup
+        for (Thread thread : startupThreads) {
+            thread.join();
         }
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
         ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
@@ -156,7 +161,6 @@ public class AsterixHyracksIntegrationUtil {
         }
         return ncConfig;
     }
-
 
     public String[] getNcNames() {
         return propertiesAccessor.getNodeNames().toArray(new String[propertiesAccessor.getNodeNames().size()]);

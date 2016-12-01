@@ -17,14 +17,12 @@
  * under the License.
  */
 /*
- * Test case Name  : metadata_node_recovery.aql
- * Description     : Check that metadata node failover is done correctly.
+ * Test case Name  : bulkload.aql
+ * Description     : Check that Bulkload LSM component are replicated correclty.
                      The test goes as follows:
-                     start 2 nodes, create a dataset, kill metadata node
-                     and wait until the failover complete, verify the
-                     dataset still exists.
+                     start 2 nodes, bulkload a dataset, query data, kill one node
+                     and wait until the failover complete, query the data again.
  * Expected Result : Success
  * Date            : January 6 2016
  */
-
-for $x in dataset Metadata.Dataset where $x.DatasetName ='FacebookUsers' return $x.DatasetName;
+kill asterix_nc2

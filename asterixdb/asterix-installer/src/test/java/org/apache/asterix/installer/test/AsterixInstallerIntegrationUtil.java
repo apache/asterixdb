@@ -53,19 +53,22 @@ public class AsterixInstallerIntegrationUtil {
     private static final int zookeeperClientPort = 2900;
     private static final int zookeeperTestClientPort = 3945;
     private static IHyracksClientConnection hcc;
+    private static final String CLUSTERS_BASE_PATH = "clusters" + File.separator + "local" + File.separator;
+    public static final String LOCAL_CLUSTER_PATH = CLUSTERS_BASE_PATH + File.separator + "local.xml";
+    public static final String LOCAL_CLUSTER_WITH_REPLICATION_PATH = CLUSTERS_BASE_PATH + File.separator
+            + "local_with_replication.xml";
 
     public static void deinit() throws Exception {
         deleteInstance();
         stopZookeeper();
     }
 
-    public static void init() throws Exception {
+    public static void init(String clusterPath) throws Exception {
         managixHome = getManagixHome();
         System.setProperty("log4j.configuration",
                 managixHome + File.separator + "conf" + File.separator + "log4j.properties");
 
-        clusterConfigurationPath = managixHome + File.separator + "clusters" + File.separator + "local" + File.separator
-                + "local.xml";
+        clusterConfigurationPath = managixHome + File.separator + clusterPath;
 
         InstallerDriver.setManagixHome(managixHome);
 

@@ -72,8 +72,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final String STORAGE_METADATA_FILE_NAME_PREFIX = "." + StorageConstants.METADATA_ROOT;
     private static final long STORAGE_LOCAL_RESOURCE_ID = -4321;
     private static final int MAX_CACHED_RESOURCES = 1000;
-    private static final FilenameFilter METADATA_FILES_FILTER = (File dir, String name) -> name.equalsIgnoreCase(
-            METADATA_FILE_NAME);
+    private static final FilenameFilter METADATA_FILES_FILTER = (File dir, String name) -> name
+            .equalsIgnoreCase(METADATA_FILE_NAME);
     // Finals
     private final IIOManager ioManager;
     private final String[] mountPoints;
@@ -121,9 +121,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     @Override
     public String toString() {
         StringBuilder aString = new StringBuilder().append(PersistentLocalResourceRepository.class.getSimpleName())
-                .append(Character.LINE_SEPARATOR).append(ioManager.getClass().getSimpleName()).append(':').append(
-                        Character.LINE_SEPARATOR).append(ioManager.toString()).append(Character.LINE_SEPARATOR).append(
-                                "Cached Resources:").append(Character.LINE_SEPARATOR);
+                .append(Character.LINE_SEPARATOR).append(ioManager.getClass().getSimpleName()).append(':')
+                .append(Character.LINE_SEPARATOR).append(ioManager.toString()).append(Character.LINE_SEPARATOR)
+                .append("Cached Resources:").append(Character.LINE_SEPARATOR);
         for (Entry<String, LocalResource> pair : resourceCache.asMap().entrySet()) {
             aString.append(pair.getKey()).append("->").append(pair.getValue()).append(Character.LINE_SEPARATOR);
         }
@@ -158,8 +158,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
             String storageRootDirPath;
             if (storageRootDirName.startsWith(File.separator)) {
-                storageRootDirPath = mountPoints[i]
-                        + storageRootDirName.substring(File.separator.length());
+                storageRootDirPath = mountPoints[i] + storageRootDirName.substring(File.separator.length());
             } else {
                 storageRootDirPath = mountPoints[i] + storageRootDirName;
             }
@@ -209,8 +208,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
         //if replication enabled, send resource metadata info to remote nodes
         if (isReplicationEnabled && resource.getId() != STORAGE_LOCAL_RESOURCE_ID) {
-            String filePath = getFileName(resource.getPath(), resource.getId());
-            createReplicationJob(ReplicationOperation.REPLICATE, filePath);
+            createReplicationJob(ReplicationOperation.REPLICATE, resourceFile);
         }
     }
 
@@ -222,9 +220,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             resourceCache.invalidate(relativePath);
 
             //if replication enabled, delete resource from remote replicas
-            if (isReplicationEnabled && !resourceFile.getFile().getName().startsWith(
-                    STORAGE_METADATA_FILE_NAME_PREFIX)) {
-                createReplicationJob(ReplicationOperation.DELETE, resourceFile.getAbsolutePath());
+            if (isReplicationEnabled
+                    && !resourceFile.getFile().getName().startsWith(STORAGE_METADATA_FILE_NAME_PREFIX)) {
+                createReplicationJob(ReplicationOperation.DELETE, resourceFile);
             }
         } else {
             throw new HyracksDataException("Resource doesn't exist");
@@ -365,19 +363,20 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    private void createReplicationJob(ReplicationOperation operation, String filePath) throws HyracksDataException {
+    private void createReplicationJob(ReplicationOperation operation, FileReference fileRef)
+            throws HyracksDataException {
         /**
          * Durable resources path format:
          * /partition/dataverse/idx/fileName
          * Temporary resources path format:
          * /partition/TEMP_DATASETS_STORAGE_FOLDER/dataverse/idx/fileName
          */
-        String[] fileNameTokens = filePath.split(File.separator);
+        String[] fileNameTokens = fileRef.getAbsolutePath().split(File.separator);
         String partitionDir = fileNameTokens[fileNameTokens.length - 4];
         //exclude temporary datasets resources
         if (!partitionDir.equals(StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER)) {
             filesToBeReplicated.clear();
-            filesToBeReplicated.add(filePath);
+            filesToBeReplicated.add(fileRef.getAbsolutePath());
             AsterixReplicationJob job = new AsterixReplicationJob(ReplicationJobType.METADATA, operation,
                     ReplicationExecutionType.SYNC, filesToBeReplicated);
             try {
@@ -421,11 +420,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      * @param ioDeviceId
      * @return A file reference to the storage metadata file.
      */
-    private static FileReference getStorageMetadataFile(IIOManager ioManager, String nodeId,
-            int ioDeviceId) {
+    private static FileReference getStorageMetadataFile(IIOManager ioManager, String nodeId, int ioDeviceId) {
         String storageMetadataFileName = STORAGE_METADATA_DIRECTORY + File.separator + nodeId + "_" + "iodevice"
-                + ioDeviceId + File.separator
-                + STORAGE_METADATA_FILE_NAME_PREFIX;
+                + ioDeviceId + File.separator + STORAGE_METADATA_FILE_NAME_PREFIX;
         return new FileReference(ioManager.getIODevices().get(ioDeviceId), storageMetadataFileName);
     }
 
@@ -436,8 +433,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      * @return A file reference to the storage root directory if exists, otherwise null.
      * @throws HyracksDataException
      */
-    public static File getStorageRootDirectoryIfExists(IIOManager ioManager, String nodeId,
-            int ioDeviceId)
+    public static File getStorageRootDirectoryIfExists(IIOManager ioManager, String nodeId, int ioDeviceId)
             throws HyracksDataException {
         File storageRootDir = null;
         FileReference storageMetadataFile = getStorageMetadataFile(ioManager, nodeId, ioDeviceId);

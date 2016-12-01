@@ -77,9 +77,11 @@ public class ClusterAPIServlet extends HttpServlet {
                 case "/replication":
                     json = getReplicationJSON();
                     break;
+                case "/summary":
+                    json = getClusterStateSummaryJSON();
+                    break;
                 default:
                     throw new IllegalArgumentException();
-
             }
             response.setStatus(HttpServletResponse.SC_OK);
             responseWriter.write(json.toString(4));
@@ -90,6 +92,10 @@ public class ClusterAPIServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.toString());
         }
         responseWriter.flush();
+    }
+
+    protected JSONObject getClusterStateSummaryJSON() throws JSONException {
+        return ClusterStateManager.INSTANCE.getClusterStateSummary();
     }
 
     protected JSONObject getReplicationJSON() throws JSONException {
@@ -117,8 +123,7 @@ public class ClusterAPIServlet extends HttpServlet {
         return AbstractAsterixProperties.getImplementations();
     }
 
-    protected JSONObject getClusterStateJSON(HttpServletRequest request, String pathToNode)
-            throws JSONException {
+    protected JSONObject getClusterStateJSON(HttpServletRequest request, String pathToNode) throws JSONException {
         JSONObject json;
         json = ClusterStateManager.INSTANCE.getClusterStateDescription();
         Map<String, Object> allProperties = getAllClusterProperties();

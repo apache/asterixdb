@@ -21,17 +21,20 @@ package org.apache.asterix.installer.test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -73,7 +76,7 @@ public class AsterixRestartIT {
                     + "resources" + File.separator + "integrationts" + File.separator + "restart"
                     + File.separator + "scripts";
             env.put("SCRIPT_HOME", scriptHomePath);
-            AsterixInstallerIntegrationUtil.init();
+            AsterixInstallerIntegrationUtil.init(AsterixInstallerIntegrationUtil.LOCAL_CLUSTER_PATH);
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;

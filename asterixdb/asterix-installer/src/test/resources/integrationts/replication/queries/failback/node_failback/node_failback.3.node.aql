@@ -17,16 +17,12 @@
  * under the License.
  */
 /*
- * Test case Name  : mem_component_recovery.aql
- * Description     : Check that Memory LSM component are replicated and recovered correclty.
+ * Test case Name  : bulkload.aql
+ * Description     : Check that Bulkload LSM component are replicated correclty.
                      The test goes as follows:
-                     start 2 nodes, bulkload a dataset, copy it to in-memory dataset, query
-                     data from memory, kill one node and wait until the failover complete,
-                     query the data again.
+                     start 2 nodes, bulkload a dataset, query data, kill one node
+                     and wait until the failover complete, query the data again.
  * Expected Result : Success
  * Date            : January 6 2016
  */
-
-use dataverse TinySocial;
-
-count (for $x in dataset FacebookUsersInMemory return $x);
+kill asterix_nc1

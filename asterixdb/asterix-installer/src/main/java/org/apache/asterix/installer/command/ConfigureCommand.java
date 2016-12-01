@@ -21,6 +21,8 @@ package org.apache.asterix.installer.command;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -42,6 +44,7 @@ public class ConfigureCommand extends AbstractCommand {
     @Override
     protected void execCommand() throws Exception {
         configureCluster("local", "local.xml");
+        configureCluster("local", "local_with_replication.xml");
         configureCluster("demo", "demo.xml");
 
         String installerConfPath = InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;
@@ -51,9 +54,8 @@ public class ConfigureCommand extends AbstractCommand {
 
         configuration.setConfigured(true);
         configuration.getBackup().setBackupDir(InstallerDriver.getManagixHome() + File.separator + "backup");
-        configuration.getZookeeper().setHomeDir(
-                InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_INTERNAL_DIR
-                        + File.separator + "zookeeper_home");
+        configuration.getZookeeper().setHomeDir(InstallerDriver.getManagixHome() + File.separator
+                + InstallerDriver.MANAGIX_INTERNAL_DIR + File.separator + "zookeeper_home");
         configuration.getZookeeper().getServers().setJavaHome(System.getProperty("java.home"));
 
         Marshaller marshaller = ctx.createMarshaller();
@@ -61,11 +63,14 @@ public class ConfigureCommand extends AbstractCommand {
         marshaller.marshal(configuration, new FileOutputStream(installerConfPath));
     }
 
-    private void configureCluster(String dir, String file) throws JAXBException, PropertyException,
-            FileNotFoundException {
+    private void configureCluster(String dir, String file)
+            throws JAXBException, PropertyException, FileNotFoundException {
         String clusterDir = InstallerDriver.getManagixHome() + File.separator + "clusters" + File.separator + dir;
         String localClusterPath = clusterDir + File.separator + file;
 
+        if (!Files.exists(Paths.get(localClusterPath))) {
+            return;
+        }
         Cluster cluster = EventUtil.getCluster(localClusterPath);
         String workingDir = clusterDir + File.separator + "working_dir";
         cluster.setWorkingDir(new WorkingDir(workingDir, true));

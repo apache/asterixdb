@@ -29,4 +29,8 @@
 
 use dataverse TinySocial;
 
-for $x in dataset Metadata.Dataset where $x.DatasetName ='FacebookUsers' return $x.DatasetName;
+count(
+for $x in dataset Metadata.Dataset
+where $x.DatasetName ='FacebookUsers'
+return $x.DatasetName
+);

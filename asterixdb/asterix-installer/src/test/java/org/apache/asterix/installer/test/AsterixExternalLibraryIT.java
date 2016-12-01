@@ -55,7 +55,7 @@ public class AsterixExternalLibraryIT {
     @BeforeClass
     public static void setUp() throws Exception {
         try {
-            AsterixInstallerIntegrationUtil.init();
+            AsterixInstallerIntegrationUtil.init(AsterixInstallerIntegrationUtil.LOCAL_CLUSTER_PATH);
             File asterixInstallerProjectDir = new File(System.getProperty("user.dir"));
             String asterixExternalLibraryPath = asterixInstallerProjectDir.getAbsolutePath() + File.separator
                     + LIBRARY_PATH;

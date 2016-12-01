@@ -53,7 +53,7 @@ public class AsterixLifecycleIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        AsterixInstallerIntegrationUtil.init();
+        AsterixInstallerIntegrationUtil.init(AsterixInstallerIntegrationUtil.LOCAL_CLUSTER_PATH);
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         testCaseCollection = b.build(new File(PATH_BASE));
         File outdir = new File(PATH_ACTUAL);

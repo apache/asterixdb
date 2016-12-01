@@ -25,7 +25,4 @@
  * Expected Result : Success
  * Date            : January 6 2016
  */
-
-use dataverse TinySocial;
-
-count (for $x in dataset FacebookUsers return $x);
+kill asterix_nc2

@@ -662,4 +662,12 @@ public class ClusterStateManager {
         }
         return stateDescription;
     }
+
+    public synchronized JSONObject getClusterStateSummary() throws JSONException {
+        JSONObject stateDescription = new JSONObject();
+        stateDescription.put("state", state.name());
+        stateDescription.put("metadata_node", currentMetadataNode);
+        stateDescription.put("partitions", clusterPartitions);
+        return stateDescription;
+    }
 }

@@ -30,7 +30,7 @@
 use dataverse TinySocial;
 
 load dataset FacebookUsers using localfs
-(("path"="asterix_nc1:///vagrant/data/fbu.adm"),
+(("path"="asterix_nc1://../../../../../src/test/resources/integrationts/replication/data/fbu.adm"),
 ("format"="adm"));
 
 insert into dataset TinySocial.FacebookUsersInMemory(for $x in dataset TinySocial.FacebookUsers return $x);

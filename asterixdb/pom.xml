@@ -60,7 +60,6 @@
     <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
     <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
     <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
-    <replication.test.excludes>**/ReplicationIT.java</replication.test.excludes>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.2.18-SNAPSHOT</algebricks.version>
@@ -115,7 +114,6 @@
             <exclude>${failsafe.test.excludes}</exclude>
             <exclude>${cluster.test.excludes}</exclude>
             <exclude>${cluster.extest.excludes}</exclude>
-            <exclude>${replication.test.excludes}</exclude>
           </excludes>
         </configuration>
         <executions>
