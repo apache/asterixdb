@@ -45,31 +45,15 @@ public class AsterixTestHelper {
                 if (line == null) {
                     break;
                 }
-                if (line.length() == 0) {
-                    continue;
-                } else {
+                if (line.length() != 0) {
                     list.add(line);
                 }
             }
             result.close();
-        } catch (FileNotFoundException e) {
         } catch (IOException e) {
+            System.err.println("ignoring " + e.getMessage());
         }
         return list;
-    }
-
-    public static void readFileToString(File file, StringBuilder buf) throws Exception {
-        BufferedReader result = new BufferedReader(new FileReader(file));
-        while (true) {
-            String s = result.readLine();
-            if (s == null) {
-                break;
-            } else {
-                buf.append(s);
-                buf.append('\n');
-            }
-        }
-        result.close();
     }
 
     public static void deleteRec(File path) {

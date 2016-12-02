@@ -106,7 +106,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutablePoint aPoint2 = new AMutablePoint(0, 0);
     protected AMutableLine aLine = new AMutableLine(null, null);
     protected AMutableDate aDate = new AMutableDate(0);
-    protected final AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
+    protected AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
 
     // Serializers
     @SuppressWarnings("unchecked")
