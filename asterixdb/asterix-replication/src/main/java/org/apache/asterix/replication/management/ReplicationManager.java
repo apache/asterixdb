@@ -97,6 +97,7 @@ public class ReplicationManager implements IReplicationManager {
 
     private static final Logger LOGGER = Logger.getLogger(ReplicationManager.class.getName());
     private static final int INITIAL_REPLICATION_FACTOR = 1;
+    private static final int MAX_JOB_COMMIT_ACK_WAIT = 10000;
     private final String nodeId;
     private ExecutorService replicationListenerThreads;
     private final Map<Integer, Set<String>> jobCommitAcks;
@@ -575,8 +576,16 @@ public class ReplicationManager implements IReplicationManager {
         if (logsRepSockets != null) {
             synchronized (jobCommitAcks) {
                 try {
-                    while (jobCommitAcks.size() != 0) {
-                        jobCommitAcks.wait();
+                    long waitStartTime = System.currentTimeMillis();
+                    while (!jobCommitAcks.isEmpty()) {
+                        jobCommitAcks.wait(1000);
+                        long waitDuration = System.currentTimeMillis() - waitStartTime;
+                        if (waitDuration > MAX_JOB_COMMIT_ACK_WAIT) {
+                            LOGGER.log(Level.SEVERE,
+                                    "Timeout before receving all job ACKs from replicas. Pending jobs ("
+                                            + jobCommitAcks.keySet().toString() + ")");
+                            break;
+                        }
                     }
                 } catch (InterruptedException e) {
                     if (LOGGER.isLoggable(Level.SEVERE)) {
