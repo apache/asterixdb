@@ -19,5 +19,6 @@
 package org.apache.hyracks.api.job;
 
 public enum JobFlag {
-    PROFILE_RUNTIME
+    PROFILE_RUNTIME,
+    STORE_JOB
 }

@@ -84,9 +84,15 @@ class ClientInterfaceIPCI implements IIPCI {
             case START_JOB:
                 HyracksClientInterfaceFunctions.StartJobFunction sjf =
                         (HyracksClientInterfaceFunctions.StartJobFunction) fn;
-                JobId jobId = jobIdFactory.create();
-                ccs.getWorkQueue().schedule(new JobStartWork(ccs, sjf.getDeploymentId(),
-                        sjf.getACGGFBytes(), sjf.getJobFlags(), jobId, new IPCResponder<JobId>(handle, mid)));
+                JobId jobId = sjf.getJobId();
+                byte[] acggfBytes = null;
+                if (jobId == null) {
+                    jobId = jobIdFactory.create();
+                }
+                //TODO: only send these when the jobId is null
+                acggfBytes = sjf.getACGGFBytes();
+                ccs.getWorkQueue().schedule(new JobStartWork(ccs, sjf.getDeploymentId(), acggfBytes, sjf.getJobFlags(),
+                        jobId, new IPCResponder<JobId>(handle, mid)));
                 break;
             case GET_DATASET_DIRECTORY_SERIVICE_INFO:
                 ccs.getWorkQueue().schedule(new GetDatasetDirectoryServiceInfoWork(ccs,

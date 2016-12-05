@@ -87,6 +87,21 @@ public interface IHyracksClientConnection {
      *
      * @param appName
      *            Name of the application
+     * @param jobSpec
+     *            Job Specification
+     * @param jobFlags
+     *            Flags
+     * @param jobId
+     *            Used to run a pre-distributed job by id (the same value will be returned)
+     * @throws Exception
+     */
+    public JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags, JobId jobId) throws Exception;
+
+    /**
+     * Start the specified Job.
+     *
+     * @param appName
+     *            Name of the application
      * @param acggf
      *            Activity Cluster Graph Generator Factory
      * @param jobFlags

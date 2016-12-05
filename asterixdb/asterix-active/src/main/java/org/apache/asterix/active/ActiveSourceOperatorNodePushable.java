@@ -23,9 +23,10 @@ import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
-public abstract class ActiveSourceOperatorNodePushable extends AbstractOperatorNodePushable implements IActiveRuntime {
+public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable
+        implements IActiveRuntime {
 
     protected final IHyracksTaskContext ctx;
     protected final ActiveManager activeManager;
@@ -108,10 +109,6 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractOperatorN
         }
     }
 
-    @Override
-    public final int getInputArity() {
-        return 0;
-    }
 
     @Override
     public final IFrameWriter getInputFrameWriter(int index) {
