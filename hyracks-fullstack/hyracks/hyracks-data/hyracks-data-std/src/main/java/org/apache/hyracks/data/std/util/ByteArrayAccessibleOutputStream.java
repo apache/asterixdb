@@ -103,4 +103,11 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
         }
         buf = Arrays.copyOf(buf, newCapacity);
     }
+
+    /**
+     * Return the current length of this stream (not capacity).
+     */
+    public int getLength() {
+        return count;
+    }
 }

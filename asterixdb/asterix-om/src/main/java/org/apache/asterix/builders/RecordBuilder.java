@@ -20,7 +20,6 @@
 package org.apache.asterix.builders;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -59,7 +58,7 @@ public class RecordBuilder implements IARecordBuilder {
     private final IBinaryHashFunction utf8HashFunction;
     private final IBinaryComparator utf8Comparator;
 
-    private final ByteArrayOutputStream closedPartOutputStream;
+    private final ByteArrayAccessibleOutputStream closedPartOutputStream;
     private int[] closedPartOffsets;
     private int numberOfClosedFields;
     private byte[] nullBitMap;
@@ -73,7 +72,7 @@ public class RecordBuilder implements IARecordBuilder {
     private RuntimeRecordTypeInfo recTypeInfo;
 
     public RecordBuilder() {
-        this.closedPartOutputStream = new ByteArrayOutputStream();
+        this.closedPartOutputStream = new ByteArrayAccessibleOutputStream();
         this.numberOfClosedFields = 0;
 
         this.openPartOutputStream = new ByteArrayAccessibleOutputStream();
@@ -287,14 +286,14 @@ public class RecordBuilder implements IARecordBuilder {
                 for (int i = 0; i < numberOfSchemaFields; i++) {
                     out.writeInt(closedPartOffsets[i] + headerSize + (numberOfSchemaFields * 4));
                 }
-                out.write(closedPartOutputStream.toByteArray());
+                out.write(closedPartOutputStream.getByteArray(), 0, closedPartOutputStream.getLength());
             }
 
             // write the open part
             if (numberOfOpenFields > 0) {
                 out.writeInt(numberOfOpenFields);
                 out.write(openPartOffsetArray, 0, openPartOffsetArraySize);
-                out.write(openPartOutputStream.toByteArray());
+                out.write(openPartOutputStream.getByteArray(), 0, openPartOutputStream.getLength());
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);
