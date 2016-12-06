@@ -128,7 +128,7 @@ public class ResultPrinter {
         }
     }
 
-    private void displayRecord(String result) {
+    private void printRecord(String result) {
         String record = result;
         if (indentJSON) {
             // TODO(tillw): this is inefficient - do this during record generation
@@ -152,7 +152,7 @@ public class ResultPrinter {
         printPrefix();
         // TODO(tillw) evil hack
         quoteRecord = true;
-        displayRecord(record);
+        printRecord(record);
         printPostfix();
     }
 
@@ -179,7 +179,7 @@ public class ResultPrinter {
                     conf.out().print(", ");
                 }
                 notFirst = true;
-                displayRecord(result);
+                printRecord(result);
             }
             frameBuffer.clear();
         }

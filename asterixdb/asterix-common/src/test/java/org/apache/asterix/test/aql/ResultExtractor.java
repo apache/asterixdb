@@ -39,7 +39,8 @@ public class ResultExtractor {
     private static final Logger LOGGER = Logger.getLogger(ResultExtractor.class.getName());
 
     public static InputStream extract(InputStream resultStream) throws Exception {
-        String result = IOUtils.toString(resultStream, Charset.forName("UTF-8"));
+        final Charset utf8 = Charset.forName("UTF-8");
+        String result = IOUtils.toString(resultStream, utf8);
 
         LOGGER.fine("+++++++\n" + result + "\n+++++++\n");
 
@@ -78,7 +79,17 @@ public class ResultExtractor {
         if (! "success".equals(status)) {
             throw new Exception("Unexpected status: '" + status + "'");
         }
-        return IOUtils.toInputStream(results);
+        return IOUtils.toInputStream(results, utf8);
+    }
+
+    public static String extractHandle(InputStream resultStream) throws Exception {
+        final Charset utf8 = Charset.forName("UTF-8");
+        String result = IOUtils.toString(resultStream, utf8);
+        JSONObject parsed = new JSONObject(result);
+        JSONArray handle = parsed.getJSONArray("handle");
+        JSONObject res = new JSONObject();
+        res.put("handle", handle);
+        return res.toString();
     }
 
     private static String getFieldName(JSONTokener tokener) throws JSONException {

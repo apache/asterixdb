@@ -123,6 +123,8 @@ public class SessionConfig {
 
     private final ResultDecorator preResultDecorator;
     private final ResultDecorator postResultDecorator;
+    private final ResultDecorator preHandleDecorator;
+    private final ResultDecorator postHandleDecorator;
 
     // Flags.
     private final Map<String, Boolean> flags;
@@ -141,17 +143,19 @@ public class SessionConfig {
      *            Output format for execution output.
      */
     public SessionConfig(PrintWriter out, OutputFormat fmt) {
-        this(out, fmt, null, null, true, true, true);
+        this(out, fmt, null, null, null, null, true, true, true);
     }
 
     public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
-            ResultDecorator postResultDecorator) {
-        this(out, fmt, preResultDecorator, postResultDecorator, true, true, true);
+            ResultDecorator postResultDecorator, ResultDecorator preHandleDecorator,
+            ResultDecorator postHandleDecorator) {
+        this(out, fmt, preResultDecorator, postResultDecorator, preHandleDecorator, postHandleDecorator, true, true,
+                true);
     }
 
     public SessionConfig(PrintWriter out, OutputFormat fmt, boolean optimize, boolean executeQuery,
             boolean generateJobSpec) {
-        this(out, fmt, null, null, optimize, executeQuery, generateJobSpec);
+        this(out, fmt, null, null, null, null, optimize, executeQuery, generateJobSpec);
     }
 
     /**
@@ -172,11 +176,14 @@ public class SessionConfig {
      *            false, job cannot be executed).
      */
     public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
-            ResultDecorator postResultDecorator, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
+            ResultDecorator postResultDecorator, ResultDecorator preHandleDecorator,
+            ResultDecorator postHandleDecorator, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
         this.out = out;
         this.fmt = fmt;
         this.preResultDecorator = preResultDecorator;
         this.postResultDecorator = postResultDecorator;
+        this.preHandleDecorator = preHandleDecorator;
+        this.postHandleDecorator = postHandleDecorator;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
@@ -199,12 +206,19 @@ public class SessionConfig {
 
     public AlgebricksAppendable resultPrefix(AlgebricksAppendable app) throws AlgebricksException {
         return this.preResultDecorator != null ? this.preResultDecorator.append(app) : app;
-    };
+    }
 
     public AlgebricksAppendable resultPostfix(AlgebricksAppendable app) throws AlgebricksException {
         return this.postResultDecorator != null ? this.postResultDecorator.append(app) : app;
-    };
+    }
 
+    public AlgebricksAppendable handlePrefix(AlgebricksAppendable app) throws AlgebricksException {
+        return this.preHandleDecorator != null ? this.preHandleDecorator.append(app) : app;
+    }
+
+    public AlgebricksAppendable handlePostfix(AlgebricksAppendable app) throws AlgebricksException {
+        return this.postHandleDecorator != null ? this.postHandleDecorator.append(app) : app;
+    }
     /**
      * Retrieve the value of the "execute query" flag.
      */

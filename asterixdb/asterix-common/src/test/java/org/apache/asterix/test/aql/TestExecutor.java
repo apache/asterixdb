@@ -430,7 +430,7 @@ public class TestExecutor {
 
     public InputStream executeQueryService(String str, OutputFormat fmt, String url,
             List<CompilationUnit.Parameter> params, boolean jsonEncoded) throws Exception {
-        setFormatParam(params, fmt);
+        setParam(params, "format", fmt.mimeType());
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, url, "statement", params)
                 : constructPostMethodUrl(str, url, "statement", params);
         // Set accepted output response type
@@ -439,16 +439,24 @@ public class TestExecutor {
         return response.getEntity().getContent();
     }
 
-    protected void setFormatParam(List<CompilationUnit.Parameter> params, OutputFormat fmt) {
+    public InputStream executeQueryService(String statement, OutputFormat fmt, String url,
+            List<CompilationUnit.Parameter> params, boolean jsonEncoded, String deferred) throws Exception {
+        setParam(params, "mode", deferred);
+        InputStream resultStream = executeQueryService(statement, fmt, url, params, jsonEncoded);
+        String handle = ResultExtractor.extractHandle(resultStream);
+        return getHandleResult(handle, fmt);
+    }
+
+    protected void setParam(List<CompilationUnit.Parameter> params, String name, String value) {
         for (CompilationUnit.Parameter param : params) {
-            if ("format".equals(param.getName())) {
-                param.setValue(fmt.mimeType());
+            if (name.equals(param.getName())) {
+                param.setValue(value);
                 return;
             }
         }
         CompilationUnit.Parameter formatParam = new CompilationUnit.Parameter();
-        formatParam.setName("format");
-        formatParam.setValue(fmt.mimeType());
+        formatParam.setName(name);
+        formatParam.setValue(value);
         params.add(formatParam);
     }
 
@@ -781,14 +789,16 @@ public class TestExecutor {
                         resultStream = executeAnyAQLAsync(statement, true, fmt, getEndpoint(Servlets.AQL));
                     }
                 } else {
-                    if (ctx.getType().equalsIgnoreCase("query")) {
-                        resultStream = executeQueryService(statement, fmt, getEndpoint(Servlets.QUERY_SERVICE),
-                                cUnit.getParameter(), true);
+                    final String reqType = ctx.getType();
+                    final String url = getEndpoint(Servlets.QUERY_SERVICE);
+                    final List<CompilationUnit.Parameter> params = cUnit.getParameter();
+                    if (reqType.equalsIgnoreCase("query")) {
+                        resultStream = executeQueryService(statement, fmt, url, params, true);
                         resultStream = ResultExtractor.extract(resultStream);
-                    } else if (ctx.getType().equalsIgnoreCase("async")) {
-                        resultStream = executeAnyAQLAsync(statement, false, fmt, getEndpoint(Servlets.SQLPP));
-                    } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
-                        resultStream = executeAnyAQLAsync(statement, true, fmt, getEndpoint(Servlets.SQLPP));
+                    } else if (reqType.equalsIgnoreCase("async")) {
+                        resultStream = executeQueryService(statement, fmt, url, params, true, "async");
+                    } else if (reqType.equalsIgnoreCase("asyncdefer")) {
+                        resultStream = executeQueryService(statement, fmt, url, params, true, "deferred");
                     }
                 }
                 if (queryCount.intValue() >= expectedResultFileCtxs.size()) {

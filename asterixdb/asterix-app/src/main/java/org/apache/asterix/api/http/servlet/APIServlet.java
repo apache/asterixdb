@@ -129,7 +129,7 @@ public class APIServlet extends HttpServlet {
                     statementExectorFactory.create(aqlStatements, sessionConfig, compilationProvider);
             double duration = 0;
             long startTime = System.currentTimeMillis();
-            translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.SYNC);
+            translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.IMMEDIATE);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println(HTML_STATEMENT_SEPARATOR);

@@ -29,7 +29,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.json.JSONException;
 
 /**
  * An interface that takes care of executing a list of statements that are submitted through an Asterix API
@@ -39,19 +38,19 @@ public interface IStatementExecutor {
     /**
      * Specifies result delivery of executed statements
      */
-    public enum ResultDelivery {
+    enum ResultDelivery {
         /**
-         * Wait for results to be read
+         * Results are returned with the first response
          */
-        SYNC,
+        IMMEDIATE,
         /**
-         * Flush out result handle beofre waiting for the result
+         * Results are produced completely, but only a result handle is returned
          */
-        ASYNC,
+        DEFERRED,
         /**
-         * Return result handle and don't wait for the result
+         * A result handle is returned before the resutlts are complete
          */
-        ASYNC_DEFERRED
+        ASYNC
     }
 
     public static class Stats {
@@ -116,17 +115,14 @@ public interface IStatementExecutor {
      * @param dmlStatement
      *            The data modification statement when the query results in a modification to a dataset
      * @return the compiled {@code JobSpecification}
-     * @param returnQuery
-     *            In the case of dml, the user may run a query on affected data
      * @throws AsterixException
      * @throws RemoteException
      * @throws AlgebricksException
-     * @throws JSONException
      * @throws ACIDException
      */
     JobSpecification rewriteCompileQuery(MetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement dmlStatement)
-                    throws AsterixException, RemoteException, AlgebricksException, JSONException, ACIDException;
+                    throws AsterixException, RemoteException, AlgebricksException, ACIDException;
 
     /**
      * returns the active dataverse for an entity or a statement

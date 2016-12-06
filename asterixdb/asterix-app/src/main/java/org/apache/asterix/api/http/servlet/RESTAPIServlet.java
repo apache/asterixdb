@@ -49,6 +49,7 @@ import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
@@ -108,7 +109,12 @@ abstract class RESTAPIServlet extends HttpServlet {
             format = OutputFormat.LOSSLESS_JSON;
         }
 
-        SessionConfig sessionConfig = new SessionConfig(response.getWriter(), format);
+        SessionConfig.ResultDecorator handlePrefix = (AlgebricksAppendable app) -> app.append("{ \"").append("handle")
+                .append("\": ");
+        SessionConfig.ResultDecorator handlePostfix = (AlgebricksAppendable app) -> app.append(" }");
+
+        SessionConfig sessionConfig = new SessionConfig(response.getWriter(), format, null, null, handlePrefix,
+                handlePostfix);
 
         // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
         // "true" for JSON and "false" for ADM. (Not applicable for CSV.)
@@ -228,13 +234,13 @@ abstract class RESTAPIServlet extends HttpServlet {
     protected QueryTranslator.ResultDelivery whichResultDelivery(HttpServletRequest request) {
         String mode = request.getParameter("mode");
         if (mode != null) {
-            if (mode.equals("asynchronous")) {
+            if ("asynchronous".equals(mode) || "async".equals(mode)) {
                 return QueryTranslator.ResultDelivery.ASYNC;
-            } else if (mode.equals("asynchronous-deferred")) {
-                return QueryTranslator.ResultDelivery.ASYNC_DEFERRED;
+            } else if ("asynchronous-deferred".equals(mode) || "deferred".equals(mode)) {
+                return QueryTranslator.ResultDelivery.DEFERRED;
             }
         }
-        return QueryTranslator.ResultDelivery.SYNC;
+        return QueryTranslator.ResultDelivery.IMMEDIATE;
     }
 
     protected abstract String getQueryParameter(HttpServletRequest request);

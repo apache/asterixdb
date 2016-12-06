@@ -93,7 +93,7 @@ public class FeedWorkCollection {
                     statements.add(subscribeStmt);
                     IStatementExecutor translator = qtFactory.create(statements, pc, compilationProvider);
                     translator.compileAndExecute(AsterixAppContextInfo.INSTANCE.getHcc(), null,
-                            QueryTranslator.ResultDelivery.SYNC);
+                            QueryTranslator.ResultDelivery.IMMEDIATE);
                     if (LOGGER.isEnabledFor(Level.INFO)) {
                         LOGGER.info("Submitted connection requests for execution: " + request);
                     }

@@ -34,11 +34,11 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
-import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
 import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
 import org.apache.asterix.dataflow.data.common.ConflictingTypeResolver;
+import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
@@ -151,9 +151,9 @@ public class APIFramework {
     }
 
     public JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
-            MetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
+            MetadataProvider metadataProvider, Query rwQ, int varCounter, String outputDatasetName,
             SessionConfig conf, ICompiledDmlStatement statement)
-            throws AlgebricksException, JSONException, RemoteException, ACIDException {
+            throws AlgebricksException, RemoteException, ACIDException {
 
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
             conf.out().println();
@@ -166,9 +166,9 @@ public class APIFramework {
         }
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
-        queryMetadataProvider.setJobId(asterixJobId);
+        metadataProvider.setJobId(asterixJobId);
         ILangExpressionToPlanTranslator t =
-                translatorFactory.createExpressionToPlanTranslator(queryMetadataProvider, varCounter);
+                translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter);
 
         ILogicalPlan plan;
         // statement = null when it's a query
@@ -211,7 +211,7 @@ public class APIFramework {
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
         builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites());
         builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites());
-        IDataFormat format = queryMetadataProvider.getFormat();
+        IDataFormat format = metadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
         builder.setIMergeAggregationExpressionFactory(new AqlMergeAggregationExpressionFactory());
@@ -219,9 +219,9 @@ public class APIFramework {
         builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
         builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
-        builder.setClusterLocations(queryMetadataProvider.getClusterLocations());
+        builder.setClusterLocations(metadataProvider.getClusterLocations());
 
-        ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
+        ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
         if (conf.isOptimize()) {
             compiler.optimize();
             //plot optimized logical plan
@@ -247,7 +247,7 @@ public class APIFramework {
             try {
                 LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-                ResultUtil.displayResults(pvisitor.get().toString(), conf, new Stats(), null);
+                ResultUtil.printResults(pvisitor.get().toString(), conf, new Stats(), null);
                 return null;
             } catch (IOException e) {
                 throw new AlgebricksException(e);
@@ -291,13 +291,17 @@ public class APIFramework {
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
         JobEventListenerFactory jobEventListenerFactory =
-                new JobEventListenerFactory(asterixJobId, queryMetadataProvider.isWriteTransaction());
+                new JobEventListenerFactory(asterixJobId, metadataProvider.isWriteTransaction());
         JobSpecification spec = compiler.createJob(AsterixAppContextInfo.INSTANCE, jobEventListenerFactory);
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             printPlanPrefix(conf, "Hyracks job");
             if (rwQ != null) {
-                conf.out().println(spec.toJSON().toString(1));
+                try {
+                    conf.out().println(spec.toJSON().toString(1));
+                } catch (JSONException e) {
+                    throw new AlgebricksException(e);
+                }
                 conf.out().println(spec.getUserConstraints());
             }
             printPlanPostfix(conf);
