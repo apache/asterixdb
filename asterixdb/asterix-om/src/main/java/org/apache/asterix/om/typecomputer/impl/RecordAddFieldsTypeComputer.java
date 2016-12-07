@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.om.exceptions.InvalidExpressionException;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -56,11 +58,12 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
-        IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
+        String funcName = funcExpr.getFunctionIdentifier().getName();
 
+        IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
         ARecordType inputRecordType = TypeComputeUtils.extractRecordType(type0);
         if (inputRecordType == null) {
-            throw new AlgebricksException("Input record cannot be null");
+            throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.RECORD);
         }
 
         ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
@@ -106,7 +109,8 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
                         if (fn[j].equals(FIELD_NAME_NAME)) {
                             ILogicalExpression fieldNameExpr = recConsExpr.getArguments().get(j).getValue();
                             if (ConstantExpressionUtil.getStringConstant(fieldNameExpr) == null) {
-                                throw new AlgebricksException(fieldNameExpr + " is not supported.");
+                                throw new InvalidExpressionException(funcName, 1, fieldNameExpr,
+                                        LogicalExpressionTag.CONSTANT);
                             }
                             // Get the actual "field-name" string
                             fieldName = ConstantExpressionUtil.getStringArgument(recConsExpr, j + 1);

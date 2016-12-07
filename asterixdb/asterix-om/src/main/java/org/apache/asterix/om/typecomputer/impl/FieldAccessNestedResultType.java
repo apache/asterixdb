@@ -25,6 +25,8 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
+import org.apache.asterix.om.exceptions.UnsupportedItemTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -44,30 +46,30 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
-        if (argIndex == 0 && type.getTypeTag() != ATypeTag.RECORD) {
-            throw new AlgebricksException("The first argument should be a RECORD, but it is " + type + ".");
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag actualTypeTag = type.getTypeTag();
+        if (argIndex == 0 && actualTypeTag != ATypeTag.RECORD) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.RECORD);
         }
         if (argIndex == 1) {
-            switch (type.getTypeTag()) {
+            switch (actualTypeTag) {
                 case STRING:
                     break;
                 case ORDEREDLIST:
-                    checkOrderedList(type);
+                    checkOrderedList(funcName, type);
                     break;
                 default:
-                    throw new AlgebricksException(
-                            "The second argument should be STRING or ORDEREDLIST, but it is found " + type + ".");
+                    throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING,
+                            ATypeTag.ORDEREDLIST);
             }
         }
     }
 
-    private void checkOrderedList(IAType type) throws AlgebricksException {
+    private void checkOrderedList(String funcName, IAType type) throws AlgebricksException {
         AOrderedListType listType = (AOrderedListType) type;
         ATypeTag itemTypeTag = listType.getItemType().getTypeTag();
         if (itemTypeTag != ATypeTag.STRING && itemTypeTag != ATypeTag.ANY) {
-            throw new AlgebricksException(
-                    "The second argument should be a valid path, but it is found " + type + ".");
+            throw new UnsupportedItemTypeException(funcName, itemTypeTag);
         }
     }
 

@@ -22,6 +22,7 @@ import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -36,20 +37,24 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(index, type),
+        AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expression;
+        String funcName = functionCallExpression.getFunctionIdentifier().getName();
+        return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(funcName, index, type),
                 this::getResultType, true);
     }
 
     /**
      * Checks whether an input type violates the requirement.
      *
+     * @param funcName
+     *            the function name.
      * @param argIndex,
      *            the index of the argument to consider.
      * @param type,
      *            the type of the input argument.
      * @throws AlgebricksException
      */
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
 
     }
 

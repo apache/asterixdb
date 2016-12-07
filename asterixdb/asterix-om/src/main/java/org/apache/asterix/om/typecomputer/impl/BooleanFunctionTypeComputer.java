@@ -24,6 +24,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
@@ -37,8 +38,10 @@ public class BooleanFunctionTypeComputer extends AbstractResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
+        AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expression;
+        String funcName = functionCallExpression.getFunctionIdentifier().getName();
         // Boolean type computer doesn't follow the null/missing-in/out semantics.
-        return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(index, type),
+        return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(funcName, index, type),
                 this::getResultType, false);
     }
 

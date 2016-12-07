@@ -38,6 +38,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.junit.Assert;
 import org.junit.Test;
@@ -83,6 +84,9 @@ public class TypeComputerTest {
 
         // Mocks function expression.
         AbstractFunctionCallExpression mockExpr = mock(AbstractFunctionCallExpression.class);
+        FunctionIdentifier fid = mock(FunctionIdentifier.class);
+        when(mockExpr.getFunctionIdentifier()).thenReturn(fid);
+        when(fid.getName()).thenReturn("testFunction");
 
         // A function at most has six argument.
         List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -27,10 +28,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 abstract public class AbstractStringTypeComputer extends AbstractResultTypeComputer {
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
-        if (type.getTypeTag() != ATypeTag.STRING) {
-            throw new AlgebricksException("The input type for input argument " + argIndex + "(" + type.getDisplayName()
-                    + ")" + " is not expected.");
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag actualTypeTag = type.getTypeTag();
+        if (actualTypeTag != ATypeTag.STRING) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING);
         }
     }
 

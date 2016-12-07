@@ -47,10 +47,17 @@ public class ErrorCode {
     public static final int ERROR_NEGATIVE_VALUE = 10;
     public static final int ERROR_OUT_OF_BOUND = 11;
     public static final int ERROR_COERCION = 12;
-    public static final int ERROR_DUPLICATE_FIELD = 13;
+    public static final int ERROR_DUPLICATE_FIELD_NAME = 13;
 
     // Compilation errors
     public static final int ERROR_PARSE_ERROR = 1001;
+    public static final int ERROR_COMPILATION_TYPE_MISMATCH = 1002;
+    public static final int ERROR_COMPILATION_TYPE_INCOMPATIBLE = 1003;
+    public static final int ERROR_COMPILATION_TYPE_UNSUPPORTED = 1004;
+    public static final int ERROR_COMPILATION_TYPE_ITEM = 1005;
+    public static final int ERROR_COMPILATION_INVALID_EXPRESSION = 1006;
+    public static final int ERROR_COMPILATION_INVALID_PARAMETER_NUMBER = 1007;
+    public static final int ERROR_COMPILATION_DUPLICATE_FIELD_NAME = 1008;
 
     private static final String ERROR_MESSAGE_ID_CONFLICT = "Two Extensions share the same Id: %1$s";
     private static final String ERROR_MESSAGE_COMPONENT_CONFLICT = "Extension Conflict between %1$s and %2$s both "
@@ -63,20 +70,24 @@ public class ErrorCode {
             + " cannot process input type %2$s";
     private static final String ERROR_MESSAGE_TYPE_ITEM = "Invalid item type: function %1$s"
             + " cannot process item type %2$s in an input array (or multiset)";
-    public static final String ERROR_MESSAGE_INVALID_FORMAT = "Invalid format for %1$s in %2$s";
-    public static final String ERROR_MESSAGE_OVERFLOW = "Overflow happend in %1$s";
-    public static final String ERROR_MESSAGE_UNDERFLOW = "Underflow happend in %1$s";
-    public static final String ERROR_MESSAGE_INJECTED_FAILURE = "Injected failure in %1$s";
-    public static final String ERROR_MESSAGE_NEGATIVE_VALUE = "Invalid value: function %1$s expects"
+    private static final String ERROR_MESSAGE_INVALID_FORMAT = "Invalid format for %1$s in %2$s";
+    private static final String ERROR_MESSAGE_OVERFLOW = "Overflow happend in %1$s";
+    private static final String ERROR_MESSAGE_UNDERFLOW = "Underflow happend in %1$s";
+    private static final String ERROR_MESSAGE_INJECTED_FAILURE = "Injected failure in %1$s";
+    private static final String ERROR_MESSAGE_NEGATIVE_VALUE = "Invalid value: function %1$s expects"
             + " its %2$s input parameter to be a non-negative value, but gets %3$s";
-    public static final String ERROR_MESSAGE_OUT_OF_BOUND = "Index out of bound in %1$s: %2$s";
-    public static final String ERROR_MESSAGE_COERCION = "Invalid implicit scalar to collection coercion in %1$s";
-    public static final String ERROR_MESSAGE_DUPLICATE_FIELD = "Get duplicate fields in %1$s";
+    private static final String ERROR_MESSAGE_OUT_OF_BOUND = "Index out of bound in %1$s: %2$s";
+    private static final String ERROR_MESSAGE_COERCION = "Invalid implicit scalar to collection coercion in %1$s";
+    private static final String ERROR_MESSAGE_DUPLICATE_FIELD = "Duplicate field name \"%1$s\"";
+    private static final String ERROR_MESSAGE_INVALID_EXPRESSION = "Invalid expression: function %1$s expects"
+            + " its %2$s input parameter to be a %3$s expression, but the actual expression is %4$s";
+    private static final String ERROR_MESSAGE_INVALID_PARAMETER_NUMBER = "Invalid parameter number: function %1$s "
+            + "cannot take %2$s parameters";
 
     private static Map<Integer, String> errorMessageMap = new HashMap<>();
 
     static {
-        // compilation errors
+        // runtime errors
         errorMessageMap.put(ERROR_TYPE_MISMATCH, ERROR_MESSAGE_TYPE_MISMATCH);
         errorMessageMap.put(ERROR_TYPE_INCOMPATIBLE, ERROR_MESSAGE_TYPE_INCOMPATIBLE);
         errorMessageMap.put(ERROR_TYPE_ITEM, ERROR_MESSAGE_TYPE_ITEM);
@@ -88,7 +99,16 @@ public class ErrorCode {
         errorMessageMap.put(ERROR_NEGATIVE_VALUE, ERROR_MESSAGE_NEGATIVE_VALUE);
         errorMessageMap.put(ERROR_OUT_OF_BOUND, ERROR_MESSAGE_OUT_OF_BOUND);
         errorMessageMap.put(ERROR_COERCION, ERROR_MESSAGE_COERCION);
-        errorMessageMap.put(ERROR_DUPLICATE_FIELD, ERROR_MESSAGE_DUPLICATE_FIELD);
+        errorMessageMap.put(ERROR_DUPLICATE_FIELD_NAME, ERROR_MESSAGE_DUPLICATE_FIELD);
+
+        // compilation errors
+        errorMessageMap.put(ERROR_COMPILATION_TYPE_MISMATCH, ERROR_MESSAGE_TYPE_MISMATCH);
+        errorMessageMap.put(ERROR_COMPILATION_TYPE_INCOMPATIBLE, ERROR_MESSAGE_TYPE_INCOMPATIBLE);
+        errorMessageMap.put(ERROR_COMPILATION_TYPE_ITEM, ERROR_MESSAGE_TYPE_ITEM);
+        errorMessageMap.put(ERROR_COMPILATION_TYPE_UNSUPPORTED, ERROR_MESSAGE_TYPE_UNSUPPORTED);
+        errorMessageMap.put(ERROR_COMPILATION_INVALID_EXPRESSION, ERROR_MESSAGE_INVALID_EXPRESSION);
+        errorMessageMap.put(ERROR_COMPILATION_INVALID_PARAMETER_NUMBER, ERROR_MESSAGE_INVALID_PARAMETER_NUMBER);
+        errorMessageMap.put(ERROR_COMPILATION_DUPLICATE_FIELD_NAME, ERROR_MESSAGE_DUPLICATE_FIELD);
 
         // lifecycle management errors
         errorMessageMap.put(ERROR_EXTENSION_ID_CONFLICT, ERROR_MESSAGE_ID_CONFLICT);

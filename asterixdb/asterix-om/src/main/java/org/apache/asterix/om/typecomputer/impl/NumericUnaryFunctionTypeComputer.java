@@ -23,6 +23,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -30,15 +31,13 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericUnaryFunctionTypeComputer extends AbstractResultTypeComputer {
-
-    private static final String ERR_MSG = "Arithmetic operations are not implemented for ";
     public static final NumericUnaryFunctionTypeComputer INSTANCE = new NumericUnaryFunctionTypeComputer();
 
     private NumericUnaryFunctionTypeComputer() {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case INT8:
@@ -50,7 +49,8 @@ public class NumericUnaryFunctionTypeComputer extends AbstractResultTypeComputer
             case ANY:
                 break;
             default:
-                throw new AlgebricksException(ERR_MSG + type.getDisplayName());
+                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32,
+                        ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 

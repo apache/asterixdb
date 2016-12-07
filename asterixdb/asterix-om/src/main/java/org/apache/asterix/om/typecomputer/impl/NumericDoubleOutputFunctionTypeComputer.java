@@ -19,6 +19,7 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -28,7 +29,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericDoubleOutputFunctionTypeComputer extends AbstractResultTypeComputer {
 
-    private static final String ERR_MSG = "Arithmetic operations are not implemented for ";
     public static final NumericDoubleOutputFunctionTypeComputer INSTANCE =
             new NumericDoubleOutputFunctionTypeComputer();
 
@@ -36,7 +36,7 @@ public class NumericDoubleOutputFunctionTypeComputer extends AbstractResultTypeC
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case INT8:
@@ -47,7 +47,8 @@ public class NumericDoubleOutputFunctionTypeComputer extends AbstractResultTypeC
             case DOUBLE:
                 break;
             default:
-                throw new AlgebricksException(ERR_MSG + type.getDisplayName());
+                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32,
+                        ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 

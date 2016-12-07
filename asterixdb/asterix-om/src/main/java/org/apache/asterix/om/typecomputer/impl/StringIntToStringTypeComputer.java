@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -29,10 +30,10 @@ public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
     public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer();
 
     @Override
-    public void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         if (argIndex == 0 && tag != ATypeTag.STRING) {
-            throw new AlgebricksException("First argument should be string Type.");
+            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.STRING);
         }
         if (argIndex == 1) {
             switch (tag) {
@@ -42,7 +43,8 @@ public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
                 case INT64:
                     break;
                 default:
-                    throw new AlgebricksException("Second argument should be integer Type.");
+                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16,
+                            ATypeTag.INT32, ATypeTag.INT64);
             }
         }
     }

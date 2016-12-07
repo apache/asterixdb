@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -34,11 +34,10 @@ public class RecordPairsTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag typeTag = type.getTypeTag();
         if (typeTag != ATypeTag.RECORD) {
-            throw new AlgebricksException("Function " + AsterixBuiltinFunctions.RECORD_PAIRS
-                    + " expects a record as the input, " + "but get a " + typeTag);
+            throw new TypeMismatchException(funcName, argIndex, typeTag, ATypeTag.RECORD);
         }
     }
 

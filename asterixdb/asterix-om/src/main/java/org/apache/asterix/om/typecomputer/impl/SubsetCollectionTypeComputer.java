@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -41,13 +42,11 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env, IMetadataProvider<?, ?> mp)
             throws AlgebricksException {
         AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) expression;
-        IAType t;
-        try {
-            t = (IAType) env.getType(fun.getArguments().get(0).getValue());
-        } catch (AlgebricksException e) {
-            throw new AlgebricksException(e);
-        }
-        switch (t.getTypeTag()) {
+        String funcName = fun.getFunctionIdentifier().getName();
+
+        IAType t = (IAType) env.getType(fun.getArguments().get(0).getValue());
+        ATypeTag actualTypeTag = t.getTypeTag();
+        switch (actualTypeTag) {
             case UNORDEREDLIST:
             case ORDEREDLIST: {
                 AbstractCollectionType act = (AbstractCollectionType) t;
@@ -56,7 +55,8 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
             case UNION: {
                 AUnionType ut = (AUnionType) t;
                 if (!ut.isUnknownableType()) {
-                    throw new AlgebricksException("Expecting collection type. Found " + t);
+                    throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.UNORDEREDLIST,
+                            ATypeTag.ORDEREDLIST);
                 }
                 IAType t2 = ut.getActualType();
                 ATypeTag tag2 = t2.getTypeTag();
@@ -64,13 +64,14 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
                     AbstractCollectionType act = (AbstractCollectionType) t2;
                     return act.getItemType();
                 }
-                throw new AlgebricksException("Expecting collection type. Found " + t);
+                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.UNORDEREDLIST,
+                        ATypeTag.ORDEREDLIST);
             }
             case ANY:
                 return BuiltinType.ANY;
-            default: {
-                throw new AlgebricksException("Expecting collection type. Found " + t);
-            }
+            default:
+                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.UNORDEREDLIST,
+                        ATypeTag.ORDEREDLIST);
         }
     }
 }

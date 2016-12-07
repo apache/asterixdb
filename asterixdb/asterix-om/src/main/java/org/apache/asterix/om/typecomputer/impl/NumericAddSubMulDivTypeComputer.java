@@ -18,17 +18,16 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer {
-
-    private static final String ERR_MSG = "Arithmetic operations are not implemented for ";
 
     public static final NumericAddSubMulDivTypeComputer INSTANCE = new NumericAddSubMulDivTypeComputer();
 
@@ -37,6 +36,8 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expr;
+        String funcName = functionCallExpression.getFunctionIdentifier().getName();
         IAType t1 = strippedInputTypes[0];
         IAType t2 = strippedInputTypes[1];
         ATypeTag tag1 = t1.getTypeTag();
@@ -58,7 +59,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + t2.getTypeName());
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case FLOAT:
@@ -77,7 +78,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + t2.getTypeName());
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case INT64:
@@ -98,7 +99,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + t2.getTypeName());
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case INT32:
@@ -121,7 +122,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case INT16:
@@ -146,7 +147,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case INT8:
@@ -173,7 +174,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case ANY:
@@ -188,7 +189,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case DATE:
@@ -205,7 +206,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case TIME:
@@ -222,7 +223,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case DATETIME:
@@ -236,7 +237,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ADATETIME;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case DURATION:
@@ -254,7 +255,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case YEARMONTHDURATION:
@@ -275,7 +276,7 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             case DAYTIMEDURATION:
@@ -296,11 +297,11 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         type = BuiltinType.ANY;
                         break;
                     default:
-                        throw new NotImplementedException(ERR_MSG + tag2);
+                        throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
             default:
-                throw new NotImplementedException(ERR_MSG + tag1);
+                throw new IncompatibleTypeException(funcName, tag1, tag2);
         }
         return type;
     }

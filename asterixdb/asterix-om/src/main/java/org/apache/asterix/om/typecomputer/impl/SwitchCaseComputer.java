@@ -21,6 +21,8 @@ package org.apache.asterix.om.typecomputer.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
@@ -32,8 +34,6 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class SwitchCaseComputer implements IResultTypeComputer {
 
-    private static final String ERR_MSG = "switch case should have at least 3 parameters";
-
     public static final IResultTypeComputer INSTANCE = new SwitchCaseComputer();
 
     private SwitchCaseComputer() {
@@ -43,8 +43,11 @@ public class SwitchCaseComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if (fce.getArguments().size() < 3) {
-            throw new AlgebricksException(ERR_MSG);
+        String funcName = fce.getFunctionIdentifier().getName();
+
+        int argNumber = fce.getArguments().size();
+        if (argNumber < 3) {
+            throw new CompilationException(ErrorCode.ERROR_COMPILATION_INVALID_PARAMETER_NUMBER, funcName, argNumber);
         }
         int argSize = fce.getArguments().size();
         List<IAType> types = new ArrayList<>();

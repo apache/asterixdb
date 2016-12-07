@@ -71,10 +71,14 @@ public class ExceptionTest {
             try {
                 evaluator.evaluate(null, resultPointable);
             } catch (Throwable e) {
-                if (e.getMessage() == null) {
+                String msg = e.getMessage();
+                if (msg == null) {
                     continue;
                 }
-                if (e.getMessage().startsWith("ASX")) {
+                if (msg.startsWith("ASX")) {
+                    // Verifies the error code.
+                    int errorCode = Integer.parseInt(msg.substring(3, 7));
+                    Assert.assertTrue(errorCode >= 0 && errorCode < 1000);
                     continue;
                 } else {
                     // Any root-level data exceptions thrown from runtime functions should have an error code.

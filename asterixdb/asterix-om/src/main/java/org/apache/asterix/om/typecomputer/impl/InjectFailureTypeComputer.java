@@ -18,40 +18,32 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class InjectFailureTypeComputer implements IResultTypeComputer {
+public class InjectFailureTypeComputer extends AbstractResultTypeComputer {
 
-    private static final String errMsg1 = "inject-failure should have at least 2 parameters ";
-    private static final String errMsg2 = "failure condition expression should have the return type Boolean";
+    public static final InjectFailureTypeComputer INSTANCE = new InjectFailureTypeComputer();
 
-    public static IResultTypeComputer INSTANCE = new InjectFailureTypeComputer();
+    protected InjectFailureTypeComputer() {
+    }
 
     @Override
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
-            IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if (fce.getArguments().size() < 2)
-            throw new AlgebricksException(errMsg1);
-
-        IAType t0 = (IAType) env.getType(fce.getArguments().get(0).getValue());
-        IAType t1 = (IAType) env.getType(fce.getArguments().get(0).getValue());
-        ATypeTag tag1 = t1.getTypeTag();
-        if (NonTaggedFormatUtil.isOptional(t1))
-            tag1 = ((AUnionType) t1).getActualType().getTypeTag();
-
-        if (tag1 != ATypeTag.BOOLEAN)
-            throw new AlgebricksException(errMsg2);
-
-        return t0;
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag actualTypeTag = type.getTypeTag();
+        if (actualTypeTag != ATypeTag.BOOLEAN) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.BOOLEAN);
+        }
     }
+
+    @Override
+    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
+        return BuiltinType.ABOOLEAN;
+    }
+
 }

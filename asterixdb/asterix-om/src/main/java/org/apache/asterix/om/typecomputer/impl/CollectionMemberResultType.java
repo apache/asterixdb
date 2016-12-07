@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -27,19 +28,17 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class CollectionMemberResultType extends AbstractResultTypeComputer {
-
     public static final CollectionMemberResultType INSTANCE = new CollectionMemberResultType();
 
     protected CollectionMemberResultType() {
-
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag actualTypeTag = type.getTypeTag();
         if (type.getTypeTag() != ATypeTag.UNORDEREDLIST && type.getTypeTag() != ATypeTag.ORDEREDLIST) {
-            throw new AlgebricksException(
-                    "Unnest or index access expects the input to be a collection, but it was of type "
-                    + type);
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.UNORDEREDLIST,
+                    ATypeTag.ORDEREDLIST);
         }
     }
 

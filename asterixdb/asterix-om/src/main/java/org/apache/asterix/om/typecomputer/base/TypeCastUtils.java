@@ -19,6 +19,7 @@
 
 package org.apache.asterix.om.typecomputer.base;
 
+import org.apache.asterix.om.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -39,9 +40,11 @@ public class TypeCastUtils {
             opaqueParameters = new Object[2];
             opaqueParameters[0] = requiredType;
             opaqueParameters[1] = inputType;
-            if (!ATypeHierarchy.isCompatible(requiredType.getTypeTag(),
-                            TypeComputeUtils.getActualType(inputType).getTypeTag())) {
-                throw new AlgebricksException(inputType + " can't be casted to " + requiredType);
+            ATypeTag requiredTypeTag = requiredType.getTypeTag();
+            ATypeTag actualTypeTag = TypeComputeUtils.getActualType(inputType).getTypeTag();
+            if (!ATypeHierarchy.isCompatible(requiredTypeTag, actualTypeTag)) {
+                String funcName = expr.getFunctionIdentifier().getName();
+                throw new IncompatibleTypeException(funcName, actualTypeTag, requiredTypeTag);
             }
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;

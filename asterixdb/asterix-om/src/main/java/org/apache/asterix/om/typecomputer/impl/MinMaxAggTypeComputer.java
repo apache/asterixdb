@@ -18,16 +18,15 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.UnsupportedTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
-    private static final String ERR_MSG = "Aggregator is not implemented for ";
 
     public static final MinMaxAggTypeComputer INSTANCE = new MinMaxAggTypeComputer();
 
@@ -35,7 +34,7 @@ public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case DOUBLE:
@@ -53,7 +52,7 @@ public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
             case ANY:
                 return;
             default:
-                throw new NotImplementedException(ERR_MSG + tag);
+                throw new UnsupportedTypeException(funcName, tag);
         }
     }
 

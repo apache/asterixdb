@@ -160,7 +160,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                                                 openFromParent, nestedLevel);
                                         foundMatch = true;
                                     } else {
-                                        throw new RuntimeDataException(ErrorCode.ERROR_DUPLICATE_FIELD,
+                                        throw new RuntimeDataException(ErrorCode.ERROR_DUPLICATE_FIELD_NAME,
                                                 getIdentifier());
                                     }
                                 }

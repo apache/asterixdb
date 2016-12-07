@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
@@ -33,7 +33,7 @@ public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case INT8:
@@ -44,8 +44,8 @@ public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
             case DOUBLE:
                 break;
             default:
-                throw new NotImplementedException(
-                        "Negative operations are not implemented for " + type.getDisplayName());
+                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32,
+                        ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 

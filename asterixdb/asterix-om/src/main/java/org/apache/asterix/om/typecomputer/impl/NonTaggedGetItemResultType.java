@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -36,16 +37,16 @@ public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0) {
             if (type.getTypeTag() != ATypeTag.UNORDEREDLIST && type.getTypeTag() != ATypeTag.ORDEREDLIST) {
-                throw new AlgebricksException("The input type for input argument " + argIndex + "("
-                        + type.getDisplayName() + ")" + " is not expected.");
+                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING,
+                        ATypeTag.ORDEREDLIST);
             }
         } else {
             if (!ATypeHierarchy.isCompatible(type.getTypeTag(), ATypeTag.INT32)) {
-                throw new AlgebricksException("The input type for input argument " + argIndex + "("
-                        + type.getDisplayName() + ")" + " is not expected.");
+                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INT32);
             }
         }
     }

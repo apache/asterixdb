@@ -23,11 +23,11 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
@@ -39,7 +39,7 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         if (argIndex == 0) {
             switch (tag) {
@@ -51,8 +51,8 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
                 case DOUBLE:
                     break;
                 default:
-                    throw new NotImplementedException(
-                            "Arithmetic operations are not implemented for " + type.getDisplayName());
+                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16,
+                            ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
             }
         }
         if (argIndex == 1) {
@@ -63,7 +63,8 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
                 case INT64:
                     break;
                 default:
-                    throw new AlgebricksException("Argument $precision cannot be type " + type.getDisplayName());
+                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16,
+                            ATypeTag.INT32, ATypeTag.INT64);
             }
         }
     }

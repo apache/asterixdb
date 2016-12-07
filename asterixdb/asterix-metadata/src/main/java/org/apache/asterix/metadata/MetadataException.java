@@ -24,10 +24,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 public class MetadataException extends AsterixException {
     private static final long serialVersionUID = 1L;
 
-    public MetadataException() {
-        super();
-    }
-
     public MetadataException(String message) {
         super(message);
     }

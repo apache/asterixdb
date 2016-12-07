@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -36,12 +37,13 @@ public class FieldAccessByIndexResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
-        if (argIndex == 0 && type.getTypeTag() != ATypeTag.RECORD) {
-            throw new AlgebricksException("The first argument should be a RECORD, but it is " + type + ".");
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+        ATypeTag actualTypeTag = type.getTypeTag();
+        if (argIndex == 0 && actualTypeTag != ATypeTag.RECORD) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.RECORD);
         }
-        if (argIndex == 1 && type.getTypeTag() != ATypeTag.INT32) {
-            throw new AlgebricksException("The second argument should be an INT32, but it is found " + type + ".");
+        if (argIndex == 1 && actualTypeTag != ATypeTag.INT32) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INT32);
         }
     }
 

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -33,14 +34,10 @@ public class UnaryStringInt64TypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
-        if (argIndex == 0) {
-            if (tag != ATypeTag.STRING) {
-                throw new AlgebricksException("Second argument should be string Type.");
-            }
-        } else {
-            throw new AlgebricksException("Wrong Argument Number.");
+        if (tag != ATypeTag.STRING) {
+            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.STRING);
         }
     }
 

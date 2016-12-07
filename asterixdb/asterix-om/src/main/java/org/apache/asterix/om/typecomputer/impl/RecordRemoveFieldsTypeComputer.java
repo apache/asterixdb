@@ -31,6 +31,9 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.exceptions.InvalidExpressionException;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
+import org.apache.asterix.om.exceptions.UnsupportedTypeException;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -61,11 +64,11 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
     private RecordRemoveFieldsTypeComputer() {
     }
 
-    private void getPathFromConstantExpression(ILogicalExpression expression, Set<String> fieldNameSet,
+    private void getPathFromConstantExpression(String funcName, ILogicalExpression expression, Set<String> fieldNameSet,
             List<List<String>> pathList) throws AlgebricksException {
         ConstantExpression ce = (ConstantExpression) expression;
         if (!(ce.getValue() instanceof AsterixConstantValue)) {
-            throw new AlgebricksException("Expecting a list of strings and found " + ce.getValue() + " instead.");
+            throw new InvalidExpressionException(funcName, 1, ce, LogicalExpressionTag.CONSTANT);
         }
         IAObject item = ((AsterixConstantValue) ce.getValue()).getObject();
         ATypeTag type = item.getType().getTypeTag();
@@ -86,11 +89,12 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 pathList.add(path);
                 break;
             default:
-                throw new AlgebricksException("Unsupport type: " + type);
+                throw new UnsupportedTypeException(funcName, type);
         }
     }
 
-    private List<String> getListFromExpression(ILogicalExpression expression) throws AlgebricksException {
+    private List<String> getListFromExpression(String funcName, ILogicalExpression expression)
+            throws AlgebricksException {
         AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) expression;
         List<Mutable<ILogicalExpression>> args = funcExp.getArguments();
 
@@ -100,31 +104,31 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
             // Input list has only one level of nesting (list of list or list of strings)
             ConstantExpression ce = (ConstantExpression) arg.getValue();
             if (!(ce.getValue() instanceof AsterixConstantValue)) {
-                throw new AlgebricksException("Expecting a list of strings and found " + ce.getValue() + " instead.");
+                throw new InvalidExpressionException(funcName, 1, ce, LogicalExpressionTag.CONSTANT);
             }
             IAObject item = ((AsterixConstantValue) ce.getValue()).getObject();
             ATypeTag type = item.getType().getTypeTag();
             if (type == ATypeTag.STRING) {
                 list.add(((AString) item).getStringValue());
             } else {
-                throw new AlgebricksException(type + " is currently not supported. Please check your function call.");
+                throw new UnsupportedTypeException(funcName, type);
             }
         }
 
         return list;
     }
 
-    private void getPathFromFunctionExpression(ILogicalExpression expression, Set<String> fieldNameSet,
+    private void getPathFromFunctionExpression(String funcName, ILogicalExpression expression, Set<String> fieldNameSet,
             List<List<String>> pathList) throws AlgebricksException {
-
-        List<String> path = getListFromExpression(expression);
+        List<String> path = getListFromExpression(funcName, expression);
         // Add the path head to remove set
         fieldNameSet.add(path.get(0));
         pathList.add(path);
 
     }
 
-    private void computeTypeFromNonConstantExpression(ILogicalExpression expression, Set<String> fieldNameSet,
+    private void computeTypeFromNonConstantExpression(String funcName, ILogicalExpression expression,
+            Set<String> fieldNameSet,
             List<List<String>> pathList) throws AlgebricksException {
         AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) expression;
         List<Mutable<ILogicalExpression>> args = funcExp.getArguments();
@@ -133,13 +137,14 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
             ILogicalExpression le = arg.getValue();
             switch (le.getExpressionTag()) {
                 case CONSTANT:
-                    getPathFromConstantExpression(le, fieldNameSet, pathList);
+                    getPathFromConstantExpression(funcName, le, fieldNameSet, pathList);
                     break;
                 case FUNCTION_CALL:
-                    getPathFromFunctionExpression(le, fieldNameSet, pathList);
+                    getPathFromFunctionExpression(funcName, le, fieldNameSet, pathList);
                     break;
                 default:
-                    throw new AlgebricksException("Unsupported expression: " + le);
+                    throw new InvalidExpressionException(funcName, 1, le, LogicalExpressionTag.CONSTANT,
+                            LogicalExpressionTag.FUNCTION_CALL);
             }
         }
     }
@@ -147,15 +152,15 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
-        IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
+        String funcName = funcExpr.getFunctionIdentifier().getName();
 
+        IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
         List<List<String>> pathList = new ArrayList<>();
         Set<String> fieldNameSet = new HashSet<>();
         Deque<String> fieldPathStack = new ArrayDeque<>();
 
-        ARecordType inputRecordType = getRecordTypeFromType(type0, expression);
+        ARecordType inputRecordType = getRecordTypeFromType(funcName, type0);
         if (inputRecordType == null) {
             return BuiltinType.ANY;
         }
@@ -164,9 +169,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         IAType inputListType = (IAType) env.getType(arg1);
         AOrderedListType inputOrderedListType = TypeComputeUtils.extractOrderedListType(inputListType);
         if (inputOrderedListType == null) {
-            throw new AlgebricksException(
-                    "The function 'remove-fields' expects an ordered list as the second argument, but got "
-                            + inputListType);
+            throw new TypeMismatchException(funcName, 1, inputListType.getTypeTag(), ATypeTag.ORDEREDLIST);
         }
 
         ATypeTag tt = inputOrderedListType.getItemType().getTypeTag();
@@ -177,7 +180,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
         } else { // tt == ATypeTag.ANY, meaning the list is nested
-            computeTypeFromNonConstantExpression(arg1, fieldNameSet, pathList);
+            computeTypeFromNonConstantExpression(funcName, arg1, fieldNameSet, pathList);
             IAType resultType = buildOutputType(fieldPathStack, inputRecordType, fieldNameSet, pathList);
             return resultType;
         }
@@ -320,7 +323,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 destFieldTypes.toArray(new IAType[n]), isOpen);
     }
 
-    private static ARecordType getRecordTypeFromType(IAType type0, ILogicalExpression expression)
+    private static ARecordType getRecordTypeFromType(String funcName, IAType type0)
             throws AlgebricksException {
         switch (type0.getTypeTag()) {
             case RECORD:
@@ -337,8 +340,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 }
                 // Falls through for other cases.
             default:
-                throw new AlgebricksException(
-                        "Unsupported type " + type0 + " for field access expression: " + expression);
+                throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.RECORD);
         }
     }
 

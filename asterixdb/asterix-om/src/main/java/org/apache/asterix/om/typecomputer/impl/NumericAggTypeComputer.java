@@ -18,25 +18,22 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.exceptions.UnsupportedTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class NumericAggTypeComputer extends AbstractResultTypeComputer {
-
-    private static final String ERR_MSG = "Aggregator is not implemented for ";
-
     public static final NumericAggTypeComputer INSTANCE = new NumericAggTypeComputer();
 
     private NumericAggTypeComputer() {
     }
 
     @Override
-    protected void checkArgType(int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case DOUBLE:
@@ -48,14 +45,14 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
             case ANY:
                 break;
             default:
-                throw new NotImplementedException(ERR_MSG + type);
+                throw new UnsupportedTypeException(funcName, tag);
         }
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
-        IAType type;
+        IAType type = null;
         switch (tag) {
             case DOUBLE:
             case FLOAT:
@@ -67,7 +64,7 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
                 type = strippedInputTypes[0];
                 break;
             default:
-                throw new NotImplementedException(ERR_MSG + strippedInputTypes[0]);
+                break;
         }
         return AUnionType.createNullableType(type, "AggResult");
     }
