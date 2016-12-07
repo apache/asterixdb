@@ -138,6 +138,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
+      <compilation-unit name="change-feed-with-meta-csv">
+        <output-dir compare="Text">change-feed-with-meta-csv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="drop-nonexistent-feed">
         <output-dir compare="Text">drop-nonexistent-feed</output-dir>
       </compilation-unit>

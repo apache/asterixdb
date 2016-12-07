@@ -94,7 +94,7 @@ public class CharArrayRecord implements IRawRecord<char[]> {
     }
 
     public void endRecord() throws IOException {
-        if (value[size - 1] != ExternalDataConstants.LF) {
+        if (size > 0 && value[size - 1] != ExternalDataConstants.LF) {
             appendChar(ExternalDataConstants.LF);
         }
     }

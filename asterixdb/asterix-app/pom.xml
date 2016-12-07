@@ -101,7 +101,7 @@
             </configuration>
           </execution>
           <execution>
-            <id>copy-beer-csv</id>
+            <id>copy-external-data-resources</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -114,6 +114,7 @@
                   <directory>../asterix-external-data/src/test/resources</directory>
                   <includes>
                     <include>beer.csv</include>
+                    <include>change_feed.csv</include>
                   </includes>
                 </resource>
               </resources>
