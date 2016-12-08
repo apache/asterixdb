@@ -173,13 +173,18 @@ public class SerializableHashTable implements ISerializableTable {
     @Override
     public void close() {
         int nFrames = contents.size();
-        for (int i = 0; i < headers.length; i++)
-            headers[i] = null;
+        int hFrames = 0;
+        for (int i = 0; i < headers.length; i++) {
+            if (headers[i] != null) {
+                hFrames++;
+                headers[i] = null;
+            }
+        }
         contents.clear();
         frameCurrentIndex.clear();
         tupleCount = 0;
         currentLargestFrameIndex = 0;
-        ctx.deallocateFrames(nFrames);
+        ctx.deallocateFrames((nFrames + hFrames) * frameCapacity * 4);
     }
 
     private void insertNewEntry(IntSerDeBuffer header, int headerOffset, int entryCapacity, TuplePointer pointer)

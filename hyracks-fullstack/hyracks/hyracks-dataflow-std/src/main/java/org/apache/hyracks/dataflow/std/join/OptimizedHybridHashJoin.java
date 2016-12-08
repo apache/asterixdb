@@ -20,7 +20,6 @@ package org.apache.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.IFrame;
@@ -361,6 +360,7 @@ public class OptimizedHybridHashJoin {
             inMemJoiner.join(buffer, writer);
             return;
         }
+        inMemJoiner.resetAccessorProbe(accessorProbe);
         for (int i = 0; i < tupleCount; ++i) {
             int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
 
@@ -380,7 +380,7 @@ public class OptimizedHybridHashJoin {
                         bufferManager.clearPartition(victim);
                     }
                 } else { //pid is Resident
-                    inMemJoiner.join(accessorProbe, i, writer);
+                    inMemJoiner.join(i, writer);
                 }
                 probePSizeInTups[pid]++;
             }
@@ -405,9 +405,13 @@ public class OptimizedHybridHashJoin {
     }
 
     public void closeProbe(IFrameWriter writer) throws HyracksDataException {
-        //We do NOT join the spilled partitions here, that decision is made at the descriptor level (which join technique to use)
+        //We do NOT join the spilled partitions here, that decision is made at the descriptor level
+        //(which join technique to use)
         inMemJoiner.closeJoin(writer);
+        inMemJoiner.closeTable();
         closeAllSpilledPartitions(SIDE.PROBE);
+        bufferManager.close();
+        inMemJoiner = null;
         bufferManager = null;
     }
 

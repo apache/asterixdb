@@ -117,7 +117,12 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
 
     @Override
     public void close() {
-        buffers.clear();
+        for (Iterator<ByteBuffer> iter = buffers.iterator(); iter.hasNext();) {
+            ByteBuffer next = iter.next();
+            ctx.deallocateFrames(next.capacity());
+            iter.remove();
+        }
         allocated = 0;
+        buffers.clear();
     }
 }

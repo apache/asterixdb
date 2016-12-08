@@ -269,11 +269,8 @@ class ARecordCaster {
                         .deserialize(fieldType.getByteArray()[fieldType.getStartOffset()]);
                 ps.print(typeTag);
 
-                //collect the output message
-                byte[] output = fieldBos.toByteArray();
-
-                //throw the exception
-                throw new IllegalStateException("type mismatch: including an extra field " + new String(output));
+                //collect the output message and throw the exception
+                throw new IllegalStateException("type mismatch: including an extra field " + fieldBos.toString());
             }
         }
 

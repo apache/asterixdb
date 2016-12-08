@@ -90,7 +90,7 @@ public class SqlppFormatPrintUtil {
             expr.accept(visitor, 0);
         }
         output.close();
-        return new String(bos.toByteArray());
+        return bos.toString();
     }
 
 }

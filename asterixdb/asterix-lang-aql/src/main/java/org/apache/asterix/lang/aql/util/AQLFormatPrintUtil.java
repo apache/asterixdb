@@ -50,7 +50,7 @@ public class AQLFormatPrintUtil {
             expr.accept(visitor, 0);
         }
         output.close();
-        return new String(bos.toByteArray());
+        return bos.toString();
     }
 
     public static String toSQLPPString(List<Statement> exprs) throws AsterixException {
@@ -61,6 +61,6 @@ public class AQLFormatPrintUtil {
             expr.accept(visitor, 0);
         }
         output.close();
-        return new String(bos.toByteArray());
+        return bos.toString();
     }
 }

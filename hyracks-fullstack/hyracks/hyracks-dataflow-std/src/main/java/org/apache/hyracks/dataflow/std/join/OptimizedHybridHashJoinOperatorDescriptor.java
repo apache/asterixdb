@@ -667,6 +667,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
                     pReader.close();
                     joiner.closeJoin(writer);
+                    joiner.closeTable();
                 }
 
                 private void applyNestedLoopJoin(RecordDescriptor outerRd, RecordDescriptor innerRd, int memorySize,

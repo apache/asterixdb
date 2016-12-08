@@ -19,7 +19,6 @@
 package org.apache.asterix.replication.functions;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,6 +29,7 @@ import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.LSMIndexFileProperties;
+import org.apache.hyracks.data.std.util.ExtendedByteArrayOutputStream;
 
 public class ReplicationProtocol {
 
@@ -84,7 +84,7 @@ public class ReplicationProtocol {
 
     public static ByteBuffer writeLSMComponentPropertiesRequest(LSMComponentProperties lsmCompProp, ByteBuffer buffer)
             throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
         try (DataOutputStream oos = new DataOutputStream(outputStream)) {
             lsmCompProp.serialize(oos);
             int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
@@ -95,7 +95,7 @@ public class ReplicationProtocol {
             }
             buffer.putInt(ReplicationRequestType.LSM_COMPONENT_PROPERTIES.ordinal());
             buffer.putInt(oos.size());
-            buffer.put(outputStream.toByteArray());
+            buffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             buffer.flip();
             return buffer;
         }
@@ -132,7 +132,7 @@ public class ReplicationProtocol {
 
     public static ByteBuffer writeFileReplicationRequest(ByteBuffer requestBuffer, LSMIndexFileProperties afp,
             ReplicationRequestType requestType) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
         try (DataOutputStream oos = new DataOutputStream(outputStream)) {
             afp.serialize(oos);
             int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
@@ -143,7 +143,7 @@ public class ReplicationProtocol {
             }
             requestBuffer.putInt(requestType.ordinal());
             requestBuffer.putInt(oos.size());
-            requestBuffer.put(outputStream.toByteArray());
+            requestBuffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             requestBuffer.flip();
             return requestBuffer;
         }
@@ -156,13 +156,13 @@ public class ReplicationProtocol {
     }
 
     public static ByteBuffer writeReplicaEventRequest(ReplicaEvent event) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
         try (DataOutputStream oos = new DataOutputStream(outputStream)) {
             event.serialize(oos);
             ByteBuffer buffer = ByteBuffer.allocate(REPLICATION_REQUEST_HEADER_SIZE + oos.size());
             buffer.putInt(ReplicationRequestType.REPLICA_EVENT.ordinal());
             buffer.putInt(oos.size());
-            buffer.put(outputStream.toByteArray());
+            buffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             buffer.flip();
             return buffer;
         }
@@ -177,7 +177,7 @@ public class ReplicationProtocol {
 
     public static ByteBuffer writeGetReplicaFilesRequest(ByteBuffer buffer, ReplicaFilesRequest request)
             throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
         try (DataOutputStream oos = new DataOutputStream(outputStream)) {
             request.serialize(oos);
 
@@ -189,7 +189,7 @@ public class ReplicationProtocol {
             }
             buffer.putInt(ReplicationRequestType.GET_REPLICA_FILES.ordinal());
             buffer.putInt(oos.size());
-            buffer.put(outputStream.toByteArray());
+            buffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             buffer.flip();
             return buffer;
         }
@@ -197,7 +197,7 @@ public class ReplicationProtocol {
 
     public static ByteBuffer writeGetReplicaIndexFlushRequest(ByteBuffer buffer, ReplicaIndexFlushRequest request)
             throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
         try (DataOutputStream oos = new DataOutputStream(outputStream)) {
             request.serialize(oos);
             int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
@@ -208,7 +208,7 @@ public class ReplicationProtocol {
             }
             buffer.putInt(ReplicationRequestType.FLUSH_INDEX.ordinal());
             buffer.putInt(oos.size());
-            buffer.put(outputStream.toByteArray());
+            buffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             buffer.flip();
             return buffer;
         }
