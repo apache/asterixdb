@@ -249,12 +249,25 @@ public class UTF8StringUtil {
         return compareTo(thisBytes, thisStart, thatBytes, thatStart, true, false);
     }
 
+    // Certain type of string does not include lengthByte in the beginning and
+    // the length of the given string is given explicitly as a parameter. (e.g., token in a string)
+    public static int lowerCaseCompareTo(byte[] thisBytes, int thisStart, int thisLength, byte[] thatBytes,
+            int thatStart, int thatLength) {
+        return compareTo(thisBytes, thisStart, thisLength, thatBytes, thatStart, thatLength, true, false);
+    }
+
     public static int hash(byte[] bytes, int start, int coefficient, int r) {
         return hash(bytes, start, false, false, coefficient, r);
     }
 
     public static int hash(byte[] bytes, int start) {
         return hash(bytes, start, false, false, 31, Integer.MAX_VALUE);
+    }
+
+    private static int hash(byte[] bytes, int start, boolean useLowerCase, boolean useRawByte, int coefficient, int r) {
+        int utflen = getUTFLength(bytes, start);
+        int sStart = start + getNumBytesToStoreLength(utflen);
+        return hash(bytes, sStart, utflen, useLowerCase, useRawByte, coefficient, r);
     }
 
     /**
@@ -268,6 +281,12 @@ public class UTF8StringUtil {
 
     public static int lowerCaseHash(byte[] bytes, int start) {
         return hash(bytes, start, true, false, 31, Integer.MAX_VALUE);
+    }
+
+    // Certain type of string does not include lengthByte in the beginning and
+    // the length of the given string is given explicitly as a parameter.
+    public static int lowerCaseHash(byte[] bytes, int start, int length) {
+        return hash(bytes, start, length, true, false, 31, Integer.MAX_VALUE);
     }
 
     public static StringBuilder toString(StringBuilder builder, byte[] bytes, int start) {
@@ -352,23 +371,27 @@ public class UTF8StringUtil {
 
     private static int compareTo(byte[] thisBytes, int thisStart, byte[] thatBytes, int thatStart, boolean useLowerCase,
             boolean useRawByte) {
-        int utflen1 = getUTFLength(thisBytes, thisStart);
-        int utflen2 = getUTFLength(thatBytes, thatStart);
+        int thisLength = getUTFLength(thisBytes, thisStart);;
+        int thatLength = getUTFLength(thatBytes, thatStart);
+        int thisActualStart = thisStart + getNumBytesToStoreLength(thisLength);
+        int thatActualStart = thatStart + getNumBytesToStoreLength(thatLength);
+        return compareTo(thisBytes, thisActualStart, thisLength, thatBytes, thatActualStart, thatLength, useLowerCase,
+                useRawByte);
+    }
 
+    private static int compareTo(byte[] thisBytes, int thisActualStart, int thisLength, byte[] thatBytes,
+            int thatActualStart, int thatLength, boolean useLowerCase, boolean useRawByte) {
         int c1 = 0;
         int c2 = 0;
 
-        int s1Start = thisStart + getNumBytesToStoreLength(utflen1);
-        int s2Start = thatStart + getNumBytesToStoreLength(utflen2);
-
-        while (c1 < utflen1 && c2 < utflen2) {
+        while (c1 < thisLength && c2 < thatLength) {
             char ch1, ch2;
             if (useRawByte) {
-                ch1 = (char) thisBytes[s1Start + c1];
-                ch2 = (char) thatBytes[s2Start + c2];
+                ch1 = (char) thisBytes[thisActualStart + c1];
+                ch2 = (char) thatBytes[thatActualStart + c2];
             } else {
-                ch1 = (charAt(thisBytes, s1Start + c1));
-                ch2 = (charAt(thatBytes, s2Start + c2));
+                ch1 = charAt(thisBytes, thisActualStart + c1);
+                ch2 = charAt(thatBytes, thatActualStart + c2);
 
                 if (useLowerCase) {
                     ch1 = Character.toLowerCase(ch1);
@@ -379,30 +402,29 @@ public class UTF8StringUtil {
             if (ch1 != ch2) {
                 return ch1 - ch2;
             }
-            c1 += charSize(thisBytes, s1Start + c1);
-            c2 += charSize(thatBytes, s2Start + c2);
+            c1 += charSize(thisBytes, thisActualStart + c1);
+            c2 += charSize(thatBytes, thatActualStart + c2);
         }
-        return utflen1 - utflen2;
+        return thisLength - thatLength;
     }
 
-    private static int hash(byte[] bytes, int start, boolean useLowerCase, boolean useRawByte, int coefficient, int r) {
+    private static int hash(byte[] bytes, int start, int length, boolean useLowerCase, boolean useRawByte,
+            int coefficient, int r) {
         int h = 0;
-        int utflen = getUTFLength(bytes, start);
-        int sStart = start + getNumBytesToStoreLength(utflen);
         int c = 0;
 
-        while (c < utflen) {
+        while (c < length) {
             char ch;
             if (useRawByte) {
-                ch = (char) bytes[sStart + c];
+                ch = (char) bytes[start + c];
             } else {
-                ch = charAt(bytes, sStart + c);
+                ch = charAt(bytes, start + c);
                 if (useLowerCase) {
                     ch = Character.toLowerCase(ch);
                 }
             }
             h = (coefficient * h + ch) % r;
-            c += charSize(bytes, sStart + c);
+            c += charSize(bytes, start + c);
         }
         return h;
     }

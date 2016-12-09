@@ -1131,7 +1131,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         switch (index.getIndexType()) {
             case SINGLE_PARTITION_WORD_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX: {
-                return BinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false);
+                return BinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(searchKeyType, false, false);
             }
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {

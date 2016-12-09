@@ -381,6 +381,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="fulltext">
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-01">
+        <output-dir compare="Text">fulltext-01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="union">
     <test-case FilePath="union">
       <compilation-unit name="union">

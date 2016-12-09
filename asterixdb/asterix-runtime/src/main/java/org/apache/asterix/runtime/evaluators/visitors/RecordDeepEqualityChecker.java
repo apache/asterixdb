@@ -30,14 +30,15 @@ import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.util.BinaryEntry;
 
 class RecordDeepEqualityChecker {
     private final Pair<IVisitablePointable, Boolean> nestedVisitorArg = new Pair<IVisitablePointable, Boolean>(null,
             false);
     private final DeepEqualityVisitorHelper deepEqualityVisitorHelper = new DeepEqualityVisitorHelper();
     private DeepEqualityVisitor visitor;
-    private BinaryHashMap.BinaryEntry keyEntry = new BinaryHashMap.BinaryEntry();
-    private BinaryHashMap.BinaryEntry valEntry = new BinaryHashMap.BinaryEntry();
+    private BinaryEntry keyEntry = new BinaryEntry();
+    private BinaryEntry valEntry = new BinaryEntry();
     private BinaryHashMap hashMap;
 
     public RecordDeepEqualityChecker(int tableSize, int tableFrameSize) {
@@ -75,7 +76,7 @@ class RecordDeepEqualityChecker {
         for (int i = 0; i < sizeLeft; i++) {
             IVisitablePointable fieldName = fieldNamesLeft.get(i);
             keyEntry.set(fieldName.getByteArray(), fieldName.getStartOffset(), fieldName.getLength());
-            IntegerPointable.setInteger(valEntry.buf, 0, i);
+            IntegerPointable.setInteger(valEntry.getBuf(), 0, i);
             hashMap.put(keyEntry, valEntry);
         }
 
@@ -91,12 +92,12 @@ class RecordDeepEqualityChecker {
         for (int i = 0; i < fieldNamesRight.size(); i++) {
             IVisitablePointable fieldName = fieldNamesRight.get(i);
             keyEntry.set(fieldName.getByteArray(), fieldName.getStartOffset(), fieldName.getLength());
-            BinaryHashMap.BinaryEntry entry = hashMap.get(keyEntry);
+            BinaryEntry entry = hashMap.get(keyEntry);
             if (entry == null) {
                 return false;
             }
 
-            int fieldIdLeft = AInt32SerializerDeserializer.getInt(entry.buf, entry.off);
+            int fieldIdLeft = AInt32SerializerDeserializer.getInt(entry.getBuf(), entry.getOffset());
             ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(fieldTypesLeft.get(fieldIdLeft));
             if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(fieldTypesRight.get(i))) {
                 return false;

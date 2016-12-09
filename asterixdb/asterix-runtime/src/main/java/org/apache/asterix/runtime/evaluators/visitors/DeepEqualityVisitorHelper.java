@@ -25,6 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.hash.ListItemBinaryHashFunctio
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
+import org.apache.hyracks.data.std.util.BinaryEntry;
 
 public class DeepEqualityVisitorHelper {
     // Default values
@@ -39,11 +40,11 @@ public class DeepEqualityVisitorHelper {
     private IBinaryComparator cmp = listItemBinaryComparatorFactory.createBinaryComparator();
     private BinaryHashMap hashMap = null;
 
-    public BinaryHashMap initializeHashMap(BinaryHashMap.BinaryEntry valEntry) {
+    public BinaryHashMap initializeHashMap(BinaryEntry valEntry) {
         return initializeHashMap(0, 0, valEntry);
     }
 
-    public BinaryHashMap initializeHashMap(int tableSize, int tableFrameSize, BinaryHashMap.BinaryEntry valEntry) {
+    public BinaryHashMap initializeHashMap(int tableSize, int tableFrameSize, BinaryEntry valEntry) {
         if (tableFrameSize != 0 && tableSize != 0) {
             hashMap = new BinaryHashMap(tableSize, tableFrameSize, putHashFunc, getHashFunc, cmp);
         } else {

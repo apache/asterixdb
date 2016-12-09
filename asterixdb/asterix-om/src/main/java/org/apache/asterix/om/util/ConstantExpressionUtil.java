@@ -45,7 +45,16 @@ public class ConstantExpressionUtil {
             return null;
         }
         final IAObject iaObject = ((AsterixConstantValue) acv).getObject();
-        return iaObject.getType().getTypeTag() == typeTag ? iaObject : null;
+        if (typeTag != null) {
+            return iaObject.getType().getTypeTag() == typeTag ? iaObject : null;
+        } else {
+            return iaObject;
+        }
+    }
+
+    public static ATypeTag getConstantIaObjectType(ILogicalExpression expr) {
+        IAObject iaObject = getConstantIaObject(expr, null);
+        return iaObject.getType().getTypeTag();
     }
 
     public static Long getLongConstant(ILogicalExpression expr) {

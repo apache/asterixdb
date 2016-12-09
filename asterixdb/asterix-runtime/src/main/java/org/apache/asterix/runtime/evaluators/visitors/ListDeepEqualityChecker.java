@@ -20,16 +20,17 @@ package org.apache.asterix.runtime.evaluators.visitors;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
-import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap.BinaryEntry;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.util.BinaryEntry;
 
 class ListDeepEqualityChecker {
     private DeepEqualityVisitor visitor;
@@ -100,7 +101,7 @@ class ListDeepEqualityChecker {
             int off = item.getStartOffset();
             int len = item.getLength();
             keyEntry.set(buf, off, len);
-            IntegerPointable.setInteger(valEntry.buf, 0, i);
+            IntegerPointable.setInteger(valEntry.getBuf(), 0, i);
             hashMap.put(keyEntry, valEntry);
         }
 
@@ -125,7 +126,7 @@ class ListDeepEqualityChecker {
                 return false;
             }
 
-            int indexLeft = IntegerPointable.getInteger(entry.buf, entry.off);
+            int indexLeft = IntegerPointable.getInteger(entry.getBuf(), entry.getOffset());
             ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemTagTypesLeft.get(indexLeft));
             if(fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(indexRight))) {
                 return false;

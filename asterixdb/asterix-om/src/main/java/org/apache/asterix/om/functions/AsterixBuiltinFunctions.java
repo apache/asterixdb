@@ -486,6 +486,10 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier EDIT_DISTANCE_CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "edit-distance-contains", 3);
 
+    // full-text
+    public static final FunctionIdentifier FULLTEXT_CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "ftcontains", 3);
+
     // tokenizers:
     public static final FunctionIdentifier WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "word-tokens", 1);
@@ -1026,6 +1030,9 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(SIMILARITY_JACCARD_SORTED_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addPrivateFunction(SIMILARITY_JACCARD_PREFIX, AFloatTypeComputer.INSTANCE, true);
         addPrivateFunction(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
+
+        // Full-text function
+        addFunction(FULLTEXT_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
 
         // Spatial functions
         addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE, true);

@@ -38,9 +38,13 @@ public class BinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryPr
             new DelimitedUTF8StringBinaryTokenizerFactory(true, true,
             new UTF8WordTokenFactory(ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
+    private static final IBinaryTokenizerFactory aqlStringNoTypeTagTokenizer =
+            new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
+                    new UTF8WordTokenFactory(ATypeTag.STRING.serialize(), ATypeTag.INT32.serialize()));
+
     private static final IBinaryTokenizerFactory aqlHashingStringTokenizer =
-            new DelimitedUTF8StringBinaryTokenizerFactory(true, true,
-            new HashedUTF8WordTokenFactory(ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
+            new DelimitedUTF8StringBinaryTokenizerFactory(true, true, new HashedUTF8WordTokenFactory(
+                    ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG));
 
     private static final IBinaryTokenizerFactory orderedListTokenizer = new AOrderedListBinaryTokenizerFactory(
             new AListElementTokenFactory());
@@ -49,10 +53,17 @@ public class BinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryPr
             new AListElementTokenFactory());
 
     @Override
-    public IBinaryTokenizerFactory getWordTokenizerFactory(ATypeTag typeTag, boolean hashedTokens) {
+    public IBinaryTokenizerFactory getWordTokenizerFactory(ATypeTag typeTag, boolean hashedTokens,
+            boolean typeTageAlreadyRemoved) {
         switch (typeTag) {
             case STRING:
-                return hashedTokens ? aqlHashingStringTokenizer : aqlStringTokenizer;
+                if (hashedTokens) {
+                    return aqlHashingStringTokenizer;
+                } else if (!typeTageAlreadyRemoved) {
+                    return aqlStringTokenizer;
+                } else {
+                    return aqlStringNoTypeTagTokenizer;
+                }
             case ORDEREDLIST:
                 return orderedListTokenizer;
             case UNORDEREDLIST:

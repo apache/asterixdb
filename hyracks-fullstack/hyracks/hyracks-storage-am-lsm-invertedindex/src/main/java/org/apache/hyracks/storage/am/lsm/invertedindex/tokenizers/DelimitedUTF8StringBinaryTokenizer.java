@@ -50,7 +50,7 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
         return byteIndex < sentenceEndOffset;
     }
 
-    private static boolean isSeparator(char c) {
+    public static boolean isSeparator(char c) {
         return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER
                 || Character.getType(c) == Character.OTHER_NUMBER);
     }

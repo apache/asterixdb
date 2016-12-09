@@ -22,7 +22,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public interface IBinaryTokenizerFactoryProvider {
-    public IBinaryTokenizerFactory getWordTokenizerFactory(ATypeTag typeTag, boolean hashedTokens);
+    public IBinaryTokenizerFactory getWordTokenizerFactory(ATypeTag typeTag, boolean hashedTokens,
+            boolean typeTagAlreadyRemoved);
 
     public IBinaryTokenizerFactory getNGramTokenizerFactory(ATypeTag typeTag, int gramLength, boolean usePrePost,
             boolean hashedTokens);

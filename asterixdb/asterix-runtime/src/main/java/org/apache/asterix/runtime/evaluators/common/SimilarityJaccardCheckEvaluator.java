@@ -27,7 +27,6 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap.BinaryEntry;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -37,6 +36,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.BinaryEntry;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator {
@@ -120,18 +120,18 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
             BinaryEntry entry = hashMap.get(keyEntry);
             if (entry != null) {
                 // Increment second value.
-                int firstValInt = IntegerPointable.getInteger(entry.buf, entry.off);
+                int firstValInt = IntegerPointable.getInteger(entry.getBuf(), entry.getOffset());
                 // Irrelevant for the intersection size.
                 if (firstValInt == 0) {
                     continue;
                 }
-                int secondValInt = IntegerPointable.getInteger(entry.buf, entry.off + 4);
+                int secondValInt = IntegerPointable.getInteger(entry.getBuf(), entry.getOffset() + 4);
                 // Subtract old min value.
                 intersectionSize -= (firstValInt < secondValInt) ? firstValInt : secondValInt;
                 secondValInt++;
                 // Add new min value.
                 intersectionSize += (firstValInt < secondValInt) ? firstValInt : secondValInt;
-                IntegerPointable.setInteger(entry.buf, entry.off + 4, secondValInt);
+                IntegerPointable.setInteger(entry.getBuf(), entry.getOffset() + 4, secondValInt);
             } else {
                 // Could not find element in other set. Increase min union size by 1.
                 minUnionSize++;

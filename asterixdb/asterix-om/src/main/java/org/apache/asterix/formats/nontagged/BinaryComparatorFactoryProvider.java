@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.formats.nontagged;
 
+import java.io.Serializable;
+
 import org.apache.asterix.dataflow.data.nontagged.comparators.ABinaryComparator;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
@@ -48,9 +50,8 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringLowercaseTokenPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-
-import java.io.Serializable;
 
 public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactoryProvider, Serializable {
 
@@ -74,6 +75,10 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
     // case-insensitive comparisons.
     public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE =
             new PointableBinaryComparatorFactory(UTF8StringLowercasePointable.FACTORY);
+    // Equivalent to UTF8STRING_LOWERCASE_POINTABLE_INSTANCE but the length information is kept separately,
+    // rather than keeping them in the beginning of a string. It is especially useful for the string tokens
+    public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_TOKEN_POINTABLE_INSTANCE =
+            new PointableBinaryComparatorFactory(UTF8StringLowercaseTokenPointable.FACTORY);
     public static final PointableBinaryComparatorFactory BINARY_POINTABLE_INSTANCE =
             new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY);
 

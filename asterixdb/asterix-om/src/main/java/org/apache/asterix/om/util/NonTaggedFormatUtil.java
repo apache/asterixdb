@@ -232,7 +232,7 @@ public final class NonTaggedFormatUtil {
         switch (indexType) {
             case SINGLE_PARTITION_WORD_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX: {
-                return BinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false);
+                return BinaryTokenizerFactoryProvider.INSTANCE.getWordTokenizerFactory(keyType, false, false);
             }
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {

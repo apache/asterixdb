@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,8 +27,8 @@ import java.util.List;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.BinaryEntry;
 
 /**
  * The most simple implementation of a static hashtable you could imagine.
@@ -60,26 +57,6 @@ public class BinaryHashMap {
     private int nextOff;
     private int size;
 
-    // Can be used for key or value.
-    public static class BinaryEntry {
-        public byte[] buf;
-        public int off;
-        public int len;
-
-        public void set(byte[] buf, int off, int len) {
-            this.buf = buf;
-            this.off = off;
-            this.len = len;
-        }
-
-        // Inefficient. Just for debugging.
-        @SuppressWarnings("rawtypes")
-        public String print(ISerializerDeserializer serde) throws HyracksDataException {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(buf, off, len);
-            DataInput dataIn = new DataInputStream(inStream);
-            return serde.deserialize(dataIn).toString();
-        }
-    }
 
     public BinaryHashMap(int tableSize, int frameSize, IBinaryHashFunction putHashFunc,
             IBinaryHashFunction getHashFunc, IBinaryComparator cmp) {
@@ -119,9 +96,9 @@ public class BinaryHashMap {
     private BinaryEntry getPutInternal(BinaryEntry key, BinaryEntry value, boolean put) throws HyracksDataException {
         int bucket;
         if (put) {
-            bucket = Math.abs(putHashFunc.hash(key.buf, key.off, key.len) % listHeads.length);
+            bucket = Math.abs(putHashFunc.hash(key.getBuf(), key.getOffset(), key.getLength()) % listHeads.length);
         } else {
-            bucket = Math.abs(getHashFunc.hash(key.buf, key.off, key.len) % listHeads.length);
+            bucket = Math.abs(getHashFunc.hash(key.getBuf(), key.getOffset(), key.getLength()) % listHeads.length);
         }
         long headPtr = listHeads[bucket];
         if (headPtr == NULL_PTR) {
@@ -140,7 +117,8 @@ public class BinaryHashMap {
             frame = frames.get(frameIndex);
             int entryKeyOff = frameOff + ENTRY_HEADER_SIZE;
             int entryKeyLen = frame.getShort(frameOff);
-            if (cmp.compare(frame.array(), entryKeyOff, entryKeyLen, key.buf, key.off, key.len) == 0) {
+            if (cmp.compare(frame.array(), entryKeyOff, entryKeyLen, key.getBuf(), key.getOffset(),
+                    key.getLength()) == 0) {
                 // Key found, set values and return.
                 int entryValOff = frameOff + ENTRY_HEADER_SIZE + entryKeyLen;
                 int entryValLen = frame.getShort(frameOff + SLOT_SIZE);
@@ -160,7 +138,7 @@ public class BinaryHashMap {
 
     public long appendEntry(BinaryEntry key, BinaryEntry value) {
         ByteBuffer frame = frames.get(currFrameIndex);
-        int requiredSpace = key.len + value.len + ENTRY_HEADER_SIZE;
+        int requiredSpace = key.getLength() + value.getLength() + ENTRY_HEADER_SIZE;
         if (nextOff + requiredSpace >= frameSize) {
             // Entry doesn't fit on frame, allocate a new one.
             if (requiredSpace > frameSize) {
@@ -171,9 +149,10 @@ public class BinaryHashMap {
             nextOff = 0;
             frame = frames.get(currFrameIndex);
         }
-        writeEntryHeader(frame, nextOff, key.len, value.len, NULL_PTR);
-        System.arraycopy(key.buf, key.off, frame.array(), nextOff + ENTRY_HEADER_SIZE, key.len);
-        System.arraycopy(value.buf, value.off, frame.array(), nextOff + ENTRY_HEADER_SIZE + key.len, value.len);
+        writeEntryHeader(frame, nextOff, key.getLength(), value.getLength(), NULL_PTR);
+        System.arraycopy(key.getBuf(), key.getOffset(), frame.array(), nextOff + ENTRY_HEADER_SIZE, key.getLength());
+        System.arraycopy(value.getBuf(), value.getOffset(), frame.array(),
+                nextOff + ENTRY_HEADER_SIZE + key.getLength(), value.getLength());
         long entryPtr = getEntryPtr(currFrameIndex, nextOff);
         nextOff += requiredSpace;
         size++;
