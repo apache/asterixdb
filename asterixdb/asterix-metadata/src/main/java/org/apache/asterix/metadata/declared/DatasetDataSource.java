@@ -116,30 +116,26 @@ public class DatasetDataSource extends DataSource {
                 Index primaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                         dataverseName, datasetName, datasetName);
 
-                int[] minFilterFieldIndexes = null;
-                if (minFilterVars != null && !minFilterVars.isEmpty()) {
-                    minFilterFieldIndexes = new int[minFilterVars.size()];
-                    int i = 0;
-                    for (LogicalVariable v : minFilterVars) {
-                        minFilterFieldIndexes[i] = opSchema.findVariable(v);
-                        i++;
-                    }
-                }
-                int[] maxFilterFieldIndexes = null;
-                if (maxFilterVars != null && !maxFilterVars.isEmpty()) {
-                    maxFilterFieldIndexes = new int[maxFilterVars.size()];
-                    int i = 0;
-                    for (LogicalVariable v : maxFilterVars) {
-                        maxFilterFieldIndexes[i] = opSchema.findVariable(v);
-                        i++;
-                    }
-                }
+                int[] minFilterFieldIndexes = createFilterIndexes(minFilterVars, opSchema);
+                int[] maxFilterFieldIndexes = createFilterIndexes(maxFilterVars, opSchema);
                 return metadataProvider.buildBtreeRuntime(jobSpec, scanVariables, opSchema, typeEnv, context, true,
                         false, ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null,
                         true, true, implConfig, minFilterFieldIndexes, maxFilterFieldIndexes);
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }
+    }
+
+    private int[] createFilterIndexes(List<LogicalVariable> filterVars, IOperatorSchema opSchema) {
+        if (filterVars != null && !filterVars.isEmpty()) {
+            final int size = filterVars.size();
+            int[] result = new int[size];
+            for (int i = 0; i < size; ++i) {
+                result[i] = opSchema.findVariable(filterVars.get(i));
+            }
+            return result;
+        }
+        return null;
     }
 
     @Override
