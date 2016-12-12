@@ -331,8 +331,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
             case ANY:
                 return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             case UNION:
-                AUnionType u = (AUnionType) type0;
-                IAType t1 = u.getActualType();
+                IAType t1 = ((AUnionType) type0).getActualType();
                 if (t1.getTypeTag() == ATypeTag.RECORD) {
                     return (ARecordType) t1;
                 } else if (t1.getTypeTag() == ATypeTag.ANY) {

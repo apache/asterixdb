@@ -65,8 +65,6 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     private final PointableAllocator allocator = new PointableAllocator();
 
     private final ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
-    private final DataOutputStream typeDos = new DataOutputStream(typeBos);
-    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
@@ -95,8 +93,9 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
         // initialize the buffer for closed parts(fieldName bytes+ type bytes) +
         // constant(null bytes)
-        typeBos.reset();
         try {
+            final DataOutputStream typeDos = new DataOutputStream(typeBos);
+            final UTF8StringWriter utf8Writer = new UTF8StringWriter();
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
 
