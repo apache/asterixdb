@@ -51,7 +51,7 @@ public class ScopeChecker {
     }
 
     protected void setInput(String s) {
-        inputLines = s.split("\n");
+        inputLines = s.split("\n|\r\n?");
     }
 
     // Forbidden scopes are used to disallow, in a limit clause, variables
