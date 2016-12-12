@@ -26,10 +26,8 @@ import java.util.logging.Logger;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -39,16 +37,14 @@ public class SmokeParserTest {
 
     private static final Logger LOGGER = Logger.getLogger(SmokeParserTest.class.getName());
 
-    private static final String SEPARATOR = File.separator;
     private static final String EXTENSION_QUERY = "sqlpp";
     private static final String EXTENSION_RESULT = "ast";
     private static final String FILENAME_IGNORE = "ignore.txt";
     private static final String FILENAME_ONLY = "only.txt";
-    private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR
-            + "parserts" + SEPARATOR;
-    private static final String PATH_QUERIES = PATH_BASE + "queries_sqlpp" + SEPARATOR;
-    private static final String PATH_EXPECTED = PATH_BASE + "results_parser_sqlpp" + SEPARATOR;
-    private static final String PATH_ACTUAL = "target" + File.separator + "parserts" + SEPARATOR;
+    private static final String PATH_BASE = TestHelper.joinPath("src", "test", "resources", "parserts");
+    private static final String PATH_QUERIES = TestHelper.joinPath(PATH_BASE, "queries_sqlpp");
+    private static final String PATH_EXPECTED = TestHelper.joinPath(PATH_BASE, "results_parser_sqlpp");
+    private static final String PATH_ACTUAL = TestHelper.joinPath("target", "parserts");
 
     private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
@@ -67,24 +63,11 @@ public class SmokeParserTest {
         }
     }
 
-    private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {
-        for (File file : dir.listFiles()) {
-            if (file.isDirectory() && !file.getName().startsWith(".")) {
-                suiteBuild(file, testArgs, path + file.getName() + SEPARATOR);
-            }
-            if (file.isFile() && file.getName().endsWith(EXTENSION_QUERY)) {
-                String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
-                File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
-                File actualFile = new File(PATH_ACTUAL + SEPARATOR + path.replace(SEPARATOR, "_") + resultFileName);
-                testArgs.add(new Object[] { file, expectedFile, actualFile });
-            }
-        }
-    }
-
     @Parameters(name = "SmokeParserTest {index}: {0}")
     public static Collection<Object[]> tests() {
-        Collection<Object[]> testArgs = new ArrayList<Object[]>();
-        suiteBuild(new File(PATH_QUERIES), testArgs, "");
+        Collection<Object[]> testArgs = new ArrayList<>();
+        ParserTestUtil.suiteBuild(new File(PATH_QUERIES), testArgs, "", File.separator, EXTENSION_QUERY,
+                EXTENSION_RESULT, PATH_EXPECTED, PATH_ACTUAL);
         return testArgs;
     }
 
@@ -102,32 +85,7 @@ public class SmokeParserTest {
 
     @Test
     public void test() throws Exception {
-        try {
-            String queryFileShort = queryFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0),
-                    '/');
-            if (!only.isEmpty()) {
-                boolean toRun = TestHelper.isInPrefixList(only, queryFileShort);
-                if (!toRun) {
-                    LOGGER.info("SKIP TEST: \"" + queryFile.getPath()
-                            + "\" \"only.txt\" not empty and not in \"only.txt\".");
-                }
-                Assume.assumeTrue(toRun);
-            }
-            boolean skipped = TestHelper.isInPrefixList(ignore, queryFileShort);
-            if (skipped) {
-                LOGGER.info("SKIP TEST: \"" + queryFile.getPath() + "\" in \"ignore.txt\".");
-            }
-            Assume.assumeTrue(!skipped);
-
-            LOGGER.info("RUN TEST: \"" + queryFile.getPath() + "\"");
-            parserTestExecutor.testSQLPPParser(queryFile, actualFile, expectedFile);
-        } catch (Exception e) {
-            if (!(e instanceof AssumptionViolatedException)) {
-                LOGGER.severe("Test \"" + queryFile.getPath() + "\" FAILED!");
-                throw new Exception("Test \"" + queryFile.getPath() + "\" FAILED!", e);
-            } else {
-                throw e;
-            }
-        }
+        ParserTestUtil.runTest(LOGGER, parserTestExecutor, PATH_QUERIES, queryFile, expectedFile, actualFile, ignore,
+                only, File.separator);
     }
 }
