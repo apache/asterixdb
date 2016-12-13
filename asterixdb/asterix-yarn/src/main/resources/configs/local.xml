@@ -21,13 +21,13 @@
   <!-- Name of the cluster -->
   <name>local</name>
 
-  <log_dir>/tmp/</log_dir>
-  <txn_log_dir>/tmp/</txn_log_dir>
+  <log_dir>/tmp/asterix-yarn/</log_dir>
+  <txn_log_dir>/tmp/asterix-yarn/</txn_log_dir>
 
   <!-- Mount point of an iodevice. Use a comma separated list for a machine that
                   has multiple iodevices (disks).
                              This property can be overriden for a node by redefining at the node level. -->
-  <iodevices>/tmp</iodevices>
+  <iodevices>/tmp/asterix-yarn</iodevices>
 
   <!-- Path on each iodevice where Asterix will store its data -->
   <store>storage</store>

@@ -27,32 +27,26 @@ public class LogManagerProperties implements Serializable {
     private static final long serialVersionUID = 2084227360840799662L;
 
     public static final String lineSeparator = System.getProperty("line.separator");
-    public static final int LOG_MAGIC_NUMBER = 123456789;
-    public static final String LOG_DIR_SUFFIX = ".txnLogDir";
-    private static final String DEFAULT_LOG_FILE_PREFIX = "asterix_transaction_log";
+    private static final String DEFAULT_LOG_FILE_PREFIX = "transaction_log";
 
     // follow the naming convention <logFilePrefix>_<number> where number starts from 0
     private final String logFilePrefix;
     private final String logDir;
-    public String logDirKey;
 
     // number of log pages in the log buffer
     private final int logPageSize;
     // number of log pages in the log buffer.
     private final int numLogPages;
-    // logBufferSize = logPageSize * numLogPages;
-    private final int logBufferSize;
     // maximum size of each log file
     private final long logPartitionSize;
 
     public LogManagerProperties(AsterixTransactionProperties txnProperties, String nodeId) {
-        this.logDirKey = new String(nodeId + LOG_DIR_SUFFIX);
         this.logPageSize = txnProperties.getLogBufferPageSize();
         this.numLogPages = txnProperties.getLogBufferNumPages();
         long logPartitionSize = txnProperties.getLogPartitionSize();
         this.logDir = txnProperties.getLogDirectory(nodeId);
         this.logFilePrefix = DEFAULT_LOG_FILE_PREFIX;
-        this.logBufferSize = logPageSize * numLogPages;
+        int logBufferSize = logPageSize * numLogPages;
         //make sure that the log partition size is the multiple of log buffer size.
         this.logPartitionSize = (logPartitionSize / logBufferSize) * logBufferSize;
     }
@@ -77,14 +71,7 @@ public class LogManagerProperties implements Serializable {
         return numLogPages;
     }
 
-    public int getLogBufferSize() {
-        return logBufferSize;
-    }
-
-    public String getLogDirKey() {
-        return logDirKey;
-    }
-
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("log_dir_ : " + logDir + lineSeparator);

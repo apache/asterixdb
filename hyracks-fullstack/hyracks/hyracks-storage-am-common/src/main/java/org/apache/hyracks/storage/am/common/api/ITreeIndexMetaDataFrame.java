@@ -23,9 +23,9 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexMetaDataFrame {
 
-    //Storage version #. Change this if you alter any tree frame formats to stop
+    // Storage version #. Change this if you alter any tree frame formats to stop
     // possible corruption from old versions reading new formats.
-    public static final int VERSION = 3;
+    int VERSION = 4;
 
     public void initBuffer(byte level);
 
