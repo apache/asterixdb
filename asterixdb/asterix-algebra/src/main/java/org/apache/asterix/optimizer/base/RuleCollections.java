@@ -19,6 +19,7 @@
 
 package org.apache.asterix.optimizer.base;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,6 +36,7 @@ import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
 import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
+import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckRule;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForSwitchCaseRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForUnionRule;
@@ -152,6 +154,10 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> autogen = new LinkedList<>();
         autogen.add(new IntroduceAutogenerateIDRule());
         return autogen;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildFulltextContainsRuleCollection() {
+        return Collections.singletonList(new FullTextContainsParameterCheckRule());
     }
 
     public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection() {
