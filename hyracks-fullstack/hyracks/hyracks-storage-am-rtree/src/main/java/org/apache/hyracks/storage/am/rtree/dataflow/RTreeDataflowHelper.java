@@ -52,6 +52,6 @@ public class RTreeDataflowHelper extends TreeIndexDataflowHelper {
         return RTreeUtils.createRTree(treeOpDesc.getStorageManager().getBufferCache(ctx),
                 treeOpDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 valueProviderFactories, treeOpDesc.getTreeIndexComparatorFactories(), rtreePolicyType, fileRef,
-                durable, false);
+                false, opDesc.getPageManagerFactory());
     }
 }

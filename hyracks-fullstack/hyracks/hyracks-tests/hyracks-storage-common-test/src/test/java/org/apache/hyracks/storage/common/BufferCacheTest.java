@@ -32,7 +32,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -46,8 +45,6 @@ import org.junit.Test;
 public class BufferCacheTest {
     protected static final List<String> openedFiles = new ArrayList<>();
     protected static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-    protected static final String tmpDir = System.getProperty("java.io.tmpdir");
-    protected static final String sep = System.getProperty("file.separator");
 
     private static final int PAGE_SIZE = 256;
     private static final int NUM_PAGES = 10;
@@ -58,7 +55,7 @@ public class BufferCacheTest {
     private static final Random rnd = new Random(50);
 
     private String getFileName() {
-        String fileName = tmpDir + sep + simpleDateFormat.format(new Date()) + openedFiles.size();
+        String fileName = simpleDateFormat.format(new Date()) + openedFiles.size();
         openedFiles.add(fileName);
         return fileName;
     }
@@ -70,7 +67,7 @@ public class BufferCacheTest {
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         String fileName = getFileName();
-        FileReference file = ioManager.resolveAbsolutePath(fileName);
+        FileReference file = ioManager.resolve(fileName);
         bufferCache.createFile(file);
         int fileId = fmp.lookupFileId(file);
         int num = 10;
@@ -157,7 +154,7 @@ public class BufferCacheTest {
         for (int i = 0; i < MAX_OPEN_FILES; i++) {
             String fileName = getFileName();
 
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -169,7 +166,7 @@ public class BufferCacheTest {
         // since all files are open, next open should fail
         try {
             String fileName = getFileName();
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -187,7 +184,7 @@ public class BufferCacheTest {
         exceptionThrown = false;
         try {
             String fileName = getFileName();
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -220,7 +217,7 @@ public class BufferCacheTest {
         // open max number of files and write some stuff into their first page
         for (int i = 0; i < MAX_OPEN_FILES; i++) {
             String fileName = getFileName();
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -248,7 +245,7 @@ public class BufferCacheTest {
         // since all files are open, next open should fail
         try {
             String fileName = getFileName();
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -270,7 +267,7 @@ public class BufferCacheTest {
         // now open a few new files
         for (int i = 0; i < filesToClose; i++) {
             String fileName = getFileName();
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);
@@ -280,7 +277,7 @@ public class BufferCacheTest {
         // since all files are open, next open should fail
         try {
             String fileName = getFileName();
-            FileReference file = ioManager.resolveAbsolutePath(fileName);
+            FileReference file = ioManager.resolve(fileName);
             bufferCache.createFile(file);
             int fileId = fmp.lookupFileId(file);
             bufferCache.openFile(fileId);

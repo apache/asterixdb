@@ -26,6 +26,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
@@ -41,6 +42,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final IIndexLifecycleManagerProvider lifecycleManagerProvider;
     protected final IIndexDataflowHelperFactory dataflowHelperFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
+    protected final IPageManagerFactory pageManagerFactory;
     protected final boolean retainInput;
     protected final boolean retainNull;
     protected final IMissingWriterFactory nullWriterFactory;
@@ -55,7 +57,8 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
             boolean retainInput, boolean retainNull, IMissingWriterFactory nullWriterFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
+            IModificationOperationCallbackFactory modificationOpCallbackFactory,
+            IPageManagerFactory pageManagerFactory) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;
@@ -68,6 +71,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
         this.localResourceFactoryProvider = localResourceFactoryProvider;
         this.searchOpCallbackFactory = searchOpCallbackFactory;
         this.modificationOpCallbackFactory = modificationOpCallbackFactory;
+        this.pageManagerFactory = pageManagerFactory;
         if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
         }
@@ -131,5 +135,10 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     @Override
     public ILocalResourceFactoryProvider getLocalResourceFactoryProvider() {
         return localResourceFactoryProvider;
+    }
+
+    @Override
+    public IPageManagerFactory getPageManagerFactory() {
+        return pageManagerFactory;
     }
 }

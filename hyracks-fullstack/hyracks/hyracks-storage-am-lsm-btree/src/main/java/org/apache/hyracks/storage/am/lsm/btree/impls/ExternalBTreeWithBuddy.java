@@ -39,7 +39,7 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
@@ -582,7 +582,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public IMetaDataPageManager getMetaManager() {
+    public IMetadataPageManager getPageManager() {
         // This method should never be called for disk only indexes
         return null;
     }
@@ -616,11 +616,12 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) factory.createLSMComponentInstance(
                 new LSMComponentFileReferences(insertFileRef, deleteFileRef, bloomFilterFileRef));
         if (createComponent) {
+            component.getBTree().create();
+            component.getBuddyBTree().create();
             component.getBloomFilter().create();
-        } else {
-            component.getBTree().activate();
-            component.getBuddyBTree().activate();
         }
+        component.getBTree().activate();
+        component.getBuddyBTree().activate();
         component.getBloomFilter().activate();
         return component;
     }
@@ -685,9 +686,9 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
             // Create the three loaders
             btreeBulkLoader = (BTreeBulkLoader) ((LSMBTreeWithBuddyDiskComponent) component).getBTree()
-                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true);
+                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false);
             buddyBtreeBulkLoader = (BTreeBulkLoader) ((LSMBTreeWithBuddyDiskComponent) component).getBuddyBTree()
-                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true);
+                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false);
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
                     bloomFilterFalsePositiveRate);
@@ -884,16 +885,6 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         files.add(component.getBuddyBTree().getFileReference().getFile().getAbsolutePath());
         files.add(component.getBloomFilter().getFileReference().getFile().getAbsolutePath());
         return files;
-    }
-
-    @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
-        if (!appendOnly) {
-            throw new IndexException("LSM Indices do not support in-place inserts");
-        } else {
-            return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
-        }
     }
 
     @Override

@@ -145,8 +145,9 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
                 framePrefixTuple.resetByTupleIndex(this, i);
                 int end = framePrefixTuple.getFieldStart(framePrefixTuple.getFieldCount() - 1)
                         + framePrefixTuple.getFieldLength(framePrefixTuple.getFieldCount() - 1);
-                if (end > max)
+                if (end > max) {
                     max = end;
+                }
             }
 
             framePrefixTuple.resetByTupleIndex(this, prefixTupleCount - 1);
@@ -154,7 +155,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
                     + framePrefixTuple.getFieldLength(framePrefixTuple.getFieldCount() - 1);
         }
 
-        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
+        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<>();
         sortedTupleOffs.ensureCapacity(tupleCount);
         for (int i = 0; i < tupleCount; i++) {
             int tupleSlotOff = slotManager.getTupleSlotOff(i);
@@ -226,12 +227,14 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int bytesRequired = tupleWriter.bytesRequired(tuple);
 
         // See if the tuple would fit uncompressed.
-        if (bytesRequired + slotManager.getSlotSize() <= freeContiguous)
+        if (bytesRequired + slotManager.getSlotSize() <= freeContiguous) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+        }
 
         // See if tuple would fit into remaining space after compaction.
-        if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
+        if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
+        }
 
         // See if the tuple matches a prefix and will fit after truncating the prefix.
         int prefixSlotNum = slotManager.findPrefix(tuple, framePrefixTuple);
@@ -242,8 +245,9 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
             int compressedSize = tupleWriter.bytesRequired(tuple, numPrefixFields, tuple.getFieldCount()
                     - numPrefixFields);
-            if (compressedSize + slotManager.getSlotSize() <= freeContiguous)
+            if (compressedSize + slotManager.getSlotSize() <= freeContiguous) {
                 return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+            }
         }
 
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
@@ -475,6 +479,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         return buf.getInt(tupleCountOff);
     }
 
+    @Override
     public IPrefixSlotManager getSlotManager() {
         return slotManager;
     }
@@ -528,10 +533,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public void setSmFlag(boolean smFlag) {
-        if (smFlag)
+        if (smFlag) {
             buf.put(smFlagOff, (byte) 1);
-        else
+        } else {
             buf.put(smFlagOff, (byte) 0);
+        }
     }
 
     @Override
@@ -570,10 +576,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
         // insert slot
         int prefixSlotNum = FieldPrefixSlotManager.TUPLE_UNCOMPRESSED;
-        if (fieldsToTruncate > 0)
+        if (fieldsToTruncate > 0) {
             prefixSlotNum = buf.getInt(prefixTupleCountOff) - 1;
-        else
+        } else {
             buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
+        }
         int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_KEY_INDICATOR);
         slotManager.insertSlot(insSlot, freeSpace);
 
@@ -754,6 +761,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         return slotManager.getSlotSize();
     }
 
+    @Override
     public ITreeIndexTupleWriter getTupleWriter() {
         return tupleWriter;
     }
@@ -770,10 +778,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // TODO: Revisit this one. Maybe there is a cleaner way to solve this in the RangeSearchCursor.
         if (tupleIndex == FieldPrefixSlotManager.GREATEST_KEY_INDICATOR
-                || tupleIndex == FieldPrefixSlotManager.ERROR_INDICATOR)
+                || tupleIndex == FieldPrefixSlotManager.ERROR_INDICATOR) {
             return -1;
-        else
+        } else {
             return tupleIndex;
+        }
     }
 
     @Override

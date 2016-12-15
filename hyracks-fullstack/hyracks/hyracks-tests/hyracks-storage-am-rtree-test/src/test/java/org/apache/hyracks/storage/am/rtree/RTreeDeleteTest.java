@@ -55,7 +55,8 @@ public class RTreeDeleteTest extends AbstractRTreeDeleteTest {
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
         return RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType);
+                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
+                harness.getMetadataManagerFactory());
     }
 
     @Override

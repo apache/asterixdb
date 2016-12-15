@@ -25,13 +25,10 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.data.PointablePrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
@@ -45,17 +42,15 @@ public class RTreeUtils {
     public static RTree createRTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             ITypeTraits[] typeTraits, IPrimitiveValueProviderFactory[] valueProviderFactories,
             IBinaryComparatorFactory[] cmpFactories, RTreePolicyType rtreePolicyType, FileReference file,
-            boolean durable, boolean isPointMBR) {
+            boolean isPointMBR, IPageManagerFactory pageManagerFactory) {
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory leafFrameFactory = new RTreeNSMLeafFrameFactory(tupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
-        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
-        IMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
-        RTree rtree = new RTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
+        RTree rtree = new RTree(bufferCache, fileMapProvider, pageManagerFactory.createPageManager(bufferCache),
+                interiorFrameFactory, leafFrameFactory,
                 cmpFactories, typeTraits.length, file, isPointMBR);
         return rtree;
     }

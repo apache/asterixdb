@@ -24,6 +24,7 @@ import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IResourceFactory;
@@ -230,7 +231,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                 new LSMInvertedIndexCreateOperatorDescriptor(spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits,
                         tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                        dataflowHelperFactory, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
+                        dataflowHelperFactory, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE,
+                        AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(invIndexCreateOp);
@@ -329,7 +331,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                 spec, secondaryRecDesc, fieldPermutation, false, numElementsHint, false,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits, tokenComparatorFactories,
-                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory);
+                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
+                AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return invIndexBulkLoadOp;
@@ -368,7 +371,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                 new LSMInvertedIndexCompactOperator(spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         secondaryFileSplitProvider, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, tokenTypeTraits,
                         tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories, tokenizerFactory,
-                        dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
+                        dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);
 

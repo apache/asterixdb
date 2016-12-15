@@ -83,7 +83,7 @@ import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -334,7 +334,7 @@ public class ReplicationManager implements IReplicationManager {
                                         LSNByteOffset, remainingFiles == 0);
                             } else {
                                 asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
-                                        IMetaDataPageManager.INVALID_LSN_OFFSET, remainingFiles == 0);
+                                        IMetadataPageManager.Constants.INVALID_LSN_OFFSET, remainingFiles == 0);
                             }
 
                             requestBuffer = ReplicationProtocol.writeFileReplicationRequest(requestBuffer,
@@ -373,7 +373,7 @@ public class ReplicationManager implements IReplicationManager {
                     for (String filePath : job.getJobFiles()) {
                         remainingFiles--;
                         asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile,
-                                IMetaDataPageManager.INVALID_LSN_OFFSET, remainingFiles == 0);
+                                IMetadataPageManager.Constants.INVALID_LSN_OFFSET, remainingFiles == 0);
                         ReplicationProtocol.writeFileReplicationRequest(requestBuffer, asterixFileProperties,
                                 ReplicationRequestType.DELETE_FILE);
 

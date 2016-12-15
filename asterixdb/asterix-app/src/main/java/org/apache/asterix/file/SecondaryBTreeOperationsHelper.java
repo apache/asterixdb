@@ -26,6 +26,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
@@ -123,7 +124,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
                 secondaryBloomFilterKeyFields, indexDataflowHelperFactory, localResourceFactoryProvider,
-                NoOpOperationCallbackFactory.INSTANCE);
+                NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);
@@ -282,7 +283,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
                             storageProperties.getBloomFilterFalsePositiveRate(), false, filterTypeTraits,
                             filterCmpFactories, secondaryBTreeFields, secondaryFilterFields, !temp),
-                    NoOpOperationCallbackFactory.INSTANCE);
+                    NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         } else {
             // External dataset
             compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
@@ -295,7 +296,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                             LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE,
                             storageProperties.getBloomFilterFalsePositiveRate(), new int[] { numSecondaryKeys },
                             ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true),
-                    NoOpOperationCallbackFactory.INSTANCE);
+                    NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         }
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);

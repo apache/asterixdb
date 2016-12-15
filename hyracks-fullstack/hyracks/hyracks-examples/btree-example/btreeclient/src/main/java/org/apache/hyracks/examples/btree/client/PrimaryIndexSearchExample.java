@@ -45,6 +45,7 @@ import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
 import org.kohsuke.args4j.CmdLineParser;
@@ -146,7 +147,7 @@ public class PrimaryIndexSearchExample {
         BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, storageManager,
                 lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories, null, lowKeyFields,
                 highKeyFields, true, true, dataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null);
+                NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
 
         JobHelper.createPartitionConstraint(spec, btreeSearchOp, splitNCs);
 

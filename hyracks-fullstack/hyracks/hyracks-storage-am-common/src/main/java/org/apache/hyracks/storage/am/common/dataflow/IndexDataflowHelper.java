@@ -28,6 +28,7 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
@@ -43,6 +44,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final IResourceLifecycleManager<IIndex> lcManager;
     protected final ILocalResourceRepository localResourceRepository;
     protected final IResourceIdFactory resourceIdFactory;
+    protected final IPageManagerFactory pageManagerFactory;
     protected final boolean durable;
     protected final FileReference resourceRef;
     protected final String resourceName;
@@ -60,6 +62,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         FileSplit fileSplit = opDesc.getFileSplitProvider().getFileSplits()[partition];
         this.resourceRef = fileSplit.getFileReference(ioManager);
         this.resourceName = resourceRef.getRelativePath();
+        this.pageManagerFactory = opDesc.getPageManagerFactory();
         this.durable = durable;
         this.partition = partition;
     }

@@ -23,10 +23,8 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrame;
@@ -57,36 +55,8 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
 
     @Override
     public void writeFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
-        IMetaDataPageManager treeMetaManager = treeIndex.getMetaManager();
-        ICachedPage filterPage = null;
-        int componentFilterPageId = treeMetaManager.getFilterPageId();
-        boolean appendOnly = false;
-        int fileId = treeIndex.getFileId();
-        if (componentFilterPageId == LinkedMetaDataPageManager.NO_FILTER_IN_PLACE) { //in-place mode, no filter page yet
-            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getMetaManager().getMetaDataFrameFactory().createFrame();
-            int metaPageId = treeMetaManager.getFirstMetadataPage();
-            ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metaPageId), false);
-            metadataPage.acquireWriteLatch();
-            try {
-                metadataFrame.setPage(metadataPage);
-                componentFilterPageId = treeIndex.getMetaManager().getFreePage(metadataFrame);
-                metadataFrame.setLSMComponentFilterPageId(componentFilterPageId);
-            } finally {
-                metadataPage.releaseWriteLatch(true);
-                bufferCache.unpin(metadataPage);
-            }
-        } else if (componentFilterPageId <= LinkedMetaDataPageManager.NO_FILTER_APPEND_ONLY) {
-            appendOnly = true;
-            filterPage = treeMetaManager.getFilterPage();
-            if (filterPage == null) {
-                treeMetaManager.setFilterPage(bufferCache.confiscatePage(IBufferCache.INVALID_DPID));
-                filterPage = treeMetaManager.getFilterPage();
-            }
-        } else { // in place, not a new filter page
-            filterPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, componentFilterPageId), true);
-        }
-
-        filterPage.acquireWriteLatch();
+        IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
+        ICachedPage filterPage = treeMetaManager.getFilterPage();
         try {
             ILSMComponentFilterFrame filterFrame = filterFrameFactory.createFrame();
             filterFrame.setPage(filterPage);
@@ -97,26 +67,19 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
             if (filter.getMaxTuple() != null) {
                 filterFrame.writeMaxTuple(filter.getMaxTuple());
             }
-
         } finally {
-            if (!appendOnly) {
-                bufferCache.unpin(filterPage);
-                filterPage.releaseWriteLatch(true);
-            } else {
-                filterPage.releaseWriteLatch(false);
-            }
+            treeMetaManager.setFilterPage(filterPage);
         }
     }
 
     @Override
     public boolean readFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
         int fileId = treeIndex.getFileId();
-
-        IMetaDataPageManager treeMetaManager = treeIndex.getMetaManager();
-
+        IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
         int componentFilterPageId = treeMetaManager.getFilterPageId();
-        if (componentFilterPageId < 0)
+        if (componentFilterPageId < 0) {
             return false;
+        }
 
         ICachedPage filterPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, componentFilterPageId),
                 false);
@@ -129,7 +92,7 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
             if (!filterFrame.isMinTupleSet() || !filterFrame.isMaxTupleSet()) {
                 return false;
             }
-            List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
+            List<ITupleReference> filterTuples = new ArrayList<>();
             filterTuples.add(filterFrame.getMinTuple());
             filterTuples.add(filterFrame.getMaxTuple());
             updateFilterInfo(filter, filterTuples);

@@ -27,7 +27,7 @@ public interface ITreeIndexMetaDataFrame {
     // possible corruption from old versions reading new formats.
     int VERSION = 4;
 
-    public void initBuffer(byte level);
+    public void initBuffer();
 
     public void setPage(ICachedPage page);
 
@@ -37,7 +37,7 @@ public interface ITreeIndexMetaDataFrame {
 
     public void setLevel(byte level);
 
-    public int getNextPage();
+    public int getNextMetadataPage();
 
     public void setNextPage(int nextPage);
 
@@ -78,4 +78,8 @@ public interface ITreeIndexMetaDataFrame {
     void setRootPageNumber(int rootPage);
 
     int getRootPageNumber();
+
+    boolean isMetadataPage();
+
+    boolean isFreePage();
 }

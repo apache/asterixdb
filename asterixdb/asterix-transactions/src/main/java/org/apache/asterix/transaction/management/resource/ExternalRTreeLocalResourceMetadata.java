@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.resource;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -69,7 +70,7 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
                             runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                     runtimeContextProvider.getLSMIOScheduler(),
                     LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
-                    btreeFields, -1, true, isPointMBR);
+                    btreeFields, -1, true, isPointMBR, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

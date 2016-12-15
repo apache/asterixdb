@@ -57,7 +57,7 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
         JobSpecification spec = new JobSpecification();
         TreeIndexStatsOperatorDescriptor secondaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
                 lcManagerProvider, secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories, null,
-                rtreeDataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
+                rtreeDataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");

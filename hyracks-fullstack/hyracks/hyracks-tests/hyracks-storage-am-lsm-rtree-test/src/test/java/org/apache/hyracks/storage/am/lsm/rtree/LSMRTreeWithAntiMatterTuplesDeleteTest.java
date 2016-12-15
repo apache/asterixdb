@@ -59,7 +59,8 @@ public class LSMRTreeWithAntiMatterTuplesDeleteTest extends AbstractRTreeDeleteT
         return LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
                 fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType, harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
+                harness.getMetadataPageManagerFactory());
     }
 
     @Override

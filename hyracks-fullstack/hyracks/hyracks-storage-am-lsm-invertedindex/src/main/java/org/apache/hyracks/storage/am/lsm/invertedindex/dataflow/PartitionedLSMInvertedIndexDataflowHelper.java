@@ -91,7 +91,7 @@ public final class PartitionedLSMInvertedIndexDataflowHelper extends AbstractLSM
                     opTrackerFactory.getOperationTracker(ctx), ioScheduler,
                     ioOpCallbackFactory.createIOOperationCallback(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                    invertedIndexFieldsForNonBulkLoadOps, durable);
+                    invertedIndexFieldsForNonBulkLoadOps, durable, opDesc.getPageManagerFactory());
             return invIndex;
         } catch (IndexException e) {
             throw new HyracksDataException(e);

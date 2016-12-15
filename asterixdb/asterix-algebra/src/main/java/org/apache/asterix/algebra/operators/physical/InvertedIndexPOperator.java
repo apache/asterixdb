@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.metadata.MetadataException;
@@ -210,7 +211,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
             List<LogicalVariable> outputVars = unnestMap.getVariables();
             if (retainInput) {
-                outputVars = new ArrayList<LogicalVariable>();
+                outputVars = new ArrayList<>();
                 VariableUtilities.getLiveVariables(unnestMap, outputVars);
             }
             RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
@@ -286,10 +287,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                     invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
                     searchModifierFactory, outputRecDesc, retainInput, retainMissing, context.getMissingWriterFactory(),
-                    NoOpOperationCallbackFactory.INSTANCE, minFilterFieldIndexes, maxFilterFieldIndexes);
-
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(invIndexSearchOp,
-                    secondarySplitsAndConstraint.second);
+                    NoOpOperationCallbackFactory.INSTANCE, minFilterFieldIndexes, maxFilterFieldIndexes,
+                    AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+            return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }

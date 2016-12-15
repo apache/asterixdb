@@ -21,7 +21,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -61,8 +61,8 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_STRING)) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) diskComponent;
-            return btreeComponent.getBTree().getMetaManager().getLSNOffset();
+            return ((IMetadataPageManager) btreeComponent.getBTree().getPageManager()).getLSNOffset();
         }
-        return IMetaDataPageManager.INVALID_LSN_OFFSET;
+        return IMetadataPageManager.Constants.INVALID_LSN_OFFSET;
     }
 }

@@ -16,27 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.common.freepage;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
-import org.apache.hyracks.storage.am.common.api.IMetadataManagerFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LinkedListMetadataManagerFactory implements IMetadataManagerFactory {
+public class LinkedMetadataPageManagerFactory implements IMetadataPageManagerFactory {
+    private static final long serialVersionUID = 1L;
 
-    private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
-    private final IBufferCache bufferCache;
-
-    public LinkedListMetadataManagerFactory(IBufferCache bufferCache,
-                                            ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
-        this.metaDataFrameFactory = metaDataFrameFactory;
-        this.bufferCache = bufferCache;
+    @Override
+    public IMetadataPageManager createPageManager(IBufferCache bufferCache) {
+        return new LinkedMetaDataPageManager(bufferCache, new LIFOMetaDataFrameFactory());
     }
 
-    public IMetaDataPageManager createFreePageManager() throws HyracksDataException {
-        return new LinkedMetaDataPageManager(bufferCache, metaDataFrameFactory);
-    }
 }

@@ -34,6 +34,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelper;
@@ -52,12 +53,13 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
             boolean propagateInput, IIndexLifecycleManagerProvider lcManagerProvider,
             IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider, int datasetId,
             double bloomFilterFalsePositiveRate, ISearchOperationCallbackFactory searchOpCallbackFactory,
-            boolean retainMissing, IMissingWriterFactory missingWriterFactory) {
+            boolean retainMissing, IMissingWriterFactory missingWriterFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, 1, 1, outRecDesc, storageManager, lcManagerProvider, fileSplitProvider,
                 new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
                 new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainMissing, missingWriterFactory,
-                null, searchOpCallbackFactory, null);
+                null, searchOpCallbackFactory, null, metadataPageManagerFactory);
         this.adapterFactory = adapterFactory;
     }
 

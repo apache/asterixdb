@@ -30,8 +30,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
@@ -53,7 +53,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualMetaDataPageManager;
+import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -100,11 +100,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
-                    new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), rtreeInteriorFrameFactory,
+                    new VirtualFreePageManager(virtualBufferCache), rtreeInteriorFrameFactory,
                     rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount,
                     ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_r_" + i), isPointMBR);
             BTree memBTree = new BTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
-                    new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), btreeInteriorFrameFactory,
+                    new VirtualFreePageManager(virtualBufferCache), btreeInteriorFrameFactory,
                     btreeLeafFrameFactory, btreeCmpFactories, btreeCmpFactories.length,
                     ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_b_" + i));
             LSMRTreeMemoryComponent mutableComponent = new LSMRTreeMemoryComponent(memRTree, memBTree,
@@ -280,13 +280,16 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) factory.createLSMComponentInstance(
                 new LSMComponentFileReferences(insertFileRef, deleteFileRef, bloomFilterFileRef));
         // Tree will be closed during cleanup of merge().
-        if (!createComponent) {
-            component.getRTree().activate();
+        if (createComponent) {
+            component.getRTree().create();
         }
+        component.getRTree().activate();
         if (component.getBTree() != null) {
-            if (!createComponent) {
-                component.getBTree().activate();
+            if (createComponent) {
+                component.getBTree().create();
+                component.getBloomFilter().create();
             }
+            component.getBTree().activate();
             component.getBloomFilter().activate();
         }
         if (component.getLSMComponentFilter() != null && !createComponent) {
@@ -310,10 +313,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
-    public IMetaDataPageManager getMetaManager() {
+    public IPageManager getPageManager() {
         LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) memoryComponents
                 .get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getMetaManager();
+        return mutableComponent.getRTree().getPageManager();
     }
 
     @Override

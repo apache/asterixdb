@@ -28,6 +28,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -50,10 +52,10 @@ public class RTreeTestHarness {
 
     protected final Random rnd = new Random();
     protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
-    protected final String tmpDir = System.getProperty("java.io.tmpdir");
-    protected final String sep = System.getProperty("file.separator");
     protected String fileName;
     protected FileReference file;
+
+    private IPageManagerFactory metadataPageManagerFactory = new LinkedMetadataPageManagerFactory();
 
     public RTreeTestHarness() {
         this.pageSize = AccessMethodTestsConfig.RTREE_PAGE_SIZE;
@@ -72,8 +74,8 @@ public class RTreeTestHarness {
     public void setUp() throws HyracksDataException {
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
-        fileName = tmpDir + sep + simpleDateFormat.format(new Date());
-        file = ioManager.resolveAbsolutePath(fileName);
+        fileName = simpleDateFormat.format(new Date());
+        file = ioManager.resolve(fileName);
         ctx = TestUtils.create(getHyracksFrameSize());
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
@@ -82,7 +84,7 @@ public class RTreeTestHarness {
 
     public void tearDown() throws HyracksDataException {
         bufferCache.close();
-        File f = new File(fileName);
+        File f = file.getFile();
         f.deleteOnExit();
     }
 
@@ -124,5 +126,9 @@ public class RTreeTestHarness {
 
     public FileReference getFileReference() {
         return file;
+    }
+
+    public IPageManagerFactory getMetadataManagerFactory() {
+        return metadataPageManagerFactory;
     }
 }

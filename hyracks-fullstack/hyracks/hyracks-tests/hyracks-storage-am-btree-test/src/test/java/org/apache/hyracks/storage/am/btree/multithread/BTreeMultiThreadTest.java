@@ -54,7 +54,8 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields) throws TreeIndexException {
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference());
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), harness.getPageManagerFactory()
+                        .createPageManager(harness.getBufferCache()));
     }
 
     @Override
@@ -64,7 +65,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected ArrayList<TestWorkloadConf> getTestWorkloadConf() {
-        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<TestWorkloadConf>();
+        ArrayList<TestWorkloadConf> workloadConfs = new ArrayList<>();
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };

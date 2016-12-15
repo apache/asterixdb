@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -49,11 +50,11 @@ public class AsterixLSMInvertedIndexUpsertOperatorDescriptor
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory,
             ITupleFilterFactory tupleFilterFactory, IModificationOperationCallbackFactory modificationOpCallbackFactory,
-            String indexName, int[] prevFieldPermutation) {
+            String indexName, int[] prevFieldPermutation, IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
                 fieldPermutation, IndexOperation.UPSERT, dataflowHelperFactory, tupleFilterFactory,
-                modificationOpCallbackFactory, indexName);
+                modificationOpCallbackFactory, indexName, metadataPageManagerFactory);
         this.prevFieldPermutation = prevFieldPermutation;
     }
 

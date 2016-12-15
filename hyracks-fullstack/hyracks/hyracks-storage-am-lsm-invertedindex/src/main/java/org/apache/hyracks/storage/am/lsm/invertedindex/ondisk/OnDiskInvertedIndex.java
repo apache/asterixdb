@@ -43,6 +43,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.IndexException;
@@ -115,7 +116,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public OnDiskInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile, FileReference invListsFile)
+            IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile, FileReference invListsFile,
+            IPageManagerFactory pageManagerFactory)
             throws IndexException {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
@@ -125,7 +127,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, getBTreeTypeTraits(tokenTypeTraits),
-                tokenCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFile);
+                tokenCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFile, pageManagerFactory.createPageManager(
+                        bufferCache));
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.invListsFile = invListsFile;
@@ -137,16 +140,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
     @Override
     public synchronized void create() throws HyracksDataException {
-        create(false);
-    }
-
-    public synchronized void create(boolean appendOnly) throws HyracksDataException {
         if (isOpen) {
             throw new HyracksDataException("Failed to create since index is already open.");
         }
-        if (!appendOnly) {
-            btree.create();
-        }
+        btree.create();
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
             fileIsMapped = fileMapProvider.isMapped(invListsFile);
@@ -170,16 +167,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
     @Override
     public synchronized void activate() throws HyracksDataException {
-        activate(false);
-    }
-
-    public synchronized void activate(boolean appendOnly) throws HyracksDataException {
         if (isOpen) {
             throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
-        if (!appendOnly) {
-            btree.activate();
-        }
+        btree.activate();
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
             fileIsMapped = fileMapProvider.isMapped(invListsFile);
@@ -289,10 +280,14 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     }
 
     public void resetInvertedListCursor(ITupleReference btreeTuple, IInvertedListCursor listCursor) {
-        int startPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartPageIdField), btreeTuple.getFieldStart(invListStartPageIdField));
-        int endPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListEndPageIdField), btreeTuple.getFieldStart(invListEndPageIdField));
-        int startOff = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartOffField), btreeTuple.getFieldStart(invListStartOffField));
-        int numElements = IntegerPointable.getInteger(btreeTuple.getFieldData(invListNumElementsField), btreeTuple.getFieldStart(invListNumElementsField));
+        int startPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartPageIdField), btreeTuple
+                .getFieldStart(invListStartPageIdField));
+        int endPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListEndPageIdField), btreeTuple
+                .getFieldStart(invListEndPageIdField));
+        int startOff = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartOffField), btreeTuple
+                .getFieldStart(invListStartOffField));
+        int numElements = IntegerPointable.getInteger(btreeTuple.getFieldData(invListNumElementsField), btreeTuple
+                .getFieldStart(invListNumElementsField));
         listCursor.reset(startPageId, endPageId, startOff, numElements);
     }
 
@@ -317,7 +312,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         private IFIFOPageQueue queue;
 
         public OnDiskInvertedIndexBulkLoader(float btreeFillFactor, boolean verifyInput, long numElementsHint,
-                boolean checkIfEmptyIndex, int startPageId, boolean appendOnly) throws IndexException,
+                boolean checkIfEmptyIndex, int startPageId) throws IndexException,
                 HyracksDataException {
             this.verifyInput = verifyInput;
             this.tokenCmp = MultiComparator.create(btree.getComparatorFactories());
@@ -331,12 +326,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             this.btreeTupleReference = new ArrayTupleReference();
             this.lastTupleBuilder = new ArrayTupleBuilder(numTokenFields + numInvListKeys);
             this.lastTuple = new ArrayTupleReference();
-            if (appendOnly) {
-                create(appendOnly);
-                activate(appendOnly);
-            }
             this.btreeBulkloader = btree.createBulkLoader(btreeFillFactor, verifyInput, numElementsHint,
-                    checkIfEmptyIndex, appendOnly);
+                    checkIfEmptyIndex);
             currentPageId = startPageId;
             currentPage = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
             invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
@@ -457,7 +448,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
 
         @Override
         public void abort() throws HyracksDataException {
-            if(btreeBulkloader != null){
+            if (btreeBulkloader != null) {
                 btreeBulkloader.abort();
             }
         }
@@ -476,10 +467,12 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         return invListsMaxPageId;
     }
 
+    @Override
     public IBinaryComparatorFactory[] getInvListCmpFactories() {
         return invListCmpFactories;
     }
 
+    @Override
     public ITypeTraits[] getInvListTypeTraits() {
         return invListTypeTraits;
     }
@@ -591,11 +584,14 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             return ByteBuffer.allocate(FRAME_SIZE);
         }
 
-        @Override public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        @Override
+        public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
             return ByteBuffer.allocate(bytes);
         }
 
-        @Override public ByteBuffer reallocateFrame(ByteBuffer bytes, int newSizeInBytes, boolean copyOldData) throws HyracksDataException {
+        @Override
+        public ByteBuffer reallocateFrame(ByteBuffer bytes, int newSizeInBytes, boolean copyOldData)
+                throws HyracksDataException {
             throw new HyracksDataException("TODO");
         }
 
@@ -611,23 +607,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             boolean checkIfEmptyIndex) throws IndexException {
         try {
             return new OnDiskInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                    rootPageId, false);
+                    rootPageId);
         } catch (HyracksDataException e) {
             throw new InvertedIndexException(e);
         }
-    }
-
-    @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
-        try {
-            return new OnDiskInvertedIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                    rootPageId, appendOnly);
-
-        } catch (HyracksDataException e) {
-            throw new InvertedIndexException(e);
-        }
-
     }
 
     @Override

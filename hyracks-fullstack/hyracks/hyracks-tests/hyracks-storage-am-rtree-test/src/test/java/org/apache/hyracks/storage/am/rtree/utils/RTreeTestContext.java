@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestContext;
@@ -55,12 +56,13 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
 
     public static RTreeTestContext create(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             FileReference file, ISerializerDeserializer[] fieldSerdes,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType)
+            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType,
+            IPageManagerFactory pageManagerFactory)
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         RTree rtree = RTreeUtils.createRTree(bufferCache, fileMapProvider, typeTraits, valueProviderFactories,
-                cmpFactories, rtreePolicyType, file, true, false);
+                cmpFactories, rtreePolicyType, file, false, pageManagerFactory);
         RTreeTestContext testCtx = new RTreeTestContext(fieldSerdes, rtree);
         return testCtx;
     }

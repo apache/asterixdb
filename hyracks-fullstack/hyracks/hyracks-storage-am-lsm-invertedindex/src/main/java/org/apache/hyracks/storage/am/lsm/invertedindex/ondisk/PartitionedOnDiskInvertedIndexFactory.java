@@ -23,6 +23,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
@@ -37,10 +38,10 @@ public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFa
             IFileMapProvider fileMapProvider,
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper) {
+            IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper,
+            IPageManagerFactory pageManagerFactory) {
         super(ioManager, bufferCache, fileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits,
-                tokenCmpFactories, fileNameMapper);
+                tokenTypeTraits, tokenCmpFactories, fileNameMapper, pageManagerFactory);
     }
 
     @Override
@@ -49,6 +50,7 @@ public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFa
         FileReference invListsFile = ioManager.resolveAbsolutePath(invListsFilePath);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();
         return new PartitionedOnDiskInvertedIndex(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits,
-                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile);
+                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile,
+                freePageManagerFactory);
     }
 }

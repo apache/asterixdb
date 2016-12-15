@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.asterix.common.utils.StoragePathUtil;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 
 public class LSMIndexFileProperties {
 
@@ -50,7 +50,7 @@ public class LSMIndexFileProperties {
 
     public LSMIndexFileProperties(LSMComponentProperties lsmComponentProperties) {
         initialize(lsmComponentProperties.getComponentId(), -1, lsmComponentProperties.getNodeId(), false,
-                IMetaDataPageManager.INVALID_LSN_OFFSET, false);
+                IMetadataPageManager.Constants.INVALID_LSN_OFFSET, false);
     }
 
     public void initialize(String filePath, long fileSize, String nodeId, boolean lsmComponentFile, long LSNByteOffset,

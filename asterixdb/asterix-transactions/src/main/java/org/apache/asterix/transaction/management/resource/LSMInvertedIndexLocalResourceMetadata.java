@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.Resource;
@@ -96,7 +97,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends Resource {
                         runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else {
                 return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches,
                         runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
@@ -109,7 +111,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends Resource {
                         runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             }
         } catch (IndexException e) {
             throw new HyracksDataException(e);

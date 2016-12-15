@@ -54,7 +54,8 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories,
                 bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true,
-                filterTypeTraits, filterCmpFactories, btreeFields, filterFields, true);
+                filterTypeTraits, filterCmpFactories, btreeFields, filterFields, true, harness
+                        .getMetadataPageManagerFactory());
     }
 
     @Before
@@ -95,7 +96,8 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
         bloomFilterKeyFields[0] = 0;
 
         ITypeTraits[] filterTypeTraits = { IntegerPointable.TYPE_TRAITS };
-        IBinaryComparatorFactory[] filterCmpFactories = { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+        IBinaryComparatorFactory[] filterCmpFactories = { PointableBinaryComparatorFactory.of(
+                IntegerPointable.FACTORY) };
         int[] filterFields = { 1 };
         int[] btreeFields = { 1 };
         ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, filterTypeTraits,
@@ -121,10 +123,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
                     LOGGER.info("Inserting " + i + " : " + f0 + " " + f1);
                 }
             }
-            try {
-                indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
-            }
+            indexAccessor.insert(tuple);
         }
         long end = System.currentTimeMillis();
         if (LOGGER.isLoggable(Level.INFO)) {

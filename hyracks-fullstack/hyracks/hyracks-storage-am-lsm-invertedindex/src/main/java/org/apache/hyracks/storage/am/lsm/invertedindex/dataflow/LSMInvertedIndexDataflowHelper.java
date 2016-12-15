@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
@@ -91,7 +92,8 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
                     opTrackerFactory.getOperationTracker(ctx), ioScheduler,
                     ioOpCallbackFactory.createIOOperationCallback(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                    invertedIndexFieldsForNonBulkLoadOps, durable);
+                    invertedIndexFieldsForNonBulkLoadOps, durable, (IMetadataPageManagerFactory) opDesc
+                            .getPageManagerFactory());
             return invIndex;
         } catch (IndexException e) {
             throw new HyracksDataException(e);

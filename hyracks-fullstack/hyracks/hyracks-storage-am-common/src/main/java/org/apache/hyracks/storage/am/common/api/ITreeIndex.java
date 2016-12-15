@@ -41,7 +41,7 @@ public interface ITreeIndex extends IIndex {
     /**
      * @return The index's free page manager.
      */
-    public IMetaDataPageManager getMetaManager();
+    public IPageManager getPageManager();
 
     /**
      * @return The number of fields tuples of this index have.

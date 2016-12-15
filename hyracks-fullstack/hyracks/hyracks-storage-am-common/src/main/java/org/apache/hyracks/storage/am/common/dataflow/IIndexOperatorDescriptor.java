@@ -25,33 +25,36 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public interface IIndexOperatorDescriptor extends IActivity {
-    public IFileSplitProvider getFileSplitProvider();
+    IFileSplitProvider getFileSplitProvider();
 
-    public IStorageManagerInterface getStorageManager();
+    IStorageManagerInterface getStorageManager();
 
-    public IIndexLifecycleManagerProvider getLifecycleManagerProvider();
+    IIndexLifecycleManagerProvider getLifecycleManagerProvider();
 
-    public RecordDescriptor getRecordDescriptor();
+    RecordDescriptor getRecordDescriptor();
 
-    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory();
+    IIndexDataflowHelperFactory getIndexDataflowHelperFactory();
 
-    public boolean getRetainInput();
+    boolean getRetainInput();
 
-    public boolean getRetainMissing();
+    boolean getRetainMissing();
 
-    public IMissingWriterFactory getMissingWriterFactory();
+    IMissingWriterFactory getMissingWriterFactory();
 
-    public ISearchOperationCallbackFactory getSearchOpCallbackFactory();
+    ISearchOperationCallbackFactory getSearchOpCallbackFactory();
 
-    public IModificationOperationCallbackFactory getModificationOpCallbackFactory();
+    IModificationOperationCallbackFactory getModificationOpCallbackFactory();
 
-    public ITupleFilterFactory getTupleFilterFactory();
+    ITupleFilterFactory getTupleFilterFactory();
 
-    public ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
+    ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
+
+    IPageManagerFactory getPageManagerFactory();
 }

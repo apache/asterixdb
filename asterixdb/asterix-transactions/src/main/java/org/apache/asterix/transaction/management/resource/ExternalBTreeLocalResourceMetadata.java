@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.resource;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -59,7 +60,8 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
                 new BaseOperationTracker(datasetId(),
                         runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                 runtimeContextProvider.getLSMIOScheduler(),
-                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true);
+                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true,
+                AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         return lsmBTree;
     }
 }

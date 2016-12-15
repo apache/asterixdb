@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.storage.am.btree;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -29,7 +26,12 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
+import org.junit.After;
+import org.junit.Before;
 
 public class BTreeExamplesTest extends OrderedIndexExamplesTest {
     private final BTreeTestHarness harness = new BTreeTestHarness();
@@ -44,11 +46,15 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
         harness.tearDown();
     }
 
+    @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
             int[] btreeFields, int[] filterFields) throws TreeIndexException {
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+        LinkedMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(harness.getBufferCache(),
+                metaFrameFactory);
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference());
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), freePageManager);
     }
 
 }

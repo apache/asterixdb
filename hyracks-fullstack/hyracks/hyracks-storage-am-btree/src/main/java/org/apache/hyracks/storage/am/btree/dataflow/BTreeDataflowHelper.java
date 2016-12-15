@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDe
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
 
@@ -44,9 +45,11 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
         try {
             FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(treeOpDesc, ctx.getTaskAttemptId()
                     .getTaskId().getPartition(), ctx.getIOManager());
-            return BTreeUtils.createBTree(opDesc.getStorageManager().getBufferCache(ctx), opDesc.getStorageManager()
+            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
+            return BTreeUtils.createBTree(bufferCache, opDesc.getStorageManager()
                     .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                            .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM, fileRef);
+                            .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM, fileRef,
+                    pageManagerFactory.createPageManager(bufferCache));
         } catch (BTreeException e) {
             throw new HyracksDataException(e);
         }

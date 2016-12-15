@@ -18,8 +18,10 @@
  */
 package org.apache.hyracks.storage.am.common.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public interface IMetadataManagerFactory {
-    public IMetaDataPageManager createFreePageManager() throws HyracksDataException;
+@FunctionalInterface
+public interface IMetadataPageManagerFactory extends IPageManagerFactory {
+    @Override
+    IMetadataPageManager createPageManager(IBufferCache bufferCache);
 }

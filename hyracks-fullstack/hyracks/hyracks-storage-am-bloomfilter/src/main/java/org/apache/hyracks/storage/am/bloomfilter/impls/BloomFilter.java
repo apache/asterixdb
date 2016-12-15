@@ -149,7 +149,6 @@ public class BloomFilter {
         if (isActivated) {
             return;
         }
-
         prepareFile();
         readBloomFilterMetaData();
         isActivated = true;

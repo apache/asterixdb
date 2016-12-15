@@ -201,7 +201,7 @@ public class LSMInvertedIndexTestUtils {
 
     public static void bulkLoadInvIndex(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numDocs, boolean appendOnly)
             throws IndexException, IOException {
-        SortedSet<CheckTuple> tmpMemIndex = new TreeSet<CheckTuple>();
+        SortedSet<CheckTuple> tmpMemIndex = new TreeSet<>();
         // First generate the expected index by inserting the documents one-by-one.
         for (int i = 0; i < numDocs; i++) {
             ITupleReference tuple = tupleGen.next();
@@ -210,7 +210,7 @@ public class LSMInvertedIndexTestUtils {
         ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
 
         // Use the expected index to bulk-load the actual index.
-        IIndexBulkLoader bulkLoader = testCtx.getIndex().createBulkLoader(1.0f, false, numDocs, true, appendOnly);
+        IIndexBulkLoader bulkLoader = testCtx.getIndex().createBulkLoader(1.0f, false, numDocs, true);
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(testCtx.getFieldSerdes().length);
         ArrayTupleReference tuple = new ArrayTupleReference();
         Iterator<CheckTuple> checkTupleIter = tmpMemIndex.iterator();
@@ -527,7 +527,7 @@ public class LSMInvertedIndexTestUtils {
             try {
                 if (!panic) {
                     // Consume cursor and deserialize results so we can sort them. Some search cursors may not deliver the result sorted (e.g., LSM search cursor).
-                    ArrayList<Integer> actualResults = new ArrayList<Integer>();
+                    ArrayList<Integer> actualResults = new ArrayList<>();
                     try {
                         while (resultCursor.hasNext()) {
                             resultCursor.next();
@@ -542,7 +542,7 @@ public class LSMInvertedIndexTestUtils {
                     Collections.sort(actualResults);
 
                     // Get expected results.
-                    List<Integer> expectedResults = new ArrayList<Integer>();
+                    List<Integer> expectedResults = new ArrayList<>();
                     LSMInvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(),
                             searchDocument, tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults,
                             testCtx.getInvertedIndexType());

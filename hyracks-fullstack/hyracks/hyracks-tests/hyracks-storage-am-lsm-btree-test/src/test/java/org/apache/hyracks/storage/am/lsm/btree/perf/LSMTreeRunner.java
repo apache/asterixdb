@@ -89,12 +89,12 @@ public class LSMTreeRunner implements IExperimentRunner {
 
         this.onDiskPageSize = onDiskPageSize;
         this.onDiskNumPages = onDiskNumPages;
-
         onDiskDir = classDir + sep + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+
         ioDeviceId = 0;
         file = ioManager.resolveAbsolutePath(onDiskDir);
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
@@ -112,7 +112,8 @@ public class LSMTreeRunner implements IExperimentRunner {
         lsmtree = LSMBTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, fmp, typeTraits,
                 cmpFactories,
                 bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(), new ThreadCountingTracker(),
-                ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null, null, true);
+                ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null, null, true,
+                TestStorageManagerComponentHolder.getMetadataPageManagerFactory());
     }
 
     @Override

@@ -262,7 +262,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
         rTreeTupleSorter.sort();
 
-        rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L, false, true);
+        rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L, false);
         cursor = rTreeTupleSorter;
 
         if (!isEmpty) {
@@ -304,7 +304,7 @@ public class LSMRTree extends AbstractLSMRTree {
         BTree diskBTree = component.getBTree();
 
         // BulkLoad the tuples from the in-memory tree into the new disk BTree.
-        IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f, false, numBTreeTuples, false, true);
+        IIndexBulkLoader bTreeBulkloader = diskBTree.createBulkLoader(1.0f, false, numBTreeTuples, false);
         IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numBTreeTuples,
                 bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
         // scan the memory BTree
@@ -363,7 +363,7 @@ public class LSMRTree extends AbstractLSMRTree {
         // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the r-trees so that
         // lsmHarness.endSearch() is called once when the r-trees have been merged.
         BTree btree = mergedComponent.getBTree();
-        IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false, true);
+        IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
         if (mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
                 .get(diskComponents.size() - 1)) {
             // Keep the deleted tuples since the oldest disk component is not included in the merge operation
@@ -407,7 +407,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
         btreeBulkLoader.end();
 
-        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false, true);
+        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -544,9 +544,9 @@ public class LSMRTree extends AbstractLSMRTree {
                 throw new TreeIndexException(e);
             }
             bulkLoader = ((LSMRTreeDiskComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint, false, true);
+                    numElementsHint, false);
             buddyBTreeBulkloader = ((LSMRTreeDiskComponent) component).getBTree().createBulkLoader(fillFactor,
-                    verifyInput, numElementsHint, false, true);
+                    verifyInput, numElementsHint, false);
             if (filterFields != null) {
                 indexTuple = new PermutingTupleReference(rtreeFields);
                 filterCmp = MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories());
@@ -633,15 +633,6 @@ public class LSMRTree extends AbstractLSMRTree {
         markAsValidInternal(component.getBTree().getBufferCache(), component.getBloomFilter());
         markAsValidInternal((component).getBTree());
         markAsValidInternal((component).getRTree());
-    }
-
-    @Override
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
-        if (!appendOnly) {
-            throw new UnsupportedOperationException("LSM indexes don't support in-place modification");
-        }
-        return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
     }
 
     @Override

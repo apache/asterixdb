@@ -22,6 +22,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
@@ -82,7 +83,8 @@ public class ExternalBTreeWithBuddyDataflowHelper extends AbstractLSMIndexDatafl
                 opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 treeOpDesc.getTreeIndexComparatorFactories(), bloomFilterFalsePositiveRate, mergePolicy,
                 opTrackerFactory.getOperationTracker(ctx), ioScheduler,
-                ioOpCallbackFactory.createIOOperationCallback(), buddyBtreeFields, version, durable);
+                ioOpCallbackFactory.createIOOperationCallback(), buddyBtreeFields, version, durable,
+                (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
     }
 
     public int getTargetVersion() {

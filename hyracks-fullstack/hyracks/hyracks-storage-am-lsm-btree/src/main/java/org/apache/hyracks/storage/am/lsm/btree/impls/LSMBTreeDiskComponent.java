@@ -21,7 +21,7 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 
@@ -65,7 +65,7 @@ public class LSMBTreeDiskComponent extends AbstractDiskLSMComponent {
     }
 
     public void readMostRecentMarkerLSN(BTree treeIndex) throws HyracksDataException {
-        IMetaDataPageManager treeMetaManager = treeIndex.getMetaManager();
+        IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
         mostRecentMarkerLSN = treeMetaManager.getLastMarkerLSN();
     }
 }

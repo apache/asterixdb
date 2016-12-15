@@ -43,8 +43,8 @@ import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationIn
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ISplitKey;
@@ -83,7 +83,7 @@ public class BTree extends AbstractTreeIndex {
     private final ReadWriteLock treeLatch;
     private final int maxTupleSize;
 
-    public BTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider, IMetaDataPageManager freePageManager,
+    public BTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider, IPageManager freePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             IBinaryComparatorFactory[] cmpFactories, int fieldCount, FileReference file) {
         super(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
@@ -100,7 +100,7 @@ public class BTree extends AbstractTreeIndex {
         TreeIndexDiskOrderScanCursor cursor = (TreeIndexDiskOrderScanCursor) icursor;
         ctx.reset();
         RangePredicate diskOrderScanPred = new RangePredicate(null, null, true, true, ctx.cmp, ctx.cmp);
-        int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
+        int maxPageId = freePageManager.getMaxPageId(ctx.metaFrame);
         int currentPageId = bulkloadLeafStart;
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
         page.acquireReadLatch();
@@ -120,6 +120,7 @@ public class BTree extends AbstractTreeIndex {
         }
     }
 
+    @Override
     public void validate() throws HyracksDataException {
         // Stack validation protocol:
         //      * parent pushes the validation information onto the stack before validation
@@ -246,7 +247,7 @@ public class BTree extends AbstractTreeIndex {
                 false);
         leftNode.acquireWriteLatch();
         try {
-            int newLeftId = freePageManager.getFreePage(ctx.metaFrame);
+            int newLeftId = freePageManager.takePage(ctx.metaFrame);
             ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newLeftId), true);
             newLeftNode.acquireWriteLatch();
             try {
@@ -371,7 +372,7 @@ public class BTree extends AbstractTreeIndex {
                 // TODO: avoid repeated calculation of tuple size
                 ctx.leafFrame.ensureCapacity(bufferCache, tuple, ctx);
             }
-                // fall-through
+            // fall-through
             case SUFFICIENT_CONTIGUOUS_SPACE: {
                 ctx.modificationCallback.found(null, tuple);
                 ctx.leafFrame.insert(tuple, targetTupleIndex);
@@ -428,7 +429,7 @@ public class BTree extends AbstractTreeIndex {
                 return true;
             }
         }
-        int rightPageId = freePageManager.getFreePage(ctx.metaFrame);
+        int rightPageId = freePageManager.takePage(ctx.metaFrame);
         ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
         rightNode.acquireWriteLatch();
         try {
@@ -545,13 +546,13 @@ public class BTree extends AbstractTreeIndex {
         FrameOpSpaceStatus spaceStatus = ctx.interiorFrame.hasSpaceInsert(tuple);
         switch (spaceStatus) {
             case INSUFFICIENT_SPACE: {
-                int rightPageId = freePageManager.getFreePage(ctx.metaFrame);
+                int rightPageId = freePageManager.takePage(ctx.metaFrame);
                 ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rightPageId), true);
                 rightNode.acquireWriteLatch();
                 try {
                     IBTreeFrame rightFrame = ctx.createInteriorFrame();
                     rightFrame.setPage(rightNode);
-                    rightFrame.initBuffer((byte) ctx.interiorFrame.getLevel());
+                    rightFrame.initBuffer(ctx.interiorFrame.getLevel());
                     rightFrame.setMultiComparator(ctx.cmp);
                     // instead of creating a new split key, use the existing
                     // splitKey
@@ -815,7 +816,6 @@ public class BTree extends AbstractTreeIndex {
             }
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             if (node != null) {
                 if (isReadLatched) {
                     node.releaseReadLatch();
@@ -887,7 +887,6 @@ public class BTree extends AbstractTreeIndex {
         } catch (Exception e) {
             node.releaseReadLatch();
             bufferCache.unpin(node);
-            e.printStackTrace();
         }
     }
 
@@ -994,13 +993,8 @@ public class BTree extends AbstractTreeIndex {
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex) throws TreeIndexException {
-        return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, false);
-    }
-
-    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, boolean appendOnly) throws TreeIndexException {
         try {
-            return new BTreeBulkLoader(fillFactor, verifyInput, appendOnly);
+            return new BTreeBulkLoader(fillFactor, verifyInput);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -1010,9 +1004,9 @@ public class BTree extends AbstractTreeIndex {
         protected final ISplitKey splitKey;
         protected final boolean verifyInput;
 
-        public BTreeBulkLoader(float fillFactor, boolean verifyInput, boolean appendOnly)
+        public BTreeBulkLoader(float fillFactor, boolean verifyInput)
                 throws TreeIndexException, HyracksDataException {
-            super(fillFactor, appendOnly);
+            super(fillFactor);
             this.verifyInput = verifyInput;
             splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
             splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
@@ -1052,7 +1046,7 @@ public class BTree extends AbstractTreeIndex {
 
                         propagateBulk(1, pagesToWrite);
 
-                        leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
+                        leafFrontier.pageId = freePageManager.takePage(metaFrame);
 
                         ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
 
@@ -1072,7 +1066,7 @@ public class BTree extends AbstractTreeIndex {
                                 .ceil((double) tupleSize / (bufferCache.getPageSize() - headerSize));
                         if (multiplier > 1) {
                             leafFrontier.page = bufferCache.confiscateLargePage(dpid, multiplier,
-                                    freePageManager.getFreePageBlock(metaFrame, multiplier - 1));
+                                    freePageManager.takeBlock(metaFrame, multiplier - 1));
                         } else {
                             leafFrontier.page = bufferCache.confiscatePage(dpid);
                         }
@@ -1112,11 +1106,13 @@ public class BTree extends AbstractTreeIndex {
 
         protected void propagateBulk(int level, List<ICachedPage> pagesToWrite)
                 throws HyracksDataException, TreeIndexException {
-            if (splitKey.getBuffer() == null)
+            if (splitKey.getBuffer() == null) {
                 return;
+            }
 
-            if (level >= nodeFrontiers.size())
+            if (level >= nodeFrontiers.size()) {
                 addLevel();
+            }
 
             NodeFrontier frontier = nodeFrontiers.get(level);
             interiorFrame.setPage(frontier.page);
@@ -1144,7 +1140,7 @@ public class BTree extends AbstractTreeIndex {
                 splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
 
                 ((IBTreeInteriorFrame) interiorFrame).deleteGreatest();
-                int finalPageId = freePageManager.getFreePage(metaFrame);
+                int finalPageId = freePageManager.takePage(metaFrame);
                 bufferCache.setPageDiskId(frontier.page, BufferedFileHandle.getDiskPageId(fileId, finalPageId));
                 pagesToWrite.add(frontier.page);
                 splitKey.setLeftPage(finalPageId);
@@ -1159,10 +1155,7 @@ public class BTree extends AbstractTreeIndex {
 
         private void persistFrontiers(int level, int rightPage) throws HyracksDataException {
             if (level >= nodeFrontiers.size()) {
-                //at root
-                if (appendOnly) {
-                    rootPage = nodeFrontiers.get(level - 1).pageId;
-                }
+                rootPage = nodeFrontiers.get(level - 1).pageId;
                 releasedLatches = true;
                 return;
             }
@@ -1183,7 +1176,7 @@ public class BTree extends AbstractTreeIndex {
                         "Error in index creation. Internal node appears to have no rightmost guide");
             }
             ((IBTreeInteriorFrame) interiorFrame).setRightmostChildPageId(rightPage);
-            int finalPageId = freePageManager.getFreePage(metaFrame);
+            int finalPageId = freePageManager.takePage(metaFrame);
             setPageDpid(frontier.page, finalPageId);
             queue.put(frontier.page);
             frontier.pageId = finalPageId;

@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -64,12 +65,14 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
     public ExternalFilesIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, IIndexDataflowHelperFactory dataflowHelperFactory,
-            ILocalResourceFactoryProvider localResourceFactoryProvider, List<ExternalFile> files, boolean createNewIndex) {
+            ILocalResourceFactoryProvider localResourceFactoryProvider, List<ExternalFile> files,
+            boolean createNewIndex, IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider,
                 new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
                 new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 dataflowHelperFactory, null, false, false, null, localResourceFactoryProvider,
-                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
+                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
+                metadataPageManagerFactory);
         this.createNewIndex = createNewIndex;
         this.files = files;
     }

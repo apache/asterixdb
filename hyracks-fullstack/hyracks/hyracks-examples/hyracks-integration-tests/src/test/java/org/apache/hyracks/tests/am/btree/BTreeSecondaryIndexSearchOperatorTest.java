@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,7 +86,7 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperator
                 secondaryRecDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryBloomFilterKeyFields, secondaryLowKeyFields,
                 secondaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null);
+                NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
@@ -98,7 +99,8 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperator
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 primaryBloomFilterKeyFields, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null);
+                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null,
+                new LinkedMetadataPageManagerFactory());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");

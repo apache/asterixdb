@@ -22,7 +22,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexDiskComponent;
@@ -66,8 +66,8 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMInvertedIndexFileManager.DELETED_KEYS_BTREE_SUFFIX)) {
             LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) diskComponent;
-            return invIndexComponent.getDeletedKeysBTree().getMetaManager().getLSNOffset();
+            return ((IMetadataPageManager) invIndexComponent.getDeletedKeysBTree().getPageManager()).getLSNOffset();
         }
-        return IMetaDataPageManager.INVALID_LSN_OFFSET;
+        return IMetadataPageManager.Constants.INVALID_LSN_OFFSET;
     }
 }

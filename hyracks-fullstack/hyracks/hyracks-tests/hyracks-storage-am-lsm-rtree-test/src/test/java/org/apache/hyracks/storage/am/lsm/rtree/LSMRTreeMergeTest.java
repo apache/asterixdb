@@ -56,10 +56,10 @@ public class LSMRTreeMergeTest extends LSMRTreeMergeTestDriver {
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
         return LSMRTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, valueProviderFactories,
-                numKeys, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
+                .getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                valueProviderFactories, numKeys, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(), harness
+                        .getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(), harness
+                                .getIOOperationCallback(), harness.getMetadataPageManagerFactory());
     }
 
     @Override

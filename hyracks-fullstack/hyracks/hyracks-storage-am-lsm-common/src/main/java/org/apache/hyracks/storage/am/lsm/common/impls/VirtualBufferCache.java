@@ -396,6 +396,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             latch.writeLock().unlock();
         }
 
+        @Override
         public boolean confiscated() {
             return false;
         }
@@ -433,7 +434,12 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
-        return numPages;
+        synchronized (fileMapManager) {
+            if (fileMapManager.isMapped(fileId)) {
+                return numPages;
+            }
+        }
+        return 0;
     }
 
     @Override

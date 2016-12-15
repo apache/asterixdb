@@ -29,6 +29,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexCompactOperatorNodePushable;
@@ -45,11 +46,12 @@ public class LSMInvertedIndexCompactOperator extends AbstractLSMInvertedIndexOpe
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory dataflowHelperFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
+            IModificationOperationCallbackFactory modificationOpCallbackFactory,
+            IPageManagerFactory pageManagerFactory) {
         super(spec, 1, 1, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
-                dataflowHelperFactory, null, false, false,
-                null, NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
+                dataflowHelperFactory, null, false, false, null, NoOpLocalResourceFactoryProvider.INSTANCE,
+                NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory, pageManagerFactory);
     }
 
     @Override

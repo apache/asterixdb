@@ -21,14 +21,13 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.common;
 
 import java.io.IOException;
 
-import org.junit.Test;
-
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.junit.Test;
 
 public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedIndexTest {
 
@@ -42,10 +41,8 @@ public abstract class AbstractInvertedIndexLoadTest extends AbstractInvertedInde
     protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
             IndexException {
         IIndex invIndex = testCtx.getIndex();
-        if(invIndexType != InvertedIndexType.PARTITIONED_ONDISK && invIndexType != InvertedIndexType.ONDISK) {
-            invIndex.create();
-            invIndex.activate();
-        }
+        invIndex.create();
+        invIndex.activate();
         if (bulkLoad) {
                 LSMInvertedIndexTestUtils.bulkLoadInvIndex(testCtx, tupleGen, NUM_DOCS_TO_INSERT, true);
         } else {

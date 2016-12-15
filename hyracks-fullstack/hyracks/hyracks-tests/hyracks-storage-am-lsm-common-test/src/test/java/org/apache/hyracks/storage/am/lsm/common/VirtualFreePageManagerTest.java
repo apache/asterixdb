@@ -21,23 +21,26 @@ package org.apache.hyracks.storage.am.lsm.common;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualMetaDataPageManager;
-import org.junit.Test;
+import java.io.File;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
+import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
+import org.junit.Test;
 
 public class VirtualFreePageManagerTest {
 
     private final int NUM_PAGES = 100;
 
-    private void testInMemoryFreePageManager(VirtualMetaDataPageManager virtualFreePageManager) throws HyracksDataException {
+    private void testInMemoryFreePageManager(VirtualFreePageManager virtualFreePageManager) throws HyracksDataException {
         // The first two pages are reserved for the BTree's metadata page and
         // root page.
-        // The "actual" capacity is therefore numPages - 2.
-        int capacity = virtualFreePageManager.getCapacity();
-        assertEquals(capacity, NUM_PAGES - 2);
+        int capacity = NUM_PAGES - 2;
         for (int i = 0; i < capacity; i++) {
-            int pageId = virtualFreePageManager.getFreePage(null);
+            int pageId = virtualFreePageManager.takePage(null);
             // The free pages start from page 2;
             assertEquals(i + 2, pageId);
         }
@@ -46,17 +49,25 @@ public class VirtualFreePageManagerTest {
         // nevertheless succeed.
         // We expect isFull() to return true.
         for (int i = 0; i < 100; i++) {
-            int pageId = virtualFreePageManager.getFreePage(null);
+            int pageId = virtualFreePageManager.takePage(null);
             assertEquals(capacity + i + 2, pageId);
         }
     }
 
     @Test
     public void test01() throws HyracksDataException {
-        VirtualMetaDataPageManager virtualFreePageManager = new VirtualMetaDataPageManager(NUM_PAGES);
+        VirtualBufferCache bufferCache = new VirtualBufferCache(new HeapBufferAllocator(), 4096, 128);
+        bufferCache.open();
+        FileReference fileRef = new FileReference(new IODeviceHandle(new File("target"), "workspace"), "tempfile.tmp");
+        bufferCache.createFile(fileRef);
+        int fileId = bufferCache.getFileMapProvider().lookupFileId(fileRef);
+        bufferCache.openFile(fileId);
+        VirtualFreePageManager virtualFreePageManager = new VirtualFreePageManager(bufferCache);
+        virtualFreePageManager.open(fileId);
+        virtualFreePageManager.init(null, null);
         testInMemoryFreePageManager(virtualFreePageManager);
         // We expect exactly the same behavior after a reset().
-        virtualFreePageManager.reset();
+        virtualFreePageManager.init(null, null);
         testInMemoryFreePageManager(virtualFreePageManager);
     }
 }

@@ -42,11 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class BufferCacheRegressionTest {
-    protected static final String tmpDir = System.getProperty("java.io.tmpdir");
-    protected static final String sep = System.getProperty("file.separator");
-
-    protected String fileName = tmpDir + sep + "flushTestFile";
-
+    protected String fileName = "flushTestFile";
     private static final int PAGE_SIZE = 256;
     private static final int HYRACKS_FRAME_SIZE = PAGE_SIZE;
     private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
@@ -83,7 +79,7 @@ public class BufferCacheRegressionTest {
         IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
         IOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
-        FileReference firstFileRef = ioManager.resolveAbsolutePath(fileName);
+        FileReference firstFileRef = ioManager.resolve(fileName);
         bufferCache.createFile(firstFileRef);
         int firstFileId = fmp.lookupFileId(firstFileRef);
         bufferCache.openFile(firstFileId);
@@ -107,7 +103,7 @@ public class BufferCacheRegressionTest {
         }
 
         // Create a file with the same name.
-        FileReference secondFileRef = ioManager.resolveAbsolutePath(fileName);
+        FileReference secondFileRef = ioManager.resolve(fileName);
         bufferCache.createFile(secondFileRef);
         int secondFileId = fmp.lookupFileId(secondFileRef);
 
@@ -123,7 +119,7 @@ public class BufferCacheRegressionTest {
         // ask the BufferCache to pin the page, because it would return the same
         // physical memory again, and for performance reasons pages are never
         // reset with 0's.
-        FileReference testFileRef = ioManager.resolveAbsolutePath(fileName);
+        FileReference testFileRef = ioManager.resolve(fileName);
         IFileHandle testFileHandle = ioManager.open(testFileRef, FileReadWriteMode.READ_ONLY,
                 FileSyncMode.METADATA_SYNC_DATA_SYNC);
         ByteBuffer testBuffer = ByteBuffer.allocate(PAGE_SIZE + BufferCache.RESERVED_HEADER_BYTES);

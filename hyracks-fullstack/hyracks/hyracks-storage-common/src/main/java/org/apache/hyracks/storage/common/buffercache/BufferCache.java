@@ -1331,7 +1331,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 bucket.cachedPage = cPage;
                 cPage.pinCount.decrementAndGet();
                 if (DEBUG){
-                    assert cPage.pinCount.get() == 0 ;
+                    assert cPage.pinCount.get() == 0;
                     assert cPage.latch.getReadLockCount() == 0;
                     assert cPage.latch.getWriteHoldCount() == 0;
                     confiscatedPages.remove(cPage);

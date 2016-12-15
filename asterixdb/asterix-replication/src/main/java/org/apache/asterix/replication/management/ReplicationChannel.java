@@ -71,7 +71,7 @@ import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.application.INCApplicationContext;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.util.StorageUtil;
@@ -344,7 +344,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 }
                 if (afp.isLSMComponentFile()) {
                     String componentId = LSMComponentProperties.getLSMComponentID(afp.getFilePath());
-                    if (afp.getLSNByteOffset() != IMetaDataPageManager.INVALID_LSN_OFFSET) {
+                    if (afp.getLSNByteOffset() != IMetadataPageManager.Constants.INVALID_LSN_OFFSET) {
                         LSMComponentLSNSyncTask syncTask = new LSMComponentLSNSyncTask(componentId,
                                 destFile.getAbsolutePath(), afp.getLSNByteOffset());
                         lsmComponentRemoteLSN2LocalLSNMappingTaskQ.offer(syncTask);
@@ -392,7 +392,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                                     FileChannel fileChannel = fromFile.getChannel();) {
                                 long fileSize = fileChannel.size();
                                 fileProperties.initialize(filePath, fileSize, replicaId, false,
-                                        IMetaDataPageManager.INVALID_LSN_OFFSET, false);
+                                        IMetadataPageManager.Constants.INVALID_LSN_OFFSET, false);
                                 outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
                                         ReplicationRequestType.REPLICATE_FILE);
 

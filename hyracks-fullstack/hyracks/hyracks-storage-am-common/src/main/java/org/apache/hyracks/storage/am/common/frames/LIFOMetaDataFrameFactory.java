@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.common.frames;
 
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;

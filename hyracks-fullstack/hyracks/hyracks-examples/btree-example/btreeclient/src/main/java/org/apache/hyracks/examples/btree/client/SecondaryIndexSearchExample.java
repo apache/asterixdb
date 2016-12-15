@@ -45,6 +45,7 @@ import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManagerInterface;
 import org.kohsuke.args4j.CmdLineParser;
@@ -172,7 +173,8 @@ public class SecondaryIndexSearchExample {
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 searchComparatorFactories, null, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null);
+                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null,
+                new LinkedMetadataPageManagerFactory());
 
         JobHelper.createPartitionConstraint(spec, secondarySearchOp, splitNCs);
 
@@ -189,7 +191,7 @@ public class SecondaryIndexSearchExample {
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 null, primaryLowKeyFields, primaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null);
+                NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
 
         JobHelper.createPartitionConstraint(spec, primarySearchOp, splitNCs);
 

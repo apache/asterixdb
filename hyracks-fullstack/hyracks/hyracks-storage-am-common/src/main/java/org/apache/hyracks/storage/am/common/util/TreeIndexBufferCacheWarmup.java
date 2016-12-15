@@ -23,7 +23,7 @@ import java.util.Random;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.MathUtil;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.common.arraylist.IntArrayList;
@@ -33,13 +33,13 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class TreeIndexBufferCacheWarmup {
     private final IBufferCache bufferCache;
-    private final IMetaDataPageManager freePageManager;
+    private final IMetadataPageManager freePageManager;
     private final int fileId;
     private final ArrayList<IntArrayList> pagesByLevel = new ArrayList<>();
     private final Random rnd = new Random();
 
     public TreeIndexBufferCacheWarmup(IBufferCache bufferCache,
-            IMetaDataPageManager freePageManager, int fileId) {
+            IMetadataPageManager freePageManager, int fileId) {
         this.bufferCache = bufferCache;
         this.freePageManager = freePageManager;
         this.fileId = fileId;
@@ -51,7 +51,7 @@ public class TreeIndexBufferCacheWarmup {
         bufferCache.openFile(fileId);
 
         // scan entire file to determine pages in each level
-        int maxPageId = freePageManager.getMaxPage(metaFrame);
+        int maxPageId = freePageManager.getMaxPageId(metaFrame);
         for (int pageId = 0; pageId <= maxPageId; pageId++) {
             ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             page.acquireReadLatch();

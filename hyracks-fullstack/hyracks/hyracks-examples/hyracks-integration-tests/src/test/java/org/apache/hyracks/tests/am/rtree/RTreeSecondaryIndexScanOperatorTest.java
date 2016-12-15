@@ -86,7 +86,7 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
         RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null);
+                NoOpOperationCallbackFactory.INSTANCE, null, null, pageManagerFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");

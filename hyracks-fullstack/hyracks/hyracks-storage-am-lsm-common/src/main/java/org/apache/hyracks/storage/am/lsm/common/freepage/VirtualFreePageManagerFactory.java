@@ -16,10 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.am.lsm.common.freepage;
 
-public interface IVirtualMetaDataPageManager extends IMetaDataPageManager {
-    public int getCapacity();
+import org.apache.hyracks.storage.am.common.api.IPageManager;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-    public void reset();
+public class VirtualFreePageManagerFactory implements IPageManagerFactory {
+    private static final long serialVersionUID = 1L;
+    @Override
+    public IPageManager createPageManager(IBufferCache bufferCache) {
+        return new VirtualFreePageManager(bufferCache);
+    }
 }

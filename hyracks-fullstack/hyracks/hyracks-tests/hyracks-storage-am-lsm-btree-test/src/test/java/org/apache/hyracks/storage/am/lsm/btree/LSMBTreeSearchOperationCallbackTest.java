@@ -59,7 +59,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerProvider.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
-                harness.getIOOperationCallback(), true, null, null, null, null, true);
+                harness.getIOOperationCallback(), true, null, null, null, null, true, harness
+                        .getMetadataPageManagerFactory());
     }
 
     @Override
@@ -282,7 +283,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 throw new IllegalArgumentException("Invalid range: [" + begin + ", " + end + "]");
             }
 
-            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true, true);
+            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true);
             for (int i = begin; i <= end; i++) {
                 TupleUtils.createIntegerTuple(builder, tuple, i);
                 bulkloader.add(tuple);

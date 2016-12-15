@@ -34,6 +34,8 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -77,6 +79,7 @@ public class LSMBTreeTestHarness {
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
     protected ILSMIOOperationCallback ioOpCallback;
+    protected IMetadataPageManagerFactory metadataPageManagerFactory;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -97,6 +100,7 @@ public class LSMBTreeTestHarness {
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
+        this.metadataPageManagerFactory = new AppendOnlyLinkedMetadataPageManagerFactory();
     }
 
     public void setUp() throws HyracksDataException {
@@ -212,5 +216,9 @@ public class LSMBTreeTestHarness {
 
     public ILSMIOOperationCallback getIOOperationCallback() {
         return ioOpCallback;
+    }
+
+    public IMetadataPageManagerFactory getMetadataPageManagerFactory() {
+        return metadataPageManagerFactory;
     }
 }

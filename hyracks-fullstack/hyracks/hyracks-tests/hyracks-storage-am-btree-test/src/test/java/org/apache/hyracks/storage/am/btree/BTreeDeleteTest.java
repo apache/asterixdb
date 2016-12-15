@@ -21,14 +21,13 @@ package org.apache.hyracks.storage.am.btree;
 
 import java.util.Random;
 
-import org.junit.After;
-import org.junit.Before;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeTestContext;
 import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
+import org.junit.After;
+import org.junit.Before;
 
 public class BTreeDeleteTest extends OrderedIndexDeleteTest {
 
@@ -53,7 +52,8 @@ public class BTreeDeleteTest extends OrderedIndexDeleteTest {
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
         return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, numKeys, leafType);
+                harness.getFileReference(), fieldSerdes, numKeys, leafType, harness.getPageManagerFactory()
+                        .createPageManager(harness.getBufferCache()));
     }
 
     @Override

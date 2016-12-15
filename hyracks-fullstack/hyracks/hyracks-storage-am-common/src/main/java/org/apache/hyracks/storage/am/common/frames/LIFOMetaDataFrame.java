@@ -31,6 +31,9 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
+    private static final byte META_PAGE_LEVEL_INDICATOR = -1;
+    private static final byte FREE_PAGE_LEVEL_INDICATOR = -2;
+
     // Arbitrarily chosen magic integer.
     protected static final int OBSOLETE_MAGIC_VALID_INT = 0x5bd1e995;
     protected static final int MAGIC_VALID_INT = 0x1B16DA7A;
@@ -119,21 +122,21 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     }
 
     @Override
-    public void initBuffer(byte level) {
+    public void initBuffer() {
         buf.putInt(TUPLE_COUNT_OFFSET, 0);
         buf.putInt(FREE_SPACE_OFFSET, HEADER_END_OFFSET);
         buf.putInt(MAX_PAGE_OFFSET, 0);
-        buf.put(LEVEL_OFFSET, level);
+        buf.put(LEVEL_OFFSET, META_PAGE_LEVEL_INDICATOR);
         buf.putInt(NEXT_PAGE_OFFSET, -1);
         buf.putInt(ADDITIONAL_FILTERING_PAGE_OFFSET, -1);
         buf.putLong(LAST_MARKER_LSN_OFFSET, -1L);
-        buf.putInt(ROOT_PAGE_NUMBER, 0);
+        buf.putInt(ROOT_PAGE_NUMBER, 1);
         buf.putInt(STORAGE_VERSION_OFFSET, VERSION);
         setValid(false);
     }
 
     @Override
-    public int getNextPage() {
+    public int getNextMetadataPage() {
         return buf.getInt(NEXT_PAGE_OFFSET);
     }
 
@@ -203,5 +206,15 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     @Override
     public int getRootPageNumber() {
         return buf.getInt(ROOT_PAGE_NUMBER);
+    }
+
+    @Override
+    public boolean isMetadataPage() {
+        return getLevel() == META_PAGE_LEVEL_INDICATOR;
+    }
+
+    @Override
+    public boolean isFreePage() {
+        return getLevel() == FREE_PAGE_LEVEL_INDICATOR;
     }
 }

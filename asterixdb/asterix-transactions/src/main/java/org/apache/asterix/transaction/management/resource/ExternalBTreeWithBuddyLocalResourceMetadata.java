@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.resource;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.Resource;
@@ -73,6 +74,6 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
                         runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                 runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), buddyBtreeFields, -1,
-                true);
+                true, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
     }
 }

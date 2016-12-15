@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -68,8 +68,8 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMBTreeFileManager.BTREE_STRING)) {
             LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) diskComponent;
-            return btreeComponent.getBTree().getMetaManager().getLSNOffset();
+            return ((IMetadataPageManager) btreeComponent.getBTree().getPageManager()).getLSNOffset();
         }
-        return IMetaDataPageManager.INVALID_LSN_OFFSET;
+        return IMetadataPageManager.Constants.INVALID_LSN_OFFSET;
     }
 }

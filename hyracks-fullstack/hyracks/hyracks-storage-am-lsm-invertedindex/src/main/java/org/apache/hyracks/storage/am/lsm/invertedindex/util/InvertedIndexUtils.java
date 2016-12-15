@@ -31,12 +31,11 @@ import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedListMetadataManagerFactory;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -67,7 +66,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class InvertedIndexUtils {
 
     public static InMemoryInvertedIndex createInMemoryBTreeInvertedindex(IBufferCache memBufferCache,
-            IMetaDataPageManager virtualFreePageManager, ITypeTraits[] invListTypeTraits,
+            IPageManager virtualFreePageManager, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             FileReference btreeFileRef) throws BTreeException {
@@ -76,7 +75,7 @@ public class InvertedIndexUtils {
     }
 
     public static InMemoryInvertedIndex createPartitionedInMemoryBTreeInvertedindex(IBufferCache memBufferCache,
-            IMetaDataPageManager virtualFreePageManager, ITypeTraits[] invListTypeTraits,
+            IPageManager virtualFreePageManager, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             FileReference btreeFileRef) throws BTreeException {
@@ -87,24 +86,26 @@ public class InvertedIndexUtils {
     public static OnDiskInvertedIndex createOnDiskInvertedIndex(IIOManager ioManager, IBufferCache bufferCache,
             IFileMapProvider fileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, FileReference invListsFile) throws IndexException,
+            IBinaryComparatorFactory[] tokenCmpFactories, FileReference invListsFile,
+            IPageManagerFactory pageManagerFactory) throws IndexException,
             HyracksDataException {
         IInvertedListBuilder builder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         FileReference btreeFile = getBTreeFile(ioManager, invListsFile);
         return new OnDiskInvertedIndex(bufferCache, fileMapProvider, builder, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, btreeFile, invListsFile);
+                tokenTypeTraits, tokenCmpFactories, btreeFile, invListsFile, pageManagerFactory);
     }
 
     public static PartitionedOnDiskInvertedIndex createPartitionedOnDiskInvertedIndex(IIOManager ioManager,
             IBufferCache bufferCache,
             IFileMapProvider fileMapProvider, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, FileReference invListsFile) throws IndexException,
+            IBinaryComparatorFactory[] tokenCmpFactories, FileReference invListsFile,
+            IPageManagerFactory pageManagerFactory) throws IndexException,
             HyracksDataException {
         IInvertedListBuilder builder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
         FileReference btreeFile = getBTreeFile(ioManager, invListsFile);
         return new PartitionedOnDiskInvertedIndex(bufferCache, fileMapProvider, builder, invListTypeTraits,
-                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, btreeFile, invListsFile);
+                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, btreeFile, invListsFile, pageManagerFactory);
     }
 
     public static FileReference getBTreeFile(IIOManager ioManager, FileReference invListsFile)
@@ -114,14 +115,11 @@ public class InvertedIndexUtils {
 
     public static BTreeFactory createDeletedKeysBTreeFactory(IIOManager ioManager, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
-            IBufferCache diskBufferCache) throws BTreeException {
+            IBufferCache diskBufferCache, IPageManagerFactory freePageManagerFactory) throws BTreeException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(invListTypeTraits);
         ITreeIndexFrameFactory leafFrameFactory = BTreeUtils.getLeafFrameFactory(tupleWriterFactory,
                 BTreeLeafFrameType.REGULAR_NSM);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        LinkedListMetadataManagerFactory freePageManagerFactory = new LinkedListMetadataManagerFactory(diskBufferCache,
-                metaFrameFactory);
         BTreeFactory deletedKeysBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, interiorFrameFactory, leafFrameFactory, invListCmpFactories,
                 invListCmpFactories.length);
@@ -137,11 +135,11 @@ public class InvertedIndexUtils {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, int[] invertedIndexFields, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, int[] filterFieldsForNonBulkLoadOps,
-            int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable) throws IndexException, HyracksDataException {
+            int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable, IMetadataPageManagerFactory pageManagerFactory)
+            throws IndexException, HyracksDataException {
 
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(ioManager, diskFileMapProvider,
-                invListTypeTraits,
-                invListCmpFactories, diskBufferCache);
+                invListTypeTraits, invListCmpFactories, diskBufferCache, pageManagerFactory);
 
         int[] bloomFilterKeyFields = new int[invListCmpFactories.length];
         for (int i = 0; i < invListCmpFactories.length; i++) {
@@ -158,7 +156,7 @@ public class InvertedIndexUtils {
                 invListTypeTraits);
         OnDiskInvertedIndexFactory invIndexFactory = new OnDiskInvertedIndexFactory(ioManager, diskBufferCache,
                 diskFileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                tokenCmpFactories, fileManager);
+                tokenCmpFactories, fileManager, pageManagerFactory);
 
         LSMComponentFilterFactory filterFactory = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;
@@ -188,12 +186,12 @@ public class InvertedIndexUtils {
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, int[] invertedIndexFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable)
+            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable,
+            IPageManagerFactory pageManagerFactory)
             throws IndexException, HyracksDataException {
 
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(ioManager, diskFileMapProvider,
-                invListTypeTraits,
-                invListCmpFactories, diskBufferCache);
+                invListTypeTraits, invListCmpFactories, diskBufferCache, pageManagerFactory);
 
         int[] bloomFilterKeyFields = new int[invListCmpFactories.length];
         for (int i = 0; i < invListCmpFactories.length; i++) {
@@ -210,7 +208,7 @@ public class InvertedIndexUtils {
                 invListTypeTraits);
         PartitionedOnDiskInvertedIndexFactory invIndexFactory = new PartitionedOnDiskInvertedIndexFactory(ioManager,
                 diskBufferCache, diskFileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, fileManager);
+                tokenTypeTraits, tokenCmpFactories, fileManager, pageManagerFactory);
 
         LSMComponentFilterFactory filterFactory = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;

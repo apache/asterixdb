@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
@@ -100,7 +101,7 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
                     rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
                     ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, btreeFields, version, durable,
-                    isPointMBR);
+                    isPointMBR, (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

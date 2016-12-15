@@ -36,6 +36,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.Resource;
@@ -364,7 +365,7 @@ public class MetadataBootstrap {
                             .createMergePolicy(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
                     opTracker, runtimeContext.getLSMIOScheduler(),
                     LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
-                    null, null, null, null, true);
+                    null, null, null, null, true, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             lsmBtree.create();
             resourceID = index.getResourceID();
             Resource localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
@@ -401,7 +402,7 @@ public class MetadataBootstrap {
                                 GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
                         opTracker, runtimeContext.getLSMIOScheduler(),
                         LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
-                        null, null, null, null, true);
+                        null, null, null, null, true, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
                 dataLifecycleManager.register(file.getRelativePath(), lsmBtree);
             }
         }

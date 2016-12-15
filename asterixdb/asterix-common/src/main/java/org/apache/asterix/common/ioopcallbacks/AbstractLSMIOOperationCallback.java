@@ -22,7 +22,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -78,7 +78,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         if (opType == LSMOperationType.FLUSH && newComponent != null) {
             synchronized (this) {
                 flushRequested[readIndex] = false;
-                // if the component which just finished flushing is the component that will be modified next, we set its first LSN to its previous LSN
+                // if the component which just finished flushing is the component that will be modified next,
+                // we set its first LSN to its previous LSN
                 if (readIndex == writeIndex) {
                     firstLSNs[writeIndex] = mutableLastLSNs[writeIndex];
                 }
@@ -92,11 +93,11 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
             throws HyracksDataException {
         long componentLSN = getComponentLSN(oldComponents);
-        treeIndex.getMetaManager().setLSN(componentLSN);
+        ((IMetadataPageManager) treeIndex.getPageManager()).setLSN(componentLSN);
     }
 
     public static long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
-        return treeIndex.getMetaManager().getLSN();
+        return ((IMetadataPageManager) treeIndex.getPageManager()).getLSN();
     }
 
     public void updateLastLSN(long lastLSN) {
@@ -110,7 +111,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
 
     public synchronized long getFirstLSN() {
         // We make sure that this method is only called on a non-empty component so the returned LSN is meaningful
-        // The firstLSN is always the lsn of the currently being flushed component or the next to be flushed when no flush operation is on going
+        // The firstLSN is always the lsn of the currently being flushed component or the next
+        // to be flushed when no flush operation is on going
         return firstLSNs[readIndex];
     }
 
@@ -127,7 +129,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     /**
      * @param component
      * @param componentFilePath
-     * @return The LSN byte offset in the LSM disk component if the index is valid, otherwise {@link IMetaDataPageManager#INVALID_LSN_OFFSET}.
+     * @return The LSN byte offset in the LSM disk component if the index is valid,
+     *         otherwise {@link IMetadataPageManager#INVALID_LSN_OFFSET}.
      * @throws HyracksDataException
      */
     public abstract long getComponentFileLSNOffset(ILSMComponent component, String componentFilePath)

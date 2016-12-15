@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.Resource;
@@ -87,7 +88,8 @@ public class LSMBTreeLocalResourceMetadata extends Resource {
                         : new BaseOperationTracker(datasetId(), datasetLifecycleManager.getDatasetInfo(datasetId())),
                 runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), isPrimary, filterTypeTraits,
-                filterCmpFactories, btreeFields, filterFields, true);
+                filterCmpFactories, btreeFields, filterFields, true, AsterixLSMIndexUtil
+                        .getMetadataPageManagerFactory());
         return lsmBTree;
     }
 }

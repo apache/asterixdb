@@ -31,9 +31,9 @@ import org.apache.hyracks.dataflow.common.util.TupleUtils;
 import org.apache.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -55,7 +55,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public ITreeIndexFrameFactory interiorFrameFactory;
     public IBTreeLeafFrame leafFrame;
     public IBTreeInteriorFrame interiorFrame;
-    public final IMetaDataPageManager freePageManager;
+    public final IPageManager freePageManager;
     public final ITreeIndexMetaDataFrame metaFrame;
     public IndexOperation op;
     public ITreeIndexCursor cursor;
@@ -78,7 +78,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public final ITreeIndexTupleReference leafFrameTuple;
 
     public BTreeOpContext(IIndexAccessor accessor, ITreeIndexFrameFactory leafFrameFactory,
-                          ITreeIndexFrameFactory interiorFrameFactory, IMetaDataPageManager freePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, IPageManager freePageManager,
                           IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
                           ISearchOperationCallback searchCallback) {
         this.accessor = accessor;
@@ -101,25 +101,29 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
             interiorFrame.setMultiComparator(cmp);
         }
         this.freePageManager = freePageManager;
-        this.metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+        this.metaFrame = freePageManager.createMetadataFrame();
         this.pageLsns = new LongArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
         this.smoCount = 0;
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
 
         // Debug
-        this.validationInfos = new ArrayDeque<PageValidationInfo>(INIT_ARRAYLIST_SIZE);
+        this.validationInfos = new ArrayDeque<>(INIT_ARRAYLIST_SIZE);
         this.interiorFrameTuple = interiorFrame.createTupleReference();
         this.leafFrameTuple = leafFrame.createTupleReference();
     }
 
+    @Override
     public void reset() {
-        if (pageLsns != null)
+        if (pageLsns != null) {
             pageLsns.clear();
-        if (freePages != null)
+        }
+        if (freePages != null) {
             freePages.clear();
-        if (smPages != null)
+        }
+        if (smPages != null) {
             smPages.clear();
+        }
         opRestarts = 0;
         smoCount = 0;
         exceptionHandled = false;
@@ -240,11 +244,11 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     @Override
     public int getFreeBlock(int size) throws HyracksDataException {
-        return freePageManager.getFreePageBlock(metaFrame, size);
+        return freePageManager.takeBlock(metaFrame, size);
     }
 
     @Override
     public void returnFreePageBlock(int blockPageId, int size) throws HyracksDataException {
-        freePageManager.addFreePageBlock(metaFrame, blockPageId, size);
+        freePageManager.releaseBlock(metaFrame, blockPageId, size);
     }
 }

@@ -47,7 +47,8 @@ public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     public void setup() throws Exception {
         harness.setUp();
         testCtx = BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, fieldSerdes.length, BTreeLeafFrameType.REGULAR_NSM);
+                harness.getFileReference(), fieldSerdes, fieldSerdes.length, BTreeLeafFrameType.REGULAR_NSM, harness
+                        .getPageManagerFactory().createPageManager(harness.getBufferCache()));
         index = testCtx.getIndex();
     }
 

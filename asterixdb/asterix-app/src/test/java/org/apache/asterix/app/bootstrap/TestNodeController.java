@@ -29,6 +29,7 @@ import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
@@ -196,7 +197,7 @@ public class TestNodeController {
                 primaryIndexInfo.primaryIndexComparatorFactories, primaryIndexInfo.primaryIndexBloomFilterKeyFields,
                 primaryIndexInfo.primaryKeyIndexes, primaryIndexInfo.primaryKeyIndexes, true, true,
                 indexDataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, filterFields,
-                filterFields);
+                filterFields, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         BTreeSearchOperatorNodePushable searchOp = new BTreeSearchOperatorNodePushable(searchOpDesc, ctx, 0,
                 primaryIndexInfo.getSearchRecordDescriptorProvider(), /*primaryIndexInfo.primaryKeyIndexes*/null,
                 /*primaryIndexInfo.primaryKeyIndexes*/null, true, true, filterFields, filterFields);
@@ -231,6 +232,8 @@ public class TestNodeController {
         Mockito.when(indexOpDesc.getTreeIndexBloomFilterKeyFields())
                 .thenReturn(primaryIndexInfo.primaryIndexBloomFilterKeyFields);
         Mockito.when(indexOpDesc.getModificationOpCallbackFactory()).thenReturn(modOpCallbackFactory);
+        Mockito.when(indexOpDesc.getPageManagerFactory()).thenReturn(AsterixLSMIndexUtil
+                .getMetadataPageManagerFactory());
         return indexOpDesc;
     }
 
@@ -247,6 +250,8 @@ public class TestNodeController {
                 .thenReturn(primaryIndexInfo.primaryIndexComparatorFactories);
         Mockito.when(indexOpDesc.getTreeIndexBloomFilterKeyFields())
                 .thenReturn(primaryIndexInfo.primaryIndexBloomFilterKeyFields);
+        Mockito.when(indexOpDesc.getPageManagerFactory()).thenReturn(AsterixLSMIndexUtil
+                .getMetadataPageManagerFactory());
         return indexOpDesc;
     }
 

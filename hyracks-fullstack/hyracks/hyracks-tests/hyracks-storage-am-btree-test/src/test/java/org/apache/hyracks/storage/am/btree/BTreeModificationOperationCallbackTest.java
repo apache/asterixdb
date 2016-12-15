@@ -22,6 +22,9 @@ import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 
 public class BTreeModificationOperationCallbackTest extends AbstractModificationOperationCallbackTest {
     private final BTreeTestHarness harness;
@@ -32,10 +35,11 @@ public class BTreeModificationOperationCallbackTest extends AbstractModification
 
     @Override
     protected void createIndexInstance() throws Exception {
-        index = BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(),
-                SerdeUtils.serdesToTypeTraits(keySerdes),
-                SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), BTreeLeafFrameType.REGULAR_NSM,
-                harness.getFileReference());
+        IMetadataPageManagerFactory freePageManagerFactory = new LinkedMetadataPageManagerFactory();
+        IMetadataPageManager freePageManager = freePageManagerFactory.createPageManager(harness.getBufferCache());
+        index = BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), SerdeUtils
+                .serdesToTypeTraits(keySerdes), SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length),
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), freePageManager);
     }
 
     @Override

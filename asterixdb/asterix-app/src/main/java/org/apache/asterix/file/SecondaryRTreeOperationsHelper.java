@@ -27,6 +27,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IResourceFactory;
@@ -146,8 +147,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
         TreeIndexCreateOperatorDescriptor secondaryIndexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, secondaryTypeTraits, secondaryComparatorFactories, null,
-                indexDataflowHelperFactory, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
-
+                indexDataflowHelperFactory, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE,
+                AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);
@@ -484,7 +485,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     new LSMTreeIndexCompactOperatorDescriptor(spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
                             secondaryTypeTraits, secondaryComparatorFactories, secondaryBloomFilterKeyFields, idff,
-                            NoOpOperationCallbackFactory.INSTANCE);
+                            NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         } else {
             // External dataset
             compactOp =
@@ -500,7 +501,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                                     storageProperties.getBloomFilterFalsePositiveRate(),
                                     new int[] { numNestedSecondaryKeyFields },
                                     ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true, isPointMBR),
-                            NoOpOperationCallbackFactory.INSTANCE);
+                            NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
         }
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,

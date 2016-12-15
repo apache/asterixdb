@@ -27,6 +27,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractIndexOperatorDescriptor;
@@ -56,10 +57,12 @@ public abstract class AbstractLSMInvertedIndexOperatorDescriptor extends Abstrac
             ITupleFilterFactory tupleFilterFactory, boolean retainInput, boolean retainNull,
             IMissingWriterFactory nullWriterFactory, ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
+            IModificationOperationCallbackFactory modificationOpCallbackFactory,
+            IPageManagerFactory pageManagerFactory) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
                 dataflowHelperFactory, tupleFilterFactory, retainInput, retainNull, nullWriterFactory,
-                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory);
+                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory,
+                pageManagerFactory);
         this.invListsTypeTraits = invListsTypeTraits;
         this.invListComparatorFactories = invListComparatorFactories;
         this.tokenTypeTraits = tokenTypeTraits;

@@ -90,12 +90,11 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         IBufferCache bufferCache = treeIndex.getBufferCache();
         treeIndex.activate();
         try {
-            int metadataPage = treeIndex.getMetaManager().getFirstMetadataPage();
+            int metadataPage = treeIndex.getPageManager().getMetadataPageId();
             if (metadataPage < 0) {
                 return TreeIndexState.INVALID;
             }
-            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getMetaManager().getMetaDataFrameFactory()
-                    .createFrame();
+            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getPageManager().createMetadataFrame();
             ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage),
                     false);
             page.acquireReadLatch();

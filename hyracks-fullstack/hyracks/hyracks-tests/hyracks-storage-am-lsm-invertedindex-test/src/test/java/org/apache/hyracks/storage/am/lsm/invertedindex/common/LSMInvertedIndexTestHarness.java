@@ -32,6 +32,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -81,6 +83,8 @@ public class LSMInvertedIndexTestHarness {
     protected String btreeFileName = "btree_vocab";
     protected String invIndexFileName = "inv_index";
     protected FileReference invIndexFileRef;
+    protected IMetadataPageManagerFactory metadataPageManagerFactory =
+            new AppendOnlyLinkedMetadataPageManagerFactory();
 
     public LSMInvertedIndexTestHarness() {
         this.diskPageSize = AccessMethodTestsConfig.LSM_INVINDEX_DISK_PAGE_SIZE;
@@ -218,5 +222,9 @@ public class LSMInvertedIndexTestHarness {
 
     public ILSMIOOperationCallback getIOOperationCallback() {
         return ioOpCallback;
+    }
+
+    public IMetadataPageManagerFactory getMetadataPageManagerFactory() {
+        return metadataPageManagerFactory;
     }
 }

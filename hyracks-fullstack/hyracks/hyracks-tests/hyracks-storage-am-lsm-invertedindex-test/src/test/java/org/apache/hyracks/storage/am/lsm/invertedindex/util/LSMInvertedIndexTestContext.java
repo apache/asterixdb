@@ -39,7 +39,7 @@ import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.common.CheckTuple;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualMetaDataPageManager;
+import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.InvertedIndexException;
@@ -129,29 +129,30 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         switch (invIndexType) {
             case INMEMORY: {
                 invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCaches().get(0),
-                        new VirtualMetaDataPageManager(harness.getVirtualBufferCaches().get(0).getNumPages()),
+                        new VirtualFreePageManager(harness.getVirtualBufferCaches().get(0)),
                         invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
                 break;
             }
             case PARTITIONED_INMEMORY: {
                 invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness
-                        .getVirtualBufferCaches().get(0), new VirtualMetaDataPageManager(harness.getVirtualBufferCaches()
-                        .get(0).getNumPages()), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        .getVirtualBufferCaches().get(0), new VirtualFreePageManager(harness.getVirtualBufferCaches()
+                                .get(0)), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits,
                         tokenCmpFactories, tokenizerFactory, ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
                 break;
             }
             case ONDISK: {
                 invIndex = InvertedIndexUtils.createOnDiskInvertedIndex(ioManager, harness.getDiskBufferCache(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, harness.getInvListsFileRef());
+                        tokenCmpFactories, harness.getInvListsFileRef(), harness.getMetadataPageManagerFactory());
                 break;
             }
             case PARTITIONED_ONDISK: {
                 invIndex = InvertedIndexUtils.createPartitionedOnDiskInvertedIndex(ioManager, harness
                         .getDiskBufferCache(),
                         harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, harness.getInvListsFileRef());
+                        tokenCmpFactories, harness.getInvListsFileRef(), harness.getMetadataPageManagerFactory());
                 break;
             }
             case LSM: {
@@ -161,7 +162,8 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                         harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true, harness
+                                .getMetadataPageManagerFactory());
                 break;
             }
             case PARTITIONED_LSM: {
@@ -172,7 +174,8 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                         harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true, harness
+                                .getMetadataPageManagerFactory());
                 break;
             }
             default: {

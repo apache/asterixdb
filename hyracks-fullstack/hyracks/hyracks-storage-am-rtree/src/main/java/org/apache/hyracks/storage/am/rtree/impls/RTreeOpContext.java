@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -45,7 +45,7 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public IndexOperation op;
     public ITreeIndexCursor cursor;
     public RTreeCursorInitialState cursorInitialState;
-    public final IMetaDataPageManager freePageManager;
+    public final IPageManager freePageManager;
     public final ITreeIndexMetaDataFrame metaFrame;
     public RTreeSplitKey splitKey;
     public ITupleReference tuple;
@@ -60,7 +60,7 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public IModificationOperationCallback modificationCallback;
 
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame,
-                          IMetaDataPageManager freePageManager, IBinaryComparatorFactory[] cmpFactories,
+            IPageManager freePageManager, IBinaryComparatorFactory[] cmpFactories,
                           IModificationOperationCallback modificationCallback) {
 
         if (cmpFactories[0] != null) {
@@ -72,11 +72,11 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
         this.interiorFrame = interiorFrame;
         this.leafFrame = leafFrame;
         this.freePageManager = freePageManager;
-        this.metaFrame = freePageManager.getMetaDataFrameFactory().createFrame();
+        this.metaFrame = freePageManager.createMetadataFrame();
         this.modificationCallback = modificationCallback;
         pathList = new PathList(INITIAL_HEIGHT, INITIAL_HEIGHT);
-        NSNUpdates = new ArrayList<ICachedPage>();
-        LSNUpdates = new ArrayList<ICachedPage>();
+        NSNUpdates = new ArrayList<>();
+        LSNUpdates = new ArrayList<>();
     }
 
     public ITupleReference getTuple() {
@@ -87,6 +87,7 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
         this.tuple = tuple;
     }
 
+    @Override
     public void reset() {
         if (pathList != null) {
             pathList.clear();
@@ -129,11 +130,11 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     @Override
     public int getFreeBlock(int size) throws HyracksDataException {
-        return freePageManager.getFreePageBlock(metaFrame, size);
+        return freePageManager.takeBlock(metaFrame, size);
     }
 
     @Override
     public void returnFreePageBlock(int blockPageId, int size) throws HyracksDataException {
-        freePageManager.addFreePageBlock(metaFrame, blockPageId, size);
+        freePageManager.releaseBlock(metaFrame, blockPageId, size);
     }
 }

@@ -54,10 +54,10 @@ public class LSMBTreeUpdateTest extends OrderedIndexUpdateTest {
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType) throws Exception {
         return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, numKeys,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback());
+                .getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
+                numKeys, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness
+                        .getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), harness
+                                .getMetadataPageManagerFactory());
     }
 
     @Override

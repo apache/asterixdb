@@ -31,6 +31,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.common.CheckTuple;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -69,10 +70,11 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
     }
 
     public static LSMBTreeTestContext create(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
+            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
+            ISerializerDeserializer[] fieldSerdes,
             int numKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback)
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            IMetadataPageManagerFactory metadataPageManagerFactory)
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
@@ -81,9 +83,9 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             bloomFilterKeyFields[i] = i;
         }
         LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache,
-                diskFileMapProvider,
-                typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback, true, null, null, null, null, true);
+                diskFileMapProvider, typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
+                mergePolicy, opTracker, ioScheduler, ioOpCallback, true, null, null, null, null, true,
+                metadataPageManagerFactory);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

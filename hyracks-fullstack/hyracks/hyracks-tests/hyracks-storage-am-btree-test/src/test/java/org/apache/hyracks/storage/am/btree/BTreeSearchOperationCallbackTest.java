@@ -22,6 +22,9 @@ import org.apache.hyracks.dataflow.common.util.SerdeUtils;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 
 public class BTreeSearchOperationCallbackTest extends AbstractSearchOperationCallbackTest {
     private final BTreeTestHarness harness;
@@ -32,10 +35,13 @@ public class BTreeSearchOperationCallbackTest extends AbstractSearchOperationCal
 
     @Override
     protected void createIndexInstance() throws Exception {
+        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+        LinkedMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(harness.getBufferCache(),
+                metaFrameFactory);
         index = BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(),
                 SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), BTreeLeafFrameType.REGULAR_NSM,
-                harness.getFileReference());
+                harness.getFileReference(), freePageManager);
     }
 
     @Override

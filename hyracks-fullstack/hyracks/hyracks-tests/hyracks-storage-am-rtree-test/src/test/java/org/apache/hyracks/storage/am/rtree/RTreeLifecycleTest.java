@@ -54,7 +54,8 @@ public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
     public void setup() throws Exception {
         harness.setUp();
         testCtx = RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE);
+                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
+                harness.getMetadataManagerFactory());
         index = testCtx.getIndex();
     }
 

@@ -74,11 +74,10 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             IIOManager ioManager = ctx.getIOManager();
             FileReference fileRef = ioManager.resolve(resource.getPath());
             int indexFileId = fileMapProvider.lookupFileId(fileRef);
-            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getMetaManager(), indexFileId,
+            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getPageManager(), indexFileId,
                     treeIndex.getRootPageId());
             TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex
-                    .getInteriorFrameFactory().createFrame(), treeIndex.getMetaManager().getMetaDataFrameFactory()
-                    .createFrame());
+                    .getInteriorFrameFactory().createFrame(), treeIndex.getPageManager().createMetadataFrame());
             // Write the stats output as a single string field.
             FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);

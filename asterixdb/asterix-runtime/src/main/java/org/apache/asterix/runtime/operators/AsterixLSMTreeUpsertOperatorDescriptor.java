@@ -31,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -52,11 +53,12 @@ public class AsterixLSMTreeUpsertOperatorDescriptor extends AsterixLSMTreeInsert
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
             boolean isPrimary, String indexName, IMissingWriterFactory missingWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackProvider,
-            ISearchOperationCallbackFactory searchOpCallbackProvider, int[] prevValuePermutation) {
+            ISearchOperationCallbackFactory searchOpCallbackProvider, int[] prevValuePermutation,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, IndexOperation.UPSERT,
                 dataflowHelperFactory, tupleFilterFactory, isPrimary, indexName, missingWriterFactory,
-                modificationOpCallbackProvider, searchOpCallbackProvider);
+                modificationOpCallbackProvider, searchOpCallbackProvider, metadataPageManagerFactory);
         this.prevValuePermutation = prevValuePermutation;
     }
 

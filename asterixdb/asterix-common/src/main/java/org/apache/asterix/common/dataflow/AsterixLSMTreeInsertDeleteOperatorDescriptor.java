@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -54,10 +55,12 @@ public class AsterixLSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexIn
             ITupleFilterFactory tupleFilterFactory, boolean isPrimary, String indexName,
             IMissingWriterFactory nullWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackProvider,
-            ISearchOperationCallbackFactory searchOpCallbackProvider) {
+            ISearchOperationCallbackFactory searchOpCallbackProvider,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, op, dataflowHelperFactory,
-                tupleFilterFactory, nullWriterFactory, modificationOpCallbackProvider, searchOpCallbackProvider);
+                tupleFilterFactory, nullWriterFactory, modificationOpCallbackProvider, searchOpCallbackProvider,
+                metadataPageManagerFactory);
         this.isPrimary = isPrimary;
         this.indexName = indexName;
     }

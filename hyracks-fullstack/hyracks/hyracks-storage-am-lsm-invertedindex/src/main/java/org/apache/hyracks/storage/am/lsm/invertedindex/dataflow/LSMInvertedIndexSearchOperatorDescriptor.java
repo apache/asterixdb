@@ -30,6 +30,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
@@ -56,13 +57,12 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
             boolean retainNull, IMissingWriterFactory nullWriterFactory,
             ISearchOperationCallbackFactory searchOpCallbackProvider, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes) {
-
+            int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory) {
         super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
                 btreeDataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
                 NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
-                NoOpOperationCallbackFactory.INSTANCE);
+                NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
         this.queryField = queryField;
         this.searchModifierFactory = searchModifierFactory;
         this.minFilterFieldIndexes = minFilterFieldIndexes;

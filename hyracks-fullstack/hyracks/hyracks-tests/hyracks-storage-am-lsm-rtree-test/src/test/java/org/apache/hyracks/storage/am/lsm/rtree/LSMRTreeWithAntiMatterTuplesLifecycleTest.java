@@ -67,10 +67,10 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     public void setup() throws Exception {
         harness.setUp();
         testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getIOManager(), harness
-                .getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
-                fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE, harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback());
+                .getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), harness
+                        .getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
+                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(), harness
+                        .getIOOperationCallback(), harness.getMetadataPageManagerFactory());
         index = testCtx.getIndex();
     }
 

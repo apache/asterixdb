@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -49,7 +50,6 @@ public class IndexInfoOperatorDescriptor implements IIndexOperatorDescriptor{
         this.fileSplitProvider = fileSplitProvider;
         this.lifecycleManagerProvider = lifecycleManagerProvider;
         this.storageManager = storageManager;
-
     }
 
     @Override
@@ -123,4 +123,8 @@ public class IndexInfoOperatorDescriptor implements IIndexOperatorDescriptor{
         return null;
     }
 
+    @Override
+    public IPageManagerFactory getPageManagerFactory() {
+        return null;
+    }
 }

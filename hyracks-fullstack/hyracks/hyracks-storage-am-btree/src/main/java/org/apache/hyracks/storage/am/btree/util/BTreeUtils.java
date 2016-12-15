@@ -29,12 +29,9 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -43,19 +40,16 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class BTreeUtils {
     public static BTree createBTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType,
-            FileReference file) throws BTreeException {
+            FileReference file, IPageManager freePageManager) throws BTreeException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        IMetaDataPageManager freePageManager;
-        freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
         BTree btree = new BTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
                 cmpFactories, typeTraits.length, file);
         return btree;
     }
 
-    public static BTree createBTree(IBufferCache bufferCache, IMetaDataPageManager freePageManager,
+    public static BTree createBTree(IBufferCache bufferCache, IPageManager freePageManager,
             IFileMapProvider fileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             BTreeLeafFrameType leafType, FileReference file) throws BTreeException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);

@@ -30,8 +30,10 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -55,7 +57,8 @@ public class TestStorageManagerComponentHolder {
     private static ILocalResourceRepository localResourceRepository;
     private static IResourceLifecycleManager<IIndex> lcManager;
     private static ResourceIdFactory resourceIdFactory;
-
+    private static IMetadataPageManagerFactory metadataPageManagerFactory =
+            new AppendOnlyLinkedMetadataPageManagerFactory();
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;
@@ -104,7 +107,8 @@ public class TestStorageManagerComponentHolder {
     public synchronized static IOManager getIOManager() throws HyracksDataException {
         if (ioManager == null) {
             List<IODeviceHandle> devices = new ArrayList<>();
-            devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "iodev_test_wa"));
+            devices.add(new IODeviceHandle(new File(System.getProperty("user.dir") + File.separator + "target"),
+                    "iodev_test_wa"));
             ioManager = new IOManager(devices, Executors.newCachedThreadPool());
         }
         return ioManager;
@@ -122,6 +126,10 @@ public class TestStorageManagerComponentHolder {
             }
         }
         return localResourceRepository;
+    }
+
+    public static IMetadataPageManagerFactory getMetadataPageManagerFactory() {
+        return metadataPageManagerFactory;
     }
 
     public synchronized static ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {

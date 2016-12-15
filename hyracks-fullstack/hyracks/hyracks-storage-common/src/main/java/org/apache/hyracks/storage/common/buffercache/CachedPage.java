@@ -59,6 +59,10 @@ public class CachedPage implements ICachedPageInternal {
         ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
     }
 
+    public int incrementAndGetPinCount() {
+        return pinCount.incrementAndGet();
+    }
+
     public CachedPage(int cpid, ByteBuffer buffer, IPageReplacementStrategy pageReplacementStrategy) {
         this.cpid = cpid;
         this.buffer = buffer;
@@ -99,9 +103,9 @@ public class CachedPage implements ICachedPageInternal {
 
     @Override
     public boolean isGoodVictim() {
-        if (confiscated.get())
+        if (confiscated.get()) {
             return false; // i am not a good victim because i cant flush!
-        else {
+        } else {
             return pinCount.get() == 0;
         }
     }

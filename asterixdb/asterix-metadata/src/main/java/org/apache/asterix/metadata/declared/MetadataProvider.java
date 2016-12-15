@@ -33,6 +33,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
+import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
@@ -199,6 +200,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.config = config;
     }
 
+    @Override
     public Map<String, String> getConfig() {
         return config;
     }
@@ -568,7 +570,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                                 storageProperties.getBloomFilterFalsePositiveRate(), !isSecondary, filterTypeTraits,
                                 filterCmpFactories, btreeFields, filterFields, !temp),
                         retainInput, retainMissing, context.getMissingWriterFactory(), searchCallbackFactory,
-                        minFilterFieldIndexes, maxFilterFieldIndexes);
+                        minFilterFieldIndexes, maxFilterFieldIndexes, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else {
                 // External dataset <- use the btree with buddy btree->
                 // Be Careful of Key Start Index ?
@@ -584,7 +587,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, rtcProvider,
                         rtcProvider, spPc.first, typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields,
                         highKeyFields, lowKeyInclusive, highKeyInclusive, indexDataflowHelperFactory, retainInput,
-                        retainMissing, context.getMissingWriterFactory(), searchCallbackFactory);
+                        retainMissing, context.getMissingWriterFactory(), searchCallbackFactory, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             }
             return new Pair<>(btreeSearchOp, spPc.second);
         } catch (MetadataException me) {
@@ -692,7 +696,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                         spPc.first, typeTraits, comparatorFactories, keyFields, idff, retainInput, retainMissing,
                         context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                        maxFilterFieldIndexes);
+                        maxFilterFieldIndexes, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             } else {
                 // External Dataset
                 ExternalRTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalRTreeDataflowHelperFactory(
@@ -708,7 +712,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 rtreeSearchOp = new ExternalRTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                         spPc.first, typeTraits, comparatorFactories, keyFields, indexDataflowHelperFactory, retainInput,
-                        retainMissing, context.getMissingWriterFactory(), searchCallbackFactory);
+                        retainMissing, context.getMissingWriterFactory(), searchCallbackFactory, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             }
 
             return new Pair<>(rtreeSearchOp, spPc.second);
@@ -830,7 +835,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
                             storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
-                            filterCmpFactories, btreeFields, filterFields, !temp));
+                            filterCmpFactories, btreeFields, filterFields, !temp), AsterixLSMIndexUtil
+                                    .getMetadataPageManagerFactory());
             return new Pair<>(btreeBulkLoad, splitsAndConstraint.second);
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
@@ -1089,7 +1095,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     outRecDesc, indexDataflowHelperFactory, retainInput, appContext.getIndexLifecycleManagerProvider(),
                     appContext.getStorageManagerInterface(), spPc.first, dataset.getDatasetId(),
                     metadataProvider.getStorageProperties().getBloomFilterFalsePositiveRate(), searchOpCallbackFactory,
-                    retainMissing, context.getMissingWriterFactory());
+                    retainMissing, context.getMissingWriterFactory(), AsterixLSMIndexUtil
+                            .getMetadataPageManagerFactory());
             return new Pair<>(op, spPc.second);
         } catch (Exception e) {
             throw new AlgebricksException(e);
@@ -1234,7 +1241,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields, fieldPermutation,
                     idfh, null, true, indexName, context.getMissingWriterFactory(), modificationCallbackFactory,
-                    searchCallbackFactory, null);
+                    searchCallbackFactory, null, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             op.setType(itemType);
             op.setFilterIndex(fieldIdx);
             return new Pair<>(op, splitsAndConstraint.second);
@@ -1404,13 +1411,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 op = new TreeIndexBulkLoadOperatorDescriptor(spec, recordDesc, appContext.getStorageManagerInterface(),
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                         comparatorFactories, bloomFilterKeyFields, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh);
+                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else {
                 op = new AsterixLSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                         splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
                         fieldPermutation, indexOp, idfh, null, true, indexName, null, modificationCallbackFactory,
-                        NoOpOperationCallbackFactory.INSTANCE);
+                        NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -1603,13 +1611,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 op = new TreeIndexBulkLoadOperatorDescriptor(spec, recordDesc, appContext.getStorageManagerInterface(),
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                         comparatorFactories, bloomFilterKeyFields, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idfh);
+                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idfh, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else if (indexOp == IndexOperation.UPSERT) {
                 op = new AsterixLSMTreeUpsertOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                         splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
                         fieldPermutation, idfh, filterFactory, false, indexName, null, modificationCallbackFactory,
-                        NoOpOperationCallbackFactory.INSTANCE, prevFieldPermutation);
+                        NoOpOperationCallbackFactory.INSTANCE, prevFieldPermutation, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else {
                 op = new AsterixLSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
@@ -1623,7 +1633,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                                 storageProperties.getBloomFilterFalsePositiveRate(), false, filterTypeTraits,
                                 filterCmpFactories, btreeFields, filterFields, !temp),
                         filterFactory, false, indexName, null, modificationCallbackFactory,
-                        NoOpOperationCallbackFactory.INSTANCE);
+                        NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (Exception e) {
@@ -1780,19 +1790,21 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 op = new TreeIndexBulkLoadOperatorDescriptor(spec, recordDesc, appContext.getStorageManagerInterface(),
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                         primaryComparatorFactories, btreeFields, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idff);
+                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idff, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else if (indexOp == IndexOperation.UPSERT) {
                 op = new AsterixLSMTreeUpsertOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                         splitsAndConstraint.first, typeTraits, comparatorFactories, null, fieldPermutation, idff,
                         filterFactory, false, indexName, null, modificationCallbackFactory,
-                        NoOpOperationCallbackFactory.INSTANCE, prevFieldPermutation);
+                        NoOpOperationCallbackFactory.INSTANCE, prevFieldPermutation, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             } else {
                 op = new AsterixLSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                         splitsAndConstraint.first, typeTraits, comparatorFactories, null, fieldPermutation, indexOp,
                         idff, filterFactory, false, indexName, null, modificationCallbackFactory,
-                        NoOpOperationCallbackFactory.INSTANCE);
+                        NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
@@ -2014,20 +2026,22 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 op = new LSMInvertedIndexBulkLoadOperatorDescriptor(spec, recordDesc, fieldPermutation, false,
                         numElementsHint, false, appContext.getStorageManagerInterface(), splitsAndConstraint.first,
                         appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
-                        invListsTypeTraits, invListComparatorFactories, tokenizerFactory, indexDataFlowFactory);
+                        invListsTypeTraits, invListComparatorFactories, tokenizerFactory, indexDataFlowFactory,
+                        AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             } else if (indexOp == IndexOperation.UPSERT) {
                 op = new AsterixLSMInvertedIndexUpsertOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), splitsAndConstraint.first,
                         appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                         invListsTypeTraits, invListComparatorFactories, tokenizerFactory, fieldPermutation,
                         indexDataFlowFactory, filterFactory, modificationCallbackFactory, indexName,
-                        prevFieldPermutation);
+                        prevFieldPermutation, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
             } else {
                 op = new AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManagerInterface(), splitsAndConstraint.first,
                         appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                         invListsTypeTraits, invListComparatorFactories, tokenizerFactory, fieldPermutation, indexOp,
-                        indexDataFlowFactory, filterFactory, modificationCallbackFactory, indexName);
+                        indexDataFlowFactory, filterFactory, modificationCallbackFactory, indexName, AsterixLSMIndexUtil
+                                .getMetadataPageManagerFactory());
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (Exception e) {

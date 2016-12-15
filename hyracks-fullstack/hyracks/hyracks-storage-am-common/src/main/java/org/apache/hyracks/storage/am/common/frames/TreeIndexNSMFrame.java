@@ -149,7 +149,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         int tupleCount = buf.getInt(tupleCountOff);
         int freeSpace = buf.getInt(freeSpaceOff);
         // Sort the slots by the tuple offset they point to.
-        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
+        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<>();
         sortedTupleOffs.ensureCapacity(tupleCount);
         for (int i = 0; i < tupleCount; i++) {
             int slotOff = slotManager.getSlotOff(i);
@@ -287,6 +287,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         return buf.getInt(tupleCountOff);
     }
 
+    @Override
     public ISlotManager getSlotManager() {
         return slotManager;
     }
