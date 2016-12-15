@@ -60,12 +60,13 @@
 
  * Example:
 
-        { "v1": acos(1), "v2": acos(2), "v3": abs(0), "v4": acos(float("0.5")), "v5": acos(double("-0.5")) };
+        { "v1": acos(1), "v2": acos(2), "v3": acos(0), "v4": acos(float("0.5")), "v5": acos(double("-0.5")) };
 
 
  * The expected result is:
 
-        { "v1": 0.0, "v2": NaN, "v3": 0, "v4": 1.0471975511965979, "v5": 2.0943951023931957 }
+        { "v1": 0.0, "v2": NaN, "v3": 1.5707963267948966, "v4": 1.0471975511965979, "v5": 2.0943951023931957 }
+
 
 
 ### asin ###
@@ -123,7 +124,7 @@
 
         atan2(numeric_value1, numeric_value2)
 
- * Computes the arc tangent value of arguments.
+ * Computes the arc tangent value of numeric_value2/numeric_value1.
  * Arguments:
     * `numeric_value1`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value,
     * `numeric_value2`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
@@ -268,12 +269,13 @@
 
  * Example:
 
-        { "v1": exp(1), "v2": exp(2), "v3": exp(0), "v4": exp(float("0.5")), "v5": exp(double("1000")) };
+        { "v1": ln(1), "v2": ln(2), "v3": ln(0), "v4": ln(float("0.5")), "v5": ln(double("1000")) };
 
 
  * The expected result is:
 
-        { "v1": 2.718281828459045, "v2": 7.38905609893065, "v3": 1.0, "v4": 1.6487212707001282, "v5": Infinity }
+        { "v1": 0.0, "v2": 0.6931471805599453, "v3": -Infinity, "v4": -0.6931471805599453, "v5": 6.907755278982137 }
+
 
 
 ### log ###
@@ -292,15 +294,15 @@
 
  * Example:
 
-        { "v1": exp(1), "v2": exp(2), "v3": exp(0), "v4": exp(float("0.5")), "v5": exp(double("1000")) };
-
+        { "v1": log(1), "v2": log(2), "v3": log(0), "v4": log(float("0.5")), "v5": log(double("1000")) };
 
  * The expected result is:
 
-        { "v1": 2.718281828459045, "v2": 7.38905609893065, "v3": 1.0, "v4": 1.6487212707001282, "v5": Infinity }
+        { "v1": 0.0, "v2": 0.3010299956639812, "v3": -Infinity, "v4": -0.3010299956639812, "v5": 3.0 }
 
 
-### atan2 ###
+
+### power ###
  * Syntax:
 
         power(numeric_value1, numeric_value2)
@@ -409,12 +411,13 @@
 
  * Example:
 
-        { "v1": sign(1), "v2": sign(2), "v3": sign(0), "v4": sign(float("0.5")), "v5": sign(double("1000")) };
+        { "v1": sign(1), "v2": sign(2), "v3": sign(0), "v4": sign(float("0.5")), "v5": sign(double("-1000")) };
 
 
  * The expected result is:
 
         { "v1": 1, "v2": 1, "v3": 0, "v4": 1, "v5": -1 }
+
 
 
 ### sin ###
