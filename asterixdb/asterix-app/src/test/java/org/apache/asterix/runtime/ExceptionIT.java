@@ -39,7 +39,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ExceptionTest {
+public class ExceptionIT {
 
     @Test
     public void test() throws Exception {
