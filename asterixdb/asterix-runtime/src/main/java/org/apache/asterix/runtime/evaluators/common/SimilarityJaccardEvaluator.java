@@ -50,11 +50,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     // Parameters for hash table.
-    protected final int TABLE_SIZE = 100;
-    protected final int TABLE_FRAME_SIZE = 32768;
+    protected static final int MIN_TABLE_SIZE = 100;
+    protected static final int TABLE_FRAME_SIZE = 32768;
 
     // Assuming type indicator in serde format.
-    protected final int TYPE_INDICATOR_SIZE = 1;
+    protected static final int TYPE_INDICATOR_SIZE = 1;
 
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
@@ -88,6 +88,8 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     // Ignore case for strings. Defaults to true.
     protected final boolean ignoreCase = true;
+
+    protected int hashTableSize = MIN_TABLE_SIZE;
 
     public SimilarityJaccardEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws HyracksDataException {
@@ -140,6 +142,10 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         if (firstListIter.size() == 0 || secondListIter.size() == 0) {
             return false;
         }
+
+        // Set the size of the table dynamically
+        hashTableSize = Math.max(Math.max(firstListIter.size(), secondListIter.size()), MIN_TABLE_SIZE);
+
         // TODO: Check item types are compatible.
         return true;
     }
@@ -229,7 +235,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
                 .createBinaryHashFunction(probeItemTypeTag, ignoreCase);
         IBinaryComparator cmp = ListItemBinaryComparatorFactory.INSTANCE.createBinaryComparator(buildItemTypeTag,
                 probeItemTypeTag, ignoreCase);
-        hashMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
+        hashMap = new BinaryHashMap(hashTableSize, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
     }
 
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
