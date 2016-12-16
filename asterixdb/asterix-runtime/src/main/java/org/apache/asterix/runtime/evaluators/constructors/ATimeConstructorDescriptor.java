@@ -26,7 +26,7 @@ import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -120,7 +120,7 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.TIME_CONSTRUCTOR;
+        return BuiltinFunctions.TIME_CONSTRUCTOR;
     }
 
 }

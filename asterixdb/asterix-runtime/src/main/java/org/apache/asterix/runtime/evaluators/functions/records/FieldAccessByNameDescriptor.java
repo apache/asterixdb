@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.records;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -36,7 +36,7 @@ public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME;
+        return BuiltinFunctions.FIELD_ACCESS_BY_NAME;
     }
 
     @Override

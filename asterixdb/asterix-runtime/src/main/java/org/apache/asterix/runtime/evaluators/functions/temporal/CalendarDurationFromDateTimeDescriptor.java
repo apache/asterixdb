@@ -27,7 +27,7 @@ import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -65,7 +65,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  */
 public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final FunctionIdentifier FID = AsterixBuiltinFunctions.CALENDAR_DURATION_FROM_DATETIME;
+    public static final FunctionIdentifier FID = BuiltinFunctions.CALENDAR_DURATION_FROM_DATETIME;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

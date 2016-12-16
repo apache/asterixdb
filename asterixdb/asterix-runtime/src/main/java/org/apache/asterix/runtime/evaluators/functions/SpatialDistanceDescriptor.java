@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -114,7 +114,7 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SPATIAL_DISTANCE;
+        return BuiltinFunctions.SPATIAL_DISTANCE;
     }
 
 }

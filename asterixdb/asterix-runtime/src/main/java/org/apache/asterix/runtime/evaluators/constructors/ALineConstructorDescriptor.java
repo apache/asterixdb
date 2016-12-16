@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ALine;
 import org.apache.asterix.om.base.AMutableLine;
 import org.apache.asterix.om.base.AMutablePoint;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -113,7 +113,7 @@ public class ALineConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.LINE_CONSTRUCTOR;
+        return BuiltinFunctions.LINE_CONSTRUCTOR;
     }
 
 }

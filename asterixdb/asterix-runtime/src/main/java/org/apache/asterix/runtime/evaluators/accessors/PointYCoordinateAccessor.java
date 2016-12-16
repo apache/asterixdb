@@ -28,7 +28,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -49,7 +49,7 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
 
     private static final long serialVersionUID = 1L;
 
-    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_POINT_Y_COORDINATE_ACCESSOR;
+    private static final FunctionIdentifier FID = BuiltinFunctions.GET_POINT_Y_COORDINATE_ACCESSOR;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

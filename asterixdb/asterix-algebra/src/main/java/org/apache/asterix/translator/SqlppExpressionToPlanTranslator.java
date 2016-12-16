@@ -67,7 +67,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -329,7 +329,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             if (hasRightPosVar) {
                 // Creates record to get correlation between the two aggregate variables.
                 ScalarFunctionCallExpression recordCreationFunc = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR),
                         // Field name for the listified right unnest var.
                         new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AString("unnestvar")))),
@@ -357,8 +357,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             }
 
             // Adds an aggregate operator to listfy unnest variables.
-            AggregateFunctionCallExpression fListify = AsterixBuiltinFunctions
-                    .makeAggregateFunctionExpression(AsterixBuiltinFunctions.LISTIFY, mkSingletonArrayList(
+            AggregateFunctionCallExpression fListify = BuiltinFunctions
+                    .makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, mkSingletonArrayList(
                             new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varToListify))));
 
             LogicalVariable aggVar = context.newSubplanOutputVar();
@@ -383,12 +383,12 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
             if (hasRightPosVar) {
                 ScalarFunctionCallExpression fieldAccessForRightUnnestVar = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(outerUnnestVar)),
                         new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
                 ScalarFunctionCallExpression fieldAccessForRightPosVar = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(outerUnnestVar)),
                         new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(1)))));
@@ -523,7 +523,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
                 // A "THEN" branch can be entered only when the tuple has not enter any other preceding
                 // branches and the current "WHEN" condition is TRUE.
                 branchEntraceConditionExprRef = new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), andArgs));
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), andArgs));
             }
 
             // Translates the corresponding "THEN" expression.
@@ -552,7 +552,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         }
         arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForElse.second)));
         AbstractFunctionCallExpression swithCaseExpr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SWITCH_CASE), arguments);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.SWITCH_CASE), arguments);
         AssignOperator assignOp = new AssignOperator(selectVar, new MutableObject<>(swithCaseExpr));
         assignOp.getInputs().add(new MutableObject<>(opAndVarForElse.first));
 
@@ -560,7 +560,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         LogicalVariable unnestVar = context.newVar();
         UnnestOperator unnestOp = new UnnestOperator(unnestVar,
                 new MutableObject<>(new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), Collections
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), Collections
                                 .singletonList(new MutableObject<>(new VariableReferenceExpression(selectVar))))));
         unnestOp.getInputs().add(new MutableObject<>(assignOp));
 

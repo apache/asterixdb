@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -48,7 +48,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.INJECT_FAILURE;
+        return BuiltinFunctions.INJECT_FAILURE;
     }
 
     @Override

@@ -26,7 +26,7 @@ import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.temporal.ADateParserFactory;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -129,7 +129,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.DATETIME_CONSTRUCTOR;
+        return BuiltinFunctions.DATETIME_CONSTRUCTOR;
     }
 
 }

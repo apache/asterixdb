@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -50,7 +50,7 @@ public class StringContainsDescriptor extends AbstractScalarFunctionDynamicDescr
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1],
-                        AsterixBuiltinFunctions.STRING_CONTAINS) {
+                        BuiltinFunctions.STRING_CONTAINS) {
                     @Override
                     protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
                         return UTF8StringPointable.contains(left, right, false);
@@ -62,7 +62,7 @@ public class StringContainsDescriptor extends AbstractScalarFunctionDynamicDescr
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_CONTAINS;
+        return BuiltinFunctions.STRING_CONTAINS;
     }
 
 }

@@ -22,7 +22,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -73,7 +73,7 @@ public class CountVarToCountOneRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) exp2;
-        if (fun.getFunctionIdentifier() != AsterixBuiltinFunctions.COUNT) {
+        if (fun.getFunctionIdentifier() != BuiltinFunctions.COUNT) {
             return false;
         }
         ILogicalExpression exp3 = fun.getArguments().get(0).getValue();

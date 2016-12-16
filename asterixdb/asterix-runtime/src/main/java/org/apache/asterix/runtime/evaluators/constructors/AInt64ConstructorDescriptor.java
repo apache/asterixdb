@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -134,7 +134,7 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.INT64_CONSTRUCTOR;
+        return BuiltinFunctions.INT64_CONSTRUCTOR;
     }
 
 }

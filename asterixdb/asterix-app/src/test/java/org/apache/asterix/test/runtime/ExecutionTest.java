@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.asterix.app.external.TestLibrarian;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -51,7 +51,7 @@ public class ExecutionTest {
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     protected static final List<String> badTestCases = new ArrayList<>();
-    protected static AsterixTransactionProperties txnProperties;
+    protected static TransactionProperties txnProperties;
     protected static final TestExecutor testExecutor = new TestExecutor();
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;

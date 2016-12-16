@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
@@ -42,7 +42,7 @@ public class SerializableLocalSqlAvgAggregateDescriptor extends AbstractSerializ
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SERIAL_LOCAL_SQL_AVG;
+        return BuiltinFunctions.SERIAL_LOCAL_SQL_AVG;
     }
 
     @Override

@@ -22,7 +22,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
@@ -57,7 +57,7 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR;
+        return BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR;
     }
 
     @Override

@@ -23,7 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -109,7 +109,7 @@ public class NestGroupByRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractFunctionCallExpression listifyCall = (AbstractFunctionCallExpression) eAgg;
-        if (listifyCall.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
+        if (listifyCall.getFunctionIdentifier() != BuiltinFunctions.LISTIFY) {
             return false;
         }
         ILogicalExpression argListify = listifyCall.getArguments().get(0).getValue();
@@ -151,7 +151,7 @@ public class NestGroupByRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractFunctionCallExpression uf = (AbstractFunctionCallExpression) eUnnest;
-        if (uf.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+        if (uf.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
         }
         ILogicalExpression scanArg = uf.getArguments().get(0).getValue();

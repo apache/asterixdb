@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -105,7 +105,7 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.POINT_CONSTRUCTOR;
+        return BuiltinFunctions.POINT_CONSTRUCTOR;
     }
 
 }

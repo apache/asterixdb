@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint3D;
 import org.apache.asterix.om.base.APoint3D;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -108,7 +108,7 @@ public class APoint3DConstructorDescriptor extends AbstractScalarFunctionDynamic
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.POINT3D_CONSTRUCTOR;
+        return BuiltinFunctions.POINT3D_CONSTRUCTOR;
     }
 
 }

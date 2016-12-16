@@ -35,7 +35,7 @@ import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -51,7 +51,7 @@ public abstract class AbstractLangTranslator {
 
         if (!(ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)
                 && ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted())) {
-            int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
+            int maxWaitCycles = AppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
                 while (!ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)
@@ -80,7 +80,7 @@ public abstract class AbstractLangTranslator {
         }
 
         if (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()) {
-            int maxWaitCycles = AsterixAppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
+            int maxWaitCycles = AppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
                 while (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted() && waitCycleCount < maxWaitCycles) {

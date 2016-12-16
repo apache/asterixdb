@@ -37,7 +37,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONObject;
 
@@ -83,7 +83,7 @@ public class DiagnosticsAPIServlet extends ClusterNodeDetailsAPIServlet {
                 fixupKeys(new JSONObject(hcc.getNodeDetailsJSON(null, true, false)))));
 
         Map<String, Map<String, Future<JSONObject>>> ncDataMap = new HashMap<>();
-        for (String nc : AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodeNames()) {
+        for (String nc : AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames()) {
             Map<String, Future<JSONObject>> ncData = new HashMap<>();
             ncData.put("threaddump", executor.submit(() ->
                     fixupKeys(new JSONObject(hcc.getThreadDump(nc)))));

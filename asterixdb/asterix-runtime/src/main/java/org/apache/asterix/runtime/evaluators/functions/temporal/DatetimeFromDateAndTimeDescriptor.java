@@ -27,7 +27,7 @@ import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -46,7 +46,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATETIME_FROM_DATE_TIME;
+    public final static FunctionIdentifier FID = BuiltinFunctions.DATETIME_FROM_DATE_TIME;
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

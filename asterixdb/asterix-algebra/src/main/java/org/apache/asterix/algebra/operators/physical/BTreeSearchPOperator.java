@@ -26,7 +26,7 @@ import org.apache.asterix.metadata.declared.DataSourceIndex;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -106,7 +106,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         }
         AbstractFunctionCallExpression unnestFuncExpr = (AbstractFunctionCallExpression) unnestExpr;
         FunctionIdentifier funcIdent = unnestFuncExpr.getFunctionIdentifier();
-        if (!funcIdent.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+        if (!funcIdent.equals(BuiltinFunctions.INDEX_SEARCH)) {
             return;
         }
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams();

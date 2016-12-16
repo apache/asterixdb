@@ -36,7 +36,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -134,7 +134,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(AsterixBuiltinFunctions.AVG, data[offset], aggType.serialize());
+            throw new IncompatibleTypeException(BuiltinFunctions.AVG, data[offset], aggType.serialize());
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
@@ -171,7 +171,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 break;
             }
             default: {
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.AVG, data[offset]);
+                throw new UnsupportedItemTypeException(BuiltinFunctions.AVG, data[offset]);
             }
         }
     }

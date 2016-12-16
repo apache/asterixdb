@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.PointableAllocator;
@@ -75,7 +75,7 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.CAST_TYPE;
+        return BuiltinFunctions.CAST_TYPE;
     }
 
     @Override

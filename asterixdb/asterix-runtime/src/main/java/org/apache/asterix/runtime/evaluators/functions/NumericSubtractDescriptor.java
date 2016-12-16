@@ -33,7 +33,7 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -64,7 +64,7 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.NUMERIC_SUBTRACT;
+        return BuiltinFunctions.NUMERIC_SUBTRACT;
     }
 
     @Override

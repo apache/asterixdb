@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
@@ -41,7 +41,7 @@ public class SerializableSqlSumAggregateDescriptor extends AbstractSerializableA
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SERIAL_SQL_SUM;
+        return BuiltinFunctions.SERIAL_SQL_SUM;
     }
 
     @Override

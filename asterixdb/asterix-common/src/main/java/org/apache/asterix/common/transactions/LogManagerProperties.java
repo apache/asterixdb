@@ -20,7 +20,7 @@ package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 
 public class LogManagerProperties implements Serializable {
 
@@ -40,7 +40,7 @@ public class LogManagerProperties implements Serializable {
     // maximum size of each log file
     private final long logPartitionSize;
 
-    public LogManagerProperties(AsterixTransactionProperties txnProperties, String nodeId) {
+    public LogManagerProperties(TransactionProperties txnProperties, String nodeId) {
         this.logPageSize = txnProperties.getLogBufferPageSize();
         this.numLogPages = txnProperties.getLogBufferNumPages();
         long logPartitionSize = txnProperties.getLogPartitionSize();

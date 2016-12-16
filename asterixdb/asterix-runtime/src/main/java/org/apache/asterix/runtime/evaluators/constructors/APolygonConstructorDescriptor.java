@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -110,7 +110,7 @@ public class APolygonConstructorDescriptor extends AbstractScalarFunctionDynamic
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.POLYGON_CONSTRUCTOR;
+        return BuiltinFunctions.POLYGON_CONSTRUCTOR;
     }
 
 }

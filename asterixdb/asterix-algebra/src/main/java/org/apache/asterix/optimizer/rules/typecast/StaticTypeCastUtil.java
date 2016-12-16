@@ -29,7 +29,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -80,13 +80,13 @@ public class StaticTypeCastUtil {
      */
     public static boolean rewriteListExpr(AbstractFunctionCallExpression funcExpr, IAType reqType, IAType inputType,
             IVariableTypeEnvironment env) throws AlgebricksException {
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
             }
             return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
                     env);
-        } else if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
+        } else if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
             }
@@ -136,13 +136,13 @@ public class StaticTypeCastUtil {
          * because they are not "statically cast-able".
          * instead, the record will be dynamically casted at the runtime
          */
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
             }
             return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
                     env);
-        } else if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
+        } else if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
             }
@@ -256,8 +256,8 @@ public class StaticTypeCastUtil {
      */
     private static boolean staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
             ARecordType inputType, IVariableTypeEnvironment env) throws AlgebricksException {
-        if (!(func.getFunctionIdentifier() == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
-                || func.getFunctionIdentifier() == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
+        if (!(func.getFunctionIdentifier() == BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
+                || func.getFunctionIdentifier() == BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             return false;
         }
         IAType[] reqFieldTypes = reqType.getFieldTypes();
@@ -332,7 +332,7 @@ public class StaticTypeCastUtil {
                             matched = true;
 
                             ScalarFunctionCallExpression notNullFunc = new ScalarFunctionCallExpression(
-                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CHECK_UNKNOWN));
+                                    FunctionUtil.getFunctionInfo(BuiltinFunctions.CHECK_UNKNOWN));
                             notNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(arg));
                             //wrap the not null function to the original function
                             func.getArguments().get(2 * i + 1).setValue(notNullFunc);
@@ -471,7 +471,7 @@ public class StaticTypeCastUtil {
             // do not enforce nested type in the case of no-used variables
             if (!inputFieldType.equals(reqFieldType) && !parameterVars.isEmpty()) {
                 //inject dynamic type casting
-                injectCastFunction(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE), reqFieldType,
+                injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), reqFieldType,
                         inputFieldType, expRef, argExpr);
                 castInjected = true;
             }

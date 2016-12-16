@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -121,7 +121,7 @@ public class ADoubleConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.DOUBLE_CONSTRUCTOR;
+        return BuiltinFunctions.DOUBLE_CONSTRUCTOR;
     }
 
 }

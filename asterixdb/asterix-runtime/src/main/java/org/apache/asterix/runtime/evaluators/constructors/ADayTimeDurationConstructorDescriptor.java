@@ -25,7 +25,7 @@ import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.AMutableDayTimeDuration;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -115,7 +115,7 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
      */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
+        return BuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
     }
 
 }

@@ -54,12 +54,12 @@ public class RuntimeUtils {
 
     public static Map<InetAddress, Set<String>> getNodeControllerMap() throws HyracksDataException {
         Map<InetAddress, Set<String>> map = new HashMap<>();
-        AsterixAppContextInfo.INSTANCE.getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
+        AppContextInfo.INSTANCE.getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
         return map;
     }
 
     public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) {
-        ClusterControllerService ccs = (ClusterControllerService) AsterixAppContextInfo.INSTANCE
+        ClusterControllerService ccs = (ClusterControllerService) AppContextInfo.INSTANCE
                 .getCCApplicationContext().getControllerService();
         map.putAll(ccs.getIpAddressNodeNameMap());
     }

@@ -22,11 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.metadata.declared.DataSource;
-import org.apache.asterix.metadata.declared.DataSource.Type;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -155,7 +154,7 @@ public class OptimizableOperatorSubTree {
 
                     if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
-                        if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                        if (f.getFunctionIdentifier().equals(BuiltinFunctions.INDEX_SEARCH)) {
                             AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                             jobGenParams.readFromFuncArgs(f.getArguments());
                             if (jobGenParams.isPrimaryIndex()) {
@@ -170,7 +169,7 @@ public class OptimizableOperatorSubTree {
                                 }
                                 dataSourceFound = true;
                             }
-                        } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.EXTERNAL_LOOKUP)) {
+                        } else if (f.getFunctionIdentifier().equals(BuiltinFunctions.EXTERNAL_LOOKUP)) {
                             // External lookup case
                             if (getDataSourceRef() == null) {
                                 setDataSourceRef(subTreeOpRef);

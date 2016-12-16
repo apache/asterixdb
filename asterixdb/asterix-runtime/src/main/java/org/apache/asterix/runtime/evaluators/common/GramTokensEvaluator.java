@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -72,7 +72,7 @@ public class GramTokensEvaluator implements IScalarEvaluator {
         gramLengthEval.evaluate(tuple, gramLengthArg);
         prePostEval.evaluate(tuple, prePostArg);
 
-        int gramLength = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.GRAM_TOKENS.getName(), 1,
+        int gramLength = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GRAM_TOKENS.getName(), 1,
                 gramLengthArg.getByteArray(), gramLengthArg.getStartOffset());
         tokenizer.setGramlength(gramLength);
         boolean prePost = BooleanPointable.getBoolean(prePostArg.getByteArray(),

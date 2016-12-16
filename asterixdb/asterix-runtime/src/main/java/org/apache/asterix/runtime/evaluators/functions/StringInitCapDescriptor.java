@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -63,7 +63,7 @@ public class StringInitCapDescriptor extends AbstractScalarFunctionDynamicDescri
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_INITCAP;
+        return BuiltinFunctions.STRING_INITCAP;
     }
 
 }

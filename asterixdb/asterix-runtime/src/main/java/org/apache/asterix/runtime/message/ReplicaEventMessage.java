@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
@@ -56,8 +56,8 @@ public class ReplicaEventMessage implements IApplicationMessage {
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
-        IAsterixAppRuntimeContext appContext =
-                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext =
+                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         Node node = new Node();
         node.setId(nodeId);
         node.setClusterIp(nodeIPAddress);

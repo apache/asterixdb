@@ -52,17 +52,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
-import org.apache.asterix.common.replication.AsterixReplicationJob;
+import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
+import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.Replica.ReplicaState;
 import org.apache.asterix.common.replication.ReplicaEvent;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.LogType;
@@ -110,8 +110,8 @@ public class ReplicationManager implements IReplicationManager {
     private int replicationFactor = 1;
     private final ReplicaResourcesManager replicaResourcesManager;
     private final ILogManager logManager;
-    private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
-    private final AsterixReplicationProperties replicationProperties;
+    private final IAppRuntimeContextProvider asterixAppRuntimeContextProvider;
+    private final ReplicationProperties replicationProperties;
     private final Map<String, Replica> replicas;
     private final Map<String, Set<Integer>> replica2PartitionsMap;
 
@@ -124,7 +124,7 @@ public class ReplicationManager implements IReplicationManager {
     private ReplicationJobsProccessor replicationJobsProcessor;
     private final ReplicasEventsMonitor replicationMonitor;
     //dummy job used to stop ReplicationJobsProccessor thread.
-    private static final IReplicationJob REPLICATION_JOB_POISON_PILL = new AsterixReplicationJob(
+    private static final IReplicationJob REPLICATION_JOB_POISON_PILL = new ReplicationJob(
             ReplicationJobType.METADATA, ReplicationOperation.REPLICATE, ReplicationExecutionType.ASYNC, null);
     //used to identify the correct IP address when the node has multiple network interfaces
     private String hostIPAddressFirstOctet = null;
@@ -139,9 +139,9 @@ public class ReplicationManager implements IReplicationManager {
 
     //TODO this class needs to be refactored by moving its private classes to separate files
     //and possibly using MessageBroker to send/receive remote replicas events.
-    public ReplicationManager(String nodeId, AsterixReplicationProperties replicationProperties,
+    public ReplicationManager(String nodeId, ReplicationProperties replicationProperties,
             IReplicaResourcesManager remoteResoucesManager, ILogManager logManager,
-            IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
+            IAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
         this.nodeId = nodeId;
         this.replicationProperties = replicationProperties;
         this.replicaResourcesManager = (ReplicaResourcesManager) remoteResoucesManager;
@@ -164,7 +164,7 @@ public class ReplicationManager implements IReplicationManager {
         replicationJobsProcessor = new ReplicationJobsProccessor();
         replicationMonitor = new ReplicasEventsMonitor();
 
-        Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
+        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) asterixAppRuntimeContextProvider
                 .getAppContext()).getMetadataProperties().getNodePartitions();
         //add list of replicas from configurations (To be read from another source e.g. Zookeeper)
         Set<Replica> replicaNodes = replicationProperties.getRemoteReplicas(nodeId);
@@ -328,7 +328,7 @@ public class ReplicationManager implements IReplicationManager {
                                  */
                                 ILSMComponent diskComponent = LSMComponentJob.getLSMIndexOperationContext()
                                         .getComponentsToBeReplicated().get(0);
-                                long LSNByteOffset = AsterixLSMIndexUtil.getComponentFileLSNOffset(
+                                long LSNByteOffset = LSMIndexUtil.getComponentFileLSNOffset(
                                         (AbstractLSMIndex) LSMComponentJob.getLSMIndex(), diskComponent, filePath);
                                 asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
                                         LSNByteOffset, remainingFiles == 0);

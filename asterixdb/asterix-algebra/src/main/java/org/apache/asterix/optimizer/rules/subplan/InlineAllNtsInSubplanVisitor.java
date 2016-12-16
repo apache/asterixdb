@@ -32,7 +32,7 @@ import java.util.Set;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -297,7 +297,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         LogicalVariable recordVar = context.newVar();
         Mutable<ILogicalExpression> recordExprRef = new MutableObject<ILogicalExpression>(
                 new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
                         recordConstructorArgs));
         AssignOperator assignOp = new AssignOperator(recordVar, recordExprRef);
         return new Pair<ILogicalOperator, LogicalVariable>(assignOp, recordVar);
@@ -328,7 +328,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         // Creates an aggregation function expression.
         aggArgList.add(new MutableObject<>(new VariableReferenceExpression(recordVar)));
         ILogicalExpression aggExpr = new AggregateFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.LISTIFY), false, aggArgList);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.LISTIFY), false, aggArgList);
         aggExprList.add(new MutableObject<>(aggExpr));
         AggregateOperator aggOp = new AggregateOperator(aggVarList, aggExprList);
 
@@ -371,7 +371,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         unnestArgList.add(unnestArg);
         Mutable<ILogicalExpression> unnestExpr = new MutableObject<ILogicalExpression>(
                 new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION), unnestArgList));
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), unnestArgList));
         ILogicalOperator unnestOp = new UnnestOperator(unnestVar, unnestExpr);
         return new Pair<ILogicalOperator, LogicalVariable>(unnestOp, unnestVar);
     }
@@ -392,7 +392,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
                 argRefs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(
                         new AsterixConstantValue(new AString(Integer.toString(inputLiveVar.getId()))))));
                 fieldAccessExprs.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME), argRefs)));
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argRefs)));
                 // Updates variable mapping for ancestor operators.
                 updateInputToOutputVarMapping(inputLiveVar, newVar, false);
             }

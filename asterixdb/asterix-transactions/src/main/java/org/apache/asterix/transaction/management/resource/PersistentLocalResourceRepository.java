@@ -41,9 +41,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.replication.AsterixReplicationJob;
+import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -89,7 +89,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private Set<Integer> nodeInactivePartitions;
 
     public PersistentLocalResourceRepository(IIOManager ioManager, List<IODeviceHandle> devices, String nodeId,
-            AsterixMetadataProperties metadataProperties) throws HyracksDataException {
+            MetadataProperties metadataProperties) throws HyracksDataException {
         this.ioManager = ioManager;
         mountPoints = new String[devices.size()];
         this.nodeId = nodeId;
@@ -377,7 +377,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         if (!partitionDir.equals(StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER)) {
             filesToBeReplicated.clear();
             filesToBeReplicated.add(fileRef.getAbsolutePath());
-            AsterixReplicationJob job = new AsterixReplicationJob(ReplicationJobType.METADATA, operation,
+            ReplicationJob job = new ReplicationJob(ReplicationJobType.METADATA, operation,
                     ReplicationExecutionType.SYNC, filesToBeReplicated);
             try {
                 replicationManager.submitJob(job);

@@ -25,13 +25,13 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -57,7 +57,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.BINARY_CONCAT;
+        return BuiltinFunctions.BINARY_CONCAT;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryScalarEvaluator(ctx, args) {
 
-                    private final AsterixListAccessor listAccessor = new AsterixListAccessor();
+                    private final ListAccessor listAccessor = new ListAccessor();
                     private final byte[] metaBuffer = new byte[5];
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE

@@ -19,7 +19,7 @@
 package org.apache.asterix.active;
 
 import org.apache.asterix.active.message.ActivePartitionMessage;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,7 +36,7 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
 
     public ActiveSourceOperatorNodePushable(IHyracksTaskContext ctx, ActiveRuntimeId runtimeId) {
         this.ctx = ctx;
-        activeManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+        activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getActiveManager();
         this.runtimeId = runtimeId;
     }

@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -108,7 +108,7 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.NULL_CONSTRUCTOR;
+        return BuiltinFunctions.NULL_CONSTRUCTOR;
     }
 
 }

@@ -26,7 +26,7 @@ import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.base.temporal.AsterixTemporalTypeParseException;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -48,7 +48,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ParseTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.PARSE_TIME;
+    public final static FunctionIdentifier FID = BuiltinFunctions.PARSE_TIME;
     private final static DateTimeFormatUtils DT_UTILS = DateTimeFormatUtils.getInstance();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

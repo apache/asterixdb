@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.job.listener;
 
 import java.util.List;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -54,7 +54,7 @@ public class MultiTransactionJobletEventListenerFactory implements IJobletEventL
             public void jobletFinish(JobStatus jobStatus) {
                 try {
                     ITransactionManager txnManager =
-                            ((IAsterixAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
+                            ((IAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
                                     .getTransactionSubsystem().getTransactionManager();
                     for (JobId jobId : jobIds) {
                         ITransactionContext txnContext = txnManager.getTransactionContext(jobId, false);
@@ -71,7 +71,7 @@ public class MultiTransactionJobletEventListenerFactory implements IJobletEventL
             public void jobletStart() {
                 try {
                     for (JobId jobId : jobIds) {
-                        ((IAsterixAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
+                        ((IAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
                                 .getTransactionSubsystem().getTransactionManager().getTransactionContext(jobId, true);
                     }
                 } catch (ACIDException e) {

@@ -23,7 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -43,8 +43,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DayTimeDurationComparatorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier GREATER_THAN_FID = AsterixBuiltinFunctions.DAY_TIME_DURATION_GREATER_THAN;
-    public final static FunctionIdentifier LESS_THAN_FID = AsterixBuiltinFunctions.DAY_TIME_DURATION_LESS_THAN;
+    public final static FunctionIdentifier GREATER_THAN_FID = BuiltinFunctions.DAY_TIME_DURATION_GREATER_THAN;
+    public final static FunctionIdentifier LESS_THAN_FID = BuiltinFunctions.DAY_TIME_DURATION_LESS_THAN;
     private final boolean isGreaterThan;
 
     protected DayTimeDurationComparatorDescriptor(boolean isGreaterThan) {

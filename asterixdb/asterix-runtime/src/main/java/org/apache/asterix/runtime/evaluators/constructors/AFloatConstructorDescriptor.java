@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -120,6 +120,6 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.FLOAT_CONSTRUCTOR;
+        return BuiltinFunctions.FLOAT_CONSTRUCTOR;
     }
 }

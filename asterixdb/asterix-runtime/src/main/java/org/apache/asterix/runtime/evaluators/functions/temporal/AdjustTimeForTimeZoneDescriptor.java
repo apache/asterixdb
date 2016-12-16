@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeseriali
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem.Fields;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -46,7 +46,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.ADJUST_TIME_FOR_TIMEZONE;
+    public final static FunctionIdentifier FID = BuiltinFunctions.ADJUST_TIME_FOR_TIMEZONE;
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

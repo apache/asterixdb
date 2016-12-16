@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -43,7 +43,7 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.FIND_BINARY_FROM;
+        return BuiltinFunctions.FIND_BINARY_FROM;
     }
 
     @Override

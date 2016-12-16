@@ -33,7 +33,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -117,7 +117,7 @@ public class EquivalenceClassUtils {
             }
             LogicalVariable var = indexSearchVars.get(pkIndex);
             ILogicalExpression expr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(referredRecordVar)),
                     new MutableObject<ILogicalExpression>(
                             new ConstantExpression(new AsterixConstantValue(new AInt32(fieldIndexInRecord)))));
@@ -174,7 +174,7 @@ public class EquivalenceClassUtils {
             LogicalVariable assignVar = context.newVar();
             ILogicalOperator assignOp = new AssignOperator(assignVar,
                     new MutableObject<ILogicalExpression>(new StatefulFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_QUERY_UID), null)));
+                            FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_QUERY_UID), null)));
             OperatorPropertiesUtil.markMovable(assignOp, !usedForCorrelationJoin);
             assignOp.getInputs().add(new MutableObject<ILogicalOperator>(operator));
             context.addPrimaryKey(new FunctionalDependency(Collections.singletonList(assignVar),

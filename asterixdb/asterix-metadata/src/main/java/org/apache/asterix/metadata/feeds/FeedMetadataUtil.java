@@ -29,7 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
+import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -149,10 +149,10 @@ public class FeedMetadataUtil {
                         orig.getFeedConnectionId(), orig.getSourceFeedId(), (ARecordType) orig.getOutputType(),
                         orig.getRecordDescriptor(), orig.getFeedPolicyProperties(), orig.getSubscriptionLocation());
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
-            } else if ((opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor)
-                    && ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).isPrimary()) {
+            } else if ((opDesc instanceof LSMTreeInsertDeleteOperatorDescriptor)
+                    && ((LSMTreeInsertDeleteOperatorDescriptor) opDesc).isPrimary()) {
                 // only introduce store before primary index
-                operandId = ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
+                operandId = ((LSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
                 metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc, feedPolicyProperties,
                         FeedRuntimeType.STORE, false, operandId);
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());

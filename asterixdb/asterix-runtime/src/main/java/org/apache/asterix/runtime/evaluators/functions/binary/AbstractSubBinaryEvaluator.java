@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -68,7 +68,7 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
             int subStart;
 
             // strange SQL index convention
-            subStart = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes,
+            subStart = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes,
                     offset) - 1;
 
             int totalLength = byteArrayPointable.getContentLength();

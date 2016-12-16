@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -47,7 +47,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.PRINT_BINARY;
+        return BuiltinFunctions.PRINT_BINARY;
     }
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {

@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.asterix.external.library.ExternalFunctionDescriptorProvider;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.runtime.formats.FormatUtils;
@@ -170,8 +170,8 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
         switch (fd.getFunctionDescriptorTag()) {
             case AGGREGATE: {
-                if (AsterixBuiltinFunctions.isAggregateFunctionSerializable(fd.getIdentifier())) {
-                    AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
+                if (BuiltinFunctions.isAggregateFunctionSerializable(fd.getIdentifier())) {
+                    AggregateFunctionCallExpression serialAggExpr = BuiltinFunctions
                             .makeSerializableAggregateFunctionExpression(fd.getIdentifier(), expr.getArguments());
                     IFunctionDescriptor afdd = getFunctionDescriptor(serialAggExpr, env, context);
                     return afdd.createSerializableAggregateEvaluatorFactory(args);

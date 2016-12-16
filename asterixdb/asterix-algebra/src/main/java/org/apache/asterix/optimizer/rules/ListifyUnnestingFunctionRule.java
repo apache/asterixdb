@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -100,7 +100,7 @@ public class ListifyUnnestingFunctionRule implements IAlgebraicRewriteRule {
         IFunctionInfo functionInfo = func.getFunctionInfo();
 
         // Checks if the function is an unnesting function.
-        if (!AsterixBuiltinFunctions.isBuiltinUnnestingFunction(functionInfo.getFunctionIdentifier())) {
+        if (!BuiltinFunctions.isBuiltinUnnestingFunction(functionInfo.getFunctionIdentifier())) {
             return false;
         }
 
@@ -119,7 +119,7 @@ public class ListifyUnnestingFunctionRule implements IAlgebraicRewriteRule {
         LogicalVariable aggVar = context.newVar();
         Mutable<ILogicalExpression> aggArgExprRef = new MutableObject<>(new VariableReferenceExpression(unnestVar));
         ILogicalExpression aggExpr = new AggregateFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.LISTIFY), false, new ArrayList<>(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.LISTIFY), false, new ArrayList<>(
                         Collections.singletonList(aggArgExprRef)));
         AggregateOperator aggregateOperator = new AggregateOperator(new ArrayList<>(Collections.singletonList(aggVar)),
                 new ArrayList<>(Collections.singletonList(new MutableObject<>(aggExpr))));

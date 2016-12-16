@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions.records;
 
 import java.util.List;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
@@ -47,7 +47,7 @@ public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.FIELD_ACCESS_NESTED;
+        return BuiltinFunctions.FIELD_ACCESS_NESTED;
     }
 
     @Override

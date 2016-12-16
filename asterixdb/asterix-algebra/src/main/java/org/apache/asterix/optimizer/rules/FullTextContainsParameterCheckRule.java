@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
@@ -92,7 +92,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier fi = funcExpr.getFunctionIdentifier();
 
-        if (fi == AsterixBuiltinFunctions.FULLTEXT_CONTAINS) {
+        if (fi == BuiltinFunctions.FULLTEXT_CONTAINS) {
             // Don't need to check this operator again.
             context.addToDontApplySet(this, op);
 
@@ -102,7 +102,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
             // The number of parameters should be three: exp1, exp2, and the option
             if (oldExprs.size() != 3) {
                 throw new AlgebricksException(
-                        AsterixBuiltinFunctions.FULLTEXT_CONTAINS.getName() + " should have three parameters.");
+                        BuiltinFunctions.FULLTEXT_CONTAINS.getName() + " should have three parameters.");
             }
 
             // The last expression is a record that contains the parameters. That's why we deduct -1.
@@ -136,7 +136,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         if (firstExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && ConstantExpressionUtil.getConstantIaObjectType(firstExpr) != ATypeTag.STRING) {
             throw new AlgebricksException("The first expression of "
-                    + AsterixBuiltinFunctions.FULLTEXT_CONTAINS.getName() + " should be a string.");
+                    + BuiltinFunctions.FULLTEXT_CONTAINS.getName() + " should be a string.");
         }
 
         // Check the second parameter - Expression2. If it's a constant, then we can check the type here.
@@ -150,7 +150,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                     break;
                 default:
                     throw new AlgebricksException(
-                            "The second expression of " + AsterixBuiltinFunctions.FULLTEXT_CONTAINS.getName()
+                            "The second expression of " + BuiltinFunctions.FULLTEXT_CONTAINS.getName()
                                     + "should be a string, an unordered list, or an ordered list.");
             }
         }
@@ -167,8 +167,8 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         // Get the last parameter - this should be a record-constructor.
         AbstractFunctionCallExpression openRecConsExpr = (AbstractFunctionCallExpression) expr.getValue();
         FunctionIdentifier openRecConsFi = openRecConsExpr.getFunctionIdentifier();
-        if (openRecConsFi != AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
-                && openRecConsFi != AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR) {
+        if (openRecConsFi != BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
+                && openRecConsFi != BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR) {
             throw new AlgebricksException("ftcontains() option should be the form of a record { }.");
         }
 

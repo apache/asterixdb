@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
@@ -46,7 +46,7 @@ public class CountHashedGramTokensDescriptor extends AbstractScalarFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.COUNTHASHED_GRAM_TOKENS;
+        return BuiltinFunctions.COUNTHASHED_GRAM_TOKENS;
     }
 
     @Override

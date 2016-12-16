@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -80,7 +80,7 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
                 rewritten = true;
             }
         }
-        if (!func.getFunctionIdentifier().equals(AsterixBuiltinFunctions.SWITCH_CASE)) {
+        if (!func.getFunctionIdentifier().equals(BuiltinFunctions.SWITCH_CASE)) {
             return rewritten;
         }
         return rewriteSwitchCase(op, func, context);
@@ -101,7 +101,7 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
                 ILogicalExpression argExpr = argRef.getValue();
                 // Injects a cast call to cast the data type to the produced type of the switch-case function call.
                 ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE),
                         new ArrayList<>(Collections.singletonList(new MutableObject<>(argExpr))));
                 TypeCastUtils.setRequiredAndInputTypes(castFunc, producedType, type);
                 argRef.setValue(castFunc);

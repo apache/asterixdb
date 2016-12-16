@@ -27,7 +27,7 @@ import org.apache.asterix.dataflow.data.nontagged.hash.ListItemBinaryHashFunctio
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -63,10 +63,10 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
     protected final IScalarEvaluator firstOrdListEval;
     protected final IScalarEvaluator secondOrdListEval;
 
-    protected final AsterixOrderedListIterator fstOrdListIter = new AsterixOrderedListIterator();
-    protected final AsterixOrderedListIterator sndOrdListIter = new AsterixOrderedListIterator();
-    protected final AsterixUnorderedListIterator fstUnordListIter = new AsterixUnorderedListIterator();
-    protected final AsterixUnorderedListIterator sndUnordListIter = new AsterixUnorderedListIterator();
+    protected final OrderedListIterator fstOrdListIter = new OrderedListIterator();
+    protected final OrderedListIterator sndOrdListIter = new OrderedListIterator();
+    protected final UnorderedListIterator fstUnordListIter = new UnorderedListIterator();
+    protected final UnorderedListIterator sndUnordListIter = new UnorderedListIterator();
 
     protected AbstractAsterixListIterator firstListIter;
     protected AbstractAsterixListIterator secondListIter;
@@ -243,7 +243,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
                 break;
             }
             default: {
-                throw new TypeMismatchException(AsterixBuiltinFunctions.SIMILARITY_JACCARD, 0, typeTag1.serialize(),
+                throw new TypeMismatchException(BuiltinFunctions.SIMILARITY_JACCARD, 0, typeTag1.serialize(),
                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
             }
         }
@@ -257,7 +257,7 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
                 break;
             }
             default: {
-                throw new TypeMismatchException(AsterixBuiltinFunctions.SIMILARITY_JACCARD, 1, typeTag2.serialize(),
+                throw new TypeMismatchException(BuiltinFunctions.SIMILARITY_JACCARD, 1, typeTag2.serialize(),
                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
             }
         }

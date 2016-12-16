@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -87,7 +87,7 @@ public interface IExternalDataSourceFactory extends Serializable {
             AlgebricksAbsolutePartitionConstraint constraints, int count) throws AlgebricksException {
         if (constraints == null) {
             ArrayList<String> locs = new ArrayList<>();
-            Set<String> stores = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getStores().keySet();
+            Set<String> stores = AppContextInfo.INSTANCE.getMetadataProperties().getStores().keySet();
             if (stores.isEmpty()) {
                 throw new AlgebricksException("Configurations don't have any stores");
             }

@@ -31,7 +31,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -186,7 +186,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                     FunctionIdentifier fid = f.getFunctionIdentifier();
-                    if (!fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                    if (!fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
                         throw new IllegalStateException();
                     }
                     AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
@@ -235,10 +235,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     FunctionIdentifier fid = f.getFunctionIdentifier();
                     String dataverseName;
                     String datasetName;
-                    if (AsterixBuiltinFunctions.EXTERNAL_LOOKUP.equals(fid)) {
+                    if (BuiltinFunctions.EXTERNAL_LOOKUP.equals(fid)) {
                         dataverseName = AccessMethodUtils.getStringConstant(f.getArguments().get(0));
                         datasetName = AccessMethodUtils.getStringConstant(f.getArguments().get(1));
-                    } else if (fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                    } else if (fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                         jobGenParams.readFromFuncArgs(f.getArguments());
                         dataverseName = jobGenParams.dataverseName;
@@ -358,7 +358,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                         FunctionIdentifier fid = f.getFunctionIdentifier();
-                        if (!fid.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                        if (!fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
                             throw new IllegalStateException();
                         }
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
@@ -410,8 +410,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
-        if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME
-                || funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+        if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME
+                || funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
 
             //get the variable from here. Figure out which input it came from. Go to that input!!!
             ArrayList<LogicalVariable> usedVars = new ArrayList<>();
@@ -442,14 +442,14 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 }
             }
 
-            if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+            if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
                 String fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
                 if (fieldName == null) {
                     return null;
                 }
                 returnList.add(fieldName);
                 return new Pair<>(recType, returnList);
-            } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+            } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
                 Integer fieldIndex = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
                 if (fieldIndex == null) {
                     return null;

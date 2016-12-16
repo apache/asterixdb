@@ -35,7 +35,7 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -100,7 +100,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(AsterixBuiltinFunctions.SUM, bytes[offset], aggType.serialize());
+            throw new IncompatibleTypeException(BuiltinFunctions.SUM, bytes[offset], aggType.serialize());
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {
@@ -147,7 +147,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM, bytes[offset]);
+                throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, bytes[offset]);
         }
         state[start + AGG_TYPE_OFFSET] = aggType.serialize();
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
@@ -206,7 +206,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                     break;
                 }
                 default:
-                    throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM, aggType.serialize());
+                    throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);

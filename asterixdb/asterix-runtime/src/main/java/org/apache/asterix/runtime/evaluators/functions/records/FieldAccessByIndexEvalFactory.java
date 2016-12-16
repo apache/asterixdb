@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -89,14 +89,14 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                     int offset = inputArg0.getStartOffset();
 
                     if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, 0,
+                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, 0,
                                 serRecord[offset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
                     eval1.evaluate(tuple, inputArg1);
                     byte[] indexBytes = inputArg1.getByteArray();
                     int indexOffset = inputArg1.getStartOffset();
                     if (indexBytes[indexOffset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, 1,
+                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, 1,
                                 indexBytes[offset], ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                     }
                     fieldIndex = IntegerPointable.getInteger(indexBytes, indexOffset + 1);

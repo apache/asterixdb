@@ -30,8 +30,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.common.config.AsterixExternalProperties;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -109,7 +109,7 @@ public class QueryWebInterfaceServlet extends HttpServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json");
-        AsterixExternalProperties externalProperties = AsterixAppContextInfo.INSTANCE.getExternalProperties();
+        ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
         JSONObject obj = new JSONObject();
         try {
             PrintWriter out = response.getWriter();

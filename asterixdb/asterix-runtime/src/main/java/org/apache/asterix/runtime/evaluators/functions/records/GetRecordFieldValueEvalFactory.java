@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -86,7 +86,7 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     int serRecordLen = inputArg0.getLength();
 
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, 0,
+                        throw new TypeMismatchException(BuiltinFunctions.GET_RECORD_FIELD_VALUE, 0,
                                 serRecord[serRecordOffset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
 

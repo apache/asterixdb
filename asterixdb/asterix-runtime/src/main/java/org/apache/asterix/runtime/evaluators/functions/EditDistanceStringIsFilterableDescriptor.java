@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -60,6 +60,6 @@ public class EditDistanceStringIsFilterableDescriptor extends AbstractScalarFunc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE;
+        return BuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE;
     }
 }

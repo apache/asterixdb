@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -98,7 +98,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                 continue;
             }
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            FunctionIdentifier funcIdent = AsterixBuiltinFunctions.getAggregateFunction(funcExpr
+            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr
                     .getFunctionIdentifier());
             if (funcIdent == null) {
                 // Recursively look in func args.
@@ -183,7 +183,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
             return false;
         }
         AbstractFunctionCallExpression origAggFuncExpr = (AbstractFunctionCallExpression) aggExpr;
-        if (origAggFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
+        if (origAggFuncExpr.getFunctionIdentifier() != BuiltinFunctions.LISTIFY) {
             return false;
         }
 
@@ -210,14 +210,14 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         for (Mutable<ILogicalExpression> srcAssignExprRef : srcAssignExprRefs) {
             AbstractFunctionCallExpression assignFuncExpr = (AbstractFunctionCallExpression) srcAssignExprRef
                     .getValue();
-            FunctionIdentifier aggFuncIdent = AsterixBuiltinFunctions.getAggregateFunction(assignFuncExpr
+            FunctionIdentifier aggFuncIdent = BuiltinFunctions.getAggregateFunction(assignFuncExpr
                     .getFunctionIdentifier());
 
             // Push the agg func into the agg op.
 
             List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
             aggArgs.add(aggOpExpr.getArguments().get(0));
-            AggregateFunctionCallExpression aggFuncExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
+            AggregateFunctionCallExpression aggFuncExpr = BuiltinFunctions.makeAggregateFunctionExpression(
                     aggFuncIdent, aggArgs);
             LogicalVariable newVar = context.newVar();
             aggOp.getVariables().add(newVar);
@@ -247,7 +247,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                 continue;
             }
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            FunctionIdentifier funcIdent = AsterixBuiltinFunctions.getAggregateFunction(funcExpr
+            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr
                     .getFunctionIdentifier());
             if (funcIdent == null) {
                 // Recursively look in func args.

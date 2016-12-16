@@ -30,7 +30,7 @@ import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
@@ -64,7 +64,7 @@ public class FunctionMapUtil {
         if (finfo == null) {
             return false;
         }
-        return AsterixBuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
+        return BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
     }
 
     /**
@@ -89,7 +89,7 @@ public class FunctionMapUtil {
         if (finfo == null) {
             return false;
         }
-        return AsterixBuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
+        return BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
     }
 
     /**

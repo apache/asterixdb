@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -40,7 +40,7 @@ public class GreaterThanOrEqualsDescriptor extends AbstractScalarFunctionDynamic
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.GE;
+        return BuiltinFunctions.GE;
     }
 
     @Override

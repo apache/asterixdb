@@ -24,17 +24,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.app.external.ExternalIndexingOperations;
-import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.util.RuntimeComponentsProvider;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -57,8 +60,6 @@ import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
@@ -131,7 +132,7 @@ public abstract class SecondaryIndexOperationsHelper {
     protected RecordDescriptor secondaryRecDesc;
     protected IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories;
 
-    protected IAsterixPropertiesProvider propertiesProvider;
+    protected IPropertiesProvider propertiesProvider;
     protected ILSMMergePolicyFactory mergePolicyFactory;
     protected Map<String, String> mergePolicyFactoryProperties;
     protected RecordDescriptor enforcedRecDesc;
@@ -149,7 +150,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexOperationsHelper(PhysicalOptimizationConfig physOptConf,
-            IAsterixPropertiesProvider propertiesProvider) {
+            IPropertiesProvider propertiesProvider) {
         this.physOptConf = physOptConf;
         this.propertiesProvider = propertiesProvider;
     }
@@ -159,7 +160,7 @@ public abstract class SecondaryIndexOperationsHelper {
             boolean isEnforced, int gramLength, MetadataProvider metadataProvider,
             PhysicalOptimizationConfig physOptConf, ARecordType recType, ARecordType metaType,
             List<Integer> keySourceIndicators, ARecordType enforcedType) throws AsterixException, AlgebricksException {
-        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
+        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
         SecondaryIndexOperationsHelper indexOperationsHelper = null;
         switch (indexType) {
             case BTREE: {
@@ -349,18 +350,18 @@ public abstract class SecondaryIndexOperationsHelper {
         ISearchOperationCallbackFactory searchCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
                 : new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, dataset.getDatasetId(),
                         primaryBloomFilterKeyFields, txnSubsystemProvider, ResourceType.LSM_BTREE);
-        AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+        StorageProperties storageProperties = propertiesProvider.getStorageProperties();
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
                 primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         mergePolicyFactory, mergePolicyFactoryProperties,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
                         primaryBTreeFields, primaryFilterFields, !temp),
-                false, false, null, searchCallbackFactory, null, null, AsterixLSMIndexUtil
+                false, false, null, searchCallbackFactory, null, null, LSMIndexUtil
                         .getMetadataPageManagerFactory());
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
@@ -447,10 +448,10 @@ public abstract class SecondaryIndexOperationsHelper {
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor)
             throws MetadataException, AlgebricksException {
         TreeIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                secondaryRecDesc, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
+                secondaryRecDesc, RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields,
-                fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory, AsterixLSMIndexUtil
+                fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory, LSMIndexUtil
                         .getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
@@ -564,11 +565,11 @@ public abstract class SecondaryIndexOperationsHelper {
             }
         }
         ExternalIndexBulkModifyOperatorDescriptor treeIndexBulkLoadOp = new ExternalIndexBulkModifyOperatorDescriptor(
-                spec, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider, secondaryTypeTraits,
+                spec, RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryBloomFilterKeyFields, dataflowHelperFactory,
                 NoOpOperationCallbackFactory.INSTANCE, deletedFiles, fieldPermutation, fillFactor, numElementsHint,
-                AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                LSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return treeIndexBulkLoadOp;

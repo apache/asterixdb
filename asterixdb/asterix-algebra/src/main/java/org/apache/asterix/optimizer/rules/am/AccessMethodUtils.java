@@ -40,7 +40,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -139,7 +139,7 @@ public class AccessMethodUtils {
         }
         if (arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             // The arguments of contains() function are asymmetrical, we can only use index if it is on the first argument
-            if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.STRING_CONTAINS) {
+            if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.STRING_CONTAINS) {
                 return false;
             }
             IAType expressionType = constantRuntimeResultType(arg1, context, typeEnvironment);
@@ -408,7 +408,7 @@ public class AccessMethodUtils {
         appendSecondaryIndexTypes(dataset, recordType, metaRecordType, index, outputPrimaryKeysOnly,
                 secondaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
-        IFunctionInfo secondaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
+        IFunctionInfo secondaryIndexSearch = FunctionUtil.getFunctionInfo(BuiltinFunctions.INDEX_SEARCH);
         UnnestingFunctionCallExpression secondaryIndexSearchFunc = new UnnestingFunctionCallExpression(
                 secondaryIndexSearch, secondaryIndexFuncArgs);
         secondaryIndexSearchFunc.setReturnsUniqueValues(true);
@@ -481,7 +481,7 @@ public class AccessMethodUtils {
         primaryIndexUnnestVars.addAll(dataSourceOp.getVariables());
         appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
         // An index search is expressed as an unnest over an index-search function.
-        IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
+        IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(BuiltinFunctions.INDEX_SEARCH);
         AbstractFunctionCallExpression primaryIndexSearchFunc = new ScalarFunctionCallExpression(primaryIndexSearch,
                 primaryIndexFuncArgs);
         // This is the operator that jobgen will be looking for. It contains an unnest function that has all necessary arguments to determine
@@ -632,7 +632,7 @@ public class AccessMethodUtils {
         externalUnnestVars.addAll(dataSourceOp.getVariables());
         appendExternalRecTypes(dataset, recordType, outputTypes);
 
-        IFunctionInfo externalLookup = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.EXTERNAL_LOOKUP);
+        IFunctionInfo externalLookup = FunctionUtil.getFunctionInfo(BuiltinFunctions.EXTERNAL_LOOKUP);
         AbstractFunctionCallExpression externalLookupFunc = new ScalarFunctionCallExpression(externalLookup,
                 externalLookupArgs);
         UnnestMapOperator unnestOp = new UnnestMapOperator(externalUnnestVars,

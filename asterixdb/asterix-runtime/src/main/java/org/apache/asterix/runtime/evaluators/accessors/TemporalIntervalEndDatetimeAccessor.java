@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeser
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -48,7 +48,7 @@ public class TemporalIntervalEndDatetimeAccessor extends AbstractScalarFunctionD
 
     private static final long serialVersionUID = 1L;
 
-    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END_DATETIME;
+    private static final FunctionIdentifier FID = BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END_DATETIME;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

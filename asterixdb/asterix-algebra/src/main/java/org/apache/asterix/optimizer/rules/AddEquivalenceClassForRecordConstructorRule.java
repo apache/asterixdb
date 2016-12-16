@@ -27,7 +27,7 @@ import java.util.Map;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -88,8 +88,8 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                 FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
-                if (fid == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR
-                        || fid == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
+                if (fid == BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR
+                        || fid == BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
                     changed |= propagateEquivalenceClassesForRecordConstructor(vars.get(exprIndex), funcExpr, assignOp,
                             context);
                 }
@@ -116,7 +116,7 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
                     context.putEquivalenceClassMap(assignOp, ecs);
                 }
                 ILogicalExpression expr = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)),
                         new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(parameterIndex / 2))))); // Every two parameters corresponds to a field.

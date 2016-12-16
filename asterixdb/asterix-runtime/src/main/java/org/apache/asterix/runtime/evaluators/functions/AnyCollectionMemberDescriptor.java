@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -59,7 +59,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER;
+        return BuiltinFunctions.ANY_COLLECTION_MEMBER;
     }
 
     private static class AnyCollectionMemberEvalFactory implements IScalarEvaluatorFactory {
@@ -96,7 +96,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
                     if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER, 0,
+                        throw new TypeMismatchException(BuiltinFunctions.ANY_COLLECTION_MEMBER, 0,
                                 serList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                 ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                     }

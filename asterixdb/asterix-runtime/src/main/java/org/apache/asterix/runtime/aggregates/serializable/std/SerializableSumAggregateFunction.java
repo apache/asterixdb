@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -58,7 +58,7 @@ public class SerializableSumAggregateFunction extends AbstractSerializableSumAgg
         // but if all input value are system null, then we should return
         // null in finish().
         if (isLocalAgg) {
-            throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM,
+            throw new UnsupportedItemTypeException(BuiltinFunctions.SUM,
                     ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         }
     }

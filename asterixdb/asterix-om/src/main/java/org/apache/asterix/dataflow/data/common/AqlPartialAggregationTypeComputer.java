@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.dataflow.data.common;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -35,17 +35,17 @@ public class AqlPartialAggregationTypeComputer implements IPartialAggregationTyp
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AggregateFunctionCallExpression agg = (AggregateFunctionCallExpression) expr;
         FunctionIdentifier partialFid = agg.getFunctionIdentifier();
-        if (partialFid.equals(AsterixBuiltinFunctions.SERIAL_GLOBAL_AVG)) {
-            partialFid = AsterixBuiltinFunctions.SERIAL_LOCAL_AVG;
+        if (partialFid.equals(BuiltinFunctions.SERIAL_GLOBAL_AVG)) {
+            partialFid = BuiltinFunctions.SERIAL_LOCAL_AVG;
         }
-        AggregateFunctionCallExpression partialAgg = AsterixBuiltinFunctions.makeAggregateFunctionExpression(partialFid,
+        AggregateFunctionCallExpression partialAgg = BuiltinFunctions.makeAggregateFunctionExpression(partialFid,
                 agg.getArguments());
         return getTypeForFunction(partialAgg, env, metadataProvider);
     }
 
     private Object getTypeForFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        return AsterixBuiltinFunctions.getResultTypeComputer(expr.getFunctionIdentifier()).computeType(expr, env,
+        return BuiltinFunctions.getResultTypeComputer(expr.getFunctionIdentifier()).computeType(expr, env,
                 metadataProvider);
     }
 }

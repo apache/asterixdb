@@ -27,12 +27,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
@@ -139,12 +139,12 @@ public class MetadataNode implements IMetadataNode {
         super();
     }
 
-    public void initialize(IAsterixAppRuntimeContext runtimeContext,
+    public void initialize(IAppRuntimeContext runtimeContext,
             MetadataTupleTranslatorProvider tupleTranslatorProvider, List<IMetadataExtension> metadataExtensions) {
         this.tupleTranslatorProvider = tupleTranslatorProvider;
         this.transactionSubsystem = runtimeContext.getTransactionSubsystem();
         this.datasetLifecycleManager = runtimeContext.getDatasetLifecycleManager();
-        this.metadataStoragePartition = ((IAsterixPropertiesProvider) runtimeContext).getMetadataProperties()
+        this.metadataStoragePartition = ((IPropertiesProvider) runtimeContext).getMetadataProperties()
                 .getMetadataPartition().getPartitionId();
         if (metadataExtensions != null) {
             extensionDatasets = new HashMap<>();
@@ -423,7 +423,7 @@ public class MetadataNode implements IMetadataNode {
             txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
                     metadataIndex.isPrimaryIndex());
 
-            AsterixLSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
+            LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
 
             // TODO: fix exceptions once new BTree exception model is in hyracks.
             indexAccessor.forceInsert(tuple);
@@ -688,7 +688,7 @@ public class MetadataNode implements IMetadataNode {
             txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
                     metadataIndex.isPrimaryIndex());
 
-            AsterixLSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
+            LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
 
             indexAccessor.forceDelete(tuple);
         } finally {

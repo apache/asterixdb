@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
 import org.apache.asterix.om.base.ARectangle;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -119,7 +119,7 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.RECTANGLE_CONSTRUCTOR;
+        return BuiltinFunctions.RECTANGLE_CONSTRUCTOR;
     }
 
 }

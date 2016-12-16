@@ -28,7 +28,7 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -132,7 +132,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
-        if (!funcIdent.equals(AsterixBuiltinFunctions.EXTERNAL_LOOKUP)) {
+        if (!funcIdent.equals(BuiltinFunctions.EXTERNAL_LOOKUP)) {
             return;
         }
         int[] ridIndexes = getKeyIndexes(ridVarList, inputSchemas);

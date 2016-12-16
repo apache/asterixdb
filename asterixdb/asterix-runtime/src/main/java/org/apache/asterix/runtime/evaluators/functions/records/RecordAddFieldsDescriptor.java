@@ -28,7 +28,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.ListItemBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.hash.ListItemBinaryHashFunctionFactory;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
@@ -265,6 +265,6 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.ADD_FIELDS;
+        return BuiltinFunctions.ADD_FIELDS;
     }
 }

@@ -21,9 +21,9 @@ package org.apache.asterix.transaction.management.resource;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -61,7 +61,7 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+    public ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException {
         IIOManager ioManager = runtimeContextProvider.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
@@ -74,6 +74,6 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
                         runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
                 runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), buddyBtreeFields, -1,
-                true, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                true, LSMIndexUtil.getMetadataPageManagerFactory());
     }
 }

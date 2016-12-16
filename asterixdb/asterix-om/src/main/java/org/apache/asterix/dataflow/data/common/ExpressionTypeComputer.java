@@ -20,8 +20,8 @@ package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.functions.AsterixExternalFunctionInfo;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -69,10 +69,10 @@ public class ExpressionTypeComputer implements IExpressionTypeComputer {
         // Note: built-in functions + udfs
         IResultTypeComputer rtc;
         FunctionSignature signature = new FunctionSignature(fi.getNamespace(), fi.getName(), fi.getArity());
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, true)) {
-            rtc = AsterixBuiltinFunctions.getResultTypeComputer(fi);
+        if (BuiltinFunctions.isBuiltinCompilerFunction(signature, true)) {
+            rtc = BuiltinFunctions.getResultTypeComputer(fi);
         } else {
-            rtc = ((AsterixExternalFunctionInfo) expr.getFunctionInfo()).getResultTypeComputer();
+            rtc = ((ExternalFunctionInfo) expr.getFunctionInfo()).getResultTypeComputer();
         }
         if (rtc == null) {
             throw new AlgebricksException("Type computer missing for " + fi);

@@ -26,7 +26,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -120,7 +120,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.PREFIX_LEN_JACCARD;
+        return BuiltinFunctions.PREFIX_LEN_JACCARD;
     }
 
 }

@@ -19,7 +19,7 @@
 
 package org.apache.asterix.transaction.management.opcallbacks;
 
-import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
+import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -39,7 +39,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 public class PrimaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
         implements IModificationOperationCallback {
 
-    private final AsterixLSMInsertDeleteOperatorNodePushable operatorNodePushable;
+    private final LSMInsertDeleteOperatorNodePushable operatorNodePushable;
     private final boolean logBeforeImage;
 
     public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
@@ -48,7 +48,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
             boolean logBeforeImage) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
-        this.operatorNodePushable = (AsterixLSMInsertDeleteOperatorNodePushable) operatorNodePushable;
+        this.operatorNodePushable = (LSMInsertDeleteOperatorNodePushable) operatorNodePushable;
         this.logBeforeImage = logBeforeImage;
     }
 

@@ -20,7 +20,7 @@ package org.apache.asterix.common.context;
 
 import java.util.List;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -56,7 +56,7 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
                 deviceId = i;
             }
         }
-        return ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
                 .getDatasetLifecycleManager().getVirtualBufferCaches(datasetID, deviceId);
     }
 

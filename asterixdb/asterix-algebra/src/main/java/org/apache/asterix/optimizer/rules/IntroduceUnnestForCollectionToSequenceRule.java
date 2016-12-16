@@ -21,7 +21,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.List;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -70,7 +70,7 @@ public class IntroduceUnnestForCollectionToSequenceRule implements IAlgebraicRew
             return false;
         }
         AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) expr;
-        if (func.getFunctionIdentifier() != AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE) {
+        if (func.getFunctionIdentifier() != BuiltinFunctions.COLLECTION_TO_SEQUENCE) {
             return false;
         }
 
@@ -88,7 +88,7 @@ public class IntroduceUnnestForCollectionToSequenceRule implements IAlgebraicRew
         @SuppressWarnings("unchecked")
         UnnestOperator unnest = new UnnestOperator(var,
                 new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
                         new MutableObject<ILogicalExpression>(argExpr))));
         unnest.getInputs().addAll(assign.getInputs());
         opRef.setValue(unnest);

@@ -49,7 +49,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVisitor<Void, Integer> {
@@ -258,7 +258,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         FunctionSignature functionSignature = pf.getFunctionSignature();
         FunctionSignature normalizedFunctionSignature =
                 FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, false);
-        if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
+        if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
             functionSignature = normalizedFunctionSignature;
         }
         out.println(skip(step) + "FunctionCall " + functionSignature.toString() + "[");

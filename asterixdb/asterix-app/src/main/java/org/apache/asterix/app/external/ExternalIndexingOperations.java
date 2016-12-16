@@ -26,14 +26,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
@@ -70,8 +70,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
+import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.util.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.ExternalBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -214,8 +214,8 @@ public class ExternalIndexingOperations {
             ArrayList<ExternalFile> externalFilesSnapshot, MetadataProvider metadataProvider, boolean createIndex)
             throws MetadataException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
-        AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
+        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
+        StorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
@@ -234,13 +234,13 @@ public class ExternalIndexingOperations {
         ExternalBTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeDataflowHelperFactory(
                 mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                 storageProperties.getBloomFilterFalsePositiveRate(),
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true);
         ExternalFilesIndexOperatorDescriptor externalFilesOp = new ExternalFilesIndexOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, indexDataflowHelperFactory, localResourceFactoryProvider,
-                externalFilesSnapshot, createIndex, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                externalFilesSnapshot, createIndex, LSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, externalFilesOp,
                 secondarySplitsAndConstraint.second);
         spec.addRoot(externalFilesOp);
@@ -412,18 +412,18 @@ public class ExternalIndexingOperations {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForFilesIndex(dataverseName, datasetName, indexName, true);
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
+        StorageProperties storageProperties = AppContextInfo.INSTANCE.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());
         IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         compactionInfo.first, compactionInfo.second,
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), false, null, null, null, null, !temp),
-                AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                LSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
                 splitsAndConstraint.second);
         spec.addRoot(btreeDrop);
@@ -487,8 +487,8 @@ public class ExternalIndexingOperations {
     public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
-        AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
+        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
+        StorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(ds,
                 metadataProvider.getMetadataTxnContext());
         boolean temp = ds.getDatasetDetails().isTemp();
@@ -501,7 +501,7 @@ public class ExternalIndexingOperations {
         ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory = getFilesIndexDataflowHelperFactory(ds,
                 mergePolicyFactory, mergePolicyFactoryProperties, storageProperties, spec);
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER);
 
         ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<>();
         ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<>();
@@ -517,14 +517,14 @@ public class ExternalIndexingOperations {
                     btreeDataflowHelperFactories.add(getBTreeDataflowHelperFactory(ds, index, mergePolicyFactory,
                             mergePolicyFactoryProperties, storageProperties, spec));
                     btreeInfos.add(new IndexInfoOperatorDescriptor(indexSplitsAndConstraint.first,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER));
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER));
                 } else if (index.getIndexType() == IndexType.RTREE) {
                     rtreeDataflowHelperFactories.add(getRTreeDataflowHelperFactory(ds, index, mergePolicyFactory,
                             mergePolicyFactoryProperties, storageProperties, metadataProvider, spec));
                     rtreeInfos.add(new IndexInfoOperatorDescriptor(indexSplitsAndConstraint.first,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER));
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER));
                 }
             }
         }
@@ -542,20 +542,20 @@ public class ExternalIndexingOperations {
 
     private static ExternalBTreeDataflowHelperFactory getFilesIndexDataflowHelperFactory(Dataset ds,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyFactoryProperties,
-            AsterixStorageProperties storageProperties, JobSpecification spec) {
+            StorageProperties storageProperties, JobSpecification spec) {
         return new ExternalBTreeDataflowHelperFactory(mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(ds.getDatasetId()),
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                 storageProperties.getBloomFilterFalsePositiveRate(),
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true);
     }
 
     private static ExternalBTreeWithBuddyDataflowHelperFactory getBTreeDataflowHelperFactory(Dataset ds, Index index,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyFactoryProperties,
-            AsterixStorageProperties storageProperties, JobSpecification spec) {
+            StorageProperties storageProperties, JobSpecification spec) {
         return new ExternalBTreeWithBuddyDataflowHelperFactory(mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(ds.getDatasetId()),
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE,
                 storageProperties.getBloomFilterFalsePositiveRate(), new int[] { index.getKeyFieldNames().size() },
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true);
     }
@@ -563,7 +563,7 @@ public class ExternalIndexingOperations {
     @SuppressWarnings("rawtypes")
     private static ExternalRTreeDataflowHelperFactory getRTreeDataflowHelperFactory(Dataset ds, Index index,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyFactoryProperties,
-            AsterixStorageProperties storageProperties, MetadataProvider metadataProvider, JobSpecification spec)
+            StorageProperties storageProperties, MetadataProvider metadataProvider, JobSpecification spec)
             throws AlgebricksException, AsterixException {
         int numPrimaryKeys = getRIDSize(ds);
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
@@ -613,7 +613,7 @@ public class ExternalIndexingOperations {
         return new ExternalRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
                 getBuddyBtreeComparatorFactories(), mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(ds.getDatasetId()),
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
                 MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
                 storageProperties.getBloomFilterFalsePositiveRate(), new int[] { index.getKeyFieldNames().size() },
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(ds), true, isPointMBR);
@@ -622,8 +622,8 @@ public class ExternalIndexingOperations {
     public static JobSpecification buildAbortOp(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
-        AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
+        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
+        StorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(ds,
                 metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
@@ -637,7 +637,7 @@ public class ExternalIndexingOperations {
         ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory = getFilesIndexDataflowHelperFactory(ds,
                 mergePolicyFactory, mergePolicyFactoryProperties, storageProperties, spec);
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER);
 
         ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<>();
         ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<>();
@@ -653,14 +653,14 @@ public class ExternalIndexingOperations {
                     btreeDataflowHelperFactories.add(getBTreeDataflowHelperFactory(ds, index, mergePolicyFactory,
                             mergePolicyFactoryProperties, storageProperties, spec));
                     btreeInfos.add(new IndexInfoOperatorDescriptor(indexSplitsAndConstraint.first,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER));
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER));
                 } else if (index.getIndexType() == IndexType.RTREE) {
                     rtreeDataflowHelperFactories.add(getRTreeDataflowHelperFactory(ds, index, mergePolicyFactory,
                             mergePolicyFactoryProperties, storageProperties, metadataProvider, spec));
                     rtreeInfos.add(new IndexInfoOperatorDescriptor(indexSplitsAndConstraint.first,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER));
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER));
                 }
             }
         }
@@ -680,8 +680,8 @@ public class ExternalIndexingOperations {
     public static JobSpecification buildRecoverOp(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException, AsterixException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
-        AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
+        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
+        StorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(ds,
                 metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
@@ -695,7 +695,7 @@ public class ExternalIndexingOperations {
         ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory = getFilesIndexDataflowHelperFactory(ds,
                 mergePolicyFactory, mergePolicyFactoryProperties, storageProperties, spec);
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER);
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER);
 
         ArrayList<ExternalBTreeWithBuddyDataflowHelperFactory> btreeDataflowHelperFactories = new ArrayList<>();
         ArrayList<IndexInfoOperatorDescriptor> btreeInfos = new ArrayList<>();
@@ -711,14 +711,14 @@ public class ExternalIndexingOperations {
                     btreeDataflowHelperFactories.add(getBTreeDataflowHelperFactory(ds, index, mergePolicyFactory,
                             mergePolicyFactoryProperties, storageProperties, spec));
                     btreeInfos.add(new IndexInfoOperatorDescriptor(indexSplitsAndConstraint.first,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER));
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER));
                 } else if (index.getIndexType() == IndexType.RTREE) {
                     rtreeDataflowHelperFactories.add(getRTreeDataflowHelperFactory(ds, index, mergePolicyFactory,
                             mergePolicyFactoryProperties, storageProperties, metadataProvider, spec));
                     rtreeInfos.add(new IndexInfoOperatorDescriptor(indexSplitsAndConstraint.first,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER));
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER,
+                            RuntimeComponentsProvider.RUNTIME_PROVIDER));
                 }
             }
         }
@@ -737,8 +737,8 @@ public class ExternalIndexingOperations {
     public static JobSpecification compactFilesIndexJobSpec(Dataset dataset, MetadataProvider metadataProvider)
             throws MetadataException, AlgebricksException {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
-        IAsterixPropertiesProvider asterixPropertiesProvider = AsterixAppContextInfo.INSTANCE;
-        AsterixStorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
+        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
+        StorageProperties storageProperties = asterixPropertiesProvider.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
@@ -750,15 +750,15 @@ public class ExternalIndexingOperations {
         ExternalBTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeDataflowHelperFactory(
                 mergePolicyFactory, mergePolicyFactoryProperties,
                 new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                 storageProperties.getBloomFilterFalsePositiveRate(),
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true);
         FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 secondaryFileSplitProvider, filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
                 filesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, indexDataflowHelperFactory,
-                NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                NoOpOperationCallbackFactory.INSTANCE, LSMIndexUtil.getMetadataPageManagerFactory());
         spec.addRoot(compactOp);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondarySplitsAndConstraint.second);

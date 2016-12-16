@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.event.schema.cluster.Node;
 
 public class Replica {
@@ -59,7 +59,7 @@ public class Replica {
         return node.getId();
     }
 
-    public InetSocketAddress getAddress(AsterixReplicationProperties asterixReplicationProperties) {
+    public InetSocketAddress getAddress(ReplicationProperties asterixReplicationProperties) {
         String replicaIPAddress = node.getClusterIp();
         int replicationPort = asterixReplicationProperties.getDataReplicationPort(node.getId());
         return InetSocketAddress.createUnresolved(replicaIPAddress, replicationPort);

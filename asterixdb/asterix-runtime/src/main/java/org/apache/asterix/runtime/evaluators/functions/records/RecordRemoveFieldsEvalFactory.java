@@ -29,7 +29,7 @@ import java.util.List;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
@@ -97,13 +97,13 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
 
                 byte inputTypeTag0 = inputArg0.getByteArray()[inputArg0.getStartOffset()];
                 if (inputTypeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new TypeMismatchException(AsterixBuiltinFunctions.REMOVE_FIELDS, 0, inputTypeTag0,
+                    throw new TypeMismatchException(BuiltinFunctions.REMOVE_FIELDS, 0, inputTypeTag0,
                             ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                 }
 
                 byte inputTypeTag1 = inputArg1.getByteArray()[inputArg1.getStartOffset()];
                 if (inputTypeTag1 != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                    throw new TypeMismatchException(AsterixBuiltinFunctions.REMOVE_FIELDS, 1, inputTypeTag1,
+                    throw new TypeMismatchException(BuiltinFunctions.REMOVE_FIELDS, 1, inputTypeTag1,
                             ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                 }
 

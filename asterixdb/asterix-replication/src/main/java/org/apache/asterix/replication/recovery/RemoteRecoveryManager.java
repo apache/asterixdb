@@ -28,12 +28,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -46,12 +46,12 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
     private final IReplicationManager replicationManager;
     private static final Logger LOGGER = Logger.getLogger(RemoteRecoveryManager.class.getName());
-    private final IAsterixAppRuntimeContext runtimeContext;
-    private final AsterixReplicationProperties replicationProperties;
+    private final IAppRuntimeContext runtimeContext;
+    private final ReplicationProperties replicationProperties;
     private Map<String, Set<String>> failbackRecoveryReplicas;
 
-    public RemoteRecoveryManager(IReplicationManager replicationManager, IAsterixAppRuntimeContext runtimeContext,
-            AsterixReplicationProperties replicationProperties) {
+    public RemoteRecoveryManager(IReplicationManager replicationManager, IAppRuntimeContext runtimeContext,
+            ReplicationProperties replicationProperties) {
         this.replicationManager = replicationManager;
         this.runtimeContext = runtimeContext;
         this.replicationProperties = replicationProperties;
@@ -209,7 +209,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
         ILogManager logManager = runtimeContext.getTransactionSubsystem().getLogManager();
         ReplicaResourcesManager replicaResourcesManager = (ReplicaResourcesManager) runtimeContext
                 .getReplicaResourcesManager();
-        Map<String, ClusterPartition[]> nodePartitions = ((IAsterixPropertiesProvider) runtimeContext)
+        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) runtimeContext)
                 .getMetadataProperties().getNodePartitions();
 
         /**

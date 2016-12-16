@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.message;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -37,8 +37,8 @@ public class TakeoverMetadataNodeRequestMessage implements IApplicationMessage {
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
-        IAsterixAppRuntimeContext appContext =
-                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext =
+                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
         HyracksDataException hde = null;
         try {

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -447,10 +447,10 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         args.add(filterVarExpr);
         List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<>();
         argsForNotFunction.add(new MutableObject<>(new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING), args)));
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args)));
         SelectOperator selectOp = new SelectOperator(
                 new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), argsForNotFunction)),
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction)),
                 false, null);
         currentOpRef.getValue().getInputs().add(new MutableObject<>(selectOp));
 
@@ -537,13 +537,13 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                 args.add(filterVarExpr);
                 List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<>();
                 argsForNotFunction.add(new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.IS_MISSING), args)));
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args)));
                 nullCheckExprRefs.add(new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT), argsForNotFunction)));
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction)));
             }
             Mutable<ILogicalExpression> selectExprRef = nullCheckExprRefs.size() > 1
                     ? new MutableObject<>(new ScalarFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.AND), nullCheckExprRefs))
+                            FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), nullCheckExprRefs))
                     : nullCheckExprRefs.get(0);
             SelectOperator selectOp = new SelectOperator(selectExprRef, false, null);
             topJoinRef.setValue(selectOp);

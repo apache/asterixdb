@@ -24,7 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
@@ -39,14 +39,14 @@ public class NCMessageBroker implements INCMessageBroker {
     private static final Logger LOGGER = Logger.getLogger(NCMessageBroker.class.getName());
 
     private final NodeControllerService ncs;
-    private final IAsterixAppRuntimeContext appContext;
+    private final IAppRuntimeContext appContext;
     private final LinkedBlockingQueue<IApplicationMessage> receivedMsgsQ;
     private final ConcurrentFramePool messagingFramePool;
     private final int maxMsgSize;
 
     public NCMessageBroker(NodeControllerService ncs, MessagingProperties messagingProperties) {
         this.ncs = ncs;
-        appContext = (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        appContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         maxMsgSize = messagingProperties.getFrameSize();
         int messagingMemoryBudget = messagingProperties.getFrameSize() * messagingProperties.getFrameCount();
         messagingFramePool = new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget,

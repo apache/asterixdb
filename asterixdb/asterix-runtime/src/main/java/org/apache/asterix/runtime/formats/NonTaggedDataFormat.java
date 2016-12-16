@@ -48,7 +48,7 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.FunctionManagerHolder;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -311,8 +311,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
                     IScalarEvaluatorFactory evalFactory =
                             new FieldAccessByIndexEvalFactory(recordEvalFactory, fldIndexEvalFactory, recType);
-                    IFunctionInfo finfoAccess = AsterixBuiltinFunctions
-                            .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    IFunctionInfo finfoAccess = BuiltinFunctions
+                            .getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
 
                     ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                             new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -335,7 +335,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             }
             IScalarEvaluatorFactory evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, recType, fldName);
             IFunctionInfo finfoAccess =
-                    AsterixBuiltinFunctions.getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED);
+                    BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED);
 
             ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -368,14 +368,14 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     void registerTypeInferers() {
-        functionTypeInferers.put(AsterixBuiltinFunctions.LISTIFY, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.LISTIFY, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
                 ((ListifyAggregateDescriptor) fd).reset((AOrderedListType) context.getType(expr));
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.RECORD_MERGE, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.RECORD_MERGE, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -388,7 +388,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             }
         });
 
-        functionTypeInferers.put(AsterixBuiltinFunctions.DEEP_EQUAL, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.DEEP_EQUAL, new FunctionTypeInferer() {
 
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
@@ -401,7 +401,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             }
         });
 
-        functionTypeInferers.put(AsterixBuiltinFunctions.ADD_FIELDS, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.ADD_FIELDS, new FunctionTypeInferer() {
 
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
@@ -422,7 +422,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             }
         });
 
-        functionTypeInferers.put(AsterixBuiltinFunctions.REMOVE_FIELDS, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.REMOVE_FIELDS, new FunctionTypeInferer() {
 
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
@@ -442,7 +442,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                         + " org.apache.asterix.om.types.IAType)", outType, type0, type1);
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.CAST_TYPE, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.CAST_TYPE, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -453,7 +453,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                         it);
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -482,28 +482,28 @@ public class NonTaggedDataFormat implements IDataFormat {
                 return open;
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
                 ((ClosedRecordConstructorDescriptor) fd).reset((ARecordType) context.getType(expr));
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
                 ((OrderedListConstructorDescriptor) fd).reset((AOrderedListType) context.getType(expr));
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
                 ((UnorderedListConstructorDescriptor) fd).reset((AUnorderedListType) context.getType(expr));
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -533,7 +533,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.FIELD_ACCESS_NESTED, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -563,7 +563,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.GET_RECORD_FIELDS, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.GET_RECORD_FIELDS, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -581,7 +581,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.GET_RECORD_FIELD_VALUE, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -599,7 +599,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
             }
         });
-        functionTypeInferers.put(AsterixBuiltinFunctions.RECORD_PAIRS, new FunctionTypeInferer() {
+        functionTypeInferers.put(BuiltinFunctions.RECORD_PAIRS, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
@@ -715,7 +715,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     }
                     case FUNCTION_CALL: {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
-                        if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.TID)) {
+                        if (f.getFunctionIdentifier().equals(BuiltinFunctions.TID)) {
                             return 5;
                         } else {
                             // TODO

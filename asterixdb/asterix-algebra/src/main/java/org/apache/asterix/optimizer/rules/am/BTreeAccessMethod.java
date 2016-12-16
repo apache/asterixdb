@@ -34,7 +34,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -566,7 +566,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 jobGenParams.writeToFuncArgs(primaryIndexFuncArgs);
                 // An index search is expressed as an unnest-map over an
                 // index-search function.
-                IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.INDEX_SEARCH);
+                IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(BuiltinFunctions.INDEX_SEARCH);
                 UnnestingFunctionCallExpression primaryIndexSearchFunc =
                         new UnnestingFunctionCallExpression(primaryIndexSearch, primaryIndexFuncArgs);
                 primaryIndexSearchFunc.setReturnsUniqueValues(true);

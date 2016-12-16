@@ -22,10 +22,10 @@ import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.Executors;
 
-import org.apache.asterix.common.api.AsterixThreadExecutor;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.ThreadExecutor;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -34,13 +34,13 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 
-class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
+class TestRuntimeContextProvider implements IAppRuntimeContextProvider {
 
-    AsterixThreadExecutor ate = new AsterixThreadExecutor(Executors.defaultThreadFactory());
+    ThreadExecutor ate = new ThreadExecutor(Executors.defaultThreadFactory());
     IDatasetLifecycleManager dlcm = mock(IDatasetLifecycleManager.class);
 
     @Override
-    public AsterixThreadExecutor getThreadExecutor() {
+    public ThreadExecutor getThreadExecutor() {
         return ate;
     }
 
@@ -90,7 +90,7 @@ class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
     }
 
     @Override
-    public IAsterixAppRuntimeContext getAppContext() {
+    public IAppRuntimeContext getAppContext() {
         throw new UnsupportedOperationException();
     }
 }

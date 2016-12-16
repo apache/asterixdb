@@ -34,7 +34,7 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -94,7 +94,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(AsterixBuiltinFunctions.SUM, typeTag.serialize(), aggType.serialize());
+            throw new IncompatibleTypeException(BuiltinFunctions.SUM, typeTag.serialize(), aggType.serialize());
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {
@@ -137,7 +137,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
                 break;
             }
             default: {
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM, aggType.serialize());
+                throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
             }
         }
     }
@@ -194,7 +194,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
                     break;
                 }
                 default:
-                    throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.SUM, aggType.serialize());
+                    throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
             throw new HyracksDataException(e);

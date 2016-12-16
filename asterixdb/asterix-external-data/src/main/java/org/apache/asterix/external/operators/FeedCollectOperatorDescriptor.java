@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
@@ -77,7 +77,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
-        ActiveManager feedManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext()
+        ActiveManager feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject()).getActiveManager();
         ActiveRuntimeId sourceRuntimeId = new ActiveRuntimeId(sourceFeedId, subscriptionLocation.toString(), partition);
         ISubscribableRuntime sourceRuntime = (ISubscribableRuntime) feedManager.getRuntime(sourceRuntimeId);

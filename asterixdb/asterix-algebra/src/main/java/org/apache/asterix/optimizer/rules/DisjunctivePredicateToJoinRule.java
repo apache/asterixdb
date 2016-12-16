@@ -26,7 +26,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -123,15 +123,15 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
 
         ILogicalExpression cExp = new ConstantExpression(new AsterixConstantValue(list));
         Mutable<ILogicalExpression> mutCExp = new MutableObject<ILogicalExpression>(cExp);
-        IFunctionInfo scanFctInfo = AsterixBuiltinFunctions
-                .getAsterixFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION);
+        IFunctionInfo scanFctInfo = BuiltinFunctions
+                .getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
         UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(scanFctInfo, mutCExp);
         LogicalVariable scanVar = context.newVar();
         UnnestOperator unn = new UnnestOperator(scanVar, new MutableObject<ILogicalExpression>(scanExp));
         unn.getInputs().add(new MutableObject<ILogicalOperator>(ets));
         context.computeAndSetTypeEnvironmentForOperator(unn);
 
-        IFunctionInfo eqFctInfo = AsterixBuiltinFunctions.getAsterixFunctionInfo(AlgebricksBuiltinFunctions.EQ);
+        IFunctionInfo eqFctInfo = BuiltinFunctions.getAsterixFunctionInfo(AlgebricksBuiltinFunctions.EQ);
         AbstractFunctionCallExpression eqExp = new ScalarFunctionCallExpression(eqFctInfo);
         eqExp.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(scanVar)));
         eqExp.getArguments().add(new MutableObject<ILogicalExpression>(varEx.cloneExpression()));

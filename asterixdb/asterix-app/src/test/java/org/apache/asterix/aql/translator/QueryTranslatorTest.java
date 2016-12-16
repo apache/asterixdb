@@ -29,14 +29,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
-import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.MasterNode;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionConfig;
 import org.junit.Assert;
@@ -53,10 +53,10 @@ public class QueryTranslatorTest {
         SessionConfig mockSessionConfig = mock(SessionConfig.class);
         RunStatement mockRunStatement = mock(RunStatement.class);
 
-        // Mocks AsterixAppContextInfo.
-        AsterixAppContextInfo mockAsterixAppContextInfo = mock(AsterixAppContextInfo.class);
-        setFinalStaticField(AsterixAppContextInfo.class.getDeclaredField("INSTANCE"), mockAsterixAppContextInfo);
-        AsterixExternalProperties mockAsterixExternalProperties = mock(AsterixExternalProperties.class);
+        // Mocks AppContextInfo.
+        AppContextInfo mockAsterixAppContextInfo = mock(AppContextInfo.class);
+        setFinalStaticField(AppContextInfo.class.getDeclaredField("INSTANCE"), mockAsterixAppContextInfo);
+        ExternalProperties mockAsterixExternalProperties = mock(ExternalProperties.class);
         when(mockAsterixAppContextInfo.getExternalProperties()).thenReturn(mockAsterixExternalProperties);
         when(mockAsterixExternalProperties.getAPIServerPort()).thenReturn(19002);
 

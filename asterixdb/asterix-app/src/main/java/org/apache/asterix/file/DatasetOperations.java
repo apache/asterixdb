@@ -24,10 +24,10 @@ import java.rmi.RemoteException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
@@ -39,8 +39,8 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
+import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.util.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerProvider;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
@@ -115,19 +115,19 @@ public class DatasetOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
                 .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), datasetName, datasetName,
                         temp);
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
+        StorageProperties storageProperties = AppContextInfo.INSTANCE.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());
 
         IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         compactionInfo.first, compactionInfo.second,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
-                        btreeFields, filterFields, !temp), AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                        btreeFields, filterFields, !temp), LSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -181,7 +181,7 @@ public class DatasetOperations {
 
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadata.getMetadataTxnContext());
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
+        StorageProperties storageProperties = AppContextInfo.INSTANCE.getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         IResourceFactory localResourceMetadata = new LSMBTreeLocalResourceMetadataFactory(typeTraits,
                 comparatorFactories, bloomFilterKeyFields, true, dataset.getDatasetId(), compactionInfo.first,
@@ -190,15 +190,15 @@ public class DatasetOperations {
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 
         TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         compactionInfo.first, compactionInfo.second,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
                         btreeFields, filterFields, !temp),
-                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil
+                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE, LSMIndexUtil
                         .getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
@@ -235,19 +235,19 @@ public class DatasetOperations {
         int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
                 .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, datasetName, temp);
-        AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
+        StorageProperties storageProperties = AppContextInfo.INSTANCE.getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadata.getMetadataTxnContext());
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
-                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
                 splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         compactionInfo.first, compactionInfo.second,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
                         btreeFields, filterFields, !temp),
-                NoOpOperationCallbackFactory.INSTANCE, AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                NoOpOperationCallbackFactory.INSTANCE, LSMIndexUtil.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 splitsAndConstraint.second);
 

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 
 public class AsterixInlineVariablesRule extends InlineVariablesRule {
@@ -27,16 +27,16 @@ public class AsterixInlineVariablesRule extends InlineVariablesRule {
         // Do not inline field accesses and spatial functions because doing so would interfere with our access method rewrites.
         // TODO: For now we must also exclude record constructor functions to avoid breaking our type casting rules
         // IntroduceStaticTypeCastRule and IntroduceDynamicTypeCastRule.
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CAST_TYPE);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_CIRCLE);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_LINE);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_MBR);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_POINT);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_POLYGON);
-        doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_RECTANGLE);
+        doNotInlineFuncs.add(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+        doNotInlineFuncs.add(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+        doNotInlineFuncs.add(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
+        doNotInlineFuncs.add(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR);
+        doNotInlineFuncs.add(BuiltinFunctions.CAST_TYPE);
+        doNotInlineFuncs.add(BuiltinFunctions.CREATE_CIRCLE);
+        doNotInlineFuncs.add(BuiltinFunctions.CREATE_LINE);
+        doNotInlineFuncs.add(BuiltinFunctions.CREATE_MBR);
+        doNotInlineFuncs.add(BuiltinFunctions.CREATE_POINT);
+        doNotInlineFuncs.add(BuiltinFunctions.CREATE_POLYGON);
+        doNotInlineFuncs.add(BuiltinFunctions.CREATE_RECTANGLE);
     }
 }

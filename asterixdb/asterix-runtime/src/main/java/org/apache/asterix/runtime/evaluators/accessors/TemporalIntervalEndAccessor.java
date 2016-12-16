@@ -29,7 +29,7 @@ import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -51,7 +51,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class TemporalIntervalEndAccessor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END;
+    private static final FunctionIdentifier FID = BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

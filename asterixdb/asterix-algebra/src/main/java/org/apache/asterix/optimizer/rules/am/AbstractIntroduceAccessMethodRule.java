@@ -34,7 +34,7 @@ import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -74,14 +74,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
     // Function Identifier sets that retain the original field variable through each function's arguments
     private final ImmutableSet<FunctionIdentifier> funcIDSetThatRetainFieldName = ImmutableSet.of(
-            AsterixBuiltinFunctions.WORD_TOKENS, AsterixBuiltinFunctions.GRAM_TOKENS, AsterixBuiltinFunctions.SUBSTRING,
-            AsterixBuiltinFunctions.SUBSTRING_BEFORE, AsterixBuiltinFunctions.SUBSTRING_AFTER,
-            AsterixBuiltinFunctions.CREATE_POLYGON, AsterixBuiltinFunctions.CREATE_MBR,
-            AsterixBuiltinFunctions.CREATE_RECTANGLE, AsterixBuiltinFunctions.CREATE_CIRCLE,
-            AsterixBuiltinFunctions.CREATE_LINE, AsterixBuiltinFunctions.CREATE_POINT,
-            AsterixBuiltinFunctions.NUMERIC_ADD, AsterixBuiltinFunctions.NUMERIC_SUBTRACT,
-            AsterixBuiltinFunctions.NUMERIC_MULTIPLY, AsterixBuiltinFunctions.NUMERIC_DIVIDE,
-            AsterixBuiltinFunctions.NUMERIC_MOD);
+            BuiltinFunctions.WORD_TOKENS, BuiltinFunctions.GRAM_TOKENS, BuiltinFunctions.SUBSTRING,
+            BuiltinFunctions.SUBSTRING_BEFORE, BuiltinFunctions.SUBSTRING_AFTER,
+            BuiltinFunctions.CREATE_POLYGON, BuiltinFunctions.CREATE_MBR,
+            BuiltinFunctions.CREATE_RECTANGLE, BuiltinFunctions.CREATE_CIRCLE,
+            BuiltinFunctions.CREATE_LINE, BuiltinFunctions.CREATE_POINT,
+            BuiltinFunctions.NUMERIC_ADD, BuiltinFunctions.NUMERIC_SUBTRACT,
+            BuiltinFunctions.NUMERIC_MULTIPLY, BuiltinFunctions.NUMERIC_DIVIDE,
+            BuiltinFunctions.NUMERIC_MOD);
 
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
 
@@ -695,7 +695,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 return null;
             }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
-            if (childFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+            if (childFuncExpr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
                 return null;
             }
             expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
@@ -711,21 +711,21 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         String fieldName = null;
         List<String> nestedAccessFieldName = null;
         int fieldIndex = -1;
-        if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+        if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
             fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
             if (fieldName == null) {
                 return null;
             }
             isFieldAccess = true;
             isByName = true;
-        } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+        } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
             Integer idx = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
             if (idx == null) {
                 return null;
             }
             fieldIndex = idx;
             isFieldAccess = true;
-        } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_NESTED) {
+        } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_NESTED) {
             ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
             if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
                 return null;
@@ -823,7 +823,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             return null;
         }
         // We use a part of the field in edit distance computation
-        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CHECK) {
             optFuncExpr.setPartialField(true);
         }
         // We expect the function's argument to be a variable, otherwise we

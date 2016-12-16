@@ -30,7 +30,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
@@ -66,7 +66,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
     private static HashSet<FunctionIdentifier> simFuncs = new HashSet<FunctionIdentifier>();
 
     static {
-        simFuncs.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
+        simFuncs.add(BuiltinFunctions.SIMILARITY_JACCARD_CHECK);
     }
 
     private static final String AQLPLUS = ""
@@ -365,7 +365,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         ILogicalExpression exp = expRef.getValue();
         if (exp.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) exp;
-            if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.GET_ITEM)) {
+            if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.GET_ITEM)) {
                 return expRef;
             }
             if (funcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {

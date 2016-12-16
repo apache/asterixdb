@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -65,7 +65,7 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SIMILARITY_JACCARD_PREFIX_CHECK;
+        return BuiltinFunctions.SIMILARITY_JACCARD_PREFIX_CHECK;
     }
 
     private static class SimilarityJaccardPrefixCheckEvaluator extends SimilarityJaccardPrefixEvaluator {

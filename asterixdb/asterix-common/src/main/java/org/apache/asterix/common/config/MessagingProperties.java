@@ -21,7 +21,7 @@ package org.apache.asterix.common.config;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
-public class MessagingProperties extends AbstractAsterixProperties {
+public class MessagingProperties extends AbstractProperties {
 
     private static final String MESSAGING_FRAME_SIZE_KEY = "messaging.frame.size";
     private static final int MESSAGING_FRAME_SIZE_DEFAULT = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
@@ -29,7 +29,7 @@ public class MessagingProperties extends AbstractAsterixProperties {
     private static final String MESSAGING_FRAME_COUNT_KEY = "messaging.frame.count";
     private static final int MESSAGING_BUFFER_COUNTE_DEFAULT = 512;
 
-    public MessagingProperties(AsterixPropertiesAccessor accessor) {
+    public MessagingProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 

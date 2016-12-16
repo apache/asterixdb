@@ -22,12 +22,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.AsterixReplicationProperties;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
@@ -49,9 +49,9 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final ILockManager lockManager;
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
-    private final IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider;
+    private final IAppRuntimeContextProvider asterixAppRuntimeContextProvider;
     private final CheckpointThread checkpointThread;
-    private final AsterixTransactionProperties txnProperties;
+    private final TransactionProperties txnProperties;
 
     //for profiling purpose
     public static final boolean IS_PROFILE_MODE = false;//true
@@ -59,17 +59,17 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private EntityCommitProfiler ecp;
     private Future<Object> fecp;
 
-    public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider,
-            AsterixTransactionProperties txnProperties) throws ACIDException {
+    public TransactionSubsystem(String id, IAppRuntimeContextProvider asterixAppRuntimeContextProvider,
+            TransactionProperties txnProperties) throws ACIDException {
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         this.id = id;
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
 
-        AsterixReplicationProperties asterixReplicationProperties = null;
+        ReplicationProperties asterixReplicationProperties = null;
         if (asterixAppRuntimeContextProvider != null) {
-            asterixReplicationProperties = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
+            asterixReplicationProperties = ((IPropertiesProvider) asterixAppRuntimeContextProvider
                     .getAppContext()).getReplicationProperties();
         }
 
@@ -116,11 +116,11 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     }
 
     @Override
-    public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
+    public IAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
         return asterixAppRuntimeContextProvider;
     }
 
-    public AsterixTransactionProperties getTransactionProperties() {
+    public TransactionProperties getTransactionProperties() {
         return txnProperties;
     }
 

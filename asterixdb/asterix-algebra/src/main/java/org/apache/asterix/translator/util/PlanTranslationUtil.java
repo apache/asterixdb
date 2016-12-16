@@ -25,7 +25,7 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -45,7 +45,7 @@ public class PlanTranslationUtil {
             List<Mutable<ILogicalExpression>> varRefs, IVariableContext context) {
         IAObject value = (field.size() > 1) ? new AOrderedList(field) : new AString(field.get(0));
         ScalarFunctionCallExpression metaKeyFunction = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.META_KEY));
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.META_KEY));
         metaKeyFunction.getArguments()
                 .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
         metaKeyFunction.getArguments()
@@ -76,10 +76,10 @@ public class PlanTranslationUtil {
         FunctionIdentifier functionIdentifier;
         IAObject value;
         if (field.size() > 1) {
-            functionIdentifier = AsterixBuiltinFunctions.FIELD_ACCESS_NESTED;
+            functionIdentifier = BuiltinFunctions.FIELD_ACCESS_NESTED;
             value = new AOrderedList(field);
         } else {
-            functionIdentifier = AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME;
+            functionIdentifier = BuiltinFunctions.FIELD_ACCESS_BY_NAME;
             value = new AString(field.get(0));
         }
         IFunctionInfo finfoAccess = FunctionUtil.getFunctionInfo(functionIdentifier);

@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -81,7 +81,7 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
         // Check type and compute string length.
         byte typeTag = stringPtr.getByteArray()[stringPtr.getStartOffset()];
         if (typeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE, 0, typeTag,
+            throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE, 0, typeTag,
                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         utf8Ptr.set(stringPtr.getByteArray(), stringPtr.getStartOffset() + 1, stringPtr.getLength());
@@ -89,18 +89,18 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
 
         // Check type and extract edit-distance threshold.
         long edThresh = ATypeHierarchy.getIntegerValue(
-                AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, edThreshPtr.getByteArray(),
+                BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, edThreshPtr.getByteArray(),
                 edThreshPtr.getStartOffset());
 
         // Check type and extract gram length.
         long gramLen = ATypeHierarchy.getIntegerValue(
-                AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 2, gramLenPtr.getByteArray(),
+                BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 2, gramLenPtr.getByteArray(),
                 gramLenPtr.getStartOffset());
 
         // Check type and extract usePrePost flag.
         typeTag = usePrePostPtr.getByteArray()[usePrePostPtr.getStartOffset()];
         if (typeTag != ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
-            throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE, 3, typeTag,
+            throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE, 3, typeTag,
                     ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
         }
         boolean usePrePost = BooleanPointable.getBoolean(usePrePostPtr.getByteArray(),

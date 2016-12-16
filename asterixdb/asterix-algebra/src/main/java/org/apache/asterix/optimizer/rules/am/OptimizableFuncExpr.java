@@ -21,7 +21,7 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -58,7 +58,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.fieldTypes = new IAType[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
 
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             this.partialField = true;
         } else {
             this.partialField = false;
@@ -80,7 +80,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         }
         this.fieldTypes = new IAType[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             this.partialField = true;
         } else {
             this.partialField = false;

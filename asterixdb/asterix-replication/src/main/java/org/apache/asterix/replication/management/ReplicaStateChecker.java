@@ -25,7 +25,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.concurrent.Callable;
 
-import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.Replica.ReplicaState;
 import org.apache.asterix.replication.functions.ReplicationProtocol;
@@ -36,11 +36,11 @@ public class ReplicaStateChecker implements Callable<Void> {
     private final Replica replica;
     private final int replicationTimeOut;
     private final ReplicationManager replicationManager;
-    private final AsterixReplicationProperties asterixReplicationProperties;
+    private final ReplicationProperties asterixReplicationProperties;
     private final boolean suspendReplication;
 
     public ReplicaStateChecker(Replica replica, int replicationTimeOut, ReplicationManager replicationManager,
-            AsterixReplicationProperties asterixReplicationProperties, boolean suspendReplication) {
+            ReplicationProperties asterixReplicationProperties, boolean suspendReplication) {
         this.replica = replica;
         this.replicationTimeOut = replicationTimeOut;
         this.replicationManager = replicationManager;

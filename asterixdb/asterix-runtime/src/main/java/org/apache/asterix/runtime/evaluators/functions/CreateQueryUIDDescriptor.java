@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -86,7 +86,7 @@ public class CreateQueryUIDDescriptor extends AbstractScalarFunctionDynamicDescr
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.CREATE_QUERY_UID;
+        return BuiltinFunctions.CREATE_QUERY_UID;
     }
 
 }

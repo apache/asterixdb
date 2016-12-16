@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.AMutableCircle;
 import org.apache.asterix.om.base.AMutablePoint;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -112,7 +112,7 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.CIRCLE_CONSTRUCTOR;
+        return BuiltinFunctions.CIRCLE_CONSTRUCTOR;
     }
 
 }

@@ -39,7 +39,7 @@ import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -92,7 +92,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
     protected boolean handleFunction(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
             UnnestOperator unnest, AbstractFunctionCallExpression f) throws AlgebricksException {
         FunctionIdentifier fid = f.getFunctionIdentifier();
-        if (fid.equals(AsterixBuiltinFunctions.DATASET)) {
+        if (fid.equals(BuiltinFunctions.DATASET)) {
             if (unnest.getPositionalVariable() != null) {
                 // TODO remove this after enabling the support of positional variables in data scan
                 throw new AlgebricksException("No positional variables are allowed over datasets.");
@@ -149,7 +149,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, variables, recordType,
                     metaRecordType, dataset, context);
             return true;
-        } else if (fid.equals(AsterixBuiltinFunctions.FEED_COLLECT)) {
+        } else if (fid.equals(BuiltinFunctions.FEED_COLLECT)) {
             if (unnest.getPositionalVariable() != null) {
                 throw new AlgebricksException("No positional variables are allowed over feeds.");
             }

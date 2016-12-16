@@ -37,7 +37,7 @@ import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -84,12 +84,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     // Function Identifier sets that the ConstantFolding rule should skip to apply.
     // Most of them are record-related functions.
     private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED =
-            ImmutableSet.of(AsterixBuiltinFunctions.RECORD_MERGE, AsterixBuiltinFunctions.ADD_FIELDS,
-                    AsterixBuiltinFunctions.REMOVE_FIELDS, AsterixBuiltinFunctions.GET_RECORD_FIELDS,
-                    AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE, AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
-                    AsterixBuiltinFunctions.GET_ITEM, AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
-                    AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX, AsterixBuiltinFunctions.CAST_TYPE,
-                    AsterixBuiltinFunctions.META, AsterixBuiltinFunctions.META_KEY);
+            ImmutableSet.of(BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS,
+                    BuiltinFunctions.REMOVE_FIELDS, BuiltinFunctions.GET_RECORD_FIELDS,
+                    BuiltinFunctions.GET_RECORD_FIELD_VALUE, BuiltinFunctions.FIELD_ACCESS_NESTED,
+                    BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
+                    BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE,
+                    BuiltinFunctions.META, BuiltinFunctions.META_KEY);
 
     /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
@@ -191,8 +191,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             }
 
             //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
-            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
-                    || expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
+            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
+                    || expr.getFunctionIdentifier().equals(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
                 AbstractCollectionType listType = (AbstractCollectionType) TypeCastUtils.getRequiredType(expr);
                 if (listType != null && (listType.getItemType().getTypeTag() == ATypeTag.ANY
                         || listType.getItemType() instanceof AbstractCollectionType)) {
@@ -202,7 +202,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     return new Pair<Boolean, ILogicalExpression>(false, null);
                 }
             }
-            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                 String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
                 int k = rt.getFieldIndex(str);

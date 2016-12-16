@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.aggregates.std;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
@@ -42,7 +42,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.AVG;
+        return BuiltinFunctions.AVG;
     }
 
     @Override

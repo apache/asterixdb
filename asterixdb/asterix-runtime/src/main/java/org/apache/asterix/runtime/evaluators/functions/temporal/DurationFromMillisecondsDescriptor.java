@@ -28,7 +28,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -48,7 +48,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DURATION_FROM_MILLISECONDS;
+    public final static FunctionIdentifier FID = BuiltinFunctions.DURATION_FROM_MILLISECONDS;
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

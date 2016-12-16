@@ -28,7 +28,6 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Function;
-import org.apache.asterix.om.functions.AsterixFunction;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ABinaryTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ADoubleTypeComputer;
@@ -83,10 +82,8 @@ public class ExternalFunctionCompilerUtil {
 
         returnType = getTypeInfo(function.getReturnType(), txnCtx, function);
 
-        AsterixExternalScalarFunctionInfo scalarFunctionInfo = new AsterixExternalScalarFunctionInfo(fid.getNamespace(),
-                new AsterixFunction(fid.getName(), fid.getArity()), returnType, function.getFunctionBody(),
-                function.getLanguage(), arguments, typeComputer);
-        return scalarFunctionInfo;
+        return new ExternalScalarFunctionInfo(fid.getNamespace(), fid.getName(), fid.getArity(), returnType,
+                function.getFunctionBody(), function.getLanguage(), arguments, typeComputer);
     }
 
     private static IAType getTypeInfo(String paramType, MetadataTransactionContext txnCtx, Function function)

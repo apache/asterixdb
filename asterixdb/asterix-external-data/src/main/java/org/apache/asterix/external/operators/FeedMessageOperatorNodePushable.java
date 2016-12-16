@@ -25,7 +25,7 @@ import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveMessage;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.message.EndFeedMessage;
@@ -61,8 +61,8 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         this.connectionId = connectionId;
         this.message = feedMessage;
         this.partition = partition;
-        IAsterixAppRuntimeContext runtimeCtx =
-                (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+        IAppRuntimeContext runtimeCtx =
+                (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
         this.feedManager = (ActiveManager) runtimeCtx.getActiveManager();
     }
 

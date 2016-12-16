@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
@@ -74,8 +74,8 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
-        IAsterixAppRuntimeContext appContext =
-                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext =
+                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
         /**
          * if the metadata partition will be failed back

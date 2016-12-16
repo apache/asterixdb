@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
@@ -43,7 +43,7 @@ public class CorrelatedPrefixMergePolicyFactory implements ILSMMergePolicyFactor
 
     @Override
     public ILSMMergePolicy createMergePolicy(Map<String, String> properties, IHyracksTaskContext ctx) {
-        IDatasetLifecycleManager dslcManager = ((IAsterixAppRuntimeContext) ctx.getJobletContext()
+        IDatasetLifecycleManager dslcManager = ((IAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject()).getDatasetLifecycleManager();
         ILSMMergePolicy policy = new CorrelatedPrefixMergePolicy(dslcManager, datasetID);
         policy.configure(properties);

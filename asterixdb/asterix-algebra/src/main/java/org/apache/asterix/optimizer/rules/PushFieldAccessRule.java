@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -87,9 +87,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         ILogicalExpression expr = getFirstExpr(access);
         String finalAnnot;
         if (AnalysisUtil.isAccessToFieldRecord(expr)) {
-            finalAnnot = AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS;
+            finalAnnot = OperatorAnnotation.PUSHED_FIELD_ACCESS;
         } else if (AnalysisUtil.isRunnableAccessToFieldRecord(expr)) {
-            finalAnnot = AsterixOperatorAnnotations.PUSHED_RUNNABLE_FIELD_ACCESS;
+            finalAnnot = OperatorAnnotation.PUSHED_RUNNABLE_FIELD_ACCESS;
         } else {
             return false;
         }
@@ -162,11 +162,11 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             return false;
         }
         ILogicalExpression e1 = (ILogicalExpression) access.getAnnotations()
-                .get(AsterixOperatorAnnotations.FIELD_ACCESS);
+                .get(OperatorAnnotation.FIELD_ACCESS);
         if (e1 == null) {
             return false;
         }
-        ILogicalExpression e2 = (ILogicalExpression) op2.getAnnotations().get(AsterixOperatorAnnotations.FIELD_ACCESS);
+        ILogicalExpression e2 = (ILogicalExpression) op2.getAnnotations().get(OperatorAnnotation.FIELD_ACCESS);
         if (e2 == null) {
             return false;
         }

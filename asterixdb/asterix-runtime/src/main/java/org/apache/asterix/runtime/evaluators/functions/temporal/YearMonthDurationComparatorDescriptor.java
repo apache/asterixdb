@@ -23,7 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -42,8 +42,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class YearMonthDurationComparatorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final FunctionIdentifier GREATER_THAN_FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_GREATER_THAN;
-    public static final FunctionIdentifier LESS_THAN_FID = AsterixBuiltinFunctions.YEAR_MONTH_DURATION_LESS_THAN;
+    public static final FunctionIdentifier GREATER_THAN_FID = BuiltinFunctions.YEAR_MONTH_DURATION_GREATER_THAN;
+    public static final FunctionIdentifier LESS_THAN_FID = BuiltinFunctions.YEAR_MONTH_DURATION_LESS_THAN;
     private final boolean isGreaterThan;
 
     protected YearMonthDurationComparatorDescriptor(boolean isGreaterThan) {

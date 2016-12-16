@@ -25,13 +25,13 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -65,7 +65,7 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private final AsterixListAccessor listAccessor = new AsterixListAccessor();
+                    private final ListAccessor listAccessor = new ListAccessor();
                     private final DataOutput out = resultStorage.getDataOutput();
                     private final IScalarEvaluatorFactory listEvalFactory = args[0];
                     private final IScalarEvaluatorFactory sepEvalFactory = args[1];
@@ -163,6 +163,6 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_JOIN;
+        return BuiltinFunctions.STRING_JOIN;
     }
 }

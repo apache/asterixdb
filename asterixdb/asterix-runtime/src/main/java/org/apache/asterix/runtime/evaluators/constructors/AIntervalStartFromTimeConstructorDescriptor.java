@@ -33,7 +33,7 @@ import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -55,7 +55,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_CONSTRUCTOR_START_FROM_TIME;
+    public final static FunctionIdentifier FID = BuiltinFunctions.INTERVAL_CONSTRUCTOR_START_FROM_TIME;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {

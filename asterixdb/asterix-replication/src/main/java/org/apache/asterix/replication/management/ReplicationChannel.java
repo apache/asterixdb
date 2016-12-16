@@ -44,8 +44,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.AsterixReplicationProperties;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
@@ -54,7 +54,7 @@ import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationThread;
 import org.apache.asterix.common.replication.ReplicaEvent;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
@@ -91,8 +91,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private SocketChannel socketChannel = null;
     private ServerSocketChannel serverSocketChannel = null;
     private final IReplicationManager replicationManager;
-    private final AsterixReplicationProperties replicationProperties;
-    private final IAsterixAppRuntimeContextProvider appContextProvider;
+    private final ReplicationProperties replicationProperties;
+    private final IAppRuntimeContextProvider appContextProvider;
     private static final int INTIAL_BUFFER_SIZE = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
     private final LinkedBlockingQueue<LSMComponentLSNSyncTask> lsmComponentRemoteLSN2LocalLSNMappingTaskQ;
     private final LinkedBlockingQueue<LogRecord> pendingNotificationRemoteLogsQ;
@@ -103,9 +103,9 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final ReplicationNotifier replicationNotifier;
     private final Object flushLogslock = new Object();
 
-    public ReplicationChannel(String nodeId, AsterixReplicationProperties replicationProperties, ILogManager logManager,
+    public ReplicationChannel(String nodeId, ReplicationProperties replicationProperties, ILogManager logManager,
             IReplicaResourcesManager replicaResoucesManager, IReplicationManager replicationManager,
-            INCApplicationContext appContext, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
+            INCApplicationContext appContext, IAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
         this.logManager = logManager;
         this.localNodeID = nodeId;
         this.replicaResourcesManager = (ReplicaResourcesManager) replicaResoucesManager;
@@ -120,7 +120,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         replicationNotifier = new ReplicationNotifier();
         replicationThreads = Executors.newCachedThreadPool(appContext.getThreadFactory());
         Map<String, ClusterPartition[]> nodePartitions =
-                ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider.getAppContext()).getMetadataProperties()
+                ((IPropertiesProvider) asterixAppRuntimeContextProvider.getAppContext()).getMetadataProperties()
                         .getNodePartitions();
         Set<String> nodeReplicationClients = replicationProperties.getNodeReplicationClients(nodeId);
         List<Integer> clientsPartitions = new ArrayList<>();
@@ -376,7 +376,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             Set<String> replicaIds = request.getReplicaIds();
             Set<String> requesterExistingFiles = request.getExistingFiles();
             Map<String, ClusterPartition[]> nodePartitions =
-                    ((IAsterixPropertiesProvider) appContextProvider.getAppContext()).getMetadataProperties()
+                    ((IPropertiesProvider) appContextProvider.getAppContext()).getMetadataProperties()
                             .getNodePartitions();
             for (String replicaId : replicaIds) {
                 //get replica partitions

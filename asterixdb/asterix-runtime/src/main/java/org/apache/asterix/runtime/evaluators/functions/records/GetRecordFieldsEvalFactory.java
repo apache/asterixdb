@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -69,7 +69,7 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
                 int len = inputArg0.getLength();
 
                 if (data[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new TypeMismatchException(AsterixBuiltinFunctions.GET_RECORD_FIELDS, 0, data[offset],
+                    throw new TypeMismatchException(BuiltinFunctions.GET_RECORD_FIELDS, 0, data[offset],
                             ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                 }
 

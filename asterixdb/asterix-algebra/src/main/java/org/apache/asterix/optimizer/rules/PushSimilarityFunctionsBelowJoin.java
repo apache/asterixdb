@@ -22,7 +22,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.rewriter.rules.PushFunctionsBelowJoin;
 
@@ -55,10 +55,10 @@ public class PushSimilarityFunctionsBelowJoin extends PushFunctionsBelowJoin {
 
     private static final Set<FunctionIdentifier> simFuncIdents = new HashSet<FunctionIdentifier>();
     static {
-        simFuncIdents.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD);
-        simFuncIdents.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
-        simFuncIdents.add(AsterixBuiltinFunctions.EDIT_DISTANCE);
-        simFuncIdents.add(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK);
+        simFuncIdents.add(BuiltinFunctions.SIMILARITY_JACCARD);
+        simFuncIdents.add(BuiltinFunctions.SIMILARITY_JACCARD_CHECK);
+        simFuncIdents.add(BuiltinFunctions.EDIT_DISTANCE);
+        simFuncIdents.add(BuiltinFunctions.EDIT_DISTANCE_CHECK);
     }
 
     public PushSimilarityFunctionsBelowJoin() {

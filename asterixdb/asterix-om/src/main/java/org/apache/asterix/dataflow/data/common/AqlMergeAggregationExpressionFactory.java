@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -48,15 +48,15 @@ public class AqlMergeAggregationExpressionFactory implements IMergeAggregationEx
         /**
          * For global aggregate, the merge function is ALWAYS the same as the original aggregate function.
          */
-        FunctionIdentifier mergeFid = AsterixBuiltinFunctions.isGlobalAggregateFunction(fid) ? fid
-                : AsterixBuiltinFunctions.getIntermediateAggregateFunction(fid);
+        FunctionIdentifier mergeFid = BuiltinFunctions.isGlobalAggregateFunction(fid) ? fid
+                : BuiltinFunctions.getIntermediateAggregateFunction(fid);
         if (mergeFid == null) {
             /**
              * In this case, no merge function (unimplemented) for the local-side aggregate function
              */
             return null;
         }
-        ILogicalExpression aggExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
+        ILogicalExpression aggExpr = BuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
         return aggExpr;
     }
 }

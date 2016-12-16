@@ -31,7 +31,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDese
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -53,7 +53,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR;
+    private static final FunctionIdentifier FID = BuiltinFunctions.GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
@@ -61,12 +61,12 @@ public class AsterixHyracksIntegrationUtil {
     public NodeControllerService[] ncs;
     public IHyracksClientConnection hcc;
 
-    private AsterixPropertiesAccessor propertiesAccessor;
+    private PropertiesAccessor propertiesAccessor;
 
     public void init(boolean deleteOldInstanceData) throws Exception {
         ncs = new NodeControllerService[0]; // ensure that ncs is not null
         final CCConfig ccConfig = createCCConfig();
-        propertiesAccessor = AsterixPropertiesAccessor.getInstance(ccConfig.getAppConfig());
+        propertiesAccessor = PropertiesAccessor.getInstance(ccConfig.getAppConfig());
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();

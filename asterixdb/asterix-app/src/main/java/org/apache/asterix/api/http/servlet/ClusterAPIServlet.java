@@ -31,8 +31,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.common.config.AbstractAsterixProperties;
-import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.AbstractProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -99,8 +99,8 @@ public class ClusterAPIServlet extends HttpServlet {
     }
 
     protected JSONObject getReplicationJSON() throws JSONException {
-        for (AbstractAsterixProperties props : getPropertiesInstances()) {
-            if (props instanceof AsterixReplicationProperties) {
+        for (AbstractProperties props : getPropertiesInstances()) {
+            if (props instanceof ReplicationProperties) {
                 JSONObject json = new JSONObject();
                 json.put("config", props.getProperties(key -> REPLICATION_PROPERTY.matcher(key).replaceFirst("")));
                 return json;
@@ -111,16 +111,16 @@ public class ClusterAPIServlet extends HttpServlet {
 
     protected Map<String, Object> getAllClusterProperties() {
         Map<String, Object> allProperties = new HashMap<>();
-        for (AbstractAsterixProperties properties : getPropertiesInstances()) {
-            if (!(properties instanceof AsterixReplicationProperties)) {
+        for (AbstractProperties properties : getPropertiesInstances()) {
+            if (!(properties instanceof ReplicationProperties)) {
                 allProperties.putAll(properties.getProperties());
             }
         }
         return allProperties;
     }
 
-    protected List<AbstractAsterixProperties> getPropertiesInstances() {
-        return AbstractAsterixProperties.getImplementations();
+    protected List<AbstractProperties> getPropertiesInstances() {
+        return AbstractProperties.getImplementations();
     }
 
     protected JSONObject getClusterStateJSON(HttpServletRequest request, String pathToNode) throws JSONException {

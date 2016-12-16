@@ -20,7 +20,7 @@ package org.apache.asterix.optimizer.rules;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -105,7 +105,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 throws AlgebricksException {
             boolean allClosed = true;
             boolean changed = false;
-            if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
+            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
                 ARecordType reqType = (ARecordType) TypeCastUtils.getRequiredType(expr);
                 if (reqType == null || !reqType.isOpen()) {
                     int n = expr.getArguments().size();
@@ -131,15 +131,15 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                     }
                     if (allClosed) {
                         expr.setFunctionInfo(
-                                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
+                                FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
                         GlobalConfig.ASTERIX_LOGGER.finest("Switching to CLOSED record constructor in " + expr + ".\n");
                         changed = true;
                     }
                 }
             } else {
                 boolean rewrite = true;
-                if (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)
-                        || (expr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR))) {
+                if (expr.getFunctionIdentifier().equals(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)
+                        || (expr.getFunctionIdentifier().equals(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR))) {
                     IAType reqType = TypeCastUtils.getRequiredType(expr);
                     if (reqType == null) {
                         rewrite = false;

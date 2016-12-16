@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
@@ -39,7 +39,7 @@ public class IntervalBeforeDescriptor extends AbstractIntervalLogicFuncDescripto
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.INTERVAL_BEFORE;
+        return BuiltinFunctions.INTERVAL_BEFORE;
     }
 
     @Override

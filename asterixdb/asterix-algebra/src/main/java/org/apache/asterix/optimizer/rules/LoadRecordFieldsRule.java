@@ -24,11 +24,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
@@ -106,7 +106,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr1;
                     // f should be a call to a field/data access kind of
                     // function
-                    sigma.getAnnotations().put(AsterixOperatorAnnotations.FIELD_ACCESS, f.getArguments().get(0));
+                    sigma.getAnnotations().put(OperatorAnnotation.FIELD_ACCESS, f.getArguments().get(0));
                 }
             }
         }
@@ -133,7 +133,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     boolean b2 = pushFieldLoads(f.getArguments().get(1), topOp, context);
                     return b1 || b2;
                 }
-                if (fi.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+                if (fi.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                     if (AnalysisUtil.numberOfVarsInExpr(f) == 0) {
                         return false;
                     }
@@ -263,15 +263,15 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
         IVariableTypeEnvironment typeEnvironment = context.getOutputTypeEnvironment(assign);
         ConstantExpression ce = (ConstantExpression) arg1;
         ILogicalExpression fldExpr;
-        if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+        if (f.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
             String fldName = ((AString) ((AsterixConstantValue) ce.getValue()).getObject()).getStringValue();
             fldExpr = findFieldExpression(assign, recordVar, fldName, typeEnvironment,
                     (name, expression, env) -> findFieldByNameFromRecordConstructor(name, expression));
-        } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
+        } else if (f.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)) {
             Integer fldIdx = ((AInt32) ((AsterixConstantValue) ce.getValue()).getObject()).getIntegerValue();
             fldExpr = findFieldExpression(assign, recordVar, fldIdx, typeEnvironment,
                     LoadRecordFieldsRule::findFieldByIndexFromRecordConstructor);
-        } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
+        } else if (f.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_NESTED)) {
             return false;
         } else {
             throw new IllegalStateException();
@@ -339,8 +339,8 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             return null;
         }
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) constr;
-        if (!fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
-                && !fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
+        if (!fce.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)
+                && !fce.getFunctionIdentifier().equals(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             return null;
         }
         return resolver.resolve(accessKey, fce, typeEnvironment);

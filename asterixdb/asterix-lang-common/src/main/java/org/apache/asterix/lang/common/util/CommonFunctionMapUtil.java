@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 
 public class CommonFunctionMapUtil {
 
@@ -96,6 +96,6 @@ public class CommonFunctionMapUtil {
         }
         String understoreName = lowerCaseName.replace('_', '-');
         FunctionSignature newFs = new FunctionSignature(fs.getNamespace(), understoreName, fs.getArity());
-        return AsterixBuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
+        return BuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
     }
 }

@@ -31,7 +31,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -101,13 +101,13 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                     }
                     resultStorage.reset();
                     if (data1[startOffset1] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.CREATE_MBR, 1, data1[startOffset1],
+                        throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 1, data1[startOffset1],
                                 ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                     }
                     int dimension = AInt32SerializerDeserializer.getInt(data1, startOffset1 + 1);
 
                     if (data2[startOffset2] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.CREATE_MBR, 2, data2[startOffset2],
+                        throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 2, data2[startOffset2],
                                 ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                     }
                     int coordinate = AInt32SerializerDeserializer.getInt(data2, startOffset2 + 1);
@@ -327,7 +327,7 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                 }
                                 break;
                             default:
-                                throw new TypeMismatchException(AsterixBuiltinFunctions.CREATE_MBR, 0,
+                                throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 0,
                                         data0[startOffset0], ATypeTag.SERIALIZED_POINT_TYPE_TAG,
                                         ATypeTag.SERIALIZED_LINE_TYPE_TAG, ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
                                         ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG, ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);

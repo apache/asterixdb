@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.file;
 
-import org.apache.asterix.common.config.AsterixCompilerProperties;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class JobSpecificationUtils {
     public static JobSpecification createJobSpecification() {
-        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.INSTANCE.getCompilerProperties();
+        CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         JobSpecification spec = new JobSpecification(frameSize);
         return spec;

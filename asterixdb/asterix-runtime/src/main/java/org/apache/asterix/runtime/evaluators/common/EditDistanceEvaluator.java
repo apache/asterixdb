@@ -25,7 +25,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -54,8 +54,8 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     protected final IScalarEvaluator firstStringEval;
     protected final IScalarEvaluator secondStringEval;
     protected final SimilarityMetricEditDistance ed = new SimilarityMetricEditDistance();
-    protected final AsterixOrderedListIterator firstOrdListIter = new AsterixOrderedListIterator();
-    protected final AsterixOrderedListIterator secondOrdListIter = new AsterixOrderedListIterator();
+    protected final OrderedListIterator firstOrdListIter = new OrderedListIterator();
+    protected final OrderedListIterator secondOrdListIter = new OrderedListIterator();
     protected int editDistance = 0;
     protected final AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
@@ -114,7 +114,7 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
                 return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
             }
             default: {
-                throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE, 0, argType.serialize(),
+                throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE, 0, argType.serialize(),
                         ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 
@@ -123,13 +123,13 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
 
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
         if (typeTag1 != typeTag2) {
-            throw new IncompatibleTypeException(AsterixBuiltinFunctions.EDIT_DISTANCE, typeTag1.serialize(),
+            throw new IncompatibleTypeException(BuiltinFunctions.EDIT_DISTANCE, typeTag1.serialize(),
                     typeTag2.serialize());
         }
 
         // Since they are equal, check one tag is enough.
         if (typeTag1 != ATypeTag.STRING && typeTag1 != ATypeTag.ORDEREDLIST) { // could be an list
-            throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE, 0, typeTag1.serialize(),
+            throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE, 0, typeTag1.serialize(),
                     ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
         }
 
@@ -137,12 +137,12 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
+                throw new UnsupportedItemTypeException(BuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
             }
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
+                throw new UnsupportedItemTypeException(BuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
             }
         }
         return true;

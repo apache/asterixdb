@@ -29,7 +29,7 @@ public interface ITransactionSubsystem {
 
     public IRecoveryManager getRecoveryManager();
 
-    public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
+    public IAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
 
     public String getId();
 

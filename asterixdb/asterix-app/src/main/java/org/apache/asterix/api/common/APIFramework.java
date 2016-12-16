@@ -27,8 +27,8 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
 import org.apache.asterix.app.result.ResultUtil;
-import org.apache.asterix.common.config.AsterixCompilerProperties;
-import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -50,7 +50,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -190,13 +190,13 @@ public class APIFramework {
         }
 
         //print the plot for the logical plan
-        AsterixExternalProperties xProps = AsterixAppContextInfo.INSTANCE.getExternalProperties();
+        ExternalProperties xProps = AppContextInfo.INSTANCE.getExternalProperties();
         Boolean plot = xProps.getIsPlottingEnabled();
         if (plot) {
             PlanPlotter.printLogicalPlan(plan);
         }
 
-        AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.INSTANCE.getCompilerProperties();
+        CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
         int groupFrameLimit = (int) (compilerProperties.getGroupMemorySize() / frameSize);
@@ -292,7 +292,7 @@ public class APIFramework {
 
         JobEventListenerFactory jobEventListenerFactory =
                 new JobEventListenerFactory(asterixJobId, metadataProvider.isWriteTransaction());
-        JobSpecification spec = compiler.createJob(AsterixAppContextInfo.INSTANCE, jobEventListenerFactory);
+        JobSpecification spec = compiler.createJob(AppContextInfo.INSTANCE, jobEventListenerFactory);
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             printPlanPrefix(conf, "Hyracks job");

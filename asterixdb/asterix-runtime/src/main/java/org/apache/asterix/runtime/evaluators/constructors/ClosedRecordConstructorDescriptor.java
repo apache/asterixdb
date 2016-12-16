@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ARecordType;
@@ -45,7 +45,7 @@ public class ClosedRecordConstructorDescriptor extends AbstractScalarFunctionDyn
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR;
+        return BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR;
     }
 
     @Override

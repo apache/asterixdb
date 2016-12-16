@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.rewriter.rules.ExtractFunctionsFromJoinConditionRule;
 
@@ -26,12 +26,12 @@ public class AsterixExtractFunctionsFromJoinConditionRule extends ExtractFunctio
 
     @Override
     protected boolean processArgumentsToFunction(FunctionIdentifier fi) {
-        return fi.equals(AsterixBuiltinFunctions.GET_ITEM);
+        return fi.equals(BuiltinFunctions.GET_ITEM);
     }
 
     @Override
     protected boolean isComparisonFunction(FunctionIdentifier fi) {
-        return AsterixBuiltinFunctions.isSimilarityFunction(fi);
+        return BuiltinFunctions.isSimilarityFunction(fi);
     }
 
 }

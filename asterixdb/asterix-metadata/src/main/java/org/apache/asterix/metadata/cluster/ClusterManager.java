@@ -31,7 +31,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.api.IClusterManagementWork;
-import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.management.AsterixEventServiceClient;
@@ -47,7 +47,7 @@ import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.event.util.PatternCreator;
 import org.apache.asterix.installer.schema.conf.Configuration;
 import org.apache.asterix.metadata.api.IClusterManager;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 
 public class ClusterManager implements IClusterManager {
 
@@ -95,13 +95,13 @@ public class ClusterManager implements IClusterManager {
         try {
             Cluster cluster = ClusterProperties.INSTANCE.getCluster();
             List<Pattern> pattern = new ArrayList<Pattern>();
-            String asterixInstanceName = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getInstanceName();
+            String asterixInstanceName = AppContextInfo.INSTANCE.getMetadataProperties().getInstanceName();
             Patterns prepareNode = PatternCreator.INSTANCE.createPrepareNodePattern(asterixInstanceName,
                     ClusterProperties.INSTANCE.getCluster(), node);
             cluster.getNode().add(node);
             client.submit(prepareNode);
 
-            AsterixExternalProperties externalProps = AsterixAppContextInfo.INSTANCE.getExternalProperties();
+            ExternalProperties externalProps = AppContextInfo.INSTANCE.getExternalProperties();
             AsterixEventServiceUtil.poulateClusterEnvironmentProperties(cluster, externalProps.getCCJavaParams(),
                     externalProps.getNCJavaParams());
 

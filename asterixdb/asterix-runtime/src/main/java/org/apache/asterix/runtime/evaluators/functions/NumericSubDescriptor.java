@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -36,7 +36,7 @@ public class NumericSubDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.NUMERIC_SUBTRACT;
+        return BuiltinFunctions.NUMERIC_SUBTRACT;
     }
 
     /* (non-Javadoc)

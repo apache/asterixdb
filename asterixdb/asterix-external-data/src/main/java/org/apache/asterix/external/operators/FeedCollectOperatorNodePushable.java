@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.message.ActivePartitionMessage;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
@@ -59,7 +59,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
         this.sourceRuntime = sourceRuntime;
         this.feedPolicy = feedPolicy;
         this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
-        this.activeManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+        this.activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getActiveManager();
     }
 

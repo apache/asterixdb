@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
@@ -76,8 +76,8 @@ public class TakeoverPartitionsRequestMessage implements IApplicationMessage {
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
-        IAsterixAppRuntimeContext appContext =
-                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext =
+                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
         //if the NC is shutting down, it should ignore takeover partitions request
         if (!appContext.isShuttingdown()) {

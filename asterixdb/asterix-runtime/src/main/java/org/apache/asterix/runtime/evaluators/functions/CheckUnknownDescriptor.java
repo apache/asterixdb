@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -79,7 +79,7 @@ public class CheckUnknownDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.CHECK_UNKNOWN;
+        return BuiltinFunctions.CHECK_UNKNOWN;
     }
 
 }

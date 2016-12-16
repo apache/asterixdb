@@ -29,7 +29,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -115,7 +115,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             Triple<Boolean, String, String> fullyQualifiedDatasetPathCandidateFromParent,
             Mutable<ILogicalExpression> parentFuncRef) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) exprRef.getValue();
-        if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.RESOLVE) {
+        if (funcExpr.getFunctionIdentifier() != BuiltinFunctions.RESOLVE) {
             return false;
         }
         ILogicalExpression arg = funcExpr.getArguments().get(0).getValue();
@@ -152,14 +152,14 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
                     + unresolvedVarName);
         } else if (hasMatchedDataset) {
             // Rewrites the "resolve" function to a "dataset" function and only keep the dataset name argument.
-            func.setFunctionInfo(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.DATASET));
+            func.setFunctionInfo(FunctionUtil.getFunctionInfo(BuiltinFunctions.DATASET));
             Mutable<ILogicalExpression> datasetNameExpression = func.getArguments().get(0);
             func.getArguments().clear();
             func.getArguments().add(datasetNameExpression);
         } else if (fullyQualifiedDatasetPathCandidateFromParent.first) {
             // Rewrites the parent "field-access" function to a "dataset" function.
             AbstractFunctionCallExpression parentFunc = (AbstractFunctionCallExpression) parentFuncRef.getValue();
-            parentFunc.setFunctionInfo(FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.DATASET));
+            parentFunc.setFunctionInfo(FunctionUtil.getFunctionInfo(BuiltinFunctions.DATASET));
             parentFunc.getArguments().clear();
             parentFunc.getArguments().add(
                     new MutableObject<>(new ConstantExpression(
@@ -198,7 +198,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             args.add(firstArgRef);
             args.add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(fieldName)))));
             newFunc = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME), args);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME), args);
             firstArgRef = new MutableObject<>(newFunc);
         }
         funcRef.setValue(newFunc);
@@ -256,7 +256,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
     // Try to resolve the expression like resolve("x").foo as x.foo.
     private Triple<Boolean, String, String> resolveFullyQualifiedPath(AbstractFunctionCallExpression funcExpr,
             IOptimizationContext context) throws AlgebricksException {
-        if (!funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+        if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
             return new Triple<>(false, null, null);
         }
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
@@ -269,7 +269,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             return new Triple<>(false, null, null);
         }
         AbstractFunctionCallExpression firstFuncExpr = (AbstractFunctionCallExpression) firstExpr;
-        if (!firstFuncExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.RESOLVE)) {
+        if (!firstFuncExpr.getFunctionIdentifier().equals(BuiltinFunctions.RESOLVE)) {
             return new Triple<>(false, null, null);
         }
         ILogicalExpression dataverseNameExpr = firstFuncExpr.getArguments().get(0).getValue();
@@ -308,7 +308,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
     // Cleans up scan collections on top of a "dataset" function call since "dataset"
     // is an unnest function.
     private void cleanupScanCollectionForDataset(AbstractFunctionCallExpression funcExpr) {
-        if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+        if (funcExpr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return;
         }
         ILogicalExpression arg = funcExpr.getArguments().get(0).getValue();
@@ -316,7 +316,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             return;
         }
         AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) arg;
-        if (argFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.DATASET) {
+        if (argFuncExpr.getFunctionIdentifier() != BuiltinFunctions.DATASET) {
             return;
         }
         funcExpr.setFunctionInfo(argFuncExpr.getFunctionInfo());

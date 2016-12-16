@@ -36,7 +36,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -136,7 +136,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(AsterixBuiltinFunctions.AVG, bytes[offset], aggType.serialize());
+            throw new IncompatibleTypeException(BuiltinFunctions.AVG, bytes[offset], aggType.serialize());
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
@@ -173,7 +173,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.AVG, bytes[offset]);
+                throw new UnsupportedItemTypeException(BuiltinFunctions.AVG, bytes[offset]);
         }
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
         BufferSerDeUtil.writeLong(count, state, start + COUNT_OFFSET);
@@ -252,7 +252,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(AsterixBuiltinFunctions.AVG, serBytes[offset]);
+                throw new UnsupportedItemTypeException(BuiltinFunctions.AVG, serBytes[offset]);
         }
     }
 

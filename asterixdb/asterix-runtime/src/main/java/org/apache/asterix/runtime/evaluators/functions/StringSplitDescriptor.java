@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -164,7 +164,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_SPLIT;
+        return BuiltinFunctions.STRING_SPLIT;
     }
 
 }

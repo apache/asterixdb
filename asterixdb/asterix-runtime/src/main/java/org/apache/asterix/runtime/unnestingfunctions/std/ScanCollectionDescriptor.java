@@ -23,11 +23,11 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -53,7 +53,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SCAN_COLLECTION;
+        return BuiltinFunctions.SCAN_COLLECTION;
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
         public IUnnestingEvaluator createUnnestingEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
             return new IUnnestingEvaluator() {
                 private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                private final AsterixListAccessor listAccessor = new AsterixListAccessor();
+                private final ListAccessor listAccessor = new ListAccessor();
                 private final IPointable inputVal = new VoidPointable();
                 private final IScalarEvaluator argEval = listEvalFactory.createScalarEvaluator(ctx);
                 private int itemIndex;
@@ -92,7 +92,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                     }
                     if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.SCAN_COLLECTION, 0, typeTag,
+                        throw new TypeMismatchException(BuiltinFunctions.SCAN_COLLECTION, 0, typeTag,
                                 ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                     }
                     listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());

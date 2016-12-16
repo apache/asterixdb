@@ -29,7 +29,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
@@ -62,7 +62,7 @@ public class RTreeAccessMethod implements IAccessMethod {
     private static List<FunctionIdentifier> funcIdents = new ArrayList<>();
 
     static {
-        funcIdents.add(AsterixBuiltinFunctions.SPATIAL_INTERSECT);
+        funcIdents.add(BuiltinFunctions.SPATIAL_INTERSECT);
     }
 
     public static final RTreeAccessMethod INSTANCE = new RTreeAccessMethod();
@@ -214,7 +214,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         for (int i = 0; i < numSecondaryKeys; i++) {
             // The create MBR function "extracts" one field of an MBR around the given spatial object.
             AbstractFunctionCallExpression createMBR = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_MBR));
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
             // Spatial object is the constant from the func expr we are optimizing.
             createMBR.getArguments().add(new MutableObject<ILogicalExpression>(searchKeyExpr));
             // The number of dimensions.

@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -75,7 +75,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             return;
         }
         try {
-            edThresh = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK.getName(), 2,
+            edThresh = ATypeHierarchy.getIntegerValue(BuiltinFunctions.EDIT_DISTANCE_CHECK.getName(), 2,
                     argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
             editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
             writeResult(editDistance);
@@ -105,7 +105,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             }
 
             default: {
-                throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK, 0, argType.serialize(),
+                throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_CHECK, 0, argType.serialize(),
                         ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 

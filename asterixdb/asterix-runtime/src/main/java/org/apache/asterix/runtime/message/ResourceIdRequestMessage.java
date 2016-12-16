@@ -23,8 +23,8 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
-import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.common.transactions.IResourceIdManager;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
@@ -41,14 +41,14 @@ public class ResourceIdRequestMessage implements IApplicationMessage {
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         try {
             ICCMessageBroker broker =
-                    (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext().getMessageBroker();
+                    (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext().getMessageBroker();
             ResourceIdRequestResponseMessage reponse = new ResourceIdRequestResponseMessage();
             if (!ClusterStateManager.INSTANCE.isClusterActive()) {
                 reponse.setResourceId(-1);
                 reponse.setException(new Exception("Cannot generate global resource id when cluster is not active."));
             } else {
-                IAsterixResourceIdManager resourceIdManager =
-                        AsterixAppContextInfo.INSTANCE.getResourceIdManager();
+                IResourceIdManager resourceIdManager =
+                        AppContextInfo.INSTANCE.getResourceIdManager();
                 reponse.setResourceId(resourceIdManager.createResourceId());
                 if (reponse.getResourceId() < 0) {
                     reponse.setException(new Exception("One or more nodes has not reported max resource id."));
@@ -61,7 +61,7 @@ public class ResourceIdRequestMessage implements IApplicationMessage {
         }
     }
 
-    private void requestMaxResourceID(IAsterixResourceIdManager resourceIdManager, ICCMessageBroker broker)
+    private void requestMaxResourceID(IResourceIdManager resourceIdManager, ICCMessageBroker broker)
             throws Exception {
         Set<String> getParticipantNodes = ClusterStateManager.INSTANCE.getParticipantNodes();
         ReportMaxResourceIdRequestMessage msg = new ReportMaxResourceIdRequestMessage();

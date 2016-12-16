@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.RTreeJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -74,7 +74,7 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
         }
         AbstractFunctionCallExpression unnestFuncExpr = (AbstractFunctionCallExpression) unnestExpr;
         FunctionIdentifier funcIdent = unnestFuncExpr.getFunctionIdentifier();
-        if (!funcIdent.equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+        if (!funcIdent.equals(BuiltinFunctions.INDEX_SEARCH)) {
             return;
         }
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams();

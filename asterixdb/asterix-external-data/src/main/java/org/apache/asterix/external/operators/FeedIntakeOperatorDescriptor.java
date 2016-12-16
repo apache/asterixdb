@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
@@ -106,8 +106,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private IAdapterFactory createExternalAdapterFactory(IHyracksTaskContext ctx) throws HyracksDataException {
         IAdapterFactory adapterFactory;
-        IAsterixAppRuntimeContext runtimeCtx =
-                (IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+        IAppRuntimeContext runtimeCtx =
+                (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
         ILibraryManager libraryManager = runtimeCtx.getLibraryManager();
         ClassLoader classLoader = libraryManager.getLibraryClassLoader(feedId.getDataverse(), adaptorLibraryName);
         if (classLoader != null) {

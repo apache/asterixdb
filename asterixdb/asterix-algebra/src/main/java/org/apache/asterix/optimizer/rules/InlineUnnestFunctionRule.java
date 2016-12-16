@@ -22,7 +22,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -68,7 +68,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOperator.getExpressionRef()
                 .getValue();
         //we only inline for the scan-collection function
-        if (expr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+        if (expr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
         }
 
@@ -103,7 +103,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
         if (usedVarOrginExpr != null) {
             for (Pair<AbstractFunctionCallExpression, Integer> parentAndIndex : parentAndIndexList) {
                 //we only rewrite the top scan-collection function
-                if (parentAndIndex.first.getFunctionIdentifier() == AsterixBuiltinFunctions.SCAN_COLLECTION
+                if (parentAndIndex.first.getFunctionIdentifier() == BuiltinFunctions.SCAN_COLLECTION
                         && parentAndIndex.first == expr) {
                     unnestOp.getExpressionRef().setValue(usedVarOrginExpr);
                 }
@@ -141,7 +141,7 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
                 ILogicalExpression returnedExpr = assignOp.getExpressions().get(index).getValue();
                 if (returnedExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) returnedExpr;
-                    if (AsterixBuiltinFunctions.isBuiltinUnnestingFunction(funcExpr.getFunctionIdentifier())) {
+                    if (BuiltinFunctions.isBuiltinUnnestingFunction(funcExpr.getFunctionIdentifier())) {
                         // we only inline for unnest functions
                         removeUnecessaryAssign(parentOp, currentOp, assignOp, index);
                         ret = returnedExpr;

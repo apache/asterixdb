@@ -30,7 +30,7 @@ import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -243,7 +243,7 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
      */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.INTERVAL_BIN;
+        return BuiltinFunctions.INTERVAL_BIN;
     }
 
 }

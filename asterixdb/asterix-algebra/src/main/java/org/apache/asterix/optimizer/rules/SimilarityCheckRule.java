@@ -28,7 +28,7 @@ import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -198,7 +198,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             selectGetItemArgs.add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
             ILogicalExpression selectGetItemExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM), selectGetItemArgs);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_ITEM), selectGetItemArgs);
             // Replace the old similarity function call with the new getItemExpr.
             expRef.setValue(selectGetItemExpr);
 
@@ -210,7 +210,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             assignGetItemArgs.add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(new AInt32(1)))));
             ILogicalExpression assignGetItemExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM), assignGetItemArgs);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_ITEM), assignGetItemArgs);
             // Replace the original assign expr with the get-item expr.
             simFuncExprRef.setValue(assignGetItemExpr);
 
@@ -238,7 +238,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             getItemArgs.add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
             ILogicalExpression getItemExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM), getItemArgs);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_ITEM), getItemArgs);
             // Replace the old similarity function call with the new getItemExpr.
             expRef.setValue(getItemExpr);
             return true;
@@ -253,7 +253,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
         ArrayList<Mutable<ILogicalExpression>> similarityArgs = null;
         ScalarFunctionCallExpression simCheckFuncExpr = null;
         // Look for jaccard function call, and GE or GT.
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.SIMILARITY_JACCARD) {
             IAObject jaccThresh;
             if (normFuncIdent == AlgebricksBuiltinFunctions.GE) {
                 if (constVal.getObject() instanceof AFloat) {
@@ -280,11 +280,11 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             similarityArgs.add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(jaccThresh))));
             simCheckFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK), similarityArgs);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.SIMILARITY_JACCARD_CHECK), similarityArgs);
         }
 
         // Look for edit-distance function call, and LE or LT.
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE) {
             AInt32 aInt = new AInt32(0);
             try {
                 aInt = (AInt32) ATypeHierarchy.convertNumericTypeObject(constVal.getObject(), ATypeTag.INT32);
@@ -308,7 +308,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             similarityArgs.add(
                     new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(edThresh))));
             simCheckFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK), similarityArgs);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.EDIT_DISTANCE_CHECK), similarityArgs);
         }
         // Preserve all annotations.
         if (simCheckFuncExpr != null) {

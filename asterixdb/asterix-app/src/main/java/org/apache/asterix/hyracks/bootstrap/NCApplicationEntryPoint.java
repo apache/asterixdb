@@ -27,14 +27,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.app.external.ExternalLibraryUtils;
-import org.apache.asterix.app.nc.AsterixNCAppRuntimeContext;
+import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.AsterixThreadFactory;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.AsterixMetadataProperties;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
@@ -72,7 +72,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     public boolean virtualNC = false;
 
     private INCApplicationContext ncApplicationContext = null;
-    private IAsterixAppRuntimeContext runtimeContext;
+    private IAppRuntimeContext runtimeContext;
     private String nodeId;
     private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
@@ -105,8 +105,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             System.setProperty("java.rmi.server.hostname", (controllerService)
                     .getConfiguration().clusterNetPublicIPAddress);
         }
-        runtimeContext = new AsterixNCAppRuntimeContext(ncApplicationContext, getExtensions());
-        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+        runtimeContext = new NCAppRuntimeContext(ncApplicationContext, getExtensions());
+        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -116,7 +116,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
         runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
-        MessagingProperties messagingProperties = ((IAsterixPropertiesProvider) runtimeContext)
+        MessagingProperties messagingProperties = ((IPropertiesProvider) runtimeContext)
                 .getMessagingProperties();
         messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         ncApplicationContext.setMessageBroker(messageBroker);
@@ -204,7 +204,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     public void notifyStartupComplete() throws Exception {
         //Send max resource id on this NC to the CC
         ReportMaxResourceIdMessage.send((NodeControllerService) ncApplicationContext.getControllerService());
-        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -281,7 +281,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     }
 
     private void updateOnNodeJoin() {
-        AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
+        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
             metadataProperties.getNodeNames().add(nodeId);
@@ -290,7 +290,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
             String asterixInstanceName = metadataProperties.getInstanceName();
-            AsterixTransactionProperties txnProperties = ((IAsterixPropertiesProvider) runtimeContext)
+            TransactionProperties txnProperties = ((IPropertiesProvider) runtimeContext)
                     .getTransactionProperties();
             Node self = null;
             List<Node> nodes;

@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -59,7 +59,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.GET_ITEM;
+        return BuiltinFunctions.GET_ITEM;
     }
 
     private static class GetItemEvalFactory implements IScalarEvaluatorFactory {
@@ -103,10 +103,10 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         int indexOffset = inputArgIdx.getStartOffset();
 
                         if (serOrderedList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            itemIndex = ATypeHierarchy.getIntegerValue(AsterixBuiltinFunctions.GET_ITEM.getName(), 0,
+                            itemIndex = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GET_ITEM.getName(), 0,
                                     indexBytes, indexOffset);
                         } else {
-                            throw new TypeMismatchException(AsterixBuiltinFunctions.GET_ITEM,
+                            throw new TypeMismatchException(BuiltinFunctions.GET_ITEM,
                                     0, serOrderedList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
 

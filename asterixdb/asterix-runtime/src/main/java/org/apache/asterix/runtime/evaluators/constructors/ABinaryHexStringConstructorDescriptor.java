@@ -22,7 +22,7 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -66,7 +66,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR;
+        return BuiltinFunctions.BINARY_HEX_CONSTRUCTOR;
     }
 
     static class ABinaryConstructorEvaluator implements IScalarEvaluator {
@@ -101,12 +101,12 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                     byteArrayParser.parse(buffer, 0, buffer.length, out);
                     result.set(resultStorage);
                 } else {
-                    throw new TypeMismatchException(AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0,
+                    throw new TypeMismatchException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0,
                             binary[startOffset], ATypeTag.SERIALIZED_BINARY_TYPE_TAG,
                             ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                 }
             } catch (IOException e) {
-                throw new InvalidDataFormatException(AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR, e,
+                throw new InvalidDataFormatException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, e,
                         ATypeTag.SERIALIZED_BINARY_TYPE_TAG);
             }
         }

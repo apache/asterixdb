@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -53,6 +53,6 @@ public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunc
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
+        return BuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
     }
 }

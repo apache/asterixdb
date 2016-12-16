@@ -32,7 +32,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDese
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -1086,6 +1086,6 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SPATIAL_INTERSECT;
+        return BuiltinFunctions.SPATIAL_INTERSECT;
     }
 }

@@ -28,7 +28,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -164,7 +164,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_CONSTRUCTOR;
+        return BuiltinFunctions.STRING_CONSTRUCTOR;
     }
 
 }

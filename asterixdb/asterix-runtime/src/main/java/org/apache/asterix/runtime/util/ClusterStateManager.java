@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.AsterixReplicationProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.event.schema.cluster.Cluster;
@@ -96,11 +96,11 @@ public class ClusterStateManager {
     private ClusterStateManager() {
         cluster = ClusterProperties.INSTANCE.getCluster();
         // if this is the CC process
-        if (AsterixAppContextInfo.INSTANCE.initialized()
-                && AsterixAppContextInfo.INSTANCE.getCCApplicationContext() != null) {
-            node2PartitionsMap = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodePartitions();
-            clusterPartitions = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getClusterPartitions();
-            currentMetadataNode = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
+        if (AppContextInfo.INSTANCE.initialized()
+                && AppContextInfo.INSTANCE.getCCApplicationContext() != null) {
+            node2PartitionsMap = AppContextInfo.INSTANCE.getMetadataProperties().getNodePartitions();
+            clusterPartitions = AppContextInfo.INSTANCE.getMetadataProperties().getClusterPartitions();
+            currentMetadataNode = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
             replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
             autoFailover = ClusterProperties.INSTANCE.isAutoFailoverEnabled();
             if (autoFailover) {
@@ -198,11 +198,11 @@ public class ClusterStateManager {
         if (metadataNodeActive) {
             state = ClusterState.PENDING;
             LOGGER.info("Cluster is now " + state);
-            AsterixAppContextInfo.INSTANCE.getMetadataBootstrap().init();
+            AppContextInfo.INSTANCE.getMetadataBootstrap().init();
             state = ClusterState.ACTIVE;
             LOGGER.info("Cluster is now " + state);
             // start global recovery
-            AsterixAppContextInfo.INSTANCE.getGlobalRecoveryManager().startGlobalRecovery();
+            AppContextInfo.INSTANCE.getGlobalRecoveryManager().startGlobalRecovery();
             if (autoFailover && !pendingProcessingFailbackPlans.isEmpty()) {
                 processPendingFailbackPlans();
             }
@@ -282,7 +282,7 @@ public class ClusterStateManager {
     }
 
     public static int getNumberOfNodes() {
-        return AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodeNames().size();
+        return AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames().size();
     }
 
     public synchronized ClusterPartition[] getNodePartitions(String nodeId) {
@@ -307,7 +307,7 @@ public class ClusterStateManager {
     private synchronized void requestPartitionsTakeover(String failedNodeId) {
         //replica -> list of partitions to takeover
         Map<String, List<Integer>> partitionRecoveryPlan = new HashMap<>();
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE.getReplicationProperties();
+        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
 
         //collect the partitions of the failed NC
         List<ClusterPartition> lostPartitions = getNodeAssignedPartitions(failedNodeId);
@@ -332,7 +332,7 @@ public class ClusterStateManager {
             } else {
                 LOGGER.info("Partitions to recover: " + lostPartitions);
             }
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+            ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
                     .getMessageBroker();
             //For each replica, send a request to takeover the assigned partitions
             for (Entry<String, List<Integer>> entry : partitionRecoveryPlan.entrySet()) {
@@ -401,11 +401,11 @@ public class ClusterStateManager {
 
     private synchronized void requestMetadataNodeTakeover() {
         //need a new node to takeover metadata node
-        ClusterPartition metadataPartiton = AsterixAppContextInfo.INSTANCE.getMetadataProperties()
+        ClusterPartition metadataPartiton = AppContextInfo.INSTANCE.getMetadataProperties()
                 .getMetadataPartition();
         //request the metadataPartition node to register itself as the metadata node
         TakeoverMetadataNodeRequestMessage takeoverRequest = new TakeoverMetadataNodeRequestMessage();
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+        ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
                 .getMessageBroker();
         try {
             messageBroker.sendApplicationMessageToNC(takeoverRequest, metadataPartiton.getActiveNodeId());
@@ -446,7 +446,7 @@ public class ClusterStateManager {
         planId2FailbackPlanMap.put(plan.getPlanId(), plan);
 
         //get all partitions this node requires to resync
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE.getReplicationProperties();
+        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
         Set<String> nodeReplicas = replicationProperties.getNodeReplicationClients(failingBackNodeId);
         for (String replicaId : nodeReplicas) {
             ClusterPartition[] nodePartitions = node2PartitionsMap.get(replicaId);
@@ -497,7 +497,7 @@ public class ClusterStateManager {
                      * if the returning node is the original metadata node,
                      * then metadata node will change after the failback completes
                      */
-                    String originalMetadataNode = AsterixAppContextInfo.INSTANCE.getMetadataProperties()
+                    String originalMetadataNode = AppContextInfo.INSTANCE.getMetadataProperties()
                             .getMetadataNodeName();
                     if (originalMetadataNode.equals(failbackNode)) {
                         plan.setNodeToReleaseMetadataManager(currentMetadataNode);
@@ -507,7 +507,7 @@ public class ClusterStateManager {
 
                     //force new jobs to wait
                     state = ClusterState.REBALANCING;
-                    ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE
+                    ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE
                             .getCCApplicationContext().getMessageBroker();
                     handleFailbackRequests(plan, messageBroker);
                     /**
@@ -552,7 +552,7 @@ public class ClusterStateManager {
             CompleteFailbackRequestMessage request = plan.getCompleteFailbackRequestMessage();
 
             //send complete resync and takeover partitions to the failing back node
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+            ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
                     .getMessageBroker();
             try {
                 messageBroker.sendApplicationMessageToNC(request, request.getNodeId());
@@ -584,7 +584,7 @@ public class ClusterStateManager {
     }
 
     private synchronized void notifyImpactedReplicas(String nodeId, ClusterEventType event) {
-        AsterixReplicationProperties replicationProperties = AsterixAppContextInfo.INSTANCE.getReplicationProperties();
+        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
         Set<String> remoteReplicas = replicationProperties.getRemoteReplicasIds(nodeId);
         String nodeIdAddress = "";
         //in case the node joined with a new IP address, we need to send it to the other replicas
@@ -593,7 +593,7 @@ public class ClusterStateManager {
         }
 
         ReplicaEventMessage msg = new ReplicaEventMessage(nodeId, nodeIdAddress, event);
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+        ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
                 .getMessageBroker();
         for (String replica : remoteReplicas) {
             //if the remote replica is alive, send the event

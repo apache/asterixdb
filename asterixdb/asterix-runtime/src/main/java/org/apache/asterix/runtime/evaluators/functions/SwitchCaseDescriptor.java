@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -43,7 +43,7 @@ public class SwitchCaseDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SWITCH_CASE;
+        return BuiltinFunctions.SWITCH_CASE;
     }
 
     @Override

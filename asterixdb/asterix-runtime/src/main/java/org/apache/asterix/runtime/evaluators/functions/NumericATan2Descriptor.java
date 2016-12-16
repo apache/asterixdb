@@ -22,7 +22,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
@@ -51,7 +51,7 @@ public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.NUMERIC_ATAN2;
+        return BuiltinFunctions.NUMERIC_ATAN2;
     }
 
     @Override

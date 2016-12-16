@@ -25,7 +25,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDe
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -78,7 +78,7 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE;
+        return BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE;
     }
 
     private static class EditDistanceListIsFilterableEvaluator implements IScalarEvaluator {
@@ -122,7 +122,7 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
                     listLen = AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
                 default:
-                    throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE,
+                    throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE,
                             0, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG,
                             ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
@@ -131,7 +131,7 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
             bytes = edThreshPtr.getByteArray();
             offset = edThreshPtr.getStartOffset();
             long edThresh = ATypeHierarchy.getIntegerValue(
-                    AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, bytes, offset);
+                    BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, bytes, offset);
 
             // Compute result.
             long lowerBound = listLen - edThresh;

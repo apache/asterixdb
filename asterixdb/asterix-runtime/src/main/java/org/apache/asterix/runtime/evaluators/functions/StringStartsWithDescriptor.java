@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -50,7 +50,7 @@ public class StringStartsWithDescriptor extends AbstractScalarFunctionDynamicDes
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
 
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1],
-                        AsterixBuiltinFunctions.STRING_STARTS_WITH) {
+                        BuiltinFunctions.STRING_STARTS_WITH) {
 
                     @Override
                     protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
@@ -63,7 +63,7 @@ public class StringStartsWithDescriptor extends AbstractScalarFunctionDynamicDes
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_STARTS_WITH;
+        return BuiltinFunctions.STRING_STARTS_WITH;
     }
 
 }

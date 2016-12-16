@@ -22,7 +22,7 @@ import java.io.DataOutput;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -78,7 +78,7 @@ public class IsSystemNullDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.IS_SYSTEM_NULL;
+        return BuiltinFunctions.IS_SYSTEM_NULL;
     }
 
 }

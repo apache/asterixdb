@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -78,7 +78,7 @@ public class LSMRTreeLocalResourceMetadata extends Resource {
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+    public ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException {
         IIOManager ioManager = runtimeContextProvider.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
@@ -96,7 +96,7 @@ public class LSMRTreeLocalResourceMetadata extends Resource {
                     runtimeContextProvider.getLSMIOScheduler(),
                     LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
                     rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, isPointMBR,
-                    AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                    LSMIndexUtil.getMetadataPageManagerFactory());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

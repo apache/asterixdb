@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.IOException;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -50,7 +50,7 @@ public class StringLikeDescriptor extends AbstractScalarFunctionDynamicDescripto
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_LIKE;
+        return BuiltinFunctions.STRING_LIKE;
     }
 
     @Override

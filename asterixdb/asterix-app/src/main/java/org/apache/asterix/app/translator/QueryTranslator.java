@@ -53,7 +53,7 @@ import org.apache.asterix.app.external.FeedOperations;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
-import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
@@ -161,7 +161,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.CompiledStatements.CompiledConnectFeedStatement;
@@ -749,9 +749,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             } else {
                 nodegroupCardinality = Integer.parseInt(dd.getHints().get(DatasetNodegroupCardinalityHint.NAME));
             }
-            List<String> nodeNames = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getNodeNames();
+            List<String> nodeNames = AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames();
             List<String> nodeNamesClone = new ArrayList<>(nodeNames);
-            String metadataNodeName = AsterixAppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
+            String metadataNodeName = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
             List<String> selectedNodes = new ArrayList<>();
             selectedNodes.add(metadataNodeName);
             numChosen++;
@@ -2916,9 +2916,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             // Finds PREGELIX_HOME in AsterixDB configuration.
             if (pregelixHome == null) {
-                // Since there is a default value for PREGELIX_HOME in AsterixCompilerProperties,
+                // Since there is a default value for PREGELIX_HOME in CompilerProperties,
                 // pregelixHome can never be null.
-                pregelixHome = AsterixAppContextInfo.INSTANCE.getCompilerProperties().getPregelixHome();
+                pregelixHome = AppContextInfo.INSTANCE.getCompilerProperties().getPregelixHome();
             }
 
             // Constructs the pregelix command line.
@@ -3041,7 +3041,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected List<String> constructPregelixCommand(RunStatement pregelixStmt, String fromDataverseName,
             String fromDatasetName, String toDataverseName, String toDatasetName) {
         // Constructs AsterixDB parameters, e.g., URL, source dataset and sink dataset.
-        AsterixExternalProperties externalProperties = AsterixAppContextInfo.INSTANCE.getExternalProperties();
+        ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
         String clientIP = ClusterProperties.INSTANCE.getCluster().getMasterNode().getClientIp();
         StringBuilder asterixdbParameterBuilder = new StringBuilder();
         asterixdbParameterBuilder.append(

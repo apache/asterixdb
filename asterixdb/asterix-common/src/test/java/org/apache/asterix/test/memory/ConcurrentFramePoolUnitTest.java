@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.config.FeedProperties;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.asterix.common.memory.FrameAction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -58,7 +58,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
 
     @org.junit.Test
     public void testMemoryManager() {
-        AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+        FeedProperties afp = Mockito.mock(FeedProperties.class);
         Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
         ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                 DEFAULT_FRAME_SIZE);
@@ -73,7 +73,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testConcurrentMemoryManager() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -104,7 +104,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testVarSizeMemoryManager() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -139,7 +139,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testConcurrentVarSizeMemoryManager() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -178,7 +178,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
 
     @org.junit.Test
     public void testAcquireReleaseMemoryManager() throws HyracksDataException {
-        AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+        FeedProperties afp = Mockito.mock(FeedProperties.class);
         Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
         ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                 DEFAULT_FRAME_SIZE);
@@ -211,7 +211,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testConcurrentAcquireReleaseMemoryManager() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -242,7 +242,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testAcquireReleaseVarSizeMemoryManager() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -295,7 +295,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testConcurrentAcquireReleaseVarSizeMemoryManager() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -331,7 +331,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testFixedSizeSubscribtion() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);
@@ -397,7 +397,7 @@ public class ConcurrentFramePoolUnitTest extends TestCase {
     @org.junit.Test
     public void testgetWhileSubscribersExist() {
         try {
-            AsterixFeedProperties afp = Mockito.mock(AsterixFeedProperties.class);
+            FeedProperties afp = Mockito.mock(FeedProperties.class);
             Mockito.when(afp.getMemoryComponentGlobalBudget()).thenReturn(FEED_MEM_BUDGET);
             ConcurrentFramePool fmm = new ConcurrentFramePool("TestNode", afp.getMemoryComponentGlobalBudget(),
                     DEFAULT_FRAME_SIZE);

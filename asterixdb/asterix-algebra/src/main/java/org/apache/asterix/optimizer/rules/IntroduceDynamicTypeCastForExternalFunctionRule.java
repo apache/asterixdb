@@ -22,8 +22,8 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.metadata.functions.AsterixExternalScalarFunctionInfo;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.metadata.functions.ExternalScalarFunctionInfo;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
@@ -92,7 +92,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
                     (ScalarFunctionCallExpression) assignOp2.getExpressions().get(0).getValue();
             fid = funcExpr.getFunctionIdentifier();
 
-            if (fid != AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
+            if (fid != BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
                 return false;
             }
         } else {
@@ -107,7 +107,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
             fid = funcExpr.getFunctionIdentifier();
 
             // Checks whether this is an internal function call. Then, we return false.
-            if (AsterixBuiltinFunctions.getBuiltinFunctionIdentifier(fid) != null) {
+            if (BuiltinFunctions.getBuiltinFunctionIdentifier(fid) != null) {
                 return false;
             }
 
@@ -115,7 +115,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
             return false;
         }
 
-        AsterixExternalScalarFunctionInfo finfo = (AsterixExternalScalarFunctionInfo) funcExpr.getFunctionInfo();
+        ExternalScalarFunctionInfo finfo = (ExternalScalarFunctionInfo) funcExpr.getFunctionInfo();
         ARecordType requiredRecordType = (ARecordType) finfo.getArgumenTypes().get(0);
 
         List<LogicalVariable> recordVar = new ArrayList<LogicalVariable>();
@@ -137,11 +137,11 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
 
         if (checkUnknown) {
             recordVar.set(0, IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0),
-                    assignOp1, context, AsterixBuiltinFunctions.CHECK_UNKNOWN));
+                    assignOp1, context, BuiltinFunctions.CHECK_UNKNOWN));
         }
         if (cast) {
             IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0), assignOp1, context,
-                    AsterixBuiltinFunctions.CAST_TYPE);
+                    BuiltinFunctions.CAST_TYPE);
         }
         return cast || checkUnknown;
     }

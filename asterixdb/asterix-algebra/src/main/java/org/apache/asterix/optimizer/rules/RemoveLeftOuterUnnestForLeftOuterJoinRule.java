@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -214,7 +214,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
             return new Pair<>(false, null);
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        if (!funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.LISTIFY)) {
+        if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.LISTIFY)) {
             return new Pair<>(false, null);
         }
         return new Pair<>(true, funcExpr.getArguments().get(0).getValue());
@@ -227,7 +227,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
             return new Pair<>(false, null);
         }
         AbstractFunctionCallExpression conditionFunc = (AbstractFunctionCallExpression) condition;
-        if (!conditionFunc.getFunctionIdentifier().equals(AsterixBuiltinFunctions.NOT)) {
+        if (!conditionFunc.getFunctionIdentifier().equals(BuiltinFunctions.NOT)) {
             return new Pair<>(false, null);
         }
         condition = conditionFunc.getArguments().get(0).getValue();
@@ -235,7 +235,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
             return new Pair<>(false, null);
         }
         conditionFunc = (AbstractFunctionCallExpression) condition;
-        if (!conditionFunc.getFunctionIdentifier().equals(AsterixBuiltinFunctions.IS_MISSING)) {
+        if (!conditionFunc.getFunctionIdentifier().equals(BuiltinFunctions.IS_MISSING)) {
             return new Pair<>(false, null);
         }
         ILogicalExpression conditionArg = conditionFunc.getArguments().get(0).getValue();

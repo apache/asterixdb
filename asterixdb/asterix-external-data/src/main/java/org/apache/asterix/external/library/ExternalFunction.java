@@ -20,7 +20,7 @@ package org.apache.asterix.external.library;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IExternalFunction;
@@ -31,7 +31,7 @@ import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -71,10 +71,10 @@ public abstract class ExternalFunction implements IExternalFunction {
         ILibraryManager libraryManager;
         if (context == null) {
             // Gets the library manager for compile-time constant folding.
-            libraryManager = AsterixAppContextInfo.INSTANCE.getLibraryManager();
+            libraryManager = AppContextInfo.INSTANCE.getLibraryManager();
         } else {
             // Gets the library manager for real runtime evaluation.
-            IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) context.getJobletContext()
+            IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) context.getJobletContext()
                     .getApplicationContext().getApplicationObject();
             libraryManager = runtimeCtx.getLibraryManager();
         }

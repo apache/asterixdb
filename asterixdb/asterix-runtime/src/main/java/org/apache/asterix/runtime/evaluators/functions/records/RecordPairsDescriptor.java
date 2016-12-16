@@ -27,7 +27,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -64,7 +64,7 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.RECORD_PAIRS;
+        return BuiltinFunctions.RECORD_PAIRS;
     }
 
     @Override

@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -47,7 +47,7 @@ import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeCycleComponent {
     private final Map<Integer, DatasetResource> datasets = new ConcurrentHashMap<>();
-    private final AsterixStorageProperties storageProperties;
+    private final StorageProperties storageProperties;
     private final ILocalResourceRepository resourceRepository;
     private final int firstAvilableUserDatasetID;
     private final long capacity;
@@ -57,7 +57,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private final int numPartitions;
     private volatile boolean stopped = false;
 
-    public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
+    public DatasetLifecycleManager(StorageProperties storageProperties,
             ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID, ILogManager logManager,
             int numPartitions) {
         this.logManager = logManager;

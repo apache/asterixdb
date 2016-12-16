@@ -21,7 +21,7 @@ package org.apache.asterix.external.adapter.factory;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
@@ -86,7 +86,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     @Override
     public synchronized IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+        IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         try {
             restoreExternalObjects(runtimeCtx.getLibraryManager());

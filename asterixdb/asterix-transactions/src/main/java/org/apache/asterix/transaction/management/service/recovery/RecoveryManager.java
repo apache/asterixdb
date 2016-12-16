@@ -49,14 +49,14 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
-import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.IRecoveryManager;
@@ -304,7 +304,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         boolean foundWinner = false;
         JobEntityCommits jobEntityWinners = null;
 
-        IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
+        IAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
         IDatasetLifecycleManager datasetLifecycleManager = appRuntimeContext.getDatasetLifecycleManager();
 
         Map<Long, LocalResource> resourcesMap = localResourceRepository.loadAndGetAllResources();
@@ -456,9 +456,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         //get min LSN of dead replicas remote resources
                         IReplicaResourcesManager remoteResourcesManager = txnSubsystem
                                 .getAsterixAppRuntimeContextProvider().getAppContext().getReplicaResourcesManager();
-                        IAsterixPropertiesProvider propertiesProvider = (IAsterixPropertiesProvider) txnSubsystem
+                        IPropertiesProvider propertiesProvider = (IPropertiesProvider) txnSubsystem
                                 .getAsterixAppRuntimeContextProvider().getAppContext();
-                        AsterixMetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
+                        MetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
                         Set<Integer> deadReplicasPartitions = new HashSet<>();
                         //get partitions of the dead replicas that are not active on this node
                         for (String deadReplicaId : deadReplicaIds) {

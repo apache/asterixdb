@@ -21,13 +21,13 @@ package org.apache.asterix.runtime.message;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
-import org.apache.asterix.common.transactions.IAsterixResourceIdManager;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.common.transactions.IResourceIdManager;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -49,15 +49,15 @@ public class ReportMaxResourceIdMessage implements IApplicationMessage {
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAsterixResourceIdManager resourceIdManager =
-                AsterixAppContextInfo.INSTANCE.getResourceIdManager();
+        IResourceIdManager resourceIdManager =
+                AppContextInfo.INSTANCE.getResourceIdManager();
         resourceIdManager.report(src, maxResourceId);
     }
 
     public static void send(NodeControllerService cs) throws HyracksDataException {
         NodeControllerService ncs = cs;
-        IAsterixAppRuntimeContext appContext =
-                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext =
+                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
         ReportMaxResourceIdMessage maxResourceIdMsg = new ReportMaxResourceIdMessage(ncs.getId(), maxResourceId);

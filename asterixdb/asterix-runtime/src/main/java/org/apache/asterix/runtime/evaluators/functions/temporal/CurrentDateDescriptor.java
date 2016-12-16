@@ -24,7 +24,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
@@ -42,7 +42,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CurrentDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = AsterixBuiltinFunctions.CURRENT_DATE;
+    private final static FunctionIdentifier FID = BuiltinFunctions.CURRENT_DATE;
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

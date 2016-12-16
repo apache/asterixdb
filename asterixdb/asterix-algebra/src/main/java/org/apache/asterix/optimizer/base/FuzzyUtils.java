@@ -25,7 +25,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -49,7 +49,7 @@ public class FuzzyUtils {
     public static FunctionIdentifier getTokenizer(ATypeTag inputTag) {
         switch (inputTag) {
             case STRING:
-                return AsterixBuiltinFunctions.COUNTHASHED_WORD_TOKENS;
+                return BuiltinFunctions.COUNTHASHED_WORD_TOKENS;
             case UNORDEREDLIST:
             case ORDEREDLIST:
             case ANY:
@@ -82,9 +82,9 @@ public class FuzzyUtils {
 
     public static FunctionIdentifier getFunctionIdentifier(String simFuncName) {
         if (simFuncName.equals(JACCARD_FUNCTION_NAME)) {
-            return AsterixBuiltinFunctions.SIMILARITY_JACCARD;
+            return BuiltinFunctions.SIMILARITY_JACCARD;
         } else if (simFuncName.equals(EDIT_DISTANCE_FUNCTION_NAME)) {
-            return AsterixBuiltinFunctions.EDIT_DISTANCE;
+            return BuiltinFunctions.EDIT_DISTANCE;
         }
         return null;
     }

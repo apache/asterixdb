@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -38,7 +38,7 @@ public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.NUMERIC_ADD;
+        return BuiltinFunctions.NUMERIC_ADD;
     }
 
     @Override

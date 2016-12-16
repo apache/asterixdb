@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.aggregates.scalar;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.FunctionManagerHolder;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
@@ -45,7 +45,7 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
         IScalarEvaluatorFactory[] aggFuncArgs = new IScalarEvaluatorFactory[1];
         aggFuncArgs[0] = new ColumnAccessEvalFactory(0);
         // Create aggregate function from this scalar version.
-        FunctionIdentifier fid = AsterixBuiltinFunctions.getAggregateFunction(getIdentifier());
+        FunctionIdentifier fid = BuiltinFunctions.getAggregateFunction(getIdentifier());
         IFunctionManager mgr = FunctionManagerHolder.getFunctionManager();
         IFunctionDescriptor fd = mgr.lookupFunction(fid);
         AbstractAggregateFunctionDynamicDescriptor aggFuncDesc = (AbstractAggregateFunctionDynamicDescriptor) fd;

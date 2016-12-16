@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -143,7 +143,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
         if (((AbstractFunctionCallExpression) expr)
-                .getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+                .getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
         }
         AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expr;
@@ -191,7 +191,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) aggFun;
-        if (!AsterixBuiltinFunctions.LISTIFY.equals(f.getFunctionIdentifier())) {
+        if (!BuiltinFunctions.LISTIFY.equals(f.getFunctionIdentifier())) {
             return false;
         }
         if (f.getArguments().size() != 1) {
@@ -220,7 +220,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             raggVars.add(posVar);
             List<Mutable<ILogicalExpression>> rAggExprs = new ArrayList<>(1);
             StatefulFunctionCallExpression tidFun = new StatefulFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
             rAggExprs.add(new MutableObject<ILogicalExpression>(tidFun));
             RunningAggregateOperator rAgg = new RunningAggregateOperator(raggVars, rAggExprs);
             rAgg.getInputs().add(new MutableObject<ILogicalOperator>(assign));
@@ -245,7 +245,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         LogicalVariable aggVar = agg.getVariables().get(0);
         ILogicalExpression aggFun = agg.getExpressions().get(0).getValue();
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) aggFun;
-        if (!AsterixBuiltinFunctions.LISTIFY.equals(f.getFunctionIdentifier())) {
+        if (!BuiltinFunctions.LISTIFY.equals(f.getFunctionIdentifier())) {
             return false;
         }
         if (f.getArguments().size() != 1) {
@@ -280,7 +280,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
         AbstractFunctionCallExpression scanFunc = (AbstractFunctionCallExpression) unnestArg;
-        if (scanFunc.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+        if (scanFunc.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
         }
         if (scanFunc.getArguments().size() != 1) {

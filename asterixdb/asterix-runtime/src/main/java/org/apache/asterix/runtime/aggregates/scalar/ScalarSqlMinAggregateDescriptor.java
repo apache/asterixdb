@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.aggregates.scalar;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -26,7 +26,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class ScalarSqlMinAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.SCALAR_SQL_MIN;
+    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_MIN;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ScalarSqlMinAggregateDescriptor();

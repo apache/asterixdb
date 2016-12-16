@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
-import org.apache.asterix.common.dataflow.AsterixLSMIndexUtil;
-import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
+import org.apache.asterix.common.dataflow.IApplicationContextInfo;
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -36,7 +36,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -44,8 +44,8 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexJobGenParams;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
-import org.apache.asterix.runtime.util.AsterixRuntimeComponentsProvider;
+import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.util.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -116,7 +116,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             throw new IllegalStateException();
         }
         AbstractFunctionCallExpression unnestFuncExpr = (AbstractFunctionCallExpression) unnestExpr;
-        if (unnestFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.INDEX_SEARCH) {
+        if (unnestFuncExpr.getFunctionIdentifier() != BuiltinFunctions.INDEX_SEARCH) {
             return;
         }
         InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams();
@@ -246,7 +246,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 }
             }
 
-            IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
+            IApplicationContextInfo appContext = (IApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
                     .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), datasetName, indexName,
                             dataset.getDatasetDetails().isTemp());
@@ -259,7 +259,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     .getBinaryTokenizerFactory(searchModifierType, searchKeyType, secondaryIndex);
             IIndexDataflowHelperFactory dataflowHelperFactory;
 
-            AsterixStorageProperties storageProperties = AsterixAppContextInfo.INSTANCE.getStorageProperties();
+            StorageProperties storageProperties = AppContextInfo.INSTANCE.getStorageProperties();
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils
                     .getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
             boolean temp = dataset.getDatasetDetails().isTemp();
@@ -267,7 +267,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
                         compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
@@ -276,7 +276,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
                         compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        RuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
@@ -288,7 +288,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
                     searchModifierFactory, outputRecDesc, retainInput, retainMissing, context.getMissingWriterFactory(),
                     NoOpOperationCallbackFactory.INSTANCE, minFilterFieldIndexes, maxFilterFieldIndexes,
-                    AsterixLSMIndexUtil.getMetadataPageManagerFactory());
+                    LSMIndexUtil.getMetadataPageManagerFactory());
             return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);

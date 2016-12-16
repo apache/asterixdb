@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -56,7 +56,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.ORDERED_LIST_CONSTRUCTOR;
+        return BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR;
     }
 
     @Override

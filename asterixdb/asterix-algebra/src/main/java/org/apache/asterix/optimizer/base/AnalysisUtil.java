@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.metadata.declared.DataSourceId;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -89,7 +89,7 @@ public class AnalysisUtil {
             return false;
         }
         AbstractFunctionCallExpression fe = (AbstractFunctionCallExpression) e;
-        return AsterixBuiltinFunctions.isDatasetFunction(fe.getFunctionIdentifier());
+        return BuiltinFunctions.isDatasetFunction(fe.getFunctionIdentifier());
     }
 
     public static boolean isRunnableAccessToFieldRecord(ILogicalExpression expr) {
@@ -107,7 +107,7 @@ public class AnalysisUtil {
         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression fc = (AbstractFunctionCallExpression) expr;
             FunctionIdentifier fid = fc.getFunctionIdentifier();
-            if (fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+            if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
                 return true;
             }
         }
@@ -118,9 +118,9 @@ public class AnalysisUtil {
         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression fc = (AbstractFunctionCallExpression) expr;
             FunctionIdentifier fid = fc.getFunctionIdentifier();
-            if (fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)
-                    || fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)
-                    || fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
+            if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)
+                    || fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)
+                    || fid.equals(BuiltinFunctions.FIELD_ACCESS_NESTED)) {
                 return true;
             }
         }
@@ -142,9 +142,9 @@ public class AnalysisUtil {
     private static List<FunctionIdentifier> fieldAccessFunctions = new ArrayList<FunctionIdentifier>();
 
     static {
-        fieldAccessFunctions.add(AsterixBuiltinFunctions.GET_DATA);
-        fieldAccessFunctions.add(AsterixBuiltinFunctions.GET_HANDLE);
-        fieldAccessFunctions.add(AsterixBuiltinFunctions.TYPE_OF);
+        fieldAccessFunctions.add(BuiltinFunctions.GET_DATA);
+        fieldAccessFunctions.add(BuiltinFunctions.GET_HANDLE);
+        fieldAccessFunctions.add(BuiltinFunctions.TYPE_OF);
     }
 
 }

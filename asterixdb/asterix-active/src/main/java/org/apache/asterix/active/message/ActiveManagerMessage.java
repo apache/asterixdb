@@ -21,7 +21,7 @@ package org.apache.asterix.active.message;
 import java.io.Serializable;
 
 import org.apache.asterix.active.ActiveManager;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
@@ -56,8 +56,8 @@ public class ActiveManagerMessage implements IApplicationMessage {
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
-        IAsterixAppRuntimeContext appContext =
-                (IAsterixAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext =
+                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         ((ActiveManager) appContext.getActiveManager()).submit(this);
     }
 

@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -51,7 +51,7 @@ public class EditDistanceContainsEvaluator extends EditDistanceCheckEvaluator {
                 return ed.getSimilarityContains(firstOrdListIter, secondOrdListIter, edThresh);
             }
             default: {
-                throw new TypeMismatchException(AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS, 0, argType.serialize(),
+                throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_CONTAINS, 0, argType.serialize(),
                         ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
         }

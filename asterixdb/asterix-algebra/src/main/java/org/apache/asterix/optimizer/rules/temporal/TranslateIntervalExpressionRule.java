@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,12 +49,12 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
 
     private static final Set<FunctionIdentifier> TRANSLATABLE_INTERVALS = new HashSet<>();
     {
-        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_MEETS);
-        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_MET_BY);
-        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_STARTS);
-        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_STARTED_BY);
-        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_ENDS);
-        TRANSLATABLE_INTERVALS.add(AsterixBuiltinFunctions.INTERVAL_ENDED_BY);
+        TRANSLATABLE_INTERVALS.add(BuiltinFunctions.INTERVAL_MEETS);
+        TRANSLATABLE_INTERVALS.add(BuiltinFunctions.INTERVAL_MET_BY);
+        TRANSLATABLE_INTERVALS.add(BuiltinFunctions.INTERVAL_STARTS);
+        TRANSLATABLE_INTERVALS.add(BuiltinFunctions.INTERVAL_STARTED_BY);
+        TRANSLATABLE_INTERVALS.add(BuiltinFunctions.INTERVAL_ENDS);
+        TRANSLATABLE_INTERVALS.add(BuiltinFunctions.INTERVAL_ENDED_BY);
     }
 
     @Override
@@ -101,51 +101,51 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         // TODO A new strategy may be needed instead of just a simple translation.
         ILogicalExpression interval1 = funcExpr.getArguments().get(0).getValue();
         ILogicalExpression interval2 = funcExpr.getArguments().get(1).getValue();
-        if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_MEETS)) {
+        if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_MEETS)) {
             exprRef.setValue(getEqualExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2)));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_MET_BY)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_MET_BY)) {
             exprRef.setValue(getEqualExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2)));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_STARTS)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_STARTS)) {
             ILogicalExpression startExpr = getEqualExpr(getIntervalStartExpr(interval1),
                     getIntervalStartExpr(interval2));
             ILogicalExpression endExpr = getLessThanOrEqualExpr(getIntervalEndExpr(interval1),
                     getIntervalEndExpr(interval2));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_STARTED_BY)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_STARTED_BY)) {
             ILogicalExpression startExpr = getEqualExpr(getIntervalStartExpr(interval1),
                     getIntervalStartExpr(interval2));
             ILogicalExpression endExpr = getLessThanOrEqualExpr(getIntervalEndExpr(interval2),
                     getIntervalEndExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_ENDS)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_ENDS)) {
             ILogicalExpression endExpr = getEqualExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
             ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval1),
                     getIntervalStartExpr(interval2));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_ENDED_BY)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_ENDED_BY)) {
             ILogicalExpression endExpr = getEqualExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
             ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval2),
                     getIntervalStartExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_BEFORE)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_BEFORE)) {
             exprRef.setValue(getLessThanExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2)));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_AFTER)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_AFTER)) {
             exprRef.setValue(getGreaterThanExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2)));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPS)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_OVERLAPS)) {
             ILogicalExpression expr1 = getLessThanExpr(getIntervalStartExpr(interval1),
                     getIntervalStartExpr(interval2));
             ILogicalExpression expr2 = getGreaterThanExpr(getIntervalEndExpr(interval2), getIntervalEndExpr(interval1));
             ILogicalExpression expr3 = getGreaterThanExpr(getIntervalEndExpr(interval1),
                     getIntervalStartExpr(interval2));
             exprRef.setValue(getAndExpr(getAndExpr(expr1, expr2), expr3));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
             ILogicalExpression expr1 = getLessThanExpr(getIntervalStartExpr(interval2),
                     getIntervalStartExpr(interval1));
             ILogicalExpression expr2 = getGreaterThanExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
             ILogicalExpression expr3 = getGreaterThanExpr(getIntervalEndExpr(interval2),
                     getIntervalStartExpr(interval1));
             exprRef.setValue(getAndExpr(getAndExpr(expr1, expr2), expr3));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_OVERLAPPING)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_OVERLAPPING)) {
             ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval1),
                     getIntervalEndExpr(interval2));
             ILogicalExpression endExpr = getGreaterThanOrEqualExpr(getIntervalEndExpr(interval1),
@@ -155,13 +155,13 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
             ILogicalExpression endPointExpr = getNotEqualExpr(getIntervalStartExpr(interval1),
                     getIntervalEndExpr(interval2));
             exprRef.setValue(getAndExpr(getAndExpr(startExpr, endExpr), getAndExpr(startPointExpr, endPointExpr)));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_COVERS)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_COVERS)) {
             ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval1),
                     getIntervalStartExpr(interval2));
             ILogicalExpression endExpr = getGreaterThanOrEqualExpr(getIntervalEndExpr(interval1),
                     getIntervalEndExpr(interval2));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
-        } else if (funcExpr.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INTERVAL_COVERED_BY)) {
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_COVERED_BY)) {
             ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval2),
                     getIntervalStartExpr(interval1));
             ILogicalExpression endExpr = getGreaterThanOrEqualExpr(getIntervalEndExpr(interval2),
@@ -202,11 +202,11 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
     }
 
     private ILogicalExpression getIntervalStartExpr(ILogicalExpression interval) {
-        return getScalarExpr(AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_START, interval);
+        return getScalarExpr(BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_START, interval);
     }
 
     private ILogicalExpression getIntervalEndExpr(ILogicalExpression interval) {
-        return getScalarExpr(AsterixBuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END, interval);
+        return getScalarExpr(BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END, interval);
     }
 
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval) {

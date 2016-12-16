@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -124,7 +124,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SUBSTRING;
+        return BuiltinFunctions.SUBSTRING;
     }
 
 }

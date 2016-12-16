@@ -24,7 +24,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
@@ -130,6 +130,6 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.GET_OVERLAPPING_INTERVAL;
+        return BuiltinFunctions.GET_OVERLAPPING_INTERVAL;
     }
 }

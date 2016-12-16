@@ -20,7 +20,7 @@ package org.apache.asterix.metadata.functions;
 
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -37,17 +37,17 @@ public class MetadataBuiltinFunctions {
 
     static {
         addMetadataBuiltinFunctions();
-        AsterixBuiltinFunctions.addUnnestFun(AsterixBuiltinFunctions.DATASET, false);
-        AsterixBuiltinFunctions.addDatasetFunction(AsterixBuiltinFunctions.DATASET);
-        AsterixBuiltinFunctions.addUnnestFun(AsterixBuiltinFunctions.FEED_COLLECT, false);
-        AsterixBuiltinFunctions.addDatasetFunction(AsterixBuiltinFunctions.FEED_COLLECT);
-        AsterixBuiltinFunctions.addUnnestFun(AsterixBuiltinFunctions.FEED_INTERCEPT, false);
-        AsterixBuiltinFunctions.addDatasetFunction(AsterixBuiltinFunctions.FEED_INTERCEPT);
+        BuiltinFunctions.addUnnestFun(BuiltinFunctions.DATASET, false);
+        BuiltinFunctions.addDatasetFunction(BuiltinFunctions.DATASET);
+        BuiltinFunctions.addUnnestFun(BuiltinFunctions.FEED_COLLECT, false);
+        BuiltinFunctions.addDatasetFunction(BuiltinFunctions.FEED_COLLECT);
+        BuiltinFunctions.addUnnestFun(BuiltinFunctions.FEED_INTERCEPT, false);
+        BuiltinFunctions.addDatasetFunction(BuiltinFunctions.FEED_INTERCEPT);
     }
 
     public static void addMetadataBuiltinFunctions() {
 
-        AsterixBuiltinFunctions.addFunction(AsterixBuiltinFunctions.DATASET, new IResultTypeComputer() {
+        BuiltinFunctions.addFunction(BuiltinFunctions.DATASET, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -89,15 +89,15 @@ public class MetadataBuiltinFunctions {
             }
         }, true);
 
-        AsterixBuiltinFunctions.addPrivateFunction(AsterixBuiltinFunctions.FEED_COLLECT, new IResultTypeComputer() {
+        BuiltinFunctions.addPrivateFunction(BuiltinFunctions.FEED_COLLECT, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
                 AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
-                if (f.getArguments().size() != AsterixBuiltinFunctions.FEED_COLLECT.getArity()) {
+                if (f.getArguments().size() != BuiltinFunctions.FEED_COLLECT.getArity()) {
                     throw new AlgebricksException("Incorrect number of arguments -> arity is "
-                            + AsterixBuiltinFunctions.FEED_COLLECT.getArity() + ", not " + f.getArguments().size());
+                            + BuiltinFunctions.FEED_COLLECT.getArity() + ", not " + f.getArguments().size());
                 }
                 ILogicalExpression a1 = f.getArguments().get(5).getValue();
                 IAType t1 = (IAType) env.getType(a1);
@@ -126,7 +126,7 @@ public class MetadataBuiltinFunctions {
             }
         }, true);
 
-        AsterixBuiltinFunctions.addFunction(AsterixBuiltinFunctions.FEED_INTERCEPT, new IResultTypeComputer() {
+        BuiltinFunctions.addFunction(BuiltinFunctions.FEED_INTERCEPT, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,

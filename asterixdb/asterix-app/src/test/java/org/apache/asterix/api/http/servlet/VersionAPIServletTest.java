@@ -31,8 +31,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.common.config.AsterixBuildProperties;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.test.runtime.ExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONObject;
@@ -63,11 +63,11 @@ public class VersionAPIServletTest {
 
         // Creates mocks.
         ServletContext mockContext = mock(ServletContext.class);
-        AsterixAppContextInfo mockCtx = mock(AsterixAppContextInfo.class);
+        AppContextInfo mockCtx = mock(AppContextInfo.class);
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         IHyracksClientConnection mockHcc = mock(IHyracksClientConnection.class);
         HttpServletResponse mockResponse = mock(HttpServletResponse.class);
-        AsterixBuildProperties mockProperties = mock(AsterixBuildProperties.class);
+        BuildProperties mockProperties = mock(BuildProperties.class);
 
         // Sets up mock returns.
         when(servlet.getServletContext()).thenReturn(mockContext);

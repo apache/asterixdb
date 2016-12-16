@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -87,7 +87,7 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
         boolean expanded = false;
         AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) exp;
         FunctionIdentifier fi = funcExp.getFunctionIdentifier();
-        if (fi.equals(AsterixBuiltinFunctions.FUZZY_EQ)) {
+        if (fi.equals(BuiltinFunctions.FUZZY_EQ)) {
             List<Mutable<ILogicalExpression>> inputExps = funcExp.getArguments();
 
             String simFuncName = FuzzyUtils.getSimFunction(metadataProvider);

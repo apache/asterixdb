@@ -28,7 +28,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -117,7 +117,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     int len = inputArg0.getLength();
 
                     if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED, 0,
+                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_NESTED, 0,
                                 serRecord[start], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
 
@@ -141,7 +141,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             byte serializedTypeTag = subType.getTypeTag().serialize();
                             if (serializedTypeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                                 throw new UnsupportedTypeException(
-                                        AsterixBuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
+                                        BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
                                         serializedTypeTag);
                             }
                             if (subType.getTypeTag() == ATypeTag.RECORD) {
@@ -197,7 +197,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         // type check
                         if (pathIndex < fieldPointables.length - 1
                                 && serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new UnsupportedTypeException(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED,
+                            throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED,
                                     serRecord[start]);
                         }
                     }
@@ -232,7 +232,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         }
                         if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                                 throw new UnsupportedTypeException(
-                                    AsterixBuiltinFunctions.FIELD_ACCESS_NESTED.getName(), serRecord[start]);
+                                    BuiltinFunctions.FIELD_ACCESS_NESTED.getName(), serRecord[start]);
                         }
                     }
                     // emit the final result.

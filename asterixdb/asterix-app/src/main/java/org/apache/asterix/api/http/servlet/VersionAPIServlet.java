@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.json.JSONObject;
 
 import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
@@ -38,7 +38,7 @@ public class VersionAPIServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         ServletContext context = getServletContext();
-        AsterixAppContextInfo props = (AsterixAppContextInfo) context.getAttribute(ASTERIX_BUILD_PROP_ATTR);
+        AppContextInfo props = (AppContextInfo) context.getAttribute(ASTERIX_BUILD_PROP_ATTR);
         Map<String, String> buildProperties = props.getBuildProperties().getAllProps();
         JSONObject responseObject = new JSONObject(buildProperties);
         response.setCharacterEncoding("utf-8");

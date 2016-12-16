@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -90,7 +90,7 @@ public class InjectTypeCastForUnionRule implements IAlgebraicRewriteRule {
             triple.first = childIndex == 0 ? castedVar : triple.first;
             triple.second = childIndex > 0 ? castedVar : triple.second;
             ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CAST_TYPE), new ArrayList<>(Collections
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), new ArrayList<>(Collections
                             .singletonList(new MutableObject<>(new VariableReferenceExpression(varToCast)))));
             TypeCastUtils.setRequiredAndInputTypes(castFunc, producedType, inputType);
 

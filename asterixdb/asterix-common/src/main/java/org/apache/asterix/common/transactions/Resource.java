@@ -59,7 +59,7 @@ public abstract class Resource implements Serializable {
         return datasetId;
     }
 
-    public abstract ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider,
+    public abstract ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
             LocalResource resource) throws HyracksDataException;
 
     public static int getIoDeviceNum(IIOManager ioManager, IODeviceHandle deviceHandle) {

@@ -21,7 +21,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -62,7 +62,7 @@ public class PullPositionalVariableFromUnnestRule implements IAlgebraicRewriteRu
         rOpVars.add(p);
         ArrayList<Mutable<ILogicalExpression>> rOpExprList = new ArrayList<Mutable<ILogicalExpression>>();
         StatefulFunctionCallExpression fce = new StatefulFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
         rOpExprList.add(new MutableObject<ILogicalExpression>(fce));
         RunningAggregateOperator rOp = new RunningAggregateOperator(rOpVars, rOpExprList);
         rOp.setExecutionMode(unnest.getExecutionMode());

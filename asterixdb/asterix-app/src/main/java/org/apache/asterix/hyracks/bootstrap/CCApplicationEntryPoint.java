@@ -47,13 +47,13 @@ import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
-import org.apache.asterix.app.cc.AsterixResourceIdManager;
+import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.AsterixExternalProperties;
-import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.external.library.ExternalLibraryManager;
@@ -62,7 +62,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
-import org.apache.asterix.runtime.util.AsterixAppContextInfo;
+import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
@@ -99,26 +99,26 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         appCtx.setThreadFactory(new AsterixThreadFactory(appCtx.getThreadFactory(), new LifeCycleComponentManager()));
         GlobalRecoveryManager.instantiate((HyracksConnection) getNewHyracksClientConnection());
         ILibraryManager libraryManager = new ExternalLibraryManager();
-        AsterixResourceIdManager resourceIdManager = new AsterixResourceIdManager();
+        ResourceIdManager resourceIdManager = new ResourceIdManager();
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
-        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), GlobalRecoveryManager.instance(),
+        AppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), GlobalRecoveryManager.instance(),
                 libraryManager, resourceIdManager, () -> MetadataManager.INSTANCE);
         ccExtensionManager = new CompilerExtensionManager(getExtensions());
-        AsterixAppContextInfo.INSTANCE.setExtensionManager(ccExtensionManager);
+        AppContextInfo.INSTANCE.setExtensionManager(ccExtensionManager);
 
         final CCConfig ccConfig = controllerService.getCCConfig();
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
             System.setProperty("java.rmi.server.hostname", ccConfig.clusterNetIpAddress);
         }
-        AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.INSTANCE.getMetadataProperties();
+        MetadataProperties metadataProperties = AppContextInfo.INSTANCE.getMetadataProperties();
 
         setAsterixStateProxy(AsterixStateProxy.registerRemoteObject(metadataProperties.getMetadataCallbackPort()));
         appCtx.setDistributedState(proxy);
 
         MetadataManager.initialize(proxy, metadataProperties);
 
-        AsterixAppContextInfo.INSTANCE.getCCApplicationContext()
+        AppContextInfo.INSTANCE.getCCApplicationContext()
                 .addJobLifecycleListener(ActiveLifecycleListener.INSTANCE);
 
         servers = configureServers();
@@ -134,11 +134,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     }
 
     protected List<AsterixExtension> getExtensions() {
-        return AsterixAppContextInfo.INSTANCE.getExtensionProperties().getExtensions();
+        return AppContextInfo.INSTANCE.getExtensionProperties().getExtensions();
     }
 
     protected List<Server> configureServers() throws Exception {
-        AsterixExternalProperties externalProperties = AsterixAppContextInfo.INSTANCE.getExternalProperties();
+        ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
 
         List<Server> serverList = new ArrayList<>();
         serverList.add(setupWebServer(externalProperties));
@@ -171,7 +171,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return new HyracksConnection(strIP, port);
     }
 
-    protected Server setupWebServer(AsterixExternalProperties externalProperties) throws Exception {
+    protected Server setupWebServer(ExternalProperties externalProperties) throws Exception {
 
         Server webServer = new Server(externalProperties.getWebInterfacePort());
 
@@ -189,7 +189,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return webServer;
     }
 
-    protected Server setupJSONAPIServer(AsterixExternalProperties externalProperties) throws Exception {
+    protected Server setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
         Server jsonAPIServer = new Server(externalProperties.getAPIServerPort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -197,7 +197,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
         context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        context.setAttribute(ASTERIX_BUILD_PROP_ATTR, AsterixAppContextInfo.INSTANCE);
+        context.setAttribute(ASTERIX_BUILD_PROP_ATTR, AppContextInfo.INSTANCE);
         context.setAttribute(ServletConstants.EXECUTOR_SERVICE,
                 ((ClusterControllerService) appCtx.getControllerService()).getExecutor());
 
@@ -230,7 +230,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return jsonAPIServer;
     }
 
-    protected Server setupQueryWebServer(AsterixExternalProperties externalProperties) throws Exception {
+    protected Server setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
 
         Server queryWebServer = new Server(externalProperties.getQueryWebInterfacePort());
 
@@ -310,7 +310,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         }
     }
 
-    protected Server setupFeedServer(AsterixExternalProperties externalProperties) throws Exception {
+    protected Server setupFeedServer(ExternalProperties externalProperties) throws Exception {
         Server feedServer = new Server(externalProperties.getFeedServerPort());
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);

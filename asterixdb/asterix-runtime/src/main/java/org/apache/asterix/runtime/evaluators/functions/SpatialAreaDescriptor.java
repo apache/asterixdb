@@ -26,7 +26,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -134,7 +134,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SPATIAL_AREA;
+        return BuiltinFunctions.SPATIAL_AREA;
     }
 
 }

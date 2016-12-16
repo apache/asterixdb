@@ -23,7 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
@@ -43,7 +43,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DATE_FROM_UNIX_TIME_IN_DAYS;
+    public final static FunctionIdentifier FID = BuiltinFunctions.DATE_FROM_UNIX_TIME_IN_DAYS;
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

@@ -26,13 +26,13 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.common.AsterixListAccessor;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -66,7 +66,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                 return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private final AsterixListAccessor listAccessor = new AsterixListAccessor();
+                    private final ListAccessor listAccessor = new ListAccessor();
                     private final DataOutput out = resultStorage.getDataOutput();
                     private final IScalarEvaluatorFactory listEvalFactory = args[0];
                     private final IPointable inputArgList = new VoidPointable();
@@ -146,6 +146,6 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.STRING_CONCAT;
+        return BuiltinFunctions.STRING_CONCAT;
     }
 }

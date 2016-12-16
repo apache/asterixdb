@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -32,12 +32,12 @@ import org.apache.hyracks.storage.common.buffercache.ResourceHeapBufferAllocator
 
 public class DatasetVirtualBufferCaches {
     private final int datasetID;
-    private final AsterixStorageProperties storageProperties;
+    private final StorageProperties storageProperties;
     private final int firstAvilableUserDatasetID;
     private final int numPartitions;
     private final Map<Integer, List<IVirtualBufferCache>> ioDeviceVirtualBufferCaches = new HashMap<>();
 
-    public DatasetVirtualBufferCaches(int datasetID, AsterixStorageProperties storageProperties,
+    public DatasetVirtualBufferCaches(int datasetID, StorageProperties storageProperties,
             int firstAvilableUserDatasetID, int numPartitions) {
         this.datasetID = datasetID;
         this.storageProperties = storageProperties;

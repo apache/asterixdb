@@ -25,8 +25,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
+import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -97,7 +97,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
         this.partition = partition;
         this.connectionId = feedConnectionId;
-        this.feedManager = (ActiveManager) ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
+        this.feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getActiveManager();
         this.targetId = targetId;
         this.message = new VSizeFrame(ctx);
@@ -122,9 +122,9 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
         insertOperator.setOutputFrameWriter(0, writer, recordDesc);
-        if (insertOperator instanceof AsterixLSMInsertDeleteOperatorNodePushable) {
-            AsterixLSMInsertDeleteOperatorNodePushable indexOp =
-                    (AsterixLSMInsertDeleteOperatorNodePushable) insertOperator;
+        if (insertOperator instanceof LSMInsertDeleteOperatorNodePushable) {
+            LSMInsertDeleteOperatorNodePushable indexOp =
+                    (LSMInsertDeleteOperatorNodePushable) insertOperator;
             if (!indexOp.isPrimary()) {
                 writer = insertOperator;
                 return;

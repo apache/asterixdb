@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -43,7 +43,7 @@ public class AsterixIntroduceGroupByCombinerRule extends AbstractIntroduceGroupB
     @Override
     protected void processNullTest(IOptimizationContext context, GroupByOperator nestedGby,
             List<LogicalVariable> aggregateVarsProducedByCombiner) {
-        IFunctionInfo finfoEq = context.getMetadataProvider().lookupFunction(AsterixBuiltinFunctions.IS_SYSTEM_NULL);
+        IFunctionInfo finfoEq = context.getMetadataProvider().lookupFunction(BuiltinFunctions.IS_SYSTEM_NULL);
         SelectOperator selectNonSystemNull;
 
         if (aggregateVarsProducedByCombiner.size() == 1) {

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -250,7 +250,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 continue;
             }
             AbstractFunctionCallExpression fceAgg = (AbstractFunctionCallExpression) expr;
-            if (fceAgg.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
+            if (fceAgg.getFunctionIdentifier() != BuiltinFunctions.LISTIFY) {
                 continue;
             }
             aggVars.add(agg.getVariables().get(0));
@@ -275,7 +275,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
         switch (expr.getExpressionTag()) {
             case FUNCTION_CALL:
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-                FunctionIdentifier fi = AsterixBuiltinFunctions.getAggregateFunction(fce.getFunctionIdentifier());
+                FunctionIdentifier fi = BuiltinFunctions.getAggregateFunction(fce.getFunctionIdentifier());
                 if (fi != null) {
                     ILogicalExpression a1 = fce.getArguments().get(0).getValue();
                     if (a1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -285,7 +285,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                         if (nspOp != null) {
                             if (!aggregateExprToVarExpr.containsKey(expr)) {
                                 LogicalVariable newVar = context.newVar();
-                                AggregateFunctionCallExpression aggFun = AsterixBuiltinFunctions
+                                AggregateFunctionCallExpression aggFun = BuiltinFunctions
                                         .makeAggregateFunctionExpression(fi, fce.getArguments());
                                 rewriteAggregateInNestedSubplan(argVar, nspOp, aggFun, newVar, context);
                                 ILogicalExpression newVarExpr = new VariableReferenceExpression(newVar);
@@ -328,7 +328,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 if (v.equals(oldAggVar)) {
                     AbstractFunctionCallExpression oldAggExpr = (AbstractFunctionCallExpression) aggOp.getExpressions()
                             .get(i).getValue();
-                    AggregateFunctionCallExpression newAggFun = AsterixBuiltinFunctions
+                    AggregateFunctionCallExpression newAggFun = BuiltinFunctions
                             .makeAggregateFunctionExpression(aggFun.getFunctionIdentifier(), new ArrayList<>());
                     for (Mutable<ILogicalExpression> arg : oldAggExpr.getArguments()) {
                         ILogicalExpression cloned = arg.getValue().cloneExpression();
@@ -391,7 +391,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                         return false;
                     }
                     AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) expr;
-                    if (fun.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+                    if (fun.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
                         return false;
                     }
                     ILogicalExpression arg0 = fun.getArguments().get(0).getValue();
@@ -472,7 +472,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
             if (nspAgg.getVariables().get(i).equals(varFromNestedAgg)) {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) nspAgg.getExpressions().get(i)
                         .getValue();
-                if (fce.getFunctionIdentifier().equals(AsterixBuiltinFunctions.LISTIFY)) {
+                if (fce.getFunctionIdentifier().equals(BuiltinFunctions.LISTIFY)) {
                     ILogicalExpression argExpr = fce.getArguments().get(0).getValue();
                     if (argExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                         return ((VariableReferenceExpression) argExpr).getVariableReference();

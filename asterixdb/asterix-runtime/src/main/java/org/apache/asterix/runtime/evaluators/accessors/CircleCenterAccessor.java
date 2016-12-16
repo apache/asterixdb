@@ -28,7 +28,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -48,7 +48,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_CIRCLE_CENTER_ACCESSOR;
+    private static final FunctionIdentifier FID = BuiltinFunctions.GET_CIRCLE_CENTER_ACCESSOR;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
         @Override

@@ -22,12 +22,12 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
+import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.om.util.ConstantExpressionUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -61,7 +61,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
         if (op.acceptExpressionTransform(exprRef -> rewriteExpressionReference(op, exprRef, context))) {
-            op.removeAnnotation(AsterixOperatorAnnotations.PUSHED_FIELD_ACCESS);
+            op.removeAnnotation(OperatorAnnotation.PUSHED_FIELD_ACCESS);
             context.computeAndSetTypeEnvironmentForOperator(op);
             return true;
         }
@@ -83,7 +83,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             }
         }
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-        if (fce.getFunctionIdentifier() != AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+        if (fce.getFunctionIdentifier() != BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
             return changed;
         }
         changed |= extractFirstArg(fce, op, context);
@@ -149,7 +149,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             return null;
         }
         return new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
     }
 }

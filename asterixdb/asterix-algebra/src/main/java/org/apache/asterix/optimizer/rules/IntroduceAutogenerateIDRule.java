@@ -30,7 +30,7 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -161,14 +161,14 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
         args.add(new MutableObject<ILogicalExpression>(mergedRec));
         AbstractFunctionCallExpression notNullFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CHECK_UNKNOWN), args);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.CHECK_UNKNOWN), args);
         return notNullFn;
     }
 
     private AbstractFunctionCallExpression createPrimaryKeyRecordExpression(List<String> pkFieldName) {
         //Create lowest level of nested uuid
         AbstractFunctionCallExpression uuidFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_UUID));
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_UUID));
         List<Mutable<ILogicalExpression>> openRecordConsArgs = new ArrayList<>();
         Mutable<ILogicalExpression> pkFieldNameExpression = new MutableObject<ILogicalExpression>(
                 new ConstantExpression(new AsterixConstantValue(new AString(pkFieldName.get(pkFieldName.size() - 1)))));
@@ -176,7 +176,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalExpression> pkFieldValueExpression = new MutableObject<ILogicalExpression>(uuidFn);
         openRecordConsArgs.add(pkFieldValueExpression);
         AbstractFunctionCallExpression openRecFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
 
         //Create higher levels
         for (int i = pkFieldName.size() - 2; i > -1; i--) {
@@ -186,7 +186,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
                     new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(fieldName))));
             openRecordConsArgs.add(new MutableObject<ILogicalExpression>(openRecFn));
             openRecFn = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
         }
 
         return openRecFn;
@@ -197,7 +197,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         recordMergeFnArgs.add(new MutableObject<>(rec0));
         recordMergeFnArgs.add(new MutableObject<>(rec1));
         AbstractFunctionCallExpression recordMergeFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.RECORD_MERGE), recordMergeFnArgs);
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.RECORD_MERGE), recordMergeFnArgs);
         return recordMergeFn;
     }
 }
