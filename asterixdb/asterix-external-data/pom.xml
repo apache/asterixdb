@@ -103,7 +103,6 @@
           <includes>
             <include>**/*.class</include>
             <include>**/*.txt</include>
-            <include>**/DISCLAIMER</include>
             <include>**/NOTICE</include>
             <include>**/LICENSE</include>
             <include>**/DEPENDENCIES</include>

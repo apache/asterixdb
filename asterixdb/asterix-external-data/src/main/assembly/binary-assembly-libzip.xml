@@ -43,7 +43,6 @@
       <includes>
         <include>LICENSE*</include>
         <include>NOTICE*</include>
-        <include>DISCLAIMER*</include>
         <include>DEPENDENCIES*</include>
       </includes>
     </fileSet>

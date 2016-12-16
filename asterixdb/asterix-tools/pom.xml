@@ -48,7 +48,6 @@
           <includes>
             <include>**/*.class</include>
             <include>**/README*</include>
-            <include>**/DISCLAIMER*</include>
             <include>**/NOTICE*</include>
             <include>**/LICENSE*</include>
             <include>**/DEPENDENCIES*</include>

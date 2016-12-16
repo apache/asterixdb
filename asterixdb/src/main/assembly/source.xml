@@ -29,7 +29,6 @@
       <outputDirectory>/</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
       <includes>
-        <include>**/DISCLAIMER</include>
         <include>**/LICENSE</include>
         <include>**/NOTICE</include>
         <include>**/README</include>

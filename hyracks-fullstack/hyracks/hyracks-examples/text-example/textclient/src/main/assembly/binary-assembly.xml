@@ -38,7 +38,6 @@
       <directory>target/classes/META-INF</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>DISCLAIMER*</include>
         <include>DEPENDENCIES*</include>
       </includes>
     </fileSet>

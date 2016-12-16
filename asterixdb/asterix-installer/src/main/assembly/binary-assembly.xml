@@ -70,13 +70,6 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>target/classes/META-INF</directory>
-      <outputDirectory>.</outputDirectory>
-      <includes>
-        <include>DISCLAIMER*</include>
-      </includes>
-    </fileSet>
-    <fileSet>
       <directory>src/main/licenses/</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
