@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.service.recovery;
+package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
 
-public class CheckpointObject implements Serializable, Comparable<CheckpointObject> {
+public class Checkpoint implements Serializable, Comparable<Checkpoint> {
 
     private static final long serialVersionUID = 1L;
 
@@ -29,13 +29,16 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
     private final int maxJobId;
     private final long timeStamp;
     private final boolean sharp;
+    private final int storageVersion;
 
-    public CheckpointObject(long checkpointLsn, long minMCTFirstLsn, int maxJobId, long timeStamp, boolean sharp) {
+    public Checkpoint(long checkpointLsn, long minMCTFirstLsn, int maxJobId, long timeStamp, boolean sharp,
+            int storageVersion) {
         this.checkpointLsn = checkpointLsn;
         this.minMCTFirstLsn = minMCTFirstLsn;
         this.maxJobId = maxJobId;
         this.timeStamp = timeStamp;
         this.sharp = sharp;
+        this.storageVersion = storageVersion;
     }
 
     public long getCheckpointLsn() {
@@ -58,11 +61,15 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
         return sharp;
     }
 
-    @Override
-    public int compareTo(CheckpointObject checkpointObject) {
-        long compareTimeStamp = checkpointObject.getTimeStamp();
+    public int getStorageVersion() {
+        return storageVersion;
+    }
 
-        //decending order
+    @Override
+    public int compareTo(Checkpoint checkpoint) {
+        long compareTimeStamp = checkpoint.getTimeStamp();
+
+        // Descending order
         long diff = compareTimeStamp - this.timeStamp;
         if (diff > 0) {
             return 1;
@@ -71,8 +78,33 @@ public class CheckpointObject implements Serializable, Comparable<CheckpointObje
         } else {
             return -1;
         }
+    }
 
-        //ascending order
-        //return this.timeStamp - compareTimeStamp;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Checkpoint)) {
+            return false;
+        }
+        Checkpoint other = (Checkpoint) obj;
+        return compareTo(other) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (checkpointLsn ^ (checkpointLsn >>> 32));
+        result = prime * result + maxJobId;
+        result = prime * result + (int) (minMCTFirstLsn ^ (minMCTFirstLsn >>> 32));
+        result = prime * result + (sharp ? 1231 : 1237);
+        result = prime * result + storageVersion;
+        result = prime * result + (int) (timeStamp ^ (timeStamp >>> 32));
+        return result;
     }
 }

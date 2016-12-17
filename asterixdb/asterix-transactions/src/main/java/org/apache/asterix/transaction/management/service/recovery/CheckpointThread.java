@@ -18,15 +18,18 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
-import java.io.IOError;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILogManager;
-import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * A daemon thread that periodically attempts to perform checkpoints.
+ * A checkpoint attempt is made when the volume of transaction logs written
+ * since the last successful checkpoint exceeds a certain threshold.
+ */
 public class CheckpointThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(CheckpointThread.class.getName());
@@ -34,33 +37,34 @@ public class CheckpointThread extends Thread {
     private long checkpointTermInSecs;
 
     private final ILogManager logManager;
-    private final IRecoveryManager recoveryMgr;
+    private final ICheckpointManager checkpointManager;
+    private volatile boolean shouldRun = true;
 
-    public CheckpointThread(IRecoveryManager recoveryMgr, ILogManager logManager,
-            long lsnThreshold, long checkpointTermInSecs) {
-        this.recoveryMgr = recoveryMgr;
+    public CheckpointThread(ICheckpointManager checkpointManager, ILogManager logManager, long lsnThreshold,
+            long checkpointTermInSecs) {
+        this.checkpointManager = checkpointManager;
         this.logManager = logManager;
         this.lsnThreshold = lsnThreshold;
         this.checkpointTermInSecs = checkpointTermInSecs;
+        setDaemon(true);
     }
 
     @Override
     public void run() {
-
         Thread.currentThread().setName("Checkpoint Thread");
-
         long currentCheckpointAttemptMinLSN;
         long lastCheckpointLSN = -1;
         long currentLogLSN;
         long targetCheckpointLSN;
-        while (true) {
+        while (shouldRun) {
             try {
                 sleep(checkpointTermInSecs * 1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                //ignore
             }
-
+            if (!shouldRun) {
+                return;
+            }
             if (lastCheckpointLSN == -1) {
                 try {
                     //Since the system just started up after sharp checkpoint,
@@ -84,18 +88,20 @@ public class CheckpointThread extends Thread {
                     //3. next time checkpoint comes, it will be able to remove log files which have end range less than current targetCheckpointLSN
 
                     targetCheckpointLSN = lastCheckpointLSN + lsnThreshold;
-                    currentCheckpointAttemptMinLSN = recoveryMgr.checkpoint(false, targetCheckpointLSN);
+                    currentCheckpointAttemptMinLSN = checkpointManager.tryCheckpoint(targetCheckpointLSN);
 
                     //checkpoint was completed at target LSN or above
                     if (currentCheckpointAttemptMinLSN >= targetCheckpointLSN) {
                         lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
-
-                } catch (ACIDException | HyracksDataException e) {
-                    throw new IOError(e);
+                } catch (HyracksDataException e) {
+                    LOGGER.log(Level.SEVERE, "Error during checkpoint", e);
                 }
             }
         }
     }
 
+    public void shutdown() {
+        shouldRun = false;
+    }
 }

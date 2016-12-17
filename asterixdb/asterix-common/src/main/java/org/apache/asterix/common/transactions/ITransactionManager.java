@@ -124,4 +124,9 @@ public interface ITransactionManager {
      */
     public ITransactionSubsystem getTransactionProvider();
 
+    /**
+     * @return The current max job id.
+     */
+    int getMaxJobId();
+
 }

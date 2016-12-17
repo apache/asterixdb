@@ -22,21 +22,25 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.ReplicationProperties;
-import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.Checkpoint;
+import org.apache.asterix.common.transactions.CheckpointProperties;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
-import org.apache.asterix.transaction.management.service.recovery.CheckpointThread;
+import org.apache.asterix.transaction.management.service.recovery.CheckpointManagerFactory;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
 
 /**
@@ -50,8 +54,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
     private final IAppRuntimeContextProvider asterixAppRuntimeContextProvider;
-    private final CheckpointThread checkpointThread;
     private final TransactionProperties txnProperties;
+    private final ICheckpointManager checkpointManager;
 
     //for profiling purpose
     public static final boolean IS_PROFILE_MODE = false;//true
@@ -66,6 +70,15 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
+        final boolean replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
+        final CheckpointProperties checkpointProperties = new CheckpointProperties(txnProperties, id);
+        checkpointManager = CheckpointManagerFactory.create(this, checkpointProperties, replicationEnabled);
+        final Checkpoint latestCheckpoint = checkpointManager.getLatest();
+        if (latestCheckpoint != null && latestCheckpoint.getStorageVersion() != StorageConstants.VERSION) {
+            throw new IllegalStateException(
+                    String.format("Storage version mismatch. Current version (%s). On disk version: (%s)",
+                            latestCheckpoint.getStorageVersion(), StorageConstants.VERSION));
+        }
 
         ReplicationProperties asterixReplicationProperties = null;
         if (asterixAppRuntimeContextProvider != null) {
@@ -73,21 +86,12 @@ public class TransactionSubsystem implements ITransactionSubsystem {
                     .getAppContext()).getReplicationProperties();
         }
 
-        if (asterixReplicationProperties != null && ClusterProperties.INSTANCE.isReplicationEnabled()) {
+        if (asterixReplicationProperties != null && replicationEnabled) {
             this.logManager = new LogManagerWithReplication(this);
         } else {
             this.logManager = new LogManager(this);
         }
-
         this.recoveryManager = new RecoveryManager(this);
-
-        if (asterixAppRuntimeContextProvider != null) {
-            this.checkpointThread = new CheckpointThread(recoveryManager, logManager,
-                    this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
-            this.checkpointThread.start();
-        } else {
-            this.checkpointThread = null;
-        }
 
         if (IS_PROFILE_MODE) {
             ecp = new EntityCommitProfiler(this, this.txnProperties.getCommitProfilerReportInterval());
@@ -131,6 +135,11 @@ public class TransactionSubsystem implements ITransactionSubsystem {
 
     public void incrementEntityCommitCount() {
         ++profilerEntityCommitLogCount;
+    }
+
+    @Override
+    public ICheckpointManager getCheckpointManager() {
+        return checkpointManager;
     }
 
     /**

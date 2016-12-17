@@ -145,6 +145,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         }
     }
 
+    @Override
     public int getMaxJobId() {
         return maxJobId.get();
     }

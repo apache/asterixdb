@@ -351,7 +351,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return logFileSize * fileId + offset;
     }
 
-    public void renewLogFiles() throws IOException {
+    @Override
+    public void renewLogFiles() {
         terminateLogFlusher();
         long lastMaxLogFileId = deleteAllLogFiles();
         initializeLogManager(lastMaxLogFileId + 1);

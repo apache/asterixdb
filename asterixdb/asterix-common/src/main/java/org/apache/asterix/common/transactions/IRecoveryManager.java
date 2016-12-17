@@ -82,20 +82,6 @@ public interface IRecoveryManager {
     public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException;
 
     /**
-     * Makes a system checkpoint.
-     *
-     * @param isSharpCheckpoint
-     *            a flag indicating whether to perform a sharp or non-sharp checkpoint.
-     * @param nonSharpCheckpointTargetLSN
-     *            if a non-sharp checkpoint to be performed, what is the minimum LSN it should target.
-     * @return the LSN at which the checkpoint was performed.
-     * @throws ACIDException
-     * @throws HyracksDataException
-     */
-    public long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN)
-            throws ACIDException, HyracksDataException;
-
-    /**
      * @return min first LSN of the open indexes (including remote indexes if replication is enabled)
      * @throws HyracksDataException
      */

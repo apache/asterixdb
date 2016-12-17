@@ -278,7 +278,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
         lccm.register((ILifeCycleComponent) datasetLifecycleManager);
         lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
-
+        lccm.register(txnSubsystem.getCheckpointManager());
     }
 
     @Override

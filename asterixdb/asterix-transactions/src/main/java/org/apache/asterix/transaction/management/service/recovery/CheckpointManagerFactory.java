@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.utils;
+package org.apache.asterix.transaction.management.service.recovery;
 
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.asterix.common.transactions.CheckpointProperties;
+import org.apache.asterix.common.transactions.ICheckpointManager;
+import org.apache.asterix.common.transactions.ITransactionSubsystem;
 
-/**
- * A static class that stores storage constants
- */
-public class StorageConstants {
-    public static final String METADATA_ROOT = "root_metadata";
-    /** The storage version of AsterixDB related artifacts (e.g. log files, checkpoint files, etc..). */
-    private static final int LOCAL_STORAGE_VERSION = 1;
+public class CheckpointManagerFactory {
 
-    /** The storage version of AsterixDB stack. */
-    public static final int VERSION = LOCAL_STORAGE_VERSION + ITreeIndexMetaDataFrame.VERSION;
+    private CheckpointManagerFactory() {
+        throw new AssertionError();
+    }
 
-    private StorageConstants() {
+    public static ICheckpointManager create(ITransactionSubsystem txnSubsystem,
+            CheckpointProperties checkpointProperties, boolean replicationEnabled) {
+        if (!replicationEnabled) {
+            return new CheckpointManager(txnSubsystem, checkpointProperties);
+        } else {
+            return new ReplicationCheckpointManager(txnSubsystem, checkpointProperties);
+        }
     }
 }
