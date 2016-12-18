@@ -247,10 +247,15 @@ public class OptimizedHybridHashJoin {
                 break;
         }
 
-        for (int pid = spilledStatus.nextSetBit(0); pid >= 0; pid = spilledStatus.nextSetBit(pid + 1)) {
+        for (int pid = spilledStatus.nextSetBit(0); pid >= 0
+                && pid < numOfPartitions; pid = spilledStatus.nextSetBit(pid + 1)) {
             if (bufferManager.getNumTuples(pid) > 0) {
                 bufferManager.flushPartition(pid, getSpillWriterOrCreateNewOneIfNotExist(pid, whichSide));
                 bufferManager.clearPartition(pid);
+            }
+            // It doesn't matter whether a spilled partition currently holds a tuple in memory or not.
+            // The file that holds the corresponding spilled partition needs to be closed.
+            if (runFileWriters[pid] != null) {
                 runFileWriters[pid].close();
             }
         }
@@ -299,7 +304,8 @@ public class OptimizedHybridHashJoin {
     }
 
     private int selectPartitionsToReload(int freeSpace, int pid) {
-        for (int i = spilledStatus.nextSetBit(pid); i >= 0; i = spilledStatus.nextSetBit(i + 1)) {
+        for (int i = spilledStatus.nextSetBit(pid); i >= 0
+                && i < numOfPartitions; i = spilledStatus.nextSetBit(i + 1)) {
             assert buildRFWriters[i].getFileSize() > 0 : "How comes a spilled partition have size 0?";
             if (freeSpace >= buildRFWriters[i].getFileSize()) {
                 return i;
