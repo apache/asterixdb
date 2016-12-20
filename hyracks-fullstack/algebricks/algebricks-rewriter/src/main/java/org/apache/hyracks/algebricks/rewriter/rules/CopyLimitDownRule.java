@@ -103,6 +103,7 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
             limitCloneOp.setPhysicalOperator(new StreamLimitPOperator());
             limitCloneOp.getInputs().add(new MutableObject<ILogicalOperator>(unsafeOp));
             limitCloneOp.setExecutionMode(unsafeOp.getExecutionMode());
+            OperatorPropertiesUtil.computeSchemaRecIfNull((AbstractLogicalOperator) unsafeOp);
             limitCloneOp.recomputeSchema();
             unsafeOpRef.setValue(limitCloneOp);
             context.computeAndSetTypeEnvironmentForOperator(limitCloneOp);

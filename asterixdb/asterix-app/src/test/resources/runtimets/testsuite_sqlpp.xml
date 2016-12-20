@@ -1411,6 +1411,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
+      <compilation-unit name="query-ASTERIXDB-1754">
+        <output-dir compare="Text">query-ASTERIXDB-1754</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="custord">
       <compilation-unit name="load-test">
         <output-dir compare="Text">load-test</output-dir>
       </compilation-unit>
