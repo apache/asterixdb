@@ -141,6 +141,8 @@ public class NodeControllerState {
 
     private int lastHeartbeatDuration;
 
+    private int numCores;
+
     public NodeControllerState(INodeController nodeController, NodeRegistration reg) {
         this.nodeController = nodeController;
         ncConfig = reg.getNCConfig();
@@ -202,6 +204,7 @@ public class NodeControllerState {
         diskWrites = new long[RRD_SIZE];
 
         rrdPtr = 0;
+        numCores = 0;
     }
 
     public synchronized void notifyHeartbeat(HeartbeatData hbData) {
@@ -239,6 +242,7 @@ public class NodeControllerState {
             diskReads[rrdPtr] = hbData.diskReads;
             diskWrites[rrdPtr] = hbData.diskWrites;
             rrdPtr = (rrdPtr + 1) % RRD_SIZE;
+            numCores = hbData.numCores;
         }
     }
 
@@ -272,6 +276,10 @@ public class NodeControllerState {
 
     public NetworkAddress getMessagingPort() {
         return messagingPort;
+    }
+
+    public int getNumCores() {
+        return numCores;
     }
 
     public synchronized JSONObject toSummaryJSON() throws JSONException {

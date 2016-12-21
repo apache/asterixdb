@@ -27,6 +27,7 @@ use dataverse tpch;
 
 for $l in dataset('LineItem')
 group by $l_linenumber := $l.l_linenumber with $l
+order by $l_linenumber
 return {
   "l_linenumber": $l_linenumber,
   "count_order": count($l)

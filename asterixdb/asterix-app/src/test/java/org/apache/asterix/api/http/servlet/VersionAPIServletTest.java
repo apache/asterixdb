@@ -19,6 +19,12 @@
 
 package org.apache.asterix.api.http.servlet;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
@@ -33,25 +39,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.runtime.util.AppContextInfo;
-import org.apache.asterix.test.runtime.ExecutionTest;
+import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 public class VersionAPIServletTest {
 
     @Test
     public void testGet() throws Exception {
         // Starts test asterixdb cluster.
-        ExecutionTest.setUp();
+        SqlppExecutionTest.setUp();
 
         // Configures a test version api servlet.
         VersionAPIServlet servlet = spy(new VersionAPIServlet());
@@ -112,6 +112,6 @@ public class VersionAPIServletTest {
         Assert.assertEquals(actualResponse.toString(), expectedResponse.toString());
 
         // Tears down the asterixdb cluster.
-        ExecutionTest.tearDown();
+        SqlppExecutionTest.tearDown();
     }
 }

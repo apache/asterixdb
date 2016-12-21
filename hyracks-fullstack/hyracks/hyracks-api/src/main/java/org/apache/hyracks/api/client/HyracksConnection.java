@@ -128,13 +128,21 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception {
-        return hci.getNodeControllersInfo();
+    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws HyracksException {
+        try {
+            return hci.getNodeControllersInfo();
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
     }
 
     @Override
-    public ClusterTopology getClusterTopology() throws Exception {
-        return hci.getClusterTopology();
+    public ClusterTopology getClusterTopology() throws HyracksException {
+        try {
+            return hci.getClusterTopology();
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
     }
 
     @Override

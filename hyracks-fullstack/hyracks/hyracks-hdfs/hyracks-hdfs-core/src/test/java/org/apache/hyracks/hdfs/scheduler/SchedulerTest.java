@@ -98,10 +98,10 @@ public class SchedulerTest extends TestCase {
                 dataPort, resultPort, messagingPort);
         ncNameToNcInfos.put("nc7",
                 new NodeControllerInfo("nc7", NodeStatus.ALIVE, new NetworkAddress("10.0.0.7", dataPort),
-                        new NetworkAddress("10.0.0.5", resultPort), new NetworkAddress("10.0.0.5", messagingPort)));
+                        new NetworkAddress("10.0.0.5", resultPort), new NetworkAddress("10.0.0.5", messagingPort), 2));
         ncNameToNcInfos.put("nc12",
                 new NodeControllerInfo("nc12", NodeStatus.ALIVE, new NetworkAddress("10.0.0.12", dataPort),
-                        new NetworkAddress("10.0.0.5", resultPort), new NetworkAddress("10.0.0.5", messagingPort)));
+                        new NetworkAddress("10.0.0.5", resultPort), new NetworkAddress("10.0.0.5", messagingPort), 2));
 
         InputSplit[] fileSplits = new InputSplit[12];
         fileSplits[0] = new FileSplit(new Path("part-1"), 0, 0, new String[] { "10.0.0.1", "10.0.0.2", "10.0.0.3" });

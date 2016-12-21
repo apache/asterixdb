@@ -67,10 +67,6 @@
     <value>160KB</value>
   </property>
   <property>
-    <name>compiler.pregelix.home</name>
-    <value>~/pregelix</value>
-  </property>
-  <property>
     <name>storage.buffercache.pagesize</name>
     <value>32KB</value>
     <description>The page size in bytes for pages in the buffer cache.

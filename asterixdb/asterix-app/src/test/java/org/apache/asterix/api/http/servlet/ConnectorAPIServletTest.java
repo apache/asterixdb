@@ -44,7 +44,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.JSONDeserializerForTypes;
-import org.apache.asterix.test.runtime.ExecutionTest;
+import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -63,7 +63,7 @@ public class ConnectorAPIServletTest {
     @Test
     public void testGet() throws Exception {
         // Starts test asterixdb cluster.
-        ExecutionTest.setUp();
+        SqlppExecutionTest.setUp();
 
         // Configures a test connector api servlet.
         ConnectorAPIServlet servlet = spy(new ConnectorAPIServlet());
@@ -116,7 +116,7 @@ public class ConnectorAPIServletTest {
         Assert.assertTrue(path.endsWith("Metadata/Dataset_idx_Dataset"));
 
         // Tears down the asterixdb cluster.
-        ExecutionTest.tearDown();
+        SqlppExecutionTest.tearDown();
     }
 
     @Test

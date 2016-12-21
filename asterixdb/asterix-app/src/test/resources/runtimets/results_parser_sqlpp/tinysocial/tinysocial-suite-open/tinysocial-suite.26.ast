@@ -1,7 +1,10 @@
 DataverseUse TinySocial
 Query:
 SELECT [
-Variable [ Name=$org ]
+FieldAccessor [
+  Variable [ Name=$employment ]
+  Field=organization-name
+]
 organization
 FunctionCall TinySocial.sql-avg@1[
   (
@@ -105,7 +108,7 @@ FROM [  FunctionCall Metadata.dataset@1[
   AS Variable [ Name=$employment ]
 ]
 Groupby
-  Variable [ Name=$org ]
+  Variable [ Name=$organization-name ]
   :=
   FieldAccessor [
     Variable [ Name=$employment ]
@@ -116,4 +119,11 @@ Groupby
     fbu:=Variable [ Name=$fbu ]
     employment:=Variable [ Name=$employment ]
   )
+
+Orderby
+  FieldAccessor [
+    Variable [ Name=$employment ]
+    Field=organization-name
+  ]
+  ASC
 

@@ -26,7 +26,7 @@
 USE tpch;
 
 
-SELECT  nation_key AS nation_key,
+SELECT  x.nation_key AS nation_key,
         (
             SELECT od AS orderdate, sum_price AS sum_price
             FROM x as i
@@ -43,5 +43,6 @@ FROM  (
         WHERE orders.o_custkey = customer.c_custkey AND customer.c_nationkey = n.n_nationkey
         GROUP BY orders.o_orderdate as orderdate,n.n_nationkey as nation_key
 ) AS x
-GROUP BY x.nation_key AS nation_key
+GROUP BY x.nation_key
+ORDER BY x.nation_key
 ;

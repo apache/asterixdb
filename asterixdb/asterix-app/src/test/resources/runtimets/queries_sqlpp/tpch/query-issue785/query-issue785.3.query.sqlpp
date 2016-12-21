@@ -49,4 +49,5 @@ from  (
     group by orders.o_orderdate as orderdate,n.n_nationkey as nation_key
 ) as x
 group by x.nation_key as nation_key
+order by nation_key
 ;

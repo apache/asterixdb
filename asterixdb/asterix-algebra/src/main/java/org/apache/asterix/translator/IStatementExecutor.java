@@ -26,6 +26,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -108,6 +109,8 @@ public interface IStatementExecutor {
     /**
      * rewrites and compiles query into a hyracks job specifications
      *
+     * @param clusterInfoCollector
+     *            The cluster info collector
      * @param metadataProvider
      *            The metadataProvider used to access metadata and build runtimes
      * @param query
@@ -120,9 +123,8 @@ public interface IStatementExecutor {
      * @throws AlgebricksException
      * @throws ACIDException
      */
-    JobSpecification rewriteCompileQuery(MetadataProvider metadataProvider, Query query,
-            ICompiledDmlStatement dmlStatement)
-                    throws AsterixException, RemoteException, AlgebricksException, ACIDException;
+    JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
+            Query query, ICompiledDmlStatement dmlStatement) throws RemoteException, AlgebricksException, ACIDException;
 
     /**
      * returns the active dataverse for an entity or a statement

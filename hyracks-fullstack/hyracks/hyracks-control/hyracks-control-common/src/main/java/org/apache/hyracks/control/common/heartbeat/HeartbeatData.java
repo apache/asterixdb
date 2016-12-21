@@ -52,6 +52,7 @@ public class HeartbeatData {
     public long ipcMessageBytesReceived;
     public long diskReads;
     public long diskWrites;
+    public int numCores;
 
     public void readFields(DataInput dis) throws IOException {
         heapInitSize = dis.readLong();
@@ -80,6 +81,7 @@ public class HeartbeatData {
         ipcMessageBytesReceived = dis.readLong();
         diskReads = dis.readLong();
         diskWrites = dis.readLong();
+        numCores = dis.readInt();
 
         int gcCounts = dis.readInt();
         gcCollectionCounts = new long[gcCounts];
@@ -120,6 +122,7 @@ public class HeartbeatData {
         dos.writeLong(ipcMessageBytesReceived);
         dos.writeLong(diskReads);
         dos.writeLong(diskWrites);
+        dos.writeInt(numCores);
 
         dos.writeInt(gcCollectionCounts.length);
         for (int i = 0; i < gcCollectionCounts.length; i++) {

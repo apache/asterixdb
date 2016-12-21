@@ -44,4 +44,5 @@ FROM  (
         GROUP BY o_orderdate as orderdate, n_nationkey as nation_key
 ) AS x
 GROUP BY nation_key
+ORDER BY nation_key
 ;

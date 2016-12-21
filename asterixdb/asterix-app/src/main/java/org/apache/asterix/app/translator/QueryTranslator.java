@@ -53,13 +53,13 @@ import org.apache.asterix.app.external.FeedOperations;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
-import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -68,8 +68,8 @@ import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber;
 import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber.ActiveLifecycleEvent;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeed.FeedType;
 import org.apache.asterix.external.feed.api.IFeedJoint;
+import org.apache.asterix.external.feed.api.IFeed.FeedType;
 import org.apache.asterix.external.feed.api.IFeedJoint.FeedJointType;
 import org.apache.asterix.external.feed.management.ActiveLifecycleEventSubscriber;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -193,6 +193,7 @@ import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
+import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -1836,7 +1837,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName,
                     loadStmt.getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
                     loadStmt.dataIsAlreadySorted());
-            JobSpecification spec = apiFramework.compileQuery(null, metadataProvider, null, 0, null, sessionConfig,
+            JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionConfig,
                     cls);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -1896,7 +1897,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 default:
                     throw new AlgebricksException("Unsupported statement type " + stmtInsertUpsert.getKind());
             }
-            JobSpecification jobSpec = rewriteCompileQuery(metadataProvider, query, clfrqs);
+            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -1938,7 +1939,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
                     stmtDelete.getQuery());
-            JobSpecification jobSpec = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
+            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -1960,7 +1961,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     @Override
-    public JobSpecification rewriteCompileQuery(MetadataProvider metadataProvider, Query query,
+    public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
+            MetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement stmt)
             throws AsterixException, RemoteException, AlgebricksException, ACIDException {
 
@@ -1969,7 +1971,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 sessionConfig);
 
         // Query Compilation (happens under the same ongoing metadata transaction)
-        JobSpecification spec = apiFramework.compileQuery(declaredFunctions, metadataProvider, reWrittenQuery.first,
+        JobSpecification spec = apiFramework.compileQuery(clusterInfoCollector, metadataProvider, reWrittenQuery.first,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, stmt);
 
         return spec;
@@ -2417,7 +2419,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.getConfig().put(FeedActivityDetails.COLLECT_LOCATIONS,
                 StringUtils.join(bfs.getLocations(), ','));
 
-        JobSpecification jobSpec = rewriteCompileQuery(metadataProvider, bfs.getQuery(), csfs);
+        JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, bfs.getQuery(), csfs);
         FeedConnectionId feedConnectionId = new FeedConnectionId(bfs.getSubscriptionRequest().getReceivingFeedId(),
                 bfs.getSubscriptionRequest().getTargetDataset());
         String dataverse = feedConnectionId.getFeedId().getDataverse();
@@ -2560,7 +2562,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockManager.INSTANCE.queryBegin(activeDefaultDataverse, query.getDataverses(), query.getDatasets());
         try {
-            JobSpecification jobSpec = rewriteCompileQuery(metadataProvider, query, null);
+            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;

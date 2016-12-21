@@ -33,3 +33,7 @@ Groupby
     l:=Variable [ Name=$l ]
   )
 
+Orderby
+  Variable [ Name=$l_linenumber ]
+  ASC
+

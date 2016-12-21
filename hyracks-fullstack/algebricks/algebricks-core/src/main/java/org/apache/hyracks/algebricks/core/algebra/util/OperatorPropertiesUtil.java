@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 
 public class OperatorPropertiesUtil {
 
@@ -329,5 +330,24 @@ public class OperatorPropertiesUtil {
      */
     public static void markMovable(ILogicalOperator op, boolean movable) {
         op.getAnnotations().put(MOVABLE, movable);
+    }
+
+    /**
+     * Checks whether a binary input operator in consideration needs to
+     * run in a single partition mode. If it does, returns an empty properties vector.
+     * Otherwise, returns the proposed partitioned properties vector.
+     *
+     * @param op,                          the binary input operator in consideration.
+     * @param partitionedPropertiesVector, the proposed partitioned properties vector.
+     * @return either an empty properties vector or the proposed partitioned properties vector.
+     */
+    public static StructuralPropertiesVector checkUnpartitionedAndGetPropertiesVector(ILogicalOperator op,
+            StructuralPropertiesVector partitionedPropertiesVector) {
+        ILogicalOperator leftChild = op.getInputs().get(0).getValue();
+        ILogicalOperator rightChild = op.getInputs().get(1).getValue();
+        boolean unPartitioned =
+                leftChild.getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) && rightChild
+                        .getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
+        return unPartitioned ? StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR : partitionedPropertiesVector;
     }
 }

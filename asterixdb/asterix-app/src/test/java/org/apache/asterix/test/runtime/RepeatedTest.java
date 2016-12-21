@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.runtime;
 
+import static org.apache.asterix.test.runtime.LangExecutionUtil.buildTestsInXml;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -79,14 +81,13 @@ class RepeatRule implements MethodRule {
 }
 
 @RunWith(Parameterized.class)
-public class RepeatedTest extends ExecutionTest {
+public class RepeatedTest extends SqlppExecutionTest {
 
     private int count;
 
     @Parameters(name = "RepeatedTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.DEFAULT_REPEATED_TESTSUITE_XML_NAME);
-        return testArgs;
+        return LangExecutionUtil.buildTestsInXml(TestCaseContext.DEFAULT_REPEATED_TESTSUITE_XML_NAME);
     }
 
     public RepeatedTest(TestCaseContext tcCtx) {
@@ -102,6 +103,6 @@ public class RepeatedTest extends ExecutionTest {
     @Repeat(times = 100)
     public void test() throws Exception {
         System.err.println("***** Test Count: " + (++count) + " ******");
-        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
+        super.test();
     }
 }

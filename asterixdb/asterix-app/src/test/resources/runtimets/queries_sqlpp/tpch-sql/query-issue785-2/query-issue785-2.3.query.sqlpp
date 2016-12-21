@@ -41,7 +41,7 @@ X as (
       GROUP BY orders.o_orderdate AS orderdate, n.n_nationkey AS nation_key
 )
 
-SELECT nation_key As nation_key,
+SELECT x.nation_key As nation_key,
        (
             SELECT y.order_date AS orderdate, y.sum_price As sum_price
             FROM  x AS y
@@ -49,5 +49,6 @@ SELECT nation_key As nation_key,
             LIMIT 3
         ) AS sum_price
 FROM  X AS x
-GROUP BY x.nation_key AS nation_key
+GROUP BY x.nation_key
+ORDER BY x.nation_key
 ;

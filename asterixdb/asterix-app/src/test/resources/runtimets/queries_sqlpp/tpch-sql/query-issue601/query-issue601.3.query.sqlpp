@@ -29,4 +29,5 @@ USE tpch;
 SELECT l_linenumber AS l_linenumber, count(l) AS count_order
 FROM  LineItem AS l
 GROUP BY l.l_linenumber AS l_linenumber
+ORDER BY l_linenumber
 ;

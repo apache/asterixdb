@@ -29,4 +29,5 @@ use tpch;
 select element {'l_linenumber':l_linenumber,'count_order':COLL_COUNT(l)}
 from  LineItem as l
 group by l.l_linenumber as l_linenumber
+order by l_linenumber
 ;

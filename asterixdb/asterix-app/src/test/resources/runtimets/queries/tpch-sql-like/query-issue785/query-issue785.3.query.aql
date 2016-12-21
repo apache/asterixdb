@@ -39,6 +39,7 @@ from $x in (
   }
 )
 group by $nation_key := $x.nation_key keeping $x
+order by $nation_key
 select {
      "nation_key": $nation_key,
      "sum_price": from $i in $x

@@ -25,8 +25,8 @@
 use dataverse test;
 
 for $i in dataset LineItem
-order by $i.l_partkey
 group by $partkey := $i.l_partkey with $i
-for $j at $p in (for $ii in $i order by $ii.l_shipdate return $ii)
+for $j at $p in (for $ii in $i order by $ii.l_shipdate, $ii.l_orderkey return $ii)
 where $p < 4
+order by $partkey, $j.l_shipdate, $j.l_orderkey
 return { "partkey": $partkey, "pid": $p, "shipdate": $j.l_shipdate, "orderkey": $j.l_orderkey }

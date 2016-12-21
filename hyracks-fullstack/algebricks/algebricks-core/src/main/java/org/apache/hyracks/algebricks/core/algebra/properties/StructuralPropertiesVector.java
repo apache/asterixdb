@@ -86,7 +86,8 @@ public class StructuralPropertiesVector implements IPhysicalPropertiesVector {
         if (reqdPart != null) {
             IPartitioningProperty normalizedReqPart =
                     reqdPart.normalize(equivalenceClasses, mayExpandProperties ? fds : null);
-            IPartitioningProperty normalizedPropPart = propPartitioning.normalize(equivalenceClasses, fds);
+            IPartitioningProperty normalizedPropPart = propPartitioning.normalize(equivalenceClasses,
+                    mayExpandProperties ? fds : null);
             if (!PropertiesUtil.matchPartitioningProps(normalizedReqPart, normalizedPropPart, mayExpandProperties)) {
                 diffPart = reqdPart;
             }

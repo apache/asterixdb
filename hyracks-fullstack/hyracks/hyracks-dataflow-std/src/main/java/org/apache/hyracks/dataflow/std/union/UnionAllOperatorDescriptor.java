@@ -63,20 +63,14 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
                         throws HyracksDataException {
-            RecordDescriptor inRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            return new UnionOperator(ctx, inRecordDesc);
+            return new UnionOperator();
         }
     }
 
     private class UnionOperator extends AbstractUnaryOutputOperatorNodePushable {
-        private int nOpened;
-        private int nClosed;
+        private int nOpened = 0;
+        private int nClosed = 0;
         private boolean failed;
-
-        public UnionOperator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc) {
-            nOpened = 0;
-            nClosed = 0;
-        }
 
         @Override
         public int getInputArity() {

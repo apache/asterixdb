@@ -26,7 +26,7 @@
 use tpch;
 
 
-select element {'nation_key':nation_key,'sum_price':(
+select element {'nation_key':x.nation_key,'sum_price':(
         select element {'orderdate':od,'sum_price':sum}
         from  x as i
         group by i.order_date as od
@@ -48,5 +48,6 @@ from  (
     where ((orders.o_custkey = customer.c_custkey) and (customer.c_nationkey = n.n_nationkey))
     group by orders.o_orderdate as orderdate,n.n_nationkey as nation_key
 ) as x
-group by x.nation_key as nation_key
+group by x.nation_key
+order by x.nation_key
 ;

@@ -30,16 +30,18 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
+import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
 
@@ -85,36 +87,32 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
     }
 
     @Override
-    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator iop,
+    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-        StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
         // In a cost-based optimizer, we would also try to propagate the
         // parent's partitioning requirements.
-        AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
-
-        IPartitioningProperty pp1 = null;
-        IPartitioningProperty pp2 = null;
-        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            switch (partitioningType) {
-                case PAIRWISE: {
-                    pp1 = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(keysLeftBranch),
+        IPartitioningProperty pp1;
+        IPartitioningProperty pp2;
+        switch (partitioningType) {
+            case PAIRWISE:
+                pp1 = new UnorderedPartitionedProperty(new ListSet<>(keysLeftBranch),
                             context.getComputationNodeDomain());
-                    pp2 = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(keysRightBranch),
+                pp2 = new UnorderedPartitionedProperty(new ListSet<>(keysRightBranch),
                             context.getComputationNodeDomain());
                     break;
-                }
-                case BROADCAST: {
-                    pp2 = new BroadcastPartitioningProperty(context.getComputationNodeDomain());
-                    break;
-                }
-                default: {
-                    throw new IllegalStateException();
-                }
-            }
+            case BROADCAST:
+                pp1 = new RandomPartitioningProperty(context.getComputationNodeDomain());
+                pp2 = new BroadcastPartitioningProperty(context.getComputationNodeDomain());
+                break;
+            default:
+                throw new IllegalStateException();
         }
 
-        pv[0] = new StructuralPropertiesVector(pp1, null);
-        pv[1] = new StructuralPropertiesVector(pp2, null);
+        StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
+        pv[0] = OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op,
+                new StructuralPropertiesVector(pp1, null));
+        pv[1] = OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op,
+                new StructuralPropertiesVector(pp2, null));
 
         IPartitioningRequirementsCoordinator prc;
         switch (kind) {
@@ -180,14 +178,14 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                     }
                                     UnorderedPartitionedProperty upp2 =
                                             new UnorderedPartitionedProperty(modifuppreq, requirements.getNodeDomain());
-                                    return new Pair<Boolean, IPartitioningProperty>(false, upp2);
+                                    return new Pair<>(false, upp2);
                                 }
                                 case ORDERED_PARTITIONED: {
                                     throw new NotImplementedException();
                                 }
                             }
                         }
-                        return new Pair<Boolean, IPartitioningProperty>(true, requirements);
+                        return new Pair<>(true, requirements);
                     }
                 };
                 break;
@@ -196,7 +194,6 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                 throw new IllegalStateException();
             }
         }
-
         return new PhysicalRequirements(pv, prc);
     }
 

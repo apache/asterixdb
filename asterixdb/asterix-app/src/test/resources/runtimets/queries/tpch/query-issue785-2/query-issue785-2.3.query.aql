@@ -44,11 +44,12 @@ let $sum := sum(for $o in $order return $o.o_totalprice)
 return {
     "nation_key": $nation_key,
     "order_date": $orderdate,
-    "sum_price": $sum 
+    "sum_price": $sum
 })
 
 for $x in $X
 group by $nation_key := $x.nation_key with $x
+order by $nation_key
 return {
     "nation_key": $nation_key,
     "sum_price": for $y in $x

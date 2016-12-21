@@ -39,42 +39,41 @@ FROM [  (
       (
         LiteralExpr [STRING] [i]
         :
-        Variable [ Name=$i ]
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            Variable [ Name=$x ]
+            Field=i
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$x ]
+          ]
+        )
       )
       (
         LiteralExpr [STRING] [partkey]
         :
-        Variable [ Name=$partkey ]
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=l_partkey
+        ]
       )
     ]
     ]
-    FROM [      (
-        SELECT ELEMENT [
-        Variable [ Name=$l ]
-        ]
-        FROM [          FunctionCall Metadata.dataset@1[
-            LiteralExpr [STRING] [LineItem]
-          ]
-          AS Variable [ Name=$l ]
-        ]
-        Orderby
-          FieldAccessor [
-            Variable [ Name=$l ]
-            Field=l_partkey
-          ]
-          ASC
-
-      )
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItem]
+      ]
       AS Variable [ Name=$i ]
     ]
     Groupby
-      Variable [ Name=$partkey ]
+      Variable [ Name=$l_partkey ]
       :=
       FieldAccessor [
         Variable [ Name=$i ]
         Field=l_partkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g ]
       (
         i:=Variable [ Name=$i ]
       )
@@ -98,6 +97,11 @@ FROM [  (
         Field=l_shipdate
       ]
       ASC
+      FieldAccessor [
+        Variable [ Name=$ii ]
+        Field=l_orderkey
+      ]
+      ASC
 
   )
   AS Variable [ Name=$j ]
@@ -110,3 +114,20 @@ Where
     <
     LiteralExpr [LONG] [4]
   ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$gen0 ]
+    Field=partkey
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$j ]
+    Field=l_shipdate
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$j ]
+    Field=l_orderkey
+  ]
+  ASC
+

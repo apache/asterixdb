@@ -5,7 +5,10 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [nation_key]
     :
-    Variable [ Name=$nation_key ]
+    FieldAccessor [
+      Variable [ Name=$x ]
+      Field=nation_key
+    ]
   )
   (
     LiteralExpr [STRING] [sum_price]
@@ -172,4 +175,11 @@ Groupby
   (
     x:=Variable [ Name=$x ]
   )
+
+Orderby
+  FieldAccessor [
+    Variable [ Name=$x ]
+    Field=nation_key
+  ]
+  ASC
 

@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.common.config;
 
-import org.apache.hyracks.util.StorageUtil;
-
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
+import org.apache.hyracks.util.StorageUtil;
+
 public class CompilerProperties extends AbstractProperties {
+
     private static final String COMPILER_SORTMEMORY_KEY = "compiler.sortmemory";
     private static final long COMPILER_SORTMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
 
@@ -35,6 +36,9 @@ public class CompilerProperties extends AbstractProperties {
 
     private static final String COMPILER_FRAMESIZE_KEY = "compiler.framesize";
     private static final int COMPILER_FRAMESIZE_DEFAULT = StorageUtil.getSizeInBytes(32, KILOBYTE);
+
+    private static final String COMPILER_PARALLELISM_KEY = "compiler.parallelism";
+    public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
     private static final String COMPILER_PREGELIX_HOME = "compiler.pregelix.home";
     private static final String COMPILER_PREGELIX_HOME_DEFAULT = "~/pregelix";
@@ -65,6 +69,12 @@ public class CompilerProperties extends AbstractProperties {
     public int getFrameSize() {
         return accessor.getProperty(COMPILER_FRAMESIZE_KEY, COMPILER_FRAMESIZE_DEFAULT,
                 PropertyInterpreters.getIntegerBytePropertyInterpreter());
+    }
+
+    @PropertyKey(COMPILER_PARALLELISM_KEY)
+    public int getParallelism() {
+        return accessor.getProperty(COMPILER_PARALLELISM_KEY, COMPILER_PARALLELISM_AS_STORAGE,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
     @PropertyKey(COMPILER_PREGELIX_HOME)

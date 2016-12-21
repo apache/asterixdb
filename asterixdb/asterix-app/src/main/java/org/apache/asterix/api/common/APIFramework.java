@@ -18,10 +18,18 @@
  */
 package org.apache.asterix.api.common;
 
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
@@ -55,6 +63,7 @@ import org.apache.asterix.transaction.management.service.transaction.JobIdFactor
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -76,7 +85,9 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.json.JSONException;
@@ -150,7 +161,7 @@ public class APIFramework {
         return new Pair<>(q, q.getVarCounter());
     }
 
-    public JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
+    public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector,
             MetadataProvider metadataProvider, Query rwQ, int varCounter, String outputDatasetName,
             SessionConfig conf, ICompiledDmlStatement statement)
             throws AlgebricksException, RemoteException, ACIDException {
@@ -219,7 +230,10 @@ public class APIFramework {
         builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
         builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
-        builder.setClusterLocations(metadataProvider.getClusterLocations());
+
+        int parallelism = compilerProperties.getParallelism();
+        builder.setClusterLocations(parallelism == CompilerProperties.COMPILER_PARALLELISM_AS_STORAGE
+                ? metadataProvider.getClusterLocations() : getComputationLocations(clusterInfoCollector, parallelism));
 
         ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
         if (conf.isOptimize()) {
@@ -340,6 +354,54 @@ public class APIFramework {
             long endTime = System.currentTimeMillis();
             double duration = (endTime - startTime) / 1000.00;
             out.println("<pre>Duration: " + duration + " sec</pre>");
+        }
+    }
+
+    // Computes the location constraints based on user-configured parallelism parameter.
+    // Note that the parallelism parameter is only a hint -- it will not be respected if it is too small or too large.
+    private AlgebricksAbsolutePartitionConstraint getComputationLocations(IClusterInfoCollector clusterInfoCollector,
+            int parallelismHint) throws AlgebricksException {
+        try {
+            Map<String, NodeControllerInfo> ncMap = clusterInfoCollector.getNodeControllerInfos();
+
+            // Unifies the handling of non-positive parallelism.
+            int parallelism = parallelismHint <= 0 ? -2 * ncMap.size() : parallelismHint;
+
+            // Calculates per node parallelism, with load balance, i.e., randomly selecting nodes with larger
+            // parallelism.
+            int numNodes = ncMap.size();
+            int numNodesWithOneMorePartition = parallelism % numNodes;
+            int perNodeParallelismMin = parallelism / numNodes;
+            int perNodeParallelismMax = parallelism / numNodes + 1;
+            List<String> allNodes = new ArrayList<>();
+            Set<String> selectedNodesWithOneMorePartition = new HashSet<>();
+            for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
+                allNodes.add(entry.getKey());
+            }
+            Random random = new Random();
+            for (int index = numNodesWithOneMorePartition; index >= 1; --index) {
+                int pick = random.nextInt(index);
+                selectedNodesWithOneMorePartition.add(allNodes.get(pick));
+                Collections.swap(allNodes, pick, index - 1);
+            }
+
+            // Generates cluster locations, which has duplicates for a node if it contains more than one partitions.
+            List<String> locations = new ArrayList<>();
+            for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
+                String nodeId = entry.getKey();
+                int numCores = entry.getValue().getNumCores();
+                int availableCores = numCores > 1 ? numCores - 1 : numCores; // Reserves one core for heartbeat.
+                int nodeParallelism = selectedNodesWithOneMorePartition.contains(nodeId) ? perNodeParallelismMax
+                        : perNodeParallelismMin;
+                int coresToUse = nodeParallelism >= 0 && nodeParallelism < availableCores ? nodeParallelism
+                        : availableCores;
+                for (int count = 0; count < coresToUse; ++count) {
+                    locations.add(nodeId);
+                }
+            }
+            return new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[0]));
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
         }
     }
 }

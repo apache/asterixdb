@@ -38,7 +38,7 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ExecutionTestUtil {
 
-    protected static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(ExecutionTestUtil.class.getName());
 
     protected static final String PATH_ACTUAL = "rttest" + File.separator;
 

@@ -1,0 +1,116 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<asterixConfiguration xmlns="asterixconf">
+    <metadataNode>asterix_nc1</metadataNode>
+    <store>
+        <ncId>asterix_nc1</ncId>
+        <storeDirs>iodevice0,iodevice1</storeDirs>
+    </store>
+    <store>
+        <ncId>asterix_nc2</ncId>
+        <storeDirs>iodevice0,iodevice1</storeDirs>
+    </store>
+    <transactionLogDir>
+        <ncId>asterix_nc1</ncId>
+        <txnLogDirPath>target/txnLogDir/asterix_nc1</txnLogDirPath>
+    </transactionLogDir>
+    <transactionLogDir>
+        <ncId>asterix_nc2</ncId>
+        <txnLogDirPath>target/txnLogDir/asterix_nc2</txnLogDirPath>
+    </transactionLogDir>
+
+    <property>
+        <name>max.wait.active.cluster</name>
+        <value>60</value>
+        <description>Maximum wait (in seconds) for a cluster to be ACTIVE (all
+            nodes are available)
+            before a submitted query/statement can be
+            executed. (Default = 60 seconds)
+        </description>
+    </property>
+
+    <property>
+        <name>log.level</name>
+        <value>INFO</value>
+        <description>Log level for running tests/build</description>
+    </property>
+    <property>
+        <name>compiler.framesize</name>
+        <value>32KB</value>
+    </property>
+    <property>
+        <name>compiler.sortmemory</name>
+        <value>320KB</value>
+    </property>
+    <property>
+        <name>compiler.groupmemory</name>
+        <value>160KB</value>
+    </property>
+    <property>
+        <name>compiler.joinmemory</name>
+        <value>160KB</value>
+    </property>
+    <property>
+        <name>compiler.parallelism</name>
+        <value>-1</value>
+    </property>
+    <property>
+        <name>storage.buffercache.pagesize</name>
+        <value>32KB</value>
+        <description>The page size in bytes for pages in the buffer cache.
+            (Default = "128KB")
+        </description>
+    </property>
+    <property>
+        <name>storage.buffercache.size</name>
+        <value>48MB</value>
+        <description>The size of memory allocated to the disk buffer cache.
+            The value should be a multiple of the buffer cache page size
+            (Default = "512MB")
+        </description>
+    </property>
+    <property>
+        <name>storage.memorycomponent.numpages</name>
+        <value>8</value>
+        <description>The number of pages to allocate for a memory component.
+            This budget is shared by all the memory components of the primary
+            index and all its secondary indexes across all I/O devices on a node.
+            Note: in-memory components usually has fill factor of 75% since
+            the pages are 75% full and the remaining 25% is un-utilized. (Default = 256)
+        </description>
+    </property>
+    <property>
+        <name>plot.activate</name>
+        <value>false</value>
+        <description>Enabling plot of Algebricks plan to tmp folder. (Default = false)
+        </description>
+    </property>
+    <property>
+        <name>messaging.frame.size</name>
+        <value>4096</value>
+        <description>The frame size to be used for NC to NC messaging. (Default = 4kb)
+        </description>
+    </property>
+    <property>
+        <name>messaging.frame.count</name>
+        <value>512</value>
+        <description>Number of reusable frames for NC to NC messaging. (Default = 512)
+        </description>
+    </property>
+</asterixConfiguration>

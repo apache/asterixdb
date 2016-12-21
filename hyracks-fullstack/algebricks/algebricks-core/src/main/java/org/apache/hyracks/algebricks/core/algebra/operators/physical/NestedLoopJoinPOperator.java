@@ -34,7 +34,9 @@ import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProper
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
+import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
@@ -115,9 +117,10 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
 
         // TODO: leverage statistics to make better decisions.
-        pv[0] = new StructuralPropertiesVector(null, null);
-        pv[1] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(context.getComputationNodeDomain()),
-                null);
+        pv[0] = OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op, new StructuralPropertiesVector(
+                new RandomPartitioningProperty(context.getComputationNodeDomain()), null));
+        pv[1] = OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op, new StructuralPropertiesVector(
+                new BroadcastPartitioningProperty(context.getComputationNodeDomain()), null));
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 

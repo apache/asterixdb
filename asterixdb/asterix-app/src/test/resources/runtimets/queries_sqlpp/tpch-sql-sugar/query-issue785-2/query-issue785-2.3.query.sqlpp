@@ -50,4 +50,5 @@ SELECT nation_key,
         ) AS sum_price
 FROM  X
 GROUP BY nation_key
+ORDER BY nation_key
 ;

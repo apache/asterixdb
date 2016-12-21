@@ -52,4 +52,5 @@ select element {'nation_key':nation_key,'sum_price':(
     )}
 from  X as x
 group by x.nation_key as nation_key
+order by nation_key
 ;

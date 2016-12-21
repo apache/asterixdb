@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -173,6 +172,8 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
         }
         if (changed) {
             cleanup(gby);
+            context.computeAndSetTypeEnvironmentForOperator(gby);
+            context.computeAndSetTypeEnvironmentForOperator(parentOperator);
         }
         return changed;
     }

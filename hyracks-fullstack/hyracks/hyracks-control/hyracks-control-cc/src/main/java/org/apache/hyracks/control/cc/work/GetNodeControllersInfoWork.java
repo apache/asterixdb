@@ -43,8 +43,9 @@ public class GetNodeControllersInfoWork extends AbstractWork {
         Map<String, NodeControllerInfo> result = new LinkedHashMap<>();
         Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
         for (Map.Entry<String, NodeControllerState> e : nodeMap.entrySet()) {
-            result.put(e.getKey(), new NodeControllerInfo(e.getKey(), NodeStatus.ALIVE, e.getValue().getDataPort(),
-                    e.getValue().getDatasetPort(), e.getValue().getMessagingPort()));
+            NodeControllerState ncState = e.getValue();
+            result.put(e.getKey(), new NodeControllerInfo(e.getKey(), NodeStatus.ALIVE, ncState.getDataPort(),
+                    ncState.getDatasetPort(), ncState.getMessagingPort(), ncState.getNumCores()));
         }
         callback.setValue(result);
     }

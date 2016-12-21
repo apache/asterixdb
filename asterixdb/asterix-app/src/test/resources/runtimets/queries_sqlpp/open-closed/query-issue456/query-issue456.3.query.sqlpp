@@ -26,8 +26,9 @@
 use test;
 
 
-select element [m,test.count(id)]
+select element [x.int_m,test.count(id)]
 from  DataOpen as x
 with  id as x.id
-group by x.int_m as m
+group by x.int_m
+order by x.int_m
 ;

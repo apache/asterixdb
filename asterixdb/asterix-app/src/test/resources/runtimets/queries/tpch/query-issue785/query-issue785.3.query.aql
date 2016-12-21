@@ -39,6 +39,7 @@ for $x in (
   }
 )
 group by $nation_key := $x.nation_key with $x
+order by $nation_key
 return {
      "nation_key": $nation_key,
      "sum_price": for $i in $x

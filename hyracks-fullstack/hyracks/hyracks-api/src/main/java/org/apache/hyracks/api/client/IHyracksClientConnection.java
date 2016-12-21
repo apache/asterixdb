@@ -20,7 +20,6 @@ package org.apache.hyracks.api.client;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -30,14 +29,13 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
-import org.apache.hyracks.api.topology.ClusterTopology;
 
 /**
  * Interface used by clients to communicate with the Hyracks Cluster Controller.
  *
  * @author vinayakb
  */
-public interface IHyracksClientConnection {
+public interface IHyracksClientConnection extends IClusterInfoCollector {
     /**
      * Gets the status of the specified Job.
      *
@@ -61,8 +59,6 @@ public interface IHyracksClientConnection {
     /**
      * Start the specified Job.
      *
-     * @param appName
-     *            Name of the application
      * @param jobSpec
      *            Job Specification
      * @throws Exception
@@ -72,8 +68,6 @@ public interface IHyracksClientConnection {
     /**
      * Start the specified Job.
      *
-     * @param appName
-     *            Name of the application
      * @param jobSpec
      *            Job Specification
      * @param jobFlags
@@ -85,8 +79,6 @@ public interface IHyracksClientConnection {
     /**
      * Start the specified Job.
      *
-     * @param appName
-     *            Name of the application
      * @param jobSpec
      *            Job Specification
      * @param jobFlags
@@ -100,8 +92,6 @@ public interface IHyracksClientConnection {
     /**
      * Start the specified Job.
      *
-     * @param appName
-     *            Name of the application
      * @param acggf
      *            Activity Cluster Graph Generator Factory
      * @param jobFlags
@@ -128,20 +118,6 @@ public interface IHyracksClientConnection {
      */
     public void waitForCompletion(JobId jobId) throws Exception;
 
-    /**
-     * Gets a map of node controller names to node information.
-     *
-     * @return Map of node name to node information.
-     */
-    public Map<String, NodeControllerInfo> getNodeControllerInfos() throws Exception;
-
-    /**
-     * Get the cluster topology
-     *
-     * @return the cluster topology
-     * @throws Exception
-     */
-    public ClusterTopology getClusterTopology() throws Exception;
 
     /**
      * Deploy the user-defined jars to the cluster
@@ -154,8 +130,8 @@ public interface IHyracksClientConnection {
     /**
      * undeploy a certain deployment
      *
-     * @param jars
-     *            a list of user-defined jars
+     * @param deploymentId
+     *            the id for the deployment to be undeployed
      */
     public void unDeployBinary(DeploymentId deploymentId) throws Exception;
 

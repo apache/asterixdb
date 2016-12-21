@@ -26,7 +26,8 @@
 use tpch;
 
 
-select element {'l_linenumber':l_linenumber,'count_order':tpch.count(l)}
+select element {'l_linenumber':l.l_linenumber,'count_order':tpch.count(l)}
 from  LineItem as l
-group by l.l_linenumber as l_linenumber
+group by l.l_linenumber
+order by l.l_linenumber
 ;

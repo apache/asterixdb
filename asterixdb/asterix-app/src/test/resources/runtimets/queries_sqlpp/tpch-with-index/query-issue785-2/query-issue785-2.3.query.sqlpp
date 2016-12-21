@@ -44,12 +44,13 @@ with  t as (
             from  orders as o
         ))
   )
-select element {'nation_key':nation_key,'sum_price':(
+select element {'nation_key':x.nation_key,'sum_price':(
         select element {'orderdate':y.order_date,'sum_price':y.sum_price}
         from  x as y
         order by y.sum_price desc
         limit 3
     )}
 from  X as x
-group by x.nation_key as nation_key
+group by x.nation_key
+order by x.nation_key
 ;

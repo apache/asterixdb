@@ -5,7 +5,10 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_linenumber]
     :
-    Variable [ Name=$l_linenumber ]
+    FieldAccessor [
+      Variable [ Name=$l ]
+      Field=l_linenumber
+    ]
   )
   (
     LiteralExpr [STRING] [count_order]
@@ -42,4 +45,11 @@ Groupby
   (
     l:=Variable [ Name=$l ]
   )
+
+Orderby
+  FieldAccessor [
+    Variable [ Name=$l ]
+    Field=l_linenumber
+  ]
+  ASC
 

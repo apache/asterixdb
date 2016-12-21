@@ -31,47 +31,51 @@ FROM [  (
       (
         LiteralExpr [STRING] [partkey]
         :
-        Variable [ Name=$partkey ]
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=l_partkey
+        ]
       )
       (
         LiteralExpr [STRING] [i]
         :
-        Variable [ Name=$i ]
-      )
-    ]
-    ]
-    FROM [      (
-        SELECT ELEMENT [
-        Variable [ Name=$l ]
-        ]
-        FROM [          FunctionCall Metadata.dataset@1[
-            LiteralExpr [STRING] [LineItem]
-          ]
-          AS Variable [ Name=$l ]
-        ]
-        Orderby
+        (
+          SELECT ELEMENT [
           FieldAccessor [
-            Variable [ Name=$l ]
-            Field=l_partkey
+            Variable [ Name=$x ]
+            Field=i
           ]
-          ASC
-          FieldAccessor [
-            Variable [ Name=$l ]
-            Field=l_shipdate
           ]
-          ASC
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$x ]
+          ]
+          Orderby
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=$x ]
+                Field=i
+              ]
+              Field=l_shipdate
+            ]
+            ASC
 
+        )
       )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItem]
+      ]
       AS Variable [ Name=$i ]
     ]
     Groupby
-      Variable [ Name=$partkey ]
+      Variable [ Name=$l_partkey ]
       :=
       FieldAccessor [
         Variable [ Name=$i ]
         Field=l_partkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g ]
       (
         i:=Variable [ Name=$i ]
       )
@@ -93,3 +97,15 @@ Where
     <
     LiteralExpr [LONG] [4]
   ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$gen0 ]
+    Field=partkey
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$j ]
+    Field=l_shipdate
+  ]
+  ASC
+
