@@ -100,7 +100,7 @@
         { "v1": true, "v2": false }
 
 
-### initcap (title) ###
+### initcap (or title) ###
  * Syntax:
 
         initcap(string)
@@ -113,7 +113,7 @@
  * Return Value:
     * a `string` as the title form of the given `string`,
     * `missing` if the argument is a `missing` value,
-     * `null` if the argument is a `null` value,
+    * `null` if the argument is a `null` value,
     * any other non-string input value will cause a type error.
 
  * Example:
@@ -161,7 +161,7 @@
  * Return Value:
     * a `string` as the lowercase form of the given `string`,
     * `missing` if the argument is a `missing` value,
-     * `null` if the argument is a `null` value,
+    * `null` if the argument is a `null` value,
     * any other non-string input value will cause a type error.
 
  * Example:
@@ -193,7 +193,7 @@
 
  * Example:
 
-        ltrim("i like iphone", "iphone");
+        ltrim("me like iphone", "eml");
 
 
  * The expected result is:
@@ -220,14 +220,14 @@
  * Example:
 
         {
-          "v1": position("pphonepp", "phone"),
+          "v1": position("ppphonepp", "phone"),
           "v2": position("hone", "phone")
         };
 
 
  * The expected result is:
 
-        { "v1": 1, "v2": -1 }
+        { "v1": 2, "v2": -1 }
 
 
 ### regexp_contains ###
@@ -241,7 +241,7 @@
     * `string` : a `string` that might contain the pattern,
     * `string_pattern` : a pattern `string` to be matched,
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
-        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insenitive (i), and comments and whitespace (x).
+        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
     * a `boolean`, returns `true` if `string` contains the pattern `string_pattern`,
     * `missing` if any argument is a `missing` value,
@@ -273,7 +273,7 @@
     * `string` : a `string` that might contain the pattern,
     * `string_pattern` : a pattern `string` that might be contained,
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
-        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insenitive (i), and comments and whitespace (x).
+        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
     * a `boolean` value, `true` if `string` contains the pattern `string_pattern`,
     * `missing` if any argument is a `missing` value,
@@ -304,7 +304,7 @@
     * `string` : a `string` that might contain the pattern,
     * `string_pattern` : a pattern `string` to be matched,
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
-        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insenitive (i), and comments and whitespace (x).
+        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
     * the first position that the regular expression `string_pattern` appears in `string`,
       or -1 if it does not appear.
@@ -338,7 +338,7 @@
     * `string_pattern` : a pattern `string` to be matched,
     * `string_replacement` : a pattern `string` to be used as the replacement,
     * `string_flag` : (Optional) a `string` with flags to be used during replace.
-        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insenitive (i), and comments and whitespace (x).
+        * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
     * Returns a `string` that is obtained after the replacements,
     * `missing` if any argument is a `missing` value,
@@ -362,7 +362,7 @@
 
  * Returns a string formed by repeating the input `string` `n` times.
  * Arguments:
-    * `string` : a `string` to be extracted,
+    * `string` : a `string` to be repeated,
     * `offset` : an `tinyint`/`smallint`/`integer`/`bigint` value as the starting offset of the substring in `string`.
  * Return Value:
     * a string that repeats the input `string` `n` times,
@@ -401,13 +401,14 @@
 
  * Example:
 
-        rtrim("i like iphone", "iphone");
-
+        {
+          "v1": rtrim("i like iphone", "iphone"),
+          "v2": rtrim("i like iphone", "oneiph")
+        };
 
  * The expected result is:
 
-        "i like "
-
+        { "v1": "i like ", "v2": "i like " }
 
 ### split ###
  * Syntax:
@@ -493,10 +494,10 @@
 
         string_join(array, string)
 
- * Joins a array or multiset of strings `array` with the given separator `string` into a single string.
+ * Joins an array or multiset of strings `array` with the given separator `string` into a single string.
  * Arguments:
     * `array` : an `array` or `multiset` of strings (could be `null`) to be joined.
-    * `string` : a `string` as the separator.
+    * `string` : a `string` to serve as the separator.
  * Return Value:
     * the joined `string`,
     * `missing` if any argument is a `missing` value,
@@ -531,6 +532,14 @@
     * `null` if the argument is a `null` value,
     * any other non-string input value will cause a type error.
 
+ * Example:
+
+        string_to_codepoint("Hello ASTERIX!");
+
+
+ * The expected result is:
+
+        [ 72, 101, 108, 108, 111, 32, 65, 83, 84, 69, 82, 73, 88, 33 ]
 
 
 ### codepoint_to_string ###
@@ -551,12 +560,13 @@
 
  * Example:
 
-        { "codes": string_to_codepoint("Hello ASTERIX!"), "string": codepoint_to_string(string_to_codepoint("Hello ASTERIX!"))};
+        codepoint_to_string([72, 101, 108, 108, 111, 32, 65, 83, 84, 69, 82, 73, 88, 33]);
 
 
  * The expected result is:
 
-        { "codes": [ 72, 101, 108, 108, 111, 32, 65, 83, 84, 69, 82, 73, 88, 33 ], "string": "Hello ASTERIX!" }
+        "Hello ASTERIX!"
+
 
 
 ### substr ###
@@ -608,9 +618,10 @@
         substring_before(" like iphone", "iphone");
 
 
-* The expected result is:
+ * The expected result is:
 
         " like "
+
 
 ### substring_after ###
  * Syntax:
@@ -630,12 +641,12 @@
 
  * Example:
 
-        substring_after(" like iphone", "iphone");
+        substring_after(" like iphone", "iph");
 
 
  * The expected result is:
 
-        ""
+        "one"
 
 
 ### trim ###
@@ -657,7 +668,7 @@
 
  * Example:
 
-        trim("i like iphone", "iphone");
+        trim("i like iphone", "iphoen");
 
 
  * The expected result is:
