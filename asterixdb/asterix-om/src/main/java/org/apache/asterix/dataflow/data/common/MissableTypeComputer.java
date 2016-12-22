@@ -25,11 +25,11 @@ import org.apache.asterix.om.types.TypeHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 
-public class AqlMissableTypeComputer implements IMissableTypeComputer {
+public class MissableTypeComputer implements IMissableTypeComputer {
 
-    public static final AqlMissableTypeComputer INSTANCE = new AqlMissableTypeComputer();
+    public static final MissableTypeComputer INSTANCE = new MissableTypeComputer();
 
-    private AqlMissableTypeComputer() {
+    private MissableTypeComputer() {
     }
 
     @Override

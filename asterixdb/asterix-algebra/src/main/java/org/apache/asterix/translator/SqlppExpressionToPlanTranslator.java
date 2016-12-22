@@ -257,7 +257,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             // We set the positional variable type as INT64 type.
             unnestOp =
                     new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
-                            pVar, BuiltinType.AINT64, new AqlPositionWriter());
+                            pVar, BuiltinType.AINT64, new PositionWriter());
         } else {
             unnestOp =
                     new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
@@ -457,9 +457,9 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             // We set the positional variable type as INT64 type.
             unnestOp = innerUnnest
                     ? new UnnestOperator(rightVar, new MutableObject<>(makeUnnestExpression(eo.first)), pVar,
-                            BuiltinType.AINT64, new AqlPositionWriter())
+                            BuiltinType.AINT64, new PositionWriter())
                     : new LeftOuterUnnestOperator(rightVar, new MutableObject<>(makeUnnestExpression(eo.first)), pVar,
-                            BuiltinType.AINT64, new AqlPositionWriter());
+                            BuiltinType.AINT64, new PositionWriter());
         } else {
             unnestOp = innerUnnest ? new UnnestOperator(rightVar, new MutableObject<>(makeUnnestExpression(eo.first)))
                     : new LeftOuterUnnestOperator(rightVar, new MutableObject<>(makeUnnestExpression(eo.first)));

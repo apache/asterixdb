@@ -83,7 +83,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
             LogicalVariable pVar = context.newVar(fc.getPosVarExpr());
             // We set the positional variable type as INT64 type.
             returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
-                    pVar, BuiltinType.AINT64, new AqlPositionWriter());
+                    pVar, BuiltinType.AINT64, new PositionWriter());
         }
         returnedOp.getInputs().add(eo.second);
         return new Pair<>(returnedOp, v);

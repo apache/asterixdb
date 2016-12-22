@@ -16,22 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.translator;
+package org.apache.asterix.dataflow.data.nontagged;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.Serializable;
 
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class AqlPositionWriter implements IUnnestingPositionWriter, Serializable {
+public class MissingWriterFactory implements IMissingWriterFactory {
+
     private static final long serialVersionUID = 1L;
+    public static final MissingWriterFactory INSTANCE = new MissingWriterFactory();
+
+    private MissingWriterFactory() {
+    }
 
     @Override
-    public void write(DataOutput dataOutput, long position) throws IOException {
-        dataOutput.writeByte(BuiltinType.AINT64.getTypeTag().serialize());
-        dataOutput.writeLong(position);
+    public IMissingWriter createMissingWriter() {
+        return MissingWriterFactory::writeMissing;
+    }
+
+    private static void writeMissing(DataOutput out) throws HyracksDataException {
+        try {
+            out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
 }

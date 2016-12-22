@@ -42,11 +42,11 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
-import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
-import org.apache.asterix.dataflow.data.common.AqlMissableTypeComputer;
-import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
 import org.apache.asterix.dataflow.data.common.ConflictingTypeResolver;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
+import org.apache.asterix.dataflow.data.common.MergeAggregationExpressionFactory;
+import org.apache.asterix.dataflow.data.common.MissableTypeComputer;
+import org.apache.asterix.dataflow.data.common.PartialAggregationTypeComputer;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
@@ -110,11 +110,11 @@ public class APIFramework {
         this.ruleSetFactory = compilationProvider.getRuleSetFactory();
     }
 
-    private static class AqlOptimizationContextFactory implements IOptimizationContextFactory {
+    private static class OptimizationContextFactory implements IOptimizationContextFactory {
 
-        public static final AqlOptimizationContextFactory INSTANCE = new AqlOptimizationContextFactory();
+        public static final OptimizationContextFactory INSTANCE = new OptimizationContextFactory();
 
-        private AqlOptimizationContextFactory() {
+        private OptimizationContextFactory() {
         }
 
         @Override
@@ -218,17 +218,17 @@ public class APIFramework {
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesForJoin(joinFrameLimit);
 
         HeuristicCompilerFactoryBuilder builder =
-                new HeuristicCompilerFactoryBuilder(AqlOptimizationContextFactory.INSTANCE);
+                new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
         builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites());
         builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites());
         IDataFormat format = metadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
-        builder.setIMergeAggregationExpressionFactory(new AqlMergeAggregationExpressionFactory());
-        builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
+        builder.setIMergeAggregationExpressionFactory(new MergeAggregationExpressionFactory());
+        builder.setPartialAggregationTypeComputer(new PartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
-        builder.setMissableTypeComputer(AqlMissableTypeComputer.INSTANCE);
+        builder.setMissableTypeComputer(MissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
 
         int parallelism = compilerProperties.getParallelism();

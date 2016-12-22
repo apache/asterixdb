@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
-import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
+import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -125,7 +125,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             SerializerDeserializerProvider.INSTANCE, BinaryHashFunctionFactoryProvider.INSTANCE,
             BinaryHashFunctionFamilyProvider.INSTANCE, BinaryComparatorFactoryProvider.INSTANCE,
             TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY, BinaryIntegerInspector.FACTORY,
-            ADMPrinterFactoryProvider.INSTANCE, AqlMissingWriterFactory.INSTANCE, null,
+            ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
             new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE),
             ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
 

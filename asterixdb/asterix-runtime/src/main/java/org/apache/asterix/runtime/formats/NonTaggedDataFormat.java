@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.dataflow.data.nontagged.AqlMissingWriterFactory;
+import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
@@ -670,7 +670,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public IMissingWriterFactory getMissingWriterFactory() {
-        return AqlMissingWriterFactory.INSTANCE;
+        return MissingWriterFactory.INSTANCE;
     }
 
     @Override

@@ -330,7 +330,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
         } else {
             LogicalVariable pVar = context.newVar(fc.getPosVarExpr());
             returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
-                    pVar, BuiltinType.AINT32, new AqlPositionWriter());
+                    pVar, BuiltinType.AINT32, new PositionWriter());
         }
         returnedOp.getInputs().add(eo.second);
 

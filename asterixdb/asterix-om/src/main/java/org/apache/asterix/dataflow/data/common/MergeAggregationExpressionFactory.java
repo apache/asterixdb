@@ -34,7 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationE
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class AqlMergeAggregationExpressionFactory implements IMergeAggregationExpressionFactory {
+public class MergeAggregationExpressionFactory implements IMergeAggregationExpressionFactory {
 
     @Override
     public ILogicalExpression createMergeAggregation(LogicalVariable originalProducedVar, ILogicalExpression expr,
@@ -56,7 +56,6 @@ public class AqlMergeAggregationExpressionFactory implements IMergeAggregationEx
              */
             return null;
         }
-        ILogicalExpression aggExpr = BuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
-        return aggExpr;
+        return BuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
     }
 }

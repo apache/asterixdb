@@ -28,7 +28,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class AqlPartialAggregationTypeComputer implements IPartialAggregationTypeComputer {
+public class PartialAggregationTypeComputer implements IPartialAggregationTypeComputer {
 
     @Override
     public Object getType(ILogicalExpression expr, IVariableTypeEnvironment env,
