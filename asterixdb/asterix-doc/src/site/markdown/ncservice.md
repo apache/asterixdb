@@ -121,14 +121,11 @@ The following parameters are for the master process, under the "[cc]" section.
 
 | Parameter | Meaning |  Default |
 |----------|--------|-------|
-| compiler.framesize |  The page size (in bytes) for computation  | 32768 |
-| compiler.groupmemory |  The memory budget (in bytes) for a group by operator instance in a partition | 33554432 |
-| compiler.joinmemory | The memory budget (in bytes) for a join operator instance in a partition  | 33554432 |
-| compiler.sortmemory | The memory budget (in bytes) for a sort operator instance in a partition | 33554432 |
 | instance.name  |  The name of the AsterixDB instance   | "DEFAULT_INSTANCE" |
 | max.wait.active.cluster | The max pending time (in seconds) for cluster startup. After the threshold, if the cluster still is not up and running, it is considered unavailable.    | 60 |
 | metadata.callback.port | The port for metadata communication | 0 |
 | cluster.address | The binding IP address for the AsterixDB instance | N/A |
+
 
 The following parameters for slave processes, under "[nc]" sections.
 
@@ -168,3 +165,7 @@ The following parameter is for both master and slave processes, under the "[app]
 | Parameter | Meaning |  Default |
 |----------|--------|-------|
 | log.level | The logging level for master and slave processes | "INFO" |
+| compiler.framesize |  The page size (in bytes) for computation  | 32768 |
+| compiler.groupmemory |  The memory budget (in bytes) for a group by operator instance in a partition | 33554432 |
+| compiler.joinmemory | The memory budget (in bytes) for a join operator instance in a partition  | 33554432 |
+| compiler.sortmemory | The memory budget (in bytes) for a sort operator instance in a partition | 33554432 |
