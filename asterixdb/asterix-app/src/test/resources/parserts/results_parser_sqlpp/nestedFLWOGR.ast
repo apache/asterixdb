@@ -14,7 +14,7 @@ RecordConstructor [
 FROM [  (
     Let Variable [ Name=$data ]
       :=
-      FunctionCall Metadata.dataset@1[
+      FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [User]
       ]
     SELECT ELEMENT [

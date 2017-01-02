@@ -4803,6 +4803,54 @@
         </test-case> -->
   </test-group>
   &RecordsQueries;
+  <test-group name="resolution">
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-field-dataset">
+        <output-dir compare="Text">conflict-field-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-field-dataset-from">
+        <output-dir compare="Text">conflict-field-dataset-from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-field-dataset-fromterm">
+        <output-dir compare="Text">conflict-field-dataset-from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-field-dataset-join">
+        <output-dir compare="Text">conflict-field-dataset-from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-field-dataset-quantifier">
+        <output-dir compare="Text">conflict-field-dataset-from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-field-dataset-unnest">
+        <output-dir compare="Text">conflict-field-dataset-from</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="conflict-fields-dataset">
+        <output-dir compare="Text">conflict-field-dataset</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier samptable</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="fullyqualified">
+        <output-dir compare="Text">fullyqualified</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="fullyqualified2">
+        <output-dir compare="Text">fullyqualified2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="scan">
     <test-case FilePath="scan">
       <compilation-unit name="10">

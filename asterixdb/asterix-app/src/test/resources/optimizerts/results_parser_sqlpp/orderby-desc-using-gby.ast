@@ -32,8 +32,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [age]
     :
-    FunctionCall Metadata.dataset@1[
+    FunctionCall Metadata.resolve@-1[
       LiteralExpr [STRING] [age]
+      Variable [ Name=$name ]
+      Variable [ Name=#1 ]
+      Variable [ Name=$c ]
     ]
   )
 ]
@@ -58,8 +61,11 @@ Groupby
 Orderby
   Variable [ Name=$name ]
   DESC
-  FunctionCall Metadata.dataset@1[
+  FunctionCall Metadata.resolve@-1[
     LiteralExpr [STRING] [age]
+    Variable [ Name=$name ]
+    Variable [ Name=#1 ]
+    Variable [ Name=$c ]
   ]
   ASC
 

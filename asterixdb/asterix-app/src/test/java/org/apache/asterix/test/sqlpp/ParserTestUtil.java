@@ -30,20 +30,20 @@ import org.junit.internal.AssumptionViolatedException;
 
 class ParserTestUtil {
 
-    static void suiteBuild(File dir, Collection<Object[]> testArgs, String path, String separator,
+    static void suiteBuild(File file, Collection<Object[]> testArgs, String path, String separator,
             String extensionQuery, String extensionResult, String pathExpected, String pathActual) {
-        for (File file : dir.listFiles()) {
-            if (file.isDirectory() && !file.getName().startsWith(".")) {
-                suiteBuild(file, testArgs, TestHelper.joinPath(path, file.getName()), separator, extensionQuery,
-                        extensionResult, pathExpected, pathActual);
+        if (file.isDirectory() && !file.getName().startsWith(".")) {
+            for (File innerfile : file.listFiles()) {
+                String subdir = innerfile.isDirectory() ? TestHelper.joinPath(path, innerfile.getName()) : path;
+                suiteBuild(innerfile, testArgs, subdir, separator, extensionQuery, extensionResult, pathExpected,
+                        pathActual);
             }
-            if (file.isFile() && file.getName().endsWith(extensionQuery)) {
-                String resultFileName = AsterixTestHelper.extToResExt(file.getName(), extensionResult);
-                File expectedFile = new File(TestHelper.joinPath(pathExpected, path, resultFileName));
-                File actualFile = new File(
-                        TestHelper.joinPath(pathActual, path.replace(separator, "_"), resultFileName));
-                testArgs.add(new Object[] { file, expectedFile, actualFile });
-            }
+        }
+        if (file.isFile() && file.getName().endsWith(extensionQuery)) {
+            String resultFileName = AsterixTestHelper.extToResExt(file.getName(), extensionResult);
+            File expectedFile = new File(TestHelper.joinPath(pathExpected, path, resultFileName));
+            File actualFile = new File(TestHelper.joinPath(pathActual, path, resultFileName));
+            testArgs.add(new Object[] { file, expectedFile, actualFile });
         }
     }
 

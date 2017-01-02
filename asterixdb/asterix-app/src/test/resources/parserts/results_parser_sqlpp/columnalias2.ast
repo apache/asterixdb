@@ -2,12 +2,26 @@ Query:
 SELECT [
 FunctionCall null.sqrt@1[
   OperatorExpr [
-    FunctionCall Metadata.dataset@1[
-      LiteralExpr [STRING] [t.a]
+    FieldAccessor [
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [t]
+        Variable [ Name=$u ]
+        Variable [ Name=$root ]
+        Variable [ Name=#1 ]
+        Variable [ Name=$id ]
+      ]
+      Field=a
     ]
     *
-    FunctionCall Metadata.dataset@1[
-      LiteralExpr [STRING] [t.b]
+    FieldAccessor [
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [t]
+        Variable [ Name=$u ]
+        Variable [ Name=$root ]
+        Variable [ Name=#1 ]
+        Variable [ Name=$id ]
+      ]
+      Field=b
     ]
   ]
 ]

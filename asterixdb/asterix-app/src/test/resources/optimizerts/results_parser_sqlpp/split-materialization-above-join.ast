@@ -60,8 +60,19 @@ FROM [  FunctionCall Metadata.dataset@1[
         LiteralExpr [STRING] [sim]
         :
         IndexAccessor [
-          FunctionCall Metadata.dataset@1[
+          FunctionCall Metadata.resolve@-1[
             LiteralExpr [STRING] [sim]
+            Variable [ Name=#5 ]
+            Variable [ Name=$lenLeft ]
+            Variable [ Name=$idLeft ]
+            Variable [ Name=$lenRight ]
+            Variable [ Name=$tokensLeft ]
+            Variable [ Name=$prefixTokenRight ]
+            Variable [ Name=$tokensRight ]
+            Variable [ Name=$paperLeft ]
+            Variable [ Name=$paperRight ]
+            Variable [ Name=$idRight ]
+            Variable [ Name=$prefixTokenLeft ]
           ]
           Index:           LiteralExpr [LONG] [0]
         ]
@@ -74,13 +85,17 @@ FROM [  FunctionCall Metadata.dataset@1[
       AS Variable [ Name=$paperLeft ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.dataset@1[
+        FunctionCall Metadata.resolve@-1[
           LiteralExpr [STRING] [tokensLeft]
+          Variable [ Name=$paperLeft ]
+          Variable [ Name=$paperRight ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-          FunctionCall Metadata.dataset@1[
+          FunctionCall Metadata.resolve@-1[
             LiteralExpr [STRING] [lenLeft]
+            Variable [ Name=$paperLeft ]
+            Variable [ Name=$paperRight ]
           ]
           LiteralExpr [FLOAT] [0.5]
         ]
@@ -93,13 +108,19 @@ FROM [  FunctionCall Metadata.dataset@1[
       AS Variable [ Name=$paperRight ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.dataset@1[
+        FunctionCall Metadata.resolve@-1[
           LiteralExpr [STRING] [tokensRight]
+          Variable [ Name=$paperLeft ]
+          Variable [ Name=$paperRight ]
+          Variable [ Name=$prefixTokenLeft ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-          FunctionCall Metadata.dataset@1[
+          FunctionCall Metadata.resolve@-1[
             LiteralExpr [STRING] [lenRight]
+            Variable [ Name=$paperLeft ]
+            Variable [ Name=$paperRight ]
+            Variable [ Name=$prefixTokenLeft ]
           ]
           LiteralExpr [FLOAT] [0.5]
         ]

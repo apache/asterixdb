@@ -61,8 +61,13 @@ Let Variable [ Name=$sig_sponsorship_count ]
   FunctionCall null.sql-count@1[
     (
       SELECT ELEMENT [
-      FunctionCall Metadata.dataset@1[
+      FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [es]
+        Variable [ Name=$sponsor ]
+        Variable [ Name=$event ]
+        Variable [ Name=$sig_name ]
+        Variable [ Name=#1 ]
+        Variable [ Name=#2 ]
       ]
       ]
       FROM [        Variable [ Name=#1 ]
@@ -86,8 +91,17 @@ Let Variable [ Name=$by_chapter ]
         FunctionCall null.sql-count@1[
           (
             SELECT ELEMENT [
-            FunctionCall Metadata.dataset@1[
+            FunctionCall Metadata.resolve@-1[
               LiteralExpr [STRING] [es]
+              Variable [ Name=#4 ]
+              Variable [ Name=$e ]
+              Variable [ Name=$sponsor ]
+              Variable [ Name=$sig_sponsorship_count ]
+              Variable [ Name=$chapter_name ]
+              Variable [ Name=$event ]
+              Variable [ Name=$sig_name ]
+              Variable [ Name=#1 ]
+              Variable [ Name=#3 ]
             ]
             ]
             FROM [              Variable [ Name=#3 ]

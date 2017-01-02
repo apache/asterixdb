@@ -51,10 +51,17 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * This rule resolves references to undefined identifiers as:
- * 1. expression + field-access paths, or
+ * This rule resolves references to undefined identifiers with the following priority:
+ * 1. field-access
  * 2. datasets
  * based on the available type and metadata information.
+ *
+ *
+ * Note that undefined variable references that are FROM/JOIN/UNNEST/Quantifier binding expressions
+ * are resolved to dataset only, which has been done in
+ *
+ * @see org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor
+ *
  */
 public class ResolveVariableRule implements IAlgebraicRewriteRule {
 
@@ -144,12 +151,16 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             Mutable<ILogicalExpression> parentFuncRef, IOptimizationContext context) throws AlgebricksException {
         AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) funcRef.getValue();
         int numVarCandidates = varAccessCandidates.size();
-        boolean hasAmbiguity = hasAmbiguity(hasMatchedDataset, fullyQualifiedDatasetPathCandidateFromParent,
-                numVarCandidates);
-        if (hasAmbiguity) {
-            // More than one possibilities.
-            throw new AlgebricksException("Cannot resolve ambiguous alias reference for undefined identifier "
-                    + unresolvedVarName);
+
+        // The resolution order: 1. field-access 2. datasets (standalone-name or fully-qualified)
+        if (numVarCandidates > 0) {
+            if (numVarCandidates == 1) {
+                resolveAsFieldAccess(funcRef, varAccessCandidates.iterator().next());
+            } else {
+                // More than one possibilities.
+                throw new AlgebricksException(
+                        "Cannot resolve ambiguous alias reference for undefined identifier " + unresolvedVarName);
+            }
         } else if (hasMatchedDataset) {
             // Rewrites the "resolve" function to a "dataset" function and only keep the dataset name argument.
             func.setFunctionInfo(FunctionUtil.getFunctionInfo(BuiltinFunctions.DATASET));
@@ -165,8 +176,6 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
                     new MutableObject<>(new ConstantExpression(
                             new AsterixConstantValue(new AString(fullyQualifiedDatasetPathCandidateFromParent.second
                                     + "." + fullyQualifiedDatasetPathCandidateFromParent.third)))));
-        } else if (numVarCandidates == 1) {
-            resolveAsFieldAccess(funcRef, varAccessCandidates.iterator().next());
         } else {
             MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
             // Cannot find any resolution.
@@ -174,15 +183,6 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
                     + metadataProvider.getDefaultDataverseName() + " nor an alias with name " + unresolvedVarName);
         }
         return true;
-    }
-
-    // Check whether it is possible to have multiple resolutions for a "resolve" function.
-    private boolean hasAmbiguity(boolean hasMatchedDataset,
-            Triple<Boolean, String, String> fullyQualifiedDatasetPathCandidateFromParent, int numVarCandidates) {
-        boolean hasAmbiguity = numVarCandidates > 1 || (numVarCandidates == 1 && hasMatchedDataset);
-        hasAmbiguity = hasAmbiguity || (numVarCandidates == 1 && fullyQualifiedDatasetPathCandidateFromParent.first);
-        hasAmbiguity = hasAmbiguity || (hasMatchedDataset && fullyQualifiedDatasetPathCandidateFromParent.first);
-        return hasAmbiguity;
     }
 
     // Resolves a "resolve" function call as a field access.

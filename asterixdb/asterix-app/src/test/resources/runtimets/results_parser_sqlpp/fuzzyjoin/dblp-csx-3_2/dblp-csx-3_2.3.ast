@@ -52,14 +52,16 @@ FROM [  (
       AS Variable [ Name=$paperDBLP ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.dataset@1[
+        FunctionCall Metadata.resolve@-1[
           LiteralExpr [STRING] [tokensDBLP]
+          Variable [ Name=$paperDBLP ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
           FunctionCall fuzzyjoin.len@1[
-            FunctionCall Metadata.dataset@1[
+            FunctionCall Metadata.resolve@-1[
               LiteralExpr [STRING] [tokensDBLP]
+              Variable [ Name=$paperDBLP ]
             ]
           ]
           LiteralExpr [FLOAT] [0.5]
@@ -73,14 +75,20 @@ FROM [  (
       AS Variable [ Name=$paperCSX ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.dataset@1[
+        FunctionCall Metadata.resolve@-1[
           LiteralExpr [STRING] [tokensCSX]
+          Variable [ Name=$prefixTokenDBLP ]
+          Variable [ Name=$paperDBLP ]
+          Variable [ Name=$paperCSX ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
           FunctionCall fuzzyjoin.len@1[
-            FunctionCall Metadata.dataset@1[
+            FunctionCall Metadata.resolve@-1[
               LiteralExpr [STRING] [tokensCSX]
+              Variable [ Name=$prefixTokenDBLP ]
+              Variable [ Name=$paperDBLP ]
+              Variable [ Name=$paperCSX ]
             ]
           ]
           LiteralExpr [FLOAT] [0.5]
@@ -139,8 +147,18 @@ FROM [  (
               FunctionCall fuzzyjoin.sql-count@1[
                 (
                   SELECT ELEMENT [
-                  FunctionCall Metadata.dataset@1[
+                  FunctionCall Metadata.resolve@-1[
                     LiteralExpr [STRING] [id]
+                    Variable [ Name=$prefixTokenCSX ]
+                    Variable [ Name=$token ]
+                    Variable [ Name=$paper ]
+                    Variable [ Name=$tokenGroupped ]
+                    Variable [ Name=$prefixTokenDBLP ]
+                    Variable [ Name=$paperDBLP ]
+                    Variable [ Name=$tokenUnranked ]
+                    Variable [ Name=$paperCSX ]
+                    Variable [ Name=#1 ]
+                    Variable [ Name=#2 ]
                   ]
                   ]
                   FROM [                    Variable [ Name=#1 ]
@@ -219,8 +237,19 @@ Variable [ Name=$i ]
               FunctionCall fuzzyjoin.sql-count@1[
                 (
                   SELECT ELEMENT [
-                  FunctionCall Metadata.dataset@1[
+                  FunctionCall Metadata.resolve@-1[
                     LiteralExpr [STRING] [id]
+                    Variable [ Name=#4 ]
+                    Variable [ Name=$prefixTokenCSX ]
+                    Variable [ Name=$token ]
+                    Variable [ Name=$paper ]
+                    Variable [ Name=$tokenGroupped ]
+                    Variable [ Name=$prefixTokenDBLP ]
+                    Variable [ Name=$tokensDBLP ]
+                    Variable [ Name=$paperDBLP ]
+                    Variable [ Name=$tokenUnranked ]
+                    Variable [ Name=$paperCSX ]
+                    Variable [ Name=#3 ]
                   ]
                   ]
                   FROM [                    Variable [ Name=#3 ]

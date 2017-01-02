@@ -37,8 +37,13 @@ Orderby
   FunctionCall fuzzyjoin.sql-count@1[
     (
       SELECT ELEMENT [
-      FunctionCall Metadata.dataset@1[
+      FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [id]
+        Variable [ Name=$token ]
+        Variable [ Name=$paper ]
+        Variable [ Name=$tokenGroupped ]
+        Variable [ Name=#1 ]
+        Variable [ Name=#2 ]
       ]
       ]
       FROM [        Variable [ Name=#1 ]

@@ -36,6 +36,7 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
+import org.apache.asterix.lang.sqlpp.visitor.CheckDatasetOnlyResolutionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -64,7 +65,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     @Override
-    public Expression visit(FieldAccessor fa, ILangExpression arg) throws AsterixException {
+    public Expression visit(FieldAccessor fa, ILangExpression parent) throws AsterixException {
         Expression leadingExpr = fa.getExpr();
         if (leadingExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
             fa.setExpr(leadingExpr.accept(this, fa));
@@ -75,7 +76,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             Expression resolvedExpr = resolve(varExpr,
                     /** Resolves within the dataverse that has the same name as the variable name. */
                     SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), lastIdentifier,
-                    arg);
+                    fa, parent);
             if (resolvedExpr.getKind() == Kind.CALL_EXPRESSION) {
                 CallExpr callExpr = (CallExpr) resolvedExpr;
                 if (callExpr.getFunctionSignature().equals(datasetFunction)) {
@@ -89,13 +90,14 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     @Override
-    public Expression visit(VariableExpr varExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(VariableExpr varExpr, ILangExpression parent) throws AsterixException {
         return resolve(varExpr, null /** Resolves within the default dataverse. */
-                , SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), arg);
+                , SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), varExpr, parent);
     }
 
     // Resolve a variable expression with dataverse name and dataset name.
-    private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName, ILangExpression arg)
+    private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName,
+            Expression originalExprWithUndefinedIdentifier, ILangExpression parent)
             throws AsterixException {
         String varName = varExpr.getVar().getValue();
         checkError(varName);
@@ -108,21 +110,29 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         // it will lead to ambiguities and the plan is going to be very complex.  An example query is:
         // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/subquery/exists
         Set<VariableExpr> liveVars = SqlppVariableUtil.getLiveVariables(scopeChecker.getCurrentScope(), false);
-        boolean resolveAsDataset = resolveDatasetFirst(arg) && datasetExists(dataverseName, datasetName);
-        if (resolveAsDataset) {
-            return wrapWithDatasetFunction(dataverseName, datasetName);
-        } else if (liveVars.isEmpty()) {
-            String defaultDataverseName = metadataProvider.getDefaultDataverseName();
-            if (dataverseName == null && defaultDataverseName == null) {
-                throw new AsterixException("Cannot find dataset " + datasetName
-                        + " because there is no dataverse declared, nor an alias with name " + datasetName + "!");
+        boolean resolveToDatasetOnly = resolveToDatasetOnly(originalExprWithUndefinedIdentifier, parent);
+        boolean resolveAsDataset = datasetExists(dataverseName, datasetName);
+
+        if (resolveToDatasetOnly) {
+            if (resolveAsDataset) {
+                return wrapWithDatasetFunction(dataverseName, datasetName);
+            } else {
+                throwUnresolvableError(dataverseName, datasetName);
             }
-            //If no available dataset nor in-scope variable to resolve to, we throw an error.
-            throw new AsterixException("Cannot find dataset " + datasetName + " in dataverse "
-                    + (dataverseName == null ? defaultDataverseName : dataverseName) + " nor an alias with name "
-                    + datasetName + "!");
         }
         return wrapWithResolveFunction(varExpr, liveVars);
+    }
+
+    private void throwUnresolvableError(String dataverseName, String datasetName) throws AsterixException {
+        String defaultDataverseName = metadataProvider.getDefaultDataverseName();
+        if (dataverseName == null && defaultDataverseName == null) {
+            throw new AsterixException("Cannot find dataset " + datasetName
+                    + " because there is no dataverse declared, nor an alias with name " + datasetName + "!");
+        }
+        //If no available dataset nor in-scope variable to resolve to, we throw an error.
+        throw new AsterixException("Cannot find dataset " + datasetName + " in dataverse "
+                + (dataverseName == null ? defaultDataverseName : dataverseName) + " nor an alias with name "
+                + datasetName + "!");
     }
 
     // Checks whether we need to error the variable reference, e.g., the variable is referred
@@ -135,9 +145,12 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         }
     }
 
-    // For From/Join/UNNEST/NEST, we resolve the undefined identifier reference as dataset reference first.
-    private boolean resolveDatasetFirst(ILangExpression arg) {
-        return arg != null;
+    // For a From/Join/UNNEST/Quantifiers binding expression, we resolve the undefined identifier reference as
+    // a dataset access only.
+    private boolean resolveToDatasetOnly(Expression originalExpressionWithUndefinedIdentifier, ILangExpression parent)
+            throws AsterixException {
+        CheckDatasetOnlyResolutionVisitor visitor = new CheckDatasetOnlyResolutionVisitor();
+        return parent.accept(visitor, originalExpressionWithUndefinedIdentifier);
     }
 
     // Whether a rewrite is needed for a variable reference expression.

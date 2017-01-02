@@ -26,13 +26,15 @@ FROM [  FunctionCall Metadata.dataset@1[
   AS Variable [ Name=$paperDBLP ]
 ,
   FunctionCall fuzzyjoin.subset-collection@3[
-    FunctionCall Metadata.dataset@1[
+    FunctionCall Metadata.resolve@-1[
       LiteralExpr [STRING] [tokensDBLP]
+      Variable [ Name=$paperDBLP ]
     ]
     LiteralExpr [LONG] [0]
     FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-      FunctionCall Metadata.dataset@1[
+      FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [lenDBLP]
+        Variable [ Name=$paperDBLP ]
       ]
       LiteralExpr [FLOAT] [0.5]
     ]
@@ -104,8 +106,19 @@ Let Variable [ Name=$tokensDBLP ]
           FunctionCall fuzzyjoin.sql-count@1[
             (
               SELECT ELEMENT [
-              FunctionCall Metadata.dataset@1[
+              FunctionCall Metadata.resolve@-1[
                 LiteralExpr [STRING] [id]
+                Variable [ Name=$lenDBLP ]
+                Variable [ Name=$token ]
+                Variable [ Name=$tokensUnrankedDBLP ]
+                Variable [ Name=$paper ]
+                Variable [ Name=$tokenGroupped ]
+                Variable [ Name=$prefixTokenDBLP ]
+                Variable [ Name=$paperDBLP ]
+                Variable [ Name=$tokenUnranked ]
+                Variable [ Name=#1 ]
+                Variable [ Name=#2 ]
+                Variable [ Name=$idDBLP ]
               ]
               ]
               FROM [                Variable [ Name=#1 ]

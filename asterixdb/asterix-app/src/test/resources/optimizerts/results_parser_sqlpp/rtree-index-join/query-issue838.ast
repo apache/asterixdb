@@ -61,8 +61,10 @@ FROM [  FunctionCall Metadata.dataset@1[
     Let Variable [ Name=$circle ]
       :=
       FunctionCall twitter.create-circle@2[
-        FunctionCall Metadata.dataset@1[
+        FunctionCall Metadata.resolve@-1[
           LiteralExpr [STRING] [location]
+          Variable [ Name=$tweet ]
+          Variable [ Name=$sub ]
         ]
         LiteralExpr [DOUBLE] [30.0]
       ]
