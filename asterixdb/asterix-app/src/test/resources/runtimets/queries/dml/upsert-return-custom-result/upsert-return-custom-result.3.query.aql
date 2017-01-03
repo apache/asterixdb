@@ -23,7 +23,7 @@
  * Date            : Mar 2015
  */
 
- use dataverse test;
+use dataverse test;
 
 upsert into dataset TweetMessageuuids as $a (
 let $x :=
@@ -33,6 +33,7 @@ let $x :=
 {"tweetid":4,"message-text":"what","location":create-point(3.0,6.0)},
 {"tweetid":5,"message-text":"good","location":create-point(5.0,6.0)}]
 for $y in $x
+where $y.tweetid=5
 return $y
 ) returning
 let $x := create-circle($a.location,5.0)

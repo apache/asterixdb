@@ -90,6 +90,7 @@ import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -340,7 +341,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case Statement.Kind.INSERT:
                     case Statement.Kind.UPSERT:
-                        if (((InsertStatement) stmt).getReturnQuery() != null) {
+                        if (((InsertStatement) stmt).getReturnExpression() != null) {
                             metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
@@ -1859,51 +1860,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IStatementExecutor.Stats stats, boolean compileOnly) throws Exception {
 
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
-
         String dataverseName = getActiveDataverse(stmtInsertUpsert.getDataverseName());
         Query query = stmtInsertUpsert.getQuery();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        if (stmtInsertUpsert.getReturnQuery() != null) {
-            if (!stmtInsertUpsert.getReturnQuery().getDatasets().isEmpty()) {
-                throw new AsterixException("Cannot use datasets in an insert returning query");
-            }
-            // returnQuery Rewriting (happens under the same ongoing metadata transaction)
-            Pair<Query, Integer> rewrittenReturnQuery = apiFramework.reWriteQuery(declaredFunctions, metadataProvider,
-                    stmtInsertUpsert.getReturnQuery(), sessionConfig);
-
-            stmtInsertUpsert.getQuery().setVarCounter(rewrittenReturnQuery.first.getVarCounter());
-            stmtInsertUpsert.setRewrittenReturnQuery(rewrittenReturnQuery.first);
-            stmtInsertUpsert.addToVarCounter(rewrittenReturnQuery.second);
-        }
-
         MetadataLockManager.INSTANCE.insertDeleteUpsertBegin(dataverseName,
                 dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(), query.getDatasets());
         try {
             metadataProvider.setWriteTransaction(true);
-            CompiledInsertStatement clfrqs = null;
-            switch (stmtInsertUpsert.getKind()) {
-                case Statement.Kind.INSERT:
-                    clfrqs = new CompiledInsertStatement(dataverseName, stmtInsertUpsert.getDatasetName().getValue(),
-                            query, stmtInsertUpsert.getVarCounter(), stmtInsertUpsert.getVar(),
-                            stmtInsertUpsert.getReturnQuery());
-                    break;
-                case Statement.Kind.UPSERT:
-                    clfrqs = new CompiledUpsertStatement(dataverseName, stmtInsertUpsert.getDatasetName().getValue(),
-                            query, stmtInsertUpsert.getVarCounter(), stmtInsertUpsert.getVar(),
-                            stmtInsertUpsert.getReturnQuery());
-                    break;
-                default:
-                    throw new AlgebricksException("Unsupported statement type " + stmtInsertUpsert.getKind());
-            }
-            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, clfrqs);
-
+            JobSpecification jobSpec = rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
             if (jobSpec != null && !compileOnly) {
-                if (stmtInsertUpsert.getReturnQuery() != null) {
+                if (stmtInsertUpsert.getReturnExpression() != null) {
                     handleQueryResult(metadataProvider, hcc, hdc, jobSpec, resultDelivery, stats);
                 } else {
                     JobUtils.runJob(hcc, jobSpec, true);
@@ -1964,18 +1935,46 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
             MetadataProvider metadataProvider, Query query,
             ICompiledDmlStatement stmt)
-            throws AsterixException, RemoteException, AlgebricksException, ACIDException {
+            throws RemoteException, AlgebricksException, ACIDException {
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
-        Pair<Query, Integer> reWrittenQuery = apiFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
-                sessionConfig);
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
+                metadataProvider, query, sessionConfig);
 
         // Query Compilation (happens under the same ongoing metadata transaction)
-        JobSpecification spec = apiFramework.compileQuery(clusterInfoCollector, metadataProvider, reWrittenQuery.first,
-                reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, stmt);
+        return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
+                rewrittenResult.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, stmt);
+    }
 
-        return spec;
+    private JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
+            MetadataProvider metadataProvider, InsertStatement insertUpsert)
+            throws RemoteException, AlgebricksException, ACIDException {
 
+        // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
+                metadataProvider, insertUpsert, sessionConfig);
+
+        InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
+        String dataverseName = getActiveDataverse(rewrittenInsertUpsert.getDataverseName());
+        String datasetName = rewrittenInsertUpsert.getDatasetName().getValue();
+        CompiledInsertStatement clfrqs;
+        switch (insertUpsert.getKind()) {
+            case Statement.Kind.INSERT:
+                clfrqs = new CompiledInsertStatement(dataverseName, datasetName, rewrittenInsertUpsert.getQuery(),
+                        rewrittenInsertUpsert.getVarCounter(), rewrittenInsertUpsert.getVar(),
+                        rewrittenInsertUpsert.getReturnExpression());
+                break;
+            case Statement.Kind.UPSERT:
+                clfrqs = new CompiledUpsertStatement(dataverseName, datasetName, rewrittenInsertUpsert.getQuery(),
+                        rewrittenInsertUpsert.getVarCounter(), rewrittenInsertUpsert.getVar(),
+                        rewrittenInsertUpsert.getReturnExpression());
+                break;
+            default:
+                throw new AlgebricksException("Unsupported statement type " + rewrittenInsertUpsert.getKind());
+        }
+        // Insert/upsert statement compilation (happens under the same ongoing metadata transaction)
+        return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
+                rewrittenResult.second, datasetName, sessionConfig, clfrqs);
     }
 
     protected void handleCreateFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {

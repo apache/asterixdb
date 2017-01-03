@@ -44,6 +44,7 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -346,6 +347,17 @@ public class AbstractSqlppSimpleExpressionVisitor
         caseExpr.setThenExprs(visit(caseExpr.getThenExprs(), arg));
         caseExpr.setElseExpr(visit(caseExpr.getElseExpr(), arg));
         return caseExpr;
+    }
+
+    @Override
+    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws AsterixException {
+        Expression returnExpr = insertStatement.getReturnExpression();
+        if (returnExpr != null) {
+            insertStatement.setReturnExpression(visit(returnExpr, arg));
+        }
+        Query bodyQuery = insertStatement.getQuery();
+        bodyQuery.accept(this, arg);
+        return null;
     }
 
     protected Expression visit(Expression expr, ILangExpression arg) throws AsterixException{

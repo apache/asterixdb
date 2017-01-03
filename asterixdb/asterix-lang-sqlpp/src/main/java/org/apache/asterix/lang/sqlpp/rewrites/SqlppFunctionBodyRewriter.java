@@ -21,18 +21,19 @@ package org.apache.asterix.lang.sqlpp.rewrites;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
+    public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
+            MetadataProvider metadataProvider,
             LangRewritingContext context) throws AsterixException {
         // Sets up parameters.
-        setup(declaredFunctions, topExpr, metadataProvider, context);
+        setup(declaredFunctions, topStatement, metadataProvider, context);
 
         // Inlines column aliases.
         inlineColumnAlias();

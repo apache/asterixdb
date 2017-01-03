@@ -31,6 +31,7 @@ import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.FunctionParser;
 import org.apache.asterix.lang.aql.rewrites.visitor.AqlBuiltinFunctionRewriteVisitor;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.aql.visitor.AQLInlineUdfsVisitor;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
@@ -44,7 +45,6 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
@@ -53,59 +53,59 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 class AqlQueryRewriter implements IQueryRewriter {
 
     private final FunctionParser functionParser = new FunctionParser(new AQLParserFactory());
-    private Query topExpr;
+    private IReturningStatement topStatement;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
 
-    private void setup(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
-            LangRewritingContext context) {
-        this.topExpr = topExpr;
+    private void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
+            MetadataProvider metadataProvider, LangRewritingContext context) {
+        this.topStatement = topStatement;
         this.context = context;
         this.declaredFunctions = declaredFunctions;
         this.metadataProvider = metadataProvider;
     }
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
-            LangRewritingContext context) throws AsterixException {
-        setup(declaredFunctions, topExpr, metadataProvider, context);
-        if (topExpr.isTopLevel()) {
+    public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
+            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
+        setup(declaredFunctions, topStatement, metadataProvider, context);
+        if (topStatement.isTopLevel()) {
             wrapInLets();
         }
         inlineDeclaredUdfs();
         rewriteFunctionName();
-        topExpr.setVarCounter(context.getVarCounter());
+        topStatement.setVarCounter(context.getVarCounter());
     }
 
     private void wrapInLets() {
         // If the top expression of the main statement is not a FLWOR, it wraps
         // it into a let clause.
-        if (topExpr == null) {
+        if (topStatement == null) {
             return;
         }
-        Expression body = topExpr.getBody();
+        Expression body = topStatement.getBody();
         if (body.getKind() != Kind.FLWOGR_EXPRESSION) {
             VarIdentifier var = context.newVariable();
             VariableExpr v = new VariableExpr(var);
             LetClause c1 = new LetClause(v, body);
-            ArrayList<Clause> clauseList = new ArrayList<Clause>(1);
+            ArrayList<Clause> clauseList = new ArrayList<>(1);
             clauseList.add(c1);
             FLWOGRExpression newBody = new FLWOGRExpression(clauseList, new VariableExpr(var));
-            topExpr.setBody(newBody);
+            topStatement.setBody(newBody);
         }
     }
 
     private void rewriteFunctionName() throws AsterixException {
-        if (topExpr == null) {
+        if (topStatement == null) {
             return;
         }
         AqlBuiltinFunctionRewriteVisitor visitor = new AqlBuiltinFunctionRewriteVisitor();
-        topExpr.accept(visitor, null);
+        topStatement.accept(visitor, null);
     }
 
     private void inlineDeclaredUdfs() throws AsterixException {
-        if (topExpr == null) {
+        if (topStatement == null) {
             return;
         }
         List<FunctionSignature> funIds = new ArrayList<FunctionSignature>();
@@ -113,15 +113,17 @@ class AqlQueryRewriter implements IQueryRewriter {
             funIds.add(fdecl.getSignature());
         }
 
-        List<FunctionDecl> storedFunctionDecls = FunctionUtil.retrieveUsedStoredFunctions(metadataProvider,
-                topExpr.getBody(), funIds, null,
-                expr -> getFunctionCalls(expr), func -> functionParser.getFunctionDecl(func),
-                signature -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature));
-        declaredFunctions.addAll(storedFunctionDecls);
+        List<FunctionDecl> storedFunctionDecls = new ArrayList<>();
+        for (Expression topLevelExpr : topStatement.getDirectlyEnclosedExpressions()) {
+            storedFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr, funIds,
+                    null, expr -> getFunctionCalls(expr), func -> functionParser.getFunctionDecl(func),
+                    signature -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature)));
+            declaredFunctions.addAll(storedFunctionDecls);
+        }
         if (!declaredFunctions.isEmpty()) {
-            AQLInlineUdfsVisitor visitor =
-                    new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(), declaredFunctions, metadataProvider);
-            while (topExpr.accept(visitor, declaredFunctions)) {
+            AQLInlineUdfsVisitor visitor = new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(),
+                    declaredFunctions, metadataProvider);
+            while (topStatement.accept(visitor, declaredFunctions)) {
                 // loop until no more changes
             }
         }

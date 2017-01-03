@@ -26,10 +26,10 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -71,13 +71,13 @@ class SqlppQueryRewriter implements IQueryRewriter {
     private static final String INLINE_WITH = "inline_with";
     private static final String NOT_INLINE_WITH = "false";
     private final FunctionParser functionRepository = new FunctionParser(new SqlppParserFactory());
-    private Query topExpr;
+    private IReturningStatement topExpr;
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
 
-    protected void setup(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
-            LangRewritingContext context) {
+    protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
+            MetadataProvider metadataProvider, LangRewritingContext context) {
         this.topExpr = topExpr;
         this.context = context;
         this.declaredFunctions = declaredFunctions;
@@ -85,13 +85,16 @@ class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, Query topExpr, MetadataProvider metadataProvider,
-            LangRewritingContext context) throws AsterixException {
+    public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
+            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
+        if (topStatement == null) {
+            return;
+        }
         // Marks the current variable counter.
         context.markCounter();
 
         // Sets up parameters.
-        setup(declaredFunctions, topExpr, metadataProvider, context);
+        setup(declaredFunctions, topStatement, metadataProvider, context);
 
         // Inlines column aliases.
         inlineColumnAlias();
@@ -141,122 +144,88 @@ class SqlppQueryRewriter implements IQueryRewriter {
         inlineWithExpressions();
 
         // Sets the var counter of the query.
-        topExpr.setVarCounter(context.getVarCounter());
+        topStatement.setVarCounter(context.getVarCounter());
     }
 
     protected void rewriteGlobalAggregations() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         SqlppGlobalAggregationSugarVisitor globalAggregationVisitor = new SqlppGlobalAggregationSugarVisitor();
-        globalAggregationVisitor.visit(topExpr, null);
+        topExpr.accept(globalAggregationVisitor, null);
     }
 
     protected void rewriteListInputFunctions() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         SqlppListInputFunctionRewriteVisitor listInputFunctionVisitor = new SqlppListInputFunctionRewriteVisitor();
-        listInputFunctionVisitor.visit(topExpr, null);
+        topExpr.accept(listInputFunctionVisitor, null);
     }
 
     protected void rewriteFunctionNames() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         SqlppBuiltinFunctionRewriteVisitor functionNameMapVisitor = new SqlppBuiltinFunctionRewriteVisitor();
-        functionNameMapVisitor.visit(topExpr, null);
+        topExpr.accept(functionNameMapVisitor, null);
     }
 
     protected void inlineWithExpressions() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         String inlineWith = metadataProvider.getConfig().get(INLINE_WITH);
         if (inlineWith != null && inlineWith.equalsIgnoreCase(NOT_INLINE_WITH)) {
             return;
         }
         // Inlines with expressions.
         InlineWithExpressionVisitor inlineWithExpressionVisitor = new InlineWithExpressionVisitor(context);
-        inlineWithExpressionVisitor.visit(topExpr, null);
+        topExpr.accept(inlineWithExpressionVisitor, null);
     }
 
     protected void generateColumnNames() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         // Generate column names if they are missing in the user query.
         GenerateColumnNameVisitor generateColumnNameVisitor = new GenerateColumnNameVisitor(context);
-        generateColumnNameVisitor.visit(topExpr, null);
+        topExpr.accept(generateColumnNameVisitor, null);
     }
 
     protected void substituteGroupbyKeyExpression() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         // Substitute group-by key expressions that appear in the select clause.
         SubstituteGroupbyExpressionWithVariableVisitor substituteGbyExprVisitor =
                 new SubstituteGroupbyExpressionWithVariableVisitor(context);
-        substituteGbyExprVisitor.visit(topExpr, null);
+        topExpr.accept(substituteGbyExprVisitor, null);
     }
 
     protected void rewriteSetOperations() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         // Rewrites set operation queries that contain order-by and limit clauses.
         SetOperationVisitor setOperationVisitor = new SetOperationVisitor(context);
-        setOperationVisitor.visit(topExpr, null);
+        topExpr.accept(setOperationVisitor, null);
     }
 
     protected void rewriteOperatorExpression() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         // Rewrites like/not-like/in/not-in operators into function call expressions.
         OperatorExpressionVisitor operatorExpressionVisitor = new OperatorExpressionVisitor(context);
-        operatorExpressionVisitor.visit(topExpr, null);
+        topExpr.accept(operatorExpressionVisitor, null);
     }
 
     protected void inlineColumnAlias() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         // Inline column aliases.
         InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor(context);
-        inlineColumnAliasVisitor.visit(topExpr, null);
+        topExpr.accept(inlineColumnAliasVisitor, null);
     }
 
     protected void variableCheckAndRewrite(boolean overwrite) throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         VariableCheckAndRewriteVisitor variableCheckAndRewriteVisitor =
                 new VariableCheckAndRewriteVisitor(context, overwrite, metadataProvider);
-        variableCheckAndRewriteVisitor.visit(topExpr, null);
+        topExpr.accept(variableCheckAndRewriteVisitor, null);
     }
 
     protected void rewriteGroupBys() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context);
-        groupByVisitor.visit(topExpr, null);
+        topExpr.accept(groupByVisitor, null);
     }
 
     protected void inlineDeclaredUdfs() throws AsterixException {
-        if (topExpr == null) {
-            return;
-        }
         List<FunctionSignature> funIds = new ArrayList<FunctionSignature>();
         for (FunctionDecl fdecl : declaredFunctions) {
             funIds.add(fdecl.getSignature());
         }
 
-        List<FunctionDecl> usedStoredFunctionDecls = FunctionUtil.retrieveUsedStoredFunctions(metadataProvider,
-                topExpr.getBody(), funIds, null,
-                expr -> getFunctionCalls(expr), func -> functionRepository.getFunctionDecl(func),
-                signature -> FunctionMapUtil.normalizeBuiltinFunctionSignature(signature, false));
+        List<FunctionDecl> usedStoredFunctionDecls = new ArrayList<>();
+        for (Expression topLevelExpr : topExpr.getDirectlyEnclosedExpressions()) {
+            usedStoredFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr,
+                    funIds, null, expr -> getFunctionCalls(expr), func -> functionRepository.getFunctionDecl(func),
+                    signature -> FunctionMapUtil.normalizeBuiltinFunctionSignature(signature, false)));
+        }
         declaredFunctions.addAll(usedStoredFunctionDecls);
         if (!declaredFunctions.isEmpty()) {
             SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context,

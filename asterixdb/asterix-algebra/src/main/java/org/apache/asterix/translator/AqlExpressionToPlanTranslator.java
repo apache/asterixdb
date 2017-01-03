@@ -169,13 +169,16 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
 
     @Override
     protected boolean expressionNeedsNoNesting(Expression expr) {
-        boolean noForFLWOR = false;
-        // No nesting is needed for a FLWOR expression without a FOR clause.
-        if (expr.getKind() == Kind.FLWOGR_EXPRESSION) {
+        boolean isFLWOGR = expr.getKind() == Kind.FLWOGR_EXPRESSION;
+        boolean letOnly = true;
+        // No nesting is needed for a FLWOR expression that only has LETs and RETURN.
+        if (isFLWOGR) {
             FLWOGRExpression flwor = (FLWOGRExpression) expr;
-            noForFLWOR = flwor.noForClause();
+            for (Clause clause : flwor.getClauseList()) {
+                letOnly &= clause.getClauseType() == Clause.ClauseType.LET_CLAUSE;
+            }
         }
-        return noForFLWOR || super.expressionNeedsNoNesting(expr);
+        return (isFLWOGR && letOnly) || super.expressionNeedsNoNesting(expr);
     }
 
     private Pair<ILogicalOperator, LogicalVariable> produceFlworPlan(boolean noForClause, boolean isTop,

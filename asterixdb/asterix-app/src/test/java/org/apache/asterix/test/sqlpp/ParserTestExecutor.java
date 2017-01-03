@@ -185,7 +185,8 @@ public class ParserTestExecutor extends TestExecutor {
     private void rewrite(IQueryRewriter rewriter, List<FunctionDecl> declaredFunctions, Query topExpr,
             MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
         PA.invokeMethod(rewriter,
-                "setup(java.util.List, org.apache.asterix.lang.common.statement.Query, org.apache.asterix.metadata.declared.MetadataProvider, "
+                "setup(java.util.List, org.apache.asterix.lang.common.base.IReturningStatement, "
+                        + "org.apache.asterix.metadata.declared.MetadataProvider, "
                         + "org.apache.asterix.lang.common.rewrites.LangRewritingContext)",
                 declaredFunctions, topExpr, metadataProvider, context);
         PA.invokeMethod(rewriter, "inlineColumnAlias()");

@@ -50,8 +50,10 @@ import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.util.RangeMapBuilder;
+import org.apache.asterix.lang.aql.util.AQLFormatPrintUtil;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.base.Statement;
@@ -190,6 +192,18 @@ class AQLParser extends ScopeChecker implements IParser {
         return s.substring(1).trim();
     }
 
+    private static void checkBindingVariable(Expression returnExpression, VariableExpr var,
+                                             ILangExpression bodyExpression) throws ParseException {
+       if (returnExpression != null && var == null) {
+         try {
+           throw new ParseException("Need a binding variable for the enclosed expression: " +
+                                       AQLFormatPrintUtil.toString(bodyExpression));
+         } catch (AsterixException e){
+           throw new ParseException(e.getLocalizedMessage());
+         }
+       }
+    }
+
     private static IRecordFieldDataGen parseFieldDataGen(String hint) throws ParseException {
       IRecordFieldDataGen rfdg = null;
       String splits[] = hint.split(" +");
@@ -294,6 +308,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = WriteStatement()
     | stmt = SetStatement()
     | stmt = InsertStatement()
+    | stmt = UpsertStatement()
     | stmt = DeleteStatement()
     | stmt = UpdateStatement()
     | stmt = FeedStatement()
@@ -926,28 +941,49 @@ boolean IfExists() throws ParseException :
 
 InsertStatement InsertStatement() throws ParseException:
 {
-  VariableExpr var = null;
   Pair<Identifier,Identifier> nameComponents = null;
+  VariableExpr var = null;
   Query query;
-  Query returnQuery = null;
-  boolean upsert = false;
+  Expression returnExpression = null;
 }
 {
-  (<INSERT>|<UPSERT>{ upsert = true; }) <INTO> <DATASET> nameComponents = QualifiedName()
+  <INSERT> <INTO> <DATASET> nameComponents = QualifiedName()
   (<AS> var = Variable())?
   {
     if(var != null){
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
     }
   }
-  query = Query() ( <RETURNING> returnQuery = Query())?
+  query = Query() ( <RETURNING> returnExpression = Expression())?
     {
+      checkBindingVariable(returnExpression, var, query);
       query.setTopLevel(true);
-      if(upsert){
-        return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var, returnQuery);
-      } else{
-        return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var, returnQuery);
-      }
+      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var,
+                                 returnExpression);
+    }
+}
+
+UpsertStatement UpsertStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  VariableExpr var = null;
+  Query query;
+  Expression returnExpression = null;
+}
+{
+  <UPSERT> <INTO> <DATASET> nameComponents = QualifiedName()
+  (<AS> var = Variable())?
+  {
+    if(var != null){
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+    }
+  }
+  query = Query() ( <RETURNING> returnExpression = Expression())?
+    {
+      checkBindingVariable(returnExpression, var, query);
+      query.setTopLevel(true);
+      return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var,
+                                 returnExpression);
     }
 }
 

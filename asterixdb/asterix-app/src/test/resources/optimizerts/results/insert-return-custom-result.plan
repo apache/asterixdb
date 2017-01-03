@@ -1,17 +1,20 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
-      -- ASSIGN  |PARTITIONED|
-        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- STABLE_SORT [$$16(ASC)]  |PARTITIONED|
+      -- SUBPLAN  |PARTITIONED|
+              {
+                -- ASSIGN  |LOCAL|
+                  -- ASSIGN  |LOCAL|
+                    -- IN_MEMORY_STABLE_SORT [$$16(ASC)]  |LOCAL|
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+              }
+        -- COMMIT  |PARTITIONED|
+          -- STREAM_PROJECT  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- COMMIT  |PARTITIONED|
-                -- STREAM_PROJECT  |PARTITIONED|
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- INSERT_DELETE  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$16]  |PARTITIONED|
+              -- INSERT_DELETE  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$16]  |PARTITIONED|
+                  -- ASSIGN  |UNPARTITIONED|
+                    -- STREAM_PROJECT  |UNPARTITIONED|
+                      -- UNNEST  |UNPARTITIONED|
                         -- ASSIGN  |UNPARTITIONED|
-                          -- STREAM_PROJECT  |UNPARTITIONED|
-                            -- UNNEST  |UNPARTITIONED|
-                              -- ASSIGN  |UNPARTITIONED|
-                                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

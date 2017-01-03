@@ -20,6 +20,7 @@ package org.apache.asterix.lang.aql.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -42,11 +43,23 @@ public class AQLFormatPrintUtil {
         }
     }
 
-    public static String toString(List<Statement> exprs) throws AsterixException {
+    /**
+     * @param expr
+     *            a language expression.
+     * @return a formatted string of a language expression.
+     * @throws AsterixException
+     */
+    public static String toString(ILangExpression expr) throws AsterixException {
+        List<ILangExpression> exprs = new ArrayList<>();
+        exprs.add(expr);
+        return toString(exprs);
+    }
+
+    public static String toString(List<ILangExpression> exprs) throws AsterixException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrintWriter output = new PrintWriter(bos);
         AQLFormatPrintVisitor visitor = new AQLFormatPrintVisitor(output);
-        for (Statement expr : exprs) {
+        for (ILangExpression expr : exprs) {
             expr.accept(visitor, 0);
         }
         output.close();

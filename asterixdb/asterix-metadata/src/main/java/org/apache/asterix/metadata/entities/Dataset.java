@@ -25,6 +25,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 
 /**
@@ -191,7 +192,7 @@ public class Dataset implements IMetadataEntity<Dataset> {
         return true;
     }
 
-    public boolean allow(ProjectOperator project, byte operation) {
+    public boolean allow(ILogicalOperator topOp, byte operation) {
         return !hasMetaPart();
     }
 

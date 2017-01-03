@@ -18,30 +18,35 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class InsertStatement implements Statement {
+public class InsertStatement implements IReturningStatement {
 
     private final Identifier dataverseName;
     private final Identifier datasetName;
     private final Query query;
-    private int varCounter;
     private final VariableExpr var;
-    private Query returnQuery;
+    private Expression returnExpression;
+    private int varCounter;
 
     public InsertStatement(Identifier dataverseName, Identifier datasetName, Query query, int varCounter,
-            VariableExpr var, Query returnQuery) {
+            VariableExpr var, Expression returnExpression) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.query = query;
         this.varCounter = varCounter;
         this.var = var;
-        this.returnQuery = returnQuery;
+        this.returnExpression = returnExpression;
     }
 
     @Override
@@ -61,24 +66,51 @@ public class InsertStatement implements Statement {
         return query;
     }
 
-    public void addToVarCounter(int addition) {
-        varCounter += addition;
-    }
-
+    @Override
     public int getVarCounter() {
         return varCounter;
+    }
+
+    @Override
+    public void setVarCounter(int varCounter) {
+        this.varCounter = varCounter;
+    }
+
+    @Override
+    public List<Expression> getDirectlyEnclosedExpressions() {
+        List<Expression> topLevelExpressions = new ArrayList<>();
+        topLevelExpressions.add(query.getBody());
+        if (returnExpression != null) {
+            topLevelExpressions.add(returnExpression);
+        }
+        return topLevelExpressions;
+    }
+
+    @Override
+    public boolean isTopLevel() {
+        return true;
+    }
+
+    @Override
+    public Expression getBody() {
+        return query.getBody();
+    }
+
+    @Override
+    public void setBody(Expression body) {
+        query.setBody(body);
     }
 
     public VariableExpr getVar() {
         return var;
     }
 
-    public Query getReturnQuery() {
-        return returnQuery;
+    public Expression getReturnExpression() {
+        return returnExpression;
     }
 
-    public void setRewrittenReturnQuery(Query rewrittenReturnQuery) {
-        this.returnQuery = rewrittenReturnQuery;
+    public void setReturnExpression(Expression expr) {
+        this.returnExpression = expr;
     }
 
     @Override
@@ -88,7 +120,7 @@ public class InsertStatement implements Statement {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(datasetName, dataverseName, query, varCounter, var, returnQuery);
+        return ObjectUtils.hashCodeMulti(datasetName, dataverseName, query, varCounter, var, returnExpression);
     }
 
     @Override
@@ -103,7 +135,7 @@ public class InsertStatement implements Statement {
         return ObjectUtils.equals(datasetName, target.datasetName)
                 && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query)
                 && ObjectUtils.equals(varCounter, target.varCounter) && ObjectUtils.equals(var, target.var)
-                && ObjectUtils.equals(returnQuery, target.returnQuery);
+                && ObjectUtils.equals(returnExpression, target.returnExpression);
     }
 
     @Override

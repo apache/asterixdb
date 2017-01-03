@@ -295,17 +295,17 @@ public class CompiledStatements {
         private final String datasetName;
         private final Query query;
         private final int varCounter;
-        VariableExpr var;
-        Query returnQuery;
+        private final VariableExpr var;
+        private final Expression returnExpression;
 
         public CompiledInsertStatement(String dataverseName, String datasetName, Query query, int varCounter,
-                VariableExpr var, Query returnQuery) {
+                VariableExpr var, Expression returnExpression) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.query = query;
             this.varCounter = varCounter;
             this.var = var;
-            this.returnQuery = returnQuery;
+            this.returnExpression = returnExpression;
         }
 
         @Override
@@ -330,8 +330,8 @@ public class CompiledStatements {
             return var;
         }
 
-        public Query getReturnQuery() {
-            return returnQuery;
+        public Expression getReturnExpression() {
+            return returnExpression;
         }
 
         @Override
@@ -343,8 +343,8 @@ public class CompiledStatements {
     public static class CompiledUpsertStatement extends CompiledInsertStatement {
 
         public CompiledUpsertStatement(String dataverseName, String datasetName, Query query, int varCounter,
-                VariableExpr var, Query returnQuery) {
-            super(dataverseName, datasetName, query, varCounter, var, returnQuery);
+                VariableExpr var, Expression returnExpression) {
+            super(dataverseName, datasetName, query, varCounter, var, returnExpression);
         }
 
         @Override

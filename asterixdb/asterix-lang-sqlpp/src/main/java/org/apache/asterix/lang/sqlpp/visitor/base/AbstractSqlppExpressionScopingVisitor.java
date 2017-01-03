@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -357,6 +358,27 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             varExpr.setVar((VarIdentifier) ident);
         }
         return varExpr;
+    }
+
+    @Override
+    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws AsterixException {
+        scopeChecker.createNewScope();
+
+        // Visits the body query.
+        insertStatement.getQuery().accept(this, insertStatement);
+
+        // Registers the (inserted) data item variable.
+        VariableExpr bindingVar = insertStatement.getVar();
+        if (bindingVar != null) {
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), bindingVar.getVar());
+        }
+
+        // Visits the expression for the returning expression.
+        Expression returningExpr = insertStatement.getReturnExpression();
+        if (returningExpr != null) {
+            insertStatement.setReturnExpression(visit(returningExpr, insertStatement));
+        }
+        return null;
     }
 
     // Rewrites for an undefined variable reference, which potentially could be a syntatic sugar.

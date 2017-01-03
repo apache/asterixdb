@@ -21,7 +21,6 @@ package org.apache.asterix.api.common;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +52,7 @@ import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -145,8 +145,8 @@ public class APIFramework {
         }
     }
 
-    public Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, MetadataProvider metadataProvider,
-            Query q, SessionConfig conf) throws AsterixException {
+    public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
+            MetadataProvider metadataProvider, IReturningStatement q, SessionConfig conf) throws AsterixException {
         if (q == null) {
             return null;
         }

@@ -1721,9 +1721,20 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-udf">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-fieldname-implicit">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+        <expected-error>Need a binding variable for the enclosed expression</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-with-bad-return">
         <output-dir compare="Text">insert-with-bad-return</output-dir>
-        <expected-error>Error: Cannot use datasets in an insert returning query</expected-error>
+        <expected-error>A returning expression cannot contain dataset access</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">

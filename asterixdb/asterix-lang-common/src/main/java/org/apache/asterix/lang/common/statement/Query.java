@@ -19,15 +19,17 @@
 package org.apache.asterix.lang.common.statement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class Query implements Statement {
+public class Query implements IReturningStatement {
     private final boolean explain;
     private boolean topLevel = true;
     private Expression body;
@@ -49,26 +51,36 @@ public class Query implements Statement {
         this.datasets.addAll(datasets);
     }
 
+    @Override
     public Expression getBody() {
         return body;
     }
 
+    @Override
     public void setBody(Expression body) {
         this.body = body;
     }
 
+    @Override
     public int getVarCounter() {
         return varCounter;
     }
 
+    @Override
     public void setVarCounter(int varCounter) {
         this.varCounter = varCounter;
+    }
+
+    @Override
+    public List<Expression> getDirectlyEnclosedExpressions() {
+        return Collections.singletonList(body);
     }
 
     public void setTopLevel(boolean topLevel) {
         this.topLevel = topLevel;
     }
 
+    @Override
     public boolean isTopLevel() {
         return topLevel;
     }
@@ -125,5 +137,10 @@ public class Query implements Statement {
     @Override
     public byte getCategory() {
         return Category.QUERY;
+    }
+
+    @Override
+    public String toString() {
+        return body.toString();
     }
 }

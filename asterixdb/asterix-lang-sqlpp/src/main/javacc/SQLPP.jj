@@ -120,6 +120,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
+import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -356,6 +357,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = InsertStatement()
     | stmt = DeleteStatement()
     | stmt = UpdateStatement()
+    | stmt = UpsertStatement()
     | stmt = ConnectionStatement()
     | stmt = CompactStatement()
     | stmt = ExplainStatement()
@@ -963,13 +965,42 @@ boolean IfExists() throws ParseException :
 InsertStatement InsertStatement() throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;
-  Query query;
+  VariableExpr var = null;
+  Query query = null;
+  Expression returnExpression = null;
 }
 {
-  <INSERT> <INTO> nameComponents = QualifiedName() query = Query(false)
+  <INSERT> <INTO> nameComponents = QualifiedName() (<AS> var = Variable())?
+    query = Query(false)
+    ( <RETURNING> returnExpression = Expression())?
     {
+      if (returnExpression != null && var == null) {
+         var = ExpressionToVariableUtil.getGeneratedVariable(query.getBody(), true);
+      }
       query.setTopLevel(true);
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), null, null);
+      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var,
+                                 returnExpression);
+    }
+}
+
+UpsertStatement UpsertStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  VariableExpr var = null;
+  Query query = null;
+  Expression returnExpression = null;
+}
+{
+  <UPSERT> <INTO> nameComponents = QualifiedName() (<AS> var = Variable())?
+    query = Query(false)
+    ( <RETURNING> returnExpression = Expression())?
+    {
+      if (returnExpression != null && var == null) {
+         var = ExpressionToVariableUtil.getGeneratedVariable(query.getBody(), true);
+      }
+      query.setTopLevel(true);
+      return new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), var,
+                                 returnExpression);
     }
 }
 
@@ -3116,6 +3147,7 @@ TOKEN [IGNORE_CASE]:
   | <RAW : "raw">
   | <REFRESH : "refresh">
   | <RETURN : "return">
+  | <RETURNING : "returning">
   | <RTREE : "rtree">
   | <RUN : "run">
   | <SATISFIES : "satisfies">
@@ -3131,6 +3163,7 @@ TOKEN [IGNORE_CASE]:
   | <UNKOWN : "unknown">
   | <UNNEST : "unnest">
   | <UPDATE : "update">
+  | <UPSERT : "upsert">
   | <USE : "use">
   | <USING : "using">
   | <VALUE : "value">

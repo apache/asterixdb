@@ -1,0 +1,56 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use channels;
+
+upsert into userLocations(
+[
+{"userId":1, "roomNumber":123}
+,
+{"userId":2, "roomNumber":123}
+,
+{"userId":3, "roomNumber":123}
+,
+{"userId":4, "roomNumber":123}
+,
+{"userId":5, "roomNumber":350}
+,
+{"userId":6, "roomNumber":350}
+,
+{"userId":7, "roomNumber":350}
+,
+{"userId":8, "roomNumber":350}
+,
+{"userId":9, "roomNumber":350}
+,
+{"userId":10,"roomNumber":210}
+,
+{"userId":11,"roomNumber":210}
+,
+{"userId":12,"roomNumber":210}
+,
+{"userId":13,"roomNumber":210}
+,
+{"userId":14,"roomNumber":210}
+]
+);
+
+insert into subscriptions(
+{"param0":123}
+);

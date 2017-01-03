@@ -1749,6 +1749,33 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="insert-return-records">
+        <output-dir compare="Text">insert-return-records</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-fieldname">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-udf">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-fieldname-implicit">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+        <expected-error>Need an alias for the enclosed expression</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-with-bad-return">
+        <output-dir compare="Text">insert-with-bad-return</output-dir>
+        <expected-error>A returning expression cannot contain dataset access</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="load-with-index">
         <output-dir compare="Text">load-with-index</output-dir>
       </compilation-unit>
@@ -1946,6 +1973,17 @@
     <test-case FilePath="dml">
       <compilation-unit name="delete-multi-statement">
         <output-dir compare="Text">delete-multi-statement</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="upsert-dataset-with-meta">
+        <output-dir compare="Text">upsert-dataset-with-meta</output-dir>
+        <expected-error>upsert into dataset is not supported on Datasets with Meta records</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="upsert-return-custom-result">
+        <output-dir compare="Text">upsert-return-custom-result</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -3368,6 +3406,18 @@
       <test-case FilePath="open-index-enforced/external-indexing">
         <compilation-unit name="leftouterjoin-rtree">
           <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="open-index-enforced/type-checking">
+      <test-case FilePath="open-index-enforced/type-checking">
+        <compilation-unit name="enforced-type-delete">
+          <output-dir compare="Text">enforced-type-delete</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/type-checking">
+        <compilation-unit name="enforced-type-upsert">
+          <output-dir compare="Text">enforced-type-upsert</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -7290,6 +7340,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="query-ASTERIXDB-1298">
+        <output-dir compare="Text">query-ASTERIXDB-1298</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-ASTERIXDB-1652">
         <expected-error>In function call "test.length(...)", the dataverse "test" cannot be found!</expected-error>
         <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
@@ -7696,6 +7751,11 @@
     <test-case FilePath="feeds">
       <compilation-unit name="issue_230_feeds">
         <output-dir compare="Text">issue_230_feeds</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="upsert-feed">
+        <output-dir compare="Text">upsert-feed</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -8475,6 +8535,63 @@
     <test-case FilePath="union">
       <compilation-unit name="query-ASTERIXDB-1629">
         <output-dir compare="Text">query-ASTERIXDB-1629</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="upsert">
+    <test-case FilePath="upsert">
+      <compilation-unit name="filtered-dataset">
+        <output-dir compare="Text">filtered-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="issue1587-foreignDataType">
+        <output-dir compare="Text">issue1587-foreignDataType</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="nested-index">
+        <output-dir compare="Text">nested-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="primary-secondary-rtree">
+        <output-dir compare="Text">primary-secondary-rtree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="upsert-with-self-read">
+        <output-dir compare="Text">upsert-with-self-read</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="nullable-index">
+        <output-dir compare="Text">nullable-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="open-index">
+        <output-dir compare="Text">open-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="primary-index">
+        <output-dir compare="Text">primary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="primary-secondary-btree">
+        <output-dir compare="Text">primary-secondary-btree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="primary-secondary-inverted">
+        <output-dir compare="Text">primary-secondary-inverted</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="multiple-secondaries">
+        <output-dir compare="Text">multiple-secondaries</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

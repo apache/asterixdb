@@ -46,6 +46,7 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
@@ -188,6 +189,16 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     @Override
     public Void visit(WhereClause wc, Void arg) throws AsterixException {
         wc.getWhereExpr().accept(this, arg);
+        return null;
+    }
+
+    @Override
+    public Void visit(InsertStatement wc, Void arg) throws AsterixException {
+        wc.getQuery().accept(this, arg);
+        Expression returnExpression = wc.getReturnExpression();
+        if (returnExpression != null) {
+            returnExpression.accept(this, arg);
+        }
         return null;
     }
 

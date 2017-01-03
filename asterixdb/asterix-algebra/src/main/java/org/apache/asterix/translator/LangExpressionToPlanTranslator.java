@@ -71,6 +71,7 @@ import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
+import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSource;
@@ -300,18 +301,12 @@ class LangExpressionToPlanTranslator
         Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, base);
         ArrayList<Mutable<ILogicalOperator>> globalPlanRoots = new ArrayList<>();
         ILogicalOperator topOp = p.first;
+        List<LogicalVariable> liveVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(topOp, liveVars);
+        LogicalVariable unnestVar = liveVars.get(0);
+        LogicalVariable resVar = unnestVar;
 
         if (outputDatasetName == null) {
-            LogicalVariable resVar;
-            if (topOp instanceof ProjectOperator) {
-                resVar = ((ProjectOperator) topOp).getVariables().get(0);
-            } else if (topOp instanceof AssignOperator) {
-                resVar = ((AssignOperator) topOp).getVariables().get(0);
-            } else if (topOp instanceof AggregateOperator) {
-                resVar = ((AggregateOperator) topOp).getVariables().get(0);
-            } else {
-                throw new AlgebricksException("Invalid returning query");
-            }
             FileSplit outputFileSplit = metadataProvider.getOutputFile();
             if (outputFileSplit == null) {
                 outputFileSplit = getDefaultOutputFileLocation();
@@ -333,10 +328,6 @@ class LangExpressionToPlanTranslator
                 topOp.getAnnotations().put("output-record-type", outputRecordType);
             }
         } else {
-            ProjectOperator project = (ProjectOperator) topOp;
-            LogicalVariable unnestVar = project.getVariables().get(0);
-            LogicalVariable resVar = project.getVariables().get(0);
-
             /**
              * add the collection-to-sequence right before the project,
              * because dataset only accept non-collection records
@@ -350,9 +341,10 @@ class LangExpressionToPlanTranslator
                     new MutableObject<>(new ScalarFunctionCallExpression(
                             FunctionUtil.getFunctionInfo(BuiltinFunctions.COLLECTION_TO_SEQUENCE),
                             new MutableObject<>(new VariableReferenceExpression(resVar)))));
-            assignCollectionToSequence.getInputs().add(new MutableObject<>(project.getInputs().get(0).getValue()));
-            project.getInputs().get(0).setValue(assignCollectionToSequence);
-            project.getVariables().set(0, seqVar);
+            assignCollectionToSequence.getInputs().add(new MutableObject<>(topOp.getInputs().get(0).getValue()));
+            topOp.getInputs().get(0).setValue(assignCollectionToSequence);
+            ProjectOperator projectOperator = (ProjectOperator) topOp;
+            projectOperator.getVariables().set(0, seqVar);
             resVar = seqVar;
             DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                     stmt.getDatasetName());
@@ -391,10 +383,10 @@ class LangExpressionToPlanTranslator
 
                 additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
                         additionalFilteringAssignExpressions);
-                additionalFilteringAssign.getInputs().add(new MutableObject<>(project));
+                additionalFilteringAssign.getInputs().add(new MutableObject<>(topOp));
                 assign.getInputs().add(new MutableObject<>(additionalFilteringAssign));
             } else {
-                assign.getInputs().add(new MutableObject<>(project));
+                assign.getInputs().add(new MutableObject<>(topOp));
             }
 
             Mutable<ILogicalExpression> varRef = new MutableObject<>(new VariableReferenceExpression(resVar));
@@ -406,7 +398,7 @@ class LangExpressionToPlanTranslator
                     break;
                 case Statement.Kind.UPSERT:
                     leafOperator = translateUpsert(targetDatasource, varRef, varRefsForLoading,
-                            additionalFilteringExpressions, assign, additionalFilteringField, unnestVar, project, exprs,
+                            additionalFilteringExpressions, assign, additionalFilteringField, unnestVar, topOp, exprs,
                             resVar, additionalFilteringAssign, stmt);
                     break;
                 case Statement.Kind.DELETE:
@@ -419,7 +411,7 @@ class LangExpressionToPlanTranslator
                     break;
                 case Statement.Kind.SUBSCRIBE_FEED:
                     leafOperator = translateSubscribeFeed((CompiledSubscribeFeedStatement) stmt, targetDatasource,
-                            unnestVar, project, exprs, resVar, varRefsForLoading, varRef, assign,
+                            unnestVar, topOp, exprs, resVar, varRefsForLoading, varRef, assign,
                             additionalFilteringField, additionalFilteringAssign, additionalFilteringExpressions);
                     break;
                 default:
@@ -463,7 +455,7 @@ class LangExpressionToPlanTranslator
     }
 
     private ILogicalOperator translateSubscribeFeed(CompiledSubscribeFeedStatement sfs,
-            DatasetDataSource targetDatasource, LogicalVariable unnestVar, ProjectOperator project,
+            DatasetDataSource targetDatasource, LogicalVariable unnestVar, ILogicalOperator topOp,
             ArrayList<Mutable<ILogicalExpression>> exprs, LogicalVariable resVar,
             List<Mutable<ILogicalExpression>> varRefsForLoading, Mutable<ILogicalExpression> varRef,
             ILogicalOperator assign, List<String> additionalFilteringField, AssignOperator additionalFilteringAssign,
@@ -478,6 +470,7 @@ class LangExpressionToPlanTranslator
         boolean isChangeFeed = ExternalDataUtils.isChangeFeed(feed.getAdapterConfiguration());
         boolean isUpsertFeed = ExternalDataUtils.isUpsertFeed(feed.getAdapterConfiguration());
 
+        ProjectOperator project = (ProjectOperator) topOp;
         if (targetDatasource.getDataset().hasMetaPart() || isChangeFeed) {
             metaAndKeysVars = new ArrayList<>();
             metaAndKeysExprs = new ArrayList<>();
@@ -546,8 +539,8 @@ class LangExpressionToPlanTranslator
         }
         if (targetDatasource.getDataset().hasMetaPart() || isChangeFeed) {
             metaAndKeysAssign = new AssignOperator(metaAndKeysVars, metaAndKeysExprs);
-            metaAndKeysAssign.getInputs().add(project.getInputs().get(0));
-            project.getInputs().set(0, new MutableObject<>(metaAndKeysAssign));
+            metaAndKeysAssign.getInputs().add(topOp.getInputs().get(0));
+            topOp.getInputs().set(0, new MutableObject<>(metaAndKeysAssign));
         }
         feedModificationOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
         ILogicalOperator leafOperator = new DelegateOperator(new CommitOperator(true));
@@ -558,18 +551,20 @@ class LangExpressionToPlanTranslator
     private ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
             List<Mutable<ILogicalExpression>> varRefsForLoading,
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator assign,
-            List<String> additionalFilteringField, LogicalVariable unnestVar, ProjectOperator project,
+            List<String> additionalFilteringField, LogicalVariable unnestVar, ILogicalOperator topOp,
             List<Mutable<ILogicalExpression>> exprs, LogicalVariable resVar, AssignOperator additionalFilteringAssign,
             ICompiledDmlStatement stmt) throws AlgebricksException {
-        if (!targetDatasource.getDataset().allow(project, Dataset.OP_UPSERT)) {
+        if (!targetDatasource.getDataset().allow(topOp, Dataset.OP_UPSERT)) {
             throw new AlgebricksException(targetDatasource.getDataset().getDatasetName()
                     + ": upsert into dataset is not supported on Datasets with Meta records");
         }
+        ProjectOperator project = (ProjectOperator) topOp;
         CompiledUpsertStatement compiledUpsert = (CompiledUpsertStatement) stmt;
+        Expression returnExpression = compiledUpsert.getReturnExpression();
         InsertDeleteUpsertOperator upsertOp;
-        ILogicalOperator leafOperator;
+        ILogicalOperator rootOperator;
         if (targetDatasource.getDataset().hasMetaPart()) {
-            if (compiledUpsert.getReturnQuery() != null) {
+            if (returnExpression != null) {
                 throw new AlgebricksException("Returning not allowed on datasets with Meta records");
 
             }
@@ -628,12 +623,9 @@ class LangExpressionToPlanTranslator
                 upsertOp.getInputs().add(assign.getInputs().get(0));
             }
             metaAndKeysAssign = new AssignOperator(metaAndKeysVars, metaAndKeysExprs);
-            metaAndKeysAssign.getInputs().add(project.getInputs().get(0));
-            project.getInputs().set(0, new MutableObject<>(metaAndKeysAssign));
+            metaAndKeysAssign.getInputs().add(topOp.getInputs().get(0));
+            topOp.getInputs().set(0, new MutableObject<>(metaAndKeysAssign));
             upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-            leafOperator = new DelegateOperator(new CommitOperator(true));
-            leafOperator.getInputs().add(new MutableObject<>(upsertOp));
-
         } else {
             upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
                     InsertDeleteUpsertOperator.Kind.UPSERT, false);
@@ -647,46 +639,13 @@ class LangExpressionToPlanTranslator
                 upsertOp.setPrevFilterVar(context.newVar());
                 upsertOp.setPrevFilterType(recordType.getFieldType(additionalFilteringField.get(0)));
             }
-
-            if (compiledUpsert.getReturnQuery() != null) {
-                leafOperator = createReturningQuery(compiledUpsert, upsertOp);
-
-            } else {
-                leafOperator = new DelegateOperator(new CommitOperator(true));
-                leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(upsertOp));
-            }
         }
-        return leafOperator;
+        rootOperator = new DelegateOperator(new CommitOperator(returnExpression == null));
+        rootOperator.getInputs().add(new MutableObject<>(upsertOp));
 
-    }
+        // Compiles the return expression.
+        return processReturningExpression(rootOperator, upsertOp, compiledUpsert);
 
-    private ILogicalOperator createReturningQuery(CompiledInsertStatement compiledInsert,
-            InsertDeleteUpsertOperator insertOp) throws AlgebricksException {
-        //Make the id of the insert var point to the record variable
-        context.newVar(compiledInsert.getVar());
-        context.setVar(compiledInsert.getVar(),
-                ((VariableReferenceExpression) insertOp.getPayloadExpression().getValue()).getVariableReference());
-        // context
-
-        ILogicalPlan planAfterInsert = translate(compiledInsert.getReturnQuery(), null, null, insertOp);
-
-        ILogicalOperator finalRoot = planAfterInsert.getRoots().get(0).getValue();
-        ILogicalOperator op;
-        for (op = finalRoot;; op = op.getInputs().get(0).getValue()) {
-            if (op.getInputs().size() != 1) {
-                throw new AlgebricksException("Cannot have a multi-branch returning query");
-            }
-            if (op.getInputs().get(0).getValue() instanceof InsertDeleteUpsertOperator) {
-                break;
-            }
-        }
-
-        op.getInputs().clear();
-        ILogicalOperator leafOperator = new DelegateOperator(new CommitOperator(false));
-        leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
-        op.getInputs().add(new MutableObject<>(leafOperator));
-        leafOperator = finalRoot;
-        return leafOperator;
     }
 
     private ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
@@ -697,20 +656,52 @@ class LangExpressionToPlanTranslator
             throw new AlgebricksException(targetDatasource.getDataset().getDatasetName()
                     + ": insert into dataset is not supported on Datasets with Meta records");
         }
-        ILogicalOperator leafOperator;
+        // Adds the insert operator.
         InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef,
                 varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, false);
         insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
         insertOp.getInputs().add(new MutableObject<>(assign));
-        CompiledInsertStatement compiledInsert = (CompiledInsertStatement) stmt;
-        if (compiledInsert.getReturnQuery() != null) {
-            leafOperator = createReturningQuery(compiledInsert, insertOp);
 
-        } else {
-            leafOperator = new DelegateOperator(new CommitOperator(true));
-            leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+        // Adds the commit operator.
+        CompiledInsertStatement compiledInsert = (CompiledInsertStatement) stmt;
+        Expression returnExpression = compiledInsert.getReturnExpression();
+        ILogicalOperator rootOperator = new DelegateOperator(
+                new CommitOperator(returnExpression == null ? true : false));
+        rootOperator.getInputs().add(new MutableObject<>(insertOp));
+
+        // Compiles the return expression.
+        return processReturningExpression(rootOperator, insertOp, compiledInsert);
+    }
+
+    // Stitches the translated operators for the returning expression into the query plan.
+    private ILogicalOperator processReturningExpression(ILogicalOperator inputOperator,
+            InsertDeleteUpsertOperator insertOp, CompiledInsertStatement compiledInsert) throws AlgebricksException {
+        Expression returnExpression = compiledInsert.getReturnExpression();
+        if (returnExpression == null) {
+            return inputOperator;
         }
-        return leafOperator;
+        ILogicalOperator rootOperator = inputOperator;
+
+        //Makes the id of the insert var point to the record variable.
+        context.newVar(compiledInsert.getVar());
+        context.setVar(compiledInsert.getVar(),
+                ((VariableReferenceExpression) insertOp.getPayloadExpression().getValue()).getVariableReference());
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(returnExpression,
+                    new MutableObject<>(rootOperator));
+
+        // Adds an assign operator for the returning expression.
+        LogicalVariable resultVar = context.newVar();
+        AssignOperator assignOperator = new AssignOperator(resultVar, new MutableObject<>(p.first));
+        assignOperator.getInputs().add(p.second);
+
+        // Adds a distribute result operator.
+        List<Mutable<ILogicalExpression>> expressions = new ArrayList<>();
+        expressions.add(new MutableObject<>(new VariableReferenceExpression(resultVar)));
+        ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
+        ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
+        rootOperator = new DistributeResultOperator(expressions, sink);
+        rootOperator.getInputs().add(new MutableObject<>(assignOperator));
+        return rootOperator;
     }
 
     private DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, String dataverseName,

@@ -58,6 +58,7 @@ public class ErrorCode {
     public static final int ERROR_COMPILATION_INVALID_EXPRESSION = 1006;
     public static final int ERROR_COMPILATION_INVALID_PARAMETER_NUMBER = 1007;
     public static final int ERROR_COMPILATION_DUPLICATE_FIELD_NAME = 1008;
+    public static final int ERROR_COMPILATION_INVALID_RETURNING_EXPRESSION = 1009;
 
     private static final String ERROR_MESSAGE_ID_CONFLICT = "Two Extensions share the same Id: %1$s";
     private static final String ERROR_MESSAGE_COMPONENT_CONFLICT = "Extension Conflict between %1$s and %2$s both "
@@ -83,6 +84,8 @@ public class ErrorCode {
             + " its %2$s input parameter to be a %3$s expression, but the actual expression is %4$s";
     private static final String ERROR_MESSAGE_INVALID_PARAMETER_NUMBER = "Invalid parameter number: function %1$s "
             + "cannot take %2$s parameters";
+    private static final String ERROR_MESSAGE_INVALID_RETURNING_EXPRESSION = "A returning expression cannot"
+            + " contain dataset access";
 
     private static Map<Integer, String> errorMessageMap = new HashMap<>();
 
@@ -109,6 +112,7 @@ public class ErrorCode {
         errorMessageMap.put(ERROR_COMPILATION_INVALID_EXPRESSION, ERROR_MESSAGE_INVALID_EXPRESSION);
         errorMessageMap.put(ERROR_COMPILATION_INVALID_PARAMETER_NUMBER, ERROR_MESSAGE_INVALID_PARAMETER_NUMBER);
         errorMessageMap.put(ERROR_COMPILATION_DUPLICATE_FIELD_NAME, ERROR_MESSAGE_DUPLICATE_FIELD);
+        errorMessageMap.put(ERROR_COMPILATION_INVALID_RETURNING_EXPRESSION, ERROR_MESSAGE_INVALID_RETURNING_EXPRESSION);
 
         // lifecycle management errors
         errorMessageMap.put(ERROR_EXTENSION_ID_CONFLICT, ERROR_MESSAGE_ID_CONFLICT);
