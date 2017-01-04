@@ -177,16 +177,6 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public int createMemFile() throws HyracksDataException {
-        return bufferCache.createMemFile();
-    }
-
-    @Override
-    public void deleteMemFile(int fileId) throws HyracksDataException {
-        bufferCache.deleteMemFile(fileId);
-    }
-
-    @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
         return bufferCache.getNumPagesOfFile(fileId);
     }
@@ -220,12 +210,6 @@ public class DebugBufferCache implements IBufferCache {
     @Override
     public void finishQueue() {
         bufferCache.finishQueue();
-    }
-
-    @Override
-    public void copyPage(ICachedPage src, ICachedPage dst) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

@@ -350,16 +350,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
     }
 
-    //These 4 methods aren't applicable here.
-    @Override
-    public int createMemFile() throws HyracksDataException {
-        return 0;
-    }
-
-    @Override
-    public void deleteMemFile(int fileId) throws HyracksDataException {
-    }
-
     @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
         synchronized (fileMapManager) {
@@ -401,11 +391,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     @Override
     public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
             throws HyracksDataException {
-        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
-    }
-
-    @Override
-    public void copyPage(ICachedPage src, ICachedPage dst) {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
 

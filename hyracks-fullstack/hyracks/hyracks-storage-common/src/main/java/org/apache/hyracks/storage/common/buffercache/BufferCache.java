@@ -70,7 +70,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final IFileMapManager fileMapManager;
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
-    private final Set<Integer> virtualFiles;
     private final AsyncFIFOPageQueueManager fifoWriter;
     private final Queue<BufferCacheHeaderHelper> headerPageCache = new ConcurrentLinkedQueue<>();
 
@@ -104,7 +103,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
         Executor executor = Executors.newCachedThreadPool(threadFactory);
         fileInfoMap = new HashMap<>();
-        virtualFiles = new HashSet<>();
         cleanerThread = new CleanerThread();
         executor.execute(cleanerThread);
         closed = false;
@@ -153,9 +151,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         synchronized (fileInfoMap) {
             fInfo = fileInfoMap.get(fileId);
         }
-        if (fInfo == null && !virtualFiles.contains(fileId)) {
+        if (fInfo == null) {
             throw new HyracksDataException("pin called on a fileId " + fileId + " that has not been created.");
-        } else if (fInfo != null && fInfo.getReferenceCount() <= 0) {
+        } else if (fInfo.getReferenceCount() <= 0) {
             throw new HyracksDataException("pin called on a fileId " + fileId + " that has not been opened.");
         }
     }
@@ -802,22 +800,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
-    public int createMemFile() throws HyracksDataException {
-        if (LOGGER.isLoggable(fileOpsLevel)) {
-            LOGGER.log(fileOpsLevel, "Creating memory file in cache: " + this);
-        }
-        int fileId;
-        synchronized (fileInfoMap) {
-            fileId = fileMapManager.registerMemoryFile();
-        }
-        synchronized (virtualFiles) {
-            virtualFiles.add(fileId);
-        }
-        return fileId;
-
-    }
-
-    @Override
     public void openFile(int fileId) throws HyracksDataException {
         if (LOGGER.isLoggable(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Opening file: " + fileId + " in cache: " + this);
@@ -995,20 +977,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             } else {
                 return 0;
             }
-        }
-    }
-
-    @Override
-    public synchronized void deleteMemFile(int fileId) throws HyracksDataException {
-        //TODO: possible sanity chcecking here like in above?
-        if (LOGGER.isLoggable(fileOpsLevel)) {
-            LOGGER.log(fileOpsLevel, "Deleting memory file: " + fileId + " in cache: " + this);
-        }
-        synchronized (virtualFiles) {
-            virtualFiles.remove(fileId);
-        }
-        synchronized (fileInfoMap) {
-            fileMapManager.unregisterMemFile(fileId);
         }
     }
 
@@ -1375,13 +1343,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public void finishQueue() {
         fifoWriter.finishQueue();
-    }
-
-    @Override
-    public void copyPage(ICachedPage src, ICachedPage dst) {
-        CachedPage srcCast = (CachedPage) src;
-        CachedPage dstCast = (CachedPage) dst;
-        System.arraycopy(srcCast.buffer.array(), 0, dstCast.getBuffer().array(), 0, srcCast.buffer.capacity());
     }
 
     @Override

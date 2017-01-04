@@ -30,15 +30,11 @@ public interface IBufferCache {
 
     public void createFile(FileReference fileRef) throws HyracksDataException;
 
-    public int createMemFile() throws HyracksDataException;
-
     public void openFile(int fileId) throws HyracksDataException;
 
     public void closeFile(int fileId) throws HyracksDataException;
 
     public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
-
-    public void deleteMemFile(int fileId) throws HyracksDataException;
 
     public ICachedPage tryPin(long dpid) throws HyracksDataException;
 
@@ -75,8 +71,6 @@ public interface IBufferCache {
     public IFIFOPageQueue createFIFOQueue();
 
     public void finishQueue();
-
-    void copyPage(ICachedPage src, ICachedPage dst);
 
     void setPageDiskId(ICachedPage page, long dpid);
 

@@ -131,17 +131,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
         return vbc.getFileMapProvider();
     }
 
-    //These 4 methods are not applicable here
-    @Override
-    public int createMemFile() throws HyracksDataException {
-        throw new UnsupportedOperationException("Virtual Pages are not a valid concept in this context");
-    }
-
-    @Override
-    public void deleteMemFile(int fileId) throws HyracksDataException {
-        throw new UnsupportedOperationException("Virtual Pages are not a valid concept in this context");
-    }
-
     @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
         throw new UnsupportedOperationException();
@@ -179,11 +168,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     @Override
     public void finishQueue() {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
-    }
-
-    @Override
-    public void copyPage(ICachedPage src, ICachedPage dst) {
-
     }
 
     @Override

@@ -47,7 +47,4 @@ public interface IFileMapManager extends IFileMapProvider {
      */
     public void unregisterFile(int fileId) throws HyracksDataException;
 
-    public int registerMemoryFile();
-
-    public void unregisterMemFile(int fileId) throws HyracksDataException;
 }
