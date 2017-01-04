@@ -23,6 +23,9 @@
  *                  : query #3 - single string value query
  *                  : query #4 - single string value in an ordered list query
  *                  : query #5 - single string value in an unordered list query
+ *                  : query #6 - the same as #3, but without any option
+ *                  : query #7 - the same as #4, but without any option
+ *                  : query #8 - the same as #5, but without any option
  *  Expected Result : Success
  *
 */

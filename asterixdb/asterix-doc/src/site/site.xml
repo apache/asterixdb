@@ -100,6 +100,7 @@
 
     <menu name="Advanced Features">
       <item name="Support of Similarity Queries" href="aql/similarity.html"/>
+      <item name="Support of Full-text Queries" href="aql/fulltext.html"/>
       <item name="Accessing External Data" href="aql/externaldata.html"/>
       <item name="Support for Data Ingestion" href="feeds/tutorial.html"/>
       <item name="User Defined Functions" href="udf.html"/>

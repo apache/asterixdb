@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
@@ -112,5 +113,10 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
             }
         }
         return tokenCount;
+    }
+
+    @Override
+    public TokenizerType getTokenizerType() {
+        return TokenizerType.STRING;
     }
 }

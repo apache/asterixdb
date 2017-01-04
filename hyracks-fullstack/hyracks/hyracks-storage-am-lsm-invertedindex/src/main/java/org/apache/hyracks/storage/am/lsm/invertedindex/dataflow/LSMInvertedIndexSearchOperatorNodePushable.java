@@ -34,14 +34,19 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
     protected final IInvertedIndexSearchModifier searchModifier;
     protected final int queryFieldIndex;
     protected final int invListFields;
+    // Keeps the information whether the given query is a full-text search or not.
+    // We need to have this information to stop the search process since we don't allow a phrase search yet.
+    protected final boolean isFullTextSearchQuery;
 
     public LSMInvertedIndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int queryFieldIndex,
-            IInvertedIndexSearchModifier searchModifier, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes)
+            IInvertedIndexSearchModifier searchModifier, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            boolean isFullTextSearchQuery)
             throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, minFilterFieldIndexes, maxFilterFieldIndexes);
         this.searchModifier = searchModifier;
         this.queryFieldIndex = queryFieldIndex;
+        this.isFullTextSearchQuery = isFullTextSearchQuery;
         // If retainInput is true, the frameTuple is created in IndexSearchOperatorNodePushable.open().
         if (!opDesc.getRetainInput()) {
             this.frameTuple = new FrameTupleReference();
@@ -54,7 +59,7 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
     protected ISearchPredicate createSearchPredicate() {
         AbstractLSMInvertedIndexOperatorDescriptor invIndexOpDesc = (AbstractLSMInvertedIndexOperatorDescriptor) opDesc;
         return new InvertedIndexSearchPredicate(invIndexOpDesc.getTokenizerFactory().createTokenizer(), searchModifier,
-                minFilterKey, maxFilterKey);
+                minFilterKey, maxFilterKey, isFullTextSearchQuery);
     }
 
     @Override
@@ -63,6 +68,7 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
         InvertedIndexSearchPredicate invIndexSearchPred = (InvertedIndexSearchPredicate) searchPred;
         invIndexSearchPred.setQueryTuple(frameTuple);
         invIndexSearchPred.setQueryFieldIndex(queryFieldIndex);
+        invIndexSearchPred.setIsFullTextSearchQuery(isFullTextSearchQuery);
         if (minFilterKey != null) {
             minFilterKey.reset(accessor, tupleIndex);
         }

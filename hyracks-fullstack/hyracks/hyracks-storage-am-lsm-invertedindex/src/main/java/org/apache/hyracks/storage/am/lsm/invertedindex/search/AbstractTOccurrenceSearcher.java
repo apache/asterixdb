@@ -44,8 +44,10 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeTupleReference;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.ObjectCache;
 
 public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearcher {
@@ -96,6 +98,13 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         ITupleReference queryTuple = searchPred.getQueryTuple();
         int queryFieldIndex = searchPred.getQueryFieldIndex();
         IBinaryTokenizer queryTokenizer = searchPred.getQueryTokenizer();
+        // Is this a full-text query?
+        // Then, the last argument is conjuctive or disjunctive search option, not a query text.
+        // Thus, we need to remove the last argument.
+        boolean isFullTextSearchQuery = searchPred.getIsFullTextSearchQuery();
+        // Get the type of query tokenizer.
+        TokenizerType queryTokenizerType = queryTokenizer.getTokenizerType();
+        int tokenCountInOneField = 0;
 
         queryTokenAppender.reset(queryTokenFrame, true);
         queryTokenizer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
@@ -104,8 +113,29 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         while (queryTokenizer.hasNext()) {
             queryTokenizer.next();
             queryTokenBuilder.reset();
+            tokenCountInOneField++;
             try {
                 IToken token = queryTokenizer.getToken();
+                // For the full-text search, we don't support a phrase search yet.
+                // So, each field should have only one token.
+                // If it's a list, it can have multiple keywords in it. But, each keyword should not be a phrase.
+                if (isFullTextSearchQuery) {
+                    if (queryTokenizerType == TokenizerType.STRING && tokenCountInOneField > 1) {
+                        throw new HyracksDataException(
+                                "Phrase search in Full-text is not supported. "
+                                        + "An expression should include only one word.");
+                    } else if (queryTokenizerType == TokenizerType.LIST) {
+                        for (int j = 1; j < token.getTokenLength(); j++) {
+                            if (DelimitedUTF8StringBinaryTokenizer
+                                    .isSeparator((char) token.getData()[token.getStartOffset() + j])) {
+                                throw new HyracksDataException(
+                                        "Phrase search in Full-text is not supported. "
+                                                + "An expression should include only one word.");
+                            }
+                        }
+                    }
+                }
+
                 token.serializeToken(queryTokenBuilder.getFieldData());
                 queryTokenBuilder.addFieldEndOffset();
                 // WARNING: assuming one frame is big enough to hold all tokens

@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,8 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -296,9 +299,23 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     boolean jaccardSimilarity = optFuncExpr.getFuncExpr().getFunctionIdentifier().getName()
                             .startsWith("similarity-jaccard-check");
 
+                    // Full-text search consideration: an (un)ordered list of string type can be compatible with string
+                    // type. i.e. an (un)ordered list can be provided as arguments to a string type field index.
+                    List<IAType> elementTypes = matchedTypes;
+                    if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS
+                            || optFuncExpr.getFuncExpr()
+                                    .getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION) {
+                        for (int j = 0; j < matchedTypes.size(); j++) {
+                            if (matchedTypes.get(j).getTypeTag() == ATypeTag.ORDEREDLIST
+                                    || matchedTypes.get(j).getTypeTag() == ATypeTag.UNORDEREDLIST) {
+                                elementTypes.set(j, ((AbstractCollectionType) matchedTypes.get(j)).getItemType());
+                            }
+                        }
+                    }
+
                     for (int j = 0; j < matchedTypes.size(); j++) {
                         for (int k = j + 1; k < matchedTypes.size(); k++) {
-                            typeMatch &= isMatched(matchedTypes.get(j), matchedTypes.get(k), jaccardSimilarity);
+                            typeMatch &= isMatched(elementTypes.get(j), elementTypes.get(k), jaccardSimilarity);
                         }
                     }
 
@@ -348,6 +365,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     private boolean isMatched(IAType type1, IAType type2, boolean useListDomain) throws AlgebricksException {
+        // Sanity check - two types can't be NULL in order to be matched.
+        if (type1 == null || type2 == null) {
+            return false;
+        }
         if (ATypeHierarchy.isSameTypeDomain(Index.getNonNullableType(type1).first.getTypeTag(),
                 Index.getNonNullableType(type2).first.getTypeTag(), useListDomain)) {
             return true;
@@ -546,7 +567,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             fieldName = getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, subTree.getRecordType(),
                     funcVarIndex, optFuncExpr.getFuncExpr().getArguments().get(funcVarIndex).getValue(),
                     datasetRecordVar, subTree.getMetaRecordType(), datasetMetaVar);
-            if (fieldName == null) {
+            if (fieldName.isEmpty()) {
                 return;
             }
         }
@@ -683,25 +704,25 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                //Otherwise the cast for childFuncExpr would fail
-                return null;
+            // Can't get a field name from a constant expression. So, return null.
+            if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                return Collections.emptyList();
             }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
         } else {
             UnnestOperator unnestOp = (UnnestOperator) op;
             expr = (AbstractLogicalExpression) unnestOp.getExpressionRef().getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                return null;
+                return Collections.emptyList();
             }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
             if (childFuncExpr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
-                return null;
+                return Collections.emptyList();
             }
             expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
         }
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return null;
+            return Collections.emptyList();
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
@@ -714,21 +735,21 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
             fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
             if (fieldName == null) {
-                return null;
+                return Collections.emptyList();
             }
             isFieldAccess = true;
             isByName = true;
         } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
             Integer idx = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
             if (idx == null) {
-                return null;
+                return Collections.emptyList();
             }
             fieldIndex = idx;
             isFieldAccess = true;
         } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_NESTED) {
             ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
             if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return null;
+                return Collections.emptyList();
             }
             ConstantExpression constExpr = (ConstantExpression) nameArg;
             AOrderedList orderedNestedFieldName = (AOrderedList) ((AsterixConstantValue) constExpr.getValue())
@@ -783,10 +804,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         assignAndExpressionIndexes[0], assignAndExpressionIndexes[1], recordType, funcVarIndex,
                         parentFuncExpr, recordVar, metaType, metaVar);
 
-                if (parentFieldNames == null) {
+                if (parentFieldNames.isEmpty()) {
                     //Nested assign was not a field access.
                     //We will not use index
-                    return null;
+                    return Collections.emptyList();
                 }
 
                 if (!isByName) {
@@ -820,7 +841,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
 
         if (!funcIDSetThatRetainFieldName.contains(funcIdent)) {
-            return null;
+            return Collections.emptyList();
         }
         // We use a part of the field in edit distance computation
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CHECK) {
@@ -830,7 +851,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         // cannot apply an index.
         ILogicalExpression argExpr = funcExpr.getArguments().get(0).getValue();
         if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-            return null;
+            return Collections.emptyList();
         }
         LogicalVariable curVar = ((VariableReferenceExpression) argExpr).getVariableReference();
         // We look for the assign or unnest operator that produces curVar below
@@ -858,6 +879,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 }
             }
         }
-        return null;
+        return Collections.emptyList();
     }
 }

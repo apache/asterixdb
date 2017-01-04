@@ -673,6 +673,10 @@ IndexParams IndexType() throws ParseException:
     {
       type = IndexType.LENGTH_PARTITIONED_WORD_INVIX;
     }
+  |<FULLTEXT>
+    {
+      type = IndexType.SINGLE_PARTITION_WORD_INVIX;
+    }
   | <NGRAM> <LEFTPAREN> <INTEGER_LITERAL>
     {
       type = IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
@@ -3107,6 +3111,7 @@ TOKEN [IGNORE_CASE]:
   | <FOR : "for">
   | <FROM : "from">
   | <FULL : "full">
+  | <FULLTEXT : "fulltext">
   | <FUNCTION : "function">
   | <GROUP : "group">
   | <HAVING : "having">

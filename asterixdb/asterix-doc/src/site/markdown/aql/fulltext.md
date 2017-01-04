@@ -39,9 +39,10 @@ returned as well.
 ## <a id="Syntax">Syntax</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 The syntax of AsterixDB FTS follows a portion of the XQuery FullText Search syntax.
-A basic form is as follows:
+Two basic forms are as follows:
 
         ftcontains(Expression1, Expression2, {FullTextOption})
+        ftcontains(Expression1, Expression2)
 
 For example, we can execute the following query to find tweet messages where the `message-text` field includes
 “voice” as a word. Please note that an FTS search is case-insensitive.
@@ -62,6 +63,7 @@ into one of the first two types, i.e., into a string value or an (un)ordered lis
 
 The following examples are all valid expressions.
 
+       ... where ftcontains($msg.message-text, "sound")
        ... where ftcontains($msg.message-text, "sound", {"mode":"any"})
        ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"any"})
        ... where ftcontains($msg.message-text, {{"speed", "stand", "customization"}}, {"mode":"all"})
@@ -70,30 +72,34 @@ The following examples are all valid expressions.
 
 In the last example above, `$keyword_list` should evaluate to a string or an (un)ordered list of string value(s).
 
-The last `FullTextOption` parameter clarifies the given FTS request. Currently, we only have one option named `mode`.
+The last `FullTextOption` parameter clarifies the given FTS request. If you omit the `FullTextOption` parameter,
+then the default value will be set for each possible option. Currently, we only have one option named `mode`.
 And as we extend the FTS feature, more options will be added. Please note that the format of `FullTextOption`
 is a record, thus you need to put the option(s) in a record `{}`.
 The `mode` option indicates whether the given FTS query is a conjunctive (AND) or disjunctive (OR) search request.
-This option can be either `“any”` or `“all”`. If one specifies `“any”`, a disjunctive search will be conducted.
-For example, the following query will find documents whose `message-text` field contains “sound” or “system”,
-so a document will be returned if it contains either “sound”, “system”, or both of the keywords.
+This option can be either `“any”` or `“all”`. The default value for `mode` is `“all”`. If one specifies `“any”`,
+a disjunctive search will be conducted. For example, the following query will find documents whose `message-text`
+field contains “sound” or “system”, so a document will be returned if it contains either “sound”, “system”,
+or both of the keywords.
 
        ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"any"})
 
-The other option parameter,`“all”`, specifies a conjunctive search. The following example will find the documents whose
+The other option parameter,`“all”`, specifies a conjunctive search. The following examples will find the documents whose
 `message-text` field contains both “sound” and “system”. If a document contains only “sound” or “system” but
 not both, it will not be returned.
 
        ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"all"})
+       ... where ftcontains($msg.message-text, ["sound", "system"])
 
 Currently AsterixDB doesn’t (yet) support phrase searches, so the following query will not work.
 
        ... where ftcontains($msg.message-text, "sound system", {"mode":"any"})
 
 As a workaround solution, the following query can be used to achieve a roughly similar goal. The difference is that
-the following query will find documents where `$msg.message-text` contains both “sound” and “system”, but the order
+the following queries will find documents where `$msg.message-text` contains both “sound” and “system”, but the order
 and adjacency of “sound” and “system” are not checked, unlike in a phrase search. As a result, the query below would
 also return documents with “sound system can be installed.”, “system sound is perfect.”,
 or “sound is not clear. You may need to install a new system.”
 
        ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"all"})
+       ... where ftcontains($msg.message-text, ["sound", "system"])

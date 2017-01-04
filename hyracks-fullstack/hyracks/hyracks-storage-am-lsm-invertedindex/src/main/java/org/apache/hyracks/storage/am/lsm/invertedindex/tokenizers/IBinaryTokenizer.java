@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
+
 public interface IBinaryTokenizer {
     public IToken getToken();
 
@@ -30,4 +32,7 @@ public interface IBinaryTokenizer {
 
     // Get the total number of tokens
     public short getTokensCount();
+
+    // Get the tokenizer types
+    public TokenizerType getTokenizerType();
 }

@@ -33,6 +33,9 @@
  *                  :            in this case, "any" option that enforces a disjunctive search will be applied.
  *                  : query #8 - the same as query #7, but with a different option - "all"
  *                  :            in this case, we explicitly specify "all" option that enforces a conjunctive search.
+ *                  : query #9 - the same as query #4, but without any option that is equivalent to "all".
+ *                  : query #10 - the same as query #6, but without any option that is equivalent to "all".
+ *                  : query #11 - the same as query #8, but without any option that is equivalent to "all".
  *  Expected Result : Success
  *
 */

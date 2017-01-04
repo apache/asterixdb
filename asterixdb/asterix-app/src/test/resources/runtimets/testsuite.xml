@@ -387,6 +387,77 @@
         <output-dir compare="Text">fulltext-01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-02">
+        <output-dir compare="Text">fulltext-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-03">
+        <output-dir compare="Text">fulltext-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-04">
+        <output-dir compare="Text">fulltext-04</output-dir>
+        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-05">
+        <output-dir compare="Text">fulltext-05</output-dir>
+        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-06">
+        <output-dir compare="Text">fulltext-06</output-dir>
+        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-07">
+        <output-dir compare="Text">fulltext-07</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-01">
+        <output-dir compare="Text">fulltext-index-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-02">
+        <output-dir compare="Text">fulltext-index-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-03">
+        <output-dir compare="Text">fulltext-index-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-04">
+        <output-dir compare="Text">fulltext-index-04</output-dir>
+        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-05">
+        <output-dir compare="Text">fulltext-index-05</output-dir>
+        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-06">
+        <output-dir compare="Text">fulltext-index-06</output-dir>
+        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-07">
+        <output-dir compare="Text">fulltext-index-07</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="union">
     <test-case FilePath="union">

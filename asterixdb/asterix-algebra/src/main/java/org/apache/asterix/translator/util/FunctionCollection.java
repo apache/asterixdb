@@ -153,6 +153,7 @@ import org.apache.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.EditDistanceListIsFilterableDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterableDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.FullTextContainsWithoutOptionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedGramTokensDescriptor;
@@ -598,6 +599,7 @@ public class FunctionCollection {
 
         // full-text function
         functionsToInjectUnkownHandling.add(FullTextContainsDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(FullTextContainsWithoutOptionDescriptor.FACTORY);
 
         // Record functions.
         functionsToInjectUnkownHandling.add(GetRecordFieldsDescriptor.FACTORY);

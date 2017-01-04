@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
@@ -124,5 +125,10 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
     @Override
     public short getTokensCount() {
         return (short) totalGrams;
+    }
+
+    @Override
+    public TokenizerType getTokenizerType() {
+        return TokenizerType.STRING;
     }
 }

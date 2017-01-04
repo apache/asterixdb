@@ -20,11 +20,14 @@
 /*
  *  Description     : Full-text search non-index test
  *                  : This test is intended to verify that the full-text search works as expected.
+ *                  : But, the form of the query is join. So, each keyword from the outer dataset will be processed
+ *                  : separately. Thus, query #3 and query #4 should generate the same result.
  *                  : query #3 - two string values in [an ordered list] query with "any" option.
  *                  :            an ordered list is first initialized by let clause and is being used.
  *                  :            in this case, "any" option that enforces a disjunctive search will be applied.
  *                  : query #4 - the same as query #3, but with a different option - "all"
  *                  :            in this case, we explicitly specify "all" option that enforces a conjunctive search.
+ *                  : query #5 - the same as query #4, but without any option that is equivalent to "all".
  *  Expected Result : Success
  *
 */
@@ -57,5 +60,3 @@ create dataset MyData(MyRecord)
 
 create dataset MyKeywordData(MyKeyword)
   primary key keyword_text;
-
-create index fulltext_index_title on MyData(title) type fulltext;

@@ -42,6 +42,16 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
     protected ATypeTag searchKeyType;
     protected List<LogicalVariable> keyVarList;
     protected List<LogicalVariable> nonKeyVarList;
+    // TODO: Currently, we don't have positional information in an inverted index.
+    // Thus, we can't support the phrase search yet. So, for the full-text search,
+    // if a query predicate contains a phrase, we need to generate an exception.
+    // The following variable serves this purpose. i.e. Checks whether the query is a full-text search query or not.
+    protected boolean isFullTextSearchQuery = false;
+    protected static final int SEARCH_MODIFIER_INDEX = 0;
+    protected static final int SIM_THRESHOLD_INDEX = 1;
+    protected static final int SEARCH_KEY_TYPE_INDEX = 2;
+    protected static final int IS_FULLTEXT_SEARCH_INDEX = 3;
+    protected static final int KEY_VAR_INDEX = 4;
 
     public InvertedIndexJobGenParams() {
     }
@@ -53,6 +63,10 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
 
     public void setSearchModifierType(SearchModifierType searchModifierType) {
         this.searchModifierType = searchModifierType;
+    }
+
+    public void setIsFullTextSearch(boolean isFullTextSearchQuery) {
+        this.isFullTextSearchQuery = isFullTextSearchQuery;
     }
 
     public void setSimilarityThreshold(IAlgebricksConstantValue similarityThreshold) {
@@ -78,6 +92,9 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         // Write search key type.
         funcArgs.add(
                 new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchKeyType.ordinal())));
+        // Write full-text search information.
+        funcArgs.add(
+                new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(isFullTextSearchQuery)));
         // Write key var list.
         writeVarList(keyVarList, funcArgs);
         // Write non-key var list.
@@ -91,16 +108,18 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         super.readFromFuncArgs(funcArgs);
         int index = super.getNumParams();
         // Read search modifier type.
-        int searchModifierOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index));
+        int searchModifierOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index + SEARCH_MODIFIER_INDEX));
         searchModifierType = SearchModifierType.values()[searchModifierOrdinal];
         // Read similarity threshold. Concrete type depends on search modifier.
-        similarityThreshold = (((ConstantExpression) funcArgs.get(index + 1).getValue()).getValue());
+        similarityThreshold = ((ConstantExpression) funcArgs.get(index + SIM_THRESHOLD_INDEX).getValue()).getValue();
         // Read type of search key.
-        int typeTagOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index + 2));
+        int typeTagOrdinal = AccessMethodUtils.getInt32Constant(funcArgs.get(index + SEARCH_KEY_TYPE_INDEX));
         searchKeyType = ATypeTag.values()[typeTagOrdinal];
+        // Read full-text search information.
+        isFullTextSearchQuery = AccessMethodUtils.getBooleanConstant(funcArgs.get(index + IS_FULLTEXT_SEARCH_INDEX));
         // Read key var list.
         keyVarList = new ArrayList<LogicalVariable>();
-        readVarList(funcArgs, index + 3, keyVarList);
+        readVarList(funcArgs, index + KEY_VAR_INDEX, keyVarList);
         // TODO: We could possibly simplify things if we did read the non-key var list here.
         // We don't need to read the non-key var list.
         nonKeyVarList = null;
@@ -108,6 +127,10 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
 
     public SearchModifierType getSearchModifierType() {
         return searchModifierType;
+    }
+
+    public boolean getIsFullTextSearch() {
+        return isFullTextSearchQuery;
     }
 
     public IAlgebricksConstantValue getSimilarityThreshold() {

@@ -36,6 +36,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACollection;
 import org.apache.asterix.om.base.IAObject;
@@ -46,6 +47,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.om.util.ConstantExpressionUtil;
+import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -81,6 +84,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchM
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveEditDistanceSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveListEditDistanceSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifierFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.search.DisjunctiveSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.EditDistanceSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ListEditDistanceSearchModifierFactory;
@@ -97,7 +101,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         JACCARD,
         EDIT_DISTANCE,
         CONJUNCTIVE_EDIT_DISTANCE,
-        INVALID
+        INVALID,
+        DISJUNCTIVE
     }
 
     private static List<FunctionIdentifier> funcIdents = new ArrayList<>();
@@ -107,6 +112,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // For matching similarity-check functions. For example, similarity-jaccard-check returns a list of two items,
         // and the select condition will get the first list-item and check whether it evaluates to true.
         funcIdents.add(BuiltinFunctions.GET_ITEM);
+        // Full-text search function
+        funcIdents.add(BuiltinFunctions.FULLTEXT_CONTAINS);
+        funcIdents.add(BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION);
     }
 
     // These function identifiers are matched in this AM's analyzeFuncExprArgs(),
@@ -131,7 +139,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
 
-        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.STRING_CONTAINS) {
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.STRING_CONTAINS
+                || funcExpr.getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS
+                || funcExpr.getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION) {
             boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx, context,
                     typeEnvironment);
             if (!matches) {
@@ -828,6 +838,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.STRING_CONTAINS) {
             jobGenParams.setSearchModifierType(SearchModifierType.CONJUNCTIVE);
             jobGenParams.setSimilarityThreshold(new AsterixConstantValue(AMissing.MISSING));
+            return;
         }
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
             jobGenParams.setSearchModifierType(SearchModifierType.JACCARD);
@@ -835,6 +846,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             jobGenParams.setSimilarityThreshold(
                     ((ConstantExpression) optFuncExpr.getConstantExpr(optFuncExpr.getNumConstantExpr() - 1))
                             .getValue());
+            return;
         }
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CHECK
                 || optFuncExpr.getFuncExpr()
@@ -848,7 +860,40 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             jobGenParams.setSimilarityThreshold(
                     ((ConstantExpression) optFuncExpr.getConstantExpr(optFuncExpr.getNumConstantExpr() - 1))
                             .getValue());
+            return;
         }
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS
+                || optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION) {
+            // Let the job Gen pass the full-text search information.
+            jobGenParams.setIsFullTextSearch(true);
+
+            // We check the last argument of the given full-text search to see whether conjunctive or disjunctive
+            // search parameter is given. This is the last argument of the function call expression.
+            AbstractFunctionCallExpression funcExpr = optFuncExpr.getFuncExpr();
+            jobGenParams.setSearchModifierType(getFullTextOption(funcExpr));
+
+            jobGenParams.setSimilarityThreshold(new AsterixConstantValue(ANull.NULL));
+        }
+    }
+
+    private static SearchModifierType getFullTextOption(AbstractFunctionCallExpression funcExpr) {
+        if (funcExpr.getArguments().size() < 3 || funcExpr.getArguments().size() % 2 != 0) {
+            // If no parameters or incorrect number of parameters are given, the default search type is returned.
+            return SearchModifierType.DISJUNCTIVE;
+        }
+        // From the third argument, it contains full-text search options.
+        for (int i = 2; i < funcExpr.getArguments().size(); i = i + 2) {
+            String optionName = ConstantExpressionUtil.getStringArgument(funcExpr, i);
+            if (optionName.equals(FullTextContainsDescriptor.SEARCH_MODE_OPTION)) {
+                String searchType = ConstantExpressionUtil.getStringArgument(funcExpr, i + 1);
+                if (searchType.equals(FullTextContainsDescriptor.CONJUNCTIVE_SEARCH_MODE_OPTION)) {
+                    return SearchModifierType.CONJUNCTIVE;
+                } else {
+                    return SearchModifierType.DISJUNCTIVE;
+                }
+            }
+        }
+        return null;
     }
 
     private void addKeyVarsAndExprs(IOptimizableFuncExpr optFuncExpr, ArrayList<LogicalVariable> keyVarList,
@@ -881,6 +926,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.STRING_CONTAINS) {
             return isContainsFuncOptimizable(index, optFuncExpr);
+        }
+
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS
+                || optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION) {
+            return isFullTextContainsFuncOptimizable(index, optFuncExpr);
         }
 
         return false;
@@ -1010,6 +1060,40 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
 
         return false;
+    }
+
+    private boolean isFullTextContainsFuncCompatible(ATypeTag typeTag, IndexType indexType) {
+        //We can only optimize contains with full-text indexes.
+        return (typeTag == ATypeTag.STRING || typeTag == ATypeTag.ORDEREDLIST || typeTag == ATypeTag.UNORDEREDLIST)
+                && indexType == IndexType.SINGLE_PARTITION_WORD_INVIX;
+    }
+
+    // Does full-text search can utilize the given index?
+    private boolean isFullTextContainsFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        if (optFuncExpr.getNumLogicalVars() == 2) {
+            return isFullTextContainsFuncJoinOptimizable(index, optFuncExpr);
+        } else {
+            return isFullTextContainsFuncSelectOptimizable(index, optFuncExpr);
+        }
+    }
+
+    // Checks whether the given index is compatible with full-text search and
+    // the type of the constant search predicate is STRING, ORDEREDLIST, or UNORDEREDLIST
+    private boolean isFullTextContainsFuncSelectOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        AsterixConstantValue strConstVal =
+                (AsterixConstantValue) ((ConstantExpression) optFuncExpr.getConstantExpr(0)).getValue();
+        IAObject strObj = strConstVal.getObject();
+        ATypeTag typeTag = strObj.getType().getTypeTag();
+
+        return isFullTextContainsFuncCompatible(typeTag, index.getIndexType());
+    }
+
+    private boolean isFullTextContainsFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        if (index.isEnforcingKeyFileds()) {
+            return isFullTextContainsFuncCompatible(index.getKeyFieldTypes().get(0).getTypeTag(), index.getIndexType());
+        } else {
+            return isFullTextContainsFuncCompatible(optFuncExpr.getFieldType(0).getTypeTag(), index.getIndexType());
+        }
     }
 
     private ScalarFunctionCallExpression findTokensFunc(FunctionIdentifier funcId, IOptimizableFuncExpr optFuncExpr,
@@ -1150,15 +1234,15 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public static IInvertedIndexSearchModifierFactory getSearchModifierFactory(SearchModifierType searchModifierType,
             IAObject simThresh, Index index) throws AlgebricksException {
         switch (searchModifierType) {
-            case CONJUNCTIVE: {
+            case CONJUNCTIVE:
                 return new ConjunctiveSearchModifierFactory();
-            }
-            case JACCARD: {
+            case DISJUNCTIVE:
+                return new DisjunctiveSearchModifierFactory();
+            case JACCARD:
                 float jaccThresh = ((AFloat) simThresh).getFloatValue();
                 return new JaccardSearchModifierFactory(jaccThresh);
-            }
             case EDIT_DISTANCE:
-            case CONJUNCTIVE_EDIT_DISTANCE: {
+            case CONJUNCTIVE_EDIT_DISTANCE:
                 int edThresh = 0;
                 try {
                     edThresh = ((AInt32) ATypeHierarchy.convertNumericTypeObject(simThresh, ATypeTag.INT32))
@@ -1191,10 +1275,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                                 + "' for index type '" + index.getIndexType() + "'");
                     }
                 }
-            }
-            default: {
+            default:
                 throw new AlgebricksException("Unknown search modifier type '" + searchModifierType + "'.");
-            }
         }
     }
 

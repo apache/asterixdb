@@ -47,6 +47,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
     private final int[] minFilterFieldIndexes;
     private final int[] maxFilterFieldIndexes;
+    private final boolean isFullTextSearchQuery;
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
             IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
@@ -57,7 +58,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
             boolean retainNull, IMissingWriterFactory nullWriterFactory,
             ISearchOperationCallbackFactory searchOpCallbackProvider, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory) {
+            int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory, boolean isFullTextSearchQuery) {
         super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
                 btreeDataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
@@ -67,6 +68,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
         this.searchModifierFactory = searchModifierFactory;
         this.minFilterFieldIndexes = minFilterFieldIndexes;
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
+        this.isFullTextSearchQuery = isFullTextSearchQuery;
     }
 
     @Override
@@ -74,6 +76,6 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IInvertedIndexSearchModifier searchModifier = searchModifierFactory.createSearchModifier();
         return new LSMInvertedIndexSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, queryField,
-                searchModifier, minFilterFieldIndexes, maxFilterFieldIndexes);
+                searchModifier, minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery);
     }
 }

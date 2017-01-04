@@ -258,20 +258,19 @@ public class BinaryHashSet {
     }
 
     /**
-     * Iterate all key entries and reset the foundCount of each key to zero.
+     * Iterates all key entries and resets the foundCount of each key to zero.
      */
     public void clearFoundCount() {
-        int currentListHeadIndex = 0;
         ByteBuffer frame;
         int frameNum;
         int frameOff;
         int headPtr;
-        int checkedListHeadIndex = -1;
+        final int resetCount = 0;
 
-        while (true) {
+        for (int currentListHeadIndex = 0; currentListHeadIndex < listHeads.length; currentListHeadIndex++) {
             // Position to first non-null list-head pointer.
-            while (currentListHeadIndex < listHeads.length && listHeads[currentListHeadIndex] == NULL_PTR) {
-                currentListHeadIndex++;
+            if (listHeads[currentListHeadIndex] == NULL_PTR) {
+                continue;
             }
             headPtr = listHeads[currentListHeadIndex];
             do {
@@ -281,18 +280,11 @@ public class BinaryHashSet {
                 frame = frames.get(frameNum);
 
                 // Set the count as zero
-                frame.put(frameOff + 2 * SLOT_SIZE, (byte) 0);
+                frame.put(frameOff + 2 * SLOT_SIZE, (byte) resetCount);
 
                 // Get next key position
                 headPtr = frame.getInt(frameOff + 2 * SLOT_SIZE + COUNT_SIZE);
             } while (headPtr != NULL_PTR);
-
-            if (checkedListHeadIndex == currentListHeadIndex) {
-                // no more slots to read - we stop here.
-                break;
-            }
-
-            checkedListHeadIndex = currentListHeadIndex;
         }
     }
 

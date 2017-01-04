@@ -54,5 +54,3 @@ create dataset MyData(MyRecord)
 
 create dataset MyKeywordData(MyKeyword)
   primary key keyword_text;
-
-create index fulltext_index_title on MyData(title) type fulltext;

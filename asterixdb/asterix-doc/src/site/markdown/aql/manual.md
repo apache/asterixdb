@@ -700,10 +700,11 @@ the URL and path needed to locate the data in HDFS and a description of the data
                          | "rtree"
                          | "keyword"
                          | "ngram" "(" IntegerLiteral ")"
+                         | "fulltext"
 
 The create index statement creates a secondary index on one or more fields of a specified dataset.
 Supported index types include `btree` for totally ordered datatypes,
-`rtree` for spatial data, and `keyword` and `ngram` for textual (string) data.
+`rtree` for spatial data, and `keyword`, `ngram`, and `fulltext` for textual (string) data.
 An index can be created on a nested field (or fields) by providing a valid path expression as an index field identifier.
 An index field is not required to be part of the datatype associated with a dataset if that datatype is declared as
 open and the field's type is provided along with its type and the `enforced` keyword is specified in the end of index definition.
@@ -758,6 +759,15 @@ For details refer to the [document on similarity queries](similarity.html#Keywor
 ##### Example
 
     create index fbMessageIdx on FacebookMessages(message) type keyword;
+
+The following example creates a full-text index called fbMessageIdx on the message field of the FacebookMessages dataset.
+This full-text index can be used to optimize queries with full-text search predicates on the message field.
+For details refer to the [document on full-text queries](fulltext.html#toc).
+
+##### Example
+
+    create index fbMessageIdx on FacebookMessages(message) type fulltext;
+
 
 #### Functions
 

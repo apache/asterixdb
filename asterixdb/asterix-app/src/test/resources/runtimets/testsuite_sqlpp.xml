@@ -2453,6 +2453,28 @@
             </compilation-unit>
         </test-case>
     </test-group> -->
+  <test-group name="fulltext">
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-01">
+        <output-dir compare="Text">fulltext-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-02">
+        <output-dir compare="Text">fulltext-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-01">
+        <output-dir compare="Text">fulltext-index-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-02">
+        <output-dir compare="Text">fulltext-index-02</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="global-aggregate">
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q01">

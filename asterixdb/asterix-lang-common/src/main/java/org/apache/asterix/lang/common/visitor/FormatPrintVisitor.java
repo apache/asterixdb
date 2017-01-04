@@ -989,6 +989,8 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
                 return "btree";
             case RTREE:
                 return "rtree";
+            case SINGLE_PARTITION_WORD_INVIX:
+                return "fulltext";
             case LENGTH_PARTITIONED_WORD_INVIX:
                 return "keyword";
             case LENGTH_PARTITIONED_NGRAM_INVIX:

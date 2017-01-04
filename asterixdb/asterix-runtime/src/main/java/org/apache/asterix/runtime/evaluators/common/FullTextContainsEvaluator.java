@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import java.io.DataOutput;
-import java.util.Arrays;
 
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryTokenizerFactoryProvider;
@@ -92,8 +91,10 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
     // array that contains the key
     private BinaryHashSet rightHashSet = null;
 
-    // Checks whether the query array has been changed
+    // Keeps the query array. This is used to check whether the query predicate has been changed (e.g., join case)
     private byte[] queryArray = null;
+    private int queryArrayStartOffset = -1;
+    private int queryArrayLength = -1;
 
     // If the following is 1, then we will do a disjunctive search.
     // Else if it is equal to the number of tokens, then we will do a conjunctive search.
@@ -172,11 +173,13 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
      */
     private boolean fullTextContainsWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2)
             throws HyracksDataException {
-        // Since a fulltext search form is "X contains text Y",
+        // Since a fulltext search form is "ftcontains(X,Y,options)",
         // X (document) is the left side and Y (query predicate) is the right side.
 
         // Initialize variables that are required to conduct full-text search. (e.g., hash-set, tokenizer ...)
-        initializeFullTextContains(typeTag2);
+        if (rightHashSet == null) {
+            initializeFullTextContains();
+        }
 
         // Type tag checking is already done in the previous steps.
         // So we directly conduct the full-text search process.
@@ -185,7 +188,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
 
         // Checks whether a new query predicate is introduced.
         // If not, we can re-use the query predicate array we have already created.
-        if (!Arrays.equals(queryArray, arg2Array)) {
+        if (!partOfArrayEquals(queryArray, queryArrayStartOffset, queryArrayLength, arg2Array, arg2.getStartOffset(),
+                arg2.getLength())) {
             resetQueryArrayAndRight(arg2Array, typeTag2, arg2);
         } else {
             // The query predicate remains the same. However, the count of each token should be reset to zero.
@@ -196,23 +200,22 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         return readLeftAndConductSearch(arg1);
     }
 
-    private void initializeFullTextContains(ATypeTag predicateTypeTag) {
+    private void initializeFullTextContains() {
         // We use a hash set to store tokens from the right side (query predicate).
         // Initialize necessary variables.
-        if (rightHashSet == null) {
-            hashFunc = new PointableBinaryHashFunctionFactory(UTF8StringLowercaseTokenPointable.FACTORY)
-                    .createBinaryHashFunction();
-            keyEntry = new BinaryEntry();
-            // Parameter: number of bucket, frame size, hashFunction, Comparator, byte
-            // array that contains the key (this array will be set later.)
-            rightHashSet = new BinaryHashSet(HASH_SET_SLOT_SIZE, HASH_SET_FRAME_SIZE, hashFunc, strLowerCaseTokenCmp,
-                    null);
-            tokenizerForLeftArray = BinaryTokenizerFactoryProvider.INSTANCE
-                    .getWordTokenizerFactory(ATypeTag.STRING, false, true).createTokenizer();
-        }
+        hashFunc = new PointableBinaryHashFunctionFactory(UTF8StringLowercaseTokenPointable.FACTORY)
+                .createBinaryHashFunction();
+        keyEntry = new BinaryEntry();
+        // Parameter: number of bucket, frame size, hashFunction, Comparator, byte array
+        // that contains the key (this array will be set later.)
+        rightHashSet = new BinaryHashSet(HASH_SET_SLOT_SIZE, HASH_SET_FRAME_SIZE, hashFunc, strLowerCaseTokenCmp, null);
+        tokenizerForLeftArray = BinaryTokenizerFactoryProvider.INSTANCE
+                .getWordTokenizerFactory(ATypeTag.STRING, false, true).createTokenizer();
+    }
 
+    void resetQueryArrayAndRight(byte[] arg2Array, ATypeTag typeTag2, IPointable arg2) throws HyracksDataException {
         // If the right side is an (un)ordered list, we need to apply the (un)ordered list tokenizer.
-        switch (predicateTypeTag) {
+        switch (typeTag2) {
             case ORDEREDLIST:
                 tokenizerForRightArray = BinaryTokenizerFactoryProvider.INSTANCE
                         .getWordTokenizerFactory(ATypeTag.ORDEREDLIST, false, true).createTokenizer();
@@ -228,11 +231,10 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             default:
                 break;
         }
-    }
 
-    void resetQueryArrayAndRight(byte[] arg2Array, ATypeTag typeTag2, IPointable arg2) throws HyracksDataException {
-        queryArray = new byte[arg2Array.length];
-        System.arraycopy(arg2Array, 0, queryArray, 0, arg2Array.length);
+        queryArray = arg2Array;
+        queryArrayStartOffset = arg2.getStartOffset();
+        queryArrayLength = arg2.getLength();
 
         // Clear hash set for the search predicates.
         rightHashSet.clear();
@@ -242,11 +244,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         int queryTokenCount = 0;
         int uniqueQueryTokenCount = 0;
 
-        int startOffset = arg2.getStartOffset();
-        int length = arg2.getLength();
-
         // Reset the tokenizer for the given keywords in the given query
-        tokenizerForRightArray.reset(queryArray, startOffset, length);
+        tokenizerForRightArray.reset(queryArray, queryArrayStartOffset, queryArrayLength);
 
         // Create tokens from the given query predicate
         while (tokenizerForRightArray.hasNext()) {
@@ -324,7 +323,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
     }
 
     /**
-     * Set full-text options. The odd element is an option name and the even element is the argument for that option.
+     * Sets the full-text options. The odd element is an option name and the even element is the argument
+     * for that option. (e.g., argOptions[0] = "mode", argOptions[1] = "all")
      */
     private void setFullTextOption(IPointable[] argOptions, int uniqueQueryTokenCount) throws HyracksDataException {
         for (int i = 0; i < optionArgsLength; i = i + 2) {
@@ -351,14 +351,14 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         int foundCount = 0;
 
         // The left side: field (document)
-        // Reset the tokenizer for the given keywords in a document.
+        // Resets the tokenizer for the given keywords in a document.
         tokenizerForLeftArray.reset(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength());
 
-        // Create tokens from a field in the left side (document)
+        // Creates tokens from a field in the left side (document)
         while (tokenizerForLeftArray.hasNext()) {
             tokenizerForLeftArray.next();
 
-            // Record the starting position and the length of the current token.
+            // Records the starting position and the length of the current token.
             keyEntry.set(tokenizerForLeftArray.getToken().getStartOffset(),
                     tokenizerForLeftArray.getToken().getTokenLength());
 
@@ -386,13 +386,41 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
     }
 
     /**
-     * Check the argument types. The argument1 should be a string. The argument2 should be a string or (un)ordered list.
+     * Checks the argument types. The argument1 should be a string.
+     * The argument2 should be a string or an (un)ordered list.
      */
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
         if ((typeTag1 != ATypeTag.STRING) || (typeTag2 != ATypeTag.ORDEREDLIST && typeTag2 != ATypeTag.UNORDEREDLIST
                 && !ATypeHierarchy.isCompatible(typeTag1, typeTag2))) {
             return false;
         }
+        return true;
+    }
+
+    /**
+     * Checks whether the content of the given two arrays are equal.
+     * The code is utilizing the Arrays.equals() code. The difference is that
+     * this method only compares the certain portion of each array.
+     */
+    private static boolean partOfArrayEquals(byte[] array1, int start1, int length1, byte[] array2, int start2,
+            int length2) {
+        // Sanity check
+        if (length1 != length2 || array1 == null || array2 == null) {
+            return false;
+        }
+
+        if (array1 == array2 && start1 == start2 && length1 == length2) {
+            return true;
+        }
+
+        int offset = 0;
+        while (offset < length1) {
+            if (array1[start1 + offset] != array2[start2 + offset]) {
+                return false;
+            }
+            offset++;
+        }
+
         return true;
     }
 

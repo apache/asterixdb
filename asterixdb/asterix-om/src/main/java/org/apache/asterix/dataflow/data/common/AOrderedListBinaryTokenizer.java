@@ -26,6 +26,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 
 public class AOrderedListBinaryTokenizer implements IBinaryTokenizer {
 
@@ -89,5 +90,10 @@ public class AOrderedListBinaryTokenizer implements IBinaryTokenizer {
     @Override
     public short getTokensCount() {
         return (short) listLength;
+    }
+
+    @Override
+    public TokenizerType getTokenizerType() {
+        return TokenizerType.LIST;
     }
 }

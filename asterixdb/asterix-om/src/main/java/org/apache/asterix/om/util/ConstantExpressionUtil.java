@@ -21,7 +21,9 @@ package org.apache.asterix.om.util;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.types.ATypeTag;
@@ -36,7 +38,7 @@ public class ConstantExpressionUtil {
     private ConstantExpressionUtil() {
     }
 
-    private static IAObject getConstantIaObject(ILogicalExpression expr, ATypeTag typeTag) {
+    public static IAObject getConstantIaObject(ILogicalExpression expr, ATypeTag typeTag) {
         if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return null;
         }
@@ -70,6 +72,21 @@ public class ConstantExpressionUtil {
     public static String getStringConstant(ILogicalExpression expr) {
         final IAObject iaObject = getConstantIaObject(expr, ATypeTag.STRING);
         return iaObject != null ? ((AString) iaObject).getStringValue() : null;
+    }
+
+    public static String getStringConstant(IAObject iaObject) {
+        // Make sure to call this method after checking the type of the given object.
+        return iaObject != null ? ((AString) iaObject).getStringValue() : null;
+    }
+
+    public static AOrderedList getOrderedListConstant(IAObject iaObject) {
+        // Make sure to call this method after checking the type of the given object.
+        return iaObject != null ? (AOrderedList) iaObject : null;
+    }
+
+    public static AUnorderedList getUnorderedListConstant(IAObject iaObject) {
+        // Make sure to call this method after checking the type of the given object.
+        return iaObject != null ? (AUnorderedList) iaObject : null;
     }
 
     public static Boolean getBooleanConstant(ILogicalExpression expr) {
