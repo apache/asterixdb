@@ -156,6 +156,7 @@
         <configuration>
           <includes>
             <include>**/*.class</include>
+            <include>**/*.properties</include>
             <include>**/README*</include>
             <include>**/NOTICE*</include>
             <include>**/LICENSE*</include>

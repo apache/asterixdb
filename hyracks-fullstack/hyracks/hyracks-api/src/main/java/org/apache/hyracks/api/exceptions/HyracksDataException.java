@@ -36,6 +36,10 @@ public class HyracksDataException extends HyracksException {
     private final String nodeId;
     private transient volatile String msgCache;
 
+    public static HyracksDataException create(int code, Serializable... params) {
+        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
+    }
+
     public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,
             Serializable... params) {
         super(message, cause);

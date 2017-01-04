@@ -21,14 +21,15 @@ package org.apache.asterix.common.dataflow;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.ProcessTupleException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -135,8 +136,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                         }
                         break;
                     default: {
-                        throw new HyracksDataException("Unsupported operation %1$s in %2$s operator",
-                                ErrorCode.INVALID_OPERATOR_OPERATION, op.toString(),
+                        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, op.toString(),
                                 LSMInsertDeleteOperatorNodePushable.class.getSimpleName());
                     }
                 }
@@ -145,10 +145,10 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
             if (e.getErrorCode() == ErrorCode.INVALID_OPERATOR_OPERATION) {
                 throw e;
             } else {
-                throw new HyracksDataException(e, ErrorCode.ERROR_PROCESSING_TUPLE, i);
+                throw new ProcessTupleException(e, i);
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e, ErrorCode.ERROR_PROCESSING_TUPLE, i);
+            throw new ProcessTupleException(e, i);
         }
 
         writeBuffer.ensureFrameSize(buffer.capacity());

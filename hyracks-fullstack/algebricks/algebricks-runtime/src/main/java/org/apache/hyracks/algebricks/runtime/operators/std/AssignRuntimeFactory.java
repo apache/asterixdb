@@ -30,6 +30,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.ProcessTupleException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -173,9 +174,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                         }
                     }
                 } catch (HyracksDataException e) {
-                    throw new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.ERROR_PROCESSING_TUPLE,
-                            "Error evaluating tuple %1$s in AssignRuntime", (Throwable) e,
-                            new Serializable[] { tupleIndex });
+                    throw new ProcessTupleException(e, tupleIndex);
                 }
             }
 
