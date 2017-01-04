@@ -16,20 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.std.group;
 
-import java.io.Serializable;
+package org.apache.hyracks.dataflow.std.buffermanager;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import java.nio.ByteBuffer;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface ISpillableTableFactory extends Serializable {
-    ISpillableTable buildSpillableTable(IHyracksTaskContext ctx, int inputSizeInTuple, long dataBytesSize,
-            int[] keyFields, IBinaryComparator[] comparatorFactories, INormalizedKeyComputer firstKeyNormalizerFactory,
-            IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int framesLimit, int seed) throws HyracksDataException;
+/**
+ * This is a simple frame based buffer manager that uses a deallocatable frame pool.
+ * We assume that the list of assigned buffers are managed by another classes that call the methods of this class.
+ */
+public class FramePoolBackedFrameBufferManager implements ISimpleFrameBufferManager {
+
+    private final IDeallocatableFramePool framePool;
+
+    public FramePoolBackedFrameBufferManager(IDeallocatableFramePool framePool) {
+        this.framePool = framePool;
+    }
+
+    @Override
+    public ByteBuffer acquireFrame(int frameSize) throws HyracksDataException {
+        return framePool.allocateFrame(frameSize);
+    }
+
+    @Override
+    public void releaseFrame(ByteBuffer frame) {
+        framePool.deAllocateBuffer(frame);
+    }
 
 }

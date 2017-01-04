@@ -36,7 +36,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFamily;
+import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.FramePoolBackedFrameBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IPartitionedTupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.PreferToSpillFullyOccupiedFramePolicy;
 import org.apache.hyracks.dataflow.std.buffermanager.VPartitionTupleBufferManager;
@@ -51,6 +55,10 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
     private static final double FUDGE_FACTOR = 1.1;
     private static final long serialVersionUID = 1L;
     private final IBinaryHashFunctionFamily[] hashFunctionFamilies;
+    private static final int MIN_DATA_TABLE_FRAME_LIMT = 1;
+    private static final int MIN_HASH_TABLE_FRAME_LIMT = 2;
+    private static final int OUTPUT_FRAME_LIMT = 1;
+    private static final int MIN_FRAME_LIMT = MIN_DATA_TABLE_FRAME_LIMT + MIN_HASH_TABLE_FRAME_LIMT + OUTPUT_FRAME_LIMT;
 
     public HashSpillableTableFactory(IBinaryHashFunctionFamily[] hashFunctionFamilies) {
         this.hashFunctionFamilies = hashFunctionFamilies;
@@ -62,10 +70,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             final INormalizedKeyComputer firstKeyNormalizerFactory, IAggregatorDescriptorFactory aggregateFactory,
             RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, final int framesLimit,
             final int seed) throws HyracksDataException {
-        if (framesLimit < 2) {
-            throw new HyracksDataException("The frame limit is too small to partition the data");
-        }
         final int tableSize = suggestTableSize;
+
+        // For HashTable, we need to have at least two frames (one for header and one for content).
+        // For DataTable, we need to have at least one frame.
+        // For the output, we need to have at least one frame.
+        if (framesLimit < MIN_FRAME_LIMT) {
+            throw new HyracksDataException("The given frame limit is too small to partition the data.");
+        }
 
         final int[] intermediateResultKeys = new int[keyFields.length];
         for (int i = 0; i < keyFields.length; i++) {
@@ -78,6 +90,12 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         final ITuplePartitionComputer tpc = new FieldHashPartitionComputerFamily(keyFields, hashFunctionFamilies)
                 .createPartitioner(seed);
 
+        // For calculating hash value for the already aggregated tuples (not incoming tuples)
+        // This computer is required to calculate the hash value of a aggregated tuple
+        // while doing the garbage collection work on Hash Table.
+        final ITuplePartitionComputer tpcIntermediate = new FieldHashPartitionComputerFamily(intermediateResultKeys,
+                hashFunctionFamilies).createPartitioner(seed);
+
         final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
                 outRecordDescriptor, keyFields, intermediateResultKeys, null);
 
@@ -86,31 +104,42 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         final ArrayTupleBuilder stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
 
         //TODO(jf) research on the optimized partition size
-        final int numPartitions = getNumOfPartitions((int) (inputDataBytesSize / ctx.getInitialFrameSize()),
-                framesLimit - 1);
+        long memoryBudget = Math.max(MIN_DATA_TABLE_FRAME_LIMT + MIN_HASH_TABLE_FRAME_LIMT,
+                framesLimit - OUTPUT_FRAME_LIMT - MIN_HASH_TABLE_FRAME_LIMT);
+
+        final int numPartitions = getNumOfPartitions(inputDataBytesSize / ctx.getInitialFrameSize(), memoryBudget);
         final int entriesPerPartition = (int) Math.ceil(1.0 * tableSize / numPartitions);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(
-                    "create hashtable, table size:" + tableSize + " file size:" + inputDataBytesSize + "  partitions:"
+                    "created hashtable, table size:" + tableSize + " file size:" + inputDataBytesSize + "  #partitions:"
                     + numPartitions);
         }
 
         final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
 
-        final ISerializableTable hashTableForTuplePointer = new SerializableHashTable(tableSize, ctx);
-
         return new ISpillableTable() {
 
             private final TuplePointer pointer = new TuplePointer();
             private final BitSet spilledSet = new BitSet(numPartitions);
-            final IPartitionedTupleBufferManager bufferManager = new VPartitionTupleBufferManager(ctx,
+            // This frame pool will be shared by both data table and hash table.
+            private final IDeallocatableFramePool framePool = new DeallocatableFramePool(ctx,
+                    framesLimit * ctx.getInitialFrameSize());
+            // buffer manager for hash table
+            private final ISimpleFrameBufferManager bufferManagerForHashTable = new FramePoolBackedFrameBufferManager(
+                    framePool);
+
+            private final ISerializableTable hashTableForTuplePointer = new SerializableHashTable(tableSize, ctx,
+                    bufferManagerForHashTable);
+
+            // buffer manager for data table
+            final IPartitionedTupleBufferManager bufferManager = new VPartitionTupleBufferManager(
                     PreferToSpillFullyOccupiedFramePolicy.createAtMostOneFrameForSpilledPartitionConstrain(spilledSet),
-                    numPartitions, framesLimit * ctx.getInitialFrameSize());
+                    numPartitions, framePool);
 
             final ITuplePointerAccessor bufferAccessor = bufferManager.getTuplePointerAccessor(outRecordDescriptor);
 
             private final PreferToSpillFullyOccupiedFramePolicy spillPolicy = new PreferToSpillFullyOccupiedFramePolicy(
-                    bufferManager, spilledSet, ctx.getInitialFrameSize());
+                    bufferManager, spilledSet);
 
             private final FrameTupleAppender outputAppender = new FrameTupleAppender(new VSizeFrame(ctx));
 
@@ -125,6 +154,17 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 for (int p = getFirstEntryInHashTable(partition); p < getLastEntryInHashTable(partition); p++) {
                     hashTableForTuplePointer.delete(p);
                 }
+
+                // Checks whether the garbage collection is required and conducts a garbage collection if so.
+                if (hashTableForTuplePointer.isGarbageCollectionNeeded()) {
+                    int numberOfFramesReclaimed = hashTableForTuplePointer.collectGarbage(bufferAccessor,
+                            tpcIntermediate);
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        LOGGER.fine("Garbage Collection on Hash table is done. Deallocated frames:"
+                                + numberOfFramesReclaimed);
+                    }
+                }
+
                 bufferManager.clearPartition(partition);
             }
 
@@ -152,20 +192,34 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                         return true;
                     }
                 }
-
                 return insertNewAggregateEntry(entryInHashTable, accessor, tIndex);
             }
 
+            /**
+             * Inserts a new aggregate entry into the data table and hash table.
+             * This insertion must be an atomic operation. We cannot have a partial success or failure.
+             * So, if an insertion succeeds on the data table and the same insertion on the hash table fails, then
+             * we need to revert the effect of data table insertion.
+             */
             private boolean insertNewAggregateEntry(int entryInHashTable, IFrameTupleAccessor accessor, int tIndex)
                     throws HyracksDataException {
                 initStateTupleBuilder(accessor, tIndex);
                 int pid = getPartition(entryInHashTable);
 
+                // Insertion to the data table
                 if (!bufferManager.insertTuple(pid, stateTupleBuilder.getByteArray(),
                         stateTupleBuilder.getFieldEndOffsets(), 0, stateTupleBuilder.getSize(), pointer)) {
                     return false;
                 }
-                hashTableForTuplePointer.insert(entryInHashTable, pointer);
+
+                // Insertion to the hash table
+                if (!hashTableForTuplePointer.insert(entryInHashTable, pointer)) {
+                    // To preserve the atomicity of this method, we need to undo the effect
+                    // of the above bufferManager.insertTuple() call since the given insertion has failed.
+                    bufferManager.cancelInsertTuple(pid);
+                    return false;
+                }
+
                 return true;
             }
 
@@ -240,25 +294,30 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
     }
 
     /**
-     * Calculate the number of partitions for Data table. The formula is from Shapiro's paper -
+     * Calculates the number of partitions for Data table. The formula is from Shapiro's paper -
      * http://cs.stanford.edu/people/chrismre/cs345/rl/shapiro.pdf. Check the page 249 for more details.
      * If the required number of frames is greater than the number of available frames, we make sure that
      * at least two partitions will be created. Also, if the number of partitions is greater than the memory budget,
      * we may not allocate at least one frame for each partition in memory. So, we also deal with those cases
      * at the final part of the method.
+     * The maximum number of partitions is limited to Integer.MAX_VALUE.
      */
-    private int getNumOfPartitions(int nubmerOfInputFrames, int frameLimit) {
+    private int getNumOfPartitions(long nubmerOfInputFrames, long frameLimit) {
         if (frameLimit >= nubmerOfInputFrames * FUDGE_FACTOR) {
-            return 1; // all in memory, we will create a big partition.
+            // all in memory, we will create two big partitions. We set 2 (not 1) to avoid the corner case
+            // where the only partition may be spilled to the disk. This may happen since this formula doesn't consider
+            // the hash table size. If this is the case, we will have an indefinite loop - keep spilling the same
+            // partition again and again.
+            return 2;
         }
-        int numberOfPartitions = (int) (Math
+        long numberOfPartitions = (long) (Math
                 .ceil((nubmerOfInputFrames * FUDGE_FACTOR - frameLimit) / (frameLimit - 1)));
         numberOfPartitions = Math.max(2, numberOfPartitions);
         if (numberOfPartitions > frameLimit) {
-            numberOfPartitions = (int) Math.ceil(Math.sqrt(nubmerOfInputFrames * FUDGE_FACTOR));
-            return Math.max(2, Math.min(numberOfPartitions, frameLimit));
+            numberOfPartitions = (long) Math.ceil(Math.sqrt(nubmerOfInputFrames * FUDGE_FACTOR));
+            return (int) Math.min(Math.max(2, Math.min(numberOfPartitions, frameLimit)), Integer.MAX_VALUE);
         }
-        return numberOfPartitions;
+        return (int) Math.min(numberOfPartitions, Integer.MAX_VALUE);
     }
 
 }

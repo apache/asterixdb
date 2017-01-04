@@ -160,7 +160,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
+        int frameLimits = 5;
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
@@ -249,7 +249,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
+        int frameLimits = 5;
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
@@ -338,7 +338,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
+        int frameLimits = 5;
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
@@ -429,7 +429,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
+        int frameLimits = 5;
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
@@ -524,7 +524,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
+        int frameLimits = 5;
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
@@ -619,7 +619,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
 
         int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
+        int frameLimits = 5;
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 

@@ -19,9 +19,13 @@
 
 package org.apache.hyracks.dataflow.common.comm.io;
 
+import org.apache.hyracks.api.comm.FrameConstants;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.IFrameTupleReversibleAppender;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.IntSerDeUtils;
 
-public class FixedSizeFrameTupleAppender extends FrameTupleAppender {
+public class FixedSizeFrameTupleAppender extends FrameTupleAppender implements IFrameTupleReversibleAppender {
     @Override
     protected boolean canHoldNewTuple(int fieldCount, int dataLength) throws HyracksDataException {
         if (hasEnoughSpace(fieldCount, dataLength)) {
@@ -29,4 +33,26 @@ public class FixedSizeFrameTupleAppender extends FrameTupleAppender {
         }
         return false;
     }
+
+    /**
+     * Cancels the lastly performed append operation. i.e. decreases the tuple count and resets the data end offset.
+     */
+    @Override
+    public boolean cancelAppend() throws HyracksDataException {
+        // Decreases tupleCount by one.
+        tupleCount = IntSerDeUtils.getInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()));
+        if (tupleCount == 0) {
+            // There is no inserted tuple in the given frame. This should not happen.
+            return false;
+        }
+        tupleCount = tupleCount - 1;
+
+        // Resets tupleCount and DataEndOffset.
+        IntSerDeUtils.putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
+        tupleDataEndOffset = tupleCount == 0 ? FrameConstants.TUPLE_START_OFFSET
+                : IntSerDeUtils.getInt(array,
+                        FrameHelper.getTupleCountOffset(frame.getFrameSize()) - tupleCount * FrameConstants.SIZE_LEN);
+        return true;
+    }
+
 }

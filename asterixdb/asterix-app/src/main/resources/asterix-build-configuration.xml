@@ -64,7 +64,7 @@
   </property>
   <property>
     <name>compiler.joinmemory</name>
-    <value>160KB</value>
+    <value>256KB</value>
   </property>
   <property>
     <name>storage.buffercache.pagesize</name>

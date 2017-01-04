@@ -28,9 +28,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -56,6 +53,8 @@ import org.apache.hyracks.dataflow.std.group.aggregators.CountFieldAggregatorFac
 import org.apache.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorFactory;
 import org.apache.hyracks.dataflow.std.group.aggregators.MultiFieldsAggregatorFactory;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 public abstract class AbstractExternalGroupbyTest {
 
@@ -176,8 +175,8 @@ public abstract class AbstractExternalGroupbyTest {
 
     @Test
     public void testBuildAndMergeNormalFrameInMem() throws HyracksDataException {
-        int tableSize = 1001;
-        int numFrames = 3;
+        int tableSize = 101;
+        int numFrames = 23;
         int frameSize = 256;
         int minDataSize = frameSize;
         int minRecordSize = 20;
@@ -187,10 +186,10 @@ public abstract class AbstractExternalGroupbyTest {
 
     @Test
     public void testBuildAndMergeNormalFrameSpill() throws HyracksDataException {
-        int tableSize = 1001;
-        int numFrames = 3;
+        int tableSize = 101;
+        int numFrames = 23;
         int frameSize = 256;
-        int minDataSize = frameSize * 4;
+        int minDataSize = frameSize * 40;
         int minRecordSize = 20;
         int maxRecordSize = 50;
         testBuildAndMerge(tableSize, numFrames, frameSize, minDataSize, minRecordSize, maxRecordSize, null);
@@ -198,16 +197,14 @@ public abstract class AbstractExternalGroupbyTest {
 
     @Test
     public void testBuildAndMergeBigObj() throws HyracksDataException {
-        int tableSize = 1001;
-        int numFrames = 4;
+        int tableSize = 101;
+        int numFrames = 23;
         int frameSize = 256;
-        int minDataSize = frameSize * 5;
+        int minDataSize = frameSize * 40;
         int minRecordSize = 20;
         int maxRecordSize = 50;
-        HashMap<Integer, String> bigRecords = AbstractRunGeneratorTest.generateBigObject(frameSize, 2);
-        testBuildAndMerge(tableSize, numFrames, frameSize, minDataSize, minRecordSize, maxRecordSize,
-                bigRecords);
-
+        HashMap<Integer, String> bigRecords = AbstractRunGeneratorTest.generateBigObject(frameSize, 3);
+        testBuildAndMerge(tableSize, numFrames, frameSize, minDataSize, minRecordSize, maxRecordSize, bigRecords);
     }
 
     protected abstract void initial(IHyracksTaskContext ctx, int tableSize, int numFrames) throws HyracksDataException;

@@ -18,17 +18,22 @@
  */
 package org.apache.hyracks.dataflow.std.structures;
 
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 
 public interface ISerializableTable {
 
-    void insert(int entry, TuplePointer tuplePointer) throws HyracksDataException;
+    boolean insert(int entry, TuplePointer tuplePointer) throws HyracksDataException;
 
     void delete(int entry);
 
     boolean getTuplePointer(int entry, int offset, TuplePointer tuplePointer);
 
-    int getFrameCount();
+    /**
+     * Returns the byte size of entire frames that are currently allocated to the table.
+     */
+    int getCurrentByteSize();
 
     int getTupleCount();
 
@@ -37,4 +42,26 @@ public interface ISerializableTable {
     void reset();
 
     void close();
+
+    boolean isGarbageCollectionNeeded();
+
+    /**
+     * Collects garbages in the given table, if any. For example, compacts the table by
+     * removing the garbage created by internal migration or lazy deletion operation.
+     * The desired result of this method is a compacted table without any garbage (no wasted space).
+     *
+     * @param bufferAccessor:
+     *            required to access the real tuple to calculate the original hash value
+     * @param tpc:
+     *            hash function
+     * @return the number of frames that are reclaimed.
+     * @throws HyracksDataException
+     */
+    int collectGarbage(ITuplePointerAccessor bufferAccessor, ITuplePartitionComputer tpc)
+            throws HyracksDataException;
+
+    /**
+     * Prints out the internal information of this table.
+     */
+    String printInfo();
 }

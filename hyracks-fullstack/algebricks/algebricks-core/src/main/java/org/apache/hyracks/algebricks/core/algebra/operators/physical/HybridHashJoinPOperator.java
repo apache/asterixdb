@@ -61,6 +61,7 @@ import org.apache.hyracks.dataflow.std.join.OptimizedHybridHashJoinOperatorDescr
 
 public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
+    // The maximum number of in-memory frames that this hash join can use.
     private final int memSizeInFrames;
     private final int maxInputBuildSizeInFrames;
     private final int aveRecordsPerFrame;

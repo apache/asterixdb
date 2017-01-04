@@ -26,29 +26,21 @@ import static org.junit.Assert.assertTrue;
 import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
-import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
-import org.apache.hyracks.dataflow.std.buffermanager.FramePoolBackedFrameBufferManager;
-import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
-import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SerializableHashTableTest {
+public class SimpleSerializableHashTableTest {
 
-    SerializableHashTable nsTable;
+    SimpleSerializableHashTable nsTable;
     final int NUM_PART = 101;
     TuplePointer pointer = new TuplePointer(0, 0);
     final int num = 10000;
-    protected IHyracksFrameMgrContext ctx;
-    private IDeallocatableFramePool framePool;
-    private ISimpleFrameBufferManager bufferManager;
+    private IHyracksFrameMgrContext ctx;
 
     @Before
     public void setup() throws HyracksDataException {
         ctx = new FrameManager(256);
-        framePool = new DeallocatableFramePool(ctx, ctx.getInitialFrameSize() * 2048);
-        bufferManager = new FramePoolBackedFrameBufferManager(framePool);
-        nsTable = new SerializableHashTable(NUM_PART, ctx, bufferManager);
+        nsTable = new SimpleSerializableHashTable(NUM_PART, ctx);
     }
 
     @Test
@@ -77,7 +69,7 @@ public class SerializableHashTableTest {
         assertGetValue();
     }
 
-    protected void assertGetValue() {
+    private void assertGetValue() {
         int loop = 0;
         for (int i = 0; i < num; i++) {
             assertTrue(nsTable.getTuplePointer(i % NUM_PART, loop, pointer));
@@ -98,7 +90,7 @@ public class SerializableHashTableTest {
         assertAllPartitionsCountIsZero();
     }
 
-    protected void assertAllPartitionsCountIsZero() {
+    private void assertAllPartitionsCountIsZero() {
         for (int i = 0; i < NUM_PART; i++) {
             assertEquals(0, nsTable.getTupleCount(i));
         }

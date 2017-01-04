@@ -65,12 +65,13 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             RecordDescriptor outRecordDesc, ISpillableTableFactory spillableTableFactory) {
         super(spec, 1, 1);
         this.framesLimit = framesLimit;
-        if (framesLimit <= 1) {
+        if (framesLimit <= 3) {
             /**
-             * Minimum of 2 frames: 1 for input records, and 1 for output
+             * Minimum of 4 frames: 1 for input records, 1 for output, and 2 for hash table (1 header and 1 content)
              * aggregation results.
              */
-            throw new IllegalStateException("frame limit should at least be 2, but it is " + framesLimit + "!");
+            throw new IllegalStateException(
+                    "Frame limit for the External Group Operator should at least be 4, but it is " + framesLimit + "!");
         }
         this.partialAggregatorFactory = partialAggregatorFactory;
         this.intermediateAggregateFactory = intermediateAggregateFactory;

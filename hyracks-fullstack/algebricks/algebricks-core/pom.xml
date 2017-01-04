@@ -87,5 +87,16 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.5</version>
     </dependency>
+    <dependency>
+      <groupId>com.e-movimento.tinytools</groupId>
+      <artifactId>privilegedaccessor</artifactId>
+      <version>1.2.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

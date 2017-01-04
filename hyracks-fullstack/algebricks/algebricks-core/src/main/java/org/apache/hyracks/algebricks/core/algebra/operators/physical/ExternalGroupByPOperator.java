@@ -65,19 +65,18 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
 
 public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
 
-    private final int tableSize;
-    private final long fileSize;
+    private final long inputSize;
     private final int frameLimit;
     private List<LogicalVariable> columnSet = new ArrayList<LogicalVariable>();
 
     public ExternalGroupByPOperator(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList, int frameLimit,
-            int tableSize, long fileSize) {
-        this.tableSize = tableSize;
+            long fileSize) {
         this.frameLimit = frameLimit;
-        this.fileSize = fileSize;
+        this.inputSize = fileSize;
         computeColumnSet(gbyList);
     }
 
@@ -256,7 +255,14 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
 
         INormalizedKeyComputerFactory normalizedKeyFactory = JobGenHelper
                 .variablesToAscNormalizedKeyComputerFactory(gbyCols, aggOpInputEnv, context);
-        ExternalGroupOperatorDescriptor gbyOpDesc = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
+
+        // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
+        int memoryBudgetInBytes = context.getFrameSize() * frameLimit;
+        int groupByColumnsCount = gby.getGroupByList().size() + numFds;
+        int hashTableSize = calculateGroupByTableCardinality(memoryBudgetInBytes, groupByColumnsCount,
+                context.getFrameSize());
+
+        ExternalGroupOperatorDescriptor gbyOpDesc = new ExternalGroupOperatorDescriptor(spec, hashTableSize, inputSize,
                 keyAndDecFields, frameLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory, mergeFactory,
                 recordDescriptor, recordDescriptor, new HashSpillableTableFactory(hashFunctionFactories));
         contributeOpDesc(builder, gby, gbyOpDesc);
@@ -274,5 +280,53 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
     @Override
     public boolean expensiveThanMaterialization() {
         return true;
+    }
+
+    /**
+     * Based on a rough estimation of a tuple (each field size: 4 bytes) size and the number of possible hash values
+     * for the given number of group-by columns, calculates the number of hash entries for the hash table in Group-by.
+     * The formula is min(# of possible hash values, # of possible tuples in the data table).
+     * This method assumes that the group-by table consists of hash table that stores hash value of tuple pointer
+     * and data table actually stores the aggregated tuple.
+     * For more details, refer to this JIRA issue: https://issues.apache.org/jira/browse/ASTERIXDB-1556
+     *
+     * @param memoryBudgetByteSize
+     * @param numberOfGroupByColumns
+     * @return group-by table size (the cardinality of group-by table)
+     */
+    public static int calculateGroupByTableCardinality(long memoryBudgetByteSize, int numberOfGroupByColumns,
+            int frameSize) {
+        // Estimates a minimum tuple size with n fields:
+        // (4:tuple offset in a frame, 4n:each field offset in a tuple, 4n:each field size 4 bytes)
+        int tupleByteSize = 4 + 8 * numberOfGroupByColumns;
+
+        // Maximum number of tuples
+        long maxNumberOfTuplesInDataTable = memoryBudgetByteSize / tupleByteSize;
+
+        // To calculate possible hash values, this counts the number of bits.
+        // We assume that each field consists of 4 bytes.
+        // Also, too high range that is greater than Long.MAXVALUE (64 bits) is not necessary for our calculation.
+        // And, this should not generate negative numbers when shifting the number.
+        int numberOfBits = Math.min(61, numberOfGroupByColumns * 4 * 8);
+
+        // Possible number of unique hash entries
+        long possibleNumberOfHashEntries = 2L << numberOfBits;
+
+        // Between # of entries in Data table and # of possible hash values, we choose the smaller one.
+        long groupByTableCardinality = Math.min(possibleNumberOfHashEntries, maxNumberOfTuplesInDataTable);
+        long groupByTableByteSize = SerializableHashTable.getExpectedTableByteSize(groupByTableCardinality, frameSize);
+
+        // Gets the ratio of hash-table size in the total size (hash + data table).
+        double hashTableRatio = (double) groupByTableByteSize / (groupByTableByteSize + memoryBudgetByteSize);
+
+        // Gets the table size based on the ratio that we have calculated.
+        long finalGroupByTableByteSize = (long) (hashTableRatio * memoryBudgetByteSize);
+
+        long finalGroupByTableCardinality = finalGroupByTableByteSize
+                / SerializableHashTable.getExpectedByteSizePerHashValue();
+
+        // The maximum cardinality of a hash table: Integer.MAX_VALUE
+        return finalGroupByTableCardinality > Integer.MAX_VALUE ? Integer.MAX_VALUE
+                : (int) finalGroupByTableCardinality;
     }
 }

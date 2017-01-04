@@ -14,7 +14,7 @@
         },
         "compiler.framesize": 32768,
         "compiler.groupmemory": 163840,
-        "compiler.joinmemory": 163840,
+        "compiler.joinmemory": 262144,
         "compiler.parallelism": 0,
         "compiler.pregelix.home": "~/pregelix",
         "compiler.sortmemory": 327680,

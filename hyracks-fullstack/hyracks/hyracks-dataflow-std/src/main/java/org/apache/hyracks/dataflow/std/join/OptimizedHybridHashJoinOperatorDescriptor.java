@@ -59,6 +59,10 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.FramePoolBackedFrameBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
 import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
@@ -70,10 +74,12 @@ import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
  *         partitions.
  *         - Operator overview:
  *         Assume we are trying to do (R Join S), with M buffers available, while we have an estimate on the size
- *         of R (in terms of buffers). HHJ (Hybrid Hash Join) has two main phases: Build and Probe, where in our implementation Probe phase
- *         can apply HHJ recursively, based on the value of M and size of R and S. HHJ phases proceed as follow:
+ *         of R (in terms of buffers). HHJ (Hybrid Hash Join) has two main phases: Build and Probe,
+ *         where in our implementation Probe phase can apply HHJ recursively, based on the value of M and size of
+ *         R and S. HHJ phases proceed as follow:
  *         BUILD:
- *         Calculate number of partitions (Based on the size of R, fudge factor and M) [See Shapiro's paper for the detailed discussion].
+ *         Calculate number of partitions (Based on the size of R, fudge factor and M)
+ *         [See Shapiro's paper for the detailed discussion].
  *         Initialize the build phase (one frame per partition, all partitions considered resident at first)
  *         Read tuples of R, frame by frame, and hash each tuple (based on a given hash function) to find
  *         its target partition and try to append it to that partition:
@@ -81,9 +87,9 @@ import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
  *         if no free buffer is available, find the largest resident partition and spill it. Using its freed
  *         buffers after spilling, allocate a new buffer for the target partition.
  *         Being done with R, close the build phase. (During closing we write the very last buffer of each
- *         spilled partition to the disk, and we do partition tuning, where we try to bring back as many buffers, belonging to
- *         spilled partitions as possible into memory, based on the free buffers - We will stop at the point where remaining free buffers is not enough
- *         for reloading an entire partition back into memory)
+ *         spilled partition to the disk, and we do partition tuning, where we try to bring back as many buffers,
+ *         belonging to spilled partitions as possible into memory, based on the free buffers - We will stop at the
+ *         point where remaining free buffers is not enough for reloading an entire partition back into memory)
  *         Create the hash table for the resident partitions (basically we create an in-memory hash join here)
  *         PROBE:
  *         Initialize the probe phase on S (mainly allocate one buffer per spilled partition, and one buffer
@@ -112,7 +118,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private static final String PROBE_REL = "RelR";
     private static final String BUILD_REL = "RelS";
 
-    private final int frameLimit;
+    private final int memSizeInFrames;
     private final int inputsize0;
     private final double fudgeFactor;
     private final int[] probeKeys;
@@ -127,21 +133,20 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private final IMissingWriterFactory[] nonMatchWriterFactories;
 
     //Flags added for test purpose
-    private static boolean skipInMemoryHJ = false;
-    private static boolean forceNLJ = false;
-    private static boolean forceRR = false;
+    private boolean skipInMemoryHJ = false;
+    private boolean forceNLJ = false;
+    private boolean forceRoleReversal = false;
 
     private static final Logger LOGGER = Logger.getLogger(OptimizedHybridHashJoinOperatorDescriptor.class.getName());
 
-    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int frameLimit, int inputsize0,
-            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
-            ITuplePairComparatorFactory tupPaircomparatorFactory01,
+    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
+            int inputsize0, double factor, int[] keys0, int[] keys1,
+            IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor, ITuplePairComparatorFactory tupPaircomparatorFactory01,
             ITuplePairComparatorFactory tupPaircomparatorFactory10, IPredicateEvaluatorFactory predEvaluatorFactory,
             boolean isLeftOuter, IMissingWriterFactory[] nonMatchWriterFactories) throws HyracksDataException {
-
         super(spec, 2, 1);
-        this.frameLimit = frameLimit;
+        this.memSizeInFrames = memSizeInFrames;
         this.inputsize0 = inputsize0;
         this.fudgeFactor = factor;
         this.probeKeys = keys0;
@@ -156,15 +161,15 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         this.nonMatchWriterFactories = nonMatchWriterFactories;
     }
 
-    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int frameLimit, int inputsize0,
-            double factor, int[] keys0, int[] keys1, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories,
-            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor,
-            ITuplePairComparatorFactory tupPaircomparatorFactory01,
+    public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
+            int inputsize0, double factor, int[] keys0, int[] keys1,
+            IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor, ITuplePairComparatorFactory tupPaircomparatorFactory01,
             ITuplePairComparatorFactory tupPaircomparatorFactory10, IPredicateEvaluatorFactory predEvaluatorFactory)
             throws HyracksDataException {
-        this(spec, frameLimit, inputsize0, factor, keys0, keys1, hashFunctionGeneratorFactories, comparatorFactories,
-                recordDescriptor, tupPaircomparatorFactory01, tupPaircomparatorFactory10, predEvaluatorFactory, false,
-                null);
+        this(spec, memSizeInFrames, inputsize0, factor, keys0, keys1, hashFunctionGeneratorFactories,
+                comparatorFactories, recordDescriptor, tupPaircomparatorFactory01, tupPaircomparatorFactory10,
+                predEvaluatorFactory, false, null);
     }
 
     @Override
@@ -190,19 +195,21 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private int getNumberOfPartitions(int memorySize, int buildSize, double factor, int nPartitions)
             throws HyracksDataException {
         int numberOfPartitions = 0;
-        if (memorySize <= 1) {
-            throw new HyracksDataException("not enough memory is available for Hybrid Hash Join");
+        if (memorySize <= 2) {
+            throw new HyracksDataException("Not enough memory is available for Hybrid Hash Join.");
         }
-        if (memorySize > buildSize) {
-            return 1; //We will switch to in-Mem HJ eventually
+        if (memorySize > buildSize * factor) {
+            // We will switch to in-Mem HJ eventually: create two big partitions.
+            // We set 2 (not 1) to avoid a corner case where the only partition may be spilled to the disk.
+            // This may happen since this formula doesn't consider the hash table size. If this is the case,
+            // we will do a nested loop join after some iterations. But, this is not effective.
+            return 2;
         }
         numberOfPartitions = (int) (Math.ceil((buildSize * factor / nPartitions - memorySize) / (memorySize - 1)));
-        if (numberOfPartitions <= 0) {
-            numberOfPartitions = 1; //becomes in-memory hash join
-        }
+        numberOfPartitions = Math.max(2, numberOfPartitions);
         if (numberOfPartitions > memorySize) {
             numberOfPartitions = (int) Math.ceil(Math.sqrt(buildSize * factor / nPartitions));
-            return (numberOfPartitions < memorySize ? numberOfPartitions : memorySize);
+            return Math.max(2, Math.min(numberOfPartitions, memorySize));
         }
         return numberOfPartitions;
     }
@@ -276,10 +283,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void open() throws HyracksDataException {
-                    if (frameLimit <= 2) { //Dedicated buffers: One buffer to read and one buffer for output
-                        throw new HyracksDataException("not enough memory for Hybrid Hash Join");
+                    if (memSizeInFrames <= 2) { //Dedicated buffers: One buffer to read and two buffers for output
+                        throw new HyracksDataException("Not enough memory is assigend for Hybrid Hash Join.");
                     }
-                    state.memForJoin = frameLimit - 2;
+                    state.memForJoin = memSizeInFrames - 2;
                     state.numOfPartitions = getNumberOfPartitions(state.memForJoin, inputsize0, fudgeFactor,
                             nPartitions);
                     state.hybridHJ = new OptimizedHybridHashJoin(ctx, state.memForJoin, state.numOfPartitions,
@@ -399,6 +406,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    state.hybridHJ.clearProbeTempFiles();
                     writer.fail();
                 }
 
@@ -426,6 +434,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             int pSize = state.hybridHJ.getProbePartitionSizeInTup(pid);
                             joinPartitionPair(bReader, pReader, bSize, pSize, 1);
                         }
+
                     } finally {
                         writer.close();
                     }
@@ -442,8 +451,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     ITuplePartitionComputer buildHpc = new FieldHashPartitionComputerFamily(buildKeys,
                             hashFunctionGeneratorFactories).createPartitioner(level);
 
-                    long buildPartSize = buildSideReader.getFileSize() / ctx.getInitialFrameSize();
-                    long probePartSize = probeSideReader.getFileSize() / ctx.getInitialFrameSize();
+                    int frameSize = ctx.getInitialFrameSize();
+                    long buildPartSize = buildSideReader.getFileSize() / frameSize;
+                    long probePartSize = probeSideReader.getFileSize() / frameSize;
                     int beforeMax = Math.max(buildSizeInTuple, probeSizeInTuple);
 
                     if (LOGGER.isLoggable(Level.FINE)) {
@@ -453,12 +463,20 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                 + "  - LeftOuter is " + isLeftOuter);
                     }
 
+                    // Calculate the expected hash table size for the both side.
+                    long expectedHashTableSizeForBuildInFrame = SerializableHashTable
+                            .getExpectedTableFrameCount(buildSizeInTuple, frameSize);
+                    long expectedHashTableSizeForProbeInFrame = SerializableHashTable
+                            .getExpectedTableFrameCount(probeSizeInTuple, frameSize);
+
                     //Apply in-Mem HJ if possible
-                    if (!skipInMemoryHJ && ((buildPartSize < state.memForJoin)
-                            || (probePartSize < state.memForJoin && !isLeftOuter))) {
+                    if (!skipInMemoryHJ && ((buildPartSize + expectedHashTableSizeForBuildInFrame < state.memForJoin)
+                            || (probePartSize + expectedHashTableSizeForProbeInFrame < state.memForJoin
+                                    && !isLeftOuter))) {
+
                         int tabSize = -1;
-                        if (!forceRR && (isLeftOuter || (buildPartSize < probePartSize))) {
-                            //Case 1.1 - InMemHJ (wout Role-Reversal)
+                        if (!forceRoleReversal && (isLeftOuter || (buildPartSize < probePartSize))) {
+                            //Case 1.1 - InMemHJ (without Role-Reversal)
                             if (LOGGER.isLoggable(Level.FINE)) {
                                 LOGGER.fine("\t>>>Case 1.1 (IsLeftOuter || buildSize<probe) AND ApplyInMemHJ - [Level "
                                         + level + "]");
@@ -473,9 +491,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                     buildSideReader, probeSideReader); // checked-confirmed
                         } else { //Case 1.2 - InMemHJ with Role Reversal
                             if (LOGGER.isLoggable(Level.FINE)) {
-                                LOGGER.fine(
-                                        "\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ WITH RoleReversal - [Level "
-                                                + level + "]");
+                                LOGGER.fine("\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ"
+                                        + "WITH RoleReversal - [Level " + level + "]");
                             }
                             tabSize = probeSizeInTuple;
                             if (tabSize == 0) {
@@ -492,8 +509,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine("\t>>>Case 2. ApplyRecursiveHHJ - [Level " + level + "]");
                         }
-                        if (!forceRR && (isLeftOuter || buildPartSize < probePartSize)) {
-                            //Case 2.1 - Recursive HHJ (wout Role-Reversal)
+                        if (!forceRoleReversal && (isLeftOuter || buildPartSize < probePartSize)) {
+                            //Case 2.1 - Recursive HHJ (without Role-Reversal)
                             if (LOGGER.isLoggable(Level.FINE)) {
                                 LOGGER.fine("\t\t>>>Case 2.1 - RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
                                         + level + "]");
@@ -543,7 +560,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
                     rHHj.closeBuild();
                     buildSideReader.close();
-
                     probeSideReader.open();
                     rHHj.initProbe();
                     rPartbuff.reset();
@@ -560,9 +576,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     BitSet rPStatus = rHHj.getPartitionStatus();
                     if (!forceNLJ && (afterMax < (NLJ_SWITCH_THRESHOLD * beforeMax))) { //Case 2.1.1 - Keep applying HHJ
                         if (LOGGER.isLoggable(Level.FINE)) {
-                            LOGGER.fine(
-                                    "\t\t>>>Case 2.1.1 - KEEP APPLYING RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
-                                            + level + "]");
+                            LOGGER.fine("\t\t>>>Case 2.1.1 - KEEP APPLYING RecursiveHHJ WITH "
+                                    + "(isLeftOuter || build<probe) - [Level " + level + "]");
                         }
                         for (int rPid = rPStatus.nextSetBit(0); rPid >= 0; rPid = rPStatus.nextSetBit(rPid + 1)) {
                             RunFileReader rbrfw = rHHj.getBuildRFReader(rPid);
@@ -571,7 +586,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             int rpSizeInTuple = rHHj.getProbePartitionSizeInTup(rPid);
 
                             if (rbrfw == null || rprfw == null) {
-                                if (isLeftOuter && rprfw != null) { // if outer join, we don't reverse
+                                if (isLeftOuter && rprfw != null) { // For the outer join, we don't reverse the role.
                                     appendNullToProbeTuples(rprfw);
                                 }
                                 continue;
@@ -587,15 +602,15 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     } else { //Case 2.1.2 - Switch to NLJ
                         if (LOGGER.isLoggable(Level.FINE)) {
                             LOGGER.fine(
-                                    "\t\t>>>Case 2.1.2 - SWITCHED to NLJ RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
-                                            + level + "]");
+                                    "\t\t>>>Case 2.1.2 - SWITCHED to NLJ RecursiveHHJ WITH (isLeftOuter || build<probe)"
+                                            + " - [Level " + level + "]");
                         }
                         for (int rPid = rPStatus.nextSetBit(0); rPid >= 0; rPid = rPStatus.nextSetBit(rPid + 1)) {
                             RunFileReader rbrfw = rHHj.getBuildRFReader(rPid);
                             RunFileReader rprfw = rHHj.getProbeRFReader(rPid);
 
                             if (rbrfw == null || rprfw == null) {
-                                if (isLeftOuter && rprfw != null) { // if outer join, we don't reverse
+                                if (isLeftOuter && rprfw != null) { // For the outer join, we don't reverse the role.
                                     appendNullToProbeTuples(rprfw);
                                 }
                                 continue;
@@ -605,9 +620,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             int probeSideInTups = rHHj.getProbePartitionSizeInTup(rPid);
                             // NLJ order is outer + inner, the order is reversed from the other joins
                             if (isLeftOuter || probeSideInTups < buildSideInTups) {
-                                applyNestedLoopJoin(probeRd, buildRd, frameLimit, rprfw, rbrfw); //checked-modified
+                                applyNestedLoopJoin(probeRd, buildRd, memSizeInFrames, rprfw, rbrfw); //checked-modified
                             } else {
-                                applyNestedLoopJoin(buildRd, probeRd, frameLimit, rbrfw, rprfw); //checked-modified
+                                applyNestedLoopJoin(buildRd, probeRd, memSizeInFrames, rbrfw, rprfw); //checked-modified
                             }
                         }
                     }
@@ -642,17 +657,34 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                     assert isLeftOuter ? !isReversed : true : "LeftOut Join can not reverse roles";
 
-                    ISerializableTable table = new SerializableHashTable(tabSize, ctx);
+                    IDeallocatableFramePool framePool = new DeallocatableFramePool(ctx,
+                            state.memForJoin * ctx.getInitialFrameSize());
+                    ISimpleFrameBufferManager bufferManager = new FramePoolBackedFrameBufferManager(framePool);
+
+                    ISerializableTable table = new SerializableHashTable(tabSize, ctx, bufferManager);
                     InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tabSize, new FrameTupleAccessor(probeRDesc),
-                            hpcRepProbe, new FrameTupleAccessor(buildRDesc), hpcRepBuild,
+                            hpcRepProbe, new FrameTupleAccessor(buildRDesc), buildRDesc, hpcRepBuild,
                             new FrameTuplePairComparator(pKeys, bKeys, comparators), isLeftOuter, nonMatchWriter, table,
-                            predEvaluator, isReversed);
+                            predEvaluator, isReversed, bufferManager);
 
                     bReader.open();
                     rPartbuff.reset();
                     while (bReader.nextFrame(rPartbuff)) {
-                        //We need to allocate a copyBuffer, because this buffer gets added to the buffers list in the InMemoryHashJoin
-                        ByteBuffer copyBuffer = ctx.allocateFrame(rPartbuff.getFrameSize());
+                        // We need to allocate a copyBuffer, because this buffer gets added to the buffers list
+                        // in the InMemoryHashJoin.
+                        ByteBuffer copyBuffer = bufferManager.acquireFrame(rPartbuff.getFrameSize());
+                        // If a frame cannot be allocated, there may be a chance if we can compact the table,
+                        // one or more frame may be reclaimed.
+                        if (copyBuffer == null) {
+                            if (joiner.compactHashTable() > 0) {
+                                copyBuffer = bufferManager.acquireFrame(rPartbuff.getFrameSize());
+                            }
+                            if (copyBuffer == null) {
+                                // Still no frame is allocated? At this point, we have no way to get a frame.
+                                throw new HyracksDataException(
+                                        "Can't allocate one more frame. Assign more memory to InMemoryHashJoin.");
+                            }
+                        }
                         FrameUtils.copyAndFlip(rPartbuff.getBuffer(), copyBuffer);
                         joiner.build(copyBuffer);
                         rPartbuff.reset();
@@ -672,7 +704,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 private void applyNestedLoopJoin(RecordDescriptor outerRd, RecordDescriptor innerRd, int memorySize,
                         RunFileReader outerReader, RunFileReader innerReader) throws HyracksDataException {
-                    // The nested loop join result is outer + inner. All the other operator is probe + build. Hence the reverse relation is different
+                    // The nested loop join result is outer + inner. All the other operator is probe + build.
+                    // Hence the reverse relation is different.
                     boolean isReversed = outerRd == buildRd && innerRd == probeRd;
                     assert isLeftOuter ? !isReversed : true : "LeftOut Join can not reverse roles";
                     ITuplePairComparator nljComptorOuterInner = isReversed ? nljComparatorBuild2Probe
@@ -716,6 +749,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     }
 
     public void setForceRR(boolean b) {
-        forceRR = (!isLeftOuter && b);
+        forceRoleReversal = !isLeftOuter && b;
     }
+
 }

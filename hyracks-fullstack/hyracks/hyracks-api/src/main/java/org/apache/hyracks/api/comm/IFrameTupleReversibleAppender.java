@@ -16,20 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.std.group;
 
-import java.io.Serializable;
+package org.apache.hyracks.api.comm;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface ISpillableTableFactory extends Serializable {
-    ISpillableTable buildSpillableTable(IHyracksTaskContext ctx, int inputSizeInTuple, long dataBytesSize,
-            int[] keyFields, IBinaryComparator[] comparatorFactories, INormalizedKeyComputer firstKeyNormalizerFactory,
-            IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int framesLimit, int seed) throws HyracksDataException;
+/**
+ * A Tuple Appender class whose last append action can be canceled.
+ */
+public interface IFrameTupleReversibleAppender {
+
+    /**
+     * Cancels the effect of the last append operation. i.e. undoes the last append operation.
+     */
+    boolean cancelAppend() throws HyracksDataException;
 
 }

@@ -88,4 +88,8 @@ public class RunFileReader implements IFrameReader {
     public long getFileSize() {
         return size;
     }
+
+    public void setDeleteAfterClose(boolean deleteAfterClose) {
+        this.deleteAfterClose = deleteAfterClose;
+    }
 }
