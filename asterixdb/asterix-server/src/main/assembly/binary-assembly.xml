@@ -27,7 +27,7 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
     <fileSet>
-      <directory>src/main/licenses</directory>
+      <directory>target/generated-sources</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>LICENSE*</include>

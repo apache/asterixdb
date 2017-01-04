@@ -18,45 +18,51 @@
  ! under the License.
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.asterix</groupId>
-  <artifactId>asterix-maven-plugins</artifactId>
-  <packaging>pom</packaging>
-
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-      <comments>A business-friendly OSS license</comments>
-    </license>
-  </licenses>
-
-  <properties>
-    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
-  </properties>
-
   <parent>
-    <artifactId>apache-asterixdb</artifactId>
     <groupId>org.apache.asterix</groupId>
+    <artifactId>asterix-maven-plugins</artifactId>
     <version>0.8.9-SNAPSHOT</version>
   </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>maven-plugin</packaging>
 
+  <artifactId>license-automation-plugin</artifactId>
   <dependencies>
     <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.5</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-plugin-api</artifactId>
-      <type>jar</type>
-      <scope>compile</scope>
+      <artifactId>maven-core</artifactId>
+      <version>3.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-remote-resources-plugin</artifactId>
+      <version>1.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-compat</artifactId>
+      <version>3.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.8.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.23</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.5</version>
     </dependency>
   </dependencies>
 
-  <modules>
-    <module>lexer-generator-maven-plugin</module>
-    <module>record-manager-generator-maven-plugin</module>
-    <module>asterix-evaluator-generator-maven-plugin</module>
-    <module>asterix-test-datagenerator-maven-plugin</module>
-    <module>asterix-grammar-extension-maven-plugin</module>
-    <module>license-automation-plugin</module>
-  </modules>
 </project>

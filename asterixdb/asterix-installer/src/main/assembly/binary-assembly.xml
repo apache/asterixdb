@@ -70,7 +70,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>src/main/licenses/</directory>
+      <directory>target/generated-sources</directory>
       <outputDirectory>.</outputDirectory>
       <includes>
         <include>LICENSE*</include>
@@ -86,6 +86,7 @@
   <dependencySets>
     <dependencySet>
       <includes>
+        <!-- NOTE! Any changes here must be mirrored in asterix-installer pom.xml for licensegen -->
         <include>log4j:log4j</include>
         <include>org.apache.asterix:asterix-events</include>
         <include>org.apache.asterix:asterix-common</include>
@@ -101,6 +102,7 @@
     </dependencySet>
     <dependencySet>
       <includes>
+        <!-- NOTE! Any changes here must be mirrored in asterix-installer pom.xml for licensegen -->
         <include>org.apache.hadoop:hadoop-core</include>
         <include>commons-cli:commons-cli</include>
         <include>commons-logging:commons-logging</include>
@@ -110,6 +112,7 @@
     </dependencySet>
     <dependencySet>
       <includes>
+        <!-- NOTE! Any changes here must be mirrored in asterix-installer pom.xml for licensegen -->
         <include>org.apache.zookeeper:zookeeper</include>
         <include>log4j:log4j</include>
         <include>org.slf4j:slf4j-api</include>

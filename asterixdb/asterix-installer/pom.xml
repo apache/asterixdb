@@ -41,6 +41,98 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.asterix</groupId>
+        <artifactId>license-automation-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <!--<goal>licensedownload</goal>-->
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <generatedFiles>
+            <generatedFile>
+              <template>asterixdb/src/main/licenses/templates/asterix-license.ftl</template>
+              <outputFile>LICENSE</outputFile>
+            </generatedFile>
+            <generatedFile>
+              <template>asterixdb/src/main/licenses/templates/asterix-notice.ftl</template>
+              <outputFile>NOTICE</outputFile>
+            </generatedFile>
+          </generatedFiles>
+          <location>repo/</location>
+          <timeoutSecs>10</timeoutSecs>
+          <extraLicenseMaps>
+            <extraLicenseMap>
+              <file>${basedir}/../asterix-server/target/generated-resources/license_map.json</file>
+              <location>asterix/asterix-server-${project.version}-binary-assembly.zip::repo/</location>
+            </extraLicenseMap>
+          </extraLicenseMaps>
+          <models>
+            <model>${basedir}/../src/main/appended-resources/supplemental-models.xml</model>
+          </models>
+          <downloadDir>${project.build.directory}/generated-resources/license</downloadDir>
+          <excludedScopes>
+            <excludedScope>test</excludedScope>
+          </excludedScopes>
+          <excludes>
+            <exclude>org.apache.asterix:*</exclude>
+            <exclude>org.apache.algebricks:*</exclude>
+            <exclude>org.apache.hyracks:*</exclude>
+          </excludes>
+          <licenseDirectory>${basedir}/../src/main/licenses/content</licenseDirectory>
+          <templateRootDir>${basedir}/../../</templateRootDir>
+          <dependencySets>
+            <dependencySet>
+              <includes>
+                <!-- NOTE! Any changes here must be mirrored in src/main/assembly/binary-assembly.xml -->
+                <include>log4j:log4j</include>
+                <include>org.apache.asterix:asterix-events</include>
+                <include>org.apache.asterix:asterix-common</include>
+                <include>org.apache.zookeeper:zookeeper</include>
+                <include>args4j:args4j</include>
+                <include>log4j:log4j</include>
+                <include>commons-io:commons-io</include>
+                <include>org.slf4j:slf4j-api</include>
+                <include>org.slf4j:slf4j-log4j12</include>
+              </includes>
+              <location>lib</location>
+            </dependencySet>
+            <dependencySet>
+              <includes>
+                <!-- NOTE! Any changes here must be mirrored in src/main/assembly/binary-assembly.xml -->
+                <include>org.apache.hadoop:hadoop-core</include>
+                <include>commons-cli:commons-cli</include>
+                <include>commons-logging:commons-logging</include>
+              </includes>
+              <location>.installer/hadoop-0.20.2/lib</location>
+            </dependencySet>
+            <dependencySet>
+              <includes>
+                <!-- NOTE! Any changes here must be mirrored in src/main/assembly/binary-assembly.xml -->
+                <include>org.apache.zookeeper:zookeeper</include>
+                <include>log4j:log4j</include>
+                <include>org.slf4j:slf4j-api</include>
+              </includes>
+              <location>.installer/zookeeper/lib</location>
+            </dependencySet>
+          </dependencySets>
+          <overrides>
+            <override>
+              <gav>org.apache.zookeeper:zookeeper:3.4.5</gav>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </override>
+          </overrides>
+          <templateProperties>
+            <assembly>asterix/asterix-server-${project.version}-binary-assembly.zip</assembly>
+            <packageName>Managix Install</packageName>
+          </templateProperties>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.jvnet.jaxb2.maven2</groupId>
         <artifactId>maven-jaxb2-plugin</artifactId>
         <version>0.9.0</version>
