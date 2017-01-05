@@ -96,6 +96,9 @@ public class GenerateFileMojo extends LicenseMojo {
     @Parameter
     protected Map<String, String> templateProperties = new HashMap<>();
 
+    @Parameter
+    private boolean stripFoundationAssertionFromNotices = true;
+
     private SortedMap<String, SortedSet<Project>> noticeMap;
 
     @java.lang.Override
@@ -207,7 +210,7 @@ public class GenerateFileMojo extends LicenseMojo {
                 }
                 for (Project project : projects.getProjects()) {
                     project.setLocation(extraLicenseFile.getLocation());
-                    addProject(project, projects.getLicense());
+                    addProject(project, projects.getLicense(), extraLicenseFile.isAdditive());
                 }
             }
         }
@@ -271,7 +274,8 @@ public class GenerateFileMojo extends LicenseMojo {
 
     private void resolveNoticeFiles() throws MojoExecutionException, IOException {
         resolveArtifactFiles("NOTICE", entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.txt)?"),
-                Project::setNoticeText, text -> FOUNDATION_PATTERN.matcher(text).replaceAll(""));
+                Project::setNoticeText,
+                text -> stripFoundationAssertionFromNotices ? FOUNDATION_PATTERN.matcher(text).replaceAll("") : text);
     }
 
     private void resolveLicenseFiles() throws MojoExecutionException, IOException {
@@ -287,22 +291,24 @@ public class GenerateFileMojo extends LicenseMojo {
             if (!artifactFile.exists()) {
                 throw new MojoExecutionException("Artifact file " + artifactFile + " does not exist!");
             } else if (!artifactFile.getName().endsWith(".jar")) {
-                throw new MojoExecutionException("Unknown artifact file type: " + artifactFile);
+                getLog().info("Skipping unknown artifact file type: " + artifactFile);
+                continue;
             }
             try (JarFile jarFile = new JarFile(artifactFile)) {
                 SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile,
                         filter);
                 if (matches.isEmpty()) {
                     getLog().warn("No " + name + " file found for " + project.gav());
-                    continue;
-                } else if (matches.size() > 1) {
-                    getLog().warn("Multiple " + name + " files found for " + project.gav() + ": " + matches.keySet()
-                            + "; taking first");
                 } else {
-                    getLog().info(project.gav() + " has " + name + " file: " + matches.keySet());
+                    if (matches.size() > 1) {
+                        getLog().warn("Multiple " + name + " files found for " + project.gav() + ": " + matches.keySet()
+                                + "; taking first");
+                    } else {
+                        getLog().info(project.gav() + " has " + name + " file: " + matches.keySet());
+                    }
+                    resolveContent(project, jarFile, matches.values().iterator().next(),
+                            contentTransformer, consumer, name);
                 }
-                resolveContent(project, jarFile, matches.values().iterator().next(),
-                        contentTransformer, consumer, name);
             }
         }
     }

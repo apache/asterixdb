@@ -23,6 +23,7 @@ import java.io.File;
 public class ExtraLicenseFile {
     private File file;
     private String location;
+    private boolean additive = true;
 
     public String getLocation() {
         return location;
@@ -38,5 +39,13 @@ public class ExtraLicenseFile {
 
     public void setFile(File file) {
         this.file = file;
+    }
+
+    public boolean isAdditive() {
+        return additive;
+    }
+
+    public void setAdditive(boolean additive) {
+        this.additive = additive;
     }
 }

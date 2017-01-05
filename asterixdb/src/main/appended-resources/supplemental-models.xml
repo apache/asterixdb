@@ -162,6 +162,21 @@
   </supplement>
   <supplement>
     <project>
+      <groupId>stax</groupId>
+      <artifactId>stax</artifactId>
+      <licenses>
+        <license>
+          <name>The Apache Software License, Version 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+      </licenses>
+      <properties>
+        <verifiedVersions>1.1.1-dev,1.2.0</verifiedVersions>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
       <groupId>wss4j</groupId>
       <artifactId>wss4j</artifactId>
       <name>Apache WSS4J</name>

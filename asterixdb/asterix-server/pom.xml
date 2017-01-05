@@ -82,14 +82,6 @@
           </models>
           <overrides>
             <override>
-              <gav>stax:stax:1.1.1-dev</gav>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </override>
-            <override>
-              <gav>stax:stax:1.2.0</gav>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            </override>
-            <override>
               <gav>org.tukaani:xz:1.0</gav>
               <url>PUBLIC_DOMAIN</url>
             </override>

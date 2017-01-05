@@ -160,15 +160,20 @@ public abstract class LicenseMojo extends AbstractMojo {
             }
         }
         File path = new File(localRepository.getBasedir(), localRepository.pathOf(depProject.getArtifact()));
-        addProject(new Project(depProject, depLocation, path), new LicenseSpec(licenseUrl, displayName));
+        addProject(new Project(depProject, depLocation, path), new LicenseSpec(licenseUrl, displayName), true);
     }
 
-    protected void addProject(Project project, LicenseSpec licenseSpecNew) {
-        String licenseUrl = licenseSpecNew.getUrl();
+    protected void addProject(Project project, LicenseSpec spec, boolean additive) {
+        String licenseUrl = spec.getUrl();
         LicenseSpec license = urlToLicenseMap.get(licenseUrl);
         if (license == null) {
-            license = licenseSpecNew;
+            license = spec;
             urlToLicenseMap.put(licenseUrl, license);
+            for (String alias : license.getAliasUrls()) {
+                if (!urlToLicenseMap.containsKey(alias)) {
+                    urlToLicenseMap.put(alias ,license);
+                }
+            }
         }
         licenseUrl = license.getUrl();
         LicensedProjects entry = licenseMap.get(licenseUrl);
@@ -176,7 +181,9 @@ public abstract class LicenseMojo extends AbstractMojo {
             entry = new LicensedProjects(license);
             licenseMap.put(licenseUrl, entry);
         }
-        entry.addProject(project);
+        if (additive || entry.getProjects().contains(project)) {
+            entry.addProject(project);
+        }
     }
 
     private void buildUrlLicenseMap() throws MojoExecutionException {
@@ -188,7 +195,6 @@ public abstract class LicenseMojo extends AbstractMojo {
                 if (urlToLicenseMap.put(alias ,license) != null) {
                     throw new MojoExecutionException("Duplicate URL mapping: " + alias);
                 }
-
             }
         }
     }
