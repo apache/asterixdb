@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.StringReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -72,6 +74,11 @@ public class NCService {
      */
     private static Process proc = null;
 
+    /**
+     * The management bean for obtaining settings of the underlying operating system and hardware.
+     */
+    private static OperatingSystemMXBean osMXBean;
+
     private static List<String> buildCommand() throws IOException {
         List<String> cList = new ArrayList<>();
 
@@ -114,7 +121,8 @@ public class NCService {
                 LOGGER.info("Using JAVA_OPTS from environment");
             } else {
                 LOGGER.info("Using default JAVA_OPTS");
-                jvmargs = "-Xmx1536m";
+                long ramSize = ((com.sun.management.OperatingSystemMXBean) osMXBean).getTotalPhysicalMemorySize();
+                jvmargs = "-Xmx" + (int) Math.ceil(0.6 * ramSize / (1024 * 1024)) + "m";
             }
         }
         env.put("JAVA_OPTS", jvmargs);
@@ -242,6 +250,9 @@ public class NCService {
             System.exit(1);
         }
         config.loadConfigAndApplyDefaults();
+
+        // Initializes the oxMXBean.
+        osMXBean = ManagementFactory.getOperatingSystemMXBean();
 
         // For now we implement a trivial listener which just
         // accepts an IP/port combination from the CC. This could

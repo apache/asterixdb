@@ -68,37 +68,13 @@
     </property>
     <property>
         <name>compiler.parallelism</name>
-        <value>3</value>
+        <value>-1</value>
     </property>
     <property>
         <name>storage.buffercache.pagesize</name>
         <value>32KB</value>
         <description>The page size in bytes for pages in the buffer cache.
             (Default = "128KB")
-        </description>
-    </property>
-    <property>
-        <name>storage.buffercache.size</name>
-        <value>48MB</value>
-        <description>The size of memory allocated to the disk buffer cache.
-            The value should be a multiple of the buffer cache page size.
-        </description>
-    </property>
-    <property>
-        <name>storage.memorycomponent.numpages</name>
-        <value>8</value>
-        <description>The number of pages to allocate for a memory component.
-            This budget is shared by all the memory components of the primary
-            index and all its secondary indexes across all I/O devices on a node.
-            Note: in-memory components usually has fill factor of 75% since
-            the pages are 75% full and the remaining 25% is un-utilized.
-        </description>
-    </property>
-    <property>
-        <name>storage.memorycomponent.globalbudget</name>
-        <value>512MB</value>
-        <description>The size of memory allocated to the memory components.
-            The value should be a multiple of the memory component page size.
         </description>
     </property>
     <property>

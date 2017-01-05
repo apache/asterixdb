@@ -22,7 +22,6 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.StorageUtil;
 
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
-import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 public class StorageProperties extends AbstractProperties {
 
@@ -30,7 +29,6 @@ public class StorageProperties extends AbstractProperties {
     private static final int STORAGE_BUFFERCACHE_PAGESIZE_DEFAULT = StorageUtil.getSizeInBytes(128, KILOBYTE);
 
     private static final String STORAGE_BUFFERCACHE_SIZE_KEY = "storage.buffercache.size";
-    private static final long STORAGE_BUFFERCACHE_SIZE_DEFAULT = StorageUtil.getSizeInBytes(512, MEGABYTE);
 
     private static final String STORAGE_BUFFERCACHE_MAXOPENFILES_KEY = "storage.buffercache.maxopenfiles";
     private static final int STORAGE_BUFFERCACHE_MAXOPENFILES_DEFAULT = Integer.MAX_VALUE;
@@ -39,7 +37,6 @@ public class StorageProperties extends AbstractProperties {
     private static final int STORAGE_MEMORYCOMPONENT_PAGESIZE_DEFAULT = StorageUtil.getSizeInBytes(128, KILOBYTE);
 
     private static final String STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY = "storage.memorycomponent.numpages";
-    private static final int STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT = 256; // ... so 32MB components
 
     private static final String STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_KEY =
             "storage.metadata.memorycomponent.numpages";
@@ -49,14 +46,28 @@ public class StorageProperties extends AbstractProperties {
     private static final int STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_DEFAULT = 2; // 2 components
 
     private static final String STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY = "storage.memorycomponent.globalbudget";
-    private static final long STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT = StorageUtil.getSizeInBytes(512, MEGABYTE);
 
     private static final String STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE_KEY =
             "storage.lsm.bloomfilter.falsepositiverate";
     private static final double STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE_DEFAULT = 0.01;
 
+    private final long storageBufferCacheSizeDefault;
+    private final int storageMemoryComponentNumPages;
+    private final long storageMemorycomponentGlobalbudgetDefault;
+
     public StorageProperties(PropertiesAccessor accessor) {
         super(accessor);
+
+        // Gets the -Xmx value for the JVM.
+        long maxHeapSize = Runtime.getRuntime().maxMemory();
+        // By default, uses 1/4 of the maximum heap size for read cache, i.e., disk buffer cache.
+        storageBufferCacheSizeDefault = maxHeapSize / 4;
+        // By default, uses 1/4 of the maximum heap size for the write buffer, i.e., globalbudget for memory components.
+        storageMemorycomponentGlobalbudgetDefault = maxHeapSize / 4;
+        // By default, uses 1/16 of the storageMemorycomponentGlobalbudgetDefault for the write buffer budget
+        // for a dataset, including data and indexes.
+        storageMemoryComponentNumPages = (int) storageMemorycomponentGlobalbudgetDefault
+                / (16 * getMemoryComponentPageSize());
     }
 
     @PropertyKey(STORAGE_BUFFERCACHE_PAGESIZE_KEY)
@@ -67,7 +78,7 @@ public class StorageProperties extends AbstractProperties {
 
     @PropertyKey(STORAGE_BUFFERCACHE_SIZE_KEY)
     public long getBufferCacheSize() {
-        return accessor.getProperty(STORAGE_BUFFERCACHE_SIZE_KEY, STORAGE_BUFFERCACHE_SIZE_DEFAULT,
+        return accessor.getProperty(STORAGE_BUFFERCACHE_SIZE_KEY, storageBufferCacheSizeDefault,
                 PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
@@ -89,7 +100,7 @@ public class StorageProperties extends AbstractProperties {
 
     @PropertyKey(STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY)
     public int getMemoryComponentNumPages() {
-        return accessor.getProperty(STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY, STORAGE_MEMORYCOMPONENT_NUMPAGES_DEFAULT,
+        return accessor.getProperty(STORAGE_MEMORYCOMPONENT_NUMPAGES_KEY, storageMemoryComponentNumPages,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
@@ -108,8 +119,8 @@ public class StorageProperties extends AbstractProperties {
 
     @PropertyKey(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY)
     public long getMemoryComponentGlobalBudget() {
-        return accessor.getProperty(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY,
-                STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_DEFAULT, PropertyInterpreters.getLongBytePropertyInterpreter());
+        return accessor.getProperty(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET_KEY, storageMemorycomponentGlobalbudgetDefault,
+                PropertyInterpreters.getLongBytePropertyInterpreter());
     }
 
     @PropertyKey(STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE_KEY)
