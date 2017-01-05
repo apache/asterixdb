@@ -29,7 +29,6 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.ProcessTupleException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -145,10 +144,10 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
             if (e.getErrorCode() == ErrorCode.INVALID_OPERATOR_OPERATION) {
                 throw e;
             } else {
-                throw new ProcessTupleException(e, i);
+                throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, i);
             }
         } catch (Exception e) {
-            throw new ProcessTupleException(e, i);
+            throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, i);
         }
 
         writeBuffer.ensureFrameSize(buffer.capacity());
