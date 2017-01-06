@@ -25,10 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
@@ -64,39 +63,41 @@ public class TaskProfile extends AbstractProfile {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
         json.put("activity-id", taskAttemptId.getTaskId().getActivityId().toString());
         json.put("partition", taskAttemptId.getTaskId().getPartition());
         json.put("attempt", taskAttemptId.getAttempt());
         if (partitionSendProfile != null) {
-            JSONArray pspArray = new JSONArray();
+            ArrayNode pspArray = om.createArrayNode();
             for (PartitionProfile pp : partitionSendProfile.values()) {
-                JSONObject ppObj = new JSONObject();
+                ObjectNode ppObj = om.createObjectNode();
                 PartitionId pid = pp.getPartitionId();
-                JSONObject pidObj = new JSONObject();
-                pidObj.put("job-id", pid.getJobId());
-                pidObj.put("connector-id", pid.getConnectorDescriptorId());
+                ObjectNode pidObj = om.createObjectNode();
+                pidObj.put("job-id", pid.getJobId().toString());
+                pidObj.put("connector-id", pid.getConnectorDescriptorId().toString());
                 pidObj.put("sender-index", pid.getSenderIndex());
                 pidObj.put("receiver-index", pid.getReceiverIndex());
-                ppObj.put("partition-id", pidObj);
+                ppObj.set("partition-id", pidObj);
                 ppObj.put("open-time", pp.getOpenTime());
                 ppObj.put("close-time", pp.getCloseTime());
                 MultiResolutionEventProfiler samples = pp.getSamples();
                 ppObj.put("offset", samples.getOffset());
                 int resolution = samples.getResolution();
                 int sampleCount = samples.getCount();
-                JSONArray ftA = new JSONArray();
+                ArrayNode ftA = om.createArrayNode();
                 int[] ft = samples.getSamples();
                 for (int i = 0; i < sampleCount; ++i) {
-                    ftA.put(ft[i]);
+                    ftA.add(ft[i]);
                 }
-                ppObj.put("frame-times", ftA);
+                ppObj.set("frame-times", ftA);
                 ppObj.put("resolution", resolution);
-                pspArray.put(ppObj);
+                pspArray.add(ppObj);
             }
-            json.put("partition-send-profile", pspArray);
+            json.set("partition-send-profile", pspArray);
         }
         populateCounters(json);
 

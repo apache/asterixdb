@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
@@ -75,13 +75,14 @@ public class ALine implements IAObject {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
-        JSONObject line = new JSONObject();
-        line.put("p1", p1);
-        line.put("p2", p2);
-        json.put("ALine", line);
+        ObjectNode line = om.createObjectNode();
+        line.set("p1", p1.toJSON());
+        line.set("p2", p2.toJSON());
+        json.set("ALine", line);
 
         return json;
     }

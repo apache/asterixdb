@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -45,7 +46,7 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import org.json.JSONArray;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -123,7 +124,7 @@ public abstract class AbstractMultiNCIntegrationTest {
 
     protected void runTest(JobSpecification spec) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(spec.toJSON().toString(2));
+            LOGGER.info(spec.toJSON().asText());
         }
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -141,7 +142,8 @@ public abstract class AbstractMultiNCIntegrationTest {
             IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
             IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, spec.getResultSetIds().get(0));
 
-            JSONArray resultRecords = new JSONArray();
+            ObjectMapper om = new ObjectMapper();
+            ArrayNode resultRecords = om.createArrayNode();
             ByteBufferInputStream bbis = new ByteBufferInputStream();
 
             int readSize = reader.read(resultFrame);
@@ -156,7 +158,7 @@ public abstract class AbstractMultiNCIntegrationTest {
                         bbis.setByteBuffer(resultFrame.getBuffer(), start);
                         byte[] recordBytes = new byte[length];
                         bbis.read(recordBytes, 0, length);
-                        resultRecords.put(new String(recordBytes, 0, length));
+                        resultRecords.add(new String(recordBytes, 0, length));
                     }
                 } finally {
                     try {

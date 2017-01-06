@@ -20,11 +20,11 @@ package org.apache.hyracks.api.dataflow;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Descriptor for operators in Hyracks.
@@ -99,5 +99,5 @@ public interface IOperatorDescriptor extends Serializable {
     /**
      * Translates this operator descriptor to JSON.
      */
-    public JSONObject toJSON() throws JSONException;
+    public ObjectNode toJSON();
 }

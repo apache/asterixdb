@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.external.feed.message;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
-import org.json.JSONException;
-import org.json.JSONObject;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @deprecated A feed control message indicating the need to end the feed. This message is dispatched
@@ -82,8 +83,9 @@ public class EndFeedMessage extends FeedMessage {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject obj = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode obj = om.createObjectNode();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
         obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getFeedId().getDataverse());
         obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getEntityName());

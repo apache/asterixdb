@@ -26,11 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.string.StringValue;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
@@ -58,19 +59,19 @@ public class JobDetailsPage extends AbstractPage {
         jag.setEscapeModelStrings(false);
         add(jag);
 
-        JSONObject jagO = gacgw.getJSON();
+        ObjectNode jagO = gacgw.getJSON();
 
         Map<ActivityId, String> activityMap = new HashMap<ActivityId, String>();
         if (jagO.has("activity-clusters")) {
-            JSONArray acArray = jagO.getJSONArray("activity-clusters");
-            for (int j = 0; j < acArray.length(); ++j) {
-                JSONObject acO = acArray.getJSONObject(j);
+            JsonNode acArray = jagO.get("activity-clusters");
+            for (int j = 0; j < acArray.size(); ++j) {
+                JsonNode acO = acArray.get(j);
                 if (acO.has("activities")) {
-                    JSONArray aArray = acO.getJSONArray("activities");
-                    for (int i = 0; i < aArray.length(); ++i) {
-                        JSONObject aO = aArray.getJSONObject(i);
-                        ActivityId aid = ActivityId.parse(aO.getString("id"));
-                        String className = aO.getString("java-class");
+                    JsonNode aArray = acO.get("activities");
+                    for (int i = 0; i < aArray.size(); ++i) {
+                        JsonNode aO = aArray.get(i);
+                        ActivityId aid = ActivityId.parse(aO.get("id").asText());
+                        String className = aO.get("java-class").asText();
 
                         activityMap.put(aid, className);
                     }
@@ -84,30 +85,30 @@ public class JobDetailsPage extends AbstractPage {
         jobrun.setEscapeModelStrings(false);
         add(jobrun);
 
-        JSONObject jrO = gjrw.getJSON();
+        ObjectNode jrO = gjrw.getJSON();
 
         List<TaskClusterAttempt[]> tcList = new ArrayList<TaskClusterAttempt[]>();
         long minTime = Long.MAX_VALUE;
         long maxTime = Long.MIN_VALUE;
         if (jrO.has("activity-clusters")) {
-            JSONArray acA = jrO.getJSONArray("activity-clusters");
-            for (int i = 0; i < acA.length(); ++i) {
-                JSONObject acO = acA.getJSONObject(i);
+            JsonNode acA = jrO.get("activity-clusters");
+            for (int i = 0; i < acA.size(); ++i) {
+                JsonNode acO = acA.get(i);
                 if (acO.has("plan")) {
-                    JSONObject planO = acO.getJSONObject("plan");
+                    JsonNode planO = acO.get("plan");
                     if (planO.has("task-clusters")) {
-                        JSONArray tcA = planO.getJSONArray("task-clusters");
-                        for (int j = 0; j < tcA.length(); ++j) {
-                            JSONObject tcO = tcA.getJSONObject(j);
-                            String tcId = tcO.getString("task-cluster-id");
+                        JsonNode tcA = planO.get("task-clusters");
+                        for (int j = 0; j < tcA.size(); ++j) {
+                            JsonNode tcO = tcA.get(j);
+                            String tcId = tcO.get("task-cluster-id").asText();
                             if (tcO.has("attempts")) {
-                                JSONArray tcaA = tcO.getJSONArray("attempts");
-                                TaskClusterAttempt[] tcAttempts = new TaskClusterAttempt[tcaA.length()];
-                                for (int k = 0; k < tcaA.length(); ++k) {
-                                    JSONObject tcaO = tcaA.getJSONObject(k);
-                                    int attempt = tcaO.getInt("attempt");
-                                    long startTime = tcaO.getLong("start-time");
-                                    long endTime = tcaO.getLong("end-time");
+                                JsonNode tcaA = tcO.get("attempts");
+                                TaskClusterAttempt[] tcAttempts = new TaskClusterAttempt[tcaA.size()];
+                                for (int k = 0; k < tcaA.size(); ++k) {
+                                    JsonNode tcaO = tcaA.get(k);
+                                    int attempt = tcaO.get("attempt").asInt();
+                                    long startTime = tcaO.get("start-time").asLong();
+                                    long endTime = tcaO.get("end-time").asLong();
 
                                     tcAttempts[k] = new TaskClusterAttempt(tcId, attempt, startTime, endTime);
                                     if (startTime < minTime) {
@@ -117,13 +118,13 @@ public class JobDetailsPage extends AbstractPage {
                                         maxTime = endTime;
                                     }
                                     if (tcaO.has("task-attempts")) {
-                                        JSONArray taArray = tcaO.getJSONArray("task-attempts");
-                                        tcAttempts[k].tasks = new TaskAttempt[taArray.length()];
-                                        for (int l = 0; l < taArray.length(); ++l) {
-                                            JSONObject taO = taArray.getJSONObject(l);
-                                            TaskAttemptId taId = TaskAttemptId.parse(taO.getString("task-attempt-id"));
-                                            TaskAttempt ta = new TaskAttempt(taId, taO.getLong("start-time"),
-                                                    taO.getLong("end-time"));
+                                        JsonNode taArray = tcaO.get("task-attempts");
+                                        tcAttempts[k].tasks = new TaskAttempt[taArray.size()];
+                                        for (int l = 0; l < taArray.size(); ++l) {
+                                            JsonNode taO = taArray.get(l);
+                                            TaskAttemptId taId = TaskAttemptId.parse(taO.get("task-attempt-id").asText());
+                                            TaskAttempt ta = new TaskAttempt(taId, taO.get("start-time").asLong(),
+                                                    taO.get("end-time").asLong());
                                             tcAttempts[k].tasks[l] = ta;
                                             TaskId tid = taId.getTaskId();
                                             ta.name = activityMap.get(tid.getActivityId());
@@ -154,31 +155,31 @@ public class JobDetailsPage extends AbstractPage {
 
         Map<TaskAttemptId, TaskProfile> tpMap = new HashMap<TaskAttemptId, TaskProfile>();
         if (jrO.has("profile")) {
-            JSONObject pO = jrO.getJSONObject("profile");
+            JsonNode pO = jrO.get("profile");
             if (pO.has("joblets")) {
-                JSONArray jobletsA = pO.getJSONArray("joblets");
-                for (int i = 0; i < jobletsA.length(); ++i) {
-                    JSONObject jobletO = jobletsA.getJSONObject(i);
+                JsonNode jobletsA = pO.get("joblets");
+                for (int i = 0; i < jobletsA.size(); ++i) {
+                    JsonNode jobletO = jobletsA.get(i);
                     if (jobletO.has("tasks")) {
-                        JSONArray tasksA = jobletO.getJSONArray("tasks");
-                        for (int j = 0; j < tasksA.length(); ++j) {
-                            JSONObject taskO = tasksA.getJSONObject(j);
-                            ActivityId activityId = ActivityId.parse(taskO.getString("activity-id"));
-                            int partition = taskO.getInt("partition");
-                            int attempt = taskO.getInt("attempt");
+                        JsonNode tasksA = jobletO.get("tasks");
+                        for (int j = 0; j < tasksA.size(); ++j) {
+                            JsonNode taskO = tasksA.get(j);
+                            ActivityId activityId = ActivityId.parse(taskO.get("activity-id").asText());
+                            int partition = taskO.get("partition").asInt();
+                            int attempt = taskO.get("attempt").asInt();
                             TaskAttemptId taId = new TaskAttemptId(new TaskId(activityId, partition), attempt);
                             if (taskO.has("partition-send-profile")) {
-                                JSONArray taskProfilesA = taskO.getJSONArray("partition-send-profile");
-                                for (int k = 0; k < taskProfilesA.length(); ++k) {
-                                    JSONObject ppO = taskProfilesA.getJSONObject(k);
-                                    long openTime = ppO.getLong("open-time");
-                                    long closeTime = ppO.getLong("close-time");
-                                    int resolution = ppO.getInt("resolution");
-                                    long offset = ppO.getLong("offset");
-                                    JSONArray frameTimesA = ppO.getJSONArray("frame-times");
-                                    long[] frameTimes = new long[frameTimesA.length()];
+                                JsonNode taskProfilesA = taskO.get("partition-send-profile");
+                                for (int k = 0; k < taskProfilesA.size(); ++k) {
+                                    JsonNode ppO = taskProfilesA.get(k);
+                                    long openTime = ppO.get("open-time").asLong();
+                                    long closeTime = ppO.get("close-time").asLong();
+                                    int resolution = ppO.get("resolution").asInt();
+                                    long offset = ppO.get("offset").asLong();
+                                    JsonNode frameTimesA = ppO.get("frame-times");
+                                    long[] frameTimes = new long[frameTimesA.size()];
                                     for (int l = 0; l < frameTimes.length; ++l) {
-                                        frameTimes[l] = frameTimesA.getInt(l) + offset;
+                                        frameTimes[l] = frameTimesA.get(l).asLong() + offset;
                                     }
                                     TaskProfile tp = new TaskProfile(taId, openTime, closeTime, frameTimes, resolution);
                                     if (!tpMap.containsKey(tp.taId)) {

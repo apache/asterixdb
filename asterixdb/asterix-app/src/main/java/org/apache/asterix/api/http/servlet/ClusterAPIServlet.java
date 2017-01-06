@@ -31,12 +31,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.asterix.common.config.AsterixProperties;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.common.config.AbstractProperties;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.runtime.util.ClusterStateManager;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClusterAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -53,6 +58,7 @@ public class ClusterAPIServlet extends HttpServlet {
     protected static final String REPLICATION_URI_KEY = "replicationUri";
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
     private static final Pattern REPLICATION_PROPERTY = Pattern.compile("^replication\\.");
+    private final ObjectMapper om = new ObjectMapper();
 
     @Override
     public final void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -67,9 +73,8 @@ public class ClusterAPIServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
         PrintWriter responseWriter = response.getWriter();
-        JSONObject json;
-
         try {
+            ObjectNode json;
             switch (request.getPathInfo() == null ? "" : request.getPathInfo()) {
                 case "":
                     json = getClusterStateJSON(request, "");
@@ -84,7 +89,7 @@ public class ClusterAPIServlet extends HttpServlet {
                     throw new IllegalArgumentException();
             }
             response.setStatus(HttpServletResponse.SC_OK);
-            responseWriter.write(json.toString(4));
+            responseWriter.write(JSONUtil.convertNode(json));
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
@@ -94,15 +99,15 @@ public class ClusterAPIServlet extends HttpServlet {
         responseWriter.flush();
     }
 
-    protected JSONObject getClusterStateSummaryJSON() throws JSONException {
+    protected ObjectNode getClusterStateSummaryJSON() {
         return ClusterStateManager.INSTANCE.getClusterStateSummary();
     }
 
-    protected JSONObject getReplicationJSON() throws JSONException {
+    protected ObjectNode getReplicationJSON() {
         for (AbstractProperties props : getPropertiesInstances()) {
             if (props instanceof ReplicationProperties) {
-                JSONObject json = new JSONObject();
-                json.put("config", props.getProperties(key -> REPLICATION_PROPERTY.matcher(key).replaceFirst("")));
+                ObjectNode json = om.createObjectNode();
+                json.putPOJO("config", props.getProperties(key -> REPLICATION_PROPERTY.matcher(key).replaceFirst("")));
                 return json;
             }
         }
@@ -123,13 +128,12 @@ public class ClusterAPIServlet extends HttpServlet {
         return AbstractProperties.getImplementations();
     }
 
-    protected JSONObject getClusterStateJSON(HttpServletRequest request, String pathToNode) throws JSONException {
-        JSONObject json;
-        json = ClusterStateManager.INSTANCE.getClusterStateDescription();
+    protected ObjectNode getClusterStateJSON(HttpServletRequest request, String pathToNode) {
+        ObjectNode json = ClusterStateManager.INSTANCE.getClusterStateDescription();
         Map<String, Object> allProperties = getAllClusterProperties();
-        json.put("config", allProperties);
+        json.putPOJO("config", allProperties);
 
-        JSONArray ncs = json.getJSONArray("ncs");
+        ArrayNode ncs = (ArrayNode) json.get("ncs");
         final StringBuilder requestURL = new StringBuilder(request.getRequestURL());
         if (requestURL.charAt(requestURL.length() - 1) != '/') {
             requestURL.append('/');
@@ -138,18 +142,18 @@ public class ClusterAPIServlet extends HttpServlet {
         String clusterURL = canonicalize(requestURL);
         String adminURL = canonicalize(clusterURL + "../");
         String nodeURL = clusterURL + "node/";
-        for (int i = 0; i < ncs.length(); i++) {
-            JSONObject nc = ncs.getJSONObject(i);
-            nc.put(CONFIG_URI_KEY, nodeURL + nc.getString(NODE_ID_KEY) + "/config");
-            nc.put(STATS_URI_KEY, nodeURL + nc.getString(NODE_ID_KEY) + "/stats");
-            nc.put(THREAD_DUMP_URI_KEY, nodeURL + nc.getString(NODE_ID_KEY) + "/threaddump");
+        for (int i = 0; i < ncs.size(); i++) {
+            ObjectNode nc = (ObjectNode) ncs.get(i);
+            nc.put(CONFIG_URI_KEY, nodeURL + nc.get(NODE_ID_KEY).asText() + "/config");
+            nc.put(STATS_URI_KEY, nodeURL + nc.get(NODE_ID_KEY).asText() + "/stats");
+            nc.put(THREAD_DUMP_URI_KEY, nodeURL + nc.get(NODE_ID_KEY).asText() + "/threaddump");
         }
-        JSONObject cc;
+        ObjectNode cc;
         if (json.has("cc")) {
-            cc = json.getJSONObject("cc");
+            cc = (ObjectNode) json.get("cc");
         } else {
-            cc = new JSONObject();
-            json.put("cc", cc);
+            cc = om.createObjectNode();
+            json.set("cc", cc);
         }
         cc.put(CONFIG_URI_KEY, clusterURL + "cc/config");
         cc.put(STATS_URI_KEY, clusterURL + "cc/stats");

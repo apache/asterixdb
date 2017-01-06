@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.Assert;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -32,8 +34,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -111,15 +113,17 @@ public class NCServiceIT {
     @Test
     public void IsNodelistCorrect() throws Exception {
         // Ping the nodelist HTTP API
+
+        ObjectMapper om = new ObjectMapper();
         String localhost = InetAddress.getLoopbackAddress().getHostAddress();
         String response = getHttp("http://" + localhost + ":12345/rest/nodes");
-        JSONObject result = new JSONObject(response);
-        JSONArray nodes = result.getJSONArray("result");
-        int numNodes = nodes.length();
+        JsonNode result = om.readTree(response);
+        JsonNode nodes = result.get("result");
+        int numNodes = nodes.size();
         Assert.assertEquals("Wrong number of nodes!", 2, numNodes);
-        for (int i = 0; i < nodes.length(); i++) {
-            JSONObject node = nodes.getJSONObject(i);
-            String id = node.getString("node-id");
+        for (int i = 0; i < nodes.size(); i++) {
+            JsonNode node = nodes.get(i);
+            String id = node.get("node-id").asText();
             if (id.equals("red") || id.equals("blue")) {
                 continue;
             }

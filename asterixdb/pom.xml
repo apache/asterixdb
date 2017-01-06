@@ -68,7 +68,6 @@
     <junit.version>4.12</junit.version>
     <commons.io.version>2.5</commons.io.version>
     <servlet.api.version>3.1.0</servlet.api.version>
-    <json.version>20090211</json.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
   </properties>
 
@@ -809,12 +808,6 @@
         <type>test-jar</type>
       </dependency>
       <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>${json.version}</version>
-        <type>jar</type>
-      </dependency>
-      <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
         <version>${servlet.api.version}</version>
@@ -844,6 +837,16 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpcore</artifactId>
         <version>4.4</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.8.4</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.8.4</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

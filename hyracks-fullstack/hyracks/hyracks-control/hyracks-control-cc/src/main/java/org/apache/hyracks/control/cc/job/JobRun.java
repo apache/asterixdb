@@ -28,10 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
@@ -237,131 +236,132 @@ public class JobRun implements IJobStatusConditionVariable {
         return connectorPolicyMap;
     }
 
-    public JSONObject toJSON() throws JSONException {
-        JSONObject result = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode result = om.createObjectNode();
 
         result.put("job-id", jobId.toString());
-        result.put("status", getStatus());
+        result.putPOJO("status", getStatus());
         result.put("create-time", getCreateTime());
         result.put("start-time", getStartTime());
         result.put("end-time", getEndTime());
 
-        JSONArray aClusters = new JSONArray();
+        ArrayNode aClusters = om.createArrayNode();
         for (ActivityCluster ac : acg.getActivityClusterMap().values()) {
-            JSONObject acJSON = new JSONObject();
+            ObjectNode acJSON = om.createObjectNode();
 
             acJSON.put("activity-cluster-id", String.valueOf(ac.getId()));
 
-            JSONArray activitiesJSON = new JSONArray();
+            ArrayNode activitiesJSON = om.createArrayNode();
             for (ActivityId aid : ac.getActivityMap().keySet()) {
-                activitiesJSON.put(aid);
+                activitiesJSON.addPOJO(aid);
             }
-            acJSON.put("activities", activitiesJSON);
+            acJSON.set("activities", activitiesJSON);
 
-            JSONArray dependenciesJSON = new JSONArray();
+            ArrayNode dependenciesJSON = om.createArrayNode();
             for (ActivityCluster dependency : ac.getDependencies()) {
-                dependenciesJSON.put(String.valueOf(dependency.getId()));
+                dependenciesJSON.add(String.valueOf(dependency.getId()));
             }
-            acJSON.put("dependencies", dependenciesJSON);
+            acJSON.set("dependencies", dependenciesJSON);
 
             ActivityClusterPlan acp = activityClusterPlanMap.get(ac.getId());
             if (acp == null) {
-                acJSON.put("plan", (Object) null);
+                acJSON.putNull("plan");
             } else {
-                JSONObject planJSON = new JSONObject();
+                ObjectNode planJSON = om.createObjectNode();
 
-                JSONArray acTasks = new JSONArray();
+                ArrayNode acTasks = om.createArrayNode();
                 for (Map.Entry<ActivityId, ActivityPlan> e : acp.getActivityPlanMap().entrySet()) {
                     ActivityPlan acPlan = e.getValue();
-                    JSONObject entry = new JSONObject();
+                    ObjectNode entry = om.createObjectNode();
                     entry.put("activity-id", e.getKey().toString());
 
                     ActivityPartitionDetails apd = acPlan.getActivityPartitionDetails();
                     entry.put("partition-count", apd.getPartitionCount());
 
-                    JSONArray inPartCountsJSON = new JSONArray();
+                    ArrayNode inPartCountsJSON = om.createArrayNode();
                     int[] inPartCounts = apd.getInputPartitionCounts();
                     if (inPartCounts != null) {
                         for (int i : inPartCounts) {
-                            inPartCountsJSON.put(i);
+                            inPartCountsJSON.add(i);
                         }
                     }
-                    entry.put("input-partition-counts", inPartCountsJSON);
+                    entry.set("input-partition-counts", inPartCountsJSON);
 
-                    JSONArray outPartCountsJSON = new JSONArray();
+                    ArrayNode outPartCountsJSON = om.createArrayNode();
                     int[] outPartCounts = apd.getOutputPartitionCounts();
                     if (outPartCounts != null) {
                         for (int o : outPartCounts) {
-                            outPartCountsJSON.put(o);
+                            outPartCountsJSON.add(o);
                         }
                     }
-                    entry.put("output-partition-counts", outPartCountsJSON);
+                    entry.set("output-partition-counts", outPartCountsJSON);
 
-                    JSONArray tasks = new JSONArray();
+                    ArrayNode tasks = om.createArrayNode();
                     for (Task t : acPlan.getTasks()) {
-                        JSONObject task = new JSONObject();
+                        ObjectNode task = om.createObjectNode();
 
                         task.put("task-id", t.getTaskId().toString());
 
-                        JSONArray dependentTasksJSON = new JSONArray();
+                        ArrayNode dependentTasksJSON = om.createArrayNode();
                         for (TaskId dependent : t.getDependents()) {
-                            dependentTasksJSON.put(dependent.toString());
-                        }
-                        task.put("dependents", dependentTasksJSON);
+                            dependentTasksJSON.add(dependent.toString());
+                        task.set("dependents", dependentTasksJSON);
 
-                        JSONArray dependencyTasksJSON = new JSONArray();
+                        ArrayNode dependencyTasksJSON = om.createArrayNode();
                         for (TaskId dependency : t.getDependencies()) {
-                            dependencyTasksJSON.put(dependency.toString());
+                            dependencyTasksJSON.add(dependency.toString());
                         }
-                        task.put("dependencies", dependencyTasksJSON);
+                        task.set("dependencies", dependencyTasksJSON);
 
-                        tasks.put(task);
+                        tasks.add(task);
                     }
-                    entry.put("tasks", tasks);
+                    entry.set("tasks", tasks);
 
-                    acTasks.put(entry);
+                    acTasks.add(entry);
+                    }
                 }
-                planJSON.put("activities", acTasks);
+                planJSON.set("activities", acTasks);
 
-                JSONArray tClusters = new JSONArray();
+                ArrayNode tClusters = om.createArrayNode();
                 for (TaskCluster tc : acp.getTaskClusters()) {
-                    JSONObject c = new JSONObject();
+                    ObjectNode c = om.createObjectNode();
                     c.put("task-cluster-id", String.valueOf(tc.getTaskClusterId()));
 
-                    JSONArray tasks = new JSONArray();
+                    ArrayNode tasksAry = om.createArrayNode();
                     for (Task t : tc.getTasks()) {
-                        tasks.put(t.getTaskId().toString());
+                        tasksAry.add(t.getTaskId().toString());
                     }
-                    c.put("tasks", tasks);
+                    c.set("tasks", tasksAry);
 
-                    JSONArray prodParts = new JSONArray();
+                    ArrayNode prodParts = om.createArrayNode();
                     for (PartitionId p : tc.getProducedPartitions()) {
-                        prodParts.put(p.toString());
+                        prodParts.add(p.toString());
                     }
-                    c.put("produced-partitions", prodParts);
+                    c.set("produced-partitions", prodParts);
 
-                    JSONArray reqdParts = new JSONArray();
+                    ArrayNode reqdParts = om.createArrayNode();
                     for (PartitionId p : tc.getRequiredPartitions()) {
-                        reqdParts.put(p.toString());
+                        reqdParts.add(p.toString());
                     }
-                    c.put("required-partitions", reqdParts);
+                    c.set("required-partitions", reqdParts);
 
-                    JSONArray attempts = new JSONArray();
+                    ArrayNode attempts = om.createArrayNode();
                     List<TaskClusterAttempt> tcAttempts = tc.getAttempts();
                     if (tcAttempts != null) {
                         for (TaskClusterAttempt tca : tcAttempts) {
-                            JSONObject attempt = new JSONObject();
+                            ObjectNode attempt = om.createObjectNode();
                             attempt.put("attempt", tca.getAttempt());
-                            attempt.put("status", tca.getStatus());
+                            attempt.putPOJO("status", tca.getStatus());
                             attempt.put("start-time", tca.getStartTime());
                             attempt.put("end-time", tca.getEndTime());
 
-                            JSONArray taskAttempts = new JSONArray();
+                            ArrayNode taskAttempts = om.createArrayNode();
                             for (TaskAttempt ta : tca.getTaskAttempts().values()) {
-                                JSONObject taskAttempt = new JSONObject();
-                                taskAttempt.put("task-id", ta.getTaskAttemptId().getTaskId());
-                                taskAttempt.put("task-attempt-id", ta.getTaskAttemptId());
-                                taskAttempt.put("status", ta.getStatus());
+                                ObjectNode taskAttempt = om.createObjectNode();
+                                taskAttempt.putPOJO("task-id", ta.getTaskAttemptId().getTaskId());
+                                taskAttempt.putPOJO("task-attempt-id", ta.getTaskAttemptId());
+                                taskAttempt.putPOJO("status", ta.getStatus());
                                 taskAttempt.put("node-id", ta.getNodeId());
                                 taskAttempt.put("start-time", ta.getStartTime());
                                 taskAttempt.put("end-time", ta.getEndTime());
@@ -374,26 +374,26 @@ public class JobRun implements IJobStatusConditionVariable {
                                         taskAttempt.put("failure-details", exceptionWriter.toString());
                                     }
                                 }
-                                taskAttempts.put(taskAttempt);
+                                taskAttempts.add(taskAttempt);
                             }
-                            attempt.put("task-attempts", taskAttempts);
+                            attempt.set("task-attempts", taskAttempts);
 
-                            attempts.put(attempt);
+                            attempts.add(attempt);
                         }
                     }
-                    c.put("attempts", attempts);
+                    c.set("attempts", attempts);
 
-                    tClusters.put(c);
+                    tClusters.add(c);
                 }
-                planJSON.put("task-clusters", tClusters);
+                planJSON.set("task-clusters", tClusters);
 
-                acJSON.put("plan", planJSON);
+                acJSON.set("plan", planJSON);
             }
-            aClusters.put(acJSON);
+            aClusters.add(acJSON);
         }
-        result.put("activity-clusters", aClusters);
+        result.set("activity-clusters", aClusters);
 
-        result.put("profile", profile.toJSON());
+        result.set("profile", profile.toJSON());
 
         return result;
     }

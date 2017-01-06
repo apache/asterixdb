@@ -18,14 +18,15 @@
  */
 package org.apache.hyracks.dataflow.std.base;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public abstract class AbstractConnectorDescriptor implements IConnectorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -54,8 +55,9 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject jconn = new JSONObject();
+    public JsonNode toJSON() {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode jconn = om.createObjectNode();
 
         jconn.put("id", String.valueOf(getConnectorId()));
         jconn.put("java-class", getClass().getName());

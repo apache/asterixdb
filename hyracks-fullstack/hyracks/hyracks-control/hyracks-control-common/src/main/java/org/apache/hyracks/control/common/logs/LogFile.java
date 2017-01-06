@@ -18,11 +18,11 @@
  */
 package org.apache.hyracks.control.common.logs;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
-
-import org.json.JSONObject;
 
 public class LogFile {
     private final File root;
@@ -38,12 +38,12 @@ public class LogFile {
         openTime = System.currentTimeMillis();
     }
 
-    public synchronized void log(JSONObject object) throws Exception {
+    public synchronized void log(ObjectNode object) throws Exception {
         if (out == null) {
             root.mkdirs();
             out = new PrintWriter(new FileOutputStream(new File(root, openTime + ".log"), true));
         }
-        out.println(object.toString(1));
+        out.println(object.asText());
         out.flush();
     }
 

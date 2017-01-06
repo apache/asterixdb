@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.om.base;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public final class ABoolean implements IAObject {
 
@@ -80,7 +80,7 @@ public final class ABoolean implements IAObject {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        return new JSONObject().put("ABoolean", bVal);
+    public ObjectNode toJSON()  {
+        return new ObjectMapper().createObjectNode().put("ABoolean", bVal);
     }
 }

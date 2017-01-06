@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.om.base;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
@@ -95,14 +95,15 @@ public class APolygon implements IAObject {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
-        JSONArray polygon = new JSONArray();
+        ArrayNode polygon = om.createArrayNode();
         for (int i = 0; i < points.length; i++) {
-            polygon.put(points[i].toJSON());
+            polygon.add(points[i].toJSON());
         }
-        json.put("APolygon", polygon);
+        json.set("APolygon", polygon);
 
         return json;
     }

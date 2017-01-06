@@ -30,7 +30,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -40,10 +40,9 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.util.FlushDatasetUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.io.FileSplit;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /***
  * The REST API that takes a dataverse name and a dataset name as the input
@@ -62,7 +61,8 @@ public class ConnectorAPIServlet extends HttpServlet {
         response.setCharacterEncoding("utf-8");
         PrintWriter out = response.getWriter();
         try {
-            JSONObject jsonResponse = new JSONObject();
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode jsonResponse = om.createObjectNode();
             String dataverseName = request.getParameter("dataverseName");
             String datasetName = request.getParameter("datasetName");
             if (dataverseName == null || datasetName == null) {
@@ -94,8 +94,8 @@ public class ConnectorAPIServlet extends HttpServlet {
                 return;
             }
             boolean temp = dataset.getDatasetDetails().isTemp();
-            FileSplit[] fileSplits =
-                    metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName, datasetName, temp);
+            FileSplit[] fileSplits = metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName,
+                    datasetName, temp);
             ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
                     dataset.getItemTypeName());
             List<List<String>> primaryKeys = DatasetUtils.getPartitioningKeys(dataset);
@@ -127,24 +127,25 @@ public class ConnectorAPIServlet extends HttpServlet {
         }
     }
 
-    private void formResponseObject(JSONObject jsonResponse, FileSplit[] fileSplits, ARecordType recordType,
+    private void formResponseObject(ObjectNode jsonResponse, FileSplit[] fileSplits, ARecordType recordType,
             String primaryKeys, boolean temp, Map<String, NodeControllerInfo> nodeMap) throws Exception {
-        JSONArray partititons = new JSONArray();
+        ObjectMapper om = new ObjectMapper();
+        ArrayNode partititons = om.createArrayNode();
         // Whether the dataset is temp or not
         jsonResponse.put("temp", temp);
         // Adds a primary key.
         jsonResponse.put("keys", primaryKeys);
         // Adds record type.
-        jsonResponse.put("type", recordType.toJSON());
+        jsonResponse.set("type", recordType.toJSON());
         // Generates file partitions.
         for (FileSplit split : fileSplits) {
             String ipAddress = nodeMap.get(split.getNodeName()).getNetworkAddress().getAddress().toString();
             String path = split.getPath();
             FilePartition partition = new FilePartition(ipAddress, path);
-            partititons.put(partition.toJSONObject());
+            partititons.add(partition.toObjectNode());
         }
         // Generates the response object which contains the splits.
-        jsonResponse.put("splits", partititons);
+        jsonResponse.set("splits", partititons);
     }
 }
 
@@ -170,8 +171,9 @@ class FilePartition {
         return ipAddress + ":" + path;
     }
 
-    public JSONObject toJSONObject() throws JSONException {
-        JSONObject partition = new JSONObject();
+    public ObjectNode toObjectNode() {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode partition = om.createObjectNode();
         partition.put("ip", ipAddress);
         partition.put("path", path);
         return partition;

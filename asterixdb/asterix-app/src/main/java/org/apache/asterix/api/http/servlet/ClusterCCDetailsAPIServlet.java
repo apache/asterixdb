@@ -29,30 +29,31 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClusterCCDetailsAPIServlet extends ClusterAPIServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ClusterCCDetailsAPIServlet.class.getName());
+    private final ObjectMapper om = new ObjectMapper();
 
     @Override
     protected void getUnsafe(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter responseWriter = response.getWriter();
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-        JSONObject json;
-
         try {
+            ObjectNode json;
             if (request.getPathInfo() == null) {
-                json = getClusterStateJSON(request, "../").getJSONObject("cc");
+                json = (ObjectNode) getClusterStateJSON(request, "../").get("cc");
             } else {
                 json = processNode(request, hcc);
             }
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("application/json");
             response.setCharacterEncoding("utf-8");
-            responseWriter.write(json.toString(4));
+            responseWriter.write(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (Exception e) {
@@ -62,8 +63,7 @@ public class ClusterCCDetailsAPIServlet extends ClusterAPIServlet {
         responseWriter.flush();
     }
 
-    private JSONObject processNode(HttpServletRequest request, IHyracksClientConnection hcc)
-            throws Exception {
+    private ObjectNode processNode(HttpServletRequest request, IHyracksClientConnection hcc) throws Exception {
         String pathInfo = request.getPathInfo();
         if (pathInfo.endsWith("/")) {
             throw new IllegalArgumentException();
@@ -71,13 +71,13 @@ public class ClusterCCDetailsAPIServlet extends ClusterAPIServlet {
         String[] parts = pathInfo.substring(1).split("/");
 
         if (request.getPathInfo() == null) {
-            return getClusterStateJSON(request, "../../").getJSONObject("cc");
+            return (ObjectNode) getClusterStateJSON(request, "../../").get("cc");
         } else if (parts.length == 1) {
             switch (parts[0]) {
                 case "config":
-                    return new JSONObject(hcc.getNodeDetailsJSON(null, false, true));
+                    return om.readValue(hcc.getNodeDetailsJSON(null, false, true), ObjectNode.class);
                 case "stats":
-                    return new JSONObject(hcc.getNodeDetailsJSON(null, true, false));
+                    return om.readValue(hcc.getNodeDetailsJSON(null, true, false), ObjectNode.class);
                 case "threaddump":
                     return processCCThreadDump(hcc);
 
@@ -90,12 +90,12 @@ public class ClusterCCDetailsAPIServlet extends ClusterAPIServlet {
         }
     }
 
-    private JSONObject processCCThreadDump(IHyracksClientConnection hcc) throws Exception {
+    private ObjectNode processCCThreadDump(IHyracksClientConnection hcc) throws Exception {
         String dump = hcc.getThreadDump(null);
         if (dump == null) {
             throw new IllegalArgumentException();
         }
-        return new JSONObject(dump);
+        return (ObjectNode) om.readTree(dump);
     }
 
 }

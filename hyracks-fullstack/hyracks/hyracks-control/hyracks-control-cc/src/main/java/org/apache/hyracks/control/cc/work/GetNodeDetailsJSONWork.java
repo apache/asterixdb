@@ -35,13 +35,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.common.utils.PidHelper;
 import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.kohsuke.args4j.Option;
 
 public class GetNodeDetailsJSONWork extends SynchronizableWork {
@@ -51,7 +51,8 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
     private final boolean includeStats;
     private final boolean includeConfig;
     private final IPCResponder<String> callback;
-    private JSONObject detail;
+    private ObjectNode detail;
+    private ObjectMapper om = new ObjectMapper();
 
     public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId, boolean includeStats,
                                   boolean includeConfig, IPCResponder<String> callback) {
@@ -86,12 +87,12 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
         }
 
         if (callback != null) {
-            callback.setValue(detail == null ? null : detail.toString());
+            callback.setValue(detail == null ? null : om.writeValueAsString(detail));
         }
     }
 
-    private JSONObject getCCDetails() throws JSONException {
-        JSONObject o = new JSONObject();
+    private ObjectNode getCCDetails()  {
+        ObjectNode o = om.createObjectNode();
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
         List<GarbageCollectorMXBean> gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
@@ -106,29 +107,29 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
             o.put("vm_name", runtimeMXBean.getVmName());
             o.put("vm_version", runtimeMXBean.getVmVersion());
             o.put("vm_vendor", runtimeMXBean.getVmVendor());
-            o.put("classpath", runtimeMXBean.getClassPath().split(File.pathSeparator));
-            o.put("library_path", runtimeMXBean.getLibraryPath().split(File.pathSeparator));
-            o.put("boot_classpath", runtimeMXBean.getBootClassPath().split(File.pathSeparator));
-            o.put("input_arguments", runtimeMXBean.getInputArguments());
-            o.put("system_properties", runtimeMXBean.getSystemProperties());
+            o.putPOJO("classpath", runtimeMXBean.getClassPath().split(File.pathSeparator));
+            o.putPOJO("library_path", runtimeMXBean.getLibraryPath().split(File.pathSeparator));
+            o.putPOJO("boot_classpath", runtimeMXBean.getBootClassPath().split(File.pathSeparator));
+            o.putPOJO("input_arguments", runtimeMXBean.getInputArguments());
+            o.putPOJO("system_properties", runtimeMXBean.getSystemProperties());
             o.put("pid", PidHelper.getPid());
         }
         if (includeStats) {
             MemoryUsage heapUsage = memoryMXBean.getHeapMemoryUsage();
             MemoryUsage nonheapUsage = memoryMXBean.getNonHeapMemoryUsage();
 
-            List<JSONObject> gcs = new ArrayList<>();
+            List<ObjectNode> gcs = new ArrayList<>();
 
             for (GarbageCollectorMXBean gcMXBean : gcMXBeans) {
-                JSONObject gc = new JSONObject();
+                ObjectNode gc = om.createObjectNode();
                 gc.put("name", gcMXBean.getName());
                 gc.put("collection-time", gcMXBean.getCollectionTime());
                 gc.put("collection-count", gcMXBean.getCollectionCount());
                 gcs.add(gc);
             }
-            o.put("gcs", gcs);
+            o.putPOJO("gcs", gcs);
 
-            o.put("date", new Date());
+            o.put("date", new Date().toString());
             o.put("heap_init_size", heapUsage.getInit());
             o.put("heap_used_size", heapUsage.getUsed());
             o.put("heap_committed_size", heapUsage.getCommitted());
@@ -145,7 +146,7 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
         return o;
     }
 
-    private static void addIni(JSONObject o, Object configBean) throws JSONException {
+    private static void addIni(ObjectNode o, Object configBean)  {
         Map<String, Object> iniMap = new HashMap<>();
         for (Field f : configBean.getClass().getFields()) {
             Option option = f.getAnnotation(Option.class);
@@ -170,10 +171,10 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
                 }
             }
         }
-        o.put("ini", iniMap);
+        o.putPOJO("ini", iniMap);
     }
 
-    public JSONObject getDetail() {
+    public ObjectNode getDetail() {
         return detail;
     }
 }

@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.types;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class BuiltinType implements IAType {
 
@@ -63,8 +63,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ASTERIX_TYPE");
             return type;
         }
@@ -90,8 +91,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AInt8");
             return type;
         }
@@ -117,8 +119,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AInt16");
             return type;
         }
@@ -144,8 +147,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AInt32");
             return type;
         }
@@ -171,8 +175,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AInt64");
             return type;
         }
@@ -198,8 +203,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ABinary");
             return type;
         }
@@ -225,8 +231,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AFloat");
             return type;
         }
@@ -252,8 +259,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ADouble");
             return type;
         }
@@ -279,8 +287,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AString");
             return type;
         }
@@ -306,8 +315,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AMISSING");
             return type;
         }
@@ -333,8 +343,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ANULL");
             return type;
         }
@@ -360,8 +371,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ABoolean");
             return type;
         }
@@ -387,8 +399,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ATime");
             return type;
         }
@@ -414,8 +427,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ADate");
             return type;
         }
@@ -441,8 +455,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ADateTime");
             return type;
         }
@@ -468,8 +483,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ADuration");
             return type;
         }
@@ -495,8 +511,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "AYearMonthDuration");
             return type;
         }
@@ -522,8 +539,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ADayTimeDuration");
             return type;
         }
@@ -549,7 +567,7 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
+        public ObjectNode toJSON() {
             return null;
         }
     };
@@ -574,8 +592,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "APoint");
             return type;
         }
@@ -601,8 +620,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "APoint3D");
             return type;
         }
@@ -628,8 +648,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ALINE");
             return type;
         }
@@ -655,8 +676,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "APOLYGON");
             return type;
         }
@@ -682,8 +704,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ACIRCLE");
             return type;
         }
@@ -709,8 +732,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ARECTANGLE");
             return type;
         }
@@ -736,8 +760,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ABitArray");
             return type;
         }
@@ -762,8 +787,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", getDisplayName());
             return type;
         }
@@ -794,8 +820,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "ANY");
             return type;
         }
@@ -826,8 +853,9 @@ public abstract class BuiltinType implements IAType {
         }
 
         @Override
-        public JSONObject toJSON() throws JSONException {
-            JSONObject type = new JSONObject();
+        public ObjectNode toJSON() {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode type = om.createObjectNode();
             type.put("type", "SHORTWITHOUTTYPEINFO");
             return type;
         }

@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
@@ -42,12 +43,13 @@ public class ADayTimeDuration implements IAObject {
      * @see org.apache.hyracks.api.dataflow.value.JSONSerializable#toJSON()
      */
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
-        JSONObject duration = new JSONObject();
+        ObjectNode duration = om.createObjectNode();
         duration.put("milliseconds", chrononInMillisecond);
-        json.put("ADuration", duration);
+        json.set("ADuration", duration);
 
         return json;
     }

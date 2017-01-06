@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.om.base;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ABinary implements IAObject {
 
@@ -115,15 +115,16 @@ public class ABinary implements IAObject {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
         int start = getStart();
-        JSONArray byteArray = new JSONArray();
+        ArrayNode byteArray = om.createArrayNode();
         for (int i = 0; i < getLength(); i++) {
-            byteArray.put(bytes[start + i]);
+            byteArray.add(bytes[start + i]);
         }
-        json.put("ABinary", byteArray);
+        json.set("ABinary", byteArray);
 
         return json;
     }

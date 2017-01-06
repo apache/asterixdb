@@ -22,35 +22,35 @@ import java.util.logging.Level;
 
 public class ExternalProperties extends AbstractProperties {
 
-    private static final String EXTERNAL_WEBPORT_KEY = "web.port";
-    private static final int EXTERNAL_WEBPORT_DEFAULT = 19001;
+    public static final String EXTERNAL_WEBPORT_KEY = "web.port";
+    public static final int EXTERNAL_WEBPORT_DEFAULT = 19001;
 
-    private static final String EXTERNAL_SECONDARY_WEBPORT_KEY = "web.secondary.port";
-    private static final int EXTERNAL_SECONDARY_WEBPORT_DEFAULT = 19005;
+    public static final String EXTERNAL_SECONDARY_WEBPORT_KEY = "web.secondary.port";
+    public static final int EXTERNAL_SECONDARY_WEBPORT_DEFAULT = 19005;
 
-    private static final String QUERY_WEBPORT_KEY = "web.queryinterface.port";
-    private static final int QUERY_WEBPORT_DEFAULT = 19006;
+    public static final String QUERY_WEBPORT_KEY = "web.queryinterface.port";
+    public static final int QUERY_WEBPORT_DEFAULT = 19006;
 
-    private static final String EXTERNAL_LOGLEVEL_KEY = "log.level";
-    private static final Level EXTERNAL_LOGLEVEL_DEFAULT = Level.WARNING;
+    public static final String EXTERNAL_LOGLEVEL_KEY = "log.level";
+    public static final Level EXTERNAL_LOGLEVEL_DEFAULT = Level.WARNING;
 
-    private static final String EXTERNAL_APISERVER_KEY = "api.port";
-    private static final int EXTERNAL_APISERVER_DEFAULT = 19002;
+    public static final String EXTERNAL_APISERVER_KEY = "api.port";
+    public static final int EXTERNAL_APISERVER_DEFAULT = 19002;
 
-    private static final String EXTERNAL_FEEDSERVER_KEY = "feed.port";
-    private static final int EXTERNAL_FEEDSERVER_DEFAULT = 19003;
+    public static final String EXTERNAL_FEEDSERVER_KEY = "feed.port";
+    public static final int EXTERNAL_FEEDSERVER_DEFAULT = 19003;
 
-    private static final String EXTERNAL_CC_JAVA_OPTS_KEY = "cc.java.opts";
-    private static final String EXTERNAL_CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
+    public static final String EXTERNAL_CC_JAVA_OPTS_KEY = "cc.java.opts";
+    public static final String EXTERNAL_CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
-    private static final String EXTERNAL_NC_JAVA_OPTS_KEY = "nc.java.opts";
-    private static final String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
+    public static final String EXTERNAL_NC_JAVA_OPTS_KEY = "nc.java.opts";
+    public static final String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
 
-    private static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
-    private static final int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
+    public static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
+    public static final int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
 
-    private static final String EXTERNAL_PLOT_ACTIVATE = "plot.activate";
-    private static final boolean EXTERNAL_PLOT_ACTIVATE_DEFAULT = false;
+    public static final String EXTERNAL_PLOT_ACTIVATE = "plot.activate";
+    public static final boolean EXTERNAL_PLOT_ACTIVATE_DEFAULT = false;
 
     public ExternalProperties(PropertiesAccessor accessor) {
         super(accessor);
@@ -87,6 +87,7 @@ public class ExternalProperties extends AbstractProperties {
     }
 
     @PropertyKey(EXTERNAL_LOGLEVEL_KEY)
+    @Stringify
     public Level getLogLevel() {
         return accessor.getProperty(EXTERNAL_LOGLEVEL_KEY, EXTERNAL_LOGLEVEL_DEFAULT,
                 PropertyInterpreters.getLevelPropertyInterpreter());

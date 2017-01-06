@@ -25,10 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.job.JobId;
 
 public class JobProfile extends AbstractProfile {
@@ -62,16 +61,17 @@ public class JobProfile extends AbstractProfile {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
         json.put("job-id", jobId.toString());
         populateCounters(json);
-        JSONArray jobletsArray = new JSONArray();
+        ArrayNode jobletsArray = om.createArrayNode();
         for (JobletProfile p : jobletProfiles.values()) {
-            jobletsArray.put(p.toJSON());
+            jobletsArray.add(p.toJSON());
         }
-        json.put("joblets", jobletsArray);
+        json.set("joblets", jobletsArray);
 
         return json;
     }

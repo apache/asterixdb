@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.base.INodeController;
@@ -33,8 +35,6 @@ import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class NodeControllerState {
     private static final int RRD_SIZE = 720;
@@ -277,13 +277,13 @@ public class NodeControllerState {
     public NetworkAddress getMessagingPort() {
         return messagingPort;
     }
-
     public int getNumCores() {
         return numCores;
     }
 
-    public synchronized JSONObject toSummaryJSON() throws JSONException {
-        JSONObject o = new JSONObject();
+    public synchronized ObjectNode toSummaryJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode o = om.createObjectNode();
         o.put("node-id", ncConfig.nodeId);
         o.put("heap-used", heapUsedSize[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
         o.put("system-load-average", systemLoadAverage[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
@@ -291,8 +291,9 @@ public class NodeControllerState {
         return o;
     }
 
-    public synchronized JSONObject toDetailedJSON(boolean includeStats, boolean includeConfig) throws JSONException {
-        JSONObject o = new JSONObject();
+    public synchronized ObjectNode toDetailedJSON(boolean includeStats, boolean includeConfig)  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode o = om.createObjectNode();
 
         o.put("node-id", ncConfig.nodeId);
 
@@ -304,45 +305,45 @@ public class NodeControllerState {
             o.put("vm-name", vmName);
             o.put("vm-version", vmVersion);
             o.put("vm-vendor", vmVendor);
-            o.put("classpath", classpath.split(File.pathSeparator));
-            o.put("library-path", libraryPath.split(File.pathSeparator));
-            o.put("boot-classpath", bootClasspath.split(File.pathSeparator));
-            o.put("input-arguments", inputArguments);
-            o.put("system-properties", systemProperties);
+            o.putPOJO("classpath", classpath.split(File.pathSeparator));
+            o.putPOJO("library-path", libraryPath.split(File.pathSeparator));
+            o.putPOJO("boot-classpath", bootClasspath.split(File.pathSeparator));
+            o.putPOJO("input-arguments", inputArguments);
+            o.putPOJO("system-properties", systemProperties);
             o.put("pid", pid);
         }
         if (includeStats) {
-            o.put("date", new Date());
+            o.putPOJO("date", new Date());
             o.put("rrd-ptr", rrdPtr);
-            o.put("heartbeat-times", hbTime);
-            o.put("heap-init-sizes", heapInitSize);
-            o.put("heap-used-sizes", heapUsedSize);
-            o.put("heap-committed-sizes", heapCommittedSize);
-            o.put("heap-max-sizes", heapMaxSize);
-            o.put("nonheap-init-sizes", nonheapInitSize);
-            o.put("nonheap-used-sizes", nonheapUsedSize);
-            o.put("nonheap-committed-sizes", nonheapCommittedSize);
-            o.put("nonheap-max-sizes", nonheapMaxSize);
-            o.put("thread-counts", threadCount);
-            o.put("peak-thread-counts", peakThreadCount);
-            o.put("system-load-averages", systemLoadAverage);
-            o.put("gc-names", gcNames);
-            o.put("gc-collection-counts", gcCollectionCounts);
-            o.put("gc-collection-times", gcCollectionTimes);
-            o.put("net-payload-bytes-read", netPayloadBytesRead);
-            o.put("net-payload-bytes-written", netPayloadBytesWritten);
-            o.put("net-signaling-bytes-read", netSignalingBytesRead);
-            o.put("net-signaling-bytes-written", netSignalingBytesWritten);
-            o.put("dataset-net-payload-bytes-read", datasetNetPayloadBytesRead);
-            o.put("dataset-net-payload-bytes-written", datasetNetPayloadBytesWritten);
-            o.put("dataset-net-signaling-bytes-read", datasetNetSignalingBytesRead);
-            o.put("dataset-net-signaling-bytes-written", datasetNetSignalingBytesWritten);
-            o.put("ipc-messages-sent", ipcMessagesSent);
-            o.put("ipc-message-bytes-sent", ipcMessageBytesSent);
-            o.put("ipc-messages-received", ipcMessagesReceived);
-            o.put("ipc-message-bytes-received", ipcMessageBytesReceived);
-            o.put("disk-reads", diskReads);
-            o.put("disk-writes", diskWrites);
+            o.putPOJO("heartbeat-times", hbTime);
+            o.putPOJO("heap-init-sizes", heapInitSize);
+            o.putPOJO("heap-used-sizes", heapUsedSize);
+            o.putPOJO("heap-committed-sizes", heapCommittedSize);
+            o.putPOJO("heap-max-sizes", heapMaxSize);
+            o.putPOJO("nonheap-init-sizes", nonheapInitSize);
+            o.putPOJO("nonheap-used-sizes", nonheapUsedSize);
+            o.putPOJO("nonheap-committed-sizes", nonheapCommittedSize);
+            o.putPOJO("nonheap-max-sizes", nonheapMaxSize);
+            o.putPOJO("thread-counts", threadCount);
+            o.putPOJO("peak-thread-counts", peakThreadCount);
+            o.putPOJO("system-load-averages", systemLoadAverage);
+            o.putPOJO("gc-names", gcNames);
+            o.putPOJO("gc-collection-counts", gcCollectionCounts);
+            o.putPOJO("gc-collection-times", gcCollectionTimes);
+            o.putPOJO("net-payload-bytes-read", netPayloadBytesRead);
+            o.putPOJO("net-payload-bytes-written", netPayloadBytesWritten);
+            o.putPOJO("net-signaling-bytes-read", netSignalingBytesRead);
+            o.putPOJO("net-signaling-bytes-written", netSignalingBytesWritten);
+            o.putPOJO("dataset-net-payload-bytes-read", datasetNetPayloadBytesRead);
+            o.putPOJO("dataset-net-payload-bytes-written", datasetNetPayloadBytesWritten);
+            o.putPOJO("dataset-net-signaling-bytes-read", datasetNetSignalingBytesRead);
+            o.putPOJO("dataset-net-signaling-bytes-written", datasetNetSignalingBytesWritten);
+            o.putPOJO("ipc-messages-sent", ipcMessagesSent);
+            o.putPOJO("ipc-message-bytes-sent", ipcMessageBytesSent);
+            o.putPOJO("ipc-messages-received", ipcMessagesReceived);
+            o.putPOJO("ipc-message-bytes-received", ipcMessageBytesReceived);
+            o.putPOJO("disk-reads", diskReads);
+            o.putPOJO("disk-writes", diskWrites);
         }
 
         return o;

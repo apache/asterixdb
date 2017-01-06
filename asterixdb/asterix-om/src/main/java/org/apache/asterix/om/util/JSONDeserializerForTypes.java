@@ -23,9 +23,11 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import com.google.common.collect.Lists;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -43,26 +45,26 @@ public class JSONDeserializerForTypes {
      * @return an valid AsterixDB type.
      * @throws Exception
      */
-    public static IAType convertFromJSON(JSONObject typeInJSON) throws Exception {
-        String typeName = typeInJSON.getString("type");
+    public static IAType convertFromJSON(JsonNode typeInJSON) throws Exception {
+        String typeName = typeInJSON.get("type").asText();
         // Deals with ordered list.
         if (typeName.equals(AOrderedListType.class.getName())) {
-            IAType itemType = convertFromJSON((JSONObject) typeInJSON.get("item-type"));
+            IAType itemType = convertFromJSON(typeInJSON.get("item-type"));
             return new AOrderedListType(itemType, "ordered-list");
         }
 
         // Deals with unordered list.
         if (typeName.equals(AUnorderedListType.class.getName())) {
-            IAType itemType = convertFromJSON((JSONObject) typeInJSON.get("item-type"));
+            IAType itemType = convertFromJSON(typeInJSON.get("item-type"));
             return new AUnorderedListType(itemType, "unordered-list");
         }
 
         // Deals with Union Type.
         if (typeName.equals(AUnionType.class.getName())) {
             List<IAType> unionTypes = new ArrayList<IAType>();
-            JSONArray fields = (JSONArray) typeInJSON.get("fields");
-            for (int i = 0; i < fields.length(); i++) {
-                JSONObject fieldType = (JSONObject) fields.get(i);
+            JsonNode fields = typeInJSON.get("fields");
+            for (int i = 0; i < fields.size(); i++) {
+                JsonNode fieldType = fields.get(i);
                 unionTypes.add(convertFromJSON(fieldType));
             }
             return new AUnionType(unionTypes, "union");
@@ -70,17 +72,17 @@ public class JSONDeserializerForTypes {
 
         // Deals with record types.
         if (typeName.equals(ARecordType.class.getName())) {
-            String name = typeInJSON.getString("name");
-            boolean openType = typeInJSON.getBoolean("open");
-            JSONArray fields = typeInJSON.getJSONArray("fields");
-            String[] fieldNames = new String[fields.length()];
-            IAType[] fieldTypes = new IAType[fields.length()];
-            for (int i = 0; i < fields.length(); ++i) {
-                JSONObject field = (JSONObject) fields.get(i);
-                JSONArray names = field.names();
-                String fieldName = names.getString(0);
+            String name = typeInJSON.get("name").asText();
+            boolean openType = typeInJSON.get("open").asBoolean();
+            JsonNode fields = typeInJSON.get("fields");
+            String[] fieldNames = new String[fields.size()];
+            IAType[] fieldTypes = new IAType[fields.size()];
+            for (int i = 0; i < fields.size(); ++i) {
+                JsonNode field = fields.get(i);
+                List<String> names = Lists.newArrayList(field.fieldNames());
+                String fieldName = names.get(0);
                 fieldNames[i] = fieldName;
-                fieldTypes[i] = convertFromJSON((JSONObject) field.get(fieldName));
+                fieldTypes[i] = convertFromJSON(field.get(fieldName));
             }
             return new ARecordType(name, fieldNames, fieldTypes, openType);
         }

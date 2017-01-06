@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.api.common;
 
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
@@ -30,6 +29,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
@@ -90,7 +90,6 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.json.JSONException;
 
 /**
  * Provides helper methods for compilation of a query into a JobSpec and submission
@@ -161,9 +160,8 @@ public class APIFramework {
         return new Pair<>(q, q.getVarCounter());
     }
 
-    public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector,
-            MetadataProvider metadataProvider, Query rwQ, int varCounter, String outputDatasetName,
-            SessionConfig conf, ICompiledDmlStatement statement)
+    public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
+            Query rwQ, int varCounter, String outputDatasetName, SessionConfig conf, ICompiledDmlStatement statement)
             throws AlgebricksException, RemoteException, ACIDException {
 
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
@@ -178,8 +176,8 @@ public class APIFramework {
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
         metadataProvider.setJobId(asterixJobId);
-        ILangExpressionToPlanTranslator t =
-                translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter);
+        ILangExpressionToPlanTranslator t = translatorFactory.createExpressionToPlanTranslator(metadataProvider,
+                varCounter);
 
         ILogicalPlan plan;
         // statement = null when it's a query
@@ -217,8 +215,8 @@ public class APIFramework {
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalGroupBy(groupFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesForJoin(joinFrameLimit);
 
-        HeuristicCompilerFactoryBuilder builder =
-                new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
+        HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
+                OptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
         builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites());
         builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites());
@@ -304,16 +302,17 @@ public class APIFramework {
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        JobEventListenerFactory jobEventListenerFactory =
-                new JobEventListenerFactory(asterixJobId, metadataProvider.isWriteTransaction());
+        JobEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
+                metadataProvider.isWriteTransaction());
         JobSpecification spec = compiler.createJob(AppContextInfo.INSTANCE, jobEventListenerFactory);
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             printPlanPrefix(conf, "Hyracks job");
             if (rwQ != null) {
                 try {
-                    conf.out().println(spec.toJSON().toString(1));
-                } catch (JSONException e) {
+                    conf.out().println(
+                            new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(spec.toJSON()));
+                } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }
                 conf.out().println(spec.getUserConstraints());

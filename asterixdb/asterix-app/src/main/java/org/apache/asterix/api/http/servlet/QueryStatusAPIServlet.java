@@ -29,14 +29,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.dataset.HyracksDataset;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class QueryStatusAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -61,10 +62,11 @@ public class QueryStatusAPIServlet extends HttpServlet {
                     context.setAttribute(HYRACKS_DATASET_ATTR, hds);
                 }
             }
-            JSONObject handleObj = new JSONObject(strHandle);
-            JSONArray handle = handleObj.getJSONArray("handle");
-            JobId jobId = new JobId(handle.getLong(0));
-            ResultSetId rsId = new ResultSetId(handle.getLong(1));
+            ObjectMapper om = new ObjectMapper();
+            JsonNode handleObj = om.readTree(strHandle);
+            JsonNode handle = handleObj.get("handle");
+            JobId jobId = new JobId(handle.get(0).asLong());
+            ResultSetId rsId = new ResultSetId(handle.get(1).asLong());
 
             /* TODO(madhusudancs): We need to find a way to LOSSLESS_JSON serialize default format obtained from
              * metadataProvider in the AQLTranslator and store it as part of the result handle.
@@ -72,7 +74,7 @@ public class QueryStatusAPIServlet extends HttpServlet {
             ResultReader resultReader = new ResultReader(hds);
             resultReader.open(jobId, rsId);
 
-            JSONObject jsonResponse = new JSONObject();
+            ObjectNode jsonResponse = om.createObjectNode();
             String status;
             switch (resultReader.getStatus()) {
                 case RUNNING:

@@ -18,8 +18,8 @@
  */
 package org.apache.hyracks.control.cc.web.util;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IJSONOutputFunction {
-    public JSONObject invoke(String[] arguments) throws Exception;
+    public ObjectNode invoke(String[] arguments) throws Exception;
 }

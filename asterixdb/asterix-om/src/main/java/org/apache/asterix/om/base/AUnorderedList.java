@@ -21,13 +21,13 @@ package org.apache.asterix.om.base;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AUnorderedList implements IACollection {
 
@@ -117,14 +117,15 @@ public class AUnorderedList implements IACollection {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
-        JSONArray list = new JSONArray();
+        ArrayNode list = om.createArrayNode();
         for (IAObject v : values) {
-            list.put(v.toJSON());
+            list.add(v.toJSON());
         }
-        json.put("AUnorderedList", list);
+        json.set("AUnorderedList", list);
 
         return json;
     }

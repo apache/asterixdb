@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.om.base;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ARecord implements IAObject {
     public static final ARecord EMPTY_OPEN_RECORD = new ARecord(ARecordType.FULLY_OPEN_RECORD_TYPE, new IAObject[] {});
@@ -104,16 +105,17 @@ public class ARecord implements IAObject {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
 
-        JSONArray record = new JSONArray();
+        ArrayNode record = om.createArrayNode();
         for (int i = 0; i < fields.length; i++) {
-            JSONObject item = new JSONObject();
-            item.put(type.getFieldNames()[i], fields[i]);
-            record.put(item);
+            ObjectNode item = om.createObjectNode();
+            item.set(type.getFieldNames()[i], fields[i].toJSON());
+            record.add(item);
         }
-        json.put("ARecord", record);
+        json.set("ARecord", record);
 
         return json;
     }

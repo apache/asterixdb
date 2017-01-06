@@ -18,7 +18,8 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import org.json.JSONArray;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
@@ -26,7 +27,7 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetNodeSummariesJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private JSONArray summaries;
+    private ArrayNode summaries;
 
     public GetNodeSummariesJSONWork(ClusterControllerService ccs) {
         this.ccs = ccs;
@@ -34,13 +35,14 @@ public class GetNodeSummariesJSONWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        summaries = new JSONArray();
+        ObjectMapper om = new ObjectMapper();
+        summaries = om.createArrayNode();
         for (NodeControllerState ncs : ccs.getNodeMap().values()) {
-            summaries.put(ncs.toSummaryJSON());
+            summaries.add(ncs.toSummaryJSON());
         }
     }
 
-    public JSONArray getSummaries() {
+    public ArrayNode getSummaries() {
         return summaries;
     }
 }

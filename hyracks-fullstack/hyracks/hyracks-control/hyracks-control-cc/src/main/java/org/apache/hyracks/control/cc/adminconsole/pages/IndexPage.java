@@ -18,22 +18,23 @@
  */
 package org.apache.hyracks.control.cc.adminconsole.pages;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.web.util.JSONUtils;
 import org.apache.hyracks.control.cc.work.GetJobSummariesJSONWork;
 import org.apache.hyracks.control.cc.work.GetNodeSummariesJSONWork;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 public class IndexPage extends AbstractPage {
     private static final long serialVersionUID = 1L;
@@ -43,49 +44,42 @@ public class IndexPage extends AbstractPage {
 
         GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs);
         ccs.getWorkQueue().scheduleAndSync(gnse);
-        JSONArray nodeSummaries = gnse.getSummaries();
-        add(new Label("node-count", String.valueOf(nodeSummaries.length())));
-        ListView<JSONObject> nodeList = new ListView<JSONObject>("node-list", JSONUtils.toList(nodeSummaries)) {
+        ArrayNode nodeSummaries = gnse.getSummaries();
+        add(new Label("node-count", String.valueOf(nodeSummaries.size())));
+        ListView<JsonNode> nodeList = new ListView<JsonNode>("node-list",
+                Lists.newArrayList(nodeSummaries.iterator())) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(ListItem<JSONObject> item) {
-                JSONObject o = item.getModelObject();
-                try {
-                    item.add(new Label("node-id", o.getString("node-id")));
-                    item.add(new Label("heap-used", o.getString("heap-used")));
-                    item.add(new Label("system-load-average", o.getString("system-load-average")));
-                    PageParameters params = new PageParameters();
-                    params.add("node-id", o.getString("node-id"));
-                    item.add(new BookmarkablePageLink<Object>("node-details", NodeDetailsPage.class, params));
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                }
+            protected void populateItem(ListItem<JsonNode> item) {
+                JsonNode o = item.getModelObject();
+                item.add(new Label("node-id", o.get("node-id").asText()));
+                item.add(new Label("heap-used", o.get("heap-used").asText()));
+                item.add(new Label("system-load-average", o.get("system-load-average").asText()));
+                PageParameters params = new PageParameters();
+                params.add("node-id", o.get("node-id").asText());
+                item.add(new BookmarkablePageLink<Object>("node-details", NodeDetailsPage.class, params));
             }
         };
         add(nodeList);
 
         GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs);
         ccs.getWorkQueue().scheduleAndSync(gjse);
-        JSONArray jobSummaries = gjse.getSummaries();
-        ListView<JSONObject> jobList = new ListView<JSONObject>("jobs-list", JSONUtils.toList(jobSummaries)) {
+        ArrayNode jobSummaries = gjse.getSummaries();
+        ListView<JsonNode> jobList = new ListView<JsonNode>("jobs-list", Lists.newArrayList(jobSummaries.iterator())) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(ListItem<JSONObject> item) {
-                JSONObject o = item.getModelObject();
-                try {
-                    item.add(new Label("job-id", o.getString("job-id")));
-                    item.add(new Label("status", o.getString("status")));
-                    item.add(new Label("create-time", longToDateString(Long.parseLong(o.getString("create-time")))));
-                    item.add(new Label("start-time", longToDateString(Long.parseLong(o.getString("start-time")))));
-                    item.add(new Label("end-time", longToDateString(Long.parseLong(o.getString("end-time")))));
-                    PageParameters params = new PageParameters();
-                    params.add("job-id", o.getString("job-id"));
-                    item.add(new BookmarkablePageLink<Object>("job-details", JobDetailsPage.class, params));
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                }
+            protected void populateItem(ListItem<JsonNode> item) {
+                JsonNode o = item.getModelObject();
+                item.add(new Label("job-id", o.get("job-id").asText()));
+                item.add(new Label("status", o.get("status").asText()));
+                item.add(new Label("create-time", longToDateString(Long.parseLong(o.get("create-time").asText()))));
+                item.add(new Label("start-time", longToDateString(Long.parseLong(o.get("start-time").asText()))));
+                item.add(new Label("end-time", longToDateString(Long.parseLong(o.get("end-time").asText()))));
+                PageParameters params = new PageParameters();
+                params.add("job-id", o.get("job-id"));
+                item.add(new BookmarkablePageLink<Object>("job-details", JobDetailsPage.class, params));
             }
         };
         add(jobList);

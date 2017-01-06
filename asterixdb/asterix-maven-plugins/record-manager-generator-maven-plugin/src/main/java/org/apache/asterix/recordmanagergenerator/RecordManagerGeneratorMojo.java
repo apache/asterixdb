@@ -33,7 +33,6 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.json.JSONException;
 
 /**
  * @goal generate-record-manager
@@ -95,8 +94,6 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
                 type.addToMap(typeMap);
             } catch (FileNotFoundException fnfe) {
                 throw new MojoExecutionException("could not find type description file " + inputFiles[i], fnfe);
-            } catch (JSONException jse) {
-                throw new MojoExecutionException("could not parse type description file " + inputFiles[i], jse);
             } catch (IOException e) {
                 throw new MojoExecutionException("error closing type description file " + inputFiles[i], e);
             }

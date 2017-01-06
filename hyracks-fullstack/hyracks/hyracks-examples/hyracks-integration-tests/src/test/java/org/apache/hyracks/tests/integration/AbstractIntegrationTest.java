@@ -137,7 +137,7 @@ public abstract class AbstractIntegrationTest {
 
     protected JobId executeTest(JobSpecification spec) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(spec.toJSON().toString(2));
+            LOGGER.info(spec.toJSON().asText());
         }
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         if (LOGGER.isLoggable(Level.INFO)) {

@@ -31,18 +31,20 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.*;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.test.base.ComparisonException;
@@ -67,9 +69,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.util.StorageUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TestExecutor {
 
@@ -398,9 +398,10 @@ public class TestExecutor {
             try {
                 // First try to parse the response for a JSON error response.
 
-                JSONObject result = new JSONObject(errorBody);
-                String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                        result.getString("stacktrace") };
+                ObjectMapper om = new ObjectMapper();
+                JsonNode result = om.readTree(errorBody);
+                String[] errors = { result.get("error-code").asText(), result.get("summary").asText(),
+                        result.get("stacktrace").asText() };
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
                 exceptionMsg = "HTTP operation failed: " + errors[0] + "\nSTATUS LINE: " + httpResponse.getStatusLine()
                         + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2];
@@ -540,15 +541,16 @@ public class TestExecutor {
             throw new NullPointerException("Statement parameter required.");
         }
         RequestBuilder builder = RequestBuilder.post(endpoint);
-        JSONObject content = new JSONObject();
-        try {
-            for (CompilationUnit.Parameter param : injectStatement(statement, stmtParam, otherParams)) {
-                content.put(param.getName(), param.getValue());
-            }
-        } catch (JSONException e) {
-            throw new IllegalArgumentException("Request object construction failed.", e);
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode content = om.createObjectNode();
+        for (CompilationUnit.Parameter param : injectStatement(statement, stmtParam, otherParams)) {
+            content.put(param.getName(), param.getValue());
         }
-        builder.setEntity(new StringEntity(content.toString(), ContentType.APPLICATION_JSON));
+        try {
+            builder.setEntity(new StringEntity(om.writeValueAsString(content), ContentType.APPLICATION_JSON));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
     }
@@ -1024,11 +1026,11 @@ public class TestExecutor {
         StringWriter actual = new StringWriter();
         IOUtils.copy(executeJSONGet, actual, StandardCharsets.UTF_8);
         String config = actual.toString();
-        String nodePid = StringUtils.substringBetween(config, "\"pid\": ", ",").trim();
-        if (nodePid == null) {
-            throw new IllegalArgumentException("Coud not find process for node id: " + nodeId);
+        int nodePid = new ObjectMapper().readValue(config, ObjectNode.class).get("pid").asInt();
+        if (nodePid <= 1) {
+            throw new IllegalArgumentException("Could not retrieve node pid from admin API");
         }
-        ProcessBuilder pb = new ProcessBuilder("kill", "-9", nodePid);
+        ProcessBuilder pb = new ProcessBuilder("kill", "-9", Integer.toString(nodePid));
         pb.start().waitFor();
     }
 
@@ -1122,15 +1124,22 @@ public class TestExecutor {
             ArrayList<String> toBeDropped = new ArrayList<>();
             InputStream resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;",
                     getEndpoint(Servlets.QUERY_SERVICE));
-            resultStream = ResultExtractor.extract(resultStream);
-            StringWriter sw = new StringWriter();
-            IOUtils.copy(resultStream, sw, StandardCharsets.UTF_8.name());
-            JSONArray result = new JSONArray(sw.toString());
-            for (int i = 0; i < result.length(); ++i) {
-                JSONObject json = result.getJSONObject(i);
-                String dvName = json.getString("DataverseName");
-                if (!dvName.equals("Metadata") && !dvName.equals("Default")) {
-                    toBeDropped.add(dvName);
+            String out = IOUtils.toString(resultStream);
+            ObjectMapper om = new ObjectMapper();
+            om.setConfig(om.getDeserializationConfig().with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT));
+            JsonNode result;
+            try {
+                result = om.readValue(out, ObjectNode.class).get("results");
+            } catch (JsonMappingException e) {
+                result = om.createArrayNode();
+            }
+            for (int i = 0; i < result.size(); i++) {
+                JsonNode json = result.get(i);
+                if (json != null) {
+                    String dvName = json.get("DataverseName").asText();
+                    if (!dvName.equals("Metadata") && !dvName.equals("Default")) {
+                        toBeDropped.add(dvName);
+                    }
                 }
             }
             if (!toBeDropped.isEmpty()) {
@@ -1151,4 +1160,5 @@ public class TestExecutor {
             throw th;
         }
     }
+
 }

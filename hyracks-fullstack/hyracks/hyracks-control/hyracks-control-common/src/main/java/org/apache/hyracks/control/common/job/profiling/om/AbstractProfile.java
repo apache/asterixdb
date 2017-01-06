@@ -26,9 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.hyracks.api.io.IWritable;
 
@@ -45,17 +45,18 @@ public abstract class AbstractProfile implements IWritable, Serializable {
         return counters;
     }
 
-    public abstract JSONObject toJSON() throws JSONException;
+    public abstract ObjectNode toJSON() ;
 
-    protected void populateCounters(JSONObject jo) throws JSONException {
-        JSONArray countersObj = new JSONArray();
+    protected void populateCounters(ObjectNode jo) {
+        ObjectMapper om = new ObjectMapper();
+        ArrayNode countersObj = om.createArrayNode();
         for (Map.Entry<String, Long> e : counters.entrySet()) {
-            JSONObject jpe = new JSONObject();
+            ObjectNode jpe = om.createObjectNode();
             jpe.put("name", e.getKey());
             jpe.put("value", e.getValue());
-            countersObj.put(jpe);
+            countersObj.add(jpe);
         }
-        jo.put("counters", countersObj);
+        jo.set("counters", countersObj);
     }
 
     protected void merge(AbstractProfile profile) {

@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -293,6 +294,7 @@ public class QueryServiceServlet extends HttpServlet {
     private static SessionConfig createSessionConfig(RequestParameters param, PrintWriter resultWriter) {
         SessionConfig.ResultDecorator resultPrefix = new SessionConfig.ResultDecorator() {
             int resultNo = -1;
+
             @Override
             public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
                 app.append("\t\"");
@@ -306,16 +308,24 @@ public class QueryServiceServlet extends HttpServlet {
             }
         };
 
+
         SessionConfig.ResultDecorator resultPostfix = (AlgebricksAppendable app) -> app.append("\t,\n");
 
-        SessionConfig.ResultDecorator handlePrefix = (AlgebricksAppendable app) -> app.append("\t\"").append
-                (ResultFields.HANDLE.str()).append("\": ");
+        SessionConfig.ResultDecorator handlePrefix = new SessionConfig.ResultDecorator() {
+            @Override
+            public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
+                app.append("\t\"");
+                app.append(ResultFields.HANDLE.str());
+                app.append("\": ");
+                return app;
+            }
+        };
 
         SessionConfig.ResultDecorator handlePostfix = (AlgebricksAppendable app) -> app.append(",\n");
 
         SessionConfig.OutputFormat format = getFormat(param.format);
-        SessionConfig sessionConfig = new SessionConfig(resultWriter, format, resultPrefix, resultPostfix,
-                handlePrefix, handlePostfix);
+        SessionConfig sessionConfig = new SessionConfig(resultWriter, format, resultPrefix, resultPostfix, handlePrefix,
+                handlePostfix);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
@@ -376,7 +386,7 @@ public class QueryServiceServlet extends HttpServlet {
         printField(pw, ResultFields.STATUS.str(), rs.str());
     }
 
-    private static void printError(PrintWriter pw, Throwable e) {
+    private static void printError(PrintWriter pw, Throwable e) throws JsonProcessingException {
         Throwable rootCause = ResultUtil.getRootCause(e);
         if (rootCause == null) {
             rootCause = e;
@@ -386,16 +396,10 @@ public class QueryServiceServlet extends HttpServlet {
         pw.print(ResultFields.ERRORS.str());
         pw.print("\": [{ \n");
         printField(pw, ErrorField.CODE.str(), "1");
+
         final String msg = rootCause.getMessage();
         printField(pw, ErrorField.MSG.str(), JSONUtil.escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
                 addStack);
-        if (addStack) {
-            StringWriter sw = new StringWriter();
-            PrintWriter stackWriter = new PrintWriter(sw);
-            LOGGER.info(stackWriter.toString());
-            stackWriter.close();
-            printField(pw, ErrorField.STACK.str(), JSONUtil.escape(sw.toString()), false);
-        }
         pw.print("\t}],\n");
     }
 

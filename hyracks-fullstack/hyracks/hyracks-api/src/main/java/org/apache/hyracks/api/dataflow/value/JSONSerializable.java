@@ -18,14 +18,14 @@
  */
 package org.apache.hyracks.api.dataflow.value;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface JSONSerializable {
     /**
      * Returns the JSON representation of the object.
      *
-     * @return A new JSONObject instance representing this Java object.
+     * @return A om.createObjectNode instance representing this Java object.
      */
-    public JSONObject toJSON() throws JSONException;
+    public ObjectNode toJSON() ;
 }

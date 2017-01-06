@@ -46,10 +46,5 @@
       <artifactId>hyracks-api</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 </project>

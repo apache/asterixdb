@@ -20,8 +20,7 @@ package org.apache.asterix.om.base;
 
 import java.io.IOException;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
@@ -156,7 +155,7 @@ public class AInterval implements IAObject {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
+    public ObjectNode toJSON()  {
         // TODO(madhusudancs): Remove this method when a printer based JSON serializer is implemented.
         return null;
     }

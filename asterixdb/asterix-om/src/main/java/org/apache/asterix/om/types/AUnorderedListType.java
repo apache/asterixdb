@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.om.types;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IAObject;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AUnorderedListType extends AbstractCollectionType {
 
@@ -77,10 +77,11 @@ public class AUnorderedListType extends AbstractCollectionType {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject type = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode type = om.createObjectNode();
         type.put("type", AUnorderedListType.class.getName());
-        type.put("item-type", itemType.toJSON());
+        type.set("item-type", itemType.toJSON());
         return type;
     }
 }

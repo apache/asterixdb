@@ -18,20 +18,20 @@
  */
 package org.apache.asterix.external.parser;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.ListBuilderFactory;
-import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
+import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
@@ -40,12 +40,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringWriter;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Iterator;
 
 public class TweetParser extends AbstractDataParser implements IRecordDataParser<String> {
     private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<>(
@@ -62,119 +60,83 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
         aPoint = new AMutablePoint(0, 0);
     }
 
-    private void parseJSONArray(JSONArray jArray, DataOutput output, AOrderedListType orderedListType)
-            throws IOException, JSONException {
+    private void parseUnorderedList(JsonNode jArray, DataOutput output) throws IOException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
-        OrderedListBuilder orderedList = (OrderedListBuilder) getOrderedListBuilder();
+        UnorderedListBuilder unorderedListBuilder = (UnorderedListBuilder) getUnorderedListBuilder();
 
-        orderedList.reset(orderedListType);
-        for (int iter1 = 0; iter1 < jArray.length(); iter1++) {
+        unorderedListBuilder.reset(null);
+        for (int iter1 = 0; iter1 < jArray.size(); iter1++) {
             itemBuffer.reset();
-            if (writeField(jArray.get(iter1), orderedListType == null ? null : orderedListType.getItemType(),
-                    itemBuffer.getDataOutput())) {
-                orderedList.addItem(itemBuffer);
+            if (writeField(jArray.get(iter1), null, itemBuffer.getDataOutput())) {
+                unorderedListBuilder.addItem(itemBuffer);
             }
         }
-        orderedList.write(output, true);
+        unorderedListBuilder.write(output, true);
     }
 
-    private boolean writeFieldWithFieldType(Object fieldObj, IAType fieldType, DataOutput out)
-            throws HyracksDataException {
+    private boolean writeField(JsonNode fieldObj, IAType fieldType, DataOutput out) throws IOException {
         boolean writeResult = true;
-        IAType chkFieldType;
-        chkFieldType = fieldType instanceof AUnionType ? ((AUnionType) fieldType).getActualType() : fieldType;
-        try {
-            switch (chkFieldType.getTypeTag()) {
+        if (fieldType != null) {
+            switch (fieldType.getTypeTag()) {
                 case STRING:
-                    out.write(fieldType.getTypeTag().serialize());
-                    utf8Writer.writeUTF8(fieldObj.toString(), out);
+                    out.write(BuiltinType.ASTRING.getTypeTag().serialize());
+                    utf8Writer.writeUTF8(fieldObj.asText(), out);
                     break;
                 case INT64:
-                    out.write(fieldType.getTypeTag().serialize());
-                    if (fieldObj instanceof Integer) {
-                        out.writeLong(((Integer) fieldObj).longValue());
-                    } else {
-                        out.writeLong((Long) fieldObj);
-                    }
+                    aInt64.setValue(fieldObj.asLong());
                     int64Serde.serialize(aInt64, out);
                     break;
                 case INT32:
-                    out.write(fieldType.getTypeTag().serialize());
-                    out.writeInt((Integer) fieldObj);
+                    out.write(BuiltinType.AINT32.getTypeTag().serialize());
+                    out.writeInt(fieldObj.asInt());
                     break;
                 case DOUBLE:
-                    out.write(fieldType.getTypeTag().serialize());
-                    out.writeDouble((Double) fieldObj);
+                    out.write(BuiltinType.ADOUBLE.getTypeTag().serialize());
+                    out.writeDouble(fieldObj.asDouble());
                     break;
                 case BOOLEAN:
-                    out.write(fieldType.getTypeTag().serialize());
-                    out.writeBoolean((Boolean) fieldObj);
+                    out.write(BuiltinType.ABOOLEAN.getTypeTag().serialize());
+                    out.writeBoolean(fieldObj.asBoolean());
                     break;
                 case RECORD:
-                    if (((JSONObject) fieldObj).length() != 0) {
-                        writeResult = writeRecord((JSONObject) fieldObj, out, (ARecordType) chkFieldType);
-                    } else {
-                        writeResult = false;
-                    }
-                    break;
-                case ORDEREDLIST:
-                    if (((JSONArray) fieldObj).length() != 0) {
-                        parseJSONArray((JSONArray) fieldObj, out, (AOrderedListType) chkFieldType);
-                    } else {
-                        writeResult = false;
-                    }
+                    writeRecord(fieldObj, out, (ARecordType) fieldType);
                     break;
                 default:
                     writeResult = false;
             }
-        } catch (IOException | JSONException e) {
-            throw new HyracksDataException(e);
-        }
-        return writeResult;
-    }
-
-    private boolean writeFieldWithoutFieldType(Object fieldObj, DataOutput out) throws HyracksDataException {
-        boolean writeResult = true;
-        try {
-            if (fieldObj == JSONObject.NULL) {
+        } else {
+            if (fieldObj.isNull()) {
                 nullSerde.serialize(ANull.NULL, out);
-            } else if (fieldObj instanceof Integer) {
+            } else if (fieldObj.isInt()) {
                 out.write(BuiltinType.AINT32.getTypeTag().serialize());
-                out.writeInt((Integer) fieldObj);
-            } else if (fieldObj instanceof Boolean) {
+                out.writeInt(fieldObj.asInt());
+            } else if (fieldObj.isBoolean()) {
                 out.write(BuiltinType.ABOOLEAN.getTypeTag().serialize());
-                out.writeBoolean((Boolean) fieldObj);
-            } else if (fieldObj instanceof Double) {
+                out.writeBoolean(fieldObj.asBoolean());
+            } else if (fieldObj.isDouble()) {
                 out.write(BuiltinType.ADOUBLE.getTypeTag().serialize());
-                out.writeDouble((Double) fieldObj);
-            } else if (fieldObj instanceof Long) {
+                out.writeDouble(fieldObj.asDouble());
+            } else if (fieldObj.isLong()) {
                 out.write(BuiltinType.AINT64.getTypeTag().serialize());
-                out.writeLong((Long) fieldObj);
-            } else if (fieldObj instanceof String) {
+                out.writeLong(fieldObj.asLong());
+            } else if (fieldObj.isTextual()) {
                 out.write(BuiltinType.ASTRING.getTypeTag().serialize());
-                utf8Writer.writeUTF8((String) fieldObj, out);
-            } else if (fieldObj instanceof JSONArray) {
-                if (((JSONArray) fieldObj).length() != 0) {
-                    parseJSONArray((JSONArray) fieldObj, out, null);
+                utf8Writer.writeUTF8(fieldObj.asText(), out);
+            } else if (fieldObj.isArray()) {
+                if ((fieldObj).size() != 0) {
+                    parseUnorderedList(fieldObj, out);
                 } else {
                     writeResult = false;
                 }
-            } else if (fieldObj instanceof JSONObject) {
-                if (((JSONObject) fieldObj).length() != 0) {
-                    writeResult = writeRecord((JSONObject) fieldObj, out, null);
+            } else if (fieldObj.isObject()) {
+                if ((fieldObj).size() != 0) {
+                    writeRecord(fieldObj, out, null);
                 } else {
                     writeResult = false;
                 }
             }
-        } catch (IOException | JSONException e) {
-            throw new HyracksDataException(e);
         }
         return writeResult;
-    }
-
-    private boolean writeField(Object fieldObj, IAType fieldType, DataOutput out) throws HyracksDataException {
-        return fieldType == null ? writeFieldWithoutFieldType(fieldObj, out)
-                : writeFieldWithFieldType(fieldObj, fieldType, out);
     }
 
     private int checkAttrNameIdx(String[] nameList, String name) {
@@ -190,13 +152,11 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
         return -1;
     }
 
-    public boolean writeRecord(JSONObject obj, DataOutput out, ARecordType curRecType)
-            throws IOException, JSONException {
+    public void writeRecord(JsonNode obj, DataOutput out, ARecordType curRecType) throws IOException {
         IAType[] curTypes = null;
         String[] curFNames = null;
         int fieldN;
         int attrIdx;
-        boolean writeRecord = false;
 
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
@@ -216,9 +176,8 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
             for (int iter1 = 0; iter1 < fieldN; iter1++) {
                 fieldValueBuffer.reset();
                 DataOutput fieldOutput = fieldValueBuffer.getDataOutput();
-                if (obj.isNull(curFNames[iter1])) {
-                    if (curRecType.getFieldType(curFNames[iter1]) != null
-                            && !(curRecType.getFieldType(curFNames[iter1]) instanceof AUnionType)) {
+                if (obj.get(curFNames[iter1]).isNull()) {
+                    if (curRecType.isClosedField(curFNames[iter1])) {
                         throw new HyracksDataException("Closed field " + curFNames[iter1] + " has null value.");
                     } else {
                         continue;
@@ -226,15 +185,18 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 } else {
                     if (writeField(obj.get(curFNames[iter1]), curTypes[iter1], fieldOutput)) {
                         recBuilder.addField(iter1, fieldValueBuffer);
-                        writeRecord = true;
                     }
                 }
             }
         } else {
             //open record type
+            int closedFieldCount = 0;
             IAType curFieldType = null;
-            for (String attrName : JSONObject.getNames(obj)) {
-                if (obj.isNull(attrName) || obj.length() == 0) {
+            String attrName;
+            Iterator<String> iter = obj.fieldNames();
+            while (iter.hasNext()) {
+                attrName = iter.next();
+                if (obj.get(attrName).isNull() || obj.size() == 0) {
                     continue;
                 }
                 attrIdx = checkAttrNameIdx(curFNames, attrName);
@@ -245,29 +207,29 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 fieldNameBuffer.reset();
                 DataOutput fieldOutput = fieldValueBuffer.getDataOutput();
                 if (writeField(obj.get(attrName), curFieldType, fieldOutput)) {
-                    writeRecord = true;
                     if (attrIdx == -1) {
                         aString.setValue(attrName);
                         stringSerde.serialize(aString, fieldNameBuffer.getDataOutput());
                         recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                     } else {
                         recBuilder.addField(attrIdx, fieldValueBuffer);
+                        closedFieldCount++;
                     }
                 }
             }
+            if (curRecType != null && closedFieldCount < curFNames.length) {
+                throw new HyracksDataException("Non-null field is null");
+            }
         }
-        if (writeRecord) {
-            recBuilder.write(out, true);
-        }
-        return writeRecord;
+        recBuilder.write(out, true);
     }
 
     private IARecordBuilder getRecordBuilder() {
         return recordBuilderPool.allocate(ATypeTag.RECORD);
     }
 
-    private IAsterixListBuilder getOrderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.ORDEREDLIST);
+    private IAsterixListBuilder getUnorderedListBuilder() {
+        return listBuilderPool.allocate(ATypeTag.UNORDEREDLIST);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {
@@ -279,9 +241,9 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
         try {
             //TODO get rid of this temporary json
             resetPools();
-            JSONObject jsObj = new JSONObject(record.get());
-            writeRecord(jsObj, out, recordType);
-        } catch (JSONException | IOException e) {
+            ObjectMapper om = new ObjectMapper();
+            writeRecord(om.readTree(record.get()), out, recordType);
+        } catch (IOException e) {
             throw new HyracksDataException(e);
         }
     }

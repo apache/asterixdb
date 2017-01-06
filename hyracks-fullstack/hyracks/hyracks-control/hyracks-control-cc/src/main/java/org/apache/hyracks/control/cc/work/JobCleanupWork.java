@@ -23,9 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobId;
@@ -123,15 +122,12 @@ public class JobCleanupWork extends AbstractWork {
         }
     }
 
-    private JSONObject createJobLogObject(final JobRun run) {
-        JSONObject jobLogObject = new JSONObject();
-        try {
-            ActivityClusterGraph acg = run.getActivityClusterGraph();
-            jobLogObject.put("activity-cluster-graph", acg.toJSON());
-            jobLogObject.put("job-run", run.toJSON());
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+    private ObjectNode createJobLogObject(final JobRun run) {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode jobLogObject = om.createObjectNode();
+        ActivityClusterGraph acg = run.getActivityClusterGraph();
+        jobLogObject.set("activity-cluster-graph", acg.toJSON());
+        jobLogObject.set("job-run", run.toJSON());
         return jobLogObject;
     }
 

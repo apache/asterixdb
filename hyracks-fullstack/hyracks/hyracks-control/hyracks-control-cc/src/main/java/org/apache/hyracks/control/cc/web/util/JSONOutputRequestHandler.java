@@ -24,9 +24,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.json.JSONObject;
 
 public class JSONOutputRequestHandler extends AbstractHandler {
     private final IJSONOutputFunction fn;
@@ -46,9 +47,10 @@ public class JSONOutputRequestHandler extends AbstractHandler {
         }
         String[] parts = target.split("/");
         try {
-            JSONObject result = fn.invoke(parts);
+            ObjectNode result = fn.invoke(parts);
             response.setContentType("application/json");
-            result.write(response.getWriter());
+            ObjectMapper om = new ObjectMapper();
+            om.writer().writeValue(response.getWriter(),result);
             baseRequest.setHandled(true);
         } catch (Exception e) {
             e.printStackTrace();

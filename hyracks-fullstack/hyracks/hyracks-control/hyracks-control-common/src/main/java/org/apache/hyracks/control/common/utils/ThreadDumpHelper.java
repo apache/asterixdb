@@ -18,6 +18,13 @@
  */
 package org.apache.hyracks.control.common.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.io.IOException;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
@@ -26,15 +33,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class ThreadDumpHelper {
 
     private ThreadDumpHelper() {
     }
 
-    public static String takeDumpJSON(ThreadMXBean threadMXBean) throws JSONException {
+    public static String takeDumpJSON(ThreadMXBean threadMXBean) throws IOException {
         ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
         List<Map<String, Object>> threads = new ArrayList<>();
 
@@ -69,18 +73,20 @@ public class ThreadDumpHelper {
             }
             threads.add(threadMap);
         }
-        JSONObject json = new JSONObject();
-        json.put("date", new Date());
-        json.put("threads", threads);
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode json = om.createObjectNode();
+        json.put("date", new Date().toString());
+        json.putPOJO("threads", threads);
 
-        long [] deadlockedThreads = threadMXBean.findDeadlockedThreads();
-        long [] monitorDeadlockedThreads = threadMXBean.findMonitorDeadlockedThreads();
+        long[] deadlockedThreads = threadMXBean.findDeadlockedThreads();
+        long[] monitorDeadlockedThreads = threadMXBean.findMonitorDeadlockedThreads();
         if (deadlockedThreads != null && deadlockedThreads.length > 0) {
-            json.put("deadlocked_thread_ids", deadlockedThreads);
+            json.putPOJO("deadlocked_thread_ids", deadlockedThreads);
         }
         if (monitorDeadlockedThreads != null && monitorDeadlockedThreads.length > 0) {
-            json.put("monitor_deadlocked_thread_ids", monitorDeadlockedThreads);
+            json.putPOJO("monitor_deadlocked_thread_ids", monitorDeadlockedThreads);
         }
-        return json.toString();
+        om.enable(SerializationFeature.INDENT_OUTPUT);
+        return om.writerWithDefaultPrettyPrinter().writeValueAsString(json);
     }
 }

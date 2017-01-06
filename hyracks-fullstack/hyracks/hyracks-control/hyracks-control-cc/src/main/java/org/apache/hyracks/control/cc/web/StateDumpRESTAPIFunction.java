@@ -20,7 +20,8 @@ package org.apache.hyracks.control.cc.web;
 
 import java.util.Map;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
@@ -35,13 +36,14 @@ public class StateDumpRESTAPIFunction implements IJSONOutputFunction {
     }
 
     @Override
-    public JSONObject invoke(String[] arguments) throws Exception {
+    public ObjectNode invoke(String[] arguments) throws Exception {
         GatherStateDumpsWork gsdw = new GatherStateDumpsWork(ccs);
         ccs.getWorkQueue().scheduleAndSync(gsdw);
         StateDumpRun sdr = gsdw.getStateDumpRun();
         sdr.waitForCompletion();
 
-        JSONObject result = new JSONObject();
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode result = om.createObjectNode();
         for (Map.Entry<String, String> e : sdr.getStateDump().entrySet()) {
             result.put(e.getKey(), e.getValue());
         }

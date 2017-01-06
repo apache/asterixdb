@@ -25,10 +25,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.clienthelper.Args;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class WaitForClusterCommand extends RemoteCommand {
 
@@ -66,14 +67,15 @@ public class WaitForClusterCommand extends RemoteCommand {
                 conn = openConnection(args.getClusterStatePath(), Method.GET);
                 if (conn.getResponseCode() == HttpServletResponse.SC_OK) {
                     String result = IOUtils.toString(conn.getInputStream(), StandardCharsets.UTF_8.name());
-                    JSONObject json = new JSONObject(result);
-                    lastState = json.getString("state");
+                    ObjectMapper om = new ObjectMapper();
+                    JsonNode json = om.readTree(result);
+                    lastState = json.get("state").asText();
                     if ("ACTIVE".equals(lastState)) {
                         log("Cluster started and is ACTIVE.");
                         return 0;
                     }
                 }
-            } catch (JSONException |IOException e) { //NOSONAR - log or rethrow exception
+            } catch (IOException e) { //NOSONAR - log or rethrow exception
                 // ignore exception, try again
             }
         }

@@ -28,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONException;
 
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IActivity;
@@ -150,12 +149,7 @@ public class ActivityClusterGraphBuilder {
         acg.addActivityClusters(acList);
 
         if (LOGGER.isLoggable(Level.FINE)) {
-            try {
-                LOGGER.fine(acg.toJSON().toString(2));
-            } catch (JSONException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
+                LOGGER.fine(acg.toJSON().asText());
         }
         return acg;
     }

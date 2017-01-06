@@ -31,6 +31,8 @@ import java.util.SortedMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ReplicationProperties;
@@ -53,8 +55,8 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.json.JSONException;
-import org.json.JSONObject;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * A holder class for properties related to the Asterix cluster.
@@ -633,12 +635,15 @@ public class ClusterStateManager {
         return metadataNodeActive;
     }
 
-    public synchronized JSONObject getClusterStateDescription() throws JSONException {
-        JSONObject stateDescription = new JSONObject();
+    public synchronized ObjectNode getClusterStateDescription()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode stateDescription = om.createObjectNode();
         stateDescription.put("state", state.name());
         stateDescription.put("metadata_node", currentMetadataNode);
+        ArrayNode ncs = om.createArrayNode();
+        stateDescription.set("ncs",ncs);
         for (Map.Entry<String, ClusterPartition[]> entry : node2PartitionsMap.entrySet()) {
-            JSONObject nodeJSON = new JSONObject();
+            ObjectNode nodeJSON = om.createObjectNode();
             nodeJSON.put("node_id", entry.getKey());
             boolean allActive = true;
             boolean anyActive = false;
@@ -657,17 +662,18 @@ public class ClusterStateManager {
                     : allActive ? "ACTIVE"
                     : anyActive ? "PARTIALLY_ACTIVE"
                     : "INACTIVE");
-            nodeJSON.put("partitions", partitions);
-            stateDescription.accumulate("ncs", nodeJSON);
+            nodeJSON.putPOJO("partitions", partitions);
+            ncs.add(nodeJSON);
         }
         return stateDescription;
     }
 
-    public synchronized JSONObject getClusterStateSummary() throws JSONException {
-        JSONObject stateDescription = new JSONObject();
+    public synchronized ObjectNode getClusterStateSummary() {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode stateDescription = om.createObjectNode();
         stateDescription.put("state", state.name());
-        stateDescription.put("metadata_node", currentMetadataNode);
-        stateDescription.put("partitions", clusterPartitions);
+        stateDescription.putPOJO("metadata_node", currentMetadataNode);
+        stateDescription.putPOJO("partitions", clusterPartitions);
         return stateDescription;
     }
 }

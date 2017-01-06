@@ -26,15 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * ARecordType is read-only and shared by different partitions at runtime.
@@ -327,8 +327,9 @@ public class ARecordType extends AbstractComplexType {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject type = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode type = om.createObjectNode();
         type.put("type", ARecordType.class.getName());
         type.put("name", typeName);
         if (isOpen) {
@@ -337,14 +338,14 @@ public class ARecordType extends AbstractComplexType {
             type.put("open", false);
         }
 
-        JSONArray fields = new JSONArray();
+        ArrayNode fields = om.createArrayNode();
         for (int i = 0; i < fieldNames.length; i++) {
-            JSONObject field = new JSONObject();
-            field.put(fieldNames[i], fieldTypes[i].toJSON());
-            fields.put(field);
+            ObjectNode field = om.createObjectNode();
+            field.set(fieldNames[i], fieldTypes[i].toJSON());
+            fields.add(field);
         }
 
-        type.put("fields", fields);
+        type.set("fields", fields);
         return type;
     }
 

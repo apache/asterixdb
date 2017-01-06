@@ -31,11 +31,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ShutdownAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -62,25 +64,25 @@ public class ShutdownAPIServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
         response.setStatus(HttpServletResponse.SC_ACCEPTED);
-        JSONObject jsonObject = new JSONObject();
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode jsonObject = om.createObjectNode();
         try {
             jsonObject.put("status", "SHUTTING_DOWN");
-            jsonObject.put("date", new Date());
-            JSONObject clusterState = ClusterStateManager.INSTANCE.getClusterStateDescription();
-            JSONArray ncs = clusterState.getJSONArray("ncs");
-            for (int i = 0; i < ncs.length(); i++) {
-                JSONObject nc = ncs.getJSONObject(i);
-                String node = nc.getString(NODE_ID_KEY);
-                JSONObject details = new JSONObject(hcc.getNodeDetailsJSON(node, false, true));
-                nc.put(PID, details.get(PID));
-                if (details.has(INI) && details.getJSONObject(INI).has(NCSERVICE_PID)) {
-                    nc.put(NCSERVICE_PID, details.getJSONObject(INI).getInt(NCSERVICE_PID));
+            jsonObject.putPOJO("date", new Date());
+            ObjectNode clusterState = ClusterStateManager.INSTANCE.getClusterStateDescription();
+            ArrayNode ncs = (ArrayNode) clusterState.get("ncs");
+            for (int i = 0; i < ncs.size(); i++) {
+                ObjectNode nc = (ObjectNode) ncs.get(i);
+                String node = nc.get(NODE_ID_KEY).asText();
+                ObjectNode details = (ObjectNode) om.readTree(hcc.getNodeDetailsJSON(node, false, true));
+                nc.set(PID, details.get(PID));
+                if (details.has(INI) && details.get(INI).has(NCSERVICE_PID)) {
+                    nc.put(NCSERVICE_PID, details.get(INI).get(NCSERVICE_PID).asInt());
                 }
             }
-            jsonObject.put("cluster", clusterState);
-
+            jsonObject.set("cluster", clusterState);
             final PrintWriter writer = response.getWriter();
-            writer.print(jsonObject.toString(4));
+            writer.print(om.writeValueAsString(jsonObject));
             writer.close();
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, "Exception writing response", e);

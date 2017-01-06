@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.job;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.expressions.ConstantExpression;
@@ -39,9 +44,6 @@ import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
@@ -343,16 +345,17 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     }
 
     @SuppressWarnings("incomplete-switch")
-    public JSONObject toJSON() throws JSONException {
-        JSONObject jjob = new JSONObject();
+    public ObjectNode toJSON() throws IOException {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode jjob = om.createObjectNode();
 
-        JSONArray jopArray = new JSONArray();
+        ArrayNode jopArray = om.createArrayNode();
         for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> e : opMap.entrySet()) {
-            JSONObject op = e.getValue().toJSON();
+            ObjectNode op = e.getValue().toJSON();
             if (!userConstraints.isEmpty()) {
                 // Add operator partition constraints to each JSON operator.
-                JSONObject pcObject = new JSONObject();
-                JSONObject pleObject = new JSONObject();
+                ObjectNode pcObject = om.createObjectNode();
+                ObjectNode pleObject = om.createObjectNode();
                 Iterator<Constraint> test = userConstraints.iterator();
                 while (test.hasNext()) {
                     Constraint constraint = test.next();
@@ -372,20 +375,20 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                             break;
                     }
                 }
-                if (pleObject.length() > 0) {
-                    pcObject.put("location", pleObject);
+                if (pleObject.size() > 0) {
+                    pcObject.set("location", pleObject);
                 }
-                if (pcObject.length() > 0) {
-                    op.put("partition-constraints", pcObject);
+                if (pcObject.size() > 0) {
+                    op.set("partition-constraints", pcObject);
                 }
             }
-            jopArray.put(op);
+            jopArray.add(op);
         }
-        jjob.put("operators", jopArray);
+        jjob.set("operators", jopArray);
 
-        JSONArray jcArray = new JSONArray();
+        ArrayNode jcArray = om.createArrayNode();
         for (Map.Entry<ConnectorDescriptorId, IConnectorDescriptor> e : connMap.entrySet()) {
-            JSONObject conn = new JSONObject();
+            ObjectNode conn = om.createObjectNode();
             Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connection = connectorOpMap
                     .get(e.getKey());
             if (connection != null) {
@@ -394,10 +397,10 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                 conn.put("out-operator-id", connection.getRight().getLeft().getOperatorId().toString());
                 conn.put("out-operator-port", connection.getRight().getRight().intValue());
             }
-            conn.put("connector", e.getValue().toJSON());
-            jcArray.put(conn);
+            conn.set("connector", e.getValue().toJSON());
+            jcArray.add(conn);
         }
-        jjob.put("connectors", jcArray);
+        jjob.set("connectors", jcArray);
 
         return jjob;
     }

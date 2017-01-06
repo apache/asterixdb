@@ -24,10 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
@@ -162,15 +161,15 @@ public class ActivityClusterGraph implements Serializable {
         return ac.getProducerActivity(cid);
     }
 
-    public JSONObject toJSON() throws JSONException {
-        JSONObject acgj = new JSONObject();
-
-        JSONArray acl = new JSONArray();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode acgj = om.createObjectNode();
+        ArrayNode acl = om.createArrayNode();
         for (ActivityCluster ac : activityClusterMap.values()) {
-            acl.put(ac.toJSON());
+            acl.add(ac.toJSON());
         }
         acgj.put("version", version);
-        acgj.put("activity-clusters", acl);
+        acgj.set("activity-clusters", acl);
         return acgj;
     }
 }

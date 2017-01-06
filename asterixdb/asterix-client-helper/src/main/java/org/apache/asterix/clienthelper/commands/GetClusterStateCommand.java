@@ -24,10 +24,11 @@ import java.nio.charset.StandardCharsets;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.clienthelper.Args;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class GetClusterStateCommand extends RemoteCommand {
 
@@ -49,8 +50,9 @@ public class GetClusterStateCommand extends RemoteCommand {
             conn = openConnection(args.getClusterStatePath(), Method.GET);
             if (conn.getResponseCode() == HttpServletResponse.SC_OK) {
                 String result = IOUtils.toString(conn.getInputStream(), StandardCharsets.UTF_8.name());
-                JSONObject json = new JSONObject(result);
-                final String state = json.getString("state");
+                ObjectMapper om = new ObjectMapper();
+                JsonNode json = om.readTree(result);
+                final String state = json.get("state").asText();
                 logState(state);
                 switch (state) {
                     case "ACTIVE":
@@ -66,9 +68,6 @@ public class GetClusterStateCommand extends RemoteCommand {
         } catch (IOException e) { // NOSONAR - log or rethrow exception
             logState("DOWN");
             return 1;
-        } catch (JSONException e) { // NOSONAR - log or rethrow exception
-            logState("UNKNOWN (malformed response)");
-            return 3;
         }
     }
 }

@@ -18,7 +18,8 @@
  */
 package org.apache.hyracks.control.cc.web;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -35,8 +36,9 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
     }
 
     @Override
-    public JSONObject invoke(String[] arguments) throws Exception {
-        JSONObject result = new JSONObject();
+    public ObjectNode invoke(String[] arguments) throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode result = om.createObjectNode();
         switch (arguments.length) {
             case 1:
                 if (!"".equals(arguments[0])) {
@@ -45,7 +47,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
             case 0: {
                 GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs);
                 ccs.getWorkQueue().scheduleAndSync(gjse);
-                result.put("result", gjse.getSummaries());
+                result.set("result", gjse.getSummaries());
                 break;
             }
 
@@ -55,11 +57,11 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
                 if ("job-activity-graph".equalsIgnoreCase(arguments[1])) {
                     GetActivityClusterGraphJSONWork gjage = new GetActivityClusterGraphJSONWork(ccs, jobId);
                     ccs.getWorkQueue().scheduleAndSync(gjage);
-                    result.put("result", gjage.getJSON());
+                    result.set("result", gjage.getJSON());
                 } else if ("job-run".equalsIgnoreCase(arguments[1])) {
                     GetJobRunJSONWork gjre = new GetJobRunJSONWork(ccs, jobId);
                     ccs.getWorkQueue().scheduleAndSync(gjre);
-                    result.put("result", gjre.getJSON());
+                    result.set("result", gjre.getJSON());
                 }
 
                 break;

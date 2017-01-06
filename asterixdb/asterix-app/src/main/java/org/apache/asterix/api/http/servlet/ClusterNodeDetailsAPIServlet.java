@@ -29,37 +29,45 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ClusterNodeDetailsAPIServlet.class.getName());
+    private final ObjectMapper om = new ObjectMapper();
+
+    @Override
+    public void init() throws ServletException{
+        om.enable(SerializationFeature.INDENT_OUTPUT);
+    }
 
     @Override
     protected void getUnsafe(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter responseWriter = response.getWriter();
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-        JSONObject json;
-
         try {
+            ObjectNode json;
             if (request.getPathInfo() == null) {
-                json = new JSONObject();
-                json.put("ncs", getClusterStateJSON(request, "../").getJSONArray("ncs"));
+                json = om.createObjectNode();
+                json.set("ncs", getClusterStateJSON(request, "../").get("ncs"));
             } else {
                 json = processNode(request, hcc);
             }
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("application/json");
             response.setCharacterEncoding("utf-8");
-            responseWriter.write(json.toString(4));
+            responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
             response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
@@ -71,7 +79,7 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         responseWriter.flush();
     }
 
-    private JSONObject processNode(HttpServletRequest request, IHyracksClientConnection hcc)
+    private ObjectNode processNode(HttpServletRequest request, IHyracksClientConnection hcc)
             throws Exception {
         String pathInfo = request.getPathInfo();
         if (pathInfo.endsWith("/")) {
@@ -81,19 +89,18 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         final String node = parts[0];
 
         if (parts.length == 1) {
-            JSONArray ncs = getClusterStateJSON(request, "../../").getJSONArray("ncs");
-            for (int i = 0; i < ncs.length(); i++) {
-                JSONObject json = ncs.getJSONObject(i);
-                if (node.equals(json.getString("node_id"))) {
-                    return json;
+            ArrayNode ncs = (ArrayNode) getClusterStateJSON(request, "../../").get("ncs");
+            for (int i = 0; i < ncs.size(); i++) {
+                if (node.equals(ncs.get(i).get("node_id").asText())) {
+                    return (ObjectNode) ncs.get(i);
                 }
             }
             if ("cc".equals(node)) {
-                return new JSONObject();
+                return om.createObjectNode();
             }
             throw new IllegalArgumentException();
         } else if (parts.length == 2) {
-            JSONObject json;
+            ObjectNode json;
 
             switch (parts[1]) {
                 case "config":
@@ -118,78 +125,78 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         }
     }
 
-    protected JSONObject fixupKeys(JSONObject json) throws JSONException {
+    protected ObjectNode fixupKeys(ObjectNode json)  {
         // TODO (mblow): generate the keys with _ to begin with
         List<String> keys = new ArrayList<>();
-        for (Iterator iter = json.keys(); iter.hasNext(); ) {
+        for (Iterator iter = json.fieldNames(); iter.hasNext(); ) {
             keys.add((String) iter.next());
         }
         for (String key : keys) {
             String newKey = key.replace('-', '_');
             if (!newKey.equals(key)) {
-                json.put(newKey, json.remove(key));
+                json.set(newKey, json.remove(key));
             }
         }
         return json;
     }
 
-    protected JSONObject processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
+    protected ObjectNode processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
         final String details = hcc.getNodeDetailsJSON(node, true, false);
         if (details == null) {
             throw new IllegalArgumentException();
         }
-        JSONObject json = new JSONObject(details);
-        int index = json.getInt("rrd-ptr") - 1;
+        ObjectNode json = (ObjectNode) om.readTree(details);
+        int index = json.get("rrd-ptr").asInt() - 1;
         json.remove("rrd-ptr");
 
         List<String> keys = new ArrayList<>();
-        for (Iterator iter = json.keys(); iter.hasNext(); ) {
+        for (Iterator iter = json.fieldNames(); iter.hasNext(); ) {
             keys.add((String) iter.next());
         }
 
-        final JSONArray gcNames = json.getJSONArray("gc-names");
-        final JSONArray gcCollectionTimes = json.getJSONArray("gc-collection-times");
-        final JSONArray gcCollectionCounts = json.getJSONArray("gc-collection-counts");
+        final ArrayNode gcNames = (ArrayNode) json.get("gc-names");
+        final ArrayNode gcCollectionTimes  = (ArrayNode) json.get("gc-collection-times");
+        final ArrayNode gcCollectionCounts = (ArrayNode) json.get("gc-collection-counts");
 
         for (String key : keys) {
             if (key.startsWith("gc-")) {
                 json.remove(key);
-            } else if (json.get(key) instanceof JSONArray) {
-                final JSONArray valueArray = json.getJSONArray(key);
+            } else if (json.get(key) instanceof ArrayNode) {
+                final ArrayNode valueArray = (ArrayNode) json.get(key);
                 // fixup an index of -1 to the final element in the array (i.e. RRD_SIZE)
                 if (index == -1) {
-                    index = valueArray.length() - 1;
+                    index = valueArray.size() - 1;
                 }
                 final Object value = valueArray.get(index);
                 json.remove(key);
-                json.put(key.replaceAll("s$",""), value);
+                json.putPOJO(key.replaceAll("s$",""), value);
             }
         }
-        List<JSONObject> gcs = new ArrayList<>();
+        List<ObjectNode> gcs = new ArrayList<>();
 
-        for (int i = 0; i < gcNames.length(); i++) {
-            JSONObject gc = new JSONObject();
-            gc.put("name", gcNames.get(i));
-            gc.put("collection-time", ((JSONArray)gcCollectionTimes.get(i)).get(index));
-            gc.put("collection-count", ((JSONArray)gcCollectionCounts.get(i)).get(index));
+        for (int i = 0; i < gcNames.size(); i++) {
+            ObjectNode gc = om.createObjectNode();
+            gc.set("name", gcNames.get(i));
+            gc.set("collection-time", ((ArrayNode)gcCollectionTimes.get(i)).get(index));
+            gc.set("collection-count", ((ArrayNode)gcCollectionCounts.get(i)).get(index));
             gcs.add(gc);
         }
-        json.put("gcs", gcs);
+        json.putPOJO("gcs", gcs);
 
         return json;
     }
 
-    private JSONObject processNodeConfig(IHyracksClientConnection hcc, String node) throws Exception {
+    private ObjectNode processNodeConfig(IHyracksClientConnection hcc, String node) throws Exception {
         String config = hcc.getNodeDetailsJSON(node, false, true);
         if (config == null) {
             throw new IllegalArgumentException();
         }
-        return new JSONObject(config);
+        return (ObjectNode) om.readTree(config);
     }
 
-    private JSONObject processNodeThreadDump(IHyracksClientConnection hcc, String node) throws Exception {
+    private ObjectNode processNodeThreadDump(IHyracksClientConnection hcc, String node) throws Exception {
         if ("cc".equals(node)) {
-            return new JSONObject();
+            return om.createObjectNode();
         }
         String dump = hcc.getThreadDump(node);
         if (dump == null) {
@@ -198,7 +205,7 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
                     ? new IllegalStateException()
                     : new IllegalArgumentException();
         }
-        return new JSONObject(dump);
+        return (ObjectNode) om.readTree(dump);
     }
 
 }

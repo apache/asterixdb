@@ -20,17 +20,16 @@ package org.apache.hyracks.control.cc.work;
 
 import java.util.Collection;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetJobSummariesJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private JSONArray summaries;
+    private ArrayNode summaries;
 
     public GetJobSummariesJSONWork(ClusterControllerService ccs) {
         this.ccs = ccs;
@@ -38,25 +37,27 @@ public class GetJobSummariesJSONWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        summaries = new JSONArray();
+        ObjectMapper om = new ObjectMapper();
+        summaries = om.createArrayNode();
         populateJSON(ccs.getActiveRunMap().values());
         populateJSON(ccs.getRunMapArchive().values());
     }
 
-    private void populateJSON(Collection<JobRun> jobRuns) throws JSONException {
+    private void populateJSON(Collection<JobRun> jobRuns)  {
+        ObjectMapper om = new ObjectMapper();
         for (JobRun run : jobRuns) {
-            JSONObject jo = new JSONObject();
+            ObjectNode jo = om.createObjectNode();
             jo.put("type", "job-summary");
             jo.put("job-id", run.getJobId().toString());
             jo.put("create-time", run.getCreateTime());
             jo.put("start-time", run.getStartTime());
             jo.put("end-time", run.getEndTime());
             jo.put("status", run.getStatus().toString());
-            summaries.put(jo);
+            summaries.add(jo);
         }
     }
 
-    public JSONArray getSummaries() {
+    public ArrayNode getSummaries() {
         return summaries;
     }
 }

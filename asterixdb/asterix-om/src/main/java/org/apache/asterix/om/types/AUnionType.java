@@ -22,12 +22,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AUnionType extends AbstractComplexType {
 
@@ -203,21 +203,22 @@ public class AUnionType extends AbstractComplexType {
     }
 
     @Override
-    public JSONObject toJSON() throws JSONException {
-        JSONObject type = new JSONObject();
+    public ObjectNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode type = om.createObjectNode();
         type.put("type", AUnionType.class.getName());
 
-        JSONArray fields = new JSONArray();
+        ArrayNode fields = om.createArrayNode();
         Iterator<IAType> iter = unionList.iterator();
         if (iter.hasNext()) {
             IAType t0 = iter.next();
-            fields.put(t0.toJSON());
+            fields.add(t0.toJSON());
             while (iter.hasNext()) {
-                fields.put(iter.next().toJSON());
+                fields.add(iter.next().toJSON());
             }
         }
 
-        type.put("fields", fields);
+        type.set("fields", fields);
         return type;
     }
 }

@@ -49,9 +49,14 @@ public abstract class AbstractProperties {
         Map<String, Object> properties = new HashMap<>();
         for (Method m : getClass().getMethods()) {
             PropertyKey key = m.getAnnotation(PropertyKey.class);
+            Stringify stringify = m.getAnnotation(Stringify.class);
             if (key != null) {
                 try {
-                    properties.put(keyTransformer.apply(key.value()), m.invoke(this));
+                    if (stringify != null) {
+                        properties.put(keyTransformer.apply(key.value()), String.valueOf(m.invoke(this)));
+                    } else {
+                        properties.put(keyTransformer.apply(key.value()), m.invoke(this));
+                    }
                 } catch (Exception e) {
                     LOGGER.log(Level.INFO, "Error accessing property: " + key.value(), e);
                 }
@@ -63,6 +68,10 @@ public abstract class AbstractProperties {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface PropertyKey {
         String value();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Stringify {
     }
 
     public static List<AbstractProperties> getImplementations() {

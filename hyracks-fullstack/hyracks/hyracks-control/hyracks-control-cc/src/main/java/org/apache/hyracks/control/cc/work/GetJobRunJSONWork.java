@@ -18,7 +18,8 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -28,7 +29,7 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 public class GetJobRunJSONWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
-    private JSONObject json;
+    private ObjectNode json;
 
     public GetJobRunJSONWork(ClusterControllerService ccs, JobId jobId) {
         this.ccs = ccs;
@@ -37,18 +38,19 @@ public class GetJobRunJSONWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
+        ObjectMapper om = new ObjectMapper();
         JobRun run = ccs.getActiveRunMap().get(jobId);
         if (run == null) {
             run = ccs.getRunMapArchive().get(jobId);
             if (run == null) {
-                json = new JSONObject();
+                json = om.createObjectNode();
                 return;
             }
         }
         json = run.toJSON();
     }
 
-    public JSONObject getJSON() {
+    public ObjectNode getJSON() {
         return json;
     }
 }

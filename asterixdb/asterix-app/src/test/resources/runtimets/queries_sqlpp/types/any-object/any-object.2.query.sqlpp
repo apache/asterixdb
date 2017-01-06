@@ -17,6 +17,4 @@
  * under the License.
  */
 
-select element x
-from Metadata.Datatype as x
-order by x.DataverseName, x.DatatypeName;
+select element x from Metadata.Datatype as x;

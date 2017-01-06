@@ -25,10 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -186,50 +187,50 @@ public class ActivityCluster implements Serializable {
         vList.set(index, value);
     }
 
-    public JSONObject toJSON() throws JSONException {
-        JSONObject jac = new JSONObject();
-
-        JSONArray jans = new JSONArray();
+    public JsonNode toJSON()  {
+        ObjectMapper om = new ObjectMapper();
+        ArrayNode jans = om.createArrayNode();
+        ObjectNode jac = om.createObjectNode();
         for (IActivity an : activities.values()) {
-            JSONObject jan = new JSONObject();
+            ObjectNode jan = om.createObjectNode();
             jan.put("id", an.getActivityId().toString());
             jan.put("java-class", an.getClass().getName());
 
             List<IConnectorDescriptor> inputs = activityInputMap.get(an.getActivityId());
             if (inputs != null) {
-                JSONArray jInputs = new JSONArray();
+                ArrayNode jInputs = om.createArrayNode();
                 for (int i = 0; i < inputs.size(); ++i) {
-                    JSONObject jInput = new JSONObject();
+                    ObjectNode jInput = om.createObjectNode();
                     jInput.put("input-port", i);
                     jInput.put("connector-id", inputs.get(i).getConnectorId().toString());
-                    jInputs.put(jInput);
+                    jInputs.add(jInput);
                 }
-                jan.put("inputs", jInputs);
+                jan.set("inputs", jInputs);
             }
 
             List<IConnectorDescriptor> outputs = activityOutputMap.get(an.getActivityId());
             if (outputs != null) {
-                JSONArray jOutputs = new JSONArray();
+                ArrayNode jOutputs = om.createArrayNode();
                 for (int i = 0; i < outputs.size(); ++i) {
-                    JSONObject jOutput = new JSONObject();
+                    ObjectNode jOutput = om.createObjectNode();
                     jOutput.put("output-port", i);
                     jOutput.put("connector-id", outputs.get(i).getConnectorId().toString());
-                    jOutputs.put(jOutput);
+                    jOutputs.add(jOutput);
                 }
-                jan.put("outputs", jOutputs);
+                jan.set("outputs", jOutputs);
             }
 
             Set<ActivityId> blockers = getBlocked2BlockerMap().get(an.getActivityId());
             if (blockers != null) {
-                JSONArray jDeps = new JSONArray();
+                ArrayNode jDeps = om.createArrayNode();
                 for (ActivityId blocker : blockers) {
-                    jDeps.put(blocker.toString());
+                    jDeps.add(blocker.toString());
                 }
-                jan.put("depends-on", jDeps);
+                jan.set("depends-on", jDeps);
             }
-            jans.put(jan);
+            jans.add(jan);
         }
-        jac.put("activities", jans);
+        jac.set("activities", jans);
 
         return jac;
     }

@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.common.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Logger;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class JSONUtil {
 
@@ -31,36 +33,50 @@ public class JSONUtil {
 
     private static final String INDENT = "\t";
 
+    private static final ObjectMapper SORTED_MAPPER = new ObjectMapper();
+
     private JSONUtil() {
     }
 
+    static {
+        SORTED_MAPPER.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+    }
+
+    public static String convertNode(final JsonNode node) throws JsonProcessingException {
+        final Object obj = SORTED_MAPPER.treeToValue(node, Object.class);
+        final String json = SORTED_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        return json;
+    }
+
     public static String indent(String str, int initialIndent) {
+        ObjectMapper om = new ObjectMapper();
         try {
-            return append(new StringBuilder(), new JSONObject(str), initialIndent).toString();
-        } catch (JSONException e) {
+            return appendObj(new StringBuilder(), om.readTree(str), initialIndent).toString();
+        } catch (IOException e) {
+            LOGGER.finest(String.valueOf(e));
             LOGGER.finest("Could not indent JSON string, returning the input string: " + str);
             return str;
         }
     }
 
-    private static StringBuilder append(StringBuilder sb, Object o, int indent) throws JSONException {
-        if (o instanceof JSONObject) {
-            return append(sb, (JSONObject) o, indent);
-        } else if (o instanceof JSONArray) {
-            return append(sb, (JSONArray) o, indent);
-        } else if (o instanceof String) {
-            return quoteAndEscape(sb, (String) o);
-        } else if (JSONObject.NULL.equals(o) || o instanceof Number || o instanceof Boolean) {
+    private static StringBuilder appendOrd(StringBuilder sb, JsonNode o, int indent) {
+        if (o.isObject()) {
+            return appendObj(sb, o, indent);
+        } else if (o.isArray()) {
+            return appendAry(sb, o, indent);
+        } else if (o.isTextual()) {
+            return quoteAndEscape(sb, o.asText());
+        } else if (o.isNull() || o.isIntegralNumber() || o.isBoolean()) {
             return sb.append(String.valueOf(o));
         }
         throw new UnsupportedOperationException(o.getClass().getSimpleName());
     }
 
-    private static StringBuilder append(StringBuilder builder, JSONObject jobj, int indent) throws JSONException {
+    private static StringBuilder appendObj(StringBuilder builder, JsonNode jobj, int indent) {
         StringBuilder sb = builder.append("{\n");
         boolean first = true;
-        for (Iterator it = jobj.keys(); it.hasNext();) {
-            final String key = (String) it.next();
+        for (Iterator<JsonNode> it = jobj.iterator(); it.hasNext();) {
+            final String key = it.next().asText();
             if (first) {
                 first = false;
             } else {
@@ -69,20 +85,32 @@ public class JSONUtil {
             sb = indent(sb, indent + 1);
             sb = quote(sb, key);
             sb = sb.append(": ");
-            sb = append(sb, jobj.get(key), indent + 1);
+            if (jobj.get(key).isArray()) {
+                sb = appendAry(sb, jobj.get(key), indent + 1);
+            } else if (jobj.get(key).isObject()) {
+                sb = appendObj(sb, jobj.get(key), indent + 1);
+            } else {
+                sb = appendOrd(sb, jobj.get(key), indent + 1);
+            }
         }
         sb = sb.append("\n");
         return indent(sb, indent).append("}");
     }
 
-    private static StringBuilder append(StringBuilder builder, JSONArray jarr, int indent) throws JSONException {
+    private static StringBuilder appendAry(StringBuilder builder, JsonNode jarr, int indent) {
         StringBuilder sb = builder.append("[\n");
-        for (int i = 0; i < jarr.length(); ++i) {
+        for (int i = 0; i < jarr.size(); ++i) {
             if (i > 0) {
                 sb = sb.append(",\n");
             }
             sb = indent(sb, indent + 1);
-            sb = append(sb, jarr.get(i), indent + 1);
+            if (jarr.get(i).isArray()) {
+                sb = appendAry(sb, jarr.get(i), indent + 1);
+            } else if (jarr.get(i).isObject()) {
+                sb = appendObj(sb, jarr.get(i), indent + 1);
+            } else {
+                sb = appendOrd(sb, jarr.get(i), indent + 1);
+            }
         }
         sb = sb.append("\n");
         return indent(sb, indent).append("]");
