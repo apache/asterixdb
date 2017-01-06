@@ -1041,7 +1041,7 @@ public class BTree extends AbstractTreeIndex {
                         splitKey.initData(splitKeySize);
                         tupleWriter.writeTupleFields(leafFrontier.lastTuple, 0, cmp.getKeyFieldCount(),
                                 splitKey.getBuffer().array(), 0);
-                        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
+                        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
                         splitKey.setLeftPage(leafFrontier.pageId);
 
                         propagateBulk(1, pagesToWrite);
@@ -1137,7 +1137,7 @@ public class BTree extends AbstractTreeIndex {
                 splitKey.initData(splitKeySize);
                 tupleWriter.writeTupleFields(frontier.lastTuple, 0, cmp.getKeyFieldCount(),
                         splitKey.getBuffer().array(), 0);
-                splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
+                splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
 
                 ((IBTreeInteriorFrame) interiorFrame).deleteGreatest();
                 int finalPageId = freePageManager.takePage(metaFrame);

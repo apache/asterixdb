@@ -61,11 +61,13 @@ public class TreeTupleSorter implements ITreeIndexCursor {
         cmp = MultiComparator.create(comparatorFactories);
     }
 
+    @Override
     public void reset() {
         numTuples = 0;
         currentTupleIndex = 0;
     }
 
+    @Override
     public boolean hasNext() throws HyracksDataException {
         if (numTuples <= currentTupleIndex) {
             return false;
@@ -77,17 +79,19 @@ public class TreeTupleSorter implements ITreeIndexCursor {
                 false);
         try {
             leafFrame1.setPage(node1);
-            frameTuple1.resetByTupleOffset(leafFrame1.getBuffer(), tPointers[currentTupleIndex * 2 + 1]);
+            frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), tPointers[currentTupleIndex * 2 + 1]);
         } finally {
             bufferCache.unpin(node1);
         }
         return true;
     }
 
+    @Override
     public void next() {
         currentTupleIndex++;
     }
 
+    @Override
     public ITupleReference getTuple() {
         return frameTuple1;
     }
@@ -138,8 +142,9 @@ public class TreeTupleSorter implements ITreeIndexCursor {
                 }
                 --c;
             }
-            if (b > c)
+            if (b > c) {
                 break;
+            }
             swap(tPointers, b++, c--);
         }
 
@@ -185,8 +190,8 @@ public class TreeTupleSorter implements ITreeIndexCursor {
         leafFrame2.setPage(node2);
 
         try {
-            frameTuple1.resetByTupleOffset(leafFrame1.getBuffer(), j1);
-            frameTuple2.resetByTupleOffset(leafFrame2.getBuffer(), j2);
+            frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), j1);
+            frameTuple2.resetByTupleOffset(leafFrame2.getBuffer().array(), j2);
 
             return cmp.selectiveFieldCompare(frameTuple1, frameTuple2, comparatorFields);
 

@@ -988,7 +988,7 @@ public class RTree extends AbstractTreeIndex {
                 //not a leaf
                 if (nodeFrontiers.indexOf(n) != 0) {
                     interiorFrame.setPage(n.page);
-                    mbrTuple.resetByTupleOffset(mbr, 0);
+                    mbrTuple.resetByTupleOffset(mbr.array(), 0);
                     interiorFrame.insert(mbrTuple, -1);
                     interiorFrame.getBuffer().putInt(
                             interiorFrame.getTupleOffset(interiorFrame.getTupleCount() - 1) + mbrTuple.getTupleSize(),
@@ -1041,7 +1041,7 @@ public class RTree extends AbstractTreeIndex {
                 mbr = ByteBuffer.allocate(bytesRequired);
             }
             interiorFrameTupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);
-            mbrTuple.resetByTupleOffset(mbr, 0);
+            mbrTuple.resetByTupleOffset(mbr.array(), 0);
 
             NodeFrontier frontier = nodeFrontiers.get(level);
             interiorFrame.setPage(frontier.page);

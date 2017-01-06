@@ -66,6 +66,7 @@ public class LSMBTreeDiskComponent extends AbstractDiskLSMComponent {
 
     public void readMostRecentMarkerLSN(BTree treeIndex) throws HyracksDataException {
         IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
-        mostRecentMarkerLSN = treeMetaManager.getLastMarkerLSN();
+        treeMetaManager.get(treeMetaManager.createMetadataFrame(), MARKER_LSN_KEY, pointable);
+        mostRecentMarkerLSN = pointable.getByteArray() == null ? -1L : pointable.longValue();
     }
 }

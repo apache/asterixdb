@@ -19,5 +19,5 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 public interface ILSMComponentFilterFrameFactory {
-    public ILSMComponentFilterFrame createFrame();
+    public ILSMComponentFilterReference createFrame();
 }

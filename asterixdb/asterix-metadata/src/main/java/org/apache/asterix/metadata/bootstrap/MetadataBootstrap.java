@@ -78,7 +78,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -378,7 +378,7 @@ public class MetadataBootstrap {
                             LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
             localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceName,
-                    LIFOMetaDataFrame.VERSION, metadataPartition.getPartitionId()));
+                    ITreeIndexFrame.Constants.VERSION, metadataPartition.getPartitionId()));
             dataLifecycleManager.register(file.getRelativePath(), lsmBtree);
         } else {
             final LocalResource resource = localResourceRepository.get(file.getRelativePath());

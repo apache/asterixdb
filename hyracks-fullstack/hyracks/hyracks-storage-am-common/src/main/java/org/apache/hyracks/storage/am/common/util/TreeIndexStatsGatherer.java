@@ -21,7 +21,7 @@ package org.apache.hyracks.storage.am.common.util;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -43,7 +43,7 @@ public class TreeIndexStatsGatherer {
     }
 
     public TreeIndexStats gatherStats(ITreeIndexFrame leafFrame,
-            ITreeIndexFrame interiorFrame, ITreeIndexMetaDataFrame metaFrame)
+            ITreeIndexFrame interiorFrame, ITreeIndexMetadataFrame metaFrame)
             throws HyracksDataException {
 
         bufferCache.openFile(fileId);

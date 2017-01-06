@@ -41,6 +41,7 @@ public class RTreeSplitKey implements ISplitKey {
         this.rightTuple = rightTuple;
     }
 
+    @Override
     public void initData(int keySize) {
         // try to reuse existing memory from a lower-level split if possible
         this.keySize = keySize;
@@ -63,8 +64,8 @@ public class RTreeSplitKey implements ISplitKey {
             rightPageBuf = ByteBuffer.wrap(rightPageData);
         }
 
-        leftTuple.resetByTupleOffset(leftPageBuf, 0);
-        rightTuple.resetByTupleOffset(rightPageBuf, 0);
+        leftTuple.resetByTupleOffset(leftPageBuf.array(), 0);
+        rightTuple.resetByTupleOffset(rightPageBuf.array(), 0);
     }
 
     public void resetLeftPage() {
@@ -93,18 +94,22 @@ public class RTreeSplitKey implements ISplitKey {
         return rightTuple;
     }
 
+    @Override
     public int getLeftPage() {
         return leftPageBuf.getInt(keySize);
     }
 
+    @Override
     public int getRightPage() {
         return rightPageBuf.getInt(keySize);
     }
 
+    @Override
     public void setLeftPage(int page) {
         leftPageBuf.putInt(keySize, page);
     }
 
+    @Override
     public void setRightPage(int page) {
         rightPageBuf.putInt(keySize, page);
     }
@@ -115,12 +120,12 @@ public class RTreeSplitKey implements ISplitKey {
         copy.leftPageData = leftPageData.clone();
         copy.leftPageBuf = ByteBuffer.wrap(copy.leftPageData);
         copy.leftTuple.setFieldCount(leftTuple.getFieldCount());
-        copy.leftTuple.resetByTupleOffset(copy.leftPageBuf, 0);
+        copy.leftTuple.resetByTupleOffset(copy.leftPageBuf.array(), 0);
 
         copy.rightPageData = rightPageData.clone();
         copy.rightPageBuf = ByteBuffer.wrap(copy.rightPageData);
         copy.rightTuple.setFieldCount(rightTuple.getFieldCount());
-        copy.rightTuple.resetByTupleOffset(copy.rightPageBuf, 0);
+        copy.rightTuple.resetByTupleOffset(copy.rightPageBuf.array(), 0);
         return copy;
     }
 

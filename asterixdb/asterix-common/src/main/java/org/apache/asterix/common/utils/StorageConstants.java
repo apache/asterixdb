@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.utils;
 
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 /**
  * A static class that stores storage constants
@@ -29,7 +29,7 @@ public class StorageConstants {
     private static final int LOCAL_STORAGE_VERSION = 1;
 
     /** The storage version of AsterixDB stack. */
-    public static final int VERSION = LOCAL_STORAGE_VERSION + ITreeIndexMetaDataFrame.VERSION;
+    public static final int VERSION = LOCAL_STORAGE_VERSION + ITreeIndexFrame.Constants.VERSION;
 
     private StorageConstants() {
     }

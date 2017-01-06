@@ -52,16 +52,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.Replica.ReplicaState;
 import org.apache.asterix.common.replication.ReplicaEvent;
+import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -83,7 +83,6 @@ import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -328,15 +327,14 @@ public class ReplicationManager implements IReplicationManager {
                                  */
                                 ILSMComponent diskComponent = LSMComponentJob.getLSMIndexOperationContext()
                                         .getComponentsToBeReplicated().get(0);
-                                long LSNByteOffset = LSMIndexUtil.getComponentFileLSNOffset(
+                                long lsnOffset = LSMIndexUtil.getComponentFileLSNOffset(
                                         (AbstractLSMIndex) LSMComponentJob.getLSMIndex(), diskComponent, filePath);
                                 asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
-                                        LSNByteOffset, remainingFiles == 0);
+                                        lsnOffset, remainingFiles == 0);
                             } else {
-                                asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
-                                        IMetadataPageManager.Constants.INVALID_LSN_OFFSET, remainingFiles == 0);
+                                asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile, -1L,
+                                        remainingFiles == 0);
                             }
-
                             requestBuffer = ReplicationProtocol.writeFileReplicationRequest(requestBuffer,
                                     asterixFileProperties, ReplicationRequestType.REPLICATE_FILE);
 
@@ -372,8 +370,8 @@ public class ReplicationManager implements IReplicationManager {
                 } else if (job.getOperation() == ReplicationOperation.DELETE) {
                     for (String filePath : job.getJobFiles()) {
                         remainingFiles--;
-                        asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile,
-                                IMetadataPageManager.Constants.INVALID_LSN_OFFSET, remainingFiles == 0);
+                        asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile, -1L,
+                                remainingFiles == 0);
                         ReplicationProtocol.writeFileReplicationRequest(requestBuffer, asterixFileProperties,
                                 ReplicationRequestType.DELETE_FILE);
 

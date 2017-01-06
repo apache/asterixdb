@@ -392,7 +392,7 @@ public class LogRecord implements ILogRecord {
             throw new BufferUnderflowException();
         }
         destTuple.setFieldCount(fieldCnt);
-        destTuple.resetByTupleOffset(srcBuffer, srcBuffer.position());
+        destTuple.resetByTupleOffset(srcBuffer.array(), srcBuffer.position());
         srcBuffer.position(srcBuffer.position() + size);
         return destTuple;
     }

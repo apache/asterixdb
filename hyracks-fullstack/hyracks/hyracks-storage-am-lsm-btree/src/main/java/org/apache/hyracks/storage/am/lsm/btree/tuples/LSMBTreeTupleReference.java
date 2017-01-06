@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
@@ -39,6 +37,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
         this.numKeyFields = numKeyFields;
     }
 
+    @Override
     public void setFieldCount(int fieldCount) {
         super.setFieldCount(fieldCount);
         // Don't change the fieldCount in reset calls.
@@ -53,7 +52,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
     }
 
     @Override
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOff) {
+    public void resetByTupleOffset(byte[] buf, int tupleStartOff) {
         this.buf = buf;
         this.tupleStartOff = tupleStartOff;
         if (numKeyFields != typeTraits.length) {
@@ -72,7 +71,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
 
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
-        resetByTupleOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
+        resetByTupleOffset(frame.getBuffer().array(), frame.getTupleOffset(tupleIndex));
     }
 
     @Override
@@ -85,7 +84,7 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
     public boolean isAntimatter() {
           // Check if the leftmost bit is 0 or 1.
         final byte mask = (byte) (1 << 7);
-        if ((buf.array()[tupleStartOff] & mask) != 0) {
+        if ((buf[tupleStartOff] & mask) != 0) {
             return true;
         }
         return false;

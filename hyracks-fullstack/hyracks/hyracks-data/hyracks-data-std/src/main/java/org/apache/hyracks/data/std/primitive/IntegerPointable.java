@@ -45,7 +45,7 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IPointable createPointable() {
+        public IntegerPointable createPointable() {
             return new IntegerPointable();
         }
 

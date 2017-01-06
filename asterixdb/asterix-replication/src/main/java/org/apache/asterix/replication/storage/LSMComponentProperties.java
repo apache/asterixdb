@@ -38,7 +38,7 @@ public class LSMComponentProperties {
 
     private AtomicInteger numberOfFiles;
     private String componentId;
-    private long LSNOffset;
+    private long lsnOffset;
     private long originalLSN;
     private String nodeId;
     private Long replicaLSN;
@@ -54,9 +54,7 @@ public class LSMComponentProperties {
                 job.getLSMIndexOperationContext());
         opType = job.getLSMOpType();
     }
-
     public LSMComponentProperties() {
-
     }
 
     public static long getLSMComponentLSN(AbstractLSMIndex lsmIndex, ILSMIndexOperationContext ctx) {
@@ -79,7 +77,7 @@ public class LSMComponentProperties {
         dos.writeUTF(nodeId);
         dos.writeInt(numberOfFiles.get());
         dos.writeLong(originalLSN);
-        dos.writeLong(LSNOffset);
+        dos.writeLong(lsnOffset);
         dos.writeInt(opType.ordinal());
     }
 
@@ -89,7 +87,7 @@ public class LSMComponentProperties {
         lsmCompProp.nodeId = input.readUTF();
         lsmCompProp.numberOfFiles = new AtomicInteger(input.readInt());
         lsmCompProp.originalLSN = input.readLong();
-        lsmCompProp.LSNOffset = input.readLong();
+        lsmCompProp.lsnOffset = input.readLong();
         lsmCompProp.opType = LSMOperationType.values()[input.readInt()];
         return lsmCompProp;
     }

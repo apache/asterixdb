@@ -22,14 +22,19 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 // A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
+    public static final MutableArrayValueReference LSN_KEY = new MutableArrayValueReference("LSN"
+            .getBytes());
+    public static final long INVALID = -1L;
 
     // First LSN per mutable component
     protected long[] firstLSNs;
@@ -90,14 +95,20 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
 
     public abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
 
-    protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
+    public void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
             throws HyracksDataException {
-        long componentLSN = getComponentLSN(oldComponents);
-        ((IMetadataPageManager) treeIndex.getPageManager()).setLSN(componentLSN);
+        byte[] lsn = new byte[Long.BYTES];
+        LongPointable.setLong(lsn, 0, getComponentLSN(oldComponents));
+        IMetadataPageManager metadataPageManager = (IMetadataPageManager) treeIndex.getPageManager();
+        metadataPageManager.put(metadataPageManager.createMetadataFrame(), LSN_KEY, new MutableArrayValueReference(
+                lsn));
     }
 
     public static long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
-        return ((IMetadataPageManager) treeIndex.getPageManager()).getLSN();
+        LongPointable pointable = new LongPointable();
+        IMetadataPageManager metadataPageManager = (IMetadataPageManager) treeIndex.getPageManager();
+        metadataPageManager.get(metadataPageManager.createMetadataFrame(), LSN_KEY, pointable);
+        return pointable.getLength() == 0 ? INVALID : pointable.longValue();
     }
 
     public void updateLastLSN(long lastLSN) {

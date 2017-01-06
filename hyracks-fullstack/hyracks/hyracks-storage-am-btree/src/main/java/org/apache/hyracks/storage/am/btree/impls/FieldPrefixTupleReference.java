@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.am.btree.impls;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
@@ -84,11 +82,11 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     public int getFieldLength(int fIdx) {
         if (fIdx < numPrefixFields) {
             helperTuple.setFieldCount(numPrefixFields);
-            helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer().array(), prefixTupleStartOff);
             return helperTuple.getFieldLength(fIdx);
         } else {
             helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
-            helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer().array(), suffixTupleStartOff);
             return helperTuple.getFieldLength(fIdx - numPrefixFields);
         }
     }
@@ -97,18 +95,18 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     public int getFieldStart(int fIdx) {
         if (fIdx < numPrefixFields) {
             helperTuple.setFieldCount(numPrefixFields);
-            helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer().array(), prefixTupleStartOff);
             return helperTuple.getFieldStart(fIdx);
         } else {
             helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
-            helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
+            helperTuple.resetByTupleOffset(frame.getBuffer().array(), suffixTupleStartOff);
             return helperTuple.getFieldStart(fIdx - numPrefixFields);
         }
     }
 
     // unsupported operation
     @Override
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset) {
+    public void resetByTupleOffset(byte[] buf, int tupleStartOffset) {
         throw new UnsupportedOperationException("Resetting this type of frame by offset is not supported.");
     }
 
@@ -119,15 +117,16 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
     public int getSuffixTupleSize() {
         helperTuple.setFieldCount(numPrefixFields, fieldCount - numPrefixFields);
-        helperTuple.resetByTupleOffset(frame.getBuffer(), suffixTupleStartOff);
+        helperTuple.resetByTupleOffset(frame.getBuffer().array(), suffixTupleStartOff);
         return helperTuple.getTupleSize();
     }
 
     public int getPrefixTupleSize() {
-        if (numPrefixFields == 0)
+        if (numPrefixFields == 0) {
             return 0;
+        }
         helperTuple.setFieldCount(numPrefixFields);
-        helperTuple.resetByTupleOffset(frame.getBuffer(), prefixTupleStartOff);
+        helperTuple.resetByTupleOffset(frame.getBuffer().array(), prefixTupleStartOff);
         return helperTuple.getTupleSize();
     }
 

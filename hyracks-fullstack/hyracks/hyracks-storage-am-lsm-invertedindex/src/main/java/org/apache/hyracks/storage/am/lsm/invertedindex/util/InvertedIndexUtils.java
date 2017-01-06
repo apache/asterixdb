@@ -164,9 +164,8 @@ public class InvertedIndexUtils {
         if (filterCmpFactories != null) {
             TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
             filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
-            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory,
-                    diskBufferCache.getPageSize());
-            filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
+            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
+            filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
         LSMInvertedIndex invIndex = new LSMInvertedIndex(ioManager, virtualBufferCaches, invIndexFactory,
                 deletedKeysBTreeFactory,
@@ -216,9 +215,8 @@ public class InvertedIndexUtils {
         if (filterCmpFactories != null) {
             TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
             filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
-            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory,
-                    diskBufferCache.getPageSize());
-            filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
+            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
+            filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
         PartitionedLSMInvertedIndex invIndex = new PartitionedLSMInvertedIndex(ioManager, virtualBufferCaches,
                 invIndexFactory,

@@ -34,15 +34,12 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
-    protected static final int pageLsnOff = 0; // 0
-    protected static final int tupleCountOff = pageLsnOff + 8; // 8
-    protected static final int freeSpaceOff = tupleCountOff + 4; // 12
-    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
-    protected static final int levelOff = totalFreeSpaceOff + 4; // 20
-    protected static final int flagOff = levelOff + 1; // 21
-
-    protected static final byte smFlagBit           = 0x1;
-    protected static final byte largeFlagBit        = 0x2;
+    protected static final int PAGE_LSN_OFFSET = Constants.RESERVED_HEADER_SIZE;
+    protected static final int TOTAL_FREE_SPACE_OFFSET = PAGE_LSN_OFFSET + 8;
+    protected static final int FLAG_OFFSET = TOTAL_FREE_SPACE_OFFSET + 4;
+    protected static final int RESERVED_HEADER_SIZE = FLAG_OFFSET + 1;
+    protected static final byte SMALL_FLAG_BIT = 0x1;
+    protected static final byte LARGE_FLAG_BIT = 0x2;
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -60,12 +57,12 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public void initBuffer(byte level) {
-        buf.putLong(pageLsnOff, 0); // TODO: might to set to a different lsn
+        buf.putLong(PAGE_LSN_OFFSET, 0); // TODO: might to set to a different lsn
         // during creation
-        buf.putInt(tupleCountOff, 0);
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, 0);
         resetSpaceParams();
-        buf.put(levelOff, level);
-        buf.put(flagOff, (byte) 0);
+        buf.put(Constants.LEVEL_OFFSET, level);
+        buf.put(FLAG_OFFSET, (byte) 0);
     }
 
     @Override
@@ -75,56 +72,56 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public boolean isLeaf() {
-        return buf.get(levelOff) == 0;
+        return buf.get(Constants.LEVEL_OFFSET) == 0;
     }
 
     public boolean getSmFlag() {
-        return (buf.get(flagOff) & smFlagBit) != 0;
+        return (buf.get(FLAG_OFFSET) & SMALL_FLAG_BIT) != 0;
     }
 
     public void setSmFlag(boolean smFlag) {
         if (smFlag) {
-            buf.put(flagOff, (byte) (buf.get(flagOff) | smFlagBit));
+            buf.put(FLAG_OFFSET, (byte) (buf.get(FLAG_OFFSET) | SMALL_FLAG_BIT));
         } else {
-            buf.put(flagOff, (byte) (buf.get(flagOff) & ~smFlagBit));
+            buf.put(FLAG_OFFSET, (byte) (buf.get(FLAG_OFFSET) & ~SMALL_FLAG_BIT));
         }
     }
 
     public void setLargeFlag(boolean largeFlag) {
         if (largeFlag) {
-            buf.put(flagOff, (byte) (buf.get(flagOff) | largeFlagBit));
+            buf.put(FLAG_OFFSET, (byte) (buf.get(FLAG_OFFSET) | LARGE_FLAG_BIT));
         } else {
-            buf.put(flagOff, (byte) (buf.get(flagOff) & ~largeFlagBit));
+            buf.put(FLAG_OFFSET, (byte) (buf.get(FLAG_OFFSET) & ~LARGE_FLAG_BIT));
         }
     }
 
     public boolean getLargeFlag() {
-        return (buf.get(flagOff) & largeFlagBit) != 0;
+        return (buf.get(FLAG_OFFSET) & LARGE_FLAG_BIT) != 0;
     }
 
     @Override
     public boolean isInterior() {
-        return buf.get(levelOff) > 0;
+        return buf.get(Constants.LEVEL_OFFSET) > 0;
     }
 
     @Override
     public byte getLevel() {
-        return buf.get(levelOff);
+        return buf.get(Constants.LEVEL_OFFSET);
     }
 
     @Override
     public void setLevel(byte level) {
-        buf.put(levelOff, level);
+        buf.put(Constants.LEVEL_OFFSET, level);
     }
 
     @Override
     public int getFreeSpaceOff() {
-        return buf.getInt(freeSpaceOff);
+        return buf.getInt(Constants.FREE_SPACE_OFFSET);
     }
 
     @Override
     public void setFreeSpaceOff(int freeSpace) {
-        buf.putInt(freeSpaceOff, freeSpace);
+        buf.putInt(Constants.FREE_SPACE_OFFSET, freeSpace);
     }
 
     @Override
@@ -146,8 +143,8 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     @Override
     public boolean compact() {
         resetSpaceParams();
-        int tupleCount = buf.getInt(tupleCountOff);
-        int freeSpace = buf.getInt(freeSpaceOff);
+        int tupleCount = buf.getInt(Constants.TUPLE_COUNT_OFFSET);
+        int freeSpace = buf.getInt(Constants.FREE_SPACE_OFFSET);
         // Sort the slots by the tuple offset they point to.
         ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<>();
         sortedTupleOffs.ensureCapacity(tupleCount);
@@ -161,7 +158,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         // the left, reclaiming free space.
         for (int i = 0; i < sortedTupleOffs.size(); i++) {
             int tupleOff = sortedTupleOffs.get(i).tupleOff;
-            frameTuple.resetByTupleOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf.array(), tupleOff);
             int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
                     + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1);
             int tupleLength = tupleEndOff - tupleOff;
@@ -170,8 +167,8 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
             freeSpace += tupleLength;
         }
         // Update contiguous free space pointer and total free space indicator.
-        buf.putInt(freeSpaceOff, freeSpace);
-        buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
+        buf.putInt(Constants.FREE_SPACE_OFFSET, freeSpace);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
         return false;
     }
 
@@ -179,7 +176,7 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
     public void delete(ITupleReference tuple, int tupleIndex) {
         int slotOff = slotManager.getSlotOff(tupleIndex);
         int tupleOff = slotManager.getTupleOff(slotOff);
-        frameTuple.resetByTupleOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf.array(), tupleOff);
         int tupleSize = tupleWriter.bytesRequired(frameTuple);
 
         // perform deletion (we just do a memcpy to overwrite the slot)
@@ -188,20 +185,21 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);
 
         // maintain space information
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) - 1);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + tupleSize + slotManager
+                .getSlotSize());
     }
 
     @Override
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException {
         int bytesRequired = tupleWriter.bytesRequired(tuple);
         // Enough space in the contiguous space region?
-        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
-                - (buf.getInt(tupleCountOff) * slotManager.getSlotSize())) {
+        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(Constants.FREE_SPACE_OFFSET)
+                - (buf.getInt(Constants.TUPLE_COUNT_OFFSET) * slotManager.getSlotSize())) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         }
         // Enough space after compaction?
-        if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) {
+        if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(TOTAL_FREE_SPACE_OFFSET)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
         }
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
@@ -223,29 +221,30 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         }
         // Enough space if we delete the old tuple and insert the new one
         // without compaction?
-        if (newTupleBytes <= buf.capacity() - buf.getInt(freeSpaceOff)
-                - (buf.getInt(tupleCountOff) * slotManager.getSlotSize())) {
+        if (newTupleBytes <= buf.capacity() - buf.getInt(Constants.FREE_SPACE_OFFSET)
+                - (buf.getInt(Constants.TUPLE_COUNT_OFFSET) * slotManager.getSlotSize())) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         }
         // Enough space if we delete the old tuple and compact?
-        if (additionalBytesRequired <= buf.getInt(totalFreeSpaceOff)) {
+        if (additionalBytesRequired <= buf.getInt(TOTAL_FREE_SPACE_OFFSET)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
         }
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
     protected void resetSpaceParams() {
-        buf.putInt(freeSpaceOff, getPageHeaderSize());
-        buf.putInt(totalFreeSpaceOff, buf.capacity() - getPageHeaderSize());
+        buf.putInt(Constants.FREE_SPACE_OFFSET, getPageHeaderSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.capacity() - getPageHeaderSize());
     }
 
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
-        slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
-        int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+        slotManager.insertSlot(tupleIndex, buf.getInt(Constants.FREE_SPACE_OFFSET));
+        int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(Constants.FREE_SPACE_OFFSET));
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
+        buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager
+                .getSlotSize());
     }
 
     @Override
@@ -260,31 +259,31 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         } else {
             // Insert the new tuple at the end of the free space, and change the
             // slot value (effectively "deleting" the old tuple).
-            int newTupleOff = buf.getInt(freeSpaceOff);
+            int newTupleOff = buf.getInt(Constants.FREE_SPACE_OFFSET);
             bytesWritten = tupleWriter.writeTuple(newTuple, buf.array(), newTupleOff);
             // Update slot value.
             buf.putInt(slotOff, newTupleOff);
             // Update contiguous free space pointer.
-            buf.putInt(freeSpaceOff, newTupleOff + bytesWritten);
+            buf.putInt(Constants.FREE_SPACE_OFFSET, newTupleOff + bytesWritten);
         }
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + oldTupleBytes - bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + oldTupleBytes - bytesWritten);
     }
 
     @Override
     public String printHeader() {
         StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append("pageLsnOff:        " + pageLsnOff + "\n");
-        strBuilder.append("tupleCountOff:     " + tupleCountOff + "\n");
-        strBuilder.append("freeSpaceOff:      " + freeSpaceOff + "\n");
-        strBuilder.append("totalFreeSpaceOff: " + totalFreeSpaceOff + "\n");
-        strBuilder.append("levelOff:          " + levelOff + "\n");
-        strBuilder.append("flagOff:           " + flagOff + "\n");
+        strBuilder.append("pageLsnOff:        " + PAGE_LSN_OFFSET + "\n");
+        strBuilder.append("tupleCountOff:     " + Constants.TUPLE_COUNT_OFFSET + "\n");
+        strBuilder.append("freeSpaceOff:      " + Constants.FREE_SPACE_OFFSET + "\n");
+        strBuilder.append("totalFreeSpaceOff: " + TOTAL_FREE_SPACE_OFFSET + "\n");
+        strBuilder.append("levelOff:          " + Constants.LEVEL_OFFSET + "\n");
+        strBuilder.append("flagOff:           " + FLAG_OFFSET + "\n");
         return strBuilder.toString();
     }
 
     @Override
     public int getTupleCount() {
-        return buf.getInt(tupleCountOff);
+        return buf.getInt(Constants.TUPLE_COUNT_OFFSET);
     }
 
     @Override
@@ -299,17 +298,17 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
     @Override
     public long getPageLsn() {
-        return buf.getLong(pageLsnOff);
+        return buf.getLong(PAGE_LSN_OFFSET);
     }
 
     @Override
     public void setPageLsn(long pageLsn) {
-        buf.putLong(pageLsnOff, pageLsn);
+        buf.putLong(PAGE_LSN_OFFSET, pageLsn);
     }
 
     @Override
     public int getTotalFreeSpace() {
-        return buf.getInt(totalFreeSpaceOff);
+        return buf.getInt(TOTAL_FREE_SPACE_OFFSET);
     }
 
     @Override

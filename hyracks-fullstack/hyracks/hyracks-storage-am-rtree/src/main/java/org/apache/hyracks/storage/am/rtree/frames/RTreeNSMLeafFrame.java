@@ -71,18 +71,19 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         return true;
     }
 
+    @Override
     public int getTupleSize(ITupleReference tuple) {
         return tupleWriter.bytesRequired(tuple);
     }
 
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
-        slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
-        int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(freeSpaceOff));
-
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+        slotManager.insertSlot(-1, buf.getInt(Constants.FREE_SPACE_OFFSET));
+        int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(Constants.FREE_SPACE_OFFSET));
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
+        buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager
+                .getSlotSize());
     }
 
     @Override
@@ -90,7 +91,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         int slotOff = slotManager.getSlotOff(tupleIndex);
 
         int tupleOff = slotManager.getTupleOff(slotOff);
-        frameTuple.resetByTupleOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf.array(), tupleOff);
         int tupleSize = tupleWriter.bytesRequired(frameTuple);
 
         // perform deletion (we just do a memcpy to overwrite the slot)
@@ -99,8 +100,9 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);
 
         // maintain space information
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) - 1);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + tupleSize + slotManager
+                .getSlotSize());
     }
 
     @Override
@@ -108,6 +110,7 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         return frameTuple.getFieldCount();
     }
 
+    @Override
     public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex, MultiComparator cmp)
             throws HyracksDataException {
         // Examine the tuple index to determine whether it is valid or not.

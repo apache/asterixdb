@@ -25,7 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.MathUtil;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.common.arraylist.IntArrayList;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -46,7 +46,7 @@ public class TreeIndexBufferCacheWarmup {
     }
 
     public void warmup(ITreeIndexFrame frame,
-            ITreeIndexMetaDataFrame metaFrame, int[] warmupTreeLevels,
+            ITreeIndexMetadataFrame metaFrame, int[] warmupTreeLevels,
             int[] warmupRepeats) throws HyracksDataException {
         bufferCache.openFile(fileId);
 

@@ -31,6 +31,21 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
 public interface ITreeIndexFrame {
 
+    public static class Constants {
+        /*
+         * Storage version #. Change this if you alter any tree frame formats to stop
+         * possible corruption from old versions reading new formats.
+         */
+        public static final int VERSION = 5;
+        public static final int TUPLE_COUNT_OFFSET = 0;
+        public static final int FREE_SPACE_OFFSET = TUPLE_COUNT_OFFSET + 4;
+        public static final int LEVEL_OFFSET = FREE_SPACE_OFFSET + 4;
+        public static final int RESERVED_HEADER_SIZE = LEVEL_OFFSET + 1;
+
+        private Constants() {
+        }
+    }
+
     public void initBuffer(byte level);
 
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException;
@@ -73,7 +88,7 @@ public interface ITreeIndexFrame {
     public String printHeader();
 
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
-                      IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
+            IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
             throws HyracksDataException, TreeIndexException;
 
     public ISlotManager getSlotManager();

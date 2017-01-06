@@ -25,22 +25,19 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterManager;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterReference;
 
 public class LSMComponentFilterManager implements ILSMComponentFilterManager {
 
-    private final IBufferCache bufferCache;
+    public static final MutableArrayValueReference FILTER_KEY = new MutableArrayValueReference("Filter".getBytes());
     private final ILSMComponentFilterFrameFactory filterFrameFactory;
 
-    public LSMComponentFilterManager(IBufferCache bufferCache, ILSMComponentFilterFrameFactory filterFrameFactory) {
-        this.bufferCache = bufferCache;
+    public LSMComponentFilterManager(ILSMComponentFilterFrameFactory filterFrameFactory) {
         this.filterFrameFactory = filterFrameFactory;
     }
 
@@ -56,11 +53,8 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
     @Override
     public void writeFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
         IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
-        ICachedPage filterPage = treeMetaManager.getFilterPage();
+        ILSMComponentFilterReference filterFrame = filterFrameFactory.createFrame();
         try {
-            ILSMComponentFilterFrame filterFrame = filterFrameFactory.createFrame();
-            filterFrame.setPage(filterPage);
-            filterFrame.initBuffer();
             if (filter.getMinTuple() != null) {
                 filterFrame.writeMinTuple(filter.getMinTuple());
             }
@@ -68,39 +62,23 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
                 filterFrame.writeMaxTuple(filter.getMaxTuple());
             }
         } finally {
-            treeMetaManager.setFilterPage(filterPage);
+            treeMetaManager.put(treeMetaManager.createMetadataFrame(), FILTER_KEY, filterFrame);
         }
     }
 
     @Override
     public boolean readFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
-        int fileId = treeIndex.getFileId();
         IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
-        int componentFilterPageId = treeMetaManager.getFilterPageId();
-        if (componentFilterPageId < 0) {
+        ILSMComponentFilterReference filterFrame = filterFrameFactory.createFrame();
+        treeMetaManager.get(treeMetaManager.createMetadataFrame(), FILTER_KEY, filterFrame);
+        // TODO: Filters never have one of min/max set and the other not
+        if (!filterFrame.isMinTupleSet() || !filterFrame.isMaxTupleSet()) {
             return false;
         }
-
-        ICachedPage filterPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, componentFilterPageId),
-                false);
-
-        filterPage.acquireReadLatch();
-        try {
-            ILSMComponentFilterFrame filterFrame = filterFrameFactory.createFrame();
-            filterFrame.setPage(filterPage);
-
-            if (!filterFrame.isMinTupleSet() || !filterFrame.isMaxTupleSet()) {
-                return false;
-            }
-            List<ITupleReference> filterTuples = new ArrayList<>();
-            filterTuples.add(filterFrame.getMinTuple());
-            filterTuples.add(filterFrame.getMaxTuple());
-            updateFilterInfo(filter, filterTuples);
-
-        } finally {
-            filterPage.releaseReadLatch();
-            bufferCache.unpin(filterPage);
-        }
+        List<ITupleReference> filterTuples = new ArrayList<>();
+        filterTuples.add(filterFrame.getMinTuple());
+        filterTuples.add(filterFrame.getMaxTuple());
+        updateFilterInfo(filter, filterTuples);
         return true;
     }
 

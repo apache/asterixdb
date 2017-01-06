@@ -50,7 +50,7 @@ public interface IPageManager {
      * Create a metadata frame to be used for reading and writing to metadata pages
      * @return a new metadata frame
      */
-    ITreeIndexMetaDataFrame createMetadataFrame();
+    ITreeIndexMetadataFrame createMetadataFrame();
 
     /**
      * Determines where the main metadata page is located in an index file
@@ -82,7 +82,7 @@ public interface IPageManager {
      * @return A page location, or -1 if no free page could be found or allocated
      * @throws HyracksDataException
      */
-    int takePage(ITreeIndexMetaDataFrame frame) throws HyracksDataException;
+    int takePage(ITreeIndexMetadataFrame frame) throws HyracksDataException;
 
     /**
      * Get the location of a block of free pages to use for index operations
@@ -92,7 +92,7 @@ public interface IPageManager {
      * @return The starting page location, or -1 if a block of free pages could be found or allocated
      * @throws HyracksDataException
      */
-    int takeBlock(ITreeIndexMetaDataFrame frame, int count) throws HyracksDataException;
+    int takeBlock(ITreeIndexMetadataFrame frame, int count) throws HyracksDataException;
 
     /**
      * Add a page back to the pool of free pages within an index file
@@ -103,7 +103,7 @@ public interface IPageManager {
      *            The page to be returned to the set of free pages
      * @throws HyracksDataException
      */
-    void releasePage(ITreeIndexMetaDataFrame frame, int page) throws HyracksDataException;
+    void releasePage(ITreeIndexMetadataFrame frame, int page) throws HyracksDataException;
 
     /**
      * Add a page back to the pool of free pages within an index file
@@ -115,7 +115,7 @@ public interface IPageManager {
      *            the number of regular sized pages in the free pages block
      * @throws HyracksDataException
      */
-    void releaseBlock(ITreeIndexMetaDataFrame frame, int page, int count) throws HyracksDataException;
+    void releaseBlock(ITreeIndexMetadataFrame frame, int page, int count) throws HyracksDataException;
 
     /**
      * Gets the highest page offset according to the metadata
@@ -125,7 +125,7 @@ public interface IPageManager {
      * @return The locaiton of the highest offset page
      * @throws HyracksDataException
      */
-    int getMaxPageId(ITreeIndexMetaDataFrame frame) throws HyracksDataException;
+    int getMaxPageId(ITreeIndexMetadataFrame frame) throws HyracksDataException;
 
     /**
      * Check whether the index is empty or not.

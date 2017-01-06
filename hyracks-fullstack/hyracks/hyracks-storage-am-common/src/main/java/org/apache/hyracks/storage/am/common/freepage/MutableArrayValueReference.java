@@ -16,9 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.common.freepage;
 
-package org.apache.hyracks.storage.am.common.api;
+import org.apache.hyracks.data.std.api.IValueReference;
 
-public interface ITreeIndexMetaDataFrameFactory {
-    public ITreeIndexMetaDataFrame createFrame();
+public class MutableArrayValueReference implements IValueReference {
+    private byte[] array;
+
+    public MutableArrayValueReference() {
+        //mutable array. user doesn't need to specify the array in advance
+    }
+
+    public MutableArrayValueReference(byte[] array) {
+        this.array = array;
+    }
+
+    public void set(byte[] array) {
+        this.array = array;
+    }
+
+    @Override
+    public byte[] getByteArray() {
+        return array;
+    }
+
+    @Override
+    public int getStartOffset() {
+        return 0;
+    }
+
+    @Override
+    public int getLength() {
+        return array == null ? 0 : array.length;
+    }
+
 }

@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.common.api;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ITreeIndexTupleReference extends ITupleReference {
@@ -28,7 +26,7 @@ public interface ITreeIndexTupleReference extends ITupleReference {
 
     public void setFieldCount(int fieldStartIndex, int fieldCount);
 
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOffset);
+    public void resetByTupleOffset(byte[] buf, int tupleStartOffset);
 
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex);
 

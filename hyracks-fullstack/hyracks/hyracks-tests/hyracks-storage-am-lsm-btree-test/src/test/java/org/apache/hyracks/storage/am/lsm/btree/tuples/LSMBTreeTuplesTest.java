@@ -103,22 +103,22 @@ public class LSMBTreeTuplesTest {
                 for (int r = 0; r < 4; r++) {
 
                     // Check matter tuple with lsmBTreeTuple.
-                    lsmBTreeTuple.resetByTupleOffset(matterBuf, 0);
+                    lsmBTreeTuple.resetByTupleOffset(matterBuf.array(), 0);
                     checkTuple(lsmBTreeTuple, numFields, false, fieldSerdes, fields);
 
                     // Create a copy using copyTupleWriter, and verify again.
                     ByteBuffer copyMatterBuf = writeTuple(lsmBTreeTuple, copyTupleWriter);
-                    lsmBTreeTuple.resetByTupleOffset(copyMatterBuf, 0);
+                    lsmBTreeTuple.resetByTupleOffset(copyMatterBuf.array(), 0);
                     checkTuple(lsmBTreeTuple, numFields, false, fieldSerdes, fields);
 
                     // Check antimatter tuple with lsmBTreeTuple.
-                    lsmBTreeTuple.resetByTupleOffset(antimatterBuf, 0);
+                    lsmBTreeTuple.resetByTupleOffset(antimatterBuf.array(), 0);
                     // Should only contain keys.
                     checkTuple(lsmBTreeTuple, numKeyFields, true, fieldSerdes, fields);
 
                     // Create a copy using copyTupleWriter, and verify again.
                     ByteBuffer copyAntimatterBuf = writeTuple(lsmBTreeTuple, copyTupleWriter);
-                    lsmBTreeTuple.resetByTupleOffset(copyAntimatterBuf, 0);
+                    lsmBTreeTuple.resetByTupleOffset(copyAntimatterBuf.array(), 0);
                     // Should only contain keys.
                     checkTuple(lsmBTreeTuple, numKeyFields, true, fieldSerdes, fields);
 
@@ -126,17 +126,17 @@ public class LSMBTreeTuplesTest {
                     // We should be able to manually set a prefix of the fields
                     // (the passed type traits in the tuple factory's constructor).
                     maxLsmBTreeTuple.setFieldCount(numFields);
-                    maxLsmBTreeTuple.resetByTupleOffset(matterBuf, 0);
+                    maxLsmBTreeTuple.resetByTupleOffset(matterBuf.array(), 0);
                     checkTuple(maxLsmBTreeTuple, numFields, false, fieldSerdes, fields);
 
                     // Check antimatter tuple with maxLsmBTreeTuple.
-                    maxLsmBTreeTuple.resetByTupleOffset(antimatterBuf, 0);
+                    maxLsmBTreeTuple.resetByTupleOffset(antimatterBuf.array(), 0);
                     // Should only contain keys.
                     checkTuple(maxLsmBTreeTuple, numKeyFields, true, fieldSerdes, fields);
 
                     // Resetting maxLsmBTreeTuple should set its field count to
                     // maxFieldSerdes.length, based on the its type traits.
-                    maxLsmBTreeTuple.resetByTupleOffset(maxMatterBuf, 0);
+                    maxLsmBTreeTuple.resetByTupleOffset(maxMatterBuf.array(), 0);
                     checkTuple(maxLsmBTreeTuple, maxFieldSerdes.length, false, maxFieldSerdes, maxFields);
                 }
             }

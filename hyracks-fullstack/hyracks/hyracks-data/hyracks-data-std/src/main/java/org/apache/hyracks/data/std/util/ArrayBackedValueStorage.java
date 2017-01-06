@@ -65,4 +65,8 @@ public class ArrayBackedValueStorage implements IMutableValueStorage {
         reset();
         append(value);
     }
+
+    public void setSize(int bytesRequired) {
+        data.setSize(bytesRequired);
+    }
 }

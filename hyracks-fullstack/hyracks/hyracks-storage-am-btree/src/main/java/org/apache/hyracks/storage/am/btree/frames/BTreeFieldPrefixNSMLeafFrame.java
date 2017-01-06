@@ -56,15 +56,12 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
  */
 public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
-    protected static final int pageLsnOff = 0; // 0
-    protected static final int tupleCountOff = pageLsnOff + 8; // 8
-    protected static final int freeSpaceOff = tupleCountOff + 4; // 12
-    protected static final int totalFreeSpaceOff = freeSpaceOff + 4; // 16
-    protected static final int levelOff = totalFreeSpaceOff + 4; // 20
-    protected static final int smFlagOff = levelOff + 1; // 21
-    protected static final int uncompressedTupleCountOff = smFlagOff + 1; // 22
-    protected static final int prefixTupleCountOff = uncompressedTupleCountOff + 4; // 26
-    protected static final int nextLeafOff = prefixTupleCountOff + 4; // 30
+    protected static final int PAGE_LSN_OFFSET = ITreeIndexFrame.Constants.RESERVED_HEADER_SIZE;
+    protected static final int TOTAL_FREE_SPACE_OFFSET = PAGE_LSN_OFFSET + 8;
+    protected static final int SM_FLAG_OFFSET = TOTAL_FREE_SPACE_OFFSET + 4;
+    protected static final int UNCOMPRESSED_TUPLE_COUNT_OFFSET = SM_FLAG_OFFSET + 1;
+    protected static final int PREFIX_TUPLE_COUNT_OFFSET = UNCOMPRESSED_TUPLE_COUNT_OFFSET + 4;
+    protected static final int NEXT_LEAF_OFFSET = PREFIX_TUPLE_COUNT_OFFSET + 4;
 
     private final IPrefixSlotManager slotManager;
     private final ITreeIndexFrameCompressor compressor;
@@ -132,11 +129,11 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     public boolean compact() {
         resetSpaceParams();
 
-        int tupleCount = buf.getInt(tupleCountOff);
+        int tupleCount = buf.getInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET);
 
         // determine start of target free space (depends on assumptions stated above)
-        int freeSpace = buf.getInt(freeSpaceOff);
-        int prefixTupleCount = buf.getInt(prefixTupleCountOff);
+        int freeSpace = buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET);
+        int prefixTupleCount = buf.getInt(PREFIX_TUPLE_COUNT_OFFSET);
         if (prefixTupleCount > 0) {
 
             // debug
@@ -177,14 +174,16 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             int tupleLength = tupleEndOff - tupleOff;
             System.arraycopy(buf.array(), tupleOff, buf.array(), freeSpace, tupleLength);
 
-            slotManager.setSlot(sortedTupleOffs.get(i).slotOff, slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
+            slotManager.setSlot(sortedTupleOffs.get(i).slotOff,
+                    slotManager.encodeSlotFields(prefixSlotNum, freeSpace));
             freeSpace += tupleLength;
         }
 
-        buf.putInt(freeSpaceOff, freeSpace);
-        int totalFreeSpace = buf.capacity() - buf.getInt(freeSpaceOff)
-                - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
-        buf.putInt(totalFreeSpaceOff, totalFreeSpace);
+        buf.putInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET, freeSpace);
+        int totalFreeSpace = buf.capacity() - buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET)
+                - ((buf.getInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET) + buf.getInt(PREFIX_TUPLE_COUNT_OFFSET))
+                        * slotManager.getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, totalFreeSpace);
 
         return false;
     }
@@ -205,7 +204,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int suffixFieldStart = 0;
         if (prefixSlotNum == FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
             suffixFieldStart = 0;
-            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) - 1);
+            buf.putInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET, buf.getInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET) - 1);
         } else {
             int prefixSlot = buf.getInt(slotManager.getPrefixSlotOff(prefixSlotNum));
             suffixFieldStart = slotManager.decodeFirstSlotField(prefixSlot);
@@ -215,14 +214,17 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         tupleSize = tupleWriter.bytesRequired(frameTuple, suffixFieldStart, frameTuple.getFieldCount()
                 - suffixFieldStart);
 
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + tupleSize + slotManager.getSlotSize());
+        buf.putInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET, buf.getInt(
+                ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET) - 1);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + tupleSize
+                + slotManager.getSlotSize());
     }
 
     @Override
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException {
-        int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
-                - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
+        int freeContiguous = buf.capacity() - buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET)
+                - ((buf.getInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET) + buf.getInt(PREFIX_TUPLE_COUNT_OFFSET))
+                        * slotManager.getSlotSize());
 
         int bytesRequired = tupleWriter.bytesRequired(tuple);
 
@@ -232,7 +234,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         }
 
         // See if tuple would fit into remaining space after compaction.
-        if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff)) {
+        if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(TOTAL_FREE_SPACE_OFFSET)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
         }
 
@@ -255,7 +257,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
-        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(freeSpaceOff));
+        int slot = slotManager.insertSlot(tupleIndex, buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET));
         int prefixSlotNum = slotManager.decodeFirstSlotField(slot);
         int numPrefixFields = 0;
         if (prefixSlotNum != FieldPrefixSlotManager.TUPLE_UNCOMPRESSED) {
@@ -263,16 +265,19 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             int prefixSlot = buf.getInt(prefixSlotOff);
             numPrefixFields = slotManager.decodeFirstSlotField(prefixSlot);
         } else {
-            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
+            buf.putInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET, buf.getInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET) + 1);
         }
 
-        int freeSpace = buf.getInt(freeSpaceOff);
+        int freeSpace = buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET);
         int bytesWritten = tupleWriter.writeTupleFields(tuple, numPrefixFields,
                 tuple.getFieldCount() - numPrefixFields, buf.array(), freeSpace);
 
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+        buf.putInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET, buf.getInt(
+                ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET) + 1);
+        buf.putInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET, buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET)
+                + bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten
+                - slotManager.getSlotSize());
     }
 
     @Override
@@ -301,15 +306,16 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
             return FrameOpSpaceStatus.SUFFICIENT_INPLACE_SPACE;
         }
 
-        int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
-                - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
+        int freeContiguous = buf.capacity() - buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET)
+                - ((buf.getInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET) + buf.getInt(PREFIX_TUPLE_COUNT_OFFSET))
+                        * slotManager.getSlotSize());
 
         // Enough space if we delete the old tuple and insert the new one without compaction?
         if (newTupleBytes <= freeContiguous) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
         }
         // Enough space if we delete the old tuple and compact?
-        if (additionalBytesRequired <= buf.getInt(totalFreeSpaceOff)) {
+        if (additionalBytesRequired <= buf.getInt(TOTAL_FREE_SPACE_OFFSET)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
         }
         return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
@@ -336,41 +342,41 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         } else {
             // Insert the new tuple suffix at the end of the free space, and change
             // the slot value (effectively "deleting" the old tuple).
-            int newSuffixTupleStartOff = buf.getInt(freeSpaceOff);
+            int newSuffixTupleStartOff = buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET);
             bytesWritten = tupleWriter.writeTupleFields(newTuple, numPrefixFields, fieldCount - numPrefixFields,
                     buf.array(), newSuffixTupleStartOff);
             // Update slot value using the same prefix slot num.
             slotManager.setSlot(tupleSlotOff, slotManager.encodeSlotFields(prefixSlotNum, newSuffixTupleStartOff));
             // Update contiguous free space pointer.
-            buf.putInt(freeSpaceOff, newSuffixTupleStartOff + bytesWritten);
+            buf.putInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET, newSuffixTupleStartOff + bytesWritten);
         }
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + oldTupleBytes - bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + oldTupleBytes - bytesWritten);
     }
 
     protected void resetSpaceParams() {
-        buf.putInt(freeSpaceOff, getOrigFreeSpaceOff());
-        buf.putInt(totalFreeSpaceOff, getOrigTotalFreeSpace());
+        buf.putInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET, getOrigFreeSpaceOff());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, getOrigTotalFreeSpace());
     }
 
     @Override
     public void initBuffer(byte level) {
-        buf.putLong(pageLsnOff, 0);
+        buf.putLong(PAGE_LSN_OFFSET, 0);
         // during creation
-        buf.putInt(tupleCountOff, 0);
+        buf.putInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET, 0);
         resetSpaceParams();
-        buf.putInt(uncompressedTupleCountOff, 0);
-        buf.putInt(prefixTupleCountOff, 0);
-        buf.put(levelOff, level);
-        buf.put(smFlagOff, (byte) 0);
-        buf.putInt(nextLeafOff, -1);
+        buf.putInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET, 0);
+        buf.putInt(PREFIX_TUPLE_COUNT_OFFSET, 0);
+        buf.put(ITreeIndexFrame.Constants.LEVEL_OFFSET, level);
+        buf.put(SM_FLAG_OFFSET, (byte) 0);
+        buf.putInt(NEXT_LEAF_OFFSET, -1);
     }
 
     public void setTotalFreeSpace(int totalFreeSpace) {
-        buf.putInt(totalFreeSpaceOff, totalFreeSpace);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, totalFreeSpace);
     }
 
     public int getOrigTotalFreeSpace() {
-        return buf.capacity() - (nextLeafOff + 4);
+        return buf.capacity() - (NEXT_LEAF_OFFSET + 4);
     }
 
     @Override
@@ -437,7 +443,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new TreeIndexNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
+            throw new TreeIndexNonExistentKeyException(
+                    "Trying to update a tuple with a nonexistent key in leaf node.");
         }
         return slot;
     }
@@ -454,7 +461,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new TreeIndexNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
+            throw new TreeIndexNonExistentKeyException(
+                    "Trying to delete a tuple with a nonexistent key in leaf node.");
         }
         return slot;
     }
@@ -462,21 +470,21 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     @Override
     public String printHeader() {
         StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append("pageLsnOff:                " + pageLsnOff + "\n");
-        strBuilder.append("tupleCountOff:             " + tupleCountOff + "\n");
-        strBuilder.append("freeSpaceOff:              " + freeSpaceOff + "\n");
-        strBuilder.append("totalFreeSpaceOff:         " + totalFreeSpaceOff + "\n");
-        strBuilder.append("levelOff:                  " + levelOff + "\n");
-        strBuilder.append("smFlagOff:                 " + smFlagOff + "\n");
-        strBuilder.append("uncompressedTupleCountOff: " + uncompressedTupleCountOff + "\n");
-        strBuilder.append("prefixTupleCountOff:       " + prefixTupleCountOff + "\n");
-        strBuilder.append("nextLeafOff:               " + nextLeafOff + "\n");
+        strBuilder.append("pageLsnOff:                " + PAGE_LSN_OFFSET + "\n");
+        strBuilder.append("tupleCountOff:             " + ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET + "\n");
+        strBuilder.append("freeSpaceOff:              " + ITreeIndexFrame.Constants.FREE_SPACE_OFFSET + "\n");
+        strBuilder.append("totalFreeSpaceOff:         " + TOTAL_FREE_SPACE_OFFSET + "\n");
+        strBuilder.append("levelOff:                  " + ITreeIndexFrame.Constants.LEVEL_OFFSET + "\n");
+        strBuilder.append("smFlagOff:                 " + SM_FLAG_OFFSET + "\n");
+        strBuilder.append("uncompressedTupleCountOff: " + UNCOMPRESSED_TUPLE_COUNT_OFFSET + "\n");
+        strBuilder.append("prefixTupleCountOff:       " + PREFIX_TUPLE_COUNT_OFFSET + "\n");
+        strBuilder.append("nextLeafOff:               " + NEXT_LEAF_OFFSET + "\n");
         return strBuilder.toString();
     }
 
     @Override
     public int getTupleCount() {
-        return buf.getInt(tupleCountOff);
+        return buf.getInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET);
     }
 
     @Override
@@ -493,50 +501,50 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public long getPageLsn() {
-        return buf.getLong(pageLsnOff);
+        return buf.getLong(PAGE_LSN_OFFSET);
     }
 
     @Override
     public void setPageLsn(long pageLsn) {
-        buf.putLong(pageLsnOff, pageLsn);
+        buf.putLong(PAGE_LSN_OFFSET, pageLsn);
     }
 
     @Override
     public int getTotalFreeSpace() {
-        return buf.getInt(totalFreeSpaceOff);
+        return buf.getInt(TOTAL_FREE_SPACE_OFFSET);
     }
 
     @Override
     public boolean isLeaf() {
-        return buf.get(levelOff) == 0;
+        return buf.get(ITreeIndexFrame.Constants.LEVEL_OFFSET) == 0;
     }
 
     @Override
     public boolean isInterior() {
-        return buf.get(levelOff) > 0;
+        return buf.get(ITreeIndexFrame.Constants.LEVEL_OFFSET) > 0;
     }
 
     @Override
     public byte getLevel() {
-        return buf.get(levelOff);
+        return buf.get(ITreeIndexFrame.Constants.LEVEL_OFFSET);
     }
 
     @Override
     public void setLevel(byte level) {
-        buf.put(levelOff, level);
+        buf.put(ITreeIndexFrame.Constants.LEVEL_OFFSET, level);
     }
 
     @Override
     public boolean getSmFlag() {
-        return buf.get(smFlagOff) != 0;
+        return buf.get(SM_FLAG_OFFSET) != 0;
     }
 
     @Override
     public void setSmFlag(boolean smFlag) {
         if (smFlag) {
-            buf.put(smFlagOff, (byte) 1);
+            buf.put(SM_FLAG_OFFSET, (byte) 1);
         } else {
-            buf.put(smFlagOff, (byte) 0);
+            buf.put(SM_FLAG_OFFSET, (byte) 0);
         }
     }
 
@@ -551,21 +559,21 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     public int getPrefixTupleCount() {
-        return buf.getInt(prefixTupleCountOff);
+        return buf.getInt(PREFIX_TUPLE_COUNT_OFFSET);
     }
 
     public void setPrefixTupleCount(int prefixTupleCount) {
-        buf.putInt(prefixTupleCountOff, prefixTupleCount);
+        buf.putInt(PREFIX_TUPLE_COUNT_OFFSET, prefixTupleCount);
     }
 
     @Override
     public void insertSorted(ITupleReference tuple) throws HyracksDataException {
-        int freeSpace = buf.getInt(freeSpaceOff);
+        int freeSpace = buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET);
         int fieldsToTruncate = 0;
 
         // check if tuple matches last prefix tuple
-        if (buf.getInt(prefixTupleCountOff) > 0) {
-            framePrefixTuple.resetByTupleIndex(this, buf.getInt(prefixTupleCountOff) - 1);
+        if (buf.getInt(PREFIX_TUPLE_COUNT_OFFSET) > 0) {
+            framePrefixTuple.resetByTupleIndex(this, buf.getInt(PREFIX_TUPLE_COUNT_OFFSET) - 1);
             if (cmp.fieldRangeCompare(tuple, framePrefixTuple, 0, framePrefixTuple.getFieldCount()) == 0) {
                 fieldsToTruncate = framePrefixTuple.getFieldCount();
             }
@@ -577,17 +585,20 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         // insert slot
         int prefixSlotNum = FieldPrefixSlotManager.TUPLE_UNCOMPRESSED;
         if (fieldsToTruncate > 0) {
-            prefixSlotNum = buf.getInt(prefixTupleCountOff) - 1;
+            prefixSlotNum = buf.getInt(PREFIX_TUPLE_COUNT_OFFSET) - 1;
         } else {
-            buf.putInt(uncompressedTupleCountOff, buf.getInt(uncompressedTupleCountOff) + 1);
+            buf.putInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET, buf.getInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET) + 1);
         }
         int insSlot = slotManager.encodeSlotFields(prefixSlotNum, FieldPrefixSlotManager.GREATEST_KEY_INDICATOR);
         slotManager.insertSlot(insSlot, freeSpace);
 
         // update page metadata
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+        buf.putInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET, buf.getInt(
+                ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET) + 1);
+        buf.putInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET, buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET)
+                + bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten
+                - slotManager.getSlotSize());
     }
 
     @Override
@@ -688,8 +699,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int length = rf.slotManager.getSlotSize() * tuplesToRight;
         System.arraycopy(right.array(), src, right.array(), dest, length);
 
-        right.putInt(tupleCountOff, tuplesToRight);
-        right.putInt(prefixTupleCountOff, prefixesToRight);
+        right.putInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET, tuplesToRight);
+        right.putInt(PREFIX_TUPLE_COUNT_OFFSET, prefixesToRight);
 
         // on left page move slots to reflect possibly removed prefixes
         src = slotManager.getTupleSlotEndOff() + tuplesToRight * slotManager.getSlotSize();
@@ -698,8 +709,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         length = slotManager.getSlotSize() * tuplesToLeft;
         System.arraycopy(buf.array(), src, buf.array(), dest, length);
 
-        buf.putInt(tupleCountOff, tuplesToLeft);
-        buf.putInt(prefixTupleCountOff, prefixesToLeft);
+        buf.putInt(ITreeIndexFrame.Constants.TUPLE_COUNT_OFFSET, tuplesToLeft);
+        buf.putInt(PREFIX_TUPLE_COUNT_OFFSET, prefixesToLeft);
 
         // compact both pages
         compact();
@@ -721,39 +732,39 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
-        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
+        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
     }
 
     @Override
     public int getFreeSpaceOff() {
-        return buf.getInt(freeSpaceOff);
+        return buf.getInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET);
     }
 
     public int getOrigFreeSpaceOff() {
-        return nextLeafOff + 4;
+        return NEXT_LEAF_OFFSET + 4;
     }
 
     @Override
     public void setFreeSpaceOff(int freeSpace) {
-        buf.putInt(freeSpaceOff, freeSpace);
+        buf.putInt(ITreeIndexFrame.Constants.FREE_SPACE_OFFSET, freeSpace);
     }
 
     @Override
     public void setNextLeaf(int page) {
-        buf.putInt(nextLeafOff, page);
+        buf.putInt(NEXT_LEAF_OFFSET, page);
     }
 
     @Override
     public int getNextLeaf() {
-        return buf.getInt(nextLeafOff);
+        return buf.getInt(NEXT_LEAF_OFFSET);
     }
 
     public int getUncompressedTupleCount() {
-        return buf.getInt(uncompressedTupleCountOff);
+        return buf.getInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET);
     }
 
     public void setUncompressedTupleCount(int uncompressedTupleCount) {
-        buf.putInt(uncompressedTupleCountOff, uncompressedTupleCount);
+        buf.putInt(UNCOMPRESSED_TUPLE_COUNT_OFFSET, uncompressedTupleCount);
     }
 
     @Override
@@ -787,7 +798,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int getPageHeaderSize() {
-        return nextLeafOff;
+        return NEXT_LEAF_OFFSET;
     }
 
     @Override

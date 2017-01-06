@@ -95,7 +95,7 @@ public class InMemorySortRunner implements IExperimentRunner {
             for (int j = 0; j < batch.size(); j++) {
                 // Copy the tuple to the buffer and set the pre-created tuple ref.
                 tupleWriter.writeTuple(batch.get(j), tupleBuf.array(), tupleIndex * tupleSize);
-                tuples.get(tupleIndex).resetByTupleOffset(tupleBuf, tupleIndex * tupleSize);
+                tuples.get(tupleIndex).resetByTupleOffset(tupleBuf.array(), tupleIndex * tupleSize);
                 tupleIndex++;
             }
         }
@@ -150,7 +150,7 @@ public class InMemorySortRunner implements IExperimentRunner {
                     for (int j = 0; j < batch.size(); j++) {
                         // Copy the tuple to the buffer and set the pre-created tuple ref.
                         tupleWriter.writeTuple(batch.get(j), tupleBuf.array(), tupleIndex * tupleSize);
-                        tuples[tupleIndex].resetByTupleOffset(tupleBuf, tupleIndex * tupleSize);
+                        tuples[tupleIndex].resetByTupleOffset(tupleBuf.array(), tupleIndex * tupleSize);
                         skipList.add(tuples[tupleIndex]);
                         tupleIndex++;
                     }

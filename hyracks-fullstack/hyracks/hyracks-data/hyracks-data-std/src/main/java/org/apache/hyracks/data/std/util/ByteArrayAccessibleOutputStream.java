@@ -79,8 +79,9 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
 
     private void ensureCapacity(int minCapacity) {
         // overflow-conscious code
-        if (minCapacity - buf.length > 0)
+        if (minCapacity - buf.length > 0) {
             grow(minCapacity);
+        }
     }
 
     /**
@@ -94,11 +95,13 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
         // overflow-conscious code
         int oldCapacity = buf.length;
         int newCapacity = oldCapacity << 1;
-        if (newCapacity - minCapacity < 0)
+        if (newCapacity - minCapacity < 0) {
             newCapacity = minCapacity;
+        }
         if (newCapacity < 0) {
-            if (minCapacity < 0) // overflow
+            if (minCapacity < 0) {
                 throw new OutOfMemoryError();
+            }
             newCapacity = Integer.MAX_VALUE;
         }
         buf = Arrays.copyOf(buf, newCapacity);
@@ -109,5 +112,10 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
      */
     public int getLength() {
         return count;
+    }
+
+    public void setSize(int bytesRequired) {
+        ensureCapacity(bytesRequired);
+        count = bytesRequired;
     }
 }

@@ -53,7 +53,7 @@ public class TupleCopyValueExtractor implements IValueExtractor<ITupleReference>
         tupleBytes = new byte[numBytes];
         tupleWriter.writeTuple(tuple, tupleBytes, 0);
         buf = ByteBuffer.wrap(tupleBytes);
-        tupleReference.resetByTupleOffset(buf, 0);
+        tupleReference.resetByTupleOffset(buf.array(), 0);
         return tupleReference;
     }
 }

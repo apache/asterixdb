@@ -66,7 +66,7 @@ public class LSMHarness implements ILSMHarness {
         //only durable indexes are replicated
         this.replicationEnabled = replicationEnabled && lsmIndex.isDurable();
         if (replicationEnabled) {
-            this.componentsToBeReplicated = new ArrayList<ILSMComponent>();
+            this.componentsToBeReplicated = new ArrayList<>();
         }
     }
 
@@ -314,7 +314,7 @@ public class LSMHarness implements ILSMHarness {
                         for (ILSMComponent inactiveComp : inactiveDiskComponents) {
                             if (((AbstractDiskLSMComponent) inactiveComp).getFileReferenceCount() == 1) {
                                 if (inactiveDiskComponentsToBeDeleted == null) {
-                                    inactiveDiskComponentsToBeDeleted = new LinkedList<ILSMComponent>();
+                                    inactiveDiskComponentsToBeDeleted = new LinkedList<>();
                                 }
                                 inactiveDiskComponentsToBeDeleted.add(inactiveComp);
                             }

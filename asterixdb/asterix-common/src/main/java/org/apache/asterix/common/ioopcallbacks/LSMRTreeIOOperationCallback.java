@@ -53,7 +53,7 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
             }
         }
         // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
-        long maxLSN = -1;
+        long maxLSN = INVALID;
         for (Object o : diskComponents) {
             LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) o;
             maxLSN = Math.max(AbstractLSMIOOperationCallback.getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
@@ -66,8 +66,10 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMRTreeFileManager.RTREE_STRING)) {
             LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) diskComponent;
-            return ((IMetadataPageManager) rtreeComponent.getRTree().getPageManager()).getLSNOffset();
+            IMetadataPageManager metadataPageManager = (IMetadataPageManager) rtreeComponent.getRTree()
+                    .getPageManager();
+            return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
-        return IMetadataPageManager.Constants.INVALID_LSN_OFFSET;
+        return INVALID;
     }
 }

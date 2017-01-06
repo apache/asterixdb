@@ -16,44 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.common.frames;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame.Constants;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
-// all meta pages of this kind have a negative level
-// the first meta page has level -1, all other meta pages have level -2
-// the first meta page is special because it guarantees to have a correct max page
-// other meta pages (i.e., with level -2) have junk in the max page field
-
-public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
+/**
+ * Frame content
+ * [ Headers defined in {@link ITreeIndexFrame}][max page][next page][valid]
+ * [storage version][root page][free page count][k1 length][k1][v1 length][v1]
+ * [k2 length][k2][v2 length][v2].......
+ * ....
+ * ....
+ * [free page 5][free page 4][free page 3][free page 2][free page 1]
+ *
+ */
+public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
 
     private static final byte META_PAGE_LEVEL_INDICATOR = -1;
     private static final byte FREE_PAGE_LEVEL_INDICATOR = -2;
-
-    // Arbitrarily chosen magic integer.
-    protected static final int OBSOLETE_MAGIC_VALID_INT = 0x5bd1e995;
     protected static final int MAGIC_VALID_INT = 0x1B16DA7A;
-
-    protected static final int TUPLE_COUNT_OFFSET = 0; //0
-    protected static final int FREE_SPACE_OFFSET = TUPLE_COUNT_OFFSET + 4; //4
-    protected static final int MAX_PAGE_OFFSET = FREE_SPACE_OFFSET + 4; //8
-    protected static final int LEVEL_OFFSET = MAX_PAGE_OFFSET + 12; //20
-    protected static final int NEXT_PAGE_OFFSET = LEVEL_OFFSET + 1; // 21
-    protected static final int VALID_OFFSET = NEXT_PAGE_OFFSET + 4; // 25
-
-    // The ADDITIONAL_FILTERING_PAGE_OFF is used only for LSM indexes.
-    // We store the page id that will be used to store the information of the the filter that is associated with a disk component.
-    // It is only set in the first meta page other meta pages (i.e., with level -2) have junk in the max page field.
-    private static final int ADDITIONAL_FILTERING_PAGE_OFFSET = VALID_OFFSET + 4; // 29
-    public static final int LSN_OFFSET = ADDITIONAL_FILTERING_PAGE_OFFSET + 4; // 33
-    private static final int LAST_MARKER_LSN_OFFSET = LSN_OFFSET + 8; // 41
-    public static final int STORAGE_VERSION_OFFSET = LAST_MARKER_LSN_OFFSET + 4; //45
-    public static final int ROOT_PAGE_NUMBER = STORAGE_VERSION_OFFSET + 4; //49
-    private static final int HEADER_END_OFFSET = ROOT_PAGE_NUMBER + 4; // 53
+    protected static final int MAX_PAGE_OFFSET = ITreeIndexFrame.Constants.RESERVED_HEADER_SIZE;
+    protected static final int NEXT_PAGE_OFFSET = MAX_PAGE_OFFSET + 4;
+    protected static final int VALID_OFFSET = NEXT_PAGE_OFFSET + 4;
+    protected static final int STORAGE_VERSION_OFFSET = VALID_OFFSET + 4;
+    protected static final int ROOT_PAGE_OFFSET = STORAGE_VERSION_OFFSET + 4;
+    protected static final int FREE_PAGE_COUNT_OFFSET = ROOT_PAGE_OFFSET + 4;
+    protected static final int HEADER_END_OFFSET = FREE_PAGE_COUNT_OFFSET + 4;
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
@@ -70,44 +66,35 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
 
     @Override
     public int getFreePage() {
-        int tupleCount = buf.getInt(TUPLE_COUNT_OFFSET);
-        if (tupleCount > 0) {
-            // return the last page from the linked list of free pages
-            // TODO: this is a dumb policy, but good enough for now
-            int lastPageOff = buf.getInt(FREE_SPACE_OFFSET) - 4;
-            buf.putInt(FREE_SPACE_OFFSET, lastPageOff);
-            buf.putInt(TUPLE_COUNT_OFFSET, tupleCount - 1);
-            return buf.getInt(lastPageOff);
-        } else {
-            return -1;
+        int freePages = buf.getInt(FREE_PAGE_COUNT_OFFSET);
+        if (freePages > 0) {
+            decrement(FREE_PAGE_COUNT_OFFSET);
+            return buf.getInt(buf.array().length - Integer.BYTES * freePages);
         }
+        return -1;
     }
 
-    // must be checked before adding free page
-    // user of this class is responsible for getting a free page as a new meta
-    // page, latching it, etc. if there is no space on this page
     @Override
-    public boolean hasSpace() {
-        return buf.getInt(FREE_SPACE_OFFSET) + 4 < buf.capacity();
+    public int getSpace() {
+        return buf.array().length - buf.getInt(Constants.FREE_SPACE_OFFSET) - (Integer.BYTES * buf.getInt(
+                FREE_PAGE_COUNT_OFFSET));
     }
 
-    // no bounds checking is done, there must be free space
     @Override
     public void addFreePage(int freePage) {
-        int freeSpace = buf.getInt(FREE_SPACE_OFFSET);
-        buf.putInt(freeSpace, freePage);
-        buf.putInt(FREE_SPACE_OFFSET, freeSpace + 4);
-        buf.putInt(TUPLE_COUNT_OFFSET, buf.getInt(TUPLE_COUNT_OFFSET) + 1);
+        increment(FREE_PAGE_COUNT_OFFSET);
+        int numFreePages = buf.getInt(FREE_PAGE_COUNT_OFFSET);
+        buf.putInt(buf.array().length - (Integer.BYTES * numFreePages), freePage);
     }
 
     @Override
     public byte getLevel() {
-        return buf.get(LEVEL_OFFSET);
+        return buf.get(Constants.LEVEL_OFFSET);
     }
 
     @Override
     public void setLevel(byte level) {
-        buf.put(LEVEL_OFFSET, level);
+        buf.put(Constants.LEVEL_OFFSET, level);
     }
 
     @Override
@@ -122,16 +109,15 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     }
 
     @Override
-    public void initBuffer() {
-        buf.putInt(TUPLE_COUNT_OFFSET, 0);
-        buf.putInt(FREE_SPACE_OFFSET, HEADER_END_OFFSET);
+    public void init() {
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, 0);
+        buf.putInt(Constants.FREE_SPACE_OFFSET, HEADER_END_OFFSET);
         buf.putInt(MAX_PAGE_OFFSET, 0);
-        buf.put(LEVEL_OFFSET, META_PAGE_LEVEL_INDICATOR);
+        buf.put(Constants.LEVEL_OFFSET, META_PAGE_LEVEL_INDICATOR);
         buf.putInt(NEXT_PAGE_OFFSET, -1);
-        buf.putInt(ADDITIONAL_FILTERING_PAGE_OFFSET, -1);
-        buf.putLong(LAST_MARKER_LSN_OFFSET, -1L);
-        buf.putInt(ROOT_PAGE_NUMBER, 1);
-        buf.putInt(STORAGE_VERSION_OFFSET, VERSION);
+        buf.putInt(ROOT_PAGE_OFFSET, 1);
+        buf.putInt(FREE_PAGE_COUNT_OFFSET, 0);
+        buf.putInt(STORAGE_VERSION_OFFSET, ITreeIndexFrame.Constants.VERSION);
         setValid(false);
     }
 
@@ -141,71 +127,33 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     }
 
     @Override
-    public void setNextPage(int nextPage) {
+    public void setNextMetadataPage(int nextPage) {
         buf.putInt(NEXT_PAGE_OFFSET, nextPage);
     }
 
     @Override
     public boolean isValid() {
-        return buf.getInt(VALID_OFFSET) == MAGIC_VALID_INT || buf.getInt(VALID_OFFSET) == OBSOLETE_MAGIC_VALID_INT;
+        return buf.getInt(VALID_OFFSET) == MAGIC_VALID_INT;
     }
 
     @Override
     public void setValid(boolean isValid) {
-        if (isValid) {
-            buf.putInt(VALID_OFFSET, MAGIC_VALID_INT);
-        } else {
-            buf.putInt(VALID_OFFSET, 0);
-        }
-    }
-
-    @Override
-    public long getLSN() {
-        return buf.getLong(LSN_OFFSET);
-    }
-
-    @Override
-    public void setLSN(long lsn) {
-        buf.putLong(LSN_OFFSET, lsn);
+        buf.putInt(VALID_OFFSET, isValid ? MAGIC_VALID_INT : 0);
     }
 
     @Override
     public int getVersion() {
-        if (buf.getInt(VALID_OFFSET) == OBSOLETE_MAGIC_VALID_INT) {
-            return VERSION * -1;
-        } else {
-            return buf.getInt(STORAGE_VERSION_OFFSET);
-        }
+        return buf.getInt(STORAGE_VERSION_OFFSET);
     }
 
     @Override
-    public long getLastMarkerLSN() {
-        return buf.getLong(LAST_MARKER_LSN_OFFSET);
+    public void setRootPageId(int rootPage) {
+        buf.putInt(ROOT_PAGE_OFFSET, rootPage);
     }
 
     @Override
-    public void setLastMarkerLSN(long lsn) {
-        buf.putLong(LAST_MARKER_LSN_OFFSET, lsn);
-    }
-
-    @Override
-    public int getLSMComponentFilterPageId() {
-        return buf.getInt(ADDITIONAL_FILTERING_PAGE_OFFSET);
-    }
-
-    @Override
-    public void setLSMComponentFilterPageId(int filterPage) {
-        buf.putInt(ADDITIONAL_FILTERING_PAGE_OFFSET, filterPage);
-    }
-
-    @Override
-    public void setRootPageNumber(int rootPage) {
-        buf.putInt(ROOT_PAGE_NUMBER, rootPage);
-    }
-
-    @Override
-    public int getRootPageNumber() {
-        return buf.getInt(ROOT_PAGE_NUMBER);
+    public int getRootPageId() {
+        return buf.getInt(ROOT_PAGE_OFFSET);
     }
 
     @Override
@@ -216,5 +164,154 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     @Override
     public boolean isFreePage() {
         return getLevel() == FREE_PAGE_LEVEL_INDICATOR;
+    }
+
+    @Override
+    public void get(IValueReference key, IPointable value) {
+        int tupleCount = getTupleCount();
+        int tupleStart = getTupleStart(0);
+        for (int i = 0; i < tupleCount; i++) {
+            if (isInner(key, tupleStart)) {
+                get(tupleStart + key.getLength() + Integer.BYTES, value);
+                return;
+            }
+            tupleStart = getNextTupleStart(tupleStart);
+        }
+        value.set(null, 0, 0);
+    }
+
+    private int find(IValueReference key) {
+        int tupleCount = getTupleCount();
+        int tupleStart = getTupleStart(0);
+        for (int i = 0; i < tupleCount; i++) {
+            if (isInner(key, tupleStart)) {
+                return i;
+            }
+            tupleStart = getNextTupleStart(tupleStart);
+        }
+        return -1;
+    }
+
+    private void get(int offset, IPointable value) {
+        int valueLength = buf.getInt(offset);
+        value.set(buf.array(), offset + Integer.BYTES, valueLength);
+    }
+
+    private static final int compare(byte[] b1, int s1, byte[] b2, int s2, int l) {
+        for (int i = 0; i < l; i++) {
+            if (b1[s1 + i] != b2[s2 + i]) {
+                return b1[s1 + i] - b2[s2 + i];
+            }
+        }
+        return 0;
+    }
+
+    private boolean isInner(IValueReference key, int tupleOffset) {
+        int keySize = buf.getInt(tupleOffset);
+        if (keySize == key.getLength()) {
+            return LIFOMetaDataFrame.compare(key.getByteArray(), key.getStartOffset(), buf.array(), tupleOffset
+                    + Integer.BYTES, keySize) == 0;
+        }
+        return false;
+    }
+
+    private int getTupleStart(int index) {
+        int offset = HEADER_END_OFFSET;
+        int i = 0;
+        while (i < index) {
+            i++;
+            offset = getNextTupleStart(offset);
+        }
+        return offset;
+    }
+
+    private int getNextTupleStart(int prevTupleOffset) {
+        int keyLength = buf.getInt(prevTupleOffset);
+        int offset = prevTupleOffset + keyLength + Integer.BYTES;
+        return offset + buf.getInt(offset) + Integer.BYTES;
+    }
+
+    private void put(int index, IValueReference value) throws HyracksDataException {
+        int offset = getTupleStart(index);
+        int length = buf.getInt(offset);
+        offset += Integer.BYTES + length;
+        length = buf.getInt(offset);
+        if (length != value.getLength()) {
+            throw new HyracksDataException("This frame doesn't support overwriting dynamically sized values");
+        }
+        offset += Integer.BYTES;
+        System.arraycopy(value.getByteArray(), value.getStartOffset(), buf.array(), offset, value.getLength());
+    }
+
+    @Override
+    public void put(IValueReference key, IValueReference value) throws HyracksDataException {
+        int index = find(key);
+        if (index >= 0) {
+            put(index, value);
+        } else {
+            int offset = buf.getInt(Constants.FREE_SPACE_OFFSET);
+            int available = getSpace();
+            int required = key.getLength() + Integer.BYTES + Integer.BYTES + value.getLength();
+            if (available < required) {
+                throw new HyracksDataException("Available space in the page ("
+                        + available + ") is not enough to store the key value pair(" + required + ")");
+            }
+            buf.putInt(offset, key.getLength());
+            offset += Integer.BYTES;
+            System.arraycopy(key.getByteArray(), key.getStartOffset(), buf.array(), offset, key.getLength());
+            offset += key.getLength();
+            buf.putInt(offset, value.getLength());
+            offset += Integer.BYTES;
+            System.arraycopy(value.getByteArray(), value.getStartOffset(), buf.array(), offset, value.getLength());
+            offset += value.getLength();
+            increment(Constants.TUPLE_COUNT_OFFSET);
+            buf.putInt(Constants.FREE_SPACE_OFFSET, offset);
+        }
+    }
+
+    @Override
+    public int getTupleCount() {
+        return buf.getInt(Constants.TUPLE_COUNT_OFFSET);
+    }
+
+    private void increment(int offset) {
+        buf.putInt(offset, buf.getInt(offset) + 1);
+    }
+
+    private void decrement(int offset) {
+        buf.putInt(offset, buf.getInt(offset) - 1);
+    }
+
+    @Override
+    public int getOffset(IValueReference key) {
+        int index = find(key);
+        if (index >= 0) {
+            int offset = getTupleStart(index);
+            return offset + key.getLength() + 2 * Integer.BYTES;
+        }
+        return -1;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder aString = new StringBuilder(this.getClass().getSimpleName()).append('\n').
+                append("Tuple Count: " + getTupleCount()).append('\n').
+                append("Free Space offset: " + buf.getInt(Constants.FREE_SPACE_OFFSET)).append('\n').
+                append("Level: " + buf.get(Constants.LEVEL_OFFSET)).append('\n').
+                append("Version: " + buf.getInt(STORAGE_VERSION_OFFSET)).append('\n').
+                append("Max Page: " + buf.getInt(MAX_PAGE_OFFSET)).append('\n').
+                append("Root Page: " + buf.getInt(ROOT_PAGE_OFFSET)).append('\n').
+                append("Number of free pages: " + buf.getInt(FREE_PAGE_COUNT_OFFSET));
+        int tupleCount = getTupleCount();
+        int offset;
+        for (int i = 0; i < tupleCount; i++) {
+            offset = getTupleStart(i);
+            int keyLength = buf.getInt(offset);
+            aString.append('\n').append("Key " + i + " size = " + keyLength);
+            offset += Integer.BYTES + keyLength;
+            int valueLength = buf.getInt(offset);
+            aString.append(", Value " + i + " size = " + valueLength);
+        }
+        return aString.toString();
     }
 }

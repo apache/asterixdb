@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
@@ -99,7 +99,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
                         .getLocalResourceFactory();
                 localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceRef
                         .getRelativePath(),
-                        LIFOMetaDataFrame.VERSION, partition));
+                        ITreeIndexFrame.Constants.VERSION, partition));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

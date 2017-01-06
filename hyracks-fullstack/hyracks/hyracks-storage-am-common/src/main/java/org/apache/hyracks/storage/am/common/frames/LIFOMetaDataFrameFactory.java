@@ -18,12 +18,12 @@
  */
 package org.apache.hyracks.storage.am.common.frames;
 
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 
-public class LIFOMetaDataFrameFactory implements ITreeIndexMetaDataFrameFactory {
+public class LIFOMetaDataFrameFactory implements ITreeIndexMetadataFrameFactory {
     @Override
-    public ITreeIndexMetaDataFrame createFrame() {
+    public ITreeIndexMetadataFrame createFrame() {
         return new LIFOMetaDataFrame();
     }
 }

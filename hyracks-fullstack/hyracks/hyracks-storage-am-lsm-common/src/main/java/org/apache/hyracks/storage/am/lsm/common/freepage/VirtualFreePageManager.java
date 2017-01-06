@@ -25,7 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -44,34 +44,34 @@ public class VirtualFreePageManager implements IPageManager {
     }
 
     @Override
-    public int takePage(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+    public int takePage(ITreeIndexMetadataFrame metaFrame) throws HyracksDataException {
         // The very first call returns page id 2 because the BTree uses
         // the first page as metadata page, and the second page as root page.
         return currentPageId.incrementAndGet();
     }
 
     @Override
-    public int takeBlock(ITreeIndexMetaDataFrame metaFrame, int count) throws HyracksDataException {
+    public int takeBlock(ITreeIndexMetadataFrame metaFrame, int count) throws HyracksDataException {
         return currentPageId.getAndUpdate(operand -> operand + count) + 1;
     }
 
     @Override
-    public int getMaxPageId(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+    public int getMaxPageId(ITreeIndexMetadataFrame metaFrame) throws HyracksDataException {
         return currentPageId.get();
     }
 
     @Override
-    public ITreeIndexMetaDataFrame createMetadataFrame() {
+    public ITreeIndexMetadataFrame createMetadataFrame() {
         return null;
     }
 
     @Override
-    public void releasePage(ITreeIndexMetaDataFrame metaFrame, int freePage) throws HyracksDataException {
+    public void releasePage(ITreeIndexMetadataFrame metaFrame, int freePage) throws HyracksDataException {
         throw new HyracksDataException("Pages of an in memory index are released through the virtual buffer cache");
     }
 
     @Override
-    public void releaseBlock(ITreeIndexMetaDataFrame metaFrame, int startingPage, int count)
+    public void releaseBlock(ITreeIndexMetadataFrame metaFrame, int startingPage, int count)
             throws HyracksDataException {
         throw new HyracksDataException("Pages of an in memory index are released through the virtual buffer cache");
     }

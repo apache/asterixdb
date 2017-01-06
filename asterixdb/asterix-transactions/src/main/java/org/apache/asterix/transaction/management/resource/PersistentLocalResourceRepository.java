@@ -55,7 +55,7 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
-import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
@@ -164,7 +164,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
 
             LocalResource rootLocalResource = new LocalResource(STORAGE_LOCAL_RESOURCE_ID,
-                    storageMetadataFile.getRelativePath(), 0, LIFOMetaDataFrame.VERSION, storageRootDirPath);
+                    storageMetadataFile.getRelativePath(), 0, ITreeIndexFrame.Constants.VERSION,
+                    storageRootDirPath);
             insert(rootLocalResource);
             LOGGER.log(Level.INFO, "created the root-metadata-file: " + storageMetadataFile.getAbsolutePath());
         }
@@ -343,7 +344,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         try (FileInputStream fis = new FileInputStream(file);
                 ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
             LocalResource resource = (LocalResource) oisFromFis.readObject();
-            if (resource.getVersion() == LIFOMetaDataFrame.VERSION) {
+            if (resource.getVersion() == ITreeIndexFrame.Constants.VERSION) {
                 return resource;
             } else {
                 throw new AsterixException("Storage version mismatch.");

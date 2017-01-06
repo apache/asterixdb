@@ -61,8 +61,10 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_STRING)) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) diskComponent;
-            return ((IMetadataPageManager) btreeComponent.getBTree().getPageManager()).getLSNOffset();
+            IMetadataPageManager metadataPageManager = (IMetadataPageManager) btreeComponent.getBTree()
+                    .getPageManager();
+            return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
-        return IMetadataPageManager.Constants.INVALID_LSN_OFFSET;
+        return INVALID;
     }
 }

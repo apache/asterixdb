@@ -20,21 +20,19 @@
 package org.apache.hyracks.storage.am.lsm.common.frames;
 
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterReference;
 
 public class LSMComponentFilterFrameFactory implements ILSMComponentFilterFrameFactory {
 
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private final int pageSize;
 
-    public LSMComponentFilterFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory, int pageSize) {
+    public LSMComponentFilterFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
-        this.pageSize = pageSize;
     }
 
     @Override
-    public ILSMComponentFilterFrame createFrame() {
-        return new LSMComponentFilterFrame(tupleWriterFactory.createTupleWriter(), pageSize);
+    public ILSMComponentFilterReference createFrame() {
+        return new LSMComponentFilterReference(tupleWriterFactory.createTupleWriter());
     }
 }

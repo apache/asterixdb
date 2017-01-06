@@ -38,7 +38,7 @@ import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -56,7 +56,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public IBTreeLeafFrame leafFrame;
     public IBTreeInteriorFrame interiorFrame;
     public final IPageManager freePageManager;
-    public final ITreeIndexMetaDataFrame metaFrame;
+    public final ITreeIndexMetadataFrame metaFrame;
     public IndexOperation op;
     public ITreeIndexCursor cursor;
     public BTreeCursorInitialState cursorInitialState;

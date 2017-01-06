@@ -66,8 +66,10 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMInvertedIndexFileManager.DELETED_KEYS_BTREE_SUFFIX)) {
             LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) diskComponent;
-            return ((IMetadataPageManager) invIndexComponent.getDeletedKeysBTree().getPageManager()).getLSNOffset();
+            IMetadataPageManager metadataPageManager = (IMetadataPageManager) invIndexComponent.getDeletedKeysBTree()
+                    .getPageManager();
+            return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
-        return IMetadataPageManager.Constants.INVALID_LSN_OFFSET;
+        return INVALID;
     }
 }

@@ -310,7 +310,6 @@ public class TestExecutor {
             throws Exception {
         System.err.println("Expected results file: " + expectedFile.toString());
         String lineExpected, lineActual;
-        int num = 1;
         try (BufferedReader readerExpected = new BufferedReader(
                 new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
                 BufferedReader readerActual = new BufferedReader(

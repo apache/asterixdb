@@ -40,7 +40,7 @@ public class FieldPrefixPrefixTupleReference extends TypeAwareTupleReference {
         int prefixSlot = concreteFrame.getBuffer().getInt(prefixSlotOff);
         setFieldCount(slotManager.decodeFirstSlotField(prefixSlot));
         tupleStartOff = slotManager.decodeSecondSlotField(prefixSlot);
-        buf = concreteFrame.getBuffer();
+        buf = concreteFrame.getBuffer().array();
         resetByTupleOffset(buf, tupleStartOff);
     }
 }

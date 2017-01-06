@@ -19,14 +19,13 @@
 
 package org.apache.hyracks.storage.am.common.tuples;
 
-import java.nio.ByteBuffer;
-
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class SimpleTupleReference implements ITreeIndexTupleReference {
 
-    protected ByteBuffer buf;
+    protected byte[] buf;
     protected int fieldStartIndex;
     protected int fieldCount;
     protected int tupleStartOff;
@@ -34,14 +33,14 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
     protected int fieldSlotsBytes;
 
     @Override
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOff) {
+    public void resetByTupleOffset(byte[] buf, int tupleStartOff) {
         this.buf = buf;
         this.tupleStartOff = tupleStartOff;
     }
 
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
-        resetByTupleOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
+        resetByTupleOffset(frame.getBuffer().array(), frame.getTupleOffset(tupleIndex));
     }
 
     @Override
@@ -65,16 +64,16 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public byte[] getFieldData(int fIdx) {
-        return buf.array();
+        return buf;
     }
 
     @Override
     public int getFieldLength(int fIdx) {
         if (fIdx == 0) {
-            return buf.getShort(tupleStartOff + nullFlagsBytes);
+            return ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes);
         } else {
-            return buf.getShort(tupleStartOff + nullFlagsBytes + fIdx * 2)
-                    - buf.getShort(tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
+            return ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + fIdx * 2)
+                    - ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
         }
     }
 
@@ -84,7 +83,7 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
             return tupleStartOff + nullFlagsBytes + fieldSlotsBytes;
         } else {
             return tupleStartOff + nullFlagsBytes + fieldSlotsBytes
-                    + buf.getShort(tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
+                    + ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + ((fIdx - 1) * 2));
         }
     }
 
@@ -98,6 +97,7 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public int getTupleSize() {
-        return nullFlagsBytes + fieldSlotsBytes + buf.getShort(tupleStartOff + nullFlagsBytes + (fieldCount-1) * 2);
+        return nullFlagsBytes + fieldSlotsBytes + ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes
+                + (fieldCount - 1) * 2);
     }
 }

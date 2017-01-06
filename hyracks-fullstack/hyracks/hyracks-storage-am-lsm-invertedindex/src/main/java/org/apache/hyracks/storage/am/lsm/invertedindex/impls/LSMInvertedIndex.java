@@ -68,6 +68,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -772,6 +773,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 if (isEmptyComponent) {
                     cleanupArtifacts();
                 } else {
+                    ioOpCallback.afterOperation(LSMOperationType.FLUSH, null, component);
                     lsmHarness.addBulkLoadedComponent(component);
                 }
             }

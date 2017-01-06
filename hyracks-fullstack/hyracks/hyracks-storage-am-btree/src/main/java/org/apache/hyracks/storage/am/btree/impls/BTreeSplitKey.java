@@ -35,6 +35,7 @@ public class BTreeSplitKey implements ISplitKey {
         this.tuple = tuple;
     }
 
+    @Override
     public void initData(int keySize) {
         // try to reuse existing memory from a lower-level split if possible
         this.keySize = keySize;
@@ -48,49 +49,58 @@ public class BTreeSplitKey implements ISplitKey {
             buf = ByteBuffer.wrap(data);
         }
 
-        tuple.resetByTupleOffset(buf, 0);
+        tuple.resetByTupleOffset(buf.array(), 0);
     }
 
+    @Override
     public void reset() {
         data = null;
         buf = null;
     }
 
+    @Override
     public ByteBuffer getBuffer() {
         return buf;
     }
 
+    @Override
     public ITreeIndexTupleReference getTuple() {
         return tuple;
     }
 
+    @Override
     public int getLeftPage() {
         return buf.getInt(keySize);
     }
 
+    @Override
     public int getRightPage() {
         return buf.getInt(keySize + 4);
     }
 
+    @Override
     public void setLeftPage(int leftPage) {
         buf.putInt(keySize, leftPage);
     }
 
+    @Override
     public void setRightPage(int rightPage) {
         buf.putInt(keySize + 4, rightPage);
     }
 
+    @Override
     public void setPages(int leftPage, int rightPage) {
         buf.putInt(keySize, leftPage);
         buf.putInt(keySize + 4, rightPage);
     }
 
+    @Override
     public BTreeSplitKey duplicate(ITreeIndexTupleReference copyTuple) {
         BTreeSplitKey copy = new BTreeSplitKey(copyTuple);
         copy.data = data.clone();
         copy.buf = ByteBuffer.wrap(copy.data);
         copy.tuple.setFieldCount(tuple.getFieldCount());
-        copy.tuple.resetByTupleOffset(copy.buf, 0);
+        copy.tuple.resetByTupleOffset(copy.buf.array(), 0);
         return copy;
     }
 }

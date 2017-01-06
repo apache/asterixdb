@@ -90,9 +90,8 @@ public class LSMBTreeUtils {
         if (filterCmpFactories != null) {
             TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
             filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
-            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory,
-                    diskBufferCache.getPageSize());
-            filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
+            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
+            filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
 
         //Primary LSMBTree index has a BloomFilter.

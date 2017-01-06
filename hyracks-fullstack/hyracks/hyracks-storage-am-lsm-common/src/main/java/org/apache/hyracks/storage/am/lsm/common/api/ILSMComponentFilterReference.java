@@ -18,27 +18,23 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
-public interface ILSMComponentFilterFrame {
+public interface ILSMComponentFilterReference extends IValueReference, IPointable {
 
-    public ICachedPage getPage();
+    void writeMinTuple(ITupleReference tuple);
 
-    public void setPage(ICachedPage page);
+    void writeMaxTuple(ITupleReference tuple);
 
-    public void writeMinTuple(ITupleReference tuple);
+    boolean isMinTupleSet();
 
-    public void writeMaxTuple(ITupleReference tuple);
+    boolean isMaxTupleSet();
 
-    public void initBuffer();
+    ITupleReference getMinTuple();
 
-    public boolean isMinTupleSet();
+    ITupleReference getMaxTuple();
 
-    public boolean isMaxTupleSet();
-
-    public ITupleReference getMinTuple();
-
-    public ITupleReference getMaxTuple();
-
+    void reset();
 }

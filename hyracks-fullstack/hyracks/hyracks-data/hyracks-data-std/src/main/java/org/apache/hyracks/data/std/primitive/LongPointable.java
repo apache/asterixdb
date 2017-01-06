@@ -142,4 +142,10 @@ public final class LongPointable extends AbstractPointable implements IHashable,
     public double doubleValue() {
         return getLong();
     }
+
+    public static byte[] toByteArray(long value) {
+        byte[] bytes = new byte[Long.BYTES];
+        setLong(bytes, 0, value);
+        return bytes;
+    }
 }

@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
@@ -36,7 +34,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
     private final int nullFlagsBytes;
     private final int[] decodedFieldSlots;
 
-    private ByteBuffer buf;
+    private byte[] buf;
     private int tupleStartOff;
     private int dataStartOff;
     private final boolean antimatterAware;
@@ -55,7 +53,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
     }
 
     @Override
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOff) {
+    public void resetByTupleOffset(byte[] buf, int tupleStartOff) {
         this.buf = buf;
         this.tupleStartOff = tupleStartOff;
 
@@ -74,7 +72,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
             decodedFieldSlots[field++] = decodedFieldSlots[i];
         }
         //step3. decode field slots for value field
-        encDec.reset(buf.array(), tupleStartOff + nullFlagsBytes);
+        encDec.reset(buf, tupleStartOff + nullFlagsBytes);
         for (int i = inputKeyFieldCount; i < inputTotalFieldCount; i++) {
             if (!typeTraits[i].isFixedLength()) {
                 //value fields
@@ -92,7 +90,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
 
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
-        resetByTupleOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
+        resetByTupleOffset(frame.getBuffer().array(), frame.getTupleOffset(tupleIndex));
     }
 
     @Override
@@ -112,7 +110,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
 
     @Override
     public byte[] getFieldData(int fIdx) {
-        return buf.array();
+        return buf;
     }
 
     @Override
@@ -154,7 +152,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
     public boolean isAntimatter() {
         // Check if the leftmost bit is 0 or 1.
         final byte mask = (byte) (1 << 7);
-        if ((buf.array()[tupleStartOff] & mask) != 0) {
+        if ((buf[tupleStartOff] & mask) != 0) {
             return true;
         }
         return false;

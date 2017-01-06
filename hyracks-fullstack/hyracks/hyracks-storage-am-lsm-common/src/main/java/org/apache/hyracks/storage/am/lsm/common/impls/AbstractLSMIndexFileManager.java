@@ -37,7 +37,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -94,7 +95,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             if (metadataPage < 0) {
                 return TreeIndexState.INVALID;
             }
-            ITreeIndexMetaDataFrame metadataFrame = treeIndex.getPageManager().createMetadataFrame();
+            ITreeIndexMetadataFrame metadataFrame = treeIndex.getPageManager().createMetadataFrame();
             ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage),
                     false);
             page.acquireReadLatch();
@@ -102,7 +103,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 metadataFrame.setPage(page);
                 if (!metadataFrame.isValid()) {
                     return TreeIndexState.INVALID;
-                } else if (metadataFrame.getVersion() != ITreeIndexMetaDataFrame.VERSION) {
+                } else if (metadataFrame.getVersion() != ITreeIndexFrame.Constants.VERSION) {
                     return TreeIndexState.VERSION_MISMATCH;
                 } else {
                     return TreeIndexState.VALID;

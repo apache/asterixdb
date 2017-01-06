@@ -18,15 +18,21 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 
 public abstract class AbstractLSMComponent implements ILSMComponent {
 
+    public static final MutableArrayValueReference MARKER_LSN_KEY = new MutableArrayValueReference("Marker"
+            .getBytes());
+
     protected ComponentState state;
     protected int readerCount;
     protected final ILSMComponentFilter filter;
     protected long mostRecentMarkerLSN;
+    protected final LongPointable pointable = (LongPointable) LongPointable.FACTORY.createPointable();
 
     public AbstractLSMComponent(ILSMComponentFilter filter, long mostRecentMarkerLSN) {
         this.filter = filter;

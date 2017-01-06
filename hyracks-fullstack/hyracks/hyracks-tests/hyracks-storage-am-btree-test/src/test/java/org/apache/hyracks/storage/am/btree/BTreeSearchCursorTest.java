@@ -65,7 +65,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
     private final int fieldCount = 2;
     private final ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
     private final TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-    private final ITreeIndexMetaDataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
+    private final ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
     private final Random rnd = new Random(50);
 
     @Before

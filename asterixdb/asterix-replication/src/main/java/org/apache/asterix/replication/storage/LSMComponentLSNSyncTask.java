@@ -26,7 +26,7 @@ public class LSMComponentLSNSyncTask {
     public LSMComponentLSNSyncTask(String componentId, String componentFilePath, long LSNByteOffset) {
         this.componentId = componentId;
         this.componentFilePath = componentFilePath;
-        this.setLSNByteOffset(LSNByteOffset);
+        this.LSNByteOffset = LSNByteOffset;
     }
 
     public String getComponentFilePath() {
@@ -47,9 +47,5 @@ public class LSMComponentLSNSyncTask {
 
     public long getLSNByteOffset() {
         return LSNByteOffset;
-    }
-
-    public void setLSNByteOffset(long lSNByteOffset) {
-        LSNByteOffset = lSNByteOffset;
     }
 }

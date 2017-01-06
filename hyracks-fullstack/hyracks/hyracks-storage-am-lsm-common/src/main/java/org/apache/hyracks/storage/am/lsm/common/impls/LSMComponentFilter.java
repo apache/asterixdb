@@ -70,7 +70,7 @@ public class LSMComponentFilter implements ILSMComponentFilter {
             tupleWriter.writeTuple(tuple, minTupleBytes, 0);
             minTupleBuf = ByteBuffer.wrap(minTupleBytes);
             minTuple = tupleWriter.createTupleReference();
-            ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf, 0);
+            ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf.array(), 0);
         } else {
             int c = cmp.compare(tuple, minTuple);
             if (c < 0) {
@@ -82,7 +82,7 @@ public class LSMComponentFilter implements ILSMComponentFilter {
                 } else {
                     tupleWriter.writeTuple(tuple, minTupleBytes, 0);
                 }
-                ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf, 0);
+                ((ITreeIndexTupleReference) minTuple).resetByTupleOffset(minTupleBuf.array(), 0);
             }
         }
         if (maxTuple == null) {
@@ -91,7 +91,7 @@ public class LSMComponentFilter implements ILSMComponentFilter {
             tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
             maxTupleBuf = ByteBuffer.wrap(maxTupleBytes);
             maxTuple = tupleWriter.createTupleReference();
-            ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf, 0);
+            ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf.array(), 0);
         } else {
             int c = cmp.compare(tuple, maxTuple);
             if (c > 0) {
@@ -103,7 +103,7 @@ public class LSMComponentFilter implements ILSMComponentFilter {
                 } else {
                     tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
                 }
-                ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf, 0);
+                ((ITreeIndexTupleReference) maxTuple).resetByTupleOffset(maxTupleBuf.array(), 0);
             }
         }
     }

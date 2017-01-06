@@ -41,7 +41,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
 public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFrame {
-    protected static final int nextLeafOff = flagOff + 1; // 22
+    protected static final int NEXT_LEAF_OFFSET = TreeIndexNSMFrame.RESERVED_HEADER_SIZE;
 
     private MultiComparator cmp;
 
@@ -54,7 +54,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public int getPageHeaderSize() {
-        return nextLeafOff + 4;
+        return NEXT_LEAF_OFFSET + 4;
     }
 
     @Override
@@ -65,17 +65,17 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public void initBuffer(byte level) {
         super.initBuffer(level);
-        buf.putInt(nextLeafOff, -1);
+        buf.putInt(NEXT_LEAF_OFFSET, -1);
     }
 
     @Override
     public void setNextLeaf(int page) {
-        buf.putInt(nextLeafOff, page);
+        buf.putInt(NEXT_LEAF_OFFSET, page);
     }
 
     @Override
     public int getNextLeaf() {
-        return buf.getInt(nextLeafOff);
+        return buf.getInt(NEXT_LEAF_OFFSET);
     }
 
     @Override
@@ -161,12 +161,13 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
-        int freeSpace = buf.getInt(freeSpaceOff);
+        int freeSpace = buf.getInt(Constants.FREE_SPACE_OFFSET);
         slotManager.insertSlot(tupleIndex, freeSpace);
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), freeSpace);
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + bytesWritten);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - bytesWritten - slotManager.getSlotSize());
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
+        buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + bytesWritten);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager
+                .getSlotSize());
     }
 
     @Override
@@ -261,10 +262,10 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
                     + tuplesToLeft * rightFrame.getSlotManager().getSlotSize();
             int length = rightFrame.getSlotManager().getSlotSize() * tuplesToRight;
             System.arraycopy(right.array(), src, right.array(), dest, length);
-            right.putInt(tupleCountOff, tuplesToRight);
+            right.putInt(Constants.TUPLE_COUNT_OFFSET, tuplesToRight);
 
             // On left page only change the tupleCount indicator.
-            buf.putInt(tupleCountOff, tuplesToLeft);
+            buf.putInt(Constants.TUPLE_COUNT_OFFSET, tuplesToLeft);
 
             // Compact both pages.
             rightFrame.compact();
@@ -288,13 +289,14 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
         // Set the split key to be highest key in the left page.
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-        frameTuple.resetByTupleOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf.array(), tupleOff);
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(frameTuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
-        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer(), 0);
+        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
     }
 
+    @Override
     public void ensureCapacity(IBufferCache bufferCache, ITupleReference tuple,
                                IExtraPageBlockHelper extraPageBlockHelper) throws HyracksDataException {
         // we call ensureCapacity() for large tuples- ensure large flag is set
@@ -323,7 +325,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         System.arraycopy(buf.array(), oldSlotEnd, buf.array(), slotManager.getSlotEndOff(), oldSlotStart - oldSlotEnd);
 
         // fixup total free space counter
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + (bufferCache.getPageSize() * deltaPages));
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + (bufferCache.getPageSize()
+                * deltaPages));
     }
 
     @Override
@@ -342,6 +345,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         this.cmp = cmp;
     }
 
+    @Override
     public void validate(PageValidationInfo pvi) throws HyracksDataException {
         int tupleCount = getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
@@ -364,7 +368,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     @Override
     public String printHeader() {
         StringBuilder strBuilder = new StringBuilder(super.printHeader());
-        strBuilder.append("nextLeafOff:       " + nextLeafOff + "\n");
+        strBuilder.append("nextLeafOff:       " + NEXT_LEAF_OFFSET + "\n");
         return strBuilder.toString();
     }
 }

@@ -35,20 +35,20 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
 public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
-    protected static final int pageNsnOff = flagOff + 1; // 22
-    protected static final int rightPageOff = pageNsnOff + 8; // 30
+    protected static final int PAGE_NSN_OFFSET = TreeIndexNSMFrame.RESERVED_HEADER_SIZE;
+    protected static final int RIGHT_PAGE_OFFSET = PAGE_NSN_OFFSET + 8;
 
     protected ITreeIndexTupleReference[] mbrTuples;
     protected ITreeIndexTupleReference cmpFrameTuple;
 
-    private static final double doubleEpsilon = computeDoubleEpsilon();
+    private static final double DOUBLE_EPSILON = computeDoubleEpsilon();
     protected final IPrimitiveValueProvider[] keyValueProviders;
 
     protected IRTreePolicy rtreePolicy;
     protected final boolean isPointMBR;
 
     public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-                         RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
         super(tupleWriter, new UnorderedSlotManager());
         this.mbrTuples = new ITreeIndexTupleReference[keyValueProviders.length];
         for (int i = 0; i < keyValueProviders.length; i++) {
@@ -58,9 +58,9 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
         this.keyValueProviders = keyValueProviders;
 
         if (rtreePolicyType == RTreePolicyType.RTREE) {
-            rtreePolicy = new RTreePolicy(tupleWriter, keyValueProviders, cmpFrameTuple, totalFreeSpaceOff);
+            rtreePolicy = new RTreePolicy(tupleWriter, keyValueProviders, cmpFrameTuple, TOTAL_FREE_SPACE_OFFSET);
         } else {
-            rtreePolicy = new RStarTreePolicy(tupleWriter, keyValueProviders, cmpFrameTuple, totalFreeSpaceOff);
+            rtreePolicy = new RStarTreePolicy(tupleWriter, keyValueProviders, cmpFrameTuple, TOTAL_FREE_SPACE_OFFSET);
         }
         this.isPointMBR = isPointMBR;
     }
@@ -75,38 +75,38 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     }
 
     public static double doubleEpsilon() {
-        return doubleEpsilon;
+        return DOUBLE_EPSILON;
     }
 
     @Override
     public void initBuffer(byte level) {
         super.initBuffer(level);
-        buf.putLong(pageNsnOff, 0);
-        buf.putInt(rightPageOff, -1);
+        buf.putLong(PAGE_NSN_OFFSET, 0);
+        buf.putInt(RIGHT_PAGE_OFFSET, -1);
     }
 
     public void setTupleCount(int tupleCount) {
-        buf.putInt(tupleCountOff, tupleCount);
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, tupleCount);
     }
 
     @Override
     public void setPageNsn(long pageNsn) {
-        buf.putLong(pageNsnOff, pageNsn);
+        buf.putLong(PAGE_NSN_OFFSET, pageNsn);
     }
 
     @Override
     public long getPageNsn() {
-        return buf.getLong(pageNsnOff);
+        return buf.getLong(PAGE_NSN_OFFSET);
     }
 
     @Override
     public int getRightPage() {
-        return buf.getInt(rightPageOff);
+        return buf.getInt(RIGHT_PAGE_OFFSET);
     }
 
     @Override
     public void setRightPage(int rightPage) {
-        buf.putInt(rightPageOff, rightPage);
+        buf.putInt(RIGHT_PAGE_OFFSET, rightPage);
     }
 
     public ITreeIndexTupleReference[] getMBRTuples() {
@@ -115,7 +115,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
 
     @Override
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
-                      IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
+            IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
             throws HyracksDataException {
         rtreePolicy.split(this, buf, rightFrame, slotManager, frameTuple, tuple, splitKey);
     }
@@ -156,11 +156,25 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
 
     @Override
     public int getPageHeaderSize() {
-        return rightPageOff + 4;
+        return RIGHT_PAGE_OFFSET + 4;
     }
 
     @Override
     public void setMultiComparator(MultiComparator cmp) {
         // currently, R-Tree Frames are unsorted
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder(this.getClass().getSimpleName()).append('\n').append(
+                "Tuple Count: " + getTupleCount()).append('\n').append("Free Space offset: " + buf
+                        .getInt(Constants.FREE_SPACE_OFFSET)).append('\n').append("Level: " + buf
+                                .get(Constants.LEVEL_OFFSET)).append('\n').append("LSN: "
+                                        + buf.getLong(PAGE_LSN_OFFSET)).append('\n').append(
+                                                "Total Free Space: " + buf.getInt(TOTAL_FREE_SPACE_OFFSET)).append(
+                                                        '\n').append("Flag: " + buf.get(
+                                                                FLAG_OFFSET)).append('\n')
+                .append("NSN: " + buf.getLong(PAGE_NSN_OFFSET)).append('\n').append("Right Page:")
+                .append(buf.getInt(RIGHT_PAGE_OFFSET)).toString();
     }
 }

@@ -39,7 +39,7 @@ public class LSMRTreeTupleReference extends TypeAwareTupleReference implements I
     public boolean isAntimatter() {
         // Check if the leftmost bit is 0 or 1.
         final byte mask = (byte) (1 << 7);
-        if ((buf.array()[tupleStartOff] & mask) != 0) {
+        if ((buf[tupleStartOff] & mask) != 0) {
             return true;
         }
         return false;

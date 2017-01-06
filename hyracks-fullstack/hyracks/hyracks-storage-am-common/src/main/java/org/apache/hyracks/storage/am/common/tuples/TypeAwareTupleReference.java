@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.common.tuples;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -28,7 +26,7 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder.VarLenIntDecoder;
 
 public class TypeAwareTupleReference implements ITreeIndexTupleReference {
-    protected ByteBuffer buf;
+    protected byte[] buf;
     protected int fieldStartIndex;
     protected int fieldCount;
     protected int tupleStartOff;
@@ -46,7 +44,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     }
 
     @Override
-    public void resetByTupleOffset(ByteBuffer buf, int tupleStartOff) {
+    public void resetByTupleOffset(byte[] buf, int tupleStartOff) {
         this.buf = buf;
         this.tupleStartOff = tupleStartOff;
 
@@ -54,7 +52,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
         int field = 0;
         int cumul = 0;
         int end = fieldStartIndex + fieldCount;
-        encDec.reset(buf.array(), tupleStartOff + nullFlagsBytes);
+        encDec.reset(buf, tupleStartOff + nullFlagsBytes);
         for (int i = fieldStartIndex; i < end; i++) {
             if (!typeTraits[i].isFixedLength()) {
                 cumul += encDec.decode();
@@ -69,7 +67,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
-        resetByTupleOffset(frame.getBuffer(), frame.getTupleOffset(tupleIndex));
+        resetByTupleOffset(frame.getBuffer().array(), frame.getTupleOffset(tupleIndex));
     }
 
     @Override
@@ -99,7 +97,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public byte[] getFieldData(int fIdx) {
-        return buf.array();
+        return buf;
     }
 
     @Override

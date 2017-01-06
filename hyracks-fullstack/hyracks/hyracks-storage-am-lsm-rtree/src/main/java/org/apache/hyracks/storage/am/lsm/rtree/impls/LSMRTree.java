@@ -67,6 +67,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
@@ -599,6 +600,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 if (isEmptyComponent) {
                     cleanupArtifacts();
                 } else {
+                    ioOpCallback.afterOperation(LSMOperationType.FLUSH, null, component);
                     lsmHarness.addBulkLoadedComponent(component);
                 }
             }

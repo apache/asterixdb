@@ -22,9 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +34,7 @@ import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
-import org.apache.hyracks.storage.common.buffercache.IQueueInfo;
+import org.apache.hyracks.storage.common.buffercache.VirtualPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.TransientFileMapManager;
@@ -106,19 +104,19 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 VirtualPage prev = null;
                 VirtualPage curr = bucket.cachedPage;
                 while (curr != null) {
-                    if (BufferedFileHandle.getFileId(curr.dpid) == fileId) {
+                    if (BufferedFileHandle.getFileId(curr.dpid()) == fileId) {
                         if (prev == null) {
-                            bucket.cachedPage = curr.next;
+                            bucket.cachedPage = curr.next();
                             curr.reset();
                             curr = bucket.cachedPage;
                         } else {
-                            prev.next = curr.next;
+                            prev.next(curr.next());
                             curr.reset();
-                            curr = prev.next;
+                            curr = prev.next();
                         }
                     } else {
                         prev = curr;
-                        curr = curr.next;
+                        curr = curr.next();
                     }
                 }
             } finally {
@@ -134,18 +132,18 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             int end = nextFree - 1;
             while (start < end) {
                 VirtualPage lastUsed = pages.get(end);
-                while (end > 0 && lastUsed.dpid == -1) {
+                while (end > 0 && lastUsed.dpid() == -1) {
                     --end;
                     lastUsed = pages.get(end);
                 }
 
                 if (end == 0) {
-                    nextFree = lastUsed.dpid == -1 ? 0 : 1;
+                    nextFree = lastUsed.dpid() == -1 ? 0 : 1;
                     break;
                 }
 
                 VirtualPage firstUnused = pages.get(start);
-                while (start < end && firstUnused.dpid != -1) {
+                while (start < end && firstUnused.dpid() != -1) {
                     ++start;
                     firstUnused = pages.get(start);
                 }
@@ -177,10 +175,10 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         try {
             page = bucket.cachedPage;
             while (page != null) {
-                if (page.dpid == dpid) {
+                if (page.dpid() == dpid) {
                     return page;
                 }
-                page = page.next;
+                page = page.next();
             }
 
             if (!newPage) {
@@ -189,7 +187,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             }
 
             page = getOrAllocPage(dpid);
-            page.next = bucket.cachedPage;
+            page.next(bucket.cachedPage);
             bucket.cachedPage = page;
         } finally {
             bucket.bucketLock.unlock();
@@ -207,14 +205,14 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         VirtualPage page;
         synchronized (pages) {
             if (nextFree >= pages.size()) {
-                page = new VirtualPage(allocator.allocate(pageSize, 1)[0]);
-                page.multiplier = 1;
+                page = new VirtualPage(allocator.allocate(pageSize, 1)[0], pageSize);
+                page.multiplier(1);
                 pages.add(page);
             } else {
                 page = pages.get(nextFree);
             }
             ++nextFree;
-            page.dpid = dpid;
+            page.dpid(dpid);
         }
         return page;
     }
@@ -248,8 +246,8 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         } else {
             largePages.getAndAdd(multiplier - origMultiplier);
         }
-        ((VirtualPage) cPage).buffer = newBuffer;
-        ((VirtualPage) cPage).multiplier = multiplier;
+        ((VirtualPage) cPage).buffer(newBuffer);
+        ((VirtualPage) cPage).multiplier(multiplier);
     }
 
     @Override
@@ -349,76 +347,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
         public CacheBucket() {
             this.bucketLock = new ReentrantLock();
-        }
-    }
-
-    private class VirtualPage implements ICachedPage {
-        ByteBuffer buffer;
-        final ReadWriteLock latch;
-        volatile long dpid;
-        int multiplier;
-        VirtualPage next;
-
-        public VirtualPage(ByteBuffer buffer) {
-            this.buffer = buffer;
-            latch = new ReentrantReadWriteLock(true);
-            dpid = -1;
-            next = null;
-        }
-
-        public void reset() {
-            dpid = -1;
-            next = null;
-        }
-
-        @Override
-        public ByteBuffer getBuffer() {
-            return buffer;
-        }
-
-        @Override
-        public void acquireReadLatch() {
-            latch.readLock().lock();
-        }
-
-        @Override
-        public void releaseReadLatch() {
-            latch.readLock().unlock();
-        }
-
-        @Override
-        public void acquireWriteLatch() {
-            latch.writeLock().lock();
-        }
-
-        @Override
-        public void releaseWriteLatch(boolean markDirty) {
-            latch.writeLock().unlock();
-        }
-
-        @Override
-        public boolean confiscated() {
-            return false;
-        }
-
-        @Override
-        public IQueueInfo getQueueInfo() {
-            return null;
-        }
-
-        @Override
-        public void setQueueInfo(IQueueInfo queueInfo) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int getPageSize() {
-            return pageSize;
-        }
-
-        @Override
-        public int getFrameSizeMultiplier() {
-            return multiplier;
         }
     }
 

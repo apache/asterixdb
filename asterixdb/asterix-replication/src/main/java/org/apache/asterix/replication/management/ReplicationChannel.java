@@ -44,8 +44,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
@@ -71,7 +71,6 @@ import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.application.INCApplicationContext;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.util.StorageUtil;
@@ -344,7 +343,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 }
                 if (afp.isLSMComponentFile()) {
                     String componentId = LSMComponentProperties.getLSMComponentID(afp.getFilePath());
-                    if (afp.getLSNByteOffset() != IMetadataPageManager.Constants.INVALID_LSN_OFFSET) {
+                    if (afp.getLSNByteOffset() > AbstractLSMIOOperationCallback.INVALID) {
                         LSMComponentLSNSyncTask syncTask = new LSMComponentLSNSyncTask(componentId,
                                 destFile.getAbsolutePath(), afp.getLSNByteOffset());
                         lsmComponentRemoteLSN2LocalLSNMappingTaskQ.offer(syncTask);
@@ -392,13 +391,12 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                                     FileChannel fileChannel = fromFile.getChannel();) {
                                 long fileSize = fileChannel.size();
                                 fileProperties.initialize(filePath, fileSize, replicaId, false,
-                                        IMetadataPageManager.Constants.INVALID_LSN_OFFSET, false);
+                                        AbstractLSMIOOperationCallback.INVALID, false);
                                 outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
                                         ReplicationRequestType.REPLICATE_FILE);
 
                                 //send file info
                                 NetworkingUtil.transferBufferToChannel(socketChannel, outBuffer);
-
                                 //transfer file
                                 NetworkingUtil.sendFile(fileChannel, socketChannel);
                             }

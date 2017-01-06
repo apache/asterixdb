@@ -141,10 +141,10 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     public boolean compact() {
         resetSpaceParams();
 
-        int tupleCount = buf.getInt(tupleCountOff);
-        int freeSpace = buf.getInt(freeSpaceOff);
+        int tupleCount = buf.getInt(Constants.TUPLE_COUNT_OFFSET);
+        int freeSpace = buf.getInt(Constants.FREE_SPACE_OFFSET);
 
-        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<SlotOffTupleOff>();
+        ArrayList<SlotOffTupleOff> sortedTupleOffs = new ArrayList<>();
         sortedTupleOffs.ensureCapacity(tupleCount);
         for (int i = 0; i < tupleCount; i++) {
             int slotOff = slotManager.getSlotOff(i);
@@ -155,7 +155,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
         for (int i = 0; i < sortedTupleOffs.size(); i++) {
             int tupleOff = sortedTupleOffs.get(i).tupleOff;
-            frameTuple.resetByTupleOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf.array(), tupleOff);
 
             int tupleEndOff = frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
                     + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1);
@@ -166,8 +166,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             freeSpace += tupleLength;
         }
 
-        buf.putInt(freeSpaceOff, freeSpace);
-        buf.putInt(totalFreeSpaceOff, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
+        buf.putInt(Constants.FREE_SPACE_OFFSET, freeSpace);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.capacity() - freeSpace - tupleCount * slotManager.getSlotSize());
 
         return false;
     }
@@ -175,23 +175,25 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     @Override
     public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException {
         int bytesRequired = tupleWriter.bytesRequired(tuple) + childPtrSize;
-        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
-                - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))
+        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(Constants.FREE_SPACE_OFFSET)
+                - (buf.getInt(Constants.TUPLE_COUNT_OFFSET) * slotManager.getSlotSize())) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
-        else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
+        } else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(TOTAL_FREE_SPACE_OFFSET)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
-        else
+        } else {
             return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
+        }
     }
 
     public FrameOpSpaceStatus hasSpaceInsert(int bytesRequired) {
-        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
-                - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))
+        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(Constants.FREE_SPACE_OFFSET)
+                - (buf.getInt(Constants.TUPLE_COUNT_OFFSET) * slotManager.getSlotSize())) {
             return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
-        else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
+        } else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(TOTAL_FREE_SPACE_OFFSET)) {
             return FrameOpSpaceStatus.SUFFICIENT_SPACE;
-        else
+        } else {
             return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
+        }
     }
 
     @Override
@@ -220,6 +222,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
                         tupleB.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleB), childPtrSize);
     }
 
+    @Override
     public int getTupleSize(ITupleReference tuple) {
         return tupleWriter.bytesRequired(tuple) + childPtrSize;
     }
@@ -231,16 +234,17 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
         frameTuple.setFieldCount(tuple.getFieldCount());
-        slotManager.insertSlot(AbstractSlotManager.GREATEST_KEY_INDICATOR, buf.getInt(freeSpaceOff));
-        int freeSpace = buf.getInt(freeSpaceOff);
+        slotManager.insertSlot(AbstractSlotManager.GREATEST_KEY_INDICATOR, buf.getInt(Constants.FREE_SPACE_OFFSET));
+        int freeSpace = buf.getInt(Constants.FREE_SPACE_OFFSET);
         int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, tuple.getFieldCount(), buf.array(), freeSpace);
         System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getChildPointerOff(tuple), buf.array(),
                 freeSpace + bytesWritten, childPtrSize);
         int tupleSize = bytesWritten + childPtrSize;
 
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) + 1);
-        buf.putInt(freeSpaceOff, buf.getInt(freeSpaceOff) + tupleSize);
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) - tupleSize - slotManager.getSlotSize());
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
+        buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + tupleSize);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager
+                .getSlotSize());
 
     }
 
@@ -250,7 +254,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         int slotOff = slotManager.getSlotOff(tupleIndex);
 
         int tupleOff = slotManager.getTupleOff(slotOff);
-        frameTuple.resetByTupleOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf.array(), tupleOff);
         int tupleSize = tupleWriter.bytesRequired(frameTuple);
 
         // perform deletion (we just do a memcpy to overwrite the slot)
@@ -259,9 +263,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         System.arraycopy(buf.array(), slotStartOff, buf.array(), slotStartOff + slotManager.getSlotSize(), length);
 
         // maintain space information
-        buf.putInt(tupleCountOff, buf.getInt(tupleCountOff) - 1);
-        buf.putInt(totalFreeSpaceOff,
-                buf.getInt(totalFreeSpaceOff) + tupleSize + childPtrSize + slotManager.getSlotSize());
+        buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) - 1);
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) + tupleSize + childPtrSize + slotManager.getSlotSize());
     }
 
     @Override
@@ -288,12 +292,12 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
     // For debugging.
     public ArrayList<Integer> getChildren(MultiComparator cmp) {
-        ArrayList<Integer> ret = new ArrayList<Integer>();
+        ArrayList<Integer> ret = new ArrayList<>();
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
-        int tupleCount = buf.getInt(tupleCountOff);
+        int tupleCount = buf.getInt(Constants.TUPLE_COUNT_OFFSET);
         for (int i = 0; i < tupleCount; i++) {
             int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
-            frameTuple.resetByTupleOffset(buf, tupleOff);
+            frameTuple.resetByTupleOffset(buf.array(), tupleOff);
             int intVal = IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
             + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
             ret.add(intVal);

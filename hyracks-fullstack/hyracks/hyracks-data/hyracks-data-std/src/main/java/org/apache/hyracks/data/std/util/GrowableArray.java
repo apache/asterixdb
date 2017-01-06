@@ -67,4 +67,8 @@ public class GrowableArray implements IDataOutputProvider {
     public void append(IValueReference value) throws IOException {
         dos.write(value.getByteArray(), value.getStartOffset(), value.getLength());
     }
+
+    public void setSize(int bytesRequired) {
+        baaos.setSize(bytesRequired);
+    }
 }

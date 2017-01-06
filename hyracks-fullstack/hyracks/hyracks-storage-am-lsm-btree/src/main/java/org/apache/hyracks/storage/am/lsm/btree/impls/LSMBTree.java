@@ -71,6 +71,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
@@ -97,7 +98,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     private final boolean needKeyDupCheck;
     private final int[] btreeFields;
-    // Primary LSMBTree has a Bloomfilter, but Secondary one doesn't have. 
+    // Primary LSMBTree has a Bloomfilter, but Secondary one doesn't have.
     private final boolean hasBloomFilter;
 
     public LSMBTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
@@ -494,7 +495,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
         component.setMostRecentMarkerLSN(flushOp.getPrevMarkerLSN());
         bulkLoader.end();
-
         return component;
     }
 
@@ -744,6 +744,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 if (isEmptyComponent) {
                     cleanupArtifacts();
                 } else {
+                    //TODO(amoudi): Ensure Bulk load follow the same lifecycle Other Operations (Flush, Merge, etc).
+                    //then after operation should be called from harness as well
+                    //https://issues.apache.org/jira/browse/ASTERIXDB-1764
+                    ioOpCallback.afterOperation(LSMOperationType.FLUSH, null, component);
                     lsmHarness.addBulkLoadedComponent(component);
                 }
             }

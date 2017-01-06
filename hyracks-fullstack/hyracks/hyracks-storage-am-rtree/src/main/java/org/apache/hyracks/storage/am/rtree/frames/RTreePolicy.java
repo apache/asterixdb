@@ -191,18 +191,18 @@ public class RTreePolicy implements IRTreePolicy {
         }
 
         int tupleOff = slotManager.getTupleOff(slotManager.getSlotEndOff());
-        frameTuple.resetByTupleOffset(buf, tupleOff);
+        frameTuple.resetByTupleOffset(buf.array(), tupleOff);
         int splitKeySize = tupleWriter.bytesRequired(frameTuple, 0, keyValueProviders.length);
 
         splitKey.initData(splitKeySize);
         leftRTreeFrame.adjustMBR();
         rTreeTupleWriterLeftFrame.writeTupleFields(leftRTreeFrame.getMBRTuples(), 0, rTreeSplitKey.getLeftPageBuffer(), 0);
-        rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
+        rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer().array(), 0);
 
         ((IRTreeFrame) rightFrame).adjustMBR();
         rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getMBRTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
-        rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
+        rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer().array(), 0);
     }
 
     @Override
