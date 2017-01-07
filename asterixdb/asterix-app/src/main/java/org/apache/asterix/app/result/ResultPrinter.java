@@ -139,7 +139,7 @@ public class ResultPrinter {
         if (indentJSON) {
             // TODO(tillw): this is inefficient - do this during record generation
             try {
-                record = om.writerWithDefaultPrettyPrinter().writeValueAsString(om.readValue(result, ObjectNode.class));
+                record = om.writerWithDefaultPrettyPrinter().writeValueAsString(om.readValue(result, Object.class));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
