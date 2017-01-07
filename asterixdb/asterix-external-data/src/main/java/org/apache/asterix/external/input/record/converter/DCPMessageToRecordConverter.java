@@ -24,6 +24,8 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
@@ -31,7 +33,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import com.couchbase.client.core.message.dcp.DCPRequest;
 import com.couchbase.client.core.message.dcp.MutationMessage;
@@ -93,7 +94,9 @@ public class DCPMessageToRecordConverter implements IRecordToRecordWithMetadataA
             recordWithMetadata.reset();
             recordWithMetadata.setMetadata(0, key);
         } else {
-            throw new HyracksDataException("Unknown DCP request: " + dcpRequest);
+            throw new RuntimeDataException(
+                    ErrorCode.INPUT_RECORD_CONVERTER_DCP_MSG_TO_RECORD_CONVERTER_UNKNOWN_DCP_REQUEST,
+                    dcpRequest.toString());
         }
         return recordWithMetadata;
     }

@@ -660,7 +660,7 @@ public class ATypeHierarchy {
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
 
         if (sourceTypeTag == null) {
-            throw new RuntimeDataException(ErrorCode.ERROR_INVALID_FORMAT, name, argIndex);
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
             case INT64:
@@ -682,7 +682,7 @@ public class ATypeHierarchy {
                 value = (int) DoublePointable.getDouble(bytes, offset);
                 break;
             default:
-                throw new RuntimeDataException(ErrorCode.ERROR_TYPE_MISMATCH, name, argIndex, sourceTypeTag,
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
                         ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
 
         }
@@ -701,7 +701,7 @@ public class ATypeHierarchy {
         long value;
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
-            throw new RuntimeDataException(ErrorCode.ERROR_INVALID_FORMAT, name, argIndex);
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
             case INT64:
@@ -723,7 +723,7 @@ public class ATypeHierarchy {
                 value = (long) DoublePointable.getDouble(bytes, offset);
                 break;
             default:
-                throw new RuntimeDataException(ErrorCode.ERROR_TYPE_MISMATCH, name, argIndex, sourceTypeTag,
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
                         ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
 
@@ -743,7 +743,7 @@ public class ATypeHierarchy {
         double value;
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
-            throw new RuntimeDataException(ErrorCode.ERROR_INVALID_FORMAT, name, argIndex);
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
             case INT64:
@@ -765,7 +765,7 @@ public class ATypeHierarchy {
                 value = DoublePointable.getDouble(bytes, offset);
                 break;
             default:
-                throw new RuntimeDataException(ErrorCode.ERROR_TYPE_MISMATCH, name, argIndex, sourceTypeTag,
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
                         ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
 

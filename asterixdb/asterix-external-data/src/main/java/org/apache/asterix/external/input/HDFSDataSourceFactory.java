@@ -158,7 +158,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
      * This method initialize the scheduler which assigns responsibility of reading different logical input splits from
      * HDFS
      */
-    private static void init() {
+    private static void init() throws HyracksDataException {
         if (!initialized) {
             synchronized (initLock) {
                 if (!initialized) {

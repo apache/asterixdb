@@ -30,6 +30,7 @@ import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.types.ARecordType;
 
 import com.sun.syndication.feed.synd.SyndEntryImpl;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RSSParser implements IRecordDataParser<SyndEntryImpl> {
     private long id = 0;
@@ -49,7 +50,7 @@ public class RSSParser implements IRecordDataParser<SyndEntryImpl> {
     }
 
     @Override
-    public void parse(IRawRecord<? extends SyndEntryImpl> record, DataOutput out) throws IOException {
+    public void parse(IRawRecord<? extends SyndEntryImpl> record, DataOutput out) throws HyracksDataException {
         SyndEntryImpl entry = record.get();
         tupleFieldValues[0] = idPrefix + ":" + id;
         tupleFieldValues[1] = entry.getTitle();

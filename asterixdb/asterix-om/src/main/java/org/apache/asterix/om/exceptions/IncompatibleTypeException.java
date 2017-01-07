@@ -30,11 +30,11 @@ public class IncompatibleTypeException extends CompilationException {
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(FunctionIdentifier fid, ATypeTag typeTagLeft, ATypeTag typeTagRight) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_INCOMPATIBLE, fid.getName(), typeTagLeft, typeTagRight);
+        super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, fid.getName(), typeTagLeft, typeTagRight);
     }
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(String functionName, ATypeTag typeTagLeft, ATypeTag typeTagRight) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_INCOMPATIBLE, functionName, typeTagLeft, typeTagRight);
+        super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, functionName, typeTagLeft, typeTagRight);
     }
 }

@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
@@ -86,7 +87,7 @@ public class RecordWithPK<T> implements IRawRecord<T> {
         record.set(t);
     }
 
-    public void appendPrimaryKeyToTuple(final ArrayTupleBuilder tb) throws IOException {
+    public void appendPrimaryKeyToTuple(final ArrayTupleBuilder tb) throws HyracksDataException {
         for (final ArrayBackedValueStorage pkStorage : pkFieldValueBuffers) {
             tb.addField(pkStorage);
         }

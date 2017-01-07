@@ -240,7 +240,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                     tempValReference.set(entry.getBuf(), entry.getOffset(), entry.getLength());
                                     // If value is not equal throw conflicting duplicate field, otherwise ignore
                                     if (!PointableHelper.byteArrayEqual(valuePointable, tempValReference)) {
-                                        throw new RuntimeDataException(ErrorCode.ERROR_DUPLICATE_FIELD_NAME,
+                                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME,
                                                 getIdentifier());
                                     }
                                 } else {

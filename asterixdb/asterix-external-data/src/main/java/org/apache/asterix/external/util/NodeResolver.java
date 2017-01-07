@@ -28,6 +28,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.INodeResolver;
 import org.apache.asterix.runtime.util.RuntimeUtils;
 
@@ -61,21 +62,20 @@ public class NodeResolver implements INodeResolver {
                     if (ncs.contains(value)) {
                         return value;
                     } else {
-                        throw new AsterixException("address passed: '" + value
-                                + "' couldn't be resolved to an ip address and is not an NC id. Existing NCs are "
-                                + ncs.toString(), uhe);
+                        throw new AsterixException(ErrorCode.NODE_RESOLVER_COULDNT_RESOLVE_ADDRESS, uhe, value,
+                                ncs.toString());
                     }
                 }
 
             }
             Set<String> nodeControllers = ncMap.get(ipAddress);
             if (nodeControllers == null || nodeControllers.isEmpty()) {
-                throw new AsterixException(" No node controllers found at the address: " + value);
+                throw new AsterixException(ErrorCode.NODE_RESOLVER_NO_NODE_CONTROLLERS, value);
             }
             String chosenNCId = nodeControllers.toArray(new String[] {})[random.nextInt(nodeControllers.size())];
             return chosenNCId;
         } catch (UnknownHostException e) {
-            throw new AsterixException("Unable to resolve hostname '" + value + "' to an IP address");
+            throw new AsterixException(ErrorCode.NODE_RESOLVER_UNABLE_RESOLVE_HOST, value);
         } catch (AsterixException ae) {
             throw ae;
         } catch (Exception e) {

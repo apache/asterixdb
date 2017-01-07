@@ -27,16 +27,16 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class InvalidDataFormatException extends RuntimeDataException {
 
     public InvalidDataFormatException(FunctionIdentifier fid, byte expectedTypeTag) {
-        super(ErrorCode.ERROR_INVALID_FORMAT, fid.getName(),
+        super(ErrorCode.INVALID_FORMAT, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(expectedTypeTag));
     }
 
     public InvalidDataFormatException(FunctionIdentifier fid, String expectedType) {
-        super(ErrorCode.ERROR_INVALID_FORMAT, fid.getName(), expectedType);
+        super(ErrorCode.INVALID_FORMAT, fid.getName(), expectedType);
     }
 
     public InvalidDataFormatException(FunctionIdentifier fid, Throwable cause, byte expectedTypeTag) {
-        super(ErrorCode.ERROR_INVALID_FORMAT, fid.getName(), cause, expectedTypeTag);
+        super(ErrorCode.INVALID_FORMAT, fid.getName(), cause, expectedTypeTag);
         addSuppressed(cause);
     }
 

@@ -75,7 +75,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             boolean argResult = ABooleanSerializerDeserializer.getBoolean(argPtr.getByteArray(),
                                     argPtr.getStartOffset() + 1);
                             if (argResult) {
-                                throw new RuntimeDataException(ErrorCode.ERROR_INJECTED_FAILURE, getIdentifier());
+                                throw new RuntimeDataException(ErrorCode.INJECTED_FAILURE, getIdentifier());
                             }
                         }
 

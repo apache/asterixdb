@@ -24,6 +24,8 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -110,7 +112,7 @@ public class CounterTimerTupleForwarder implements ITupleForwarder {
             tuplesInFrame = 0;
             appender.reset(frame, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new IllegalStateException();
+                throw new RuntimeDataException(ErrorCode.DATAFLOW_ILLEGAL_STATE);
             }
         }
     }

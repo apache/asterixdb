@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.api;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 import java.io.DataOutput;
 import java.io.IOException;
 
@@ -28,5 +30,5 @@ public interface IRecordDataParser<T> extends IDataParser {
      * @param out
      * @throws Exception
      */
-    public void parse(IRawRecord<? extends T> record, DataOutput out) throws IOException;
+    public void parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException;
 }

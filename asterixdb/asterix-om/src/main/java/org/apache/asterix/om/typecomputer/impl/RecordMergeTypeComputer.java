@@ -90,7 +90,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             if (pos >= 0) {
                 IAType resultFieldType = resultFieldTypes.get(pos);
                 if (resultFieldType.getTypeTag() != fieldTypes[i].getTypeTag()) {
-                    throw new CompilationException(ErrorCode.ERROR_COMPILATION_DUPLICATE_FIELD_NAME, fieldNames[i]);
+                    throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldNames[i]);
                 }
                 // Assuming fieldTypes[i].getTypeTag() = resultFieldType.getTypeTag()
                 if (fieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
@@ -118,7 +118,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
 
     private IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0) throws AlgebricksException {
         if (fieldType1.getTypeTag() != ATypeTag.RECORD || fieldType0.getTypeTag() != ATypeTag.RECORD) {
-            throw new CompilationException(ErrorCode.ERROR_COMPILATION_DUPLICATE_FIELD_NAME, fieldName);
+            throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName);
         }
 
         ARecordType resultType = (ARecordType) fieldType0;

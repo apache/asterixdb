@@ -34,14 +34,14 @@ public class InvalidExpressionException extends CompilationException {
 
     public InvalidExpressionException(FunctionIdentifier fid, int index, ILogicalExpression actualExpr,
             LogicalExpressionTag... exprKinds) {
-        super(ErrorCode.ERROR_COMPILATION_INVALID_EXPRESSION, fid.getName(), indexToPosition(index),
+        super(ErrorCode.COMPILATION_INVALID_EXPRESSION, fid.getName(), indexToPosition(index),
                 actualExpr.toString(),
                 toExpectedTypeString(exprKinds));
     }
 
     public InvalidExpressionException(String functionName, int index, ILogicalExpression actualExpr,
             LogicalExpressionTag... exprKinds) {
-        super(ErrorCode.ERROR_COMPILATION_INVALID_EXPRESSION, functionName, indexToPosition(index),
+        super(ErrorCode.COMPILATION_INVALID_EXPRESSION, functionName, indexToPosition(index),
                 actualExpr.toString(),
                 toExpectedTypeString(exprKinds));
     }

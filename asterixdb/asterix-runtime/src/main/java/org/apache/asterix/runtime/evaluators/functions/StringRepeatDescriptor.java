@@ -87,7 +87,7 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 offset);
                         // Checks repeatingTimes. It should be a non-negative value.
                         if (repeatingTimes < 0) {
-                            throw new RuntimeDataException(ErrorCode.ERROR_NEGATIVE_VALUE, getIdentifier(), 1,
+                            throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, getIdentifier(), 1,
                                     repeatingTimes);
                         }
 

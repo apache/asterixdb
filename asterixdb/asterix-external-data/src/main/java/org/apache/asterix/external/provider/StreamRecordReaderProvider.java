@@ -21,6 +21,8 @@ package org.apache.asterix.external.provider;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.stream.EmptyLineSeparatedRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.LineRecordReader;
@@ -75,7 +77,7 @@ public class StreamRecordReaderProvider {
                         configuration.get(ExternalDataConstants.KEY_RECORD_START),
                         configuration.get(ExternalDataConstants.KEY_RECORD_END));
             default:
-                throw new HyracksDataException("Unknown format: " + format);
+                throw new RuntimeDataException(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, format);
         }
     }
 }

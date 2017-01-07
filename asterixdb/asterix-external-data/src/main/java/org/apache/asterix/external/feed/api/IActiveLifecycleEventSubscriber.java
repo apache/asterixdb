@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.feed.api;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IActiveLifecycleEventSubscriber {
 
@@ -34,7 +34,7 @@ public interface IActiveLifecycleEventSubscriber {
         ACTIVE_JOB_FAILED
     }
 
-    public void assertEvent(ActiveLifecycleEvent event) throws AsterixException, InterruptedException;
+    public void assertEvent(ActiveLifecycleEvent event) throws HyracksDataException, InterruptedException;
 
     public void handleEvent(ActiveLifecycleEvent event);
 }

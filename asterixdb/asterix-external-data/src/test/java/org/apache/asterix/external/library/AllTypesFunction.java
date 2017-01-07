@@ -44,7 +44,7 @@ public class AllTypesFunction implements IExternalScalarFunction {
     private JOrderedList newFieldList;
 
     @Override
-    public void initialize(IFunctionHelper functionHelper) {
+    public void initialize(IFunctionHelper functionHelper) throws Exception {
         newFieldList = new JOrderedList(functionHelper.getObject(JTypeTag.INT));
     }
 

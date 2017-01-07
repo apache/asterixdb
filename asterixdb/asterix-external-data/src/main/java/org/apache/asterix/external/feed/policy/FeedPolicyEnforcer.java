@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.external.feed.policy;
 
-import java.rmi.RemoteException;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FeedPolicyEnforcer {
 
@@ -34,7 +33,7 @@ public class FeedPolicyEnforcer {
         this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
     }
 
-    public boolean continueIngestionPostSoftwareFailure(Exception e) throws RemoteException, ACIDException {
+    public boolean continueIngestionPostSoftwareFailure(HyracksDataException e) throws HyracksDataException {
         return policyAccessor.continueOnSoftFailure();
     }
 

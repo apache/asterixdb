@@ -30,11 +30,11 @@ public class UnsupportedItemTypeException extends CompilationException {
 
     // Unsupported item type.
     public UnsupportedItemTypeException(FunctionIdentifier fid, ATypeTag itemTypeTag) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_ITEM, fid.getName(), itemTypeTag);
+        super(ErrorCode.COMPILATION_TYPE_ITEM, fid.getName(), itemTypeTag);
     }
 
     // Unsupported item type.
     public UnsupportedItemTypeException(String functionName, ATypeTag itemTypeTag) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_ITEM, functionName, itemTypeTag);
+        super(ErrorCode.COMPILATION_TYPE_ITEM, functionName, itemTypeTag);
     }
 }

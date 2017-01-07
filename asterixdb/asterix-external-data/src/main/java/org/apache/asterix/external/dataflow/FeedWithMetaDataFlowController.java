@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.io.IOException;
-
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordWithMetadataParser;
@@ -37,7 +35,7 @@ public class FeedWithMetaDataFlowController<T> extends FeedRecordDataFlowControl
     }
 
     @Override
-    protected void addMetaPart(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws IOException {
+    protected void addMetaPart(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws HyracksDataException {
         ((IRecordWithMetadataParser<T>) dataParser).parseMeta(tb.getDataOutput());
         tb.addFieldEndOffset();
     }

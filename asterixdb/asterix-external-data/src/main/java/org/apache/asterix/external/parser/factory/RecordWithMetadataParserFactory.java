@@ -21,6 +21,7 @@ package org.apache.asterix.external.parser.factory;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
@@ -48,14 +49,13 @@ public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserF
         // validate first
         String recordFormat = configuration.get(ExternalDataConstants.KEY_RECORD_FORMAT);
         if (recordFormat == null) {
-            throw new AsterixException(
-                    "Unknown record format for a record with meta parser. Did you specify the parameter "
-                            + ExternalDataConstants.KEY_RECORD_FORMAT);
+            throw new AsterixException(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
+                    ExternalDataConstants.KEY_FORMAT);
         }
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         if (format == null) {
-            throw new AsterixException("Unknown format for a record with meta parser. Did you specify the parameter "
-                    + ExternalDataConstants.KEY_FORMAT);
+            throw new AsterixException(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
+                    ExternalDataConstants.KEY_FORMAT);
         }
         // Create Parser Factory
         recordParserFactory = (IRecordDataParserFactory<O>) ParserFactoryProvider.getDataParserFactory(recordFormat);

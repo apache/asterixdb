@@ -76,7 +76,7 @@ public class NCExtensionManager {
     private MetadataTupleTranslatorProvider extendTupleTranslator(MetadataTupleTranslatorProvider ttp,
             IMetadataExtension tupleTranslatorExtension, IMetadataExtension mde) throws HyracksDataException {
         if (ttp != null) {
-            throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_COMPONENT_CONFLICT,
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT,
                     tupleTranslatorExtension.getId(),
                     mde.getId(), IMetadataExtension.class.getSimpleName());
         }

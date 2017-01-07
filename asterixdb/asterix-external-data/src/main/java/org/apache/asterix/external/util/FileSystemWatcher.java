@@ -36,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -95,7 +97,8 @@ public class FileSystemWatcher {
                     resume();
                 } else {
                     if (files.isEmpty()) {
-                        throw new HyracksDataException(path + ": no files found");
+                        throw new RuntimeDataException(ErrorCode.UTIL_FILE_SYSTEM_WATCHER_NO_FILES_FOUND,
+                                path.toString());
                     }
                 }
             }

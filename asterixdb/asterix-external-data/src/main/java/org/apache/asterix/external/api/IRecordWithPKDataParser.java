@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.external.api;
 
-import java.io.IOException;
-
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public interface IRecordWithPKDataParser<T> extends IRecordDataParser<T> {
 
-    public void appendKeys(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws IOException;
+    public void appendKeys(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws HyracksDataException;
 }

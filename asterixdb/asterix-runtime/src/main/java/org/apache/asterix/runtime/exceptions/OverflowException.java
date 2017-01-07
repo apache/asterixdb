@@ -27,12 +27,12 @@ public class OverflowException extends RuntimeDataException {
 
     // Overflow.
     public OverflowException(FunctionIdentifier fid) {
-        super(ErrorCode.ERROR_OVERFLOW, fid.getName());
+        super(ErrorCode.OVERFLOW, fid.getName());
     }
 
     // Overflow.
     public OverflowException(String functionName) {
-        super(ErrorCode.ERROR_OVERFLOW, functionName);
+        super(ErrorCode.OVERFLOW, functionName);
     }
 
 }

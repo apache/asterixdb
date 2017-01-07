@@ -23,6 +23,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
@@ -119,10 +121,11 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
                 throw new HyracksDataException(e);
             }
         } else {
-            String message = "Unable to create adapter as class loader not configured for library " + adaptorLibraryName
-                    + " in dataverse " + feedId.getDataverse();
-            LOGGER.severe(message);
-            throw new IllegalArgumentException(message);
+            RuntimeDataException err = new RuntimeDataException(
+                    ErrorCode.OPERATORS_FEED_INTAKE_OPERATOR_DESCRIPTOR_CLASSLOADER_NOT_CONFIGURED,
+                    adaptorLibraryName, feedId.getDataverse());
+            LOGGER.severe(err.getMessage());
+            throw err;
         }
         return adapterFactory;
     }

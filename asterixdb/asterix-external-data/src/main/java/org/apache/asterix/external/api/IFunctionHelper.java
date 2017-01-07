@@ -31,7 +31,7 @@ public interface IFunctionHelper {
 
     public boolean isValidResult();
 
-    public IJObject getObject(JTypeTag jtypeTag);
+    public IJObject getObject(JTypeTag jtypeTag) throws HyracksDataException;
 
     public void reset();
 }

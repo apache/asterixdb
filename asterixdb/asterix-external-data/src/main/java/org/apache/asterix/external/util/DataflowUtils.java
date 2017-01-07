@@ -20,6 +20,8 @@ package org.apache.asterix.external.util;
 
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.asterix.external.api.ITupleForwarder.TupleForwardPolicy;
 import org.apache.asterix.external.dataflow.CounterTimerTupleForwarder;
@@ -38,7 +40,7 @@ public class DataflowUtils {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
             appender.write(writer, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new HyracksDataException("Tuple is too large for a frame");
+                throw new RuntimeDataException(ErrorCode.UTIL_DATAFLOW_UTILS_TUPLE_TOO_LARGE);
             }
         }
     }
@@ -65,7 +67,7 @@ public class DataflowUtils {
             case RATE_CONTROLLED:
                 return RateControlledTupleForwarder.create(configuration);
             default:
-                throw new HyracksDataException("Unknown tuple forward policy");
+                throw new RuntimeDataException(ErrorCode.UTIL_DATAFLOW_UTILS_UNKNOWN_FORWARD_POLICY);
         }
     }
 
@@ -74,7 +76,7 @@ public class DataflowUtils {
         if (!appender.append(tuple)) {
             appender.write(writer, true);
             if (!appender.append(tuple)) {
-                throw new HyracksDataException("Tuple is too large for a frame");
+                throw new RuntimeDataException(ErrorCode.UTIL_DATAFLOW_UTILS_TUPLE_TOO_LARGE);
             }
         }
     }

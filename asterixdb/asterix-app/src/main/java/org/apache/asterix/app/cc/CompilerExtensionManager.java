@@ -72,7 +72,7 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
                 extension.configure(extensionConf.getArgs());
                 if (extensions.containsKey(extension.getId())) {
-                    throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_ID_CONFLICT, extension.getId());
+                    throw new RuntimeDataException(ErrorCode.EXTENSION_ID_CONFLICT, extension.getId());
                 }
                 extensions.put(extension.getId(), extension);
                 switch (extension.getExtensionKind()) {
@@ -97,7 +97,7 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
     private Pair<ExtensionId, ILangCompilationProvider> extendLangCompilationProvider(Language lang,
             Pair<ExtensionId, ILangCompilationProvider> cp, ILangExtension le) throws HyracksDataException {
         if (cp != null && le.getLangCompilationProvider(lang) != null) {
-            throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.first,
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.first,
                     lang.toString());
         }
         return (le.getLangCompilationProvider(lang) != null)
@@ -107,7 +107,7 @@ public class CompilerExtensionManager implements IAlgebraExtensionManager {
     private IStatementExecutorExtension extendStatementExecutor(IStatementExecutorExtension qte,
             IStatementExecutorExtension extension) throws HyracksDataException {
         if (qte != null) {
-            throw new RuntimeDataException(ErrorCode.ERROR_EXTENSION_COMPONENT_CONFLICT, qte.getId(), extension.getId(),
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, qte.getId(), extension.getId(),
                     IStatementExecutorFactory.class.getSimpleName());
         }
         return extension;

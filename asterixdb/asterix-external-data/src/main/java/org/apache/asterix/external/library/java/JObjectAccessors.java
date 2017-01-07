@@ -19,6 +19,8 @@
 package org.apache.asterix.external.library.java;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
@@ -558,8 +560,8 @@ public class JObjectAccessors {
                             listItem = pointableVisitor.visit((AListVisitablePointable) itemPointable, typeInfo);
                             break;
                         case ANY:
-                            throw new IllegalArgumentException(
-                                    "Cannot parse list item of type " + listType.getTypeTag());
+                            throw new RuntimeDataException(ErrorCode.LIBRARY_JOBJECT_ACCESSOR_CANNOT_PARSE_TYPE,
+                                    listType.getTypeTag());
                         default:
                             listItem = pointableVisitor.visit((AFlatValuePointable) itemPointable, typeInfo);
                     }

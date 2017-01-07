@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -32,11 +34,12 @@ public class ExternalLibraryManager implements ILibraryManager {
     private final Map<String, ClassLoader> libraryClassLoaders = new HashMap<>();
 
     @Override
-    public void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader) {
+    public void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader)
+            throws RuntimeDataException {
         String key = getKey(dataverseName, libraryName);
         synchronized (libraryClassLoaders) {
             if (libraryClassLoaders.get(key) != null) {
-                throw new IllegalStateException("Library class loader already registered!");
+                throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_LIBRARY_CLASS_REGISTERED);
             }
             libraryClassLoaders.put(key, classLoader);
         }

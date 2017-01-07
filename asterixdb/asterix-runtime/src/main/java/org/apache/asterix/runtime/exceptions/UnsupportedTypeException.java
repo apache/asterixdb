@@ -28,13 +28,13 @@ public class UnsupportedTypeException extends RuntimeDataException {
 
     // Unsupported input type.
     public UnsupportedTypeException(FunctionIdentifier fid, byte actualTypeTag) {
-        super(ErrorCode.ERROR_TYPE_UNSUPPORTED, fid.getName(),
+        super(ErrorCode.TYPE_UNSUPPORTED, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
     // Unsupported input type.
     public UnsupportedTypeException(String funcName, byte actualTypeTag) {
-        super(ErrorCode.ERROR_TYPE_UNSUPPORTED, funcName,
+        super(ErrorCode.TYPE_UNSUPPORTED, funcName,
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 }

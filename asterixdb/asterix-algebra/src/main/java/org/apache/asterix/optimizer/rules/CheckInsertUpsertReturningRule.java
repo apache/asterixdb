@@ -43,7 +43,7 @@ public class CheckInsertUpsertReturningRule implements IAlgebraicRewriteRule {
             return false;
         }
         if (InsertUpsertCheckUtil.check(opRef.getValue())) {
-            throw new CompilationException(ErrorCode.ERROR_COMPILATION_INVALID_RETURNING_EXPRESSION);
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_RETURNING_EXPRESSION);
         }
         checked = true;
         return false;

@@ -20,6 +20,8 @@ package org.apache.asterix.external.operators;
 
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -101,7 +103,8 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                         coreOperator, feedConnectionId, feedPolicyProperties, operandId, this);
                 break;
             default:
-                throw new HyracksDataException(new IllegalArgumentException("Invalid feed runtime: " + runtimeType));
+                throw new RuntimeDataException(ErrorCode.OPERATORS_FEED_META_OPERATOR_DESCRIPTOR_INVALID_RUNTIME,
+                        runtimeType);
         }
         return nodePushable;
     }

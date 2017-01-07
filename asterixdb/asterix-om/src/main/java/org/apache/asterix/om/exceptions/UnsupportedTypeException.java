@@ -30,11 +30,11 @@ public class UnsupportedTypeException extends CompilationException {
 
     // Unsupported input type.
     public UnsupportedTypeException(FunctionIdentifier fid, ATypeTag actualTypeTag) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_UNSUPPORTED, fid.getName(), actualTypeTag);
+        super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, fid.getName(), actualTypeTag);
     }
 
     // Unsupported input type.
     public UnsupportedTypeException(String funcName, ATypeTag actualTypeTag) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_UNSUPPORTED, funcName, actualTypeTag);
+        super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, funcName, actualTypeTag);
     }
 }

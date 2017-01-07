@@ -31,7 +31,7 @@ public class SocketClientInputStream extends AsterixInputStream {
     private final Socket socket;
     private InputStream in;
 
-    public SocketClientInputStream(Pair<String, Integer> address) throws UnknownHostException, IOException {
+    public SocketClientInputStream(Pair<String, Integer> address) throws IOException {
         this.socket = new Socket(address.first, address.second);
         this.in = socket.getInputStream();
     }

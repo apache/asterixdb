@@ -107,7 +107,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     }
 
     @Override
-    public void appendLastParsedPrimaryKeyToTuple(ArrayTupleBuilder tb) throws IOException {
+    public void appendLastParsedPrimaryKeyToTuple(ArrayTupleBuilder tb) throws HyracksDataException {
         rwm.appendPrimaryKeyToTuple(tb);
     }
 }

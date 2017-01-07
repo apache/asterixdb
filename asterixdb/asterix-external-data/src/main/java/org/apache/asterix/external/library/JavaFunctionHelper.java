@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.library.java.JObjectPointableVisitor;
@@ -38,8 +40,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -119,7 +119,8 @@ public class JavaFunctionHelper implements IFunctionHelper {
                 jObject = pointableVisitor.visit((AListVisitablePointable) pointable, getTypeInfo(index, type));
                 break;
             case ANY:
-                throw new IllegalStateException("Cannot handle a function argument of type " + type.getTypeTag());
+                throw new RuntimeDataException(ErrorCode.LIBRARY_JAVA_FUNCTION_HELPER_CANNOT_HANDLE_ARGU_TYPE,
+                        type.getTypeTag());
             default:
                 pointable = pointableAllocator.allocateFieldValue(type);
                 pointable.set(valueReference);
@@ -147,7 +148,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
     }
 
     @Override
-    public IJObject getObject(JTypeTag jtypeTag) {
+    public IJObject getObject(JTypeTag jtypeTag) throws RuntimeDataException {
         IJObject retValue = null;
         switch (jtypeTag) {
             case INT:
@@ -164,8 +165,10 @@ public class JavaFunctionHelper implements IFunctionHelper {
                 break;
             default:
                 try {
-                    throw new NotImplementedException("Object of type " + jtypeTag.name() + " not supported.");
+                    throw new RuntimeDataException(ErrorCode.LIBRARY_JAVA_FUNCTION_HELPER_OBJ_TYPE_NOT_SUPPORTED,
+                            jtypeTag.name());
                 } catch (IllegalStateException e) {
+                    // Exception is not thrown
                     e.printStackTrace();
                 }
                 break;

@@ -31,13 +31,13 @@ public class TypeMismatchException extends RuntimeDataException {
 
     // Parameter type mistmatch.
     public TypeMismatchException(FunctionIdentifier fid, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
-        super(ErrorCode.ERROR_TYPE_MISMATCH, fid.getName(), indexToPosition(i), toExpectedTypeString(expectedTypeTags),
+        super(ErrorCode.TYPE_MISMATCH, fid.getName(), indexToPosition(i), toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
     // Parameter type mistmatch.
     public TypeMismatchException(String functionName, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
-        super(ErrorCode.ERROR_TYPE_MISMATCH, functionName, indexToPosition(i), toExpectedTypeString(expectedTypeTags),
+        super(ErrorCode.TYPE_MISMATCH, functionName, indexToPosition(i), toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 

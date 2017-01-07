@@ -34,13 +34,13 @@ public class TypeMismatchException extends CompilationException {
     // Parameter type mistmatch.
     public TypeMismatchException(FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_MISMATCH, fid.getName(), indexToPosition(i),
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
     // Parameter type mistmatch.
     public TypeMismatchException(String functionName, Integer i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
-        super(ErrorCode.ERROR_COMPILATION_TYPE_MISMATCH, functionName, indexToPosition(i),
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 

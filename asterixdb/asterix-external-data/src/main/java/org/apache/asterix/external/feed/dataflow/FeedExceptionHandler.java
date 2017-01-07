@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.IExceptionHandler;
 import org.apache.asterix.external.util.FeedFrameUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -73,7 +72,7 @@ public class FeedExceptionHandler implements IExceptionHandler {
     }
 
     // TODO: Fix logging of exceptions
-    private void logExceptionCausingTuple(int tupleIndex, Throwable e) throws HyracksDataException, AsterixException {
+    private void logExceptionCausingTuple(int tupleIndex, Throwable e) throws HyracksDataException {
         LOGGER.log(Level.WARNING, e.getMessage(), e);
     }
 }

@@ -20,6 +20,8 @@ package org.apache.asterix.common.exceptions;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
+import java.io.Serializable;
+
 public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
@@ -27,8 +29,18 @@ public class AsterixException extends AlgebricksException {
         super(message);
     }
 
+    public AsterixException(int errorCode, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+
+    }
+
     public AsterixException(Throwable cause) {
         super(cause);
+    }
+
+    public AsterixException(int errorCode, Throwable cause, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+        addSuppressed(cause);
     }
 
     public AsterixException(String message, Throwable cause) {

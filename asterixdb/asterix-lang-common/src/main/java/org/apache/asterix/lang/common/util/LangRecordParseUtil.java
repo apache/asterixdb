@@ -83,7 +83,7 @@ public class LangRecordParseUtil {
                 parseList((ListConstructor) expr, serialized);
                 break;
             default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
                         NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE, new Serializable[] { Expression.Kind.LITERAL_EXPRESSION
                                 .toString(), Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
                                 Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString() });
@@ -129,13 +129,13 @@ public class LangRecordParseUtil {
 
     public static Literal exprToStringLiteral(Expression expr) throws HyracksDataException {
         if (expr.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
                     "Expected expression can only be of type %1$s", Expression.Kind.LITERAL_EXPRESSION);
         }
         LiteralExpr keyLiteralExpr = (LiteralExpr) expr;
         Literal keyLiteral = keyLiteralExpr.getValue();
         if (keyLiteral.getLiteralType() != Literal.Type.STRING) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
                     "Expected Literal can only be of type %1$s", Literal.Type.STRING);
         }
         return keyLiteral;
@@ -144,7 +144,7 @@ public class LangRecordParseUtil {
     private static void parseList(ListConstructor valueExpr, ArrayBackedValueStorage serialized)
             throws HyracksDataException {
         if (valueExpr.getType() != ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
                     "JSON List can't be of type %1$s", valueExpr.getType());
         }
         ArrayBackedValueStorage serializedValue = new ArrayBackedValueStorage();
@@ -187,7 +187,7 @@ public class LangRecordParseUtil {
                 stringSerde.serialize(new AString((String) value.getValue()), serialized.getDataOutput());
                 break;
             default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_PARSE_ERROR,
+                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
                         "Unknown Literal Type %1$s", value.getLiteralType());
         }
     }

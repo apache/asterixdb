@@ -25,6 +25,7 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordWithPKDataParser;
 import org.apache.asterix.external.input.record.RecordWithPK;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class TestRecordWithPKParser<T> implements IRecordWithPKDataParser<RecordWithPK<T>> {
@@ -36,13 +37,14 @@ public class TestRecordWithPKParser<T> implements IRecordWithPKDataParser<Record
     }
 
     @Override
-    public void parse(final IRawRecord<? extends RecordWithPK<T>> record, final DataOutput out) throws IOException {
+    public void parse(final IRawRecord<? extends RecordWithPK<T>> record, final DataOutput out) throws
+            HyracksDataException {
         recordParser.parse(record.get().getRecord(), out);
     }
 
     @Override
     public void appendKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends RecordWithPK<T>> record)
-            throws IOException {
+            throws HyracksDataException {
         record.get().appendPrimaryKeyToTuple(tb);
     }
 

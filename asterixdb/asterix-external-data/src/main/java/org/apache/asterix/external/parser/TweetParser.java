@@ -26,6 +26,8 @@ import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.ListBuilderFactory;
 import org.apache.asterix.builders.RecordBuilderFactory;
 import org.apache.asterix.builders.UnorderedListBuilder;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.om.base.AMutablePoint;
@@ -178,8 +180,8 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 DataOutput fieldOutput = fieldValueBuffer.getDataOutput();
                 if (obj.get(curFNames[iter1]).isNull()) {
                     if (curRecType.isClosedField(curFNames[iter1])) {
-                        throw new HyracksDataException("Closed field " + curFNames[iter1] + " has null value.");
-                    } else {
+                        throw new RuntimeDataException(ErrorCode.PARSER_TWEET_PARSER_CLOSED_FIELD_NULL,
+                                curFNames[iter1]);                    } else {
                         continue;
                     }
                 } else {

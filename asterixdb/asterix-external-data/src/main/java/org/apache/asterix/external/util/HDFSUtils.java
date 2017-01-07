@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
@@ -43,31 +45,32 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.context.ICCContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
 public class HDFSUtils {
 
-    public static Scheduler initializeHDFSScheduler() {
+    public static Scheduler initializeHDFSScheduler() throws  HyracksDataException {
         ICCContext ccContext = AppContextInfo.INSTANCE.getCCApplicationContext().getCCContext();
         Scheduler scheduler = null;
         try {
             scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
                     ccContext.getClusterControllerInfo().getClientNetPort());
         } catch (HyracksException e) {
-            throw new IllegalStateException("Cannot obtain hdfs scheduler");
+            throw new RuntimeDataException(ErrorCode.UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER);
         }
         return scheduler;
     }
 
-    public static IndexingScheduler initializeIndexingHDFSScheduler() {
+    public static IndexingScheduler initializeIndexingHDFSScheduler() throws HyracksDataException {
         ICCContext ccContext = AppContextInfo.INSTANCE.getCCApplicationContext().getCCContext();
         IndexingScheduler scheduler = null;
         try {
             scheduler = new IndexingScheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
                     ccContext.getClusterControllerInfo().getClientNetPort());
         } catch (HyracksException e) {
-            throw new IllegalStateException("Cannot obtain hdfs scheduler");
+            throw new RuntimeDataException(ErrorCode.UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER);
         }
         return scheduler;
     }

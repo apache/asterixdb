@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.external.api.IJObject;
@@ -388,7 +390,7 @@ public class JObjectUtil {
                 }
 
             default:
-                throw new IllegalStateException("Argument type: " + typeTag);
+                throw new RuntimeDataException(ErrorCode.LIBRARY_JOBJECT_UTIL_ILLEGAL_ARGU_TYPE, typeTag);
         }
         return jObject;
     }

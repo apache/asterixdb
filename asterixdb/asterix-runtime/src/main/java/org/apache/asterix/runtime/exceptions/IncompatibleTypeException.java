@@ -28,14 +28,14 @@ public class IncompatibleTypeException extends RuntimeDataException {
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(FunctionIdentifier fid, byte typeTagLeft, byte typeTagRight) {
-        super(ErrorCode.ERROR_TYPE_INCOMPATIBLE, fid.getName(),
+        super(ErrorCode.TYPE_INCOMPATIBLE, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagLeft),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagRight));
     }
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(String functionName, byte typeTagLeft, byte typeTagRight) {
-        super(ErrorCode.ERROR_TYPE_INCOMPATIBLE, functionName,
+        super(ErrorCode.TYPE_INCOMPATIBLE, functionName,
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagLeft),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagRight));
     }

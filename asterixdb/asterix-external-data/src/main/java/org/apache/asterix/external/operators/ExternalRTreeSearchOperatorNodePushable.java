@@ -58,7 +58,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
                 try {
                     nonMatchWriter.writeMissing(out);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new HyracksDataException(e);
                 }
                 nonMatchTupleBuild.addFieldEndOffset();
             }

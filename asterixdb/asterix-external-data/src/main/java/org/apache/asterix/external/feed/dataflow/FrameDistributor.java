@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.feed.dataflow.FeedFrameCollector.State;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -43,7 +45,8 @@ public class FrameDistributor implements IFrameWriter {
 
     public synchronized void registerFrameCollector(FeedFrameCollector frameCollector) throws HyracksDataException {
         if (rootFailureCause != null) {
-            throw new HyracksDataException("attempt to register to a failed feed data provider", rootFailureCause);
+            throw new RuntimeDataException(ErrorCode.FEED_DATAFLOW_FRAME_DISTR_REGISTER_FAILED_DATA_PROVIDER,
+                    rootFailureCause);
         }
         // registering a new collector.
         try {
@@ -72,7 +75,8 @@ public class FrameDistributor implements IFrameWriter {
 
     public synchronized void deregisterFrameCollector(FeedConnectionId connectionId) throws HyracksDataException {
         if (rootFailureCause != null) {
-            throw new HyracksDataException("attempt to register to a failed feed data provider", rootFailureCause);
+            throw new RuntimeDataException(ErrorCode.FEED_DATAFLOW_FRAME_DISTR_REGISTER_FAILED_DATA_PROVIDER,
+                    rootFailureCause);
         }
         FeedFrameCollector frameCollector = removeFrameCollector(connectionId);
         try {

@@ -24,6 +24,8 @@ import java.io.DataInputStream;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.operators.ExternalLookupOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
@@ -120,7 +122,8 @@ public class ExternalFileIndexAccessor implements Serializable {
             setFile(externalFileRecord, file);
         } else {
             // This should never happen
-            throw new HyracksDataException("Was not able to find a file in the files index");
+            throw new RuntimeDataException(
+                    ErrorCode.INDEXING_EXTERNAL_FILE_INDEX_ACCESSOR_UNABLE_TO_FIND_FILE_INDEX);
         }
     }
 

@@ -41,7 +41,8 @@ public class ChangeFeedDataFlowController<T> extends FeedRecordDataFlowControlle
     }
 
     @Override
-    protected void addPrimaryKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends T> record) throws IOException {
+    protected void addPrimaryKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends T> record)
+            throws HyracksDataException {
         dataParser.appendKeys(tb, record);
     }
 }

@@ -29,7 +29,7 @@ public interface ILookupRecordReader<T> {
 
     public Class<?> getRecordClass() throws IOException;
 
-    public IRawRecord<T> read(RecordId rid) throws IOException, Exception;
+    public IRawRecord<T> read(RecordId rid) throws Exception;
 
     public void open() throws IOException;
 

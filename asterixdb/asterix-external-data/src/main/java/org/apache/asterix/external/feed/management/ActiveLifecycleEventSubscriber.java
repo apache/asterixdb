@@ -21,8 +21,10 @@ package org.apache.asterix.external.feed.management;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ActiveLifecycleEventSubscriber implements IActiveLifecycleEventSubscriber {
 
@@ -38,7 +40,7 @@ public class ActiveLifecycleEventSubscriber implements IActiveLifecycleEventSubs
     }
 
     @Override
-    public void assertEvent(ActiveLifecycleEvent event) throws AsterixException, InterruptedException {
+    public void assertEvent(ActiveLifecycleEvent event) throws HyracksDataException, InterruptedException {
         boolean eventOccurred = false;
         ActiveLifecycleEvent e;
         Iterator<ActiveLifecycleEvent> eventsSoFar = inbox.iterator();
@@ -57,11 +59,11 @@ public class ActiveLifecycleEventSubscriber implements IActiveLifecycleEventSubs
         }
     }
 
-    private void assertNoFailure(ActiveLifecycleEvent e) throws AsterixException {
+    private void assertNoFailure(ActiveLifecycleEvent e) throws HyracksDataException {
         if (e.equals(ActiveLifecycleEvent.FEED_INTAKE_FAILURE) || e.equals(ActiveLifecycleEvent.FEED_COLLECT_FAILURE)
                 || e.equals(ActiveLifecycleEvent.ACTIVE_JOB_FAILED)) {
-            throw new AsterixException("Failure in active job.");
+            throw new RuntimeDataException(
+                    ErrorCode.FEED_MANAGEMENT_ACTIVE_LIFE_CYCLE_EVENT_SUBSCRIBER_ACTIVE_JOB_FAILURE);
         }
     }
-
 }

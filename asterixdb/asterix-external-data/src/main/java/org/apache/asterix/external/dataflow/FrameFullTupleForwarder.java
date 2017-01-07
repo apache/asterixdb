@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.ITupleForwarder;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -50,7 +52,7 @@ public class FrameFullTupleForwarder implements ITupleForwarder {
             appender.reset(frame, true);
             success = appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
             if (!success) {
-                throw new IllegalStateException();
+                throw new RuntimeDataException(ErrorCode.DATAFLOW_ILLEGAL_STATE);
             }
         }
     }

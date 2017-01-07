@@ -96,7 +96,6 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                     try {
                         IIndex index = indexHelper.getIndexInstance();
                         // Create bulk loader
-
                         IIndexBulkLoader bulkLoader = index.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false,
                                 files.size(), false);
                         // Load files
@@ -104,7 +103,7 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                             bulkLoader.add(filesTupleTranslator.getTupleFromFile(file));
                         }
                         bulkLoader.end();
-                    } catch (IndexException | IOException | AsterixException e) {
+                    } catch (IndexException | IOException e) {
                         throw new HyracksDataException(e);
                     } finally {
                         indexHelper.close();
@@ -132,7 +131,7 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                             }
                         }
                         bulkLoader.end();
-                    } catch (IndexException | IOException | AsterixException e) {
+                    } catch (IndexException | IOException e) {
                         if (bulkLoader != null) {
                             bulkLoader.abort();
                         }

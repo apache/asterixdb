@@ -38,7 +38,8 @@ public class ChangeFeedWithMetaDataFlowController<T> extends FeedWithMetaDataFlo
     }
 
     @Override
-    protected void addPrimaryKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends T> record) throws IOException {
+    protected void addPrimaryKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends T> record)
+            throws HyracksDataException {
         ((IRecordWithMetadataParser<T>) dataParser).appendLastParsedPrimaryKeyToTuple(tb);
     }
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IExternalFunction;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
@@ -39,9 +41,10 @@ public class ExternalFunctionProvider {
                 return new ExternalScalarFunction(finfo, args, context);
             case AGGREGATE:
             case UNNEST:
-                throw new IllegalArgumentException(" UDF of kind" + finfo.getKind() + " not supported.");
+                throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
+                        finfo.getKind());
             default:
-                throw new IllegalArgumentException(" unknown function kind" + finfo.getKind());
+                throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNKNOWN_KIND, finfo.getKind());
         }
     }
 }
@@ -66,7 +69,6 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
             result.set(resultBuffer.getByteArray(), resultBuffer.getStartOffset(), resultBuffer.getLength());
             functionHelper.reset();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new HyracksDataException(e);
         }
     }

@@ -234,7 +234,7 @@ class ARecordCaster {
                         fieldPermutation[reqFnPos] = fnPos;
                         openFields[fnPos] = false;
                     } else {
-                        throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.ERROR_CASTING_FIELD,
+                        throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.CASTING_FIELD,
                                 "Field type %1$s can't be promoted to type %2$s", inputTypeTag, requiredTypeTag);
                     }
                 }

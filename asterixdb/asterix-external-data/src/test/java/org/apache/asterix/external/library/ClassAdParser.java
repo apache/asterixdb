@@ -1744,7 +1744,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws IOException {
+    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         try {
             resetPools();
             if (oldFormat) {

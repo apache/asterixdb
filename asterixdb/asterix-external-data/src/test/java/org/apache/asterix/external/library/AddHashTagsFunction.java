@@ -34,7 +34,7 @@ public class AddHashTagsFunction implements IExternalScalarFunction {
     private JPoint location = null;
 
     @Override
-    public void initialize(IFunctionHelper functionHelper) {
+    public void initialize(IFunctionHelper functionHelper) throws Exception {
         list = new JUnorderedList(functionHelper.getObject(JTypeTag.STRING));
         location = new JPoint(0, 0);
     }

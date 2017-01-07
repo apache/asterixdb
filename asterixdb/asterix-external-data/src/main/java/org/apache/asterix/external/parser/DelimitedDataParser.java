@@ -25,10 +25,12 @@ import java.io.InputStreamReader;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -87,7 +89,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             fldIds[i] = recBuilder.getFieldId(name);
             if (fldIds[i] < 0) {
                 if (!recordType.isOpen()) {
-                    throw new HyracksDataException("Illegal field " + name + " in closed type " + recordType);
+                    throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_ILLEGAL_FIELD, name, recordType);
                 } else {
                     nameBuffers[i] = new ArrayBackedValueStorage();
                     str.setValue(name);
@@ -101,62 +103,78 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     }
 
     @Override
-    public boolean parse(DataOutput out) throws IOException {
-        while (cursor.nextRecord()) {
-            parseRecord(out);
-            if (!areAllNullFields) {
-                recBuilder.write(out, true);
-                return true;
+    public boolean parse(DataOutput out) throws HyracksDataException {
+        try {
+            while (cursor.nextRecord()) {
+                parseRecord();
+                if (!areAllNullFields) {
+                    recBuilder.write(out, true);
+                    return true;
+                }
             }
+            return false;
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
-        return false;
     }
 
-    private void parseRecord(DataOutput out) throws IOException {
+    private void parseRecord() throws HyracksDataException {
         recBuilder.reset(recordType);
         recBuilder.init();
         areAllNullFields = true;
 
         for (int i = 0; i < valueParsers.length; ++i) {
-            if (!cursor.nextField()) {
-                break;
+            try {
+                if (!cursor.nextField()) {
+                    break;
+                }
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
             }
             fieldValueBuffer.reset();
 
-            if (cursor.fStart == cursor.fEnd && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
-                    && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
-                // if the field is empty and the type is optional, insert
-                // NULL. Note that string type can also process empty field as an
-                // empty string
-                if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
-                    throw new HyracksDataException("At record: " + cursor.recordCount + " - Field " + cursor.fieldCount
-                            + " is not an optional type so it cannot accept null value. ");
+            try {
+                if (cursor.fStart == cursor.fEnd && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
+                        && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
+                    // if the field is empty and the type is optional, insert
+                    // NULL. Note that string type can also process empty field as an
+                    // empty string
+                    if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
+                        throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_NONOPTIONAL_NULL,
+                                cursor.recordCount, cursor.fieldCount);
+                    }
+                    fieldValueBufferOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                } else {
+                    fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
+                    // Eliminate doule quotes in the field that we are going to parse
+                    if (cursor.isDoubleQuoteIncludedInThisField) {
+                        cursor.eliminateDoubleQuote(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
+                        cursor.fEnd -= cursor.doubleQuoteCount;
+                        cursor.isDoubleQuoteIncludedInThisField = false;
+                    }
+                    valueParsers[i]
+                            .parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, fieldValueBufferOutput);
+                    areAllNullFields = false;
                 }
-                fieldValueBufferOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-            } else {
-                fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
-                // Eliminate doule quotes in the field that we are going to parse
-                if (cursor.isDoubleQuoteIncludedInThisField) {
-                    cursor.eliminateDoubleQuote(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart);
-                    cursor.fEnd -= cursor.doubleQuoteCount;
-                    cursor.isDoubleQuoteIncludedInThisField = false;
+                if (fldIds[i] < 0) {
+                    recBuilder.addField(nameBuffers[i], fieldValueBuffer);
+                } else {
+                    recBuilder.addField(fldIds[i], fieldValueBuffer);
                 }
-                valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
-                        fieldValueBufferOutput);
-                areAllNullFields = false;
-            }
-            if (fldIds[i] < 0) {
-                recBuilder.addField(nameBuffers[i], fieldValueBuffer);
-            } else {
-                recBuilder.addField(fldIds[i], fieldValueBuffer);
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
             }
         }
     }
 
     @Override
-    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws IOException {
-        cursor.nextRecord(record.get(), record.size());
-        parseRecord(out);
+    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
+        try {
+            cursor.nextRecord(record.get(), record.size());
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        parseRecord();
         if (!areAllNullFields) {
             recBuilder.write(out, true);
         }

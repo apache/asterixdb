@@ -20,6 +20,8 @@ package org.apache.asterix.external.dataflow;
 
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -69,7 +71,7 @@ public class RateControlledTupleForwarder implements ITupleForwarder {
             try {
                 Thread.sleep(interTupleInterval);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new HyracksDataException(e);
             }
         }
         boolean success = appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
@@ -78,7 +80,7 @@ public class RateControlledTupleForwarder implements ITupleForwarder {
             appender.reset(frame, true);
             success = appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
             if (!success) {
-                throw new IllegalStateException();
+                throw new RuntimeDataException(ErrorCode.DATAFLOW_ILLEGAL_STATE);
             }
         }
     }

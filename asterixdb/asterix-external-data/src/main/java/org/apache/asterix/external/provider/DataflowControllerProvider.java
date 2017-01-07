@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
@@ -115,8 +117,8 @@ public class DataflowControllerProvider {
                                 streamParser);
                     }
                 default:
-                    throw new HyracksDataException(
-                            "Unknown data source type: " + dataSourceFactory.getDataSourceType());
+                    throw new RuntimeDataException(ErrorCode.PROVIDER_DATAFLOW_CONTROLLER_UNKNOWN_DATA_SOURCE,
+                            dataSourceFactory.getDataSourceType());
             }
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException(e);

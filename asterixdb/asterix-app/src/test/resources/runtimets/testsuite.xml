@@ -6722,7 +6722,7 @@
     <test-case FilePath="load">
       <compilation-unit name="file-not-found">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException: bla: path not found</expected-error>
+        <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException: ASX3077: bla: path not found</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

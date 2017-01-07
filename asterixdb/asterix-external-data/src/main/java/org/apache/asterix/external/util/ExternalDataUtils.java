@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
@@ -31,6 +33,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.FloatParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -127,14 +130,14 @@ public class ExternalDataUtils {
     }
 
     public static IInputStreamFactory createExternalInputStreamFactory(ILibraryManager libraryManager, String dataverse,
-            String stream) throws AsterixException {
+            String stream) throws HyracksDataException {
         try {
             String libraryName = getLibraryName(stream);
             String className = getExternalClassName(stream);
             ClassLoader classLoader = getClassLoader(libraryManager, dataverse, libraryName);
             return ((IInputStreamFactory) (classLoader.loadClass(className).newInstance()));
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            throw new AsterixException("Failed to create stream factory", e);
+            throw new RuntimeDataException(ErrorCode.UTIL_EXTERNAL_DATA_UTILS_FAIL_CREATE_STREAM_FACTORY, e);
         }
     }
 
