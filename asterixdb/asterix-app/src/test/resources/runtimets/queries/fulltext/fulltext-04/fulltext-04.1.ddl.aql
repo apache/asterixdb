@@ -20,7 +20,7 @@
 /*
  *  Description     : Full-text search non-index test
  *                  : This test is intended to verify that the full-text search DOES NOT work as expected.
- *                  : query #3 - a string phrase is provided as a query predicate.
+ *                  : query #2 - a string phrase is provided as a query predicate.
  *                  :            this should throw an exception since we don't support a phrase search yet.
  *  Expected Result : Exception
  *

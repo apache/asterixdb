@@ -34,6 +34,8 @@ public class ErrorCode {
     public static final int INVALID_OPERATOR_OPERATION = 1;
     public static final int ERROR_PROCESSING_TUPLE = 2;
     public static final int FAILURE_ON_NODE = 3;
+    public static final int RUNTIME_FILE_WITH_ABSOULTE_PATH_NOT_WITHIN_ANY_IO_DEVICE = 4;
+    public static final int RUNTIME_FULLTEXT_PHRASE_FOUND = 5;
 
     // Loads the map that maps error codes to error message templates.
     private static Map<Integer, String> errorMessageMap = null;

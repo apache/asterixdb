@@ -47,8 +47,6 @@ create dataset MyData(MyRecord)
 
 create index fulltext_index_title on MyData(title) type fulltext;
 
-write output to asterix_nc1:"rttest/inverted-index-basic_fulltext-contains-without-option.adm";
-
 for $o in dataset MyData
 where ftcontains($o.title, "database")
 order by $o.id

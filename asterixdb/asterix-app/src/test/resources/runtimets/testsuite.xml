@@ -400,19 +400,19 @@
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-04">
         <output-dir compare="Text">fulltext-04</output-dir>
-        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+        <expected-error>ASX1010: Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-05">
         <output-dir compare="Text">fulltext-05</output-dir>
-        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+        <expected-error>ASX1010: Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-06">
         <output-dir compare="Text">fulltext-06</output-dir>
-        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+        <expected-error>ASX1010: Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
@@ -438,19 +438,19 @@
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-04">
         <output-dir compare="Text">fulltext-index-04</output-dir>
-        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+        <expected-error>ASX1010: Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-05">
         <output-dir compare="Text">fulltext-index-05</output-dir>
-        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+        <expected-error>ASX1010: Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-06">
         <output-dir compare="Text">fulltext-index-06</output-dir>
-        <expected-error>Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted. </expected-error>
+        <expected-error>ASX1010: Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">

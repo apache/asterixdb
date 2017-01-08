@@ -29,6 +29,7 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -121,16 +122,12 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
                 // If it's a list, it can have multiple keywords in it. But, each keyword should not be a phrase.
                 if (isFullTextSearchQuery) {
                     if (queryTokenizerType == TokenizerType.STRING && tokenCountInOneField > 1) {
-                        throw new HyracksDataException(
-                                "Phrase search in Full-text is not supported. "
-                                        + "An expression should include only one word.");
+                        throw HyracksDataException.create(ErrorCode.RUNTIME_FULLTEXT_PHRASE_FOUND);
                     } else if (queryTokenizerType == TokenizerType.LIST) {
                         for (int j = 1; j < token.getTokenLength(); j++) {
                             if (DelimitedUTF8StringBinaryTokenizer
                                     .isSeparator((char) token.getData()[token.getStartOffset() + j])) {
-                                throw new HyracksDataException(
-                                        "Phrase search in Full-text is not supported. "
-                                                + "An expression should include only one word.");
+                                throw HyracksDataException.create(ErrorCode.RUNTIME_FULLTEXT_PHRASE_FOUND);
                             }
                         }
                     }

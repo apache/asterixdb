@@ -28,6 +28,8 @@ import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -204,7 +206,8 @@ public class AccessMethodUtils {
                 argValue = ConstantExpressionUtil.getStringConstant(element);
                 checkAndGenerateFTSearchExceptionForStringPhrase(argValue);
             } else {
-                throw new AlgebricksException("Each element in the list should be a string in the Full-text search.");
+                throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED,
+                        BuiltinFunctions.FULLTEXT_CONTAINS.getName(), element.getType().getTypeTag());
             }
         }
     }
@@ -230,8 +233,8 @@ public class AccessMethodUtils {
                 checkEachElementInFTSearchListPredicate(oListCursor);
                 break;
             default:
-                throw new AlgebricksException(
-                        "A full-text Search predicate should be a string or an (un)ordered list.");
+                throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED,
+                        BuiltinFunctions.FULLTEXT_CONTAINS.getName(), objectFromExpr.getType().getTypeTag());
         }
     }
 
@@ -240,9 +243,7 @@ public class AccessMethodUtils {
     public static void checkAndGenerateFTSearchExceptionForStringPhrase(String value) throws AlgebricksException {
         for (int j = 0; j < value.length(); j++) {
             if (DelimitedUTF8StringBinaryTokenizer.isSeparator(value.charAt(j))) {
-                throw new AlgebricksException(
-                        "Phrase search in Full-text is not yet supported. Only one keyword per expression is permitted."
-                                + value.charAt(j));
+                throw new CompilationException(ErrorCode.COMPILATION_FULLTEXT_PHRASE_FOUND);
             }
         }
     }

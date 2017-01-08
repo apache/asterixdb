@@ -63,6 +63,7 @@ public class ErrorCode {
     public static final int COMPILATION_INVALID_EXPRESSION = 1007;
     public static final int COMPILATION_INVALID_PARAMETER_NUMBER = 1008;
     public static final int COMPILATION_INVALID_RETURNING_EXPRESSION = 1009;
+    public static final int COMPILATION_FULLTEXT_PHRASE_FOUND = 1010;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
@@ -143,7 +144,6 @@ public class ErrorCode {
     public static final int UTIL_FILE_SYSTEM_WATCHER_NO_FILES_FOUND = 3076;
     public static final int UTIL_LOCAL_FILE_SYSTEM_UTILS_PATH_NOT_FOUND = 3077;
     public static final int UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER = 3078;
-
 
     // Loads the map that maps error codes to error message templates.
     private static Map<Integer, String> errorMessageMap = null;

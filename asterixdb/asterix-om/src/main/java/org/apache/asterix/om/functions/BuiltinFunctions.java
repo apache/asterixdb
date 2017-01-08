@@ -64,6 +64,7 @@ import org.apache.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessNestedResultType;
+import org.apache.asterix.om.typecomputer.impl.FullTextContainsResultTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.GetOverlappingInvervalTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
@@ -1035,8 +1036,8 @@ public class BuiltinFunctions {
         addPrivateFunction(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
 
         // Full-text function
-        addFunction(FULLTEXT_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
-        addFunction(FULLTEXT_CONTAINS_WO_OPTION, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(FULLTEXT_CONTAINS, FullTextContainsResultTypeComputer.INSTANCE, true);
+        addFunction(FULLTEXT_CONTAINS_WO_OPTION, FullTextContainsResultTypeComputer.INSTANCE, true);
 
         // Spatial functions
         addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE, true);
