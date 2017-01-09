@@ -46,6 +46,7 @@
         <version>${project.version}</version>
         <executions>
           <execution>
+            <phase>generate-resources</phase>
             <goals>
               <!--<goal>licensedownload</goal>-->
               <goal>generate</goal>

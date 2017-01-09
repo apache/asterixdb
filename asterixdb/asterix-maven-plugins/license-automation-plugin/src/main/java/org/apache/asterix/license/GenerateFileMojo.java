@@ -56,7 +56,6 @@ import org.apache.asterix.license.project.Project;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -64,8 +63,7 @@ import org.apache.maven.project.ProjectBuildingException;
 
 @Mojo(name = "generate",
         requiresProject = true,
-        requiresDependencyResolution = ResolutionScope.TEST,
-        defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+        requiresDependencyResolution = ResolutionScope.TEST)
 public class GenerateFileMojo extends LicenseMojo {
 
     public static final Pattern FOUNDATION_PATTERN = Pattern.compile("^\\s*This product includes software developed " +

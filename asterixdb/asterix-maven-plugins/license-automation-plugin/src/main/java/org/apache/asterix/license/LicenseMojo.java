@@ -159,8 +159,8 @@ public abstract class LicenseMojo extends AbstractMojo {
                 licenseUrl = fakeLicenseUrl;
             }
         }
-        File path = new File(localRepository.getBasedir(), localRepository.pathOf(depProject.getArtifact()));
-        addProject(new Project(depProject, depLocation, path), new LicenseSpec(licenseUrl, displayName), true);
+        addProject(new Project(depProject, depLocation, depProject.getArtifact().getFile()),
+                new LicenseSpec(licenseUrl, displayName), true);
     }
 
     protected void addProject(Project project, LicenseSpec spec, boolean additive) {
