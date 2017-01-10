@@ -33,6 +33,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.asterix.runtime.util.ClusterStateManager;
@@ -161,18 +162,21 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
         for (String key : keys) {
             if (key.startsWith("gc-")) {
                 json.remove(key);
-            } else if (json.get(key) instanceof ArrayNode) {
-                final ArrayNode valueArray = (ArrayNode) json.get(key);
-                // fixup an index of -1 to the final element in the array (i.e. RRD_SIZE)
-                if (index == -1) {
-                    index = valueArray.size() - 1;
+            } else {
+                final JsonNode keyNode = json.get(key);
+                if (keyNode instanceof ArrayNode) {
+                    final ArrayNode valueArray = (ArrayNode) keyNode;
+                    // fixup an index of -1 to the final element in the array (i.e. RRD_SIZE)
+                    if (index == -1) {
+                        index = valueArray.size() - 1;
+                    }
+                    final JsonNode value = valueArray.get(index);
+                    json.remove(key);
+                    json.set(key.replaceAll("s$",""), value);
                 }
-                final Object value = valueArray.get(index);
-                json.remove(key);
-                json.putPOJO(key.replaceAll("s$",""), value);
             }
         }
-        List<ObjectNode> gcs = new ArrayList<>();
+        ArrayNode gcs = om.createArrayNode();
 
         for (int i = 0; i < gcNames.size(); i++) {
             ObjectNode gc = om.createObjectNode();
@@ -181,7 +185,7 @@ public class ClusterNodeDetailsAPIServlet extends ClusterAPIServlet {
             gc.set("collection-count", ((ArrayNode)gcCollectionCounts.get(i)).get(index));
             gcs.add(gc);
         }
-        json.putPOJO("gcs", gcs);
+        json.set("gcs", gcs);
 
         return json;
     }
