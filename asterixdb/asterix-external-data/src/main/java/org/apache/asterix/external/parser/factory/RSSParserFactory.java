@@ -31,6 +31,7 @@ import com.sun.syndication.feed.synd.SyndEntryImpl;
 public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl> {
 
     private static final long serialVersionUID = 1L;
+    private static String[] formats = { "rss" };
     private ARecordType recordType;
 
     @Override
@@ -56,6 +57,11 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl>
 
     @Override
     public void setMetaType(ARecordType metaType) {
+    }
+
+    @Override
+    public String[] getFormats() {
+        return formats;
     }
 
 }

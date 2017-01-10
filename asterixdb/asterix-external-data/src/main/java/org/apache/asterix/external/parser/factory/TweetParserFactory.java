@@ -31,6 +31,7 @@ import twitter4j.Status;
 public class TweetParserFactory implements IRecordDataParserFactory<String> {
 
     private static final long serialVersionUID = 1L;
+    private static String[] formats = { "twitter-status" };
     private ARecordType recordType;
 
     @Override
@@ -57,6 +58,11 @@ public class TweetParserFactory implements IRecordDataParserFactory<String> {
     @Override
     public void setMetaType(ARecordType metaType) {
         // do nothing
+    }
+
+    @Override
+    public String[] getFormats() {
+        return formats;
     }
 
 }

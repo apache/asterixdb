@@ -30,6 +30,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
+    private static String[] formats = { "adm", "json", "semi-structured" };
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {
@@ -54,6 +55,11 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
 
     @Override
     public void setMetaType(ARecordType metaType) {
+    }
+
+    @Override
+    public String[] getFormats() {
+        return formats;
     }
 
 }

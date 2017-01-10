@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
+    private static String[] formats = { "csv", "delimited-text" };
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
@@ -98,6 +99,11 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
 
     @Override
     public void setMetaType(ARecordType metaType) {
+    }
+
+    @Override
+    public String[] getFormats() {
+        return formats;
     }
 
 }

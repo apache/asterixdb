@@ -1,0 +1,6 @@
+org.apache.asterix.external.parser.factory.ADMDataParserFactory
+org.apache.asterix.external.parser.factory.DelimitedDataParserFactory
+org.apache.asterix.external.parser.factory.HiveDataParserFactory
+org.apache.asterix.external.parser.factory.RecordWithMetadataParserFactory
+org.apache.asterix.external.parser.factory.RSSParserFactory
+org.apache.asterix.external.parser.factory.TweetParserFactory

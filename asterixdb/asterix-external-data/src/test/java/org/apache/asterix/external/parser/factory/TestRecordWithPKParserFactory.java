@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -37,6 +38,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class TestRecordWithPKParserFactory<T> implements IRecordDataParserFactory<RecordWithPK<T>> {
 
     private static final long serialVersionUID = 1L;
+    private static final ArrayList<String> formats = new ArrayList<>();
     private ARecordType recordType;
     private IRecordDataParserFactory<char[]> recordParserFactory;
     private String format;
@@ -49,6 +51,7 @@ public class TestRecordWithPKParserFactory<T> implements IRecordDataParserFactor
     public void configure(Map<String, String> configuration) throws AsterixException {
         TreeMap<String, String> parserConf = new TreeMap<String, String>();
         format = configuration.get(ExternalDataConstants.KEY_RECORD_FORMAT);
+        formats.add(format);
         parserConf.put(ExternalDataConstants.KEY_FORMAT, format);
         recordParserFactory =
                 (IRecordDataParserFactory<char[]>) ParserFactoryProvider.getDataParserFactory(null, parserConf);
@@ -75,4 +78,10 @@ public class TestRecordWithPKParserFactory<T> implements IRecordDataParserFactor
     @Override
     public void setMetaType(ARecordType metaType) {
     }
+
+    @Override
+    public String[] getFormats() {
+        return (String[]) formats.toArray();
+    }
+
 }

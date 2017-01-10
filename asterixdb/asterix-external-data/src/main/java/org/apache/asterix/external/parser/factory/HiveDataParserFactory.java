@@ -35,6 +35,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class HiveDataParserFactory implements IRecordDataParserFactory<Writable> {
 
     private static final long serialVersionUID = 1L;
+    private static String[] formats = { "hive", "hive-parser"};
     private Map<String, String> configuration;
     private ARecordType recordType;
     private String hiveSerdeClassName;
@@ -70,6 +71,10 @@ public class HiveDataParserFactory implements IRecordDataParserFactory<Writable>
 
     @Override
     public void setMetaType(ARecordType metaType) {
+    }
+
+    @Override public String[] getFormats() {
+        return formats;
     }
 
 }

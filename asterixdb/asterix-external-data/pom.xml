@@ -106,6 +106,7 @@
             <include>**/NOTICE</include>
             <include>**/LICENSE</include>
             <include>**/DEPENDENCIES</include>
+            <include>**/services/**</include>
           </includes>
         </configuration>
         <executions>
