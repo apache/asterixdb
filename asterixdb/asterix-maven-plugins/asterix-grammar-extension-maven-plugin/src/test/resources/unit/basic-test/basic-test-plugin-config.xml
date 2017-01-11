@@ -41,6 +41,7 @@
           <gextension>src/test/resources/lang/extension.jj</gextension>
           <output>target/generated-sources/lang/grammar.jj</output>
           <parserClassName>ExtendedParser</parserClassName>
+          <parserClassModifier></parserClassModifier>
           <packageName>org.apache.asterix.lang.extension.parser</packageName>
         </configuration>
         <executions>

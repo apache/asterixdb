@@ -68,16 +68,23 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private static final String KWUNIMPORT = "unimport";
     private static final String KWPACKAGE = "package";
     private static final String NEWPRODUCTION = "@new";
+    // Adds a construct at the end of the file.
+    private static final String NEW_AT_THE_END_PRODUCTION = "@new_at_the_end";
+    // Adds a method at the end of the class definition.
+    private static final String NEW_AT_THE_END_CLASS_DEFINITION = "@new_at_the_class_def";
     private static final String MERGEPRODUCTION = "@merge";
     private static final String OVERRIDEPRODUCTION = "@override";
     private static final String BEFORE = "before:";
     private static final String AFTER = "after:";
     private static final String REPLACE = "replace";
     private static final String WITH = "with";
+    private static final String OPTION_TRUE = "true";
+    private static final String OPTION_FALSE = "false";
     private static final List<String> KEYWORDS = Arrays
             .asList(new String[] { KWCLASS, KWIMPORT, KWPACKAGE, PARSER_BEGIN, PARSER_END });
-    private static final List<String> EXTENSIONKEYWORDS = Arrays
-            .asList(new String[] { KWIMPORT, KWUNIMPORT, NEWPRODUCTION, OVERRIDEPRODUCTION, MERGEPRODUCTION });
+    private static final List<String> EXTENSIONKEYWORDS =
+            Arrays.asList(new String[] { KWIMPORT, KWUNIMPORT, NEWPRODUCTION, NEW_AT_THE_END_PRODUCTION,
+                    NEW_AT_THE_END_CLASS_DEFINITION, OVERRIDEPRODUCTION, MERGEPRODUCTION });
     private static final String REGEX_WS_DOT_SEMICOLON = "\\s|[.]|[;]";
     private static final String REGEX_WS_PAREN = "\\s|[(]|[)]";
     private static final String OPTIONS = "options";
@@ -87,14 +94,20 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private Map<String, String[]> mergeElements = new HashMap<>();
     private List<Pair<String, String>> baseFinals = new ArrayList<>();
     private List<Pair<String, String>> extensionFinals = new ArrayList<>();
+    private List<Pair<String, String>> extensionFinalsAtTheEnd = new ArrayList<>();
+    private List<Pair<String, String>> extensionMethodsAtTheClassDef = new ArrayList<>();
     private List<List<String>> imports = new ArrayList<>();
     private String baseClassName;
     private String baseClassDef;
     private String optionsBlock;
     private boolean read = false;
     private boolean shouldReplace = false;
-    private String oldWord = null;
-    private String newWord = null;
+
+    // Used in @merge replace. If set to true, applies each block's changes and stores them.
+    private boolean shouldApplyEachBlockChange = true;
+
+    private String oldPhrase = null;
+    private String newPhrase = null;
 
     @Parameter(property = "grammarix.base")
     private String base;
@@ -115,12 +128,16 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private String parserClassName;
     private String lastIdentifier;
 
+    @Parameter(property = "grammarix.parserClassModifier")
+    private String parserClassModifier;
+
     @Override
     public void execute() throws MojoExecutionException {
         base = new File(base).getAbsolutePath();
         getLog().info("Base dir: " + base);
         getLog().info("Grammar-base: " + gbase);
         getLog().info("Grammar-extension: " + gextension);
+        getLog().info("Output: " + output);
         processBase();
         processExtension();
         generateOutput();
@@ -166,7 +183,29 @@ public class GrammarExtensionMojo extends AbstractMojo {
             writer.newLine();
 
             // Class definition
-            writer.write(baseClassDef.replaceAll(baseClassName, parserClassName));
+            String classDef = baseClassDef.replaceAll(baseClassName, parserClassName);
+            if (parserClassModifier != null && parserClassModifier.length() > 0) {
+                // Adds a class modifier if any.
+                classDef = classDef.replaceFirst(KWCLASS, parserClassModifier + " " + KWCLASS);
+            }
+
+            // Process extensions at the end of the class definition
+            if (!extensionMethodsAtTheClassDef.isEmpty()) {
+                int index = classDef.lastIndexOf(CLOSE_BRACE);
+                if (index != -1) {
+                    String classDefExtension = "";
+                    for (Pair<String, String> element : extensionMethodsAtTheClassDef) {
+                        classDefExtension += toOutput(element.first);
+                        classDefExtension += "\n";
+                        classDefExtension += element.second;
+                        classDefExtension += "\n";
+                    }
+                    classDef =
+                            classDef.substring(0, index) + "\n" + classDefExtension + "\n" + classDef.substring(index);
+                }
+            }
+
+            writer.write(classDef);
             writer.newLine();
 
             // Parser End
@@ -207,6 +246,13 @@ public class GrammarExtensionMojo extends AbstractMojo {
             }
 
             for (Pair<String, String> element : baseFinals) {
+                writer.write(toOutput(element.first));
+                writer.newLine();
+                writer.write(element.second);
+                writer.newLine();
+            }
+
+            for (Pair<String, String> element : extensionFinalsAtTheEnd) {
                 writer.write(toOutput(element.first));
                 writer.newLine();
                 writer.write(element.second);
@@ -671,9 +717,15 @@ public class GrammarExtensionMojo extends AbstractMojo {
                         case NEWPRODUCTION:
                             nextOperation = NEWPRODUCTION;
                             break;
+                        case NEW_AT_THE_END_PRODUCTION:
+                            nextOperation = NEW_AT_THE_END_PRODUCTION;
+                            break;
+                        case NEW_AT_THE_END_CLASS_DEFINITION:
+                            nextOperation = NEW_AT_THE_END_CLASS_DEFINITION;
+                            break;
                         case MERGEPRODUCTION:
                             nextOperation = MERGEPRODUCTION;
-                            shouldReplace = shouldReplace(tokens);
+                            shouldReplace = shouldReplace(tokens, position.line);
                             break;
                         case OVERRIDEPRODUCTION:
                             nextOperation = OVERRIDEPRODUCTION;
@@ -693,6 +745,10 @@ public class GrammarExtensionMojo extends AbstractMojo {
                         case NEWPRODUCTION:
                             handleNew(identifier, reader);
                             break;
+                        case NEW_AT_THE_END_CLASS_DEFINITION:
+                            readFinalProduction(identifier, reader);
+                            addFinalProduction(identifier, extensionMethodsAtTheClassDef);
+                            break;
                         case OVERRIDEPRODUCTION:
                             handleOverride(identifier, reader);
                             break;
@@ -704,12 +760,16 @@ public class GrammarExtensionMojo extends AbstractMojo {
                     }
                     nextOperation = NEWPRODUCTION;
                 } else if (openAngularIndex == 0) {
-                    if (nextOperation != NEWPRODUCTION) {
+                    if (nextOperation != NEWPRODUCTION && nextOperation != NEW_AT_THE_END_PRODUCTION) {
                         throw new MojoExecutionException("Can only add new REGEX production kind");
                     }
                     position.index = position.line.indexOf(OPEN_ANGULAR);
                     readFinalProduction(identifier, reader);
-                    addFinalProduction(identifier, extensionFinals);
+                    if (nextOperation == NEWPRODUCTION) {
+                        addFinalProduction(identifier, extensionFinals);
+                    } else if (nextOperation == NEW_AT_THE_END_PRODUCTION) {
+                        addFinalProduction(identifier, extensionFinalsAtTheEnd);
+                    }
                 } else if (identifier.length() > 0 || position.line.trim().length() > 0) {
                     identifier.append(position.line);
                     identifier.append('\n');
@@ -721,16 +781,64 @@ public class GrammarExtensionMojo extends AbstractMojo {
         }
     }
 
-    private boolean shouldReplace(String[] tokens) throws MojoExecutionException {
+    private boolean shouldReplace(String[] tokens, String currentLine) throws MojoExecutionException {
         boolean replace = false;
-        if (tokens.length == 5) {
-            if (tokens[1].equals(REPLACE) && tokens[3].equals(WITH)) {
-                shouldReplace = true;
-                oldWord = tokens[2];
-                newWord = tokens[4];
-            } else {
-                throw new MojoExecutionException("Allowed syntax after @merge: <REPLACE> oldWord <WITH> newWord");
+        String errMessage = "Allowed syntax after @merge: <REPLACE> \"oldPhrase\" <WITH> \"newPhrase\" <TRUE|FALSE>.";
+        String errMessage1 = "The old phrase should be place between two quotes. (E.g., \"old\")";
+        String errMessage2 = "The new phrase should be place between two quotes. (E.g., \"new\")";
+        // @merge replace "oldphrase" with "newphrase" proceedBlock:true/false
+        if (tokens.length >= 6) {
+            // Checks whether "replace" exists.
+            if (!tokens[1].equalsIgnoreCase(REPLACE)) {
+                throw new MojoExecutionException(errMessage);
             }
+
+            // Checks whether "with" exists.
+            boolean withFound = false;
+            for (int i = 3; i < tokens.length; i++) {
+                if (tokens[i].equalsIgnoreCase(WITH)) {
+                    withFound = true;
+                    break;
+                }
+            }
+            if (!withFound) {
+                throw new MojoExecutionException(errMessage);
+            }
+
+            // Check whether the last parameter is true/false.
+            // If this is true, then we check all blocks and process before: and after:.
+            // If not, we don't process all blocks and replace "old" with "new" for all instances for
+            // the entire part of the given method.
+            if (tokens[tokens.length - 1].equalsIgnoreCase(OPTION_TRUE)) {
+                shouldApplyEachBlockChange = true;
+            } else if (tokens[tokens.length - 1].equalsIgnoreCase(OPTION_FALSE)) {
+                shouldApplyEachBlockChange = false;
+            } else {
+                throw new MojoExecutionException(errMessage);
+            }
+
+            // Gets the old phrase.
+            int oldStart = findQuotePos(currentLine, 0);
+            if (oldStart < 0) {
+                throw new MojoExecutionException(errMessage1);
+            }
+            int oldEnd = findQuotePos(currentLine, oldStart + 1);
+            if (oldEnd < 0) {
+                throw new MojoExecutionException(errMessage1);
+            }
+            oldPhrase = currentLine.substring(oldStart + 1, oldEnd);
+
+            // Gets the new phrase.
+            int newStart = findQuotePos(currentLine, oldEnd + 1);
+            if (newStart < 0) {
+                throw new MojoExecutionException(errMessage2);
+            }
+            int newEnd = findQuotePos(currentLine, newStart + 1);
+            if (newEnd < 0) {
+                throw new MojoExecutionException(errMessage2);
+            }
+            newPhrase = currentLine.substring(newStart + 1, newEnd);
+            replace = true;
         }
         return replace;
     }
@@ -776,26 +884,37 @@ public class GrammarExtensionMojo extends AbstractMojo {
             throw new MojoExecutionException(identifier.toString() + " doesn't exist in base grammar");
         } else if (shouldReplace) {
             Pair<String, String> baseMethods = extensibles.get(sig);
-            baseMethods.first = baseMethods.first.replaceAll(oldWord, newWord);
-            baseMethods.second = baseMethods.second.replaceAll(oldWord, newWord);
+            // Literally replaces the old phrase with the new phrase.
+            baseMethods.first = stringReplaceAll(baseMethods.first, oldPhrase, newPhrase);
+            baseMethods.second = stringReplaceAll(baseMethods.second, oldPhrase, newPhrase);
             shouldReplace = false;
         }
         String[] amendments = new String[6];
-        mergeElements.put(sig, amendments);
+        if (shouldApplyEachBlockChange) {
+            // Applies and stores each block's change only if shouldApplyEachBlockChange is set to true.
+            mergeElements.put(sig, amendments);
+        } else {
+            // If shouldApplyEachBlockChange is false, no result from each block's change are not stored.
+            shouldApplyEachBlockChange = true;
+        }
         // we don't need the identifier anymore
         identifier.setLength(0);
+        // The first block
         readBlock(reader, OPEN_BRACE, CLOSE_BRACE);
         String block = record.toString();
         extractBeforeAndAfter(block, amendments, 0, 1);
         record.reset();
         position.index = 0;
         position.line = reader.readLine();
+        // Skips empty lines.
         while (position.line != null && position.line.trim().length() == 0) {
             position.line = reader.readLine();
         }
+        // The second block
         int openBraceIndex = position.line.indexOf(OPEN_BRACE);
         if (openBraceIndex > -1) {
             position.index = openBraceIndex;
+            // Reads the entire part of the second block - two OPEN_BRACE and two CLOSE_BRACE.
             readBlock(reader, OPEN_BRACE, CLOSE_BRACE);
         } else {
             throw new MojoExecutionException("merge element doesn't have a second block");
@@ -917,4 +1036,36 @@ public class GrammarExtensionMojo extends AbstractMojo {
         }
         return aString.toString();
     }
+
+    /**
+     * Literally replaces the given string.
+     */
+    private String stringReplaceAll(String baseStr, String oldPhrase, String newPhrase) {
+        String resultStr = baseStr;
+        String tempStr;
+        int index = resultStr.indexOf(oldPhrase);
+        while (index < resultStr.length()) {
+            if (index < 0) {
+                return resultStr;
+            }
+            tempStr = resultStr.substring(index, index + oldPhrase.length());
+            if (tempStr.equals(oldPhrase)) {
+                resultStr = resultStr.substring(0, index) + newPhrase + resultStr.substring(index + oldPhrase.length());
+            }
+            index = resultStr.indexOf(oldPhrase, index + 1);
+        }
+        return resultStr;
+    }
+
+    /**
+     * Finds and returns the first occurrence index of a quote from startingIndex.
+     *
+     * @param baseStr
+     * @param startingIndex
+     * @return the substring if found. If not, this returns null.
+     */
+    private int findQuotePos(String baseStr, int startingIndex) {
+        return baseStr.indexOf(ExternalDataConstants.QUOTE, startingIndex);
+    }
+
 }
