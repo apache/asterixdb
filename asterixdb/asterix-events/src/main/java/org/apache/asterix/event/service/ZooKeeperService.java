@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,6 +35,9 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.event.error.EventException;
 import org.apache.asterix.event.model.AsterixInstance;
 import org.apache.asterix.installer.schema.conf.Configuration;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -111,24 +116,46 @@ public class ZooKeeperService implements ILookupService {
         }
         //TODO: Create a better way to interact with zookeeper
         Process zkProcess = Runtime.getRuntime().exec(cmdBuffer.toString());
-        int output = zkProcess.waitFor();
-        if (output != 0) {
-            throw new Exception("Error starting zookeeper server. output code = " + output);
+        int exitCode = zkProcess.waitFor();
+        Pair<CharSequence, CharSequence> outputs = getProcessStreams(zkProcess);
+        if (exitCode != 0) {
+            StringBuilder msg = new StringBuilder("Error starting zookeeper server; output code = ");
+            msg.append(exitCode);
+            appendNonEmptyStreams(outputs, msg);
+            throw new Exception(msg.toString());
         }
         zk = new ZooKeeper(zkConnectionString, ZOOKEEPER_SESSION_TIME_OUT, watcher);
         String head = msgQ.poll(60, TimeUnit.SECONDS);
         if (head == null) {
-            StringBuilder msg = new StringBuilder(
-                    "Unable to start Zookeeper Service. This could be because of the following reasons.\n");
-            msg.append("1) Managix is incorrectly configured. Please run " + "managix validate"
-                    + " to run a validation test and correct the errors reported.");
-            msg.append(
-                    "\n2) If validation in (1) is successful, ensure that java_home parameter is set correctly in Managix configuration ("
-                            + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
+            StringBuilder msg = new StringBuilder("Unable to start Zookeeper Service. This could be because of the"
+                    + " following reasons.\n1) Managix is incorrectly configured. Please run "
+                    + "managix validate to run a validation test and correct the errors reported.\n"
+                    + "2) If validation in (1) is successful, ensure that java_home parameter is set correctly"
+                    + " in Managix configuration (" + AsterixEventServiceUtil.MANAGIX_CONF_XML + ")");
+            appendNonEmptyStreams(outputs, msg);
             throw new Exception(msg.toString());
         }
         msgQ.take();
         createRootIfNotExist();
+    }
+
+    private void appendNonEmptyStreams(Pair<CharSequence, CharSequence> outputs, StringBuilder msg) {
+        appendIfNotEmpty(msg, outputs.getLeft(), "stdout");
+        appendIfNotEmpty(msg, outputs.getRight(), "stderr");
+    }
+
+    private Pair<CharSequence, CharSequence> getProcessStreams(Process process) throws IOException {
+        StringWriter stdout = new StringWriter();
+        StringWriter stderr = new StringWriter();
+        IOUtils.copy(process.getInputStream(), stdout, Charset.defaultCharset());
+        IOUtils.copy(process.getErrorStream(), stderr, Charset.defaultCharset());
+        return new ImmutablePair<>(stdout.getBuffer(), stderr.getBuffer());
+    }
+
+    private void appendIfNotEmpty(StringBuilder msg, CharSequence output, String outputName) {
+        if (output.length() > 0) {
+            msg.append(", ").append(outputName).append(" = ").append(output);
+        }
     }
 
     @Override

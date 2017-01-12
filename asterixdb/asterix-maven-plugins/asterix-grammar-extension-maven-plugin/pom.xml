@@ -31,11 +31,6 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-project</artifactId>
-      <version>2.2.1</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-external-data</artifactId>
       <version>${project.version}</version>
@@ -52,9 +47,22 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-lang-sqlpp</artifactId>
+      <artifactId>asterix-common</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -85,6 +93,17 @@
             <phase>verify</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+        <configuration>
+          <usedDependencies>
+            <usedDependency>org.apache.maven:maven-core</usedDependency>
+            <usedDependency>org.apache.maven:maven-compat</usedDependency>
+          </usedDependencies>
+        </configuration>
       </plugin>
     </plugins>
     <pluginManagement>

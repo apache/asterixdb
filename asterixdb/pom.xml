@@ -47,6 +47,7 @@
     <runSlowAQLTests>false</runSlowAQLTests>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
+    <debug.suspend.flag>n</debug.suspend.flag>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
@@ -65,9 +66,7 @@
     <algebricks.version>0.2.18-SNAPSHOT</algebricks.version>
     <hyracks.version>0.2.18-SNAPSHOT</hyracks.version>
     <hadoop.version>2.2.0</hadoop.version>
-    <junit.version>4.12</junit.version>
-    <commons.io.version>2.5</commons.io.version>
-    <servlet.api.version>3.1.0</servlet.api.version>
+    <jetty.version>9.3.11.v20160721</jetty.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
   </properties>
 
@@ -90,7 +89,7 @@
             -Djava.util.logging.config.file=${user.home}/logging.properties
             -DrunSlowAQLTests=${runSlowAQLTests}
             -Xdebug
-            -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n
+            -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=${debug.suspend.flag}
             ${coverageArgLine}
           </argLine>
           <includes>
@@ -263,6 +262,18 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.10</version>
+        <configuration>
+          <failOnWarning>true</failOnWarning>
+          <outputXML>true</outputXML>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -627,9 +638,19 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
+        <version>4.12</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
@@ -662,8 +683,46 @@
         <version>${hadoop.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${hadoop.version}</version>
+        <classifier>tests</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-core</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-annotations</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-minicluster</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <version>${hadoop.version}</version>
+        <classifier>tests</classifier>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>algebricks-common</artifactId>
+        <version>${algebricks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>algebricks-data</artifactId>
         <version>${algebricks.version}</version>
       </dependency>
       <dependency>
@@ -673,12 +732,22 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-net</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>algebricks-compiler</artifactId>
         <version>${algebricks.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>algebricks-rewriter</artifactId>
+        <version>${algebricks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>algebricks-runtime</artifactId>
         <version>${algebricks.version}</version>
       </dependency>
       <dependency>
@@ -699,6 +768,11 @@
       <dependency>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-data</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-data-std</artifactId>
         <version>${hyracks.version}</version>
       </dependency>
       <dependency>
@@ -768,6 +842,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-control-common</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-client</artifactId>
         <version>${hyracks.version}</version>
       </dependency>
@@ -808,15 +887,30 @@
         <type>test-jar</type>
       </dependency>
       <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-hdfs-2.x</artifactId>
+        <version>${hyracks.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
-        <version>${servlet.api.version}</version>
-        <type>jar</type>
+        <version>3.1.0</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>${commons.io.version}</version>
+        <version>2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.5</version>
       </dependency>
       <dependency>
         <groupId>xerces</groupId>
@@ -836,7 +930,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpcore</artifactId>
-        <version>4.4</version>
+        <version>4.4.5</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -847,6 +941,49 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
         <version>2.8.4</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>18.0</version>
+      </dependency>
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.17</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jmx</groupId>
+            <artifactId>jmxri</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jdmk</groupId>
+            <artifactId>jmxtools</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>3.4.5</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jmx</groupId>
+            <artifactId>jmxri</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jdmk</groupId>
+            <artifactId>jmxtools</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>

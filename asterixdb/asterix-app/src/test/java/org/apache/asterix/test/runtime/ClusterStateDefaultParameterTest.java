@@ -25,9 +25,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
 
-import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -35,7 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.mortbay.util.ajax.JSON;
 
 /**
  * Runs the cluster state runtime tests with the storage parallelism.

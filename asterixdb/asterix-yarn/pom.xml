@@ -183,13 +183,42 @@
             </license>
             <license>
               <url>https://opensource.org/licenses/mit-license.php</url>
-              <aliasUrls>http://www.opensource.org/licenses/mit-license.php</aliasUrls>
+              <aliasUrls>http://www.opensource.org/li]censes/mit-license.php</aliasUrls>
             </license>
           </licenses>
           <templateProperties>
             <assembly>asterix/asterix-server-${project.version}-binary-assembly.zip</assembly>
             <packageName>YARN Install</packageName>
           </templateProperties>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+        <configuration>
+          <ignoredDependencies>
+            <ignoredDependency>org.apache.hive:hive-exec:*</ignoredDependency>
+          </ignoredDependencies>
+          <usedDependencies>
+            <usedDependency>com.google.guava:guava</usedDependency>
+            <usedDependency>commons-codec:commons-codec</usedDependency>
+            <usedDependency>commons-collections:commons-collections</usedDependency>
+            <usedDependency>commons-configuration:commons-configuration</usedDependency>
+            <usedDependency>commons-lang:commons-lang</usedDependency>
+            <usedDependency>commons-logging:commons-logging-api</usedDependency>
+            <usedDependency>commons-net:commons-net</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-app</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-events</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-runtime</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-server</usedDependency>
+            <usedDependency>org.apache.commons:commons-math</usedDependency>
+            <usedDependency>org.apache.hadoop:hadoop-minicluster</usedDependency>
+            <usedDependency>org.apache.httpcomponents:httpclient</usedDependency>
+            <usedDependency>org.apache.httpcomponents:httpcore</usedDependency>
+            <usedDependency>org.slf4j:slf4j-simple</usedDependency>
+            <usedDependency>xerces:xercesImpl</usedDependency>
+          </usedDependencies>
         </configuration>
       </plugin>
     </plugins>
@@ -305,7 +334,6 @@
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.5</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
@@ -330,14 +358,10 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.2</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>4.4.5</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -374,9 +398,68 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
-      <version>${hadoop.version}</version>
-      <type>jar</type>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-yarn-api</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-yarn-server-tests</artifactId>
+      <version>${hadoop.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging-api</artifactId>
+      <version>1.0.4</version>
     </dependency>
   </dependencies>
 </project>

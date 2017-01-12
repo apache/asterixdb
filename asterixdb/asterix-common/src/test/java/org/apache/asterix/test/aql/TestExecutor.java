@@ -18,33 +18,35 @@
  */
 package org.apache.asterix.test.aql;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Arrays;
-import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.*;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.ServletUtil.Servlets;
 import org.apache.asterix.test.base.ComparisonException;
@@ -56,6 +58,7 @@ import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
@@ -69,6 +72,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.util.StorageUtil;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TestExecutor {
@@ -646,9 +655,9 @@ public class TestExecutor {
     }
 
     public static String executeScript(ProcessBuilder pb, String scriptPath) throws Exception {
+        LOGGER.info("Executing script: " + scriptPath);
         pb.command(scriptPath);
         Process p = pb.start();
-        p.waitFor();
         return getProcessOutput(p);
     }
 
@@ -678,26 +687,47 @@ public class TestExecutor {
     }
 
     private static String getProcessOutput(Process p) throws Exception {
-        StringBuilder s = new StringBuilder();
-        BufferedInputStream bisIn = new BufferedInputStream(p.getInputStream());
-        StringWriter writerIn = new StringWriter();
-        IOUtils.copy(bisIn, writerIn, "UTF-8");
-        s.append(writerIn.toString());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Future<Integer> future = Executors.newSingleThreadExecutor().submit(() -> IOUtils.copy(p.getInputStream(),
+                new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                baos.write(b);
+                System.out.write(b);
+            }
 
-        BufferedInputStream bisErr = new BufferedInputStream(p.getErrorStream());
+            @Override
+            public void flush() throws IOException {
+                baos.flush();
+                System.out.flush();
+            }
+
+            @Override
+            public void close() throws IOException {
+                baos.close();
+                System.out.close();
+            }
+        }));
+        p.waitFor();
+        future.get();
+        ByteArrayInputStream bisIn = new ByteArrayInputStream(baos.toByteArray());
+        StringWriter writerIn = new StringWriter();
+        IOUtils.copy(bisIn, writerIn, StandardCharsets.UTF_8);
         StringWriter writerErr = new StringWriter();
-        IOUtils.copy(bisErr, writerErr, "UTF-8");
-        s.append(writerErr.toString());
-        if (writerErr.toString().length() > 0) {
+        IOUtils.copy(p.getErrorStream(), writerErr, StandardCharsets.UTF_8);
+
+        StringBuffer stdOut = writerIn.getBuffer();
+        if (writerErr.getBuffer().length() > 0) {
             StringBuilder sbErr = new StringBuilder();
-            sbErr.append("script execution failed - error message:\n");
-            sbErr.append("-------------------------------------------\n");
-            sbErr.append(s.toString());
-            sbErr.append("-------------------------------------------\n");
-            LOGGER.info(sbErr.toString().trim());
-            throw new Exception(s.toString().trim());
+            sbErr.append("script execution failed - error message:\n" +
+                    "-------------------------------------------\n" +
+                    "stdout: ").append(stdOut)
+                    .append("\nstderr: ").append(writerErr.getBuffer())
+                    .append("-------------------------------------------");
+            LOGGER.info(sbErr.toString());
+            throw new Exception(sbErr.toString());
         }
-        return s.toString();
+        return stdOut.toString();
     }
 
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,

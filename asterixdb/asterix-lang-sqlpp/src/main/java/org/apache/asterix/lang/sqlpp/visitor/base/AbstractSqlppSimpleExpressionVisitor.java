@@ -21,7 +21,6 @@ package org.apache.asterix.lang.sqlpp.visitor.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.stringtemplate.language.Expr;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
