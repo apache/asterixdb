@@ -50,7 +50,7 @@
     "feed.pending.work.threshold" : 50,
     "feed.port" : 19003,
     "instance.name" : null,
-    "log.level" : "INFO",
+    "log.level" : "WARNING",
     "max.wait.active.cluster" : 60,
     "metadata.callback.port" : 0,
     "metadata.node" : "asterix_nc1",
