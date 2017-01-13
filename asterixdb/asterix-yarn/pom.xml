@@ -153,8 +153,8 @@
                 <include>org.apache.httpcomponents:httpclient</include>
                 <include>org.htrace:htrace-core</include>
                 <include>commons-httpclient:commons-httpclient</include>
-                <include>com.google.guava:guava</include>
                 <include>com.google.protobuf:protobuf-java</include>
+                <include>com.google.guava:guava</include>
               </includes>
               <location>lib</location>
             </dependencySet>
@@ -201,7 +201,6 @@
             <ignoredDependency>org.apache.hive:hive-exec:*</ignoredDependency>
           </ignoredDependencies>
           <usedDependencies>
-            <usedDependency>com.google.guava:guava</usedDependency>
             <usedDependency>commons-codec:commons-codec</usedDependency>
             <usedDependency>commons-collections:commons-collections</usedDependency>
             <usedDependency>commons-configuration:commons-configuration</usedDependency>
@@ -459,7 +458,6 @@
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging-api</artifactId>
-      <version>1.0.4</version>
     </dependency>
   </dependencies>
 </project>

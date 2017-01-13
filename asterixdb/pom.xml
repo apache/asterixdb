@@ -601,6 +601,7 @@
     <module>asterix-runtime</module>
     <module>asterix-om</module>
     <module>asterix-external-data</module>
+    <module>asterix-hivecompat</module>
     <module>asterix-examples</module>
     <module>asterix-metadata</module>
     <module>asterix-test-framework</module>
@@ -681,6 +682,12 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -708,6 +715,44 @@
         <artifactId>hadoop-hdfs</artifactId>
         <version>${hadoop.version}</version>
         <classifier>tests</classifier>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-serde</artifactId>
+        <version>0.13.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging-api</artifactId>
+        <version>1.0.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive.shims</groupId>
+        <artifactId>hive-shims-common</artifactId>
+        <version>0.13.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-common</artifactId>
+        <version>0.13.0</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>

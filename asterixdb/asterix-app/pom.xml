@@ -155,8 +155,6 @@
           </ignoredUsedUndeclaredDependencies>
           <usedDependencies>
             <usedDependency>org.apache.hadoop:hadoop-common</usedDependency>
-            <usedDependency>commons-lang:commons-lang</usedDependency>
-            <usedDependency>com.google.guava:guava</usedDependency>
             <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
           </usedDependencies>
         </configuration>

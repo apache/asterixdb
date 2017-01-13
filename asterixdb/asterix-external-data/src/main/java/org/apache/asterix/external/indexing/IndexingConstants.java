@@ -41,7 +41,7 @@ public class IndexingConstants {
     public static final String EXTERNAL_FILE_INDEX_NAME_SUFFIX = "FilesIndex";
     public static final String KEY_INPUT_FORMAT = "input-format";
     public static final String INPUT_FORMAT_RC = "rc-input-format";
-    public static final String INPUT_FORMAT_RC_FULLY_QUALIFIED = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
+    public static final String INPUT_FORMAT_RC_FULLY_QUALIFIED = "org.apache.asterix.hivecompat.io.RCFileInputFormat";
 
     //Field Types
     public static final IAType FILE_NUMBER_FIELD_TYPE = BuiltinType.AINT32;
