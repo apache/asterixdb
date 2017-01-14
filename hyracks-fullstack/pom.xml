@@ -137,6 +137,11 @@
         <artifactId>guava</artifactId>
         <version>18.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.5</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -471,7 +476,6 @@
                 </goals>
                 <!-- combine.self should be override to replace the configuration in the parent POM -->
                 <configuration combine.self="override">
-                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                   <descriptors>
                     <descriptor>src/main/assembly/source.xml</descriptor>
                   </descriptors>
@@ -547,5 +551,6 @@
   <modules>
     <module>hyracks</module>
     <module>algebricks</module>
+    <module>hyracks-fullstack-license</module>
   </modules>
 </project>

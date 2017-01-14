@@ -42,9 +42,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.asterix</groupId>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>license-automation-plugin</artifactId>
-        <version>${project.version}</version>
+        <version>${hyracks.version}</version>
         <executions>
           <execution>
             <phase>generate-resources</phase>
@@ -61,7 +61,7 @@
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <template>asterixdb/src/main/licenses/templates/asterix-notice.ftl</template>
+              <template>hyracks-fullstack/hyracks-fullstack-license/src/main/licenses/templates/asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>
@@ -219,8 +219,9 @@
             </license>
           </licenses>
           <templateProperties>
-            <assembly>this assembly</assembly>
             <packageName>Server Install</packageName>
+            <asterixAppLocation>repo/asterix-app-${project.version}.jar, within this assembly</asterixAppLocation>
+            <hyracksControlCcLocation>repo/hyracks-control-cc-${project.version}.jar, within this assembly</hyracksControlCcLocation>
           </templateProperties>
         </configuration>
       </plugin>

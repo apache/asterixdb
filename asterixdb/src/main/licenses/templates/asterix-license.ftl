@@ -30,9 +30,8 @@ ${license.content}
    ASTERIXDB COMPONENTS:
 
    AsterixDB includes a number of subcomponents with separate copyright
-   notices and license terms. Your use of the source code for these
-   subcomponents is subject to the terms and condition of the following
-   licenses.
+   notices and license terms. Your use of these subcomponents is subject
+   to the terms and condition of the following licenses.
 ===
 <#list licenseMap as e>
    <#assign licenseUrl = e.getKey()/>
@@ -66,5 +65,10 @@ ${license.content}
    </#if>
 ---
 </#list>
+===
+   AsterixDB includes source code with separate copyright notices and
+   license terms. Your use of this source code is subject to the terms
+   and condition of the following licenses.
+===
 <#include "source_licenses.ftl">
-<#include "../../../../../hyracks-fullstack/src/main/licenses/templates/source_licenses.ftl">
+<#include "../../../../../hyracks-fullstack/hyracks-fullstack-license/src/main/licenses/templates/source_licenses.ftl">
