@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.AbstractAstVisitor;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -42,77 +42,77 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 public abstract class AbstractSqlppAstVisitor<R, T> extends AbstractAstVisitor<R, T> implements ISqlppVisitor<R, T> {
 
     @Override
-    public R visit(FromClause fromClause, T arg) throws AsterixException {
+    public R visit(FromClause fromClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(FromTerm fromTerm, T arg) throws AsterixException {
+    public R visit(FromTerm fromTerm, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(JoinClause joinClause, T arg) throws AsterixException {
+    public R visit(JoinClause joinClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(NestClause nestClause, T arg) throws AsterixException {
+    public R visit(NestClause nestClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(Projection projection, T arg) throws AsterixException {
+    public R visit(Projection projection, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SelectBlock selectBlock, T arg) throws AsterixException {
+    public R visit(SelectBlock selectBlock, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SelectClause selectClause, T arg) throws AsterixException {
+    public R visit(SelectClause selectClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SelectElement selectElement, T arg) throws AsterixException {
+    public R visit(SelectElement selectElement, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SelectRegular selectRegular, T arg) throws AsterixException {
+    public R visit(SelectRegular selectRegular, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SelectSetOperation selectSetOperation, T arg) throws AsterixException {
+    public R visit(SelectSetOperation selectSetOperation, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SelectExpression selectStatement, T arg) throws AsterixException {
+    public R visit(SelectExpression selectStatement, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(UnnestClause unnestClause, T arg) throws AsterixException {
+    public R visit(UnnestClause unnestClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(HavingClause havingClause, T arg) throws AsterixException {
+    public R visit(HavingClause havingClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(IndependentSubquery independentSubquery, T arg) throws AsterixException {
+    public R visit(IndependentSubquery independentSubquery, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CaseExpression caseExpr, T arg) throws AsterixException {
+    public R visit(CaseExpression caseExpr, T arg) throws CompilationException {
         return null;
     }
 

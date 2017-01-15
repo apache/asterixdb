@@ -20,7 +20,7 @@ package org.apache.asterix.lang.common.expression;
 
 import java.util.Optional;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
@@ -43,12 +43,12 @@ public class UnaryExpr implements Expression {
         return unaryExprType;
     }
 
-    public void setExprType(String strType) throws AsterixException {
+    public void setExprType(String strType) throws CompilationException {
         Optional<UnaryExprType> exprType = UnaryExprType.fromSymbol(strType);
         if (exprType.isPresent()) {
             this.unaryExprType = exprType.get();
         } else {
-            throw new AsterixException("Unsupported operator: " + strType);
+            throw new CompilationException("Unsupported operator: " + strType);
         }
     }
 
@@ -66,7 +66,7 @@ public class UnaryExpr implements Expression {
     }
 
     @Override
-    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return visitor.visit(this, arg);
     }
 

@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -73,13 +73,13 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
 
     @Override
     protected Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
-            throws AsterixException {
+            throws CompilationException {
         Map<Expression, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
-        return (Expression) SqlppRewriteUtil.substituteExpression(returnExpr, varExprMap, context);
+        return SqlppRewriteUtil.substituteExpression(returnExpr, varExprMap, context);
     }
 
     @Override
-    public Boolean visit(FromClause fromClause, List<FunctionDecl> func) throws AsterixException {
+    public Boolean visit(FromClause fromClause, List<FunctionDecl> func) throws CompilationException {
         boolean changed = false;
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             changed |= fromTerm.accept(this, func);
@@ -88,7 +88,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(FromTerm fromTerm, List<FunctionDecl> func) throws AsterixException {
+    public Boolean visit(FromTerm fromTerm, List<FunctionDecl> func) throws CompilationException {
         boolean changed = false;
         Pair<Boolean, Expression> p = inlineUdfsInExpr(fromTerm.getLeftExpression(), func);
         fromTerm.setLeftExpression(p.second);
@@ -100,7 +100,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(JoinClause joinClause, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(JoinClause joinClause, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p1 = inlineUdfsInExpr(joinClause.getRightExpression(), funcs);
         joinClause.setRightExpression(p1.second);
         Pair<Boolean, Expression> p2 = inlineUdfsInExpr(joinClause.getConditionExpression(), funcs);
@@ -109,7 +109,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(NestClause nestClause, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(NestClause nestClause, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p1 = inlineUdfsInExpr(nestClause.getRightExpression(), funcs);
         nestClause.setRightExpression(p1.second);
         Pair<Boolean, Expression> p2 = inlineUdfsInExpr(nestClause.getConditionExpression(), funcs);
@@ -118,14 +118,14 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(Projection projection, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(Projection projection, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(projection.getExpression(), funcs);
         projection.setExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(SelectBlock selectBlock, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(SelectBlock selectBlock, List<FunctionDecl> funcs) throws CompilationException {
         boolean changed = false;
         if (selectBlock.hasFromClause()) {
             changed |= selectBlock.getFromClause().accept(this, funcs);
@@ -154,7 +154,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(SelectClause selectClause, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(SelectClause selectClause, List<FunctionDecl> funcs) throws CompilationException {
         boolean changed = false;
         if (selectClause.selectElement()) {
             changed |= selectClause.getSelectElement().accept(this, funcs);
@@ -165,14 +165,14 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(SelectElement selectElement, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(SelectElement selectElement, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(selectElement.getExpression(), funcs);
         selectElement.setExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(SelectRegular selectRegular, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(SelectRegular selectRegular, List<FunctionDecl> funcs) throws CompilationException {
         boolean changed = false;
         for (Projection projection : selectRegular.getProjections()) {
             changed |= projection.accept(this, funcs);
@@ -181,7 +181,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(SelectSetOperation selectSetOperation, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(SelectSetOperation selectSetOperation, List<FunctionDecl> funcs) throws CompilationException {
         boolean changed = false;
         changed |= selectSetOperation.getLeftInput().accept(this, funcs);
         for (SetOperationRight right : selectSetOperation.getRightInputs()) {
@@ -191,7 +191,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(SelectExpression selectExpression, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(SelectExpression selectExpression, List<FunctionDecl> funcs) throws CompilationException {
         boolean changed = false;
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
@@ -209,28 +209,29 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(UnnestClause unnestClause, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(UnnestClause unnestClause, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(unnestClause.getRightExpression(), funcs);
         unnestClause.setRightExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(HavingClause havingClause, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(HavingClause havingClause, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(havingClause.getFilterExpression(), funcs);
         havingClause.setFilterExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(IndependentSubquery independentSubquery, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(IndependentSubquery independentSubquery, List<FunctionDecl> funcs)
+            throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(independentSubquery.getExpr(), funcs);
         independentSubquery.setExpr(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(CaseExpression caseExpr, List<FunctionDecl> funcs) throws AsterixException {
+    public Boolean visit(CaseExpression caseExpr, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> result = inlineUdfsInExpr(caseExpr.getConditionExpr(), funcs);
         caseExpr.setConditionExpr(result.second);
         boolean inlined = result.first;
@@ -249,11 +250,11 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     private Map<Expression, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
-            throws AsterixException {
+            throws CompilationException {
         Map<Expression, Expression> varExprMap = new HashMap<>();
         for (LetClause lc : letClauses) {
             // inline let variables one by one iteratively.
-            lc.setBindingExpr((Expression) SqlppRewriteUtil.substituteExpression(lc.getBindingExpr(),
+            lc.setBindingExpr(SqlppRewriteUtil.substituteExpression(lc.getBindingExpr(),
                     varExprMap, context));
             varExprMap.put(lc.getVarExpr(), lc.getBindingExpr());
         }

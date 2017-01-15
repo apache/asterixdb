@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.aql.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -28,22 +28,22 @@ import org.apache.asterix.lang.common.visitor.base.AbstractAstVisitor;
 public abstract class AbstractAqlAstVisitor<R, T> extends AbstractAstVisitor<R, T> implements IAQLVisitor<R, T> {
 
     @Override
-    public R visit(FLWOGRExpression flwogreExpr, T arg) throws AsterixException {
+    public R visit(FLWOGRExpression flwogreExpr, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(UnionExpr u, T arg) throws AsterixException {
+    public R visit(UnionExpr u, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(ForClause forClause, T arg) throws AsterixException {
+    public R visit(ForClause forClause, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DistinctClause distinctClause, T arg) throws AsterixException {
+    public R visit(DistinctClause distinctClause, T arg) throws CompilationException {
         return null;
     }
 

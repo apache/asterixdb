@@ -19,7 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -39,14 +39,14 @@ public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     @Override
-    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         // Visit selectBlock first so that column names starts from $1.
         selectBlock.getSelectClause().accept(this, arg);
         return super.visit(selectBlock, arg);
     }
 
     @Override
-    public Expression visit(Projection projection, ILangExpression arg) throws AsterixException {
+    public Expression visit(Projection projection, ILangExpression arg) throws CompilationException {
         if (!projection.star() && projection.getName() == null) {
             projection.setName(SqlppVariableUtil.variableNameToDisplayedFieldName(context.newVariable().getValue()));
         }
@@ -54,7 +54,7 @@ public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     @Override
-    public Expression visit(GroupbyClause groupbyClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(GroupbyClause groupbyClause, ILangExpression arg) throws CompilationException {
         for (GbyVariableExpressionPair gbyKeyPair : groupbyClause.getGbyPairList()) {
             if (gbyKeyPair.getVar() == null) {
                 gbyKeyPair.setVar(new VariableExpr(context.newVariable()));

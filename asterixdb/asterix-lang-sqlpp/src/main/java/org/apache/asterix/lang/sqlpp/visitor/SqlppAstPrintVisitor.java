@@ -21,7 +21,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 import java.io.PrintWriter;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -67,7 +67,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(FromClause fromClause, Integer step) throws AsterixException {
+    public Void visit(FromClause fromClause, Integer step) throws CompilationException {
         out.print(skip(step) + "FROM [");
         int index = 0;
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
@@ -82,7 +82,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(FromTerm fromTerm, Integer step) throws AsterixException {
+    public Void visit(FromTerm fromTerm, Integer step) throws CompilationException {
         fromTerm.getLeftExpression().accept(this, step);
         out.print(skip(step) + "AS ");
         fromTerm.getLeftVariable().accept(this, 0);
@@ -99,7 +99,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(JoinClause joinClause, Integer step) throws AsterixException {
+    public Void visit(JoinClause joinClause, Integer step) throws CompilationException {
         out.println(skip(step) + joinClause.getJoinType() + " JOIN");
         joinClause.getRightExpression().accept(this, step + 1);
         out.print(skip(step + 1) + "AS ");
@@ -114,7 +114,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(NestClause nestClause, Integer step) throws AsterixException {
+    public Void visit(NestClause nestClause, Integer step) throws CompilationException {
         out.println(skip(step) + nestClause.getJoinType() + " NEST");
         nestClause.getRightExpression().accept(this, step + 1);
         out.print(skip(step + 1) + "AS ");
@@ -129,7 +129,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(Projection projection, Integer step) throws AsterixException {
+    public Void visit(Projection projection, Integer step) throws CompilationException {
         if (projection.star()) {
             out.println(skip(step) + "*");
         } else {
@@ -140,7 +140,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(SelectBlock selectBlock, Integer step) throws AsterixException {
+    public Void visit(SelectBlock selectBlock, Integer step) throws CompilationException {
         selectBlock.getSelectClause().accept(this, step);
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, step);
@@ -168,7 +168,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(SelectClause selectClause, Integer step) throws AsterixException {
+    public Void visit(SelectClause selectClause, Integer step) throws CompilationException {
         if (selectClause.selectRegular()) {
             selectClause.getSelectRegular().accept(this, step);
         }
@@ -179,7 +179,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(SelectElement selectElement, Integer step) throws AsterixException {
+    public Void visit(SelectElement selectElement, Integer step) throws CompilationException {
         out.println(skip(step) + "SELECT ELEMENT [");
         selectElement.getExpression().accept(this, step);
         out.println(skip(step) + "]");
@@ -187,7 +187,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(SelectRegular selectRegular, Integer step) throws AsterixException {
+    public Void visit(SelectRegular selectRegular, Integer step) throws CompilationException {
         out.println(skip(step) + "SELECT [");
         for (Projection projection : selectRegular.getProjections()) {
             projection.accept(this, step);
@@ -197,7 +197,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(SelectSetOperation selectSetOperation, Integer step) throws AsterixException {
+    public Void visit(SelectSetOperation selectSetOperation, Integer step) throws CompilationException {
         selectSetOperation.getLeftInput().accept(this, step);
         if (selectSetOperation.hasRightInputs()) {
             for (SetOperationRight right : selectSetOperation.getRightInputs()) {
@@ -210,7 +210,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(SelectExpression selectStatement, Integer step) throws AsterixException {
+    public Void visit(SelectExpression selectStatement, Integer step) throws CompilationException {
         if (selectStatement.isSubquery()) {
             out.println(skip(step) + "(");
         }
@@ -234,7 +234,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(UnnestClause unnestClause, Integer step) throws AsterixException {
+    public Void visit(UnnestClause unnestClause, Integer step) throws CompilationException {
         out.println(skip(step) + unnestClause.getJoinType() + " UNNEST");
         unnestClause.getRightExpression().accept(this, step + 1);
         out.print(skip(step + 1) + " AS ");
@@ -247,14 +247,14 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(HavingClause havingClause, Integer step) throws AsterixException {
+    public Void visit(HavingClause havingClause, Integer step) throws CompilationException {
         out.println(skip(step) + " HAVING");
         havingClause.getFilterExpression().accept(this, step + 1);
         return null;
     }
 
     @Override
-    public Void visit(CallExpr pf, Integer step) throws AsterixException {
+    public Void visit(CallExpr pf, Integer step) throws CompilationException {
         FunctionSignature functionSignature = pf.getFunctionSignature();
         FunctionSignature normalizedFunctionSignature =
                 FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, false);
@@ -270,7 +270,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(GroupbyClause gc, Integer step) throws AsterixException {
+    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
         if (gc.isGroupAll()) {
             out.println(skip(step) + "Group All");
             return null;
@@ -300,13 +300,13 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     }
 
     @Override
-    public Void visit(IndependentSubquery independentSubquery, Integer arg) throws AsterixException {
+    public Void visit(IndependentSubquery independentSubquery, Integer arg) throws CompilationException {
         independentSubquery.getExpr().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(CaseExpression caseExpr, Integer step) throws AsterixException {
+    public Void visit(CaseExpression caseExpr, Integer step) throws CompilationException {
         out.print(skip(step) + "CASE");
         caseExpr.getConditionExpr().accept(this, step + 2);
         out.println();

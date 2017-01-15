@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.common.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 
 public interface IStatementRewriter {
 
@@ -26,6 +26,6 @@ public interface IStatementRewriter {
      * @param statement,
      *            a non-query statement.
      */
-    public void rewrite(Statement statement) throws AsterixException;
+    public void rewrite(Statement statement) throws CompilationException;
 
 }

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -68,7 +68,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(LetClause lc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = lc.getBindingExpr().accept(this, env);
         VariableExpr varExpr = lc.getVarExpr();
         VariableExpr newVe = generateNewVariable(context, varExpr);
@@ -78,7 +78,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(GroupbyClause gc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         VariableSubstitutionEnvironment newSubs = env;
         List<GbyVariableExpressionPair> newGbyList =
                 VariableCloneAndSubstitutionUtil.substInVarExprPair(context, gc.getGbyPairList(), newSubs, this);
@@ -112,7 +112,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(QuantifiedExpression qe,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<QuantifiedPair> oldPairs = qe.getQuantifiedList();
         List<QuantifiedPair> newPairs = new ArrayList<>(oldPairs.size());
         VariableSubstitutionEnvironment newSubs = env;
@@ -131,7 +131,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(WhereClause wc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = wc.getWhereExpr().accept(this, env);
         WhereClause newW = new WhereClause((Expression) p1.first);
         return new Pair<>(newW, p1.second);
@@ -139,7 +139,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(CallExpr pf,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(pf.getExprList(), env, this);
         CallExpr f = new CallExpr(pf.getFunctionSignature(), exprList);
         return new Pair<>(f, env);
@@ -147,16 +147,17 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(FunctionDecl fd,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<VarIdentifier> newList = new ArrayList<>(fd.getParamList().size());
         for (VarIdentifier vi : fd.getParamList()) {
             VariableExpr varExpr = new VariableExpr(vi);
             if (!env.constainsOldVar(varExpr)) {
-                throw new AsterixException("Parameter " + vi + " does not appear in the substitution list.");
+                throw new CompilationException("Parameter " + vi + " does not appear in the substitution list.");
             }
             Expression newExpr = env.findSubstitution(varExpr);
             if (newExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
-                throw new AsterixException("Parameter " + vi + " cannot be substituted by a non-variable expression.");
+                throw new CompilationException(
+                        "Parameter " + vi + " cannot be substituted by a non-variable expression.");
             }
             newList.add(((VariableExpr) newExpr).getVar());
         }
@@ -168,7 +169,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(IfExpr ifexpr,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = ifexpr.getCondExpr().accept(this, env);
         Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = ifexpr.getThenExpr().accept(this, env);
         Pair<ILangExpression, VariableSubstitutionEnvironment> p3 = ifexpr.getElseExpr().accept(this, env);
@@ -178,7 +179,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(LimitClause lc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = lc.getLimitExpr().accept(this, env);
         Pair<ILangExpression, VariableSubstitutionEnvironment> p2;
         Expression lcOffsetExpr = lc.getOffset();
@@ -193,7 +194,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(ListConstructor lc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> oldExprList = lc.getExprList();
         List<Expression> exprs = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(oldExprList, env, this);
         ListConstructor c = new ListConstructor(lc.getType(), exprs);
@@ -202,13 +203,13 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(LiteralExpr l,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         return new Pair<>(l, env);
     }
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(OperatorExpr op,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> oldExprList = op.getExprList();
         List<Expression> exprs = new ArrayList<>(oldExprList.size());
         for (Expression e : oldExprList) {
@@ -221,7 +222,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(OrderbyClause oc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> exprList =
                 VariableCloneAndSubstitutionUtil.visitAndCloneExprList(oc.getOrderbyList(), env, this);
         OrderbyClause oc2 = new OrderbyClause(exprList, oc.getModifierList());
@@ -233,7 +234,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(Query q, VariableSubstitutionEnvironment env)
-            throws AsterixException {
+            throws CompilationException {
         Query newQ = new Query(q.isExplain());
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = q.getBody().accept(this, env);
         newQ.setBody((Expression) p1.first);
@@ -242,7 +243,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(RecordConstructor rc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<FieldBinding> oldFbs = rc.getFbList();
         ArrayList<FieldBinding> newFbs = new ArrayList<>(oldFbs.size());
         for (FieldBinding fb : oldFbs) {
@@ -257,7 +258,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(UnaryExpr u,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = u.getExpr().accept(this, env);
         UnaryExpr newU = new UnaryExpr(u.getExprType(), (Expression) p1.first);
         return new Pair<>(newU, env);
@@ -265,7 +266,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(IndexAccessor ia,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = ia.getExpr().accept(this, env);
         Expression indexExpr = null;
         if (!ia.isAny()) {
@@ -279,7 +280,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(FieldAccessor fa,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = fa.getExpr().accept(this, env);
         FieldAccessor newF = new FieldAccessor((Expression) p.first, fa.getIdent());
         return new Pair<>(newF, p.second);
@@ -287,13 +288,13 @@ public class CloneAndSubstituteVariablesVisitor extends
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(VariableExpr v,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         return new Pair<>(rewriteVariableExpr(v, env), env);
     }
 
     // Replace a variable expression if the variable is to-be substituted.
     protected Expression rewriteVariableExpr(VariableExpr expr, VariableSubstitutionEnvironment env)
-            throws AsterixException {
+            throws CompilationException {
         if (env.constainsOldVar(expr)) {
             return env.findSubstitution(expr);
         } else {
@@ -329,10 +330,10 @@ public class CloneAndSubstituteVariablesVisitor extends
      * @param env,
      *            the variable substitution environment.
      * @return a pair of an ILangExpression and a variable substitution environment.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     protected Pair<ILangExpression, VariableSubstitutionEnvironment> visitUnnesBindingExpression(Expression expr,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         return expr.accept(this, env);
     }
 

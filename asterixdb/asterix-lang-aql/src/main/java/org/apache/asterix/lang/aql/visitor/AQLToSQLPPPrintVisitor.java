@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
@@ -83,7 +83,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(FLWOGRExpression flwor, Integer step) throws AsterixException {
+    public Void visit(FLWOGRExpression flwor, Integer step) throws CompilationException {
         if (step != 0) {
             out.println("(");
         }
@@ -202,14 +202,14 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(ForClause fc, Integer step) throws AsterixException {
+    public Void visit(ForClause fc, Integer step) throws CompilationException {
         // The processing of a "for" clause depends on its neighbor clauses,
         // hence the logic goes to visit(FLWOGRExpression).
         return null;
     }
 
     private void visitForClause(ForClause fc, Integer step, boolean startFor, boolean hasConsequentFor)
-            throws AsterixException {
+            throws CompilationException {
         if (startFor) {
             out.print(skip(step) + "from  ");
         } else {
@@ -229,7 +229,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     private void visitLetClause(LetClause lc, Integer step, boolean startLet, boolean hasConsequentLet)
-            throws AsterixException {
+            throws CompilationException {
         if (startLet) {
             out.print(skip(step) + "with  ");
         } else {
@@ -245,7 +245,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(Query q, Integer step) throws AsterixException {
+    public Void visit(Query q, Integer step) throws CompilationException {
         Expression expr = q.getBody();
         if (expr != null) {
             if (expr.getKind() != Kind.FLWOGR_EXPRESSION) {
@@ -262,19 +262,19 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(DataverseDecl dv, Integer step) throws AsterixException {
+    public Void visit(DataverseDecl dv, Integer step) throws CompilationException {
         out.println(skip(step) + "use " + normalize(dv.getDataverseName().getValue()) + ";\n\n");
         return null;
     }
 
     @Override
-    public Void visit(UnionExpr u, Integer step) throws AsterixException {
+    public Void visit(UnionExpr u, Integer step) throws CompilationException {
         printDelimitedExpressions(u.getExprs(), "\n" + skip(step) + "union\n" + skip(step), step);
         return null;
     }
 
     @Override
-    public Void visit(DistinctClause dc, Integer step) throws AsterixException {
+    public Void visit(DistinctClause dc, Integer step) throws CompilationException {
         return null;
     }
 
@@ -289,7 +289,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(LetClause lc, Integer step) throws AsterixException {
+    public Void visit(LetClause lc, Integer step) throws CompilationException {
         out.print(skip(step) + "with ");
         lc.getVarExpr().accept(this, step + 2);
         out.print(" as ");
@@ -300,7 +300,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(CallExpr callExpr, Integer step) throws AsterixException {
+    public Void visit(CallExpr callExpr, Integer step) throws CompilationException {
         FunctionSignature signature = callExpr.getFunctionSignature();
         if (signature.getNamespace() != null && signature.getNamespace().equals("Metadata")
                 && signature.getName().equals("dataset") && signature.getArity() == 1) {
@@ -317,7 +317,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(GroupbyClause gc, Integer step) throws AsterixException {
+    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
         if (gc.hasHashGroupByHint()) {
             out.println(skip(step) + "/* +hash */");
         }
@@ -328,7 +328,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(InsertStatement insert, Integer step) throws AsterixException {
+    public Void visit(InsertStatement insert, Integer step) throws CompilationException {
         out.print(skip(step) + "insert into " + generateFullName(insert.getDataverseName(), insert.getDatasetName())
                 + "\n");
         insert.getQuery().accept(this, step);
@@ -337,7 +337,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     @Override
-    public Void visit(DeleteStatement del, Integer step) throws AsterixException {
+    public Void visit(DeleteStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "delete ");
         del.getVariableExpr().accept(this, step + 2);
         out.println(skip(step) + " from " + generateFullName(del.getDataverseName(), del.getDatasetName()));
@@ -366,7 +366,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
 
     @Override
     protected void printDelimitedGbyExpressions(List<GbyVariableExpressionPair> gbyList, int step)
-            throws AsterixException {
+            throws CompilationException {
         int gbySize = gbyList.size();
         int gbyIndex = 0;
         for (GbyVariableExpressionPair pair : gbyList) {
@@ -445,7 +445,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     // Processes leading "let"s in a FLWOGR.
-    private void processLeadingLetClauses(Integer step, List<Clause> clauseList) throws AsterixException {
+    private void processLeadingLetClauses(Integer step, List<Clause> clauseList) throws CompilationException {
         List<Clause> processedLetList = new ArrayList<Clause>();
         boolean firstLet = true;
         int size = clauseList.size();
@@ -473,10 +473,10 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
      * @param clauseList
      *            , a list of clauses
      * @return the cutting group-by clause and the list of extracted clauses.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     private Pair<GroupbyClause, List<Clause>> extractUnnestAfterGroupby(List<Clause> clauseList)
-            throws AsterixException {
+            throws CompilationException {
         List<Clause> nestedClauses = new ArrayList<Clause>();
         GroupbyClause cuttingGbyClause = null;
         boolean meetGroupBy = false;
@@ -519,7 +519,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
 
     // Extracts the variables to be substituted.
     private Map<VariableExpr, Expression> extractLetBindingVariables(List<Clause> clauses,
-            GroupbyClause cuttingGbyClause) throws AsterixException {
+            GroupbyClause cuttingGbyClause) throws CompilationException {
         Map<VariableExpr, Expression> varExprMap = new HashMap<VariableExpr, Expression>();
         int gbyIndex = clauses.indexOf(cuttingGbyClause);
         for (int i = gbyIndex + 1; i < clauses.size(); i++) {
@@ -560,7 +560,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
     }
 
     // Merge consecutive "where" clauses.
-    private void mergeConsecutiveWhereClauses(List<Clause> clauses) throws AsterixException {
+    private void mergeConsecutiveWhereClauses(List<Clause> clauses) throws CompilationException {
         List<Clause> results = new ArrayList<Clause>();
         int size = clauses.size();
         for (int index = 0; index < size;) {

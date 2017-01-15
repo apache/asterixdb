@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -101,7 +101,7 @@ public class SqlppVariableUtil {
         return new VarIdentifier(USER_VAR_PREFIX + idName);
     }
 
-    public static Collection<VariableExpr> getFreeVariables(ILangExpression langExpr) throws AsterixException {
+    public static Collection<VariableExpr> getFreeVariables(ILangExpression langExpr) throws CompilationException {
         Collection<VariableExpr> freeVars = new HashSet<>();
         FreeVariableVisitor visitor = new FreeVariableVisitor();
         langExpr.accept(visitor, freeVars);

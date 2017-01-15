@@ -20,7 +20,7 @@ package org.apache.asterix.lang.aql.visitor;
 
 import java.io.PrintWriter;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -45,7 +45,7 @@ class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, 
     }
 
     @Override
-    public Void visit(FLWOGRExpression flwor, Integer step) throws AsterixException {
+    public Void visit(FLWOGRExpression flwor, Integer step) throws CompilationException {
         out.println(skip(step) + "FLWOGR [");
         for (Clause cl : flwor.getClauseList()) {
             cl.accept(this, step + 1);
@@ -57,7 +57,7 @@ class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, 
     }
 
     @Override
-    public Void visit(ForClause fc, Integer step) throws AsterixException {
+    public Void visit(ForClause fc, Integer step) throws CompilationException {
         out.print(skip(step) + "For ");
         fc.getVarExpr().accept(this, 0);
         out.println(skip(step + 1) + "In ");
@@ -66,7 +66,7 @@ class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, 
     }
 
     @Override
-    public Void visit(UnionExpr u, Integer step) throws AsterixException {
+    public Void visit(UnionExpr u, Integer step) throws CompilationException {
         out.println(skip(step) + "Union [");
         for (Expression expr : u.getExprs()) {
             expr.accept(this, step + 1);
@@ -76,7 +76,7 @@ class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, 
     }
 
     @Override
-    public Void visit(DistinctClause dc, Integer step) throws AsterixException {
+    public Void visit(DistinctClause dc, Integer step) throws CompilationException {
         out.print(skip(step) + "Distinct ");
         for (Expression expr : dc.getDistinctByExpr()) {
             expr.accept(this, step + 1);

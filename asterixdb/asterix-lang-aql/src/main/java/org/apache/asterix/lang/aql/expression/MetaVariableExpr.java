@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.aql.expression;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.base.IAQLPlusVisitor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
@@ -26,7 +26,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 public class MetaVariableExpr extends VariableExpr {
 
     @Override
-    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return ((IAQLPlusVisitor<R, T>) visitor).visitMetaVariableExpr(this, arg);
     }
 

@@ -21,7 +21,7 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -39,7 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         //TODO(buyingyi): rewrite SQL temporal functions
         FunctionSignature functionSignature = callExpr.getFunctionSignature();
         callExpr.setFunctionSignature(FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, true));
@@ -52,7 +52,7 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
     }
 
     @Override
-    public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
         Expression expr = super.visit(caseExpr, arg); // Visits it as usual first.
         if (expr != caseExpr) {
             return expr.accept(this, arg);
@@ -79,7 +79,7 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
 
     // Normalizes WHEN expressions so that it can have correct NULL/MISSING semantics as well
     // as type promotion semantics.
-    private CaseExpression normalizeCaseExpr(CaseExpression caseExpr) throws AsterixException {
+    private CaseExpression normalizeCaseExpr(CaseExpression caseExpr) throws CompilationException {
         LiteralExpr trueLiteral = new LiteralExpr(TrueLiteral.INSTANCE);
         Expression conditionExpr = caseExpr.getConditionExpr();
         if (trueLiteral.equals(conditionExpr)) {

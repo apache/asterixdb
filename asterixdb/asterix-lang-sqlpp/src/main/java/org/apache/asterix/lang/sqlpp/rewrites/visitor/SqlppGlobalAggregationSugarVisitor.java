@@ -22,13 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.visitor.CheckSql92AggregateVisitor;
@@ -37,7 +35,7 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionV
 public class SqlppGlobalAggregationSugarVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
-    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         SelectClause selectClause = selectBlock.getSelectClause();
         if (!selectBlock.hasGroupbyClause() && selectBlock.hasFromClause()) {
             boolean addImplicitGby;
@@ -58,7 +56,7 @@ public class SqlppGlobalAggregationSugarVisitor extends AbstractSqlppSimpleExpre
         return super.visit(selectBlock, arg);
     }
 
-    private boolean isSql92Aggregate(ILangExpression expr, SelectBlock selectBlock) throws AsterixException {
+    private boolean isSql92Aggregate(ILangExpression expr, SelectBlock selectBlock) throws CompilationException {
         CheckSql92AggregateVisitor visitor = new CheckSql92AggregateVisitor();
         return expr.accept(visitor, selectBlock);
     }

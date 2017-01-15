@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -71,7 +71,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(ForClause fc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         LogicalVariable v = context.newVar(fc.getVarExpr());
         Expression inExpr = fc.getInExpr();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(inExpr, tupSource);
@@ -91,7 +91,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(FLWOGRExpression flwor, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Mutable<ILogicalOperator> flworPlan = tupSource;
         boolean isTop = context.isTopFlwor();
         if (!isTop) {
@@ -139,13 +139,13 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(Query q, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         return q.getBody().accept(this, tupSource);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(DistinctClause dc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         List<Mutable<ILogicalExpression>> exprList = new ArrayList<>();
         Mutable<ILogicalOperator> input = null;
         for (Expression expr : dc.getDistinctByExpr()) {
@@ -160,7 +160,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(UnionExpr unionExpr, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         List<ILangExpression> inputExprs = new ArrayList<>();
         inputExprs.addAll(unionExpr.getExprs());
         Pair<ILogicalOperator, LogicalVariable> result = translateUnionAllFromInputExprs(inputExprs, tupSource);

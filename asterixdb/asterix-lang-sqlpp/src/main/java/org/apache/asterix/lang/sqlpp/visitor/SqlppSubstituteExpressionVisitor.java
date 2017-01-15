@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -49,7 +49,7 @@ public class SqlppSubstituteExpressionVisitor extends AbstractSqlppExpressionSco
     // An example is:
     // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/group-by/gby-expr-3/gby-expr-3.3.query.sqlpp
     @Override
-    protected Expression preVisit(Expression expr) throws AsterixException {
+    protected Expression preVisit(Expression expr) throws CompilationException {
         Expression mappedExpr = exprMap.get(expr);
         if (mappedExpr == null) {
             return expr;

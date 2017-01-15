@@ -19,7 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.visitor;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -64,57 +64,57 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVi
 public class CheckDatasetOnlyResolutionVisitor extends AbstractSqlppQueryExpressionVisitor<Boolean, ILangExpression> {
 
     @Override
-    public Boolean visit(Query q, ILangExpression expr) throws AsterixException {
+    public Boolean visit(Query q, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FunctionDecl fd, ILangExpression expr) throws AsterixException {
+    public Boolean visit(FunctionDecl fd, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LiteralExpr l, ILangExpression expr) throws AsterixException {
+    public Boolean visit(LiteralExpr l, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(VariableExpr v, ILangExpression expr) throws AsterixException {
+    public Boolean visit(VariableExpr v, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(ListConstructor lc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(ListConstructor lc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(RecordConstructor rc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(RecordConstructor rc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(OperatorExpr ifbo, ILangExpression expr) throws AsterixException {
+    public Boolean visit(OperatorExpr ifbo, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FieldAccessor fa, ILangExpression expr) throws AsterixException {
+    public Boolean visit(FieldAccessor fa, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(IndexAccessor ia, ILangExpression expr) throws AsterixException {
+    public Boolean visit(IndexAccessor ia, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(IfExpr ifexpr, ILangExpression expr) throws AsterixException {
+    public Boolean visit(IfExpr ifexpr, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(QuantifiedExpression qe, ILangExpression expr) throws AsterixException {
+    public Boolean visit(QuantifiedExpression qe, ILangExpression expr) throws CompilationException {
         for (QuantifiedPair qp : qe.getQuantifiedList()) {
             // If the target reference of undefined variable is a binding expression in a quantified pair,
             // then we only resolve it to dataset.
@@ -126,112 +126,112 @@ public class CheckDatasetOnlyResolutionVisitor extends AbstractSqlppQueryExpress
     }
 
     @Override
-    public Boolean visit(UnaryExpr u, ILangExpression expr) throws AsterixException {
+    public Boolean visit(UnaryExpr u, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(CallExpr pf, ILangExpression expr) throws AsterixException {
+    public Boolean visit(CallExpr pf, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LetClause lc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(LetClause lc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(WhereClause wc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(WhereClause wc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(OrderbyClause oc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(OrderbyClause oc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(GroupbyClause gc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(GroupbyClause gc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LimitClause lc, ILangExpression expr) throws AsterixException {
+    public Boolean visit(LimitClause lc, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FromClause fromClause, ILangExpression expr) throws AsterixException {
+    public Boolean visit(FromClause fromClause, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FromTerm fromTerm, ILangExpression expr) throws AsterixException {
+    public Boolean visit(FromTerm fromTerm, ILangExpression expr) throws CompilationException {
         return expr == fromTerm.getLeftExpression();
     }
 
     @Override
-    public Boolean visit(JoinClause joinClause, ILangExpression expr) throws AsterixException {
+    public Boolean visit(JoinClause joinClause, ILangExpression expr) throws CompilationException {
         return expr == joinClause.getRightExpression();
     }
 
     @Override
-    public Boolean visit(NestClause nestClause, ILangExpression expr) throws AsterixException {
+    public Boolean visit(NestClause nestClause, ILangExpression expr) throws CompilationException {
         return expr == nestClause.getRightExpression();
     }
 
     @Override
-    public Boolean visit(Projection projection, ILangExpression expr) throws AsterixException {
+    public Boolean visit(Projection projection, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectBlock selectBlock, ILangExpression expr) throws AsterixException {
+    public Boolean visit(SelectBlock selectBlock, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectClause selectClause, ILangExpression expr) throws AsterixException {
+    public Boolean visit(SelectClause selectClause, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectElement selectElement, ILangExpression expr) throws AsterixException {
+    public Boolean visit(SelectElement selectElement, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectRegular selectRegular, ILangExpression expr) throws AsterixException {
+    public Boolean visit(SelectRegular selectRegular, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression expr) throws AsterixException {
+    public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectExpression selectStatement, ILangExpression expr) throws AsterixException {
+    public Boolean visit(SelectExpression selectStatement, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(UnnestClause unnestClause, ILangExpression expr) throws AsterixException {
+    public Boolean visit(UnnestClause unnestClause, ILangExpression expr) throws CompilationException {
         return expr == unnestClause.getRightExpression();
     }
 
     @Override
-    public Boolean visit(HavingClause havingClause, ILangExpression expr) throws AsterixException {
+    public Boolean visit(HavingClause havingClause, ILangExpression expr) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
+    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(CaseExpression caseExpr, ILangExpression arg) throws AsterixException {
+    public Boolean visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
         return false;
     }
 }

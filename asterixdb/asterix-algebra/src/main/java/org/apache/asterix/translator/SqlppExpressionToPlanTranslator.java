@@ -25,7 +25,7 @@ import java.util.Deque;
 import java.util.List;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -120,7 +120,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(Query q, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Expression queryBody = q.getBody();
         if (queryBody.getKind() == Kind.SELECT_EXPRESSION) {
             SelectExpression selectExpr = (SelectExpression) queryBody;
@@ -141,7 +141,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectExpression selectExpression,
-            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
         if (selectExpression.isSubquery()) {
             context.enterSubplan();
         }
@@ -170,7 +170,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(IndependentSubquery independentSubquery,
-            Mutable<ILogicalOperator> tupleSource) throws AsterixException {
+            Mutable<ILogicalOperator> tupleSource) throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo =
                 langExprToAlgExpression(independentSubquery.getExpr(), tupleSource);
         LogicalVariable var = context.newVar();
@@ -181,7 +181,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectSetOperation selectSetOperation,
-            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
         SetOperationInput leftInput = selectSetOperation.getLeftInput();
         if (!selectSetOperation.hasRightInputs()) {
             return leftInput.accept(this, tupSource);
@@ -193,7 +193,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         for (SetOperationRight setOperationRight : selectSetOperation.getRightInputs()) {
             SetOpType setOpType = setOperationRight.getSetOpType();
             if (setOpType != SetOpType.UNION || setOperationRight.isSetSemantics()) {
-                throw new AsterixException("Operation " + setOpType
+                throw new CompilationException("Operation " + setOpType
                         + (setOperationRight.isSetSemantics() ? " with set semantics" : "ALL") + " is not supported.");
             }
             SetOperationInput rightInput = setOperationRight.getSetOperationRightInput();
@@ -206,7 +206,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectBlock selectBlock, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Mutable<ILogicalOperator> currentOpRef = tupSource;
         if (selectBlock.hasFromClause()) {
             currentOpRef = new MutableObject<>(selectBlock.getFromClause().accept(this, currentOpRef).first);
@@ -235,7 +235,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(FromClause fromClause, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
+            throws CompilationException {
         Mutable<ILogicalOperator> inputSrc = arg;
         Pair<ILogicalOperator, LogicalVariable> topUnnest = null;
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
@@ -247,7 +247,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(FromTerm fromTerm, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         LogicalVariable fromVar = context.newVar(fromTerm.getLeftVariable());
         Expression fromExpr = fromTerm.getLeftExpression();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(fromExpr, tupSource);
@@ -283,7 +283,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(JoinClause joinClause, Mutable<ILogicalOperator> inputRef)
-            throws AsterixException {
+            throws CompilationException {
         Mutable<ILogicalOperator> leftInputRef = uncorrelatedLeftBranchStack.pop();
         if (joinClause.getJoinType() == JoinType.INNER) {
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
@@ -424,20 +424,20 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(NestClause nestClause, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
+            throws CompilationException {
         throw new NotImplementedException("Nest clause has not been implemented");
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(UnnestClause unnestClause,
-            Mutable<ILogicalOperator> inputOpRef) throws AsterixException {
+            Mutable<ILogicalOperator> inputOpRef) throws CompilationException {
         return generateUnnestForBinaryCorrelateRightBranch(unnestClause, inputOpRef,
                 unnestClause.getJoinType() == JoinType.INNER);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(HavingClause havingClause, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p =
                 langExprToAlgExpression(havingClause.getFilterExpression(), tupSource);
         SelectOperator s = new SelectOperator(new MutableObject<ILogicalExpression>(p.first), false, null);
@@ -447,7 +447,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     private Pair<ILogicalOperator, LogicalVariable> generateUnnestForBinaryCorrelateRightBranch(
             AbstractBinaryCorrelateClause binaryCorrelate, Mutable<ILogicalOperator> inputOpRef, boolean innerUnnest)
-            throws AsterixException {
+            throws CompilationException {
         LogicalVariable rightVar = context.newVar(binaryCorrelate.getRightVariable());
         Expression rightExpr = binaryCorrelate.getRightExpression();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(rightExpr, inputOpRef);
@@ -470,31 +470,31 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectClause selectClause, Mutable<ILogicalOperator> tupSrc)
-            throws AsterixException {
+            throws CompilationException {
         throw new UnsupportedOperationException(ERR_MSG);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectElement selectElement, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
+            throws CompilationException {
         throw new UnsupportedOperationException(ERR_MSG);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(SelectRegular selectRegular, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
+            throws CompilationException {
         throw new UnsupportedOperationException(ERR_MSG);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(Projection projection, Mutable<ILogicalOperator> arg)
-            throws AsterixException {
+            throws CompilationException {
         throw new UnsupportedOperationException(ERR_MSG);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(CaseExpression caseExpression,
-            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
         //Creates a series of subplan operators, one for each branch.
         Mutable<ILogicalOperator> currentOpRef = tupSource;
         ILogicalOperator currentOperator = null;
@@ -597,7 +597,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
     // Generates the return expression for a select clause.
     private Pair<ILogicalOperator, LogicalVariable> processSelectClause(SelectBlock selectBlock,
-            Mutable<ILogicalOperator> tupSrc) throws AsterixException {
+            Mutable<ILogicalOperator> tupSrc) throws CompilationException {
         SelectClause selectClause = selectBlock.getSelectClause();
         Expression returnExpr;
         if (selectClause.selectElement()) {

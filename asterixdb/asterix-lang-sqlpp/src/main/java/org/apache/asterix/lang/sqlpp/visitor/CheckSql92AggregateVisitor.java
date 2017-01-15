@@ -20,7 +20,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -67,32 +67,32 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVi
 public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisitor<Boolean, ILangExpression> {
 
     @Override
-    public Boolean visit(Query q, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(Query q, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FunctionDecl fd, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(FunctionDecl fd, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LiteralExpr l, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(LiteralExpr l, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(VariableExpr v, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(VariableExpr v, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(ListConstructor lc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(ListConstructor lc, ILangExpression parentSelectBlock) throws CompilationException {
         return visitExprList(lc.getExprList(), parentSelectBlock);
     }
 
     @Override
-    public Boolean visit(RecordConstructor rc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(RecordConstructor rc, ILangExpression parentSelectBlock) throws CompilationException {
         for (FieldBinding fieldBinding : rc.getFbList()) {
             ILangExpression leftExpr = fieldBinding.getLeftExpr();
             ILangExpression rightExpr = fieldBinding.getRightExpr();
@@ -107,22 +107,22 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     }
 
     @Override
-    public Boolean visit(OperatorExpr ifbo, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(OperatorExpr ifbo, ILangExpression parentSelectBlock) throws CompilationException {
         return visitExprList(ifbo.getExprList(), parentSelectBlock);
     }
 
     @Override
-    public Boolean visit(FieldAccessor fa, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(FieldAccessor fa, ILangExpression parentSelectBlock) throws CompilationException {
         return fa.getExpr().accept(this, parentSelectBlock);
     }
 
     @Override
-    public Boolean visit(IndexAccessor ia, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(IndexAccessor ia, ILangExpression parentSelectBlock) throws CompilationException {
         return ia.getExpr().accept(this, parentSelectBlock);
     }
 
     @Override
-    public Boolean visit(IfExpr ifexpr, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(IfExpr ifexpr, ILangExpression parentSelectBlock) throws CompilationException {
         if (ifexpr.getCondExpr().accept(this, parentSelectBlock)) {
             return true;
         } else {
@@ -132,17 +132,17 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     }
 
     @Override
-    public Boolean visit(QuantifiedExpression qe, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(QuantifiedExpression qe, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(UnaryExpr u, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(UnaryExpr u, ILangExpression parentSelectBlock) throws CompilationException {
         return u.getExpr().accept(this, parentSelectBlock);
     }
 
     @Override
-    public Boolean visit(CallExpr pf, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(CallExpr pf, ILangExpression parentSelectBlock) throws CompilationException {
         FunctionSignature fs = pf.getFunctionSignature();
         if (FunctionMapUtil.isSql92AggregateFunction(fs)) {
             return true;
@@ -156,52 +156,52 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     }
 
     @Override
-    public Boolean visit(LetClause lc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(LetClause lc, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(WhereClause wc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(WhereClause wc, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(OrderbyClause oc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(OrderbyClause oc, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(GroupbyClause gc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(GroupbyClause gc, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LimitClause lc, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(LimitClause lc, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FromClause fromClause, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(FromClause fromClause, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(FromTerm fromTerm, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(FromTerm fromTerm, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(JoinClause joinClause, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(JoinClause joinClause, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(NestClause nestClause, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(NestClause nestClause, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(Projection projection, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(Projection projection, ILangExpression parentSelectBlock) throws CompilationException {
         if (projection.star()) {
             return false;
         }
@@ -209,12 +209,12 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     }
 
     @Override
-    public Boolean visit(SelectBlock selectBlock, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(SelectBlock selectBlock, ILangExpression parentSelectBlock) throws CompilationException {
         return selectBlock.getSelectClause().accept(this, selectBlock);
     }
 
     @Override
-    public Boolean visit(SelectClause selectClause, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(SelectClause selectClause, ILangExpression parentSelectBlock) throws CompilationException {
         if (selectClause.selectElement()) {
             return selectClause.getSelectElement().accept(this, parentSelectBlock);
         } else {
@@ -223,12 +223,12 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     }
 
     @Override
-    public Boolean visit(SelectElement selectElement, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(SelectElement selectElement, ILangExpression parentSelectBlock) throws CompilationException {
         return selectElement.getExpression().accept(this, parentSelectBlock);
     }
 
     @Override
-    public Boolean visit(SelectRegular selectRegular, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(SelectRegular selectRegular, ILangExpression parentSelectBlock) throws CompilationException {
         for (Projection projection : selectRegular.getProjections()) {
             if (projection.accept(this, parentSelectBlock)) {
                 return true;
@@ -239,26 +239,28 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
 
     @Override
     public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression parentSelectBlock)
-            throws AsterixException {
+            throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(SelectExpression selectStatement, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(SelectExpression selectStatement, ILangExpression parentSelectBlock)
+            throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(UnnestClause unnestClause, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(UnnestClause unnestClause, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(HavingClause havingClause, ILangExpression parentSelectBlock) throws AsterixException {
+    public Boolean visit(HavingClause havingClause, ILangExpression parentSelectBlock) throws CompilationException {
         return false;
     }
 
-    private Boolean visitExprList(List<Expression> exprs, ILangExpression parentSelectBlock) throws AsterixException {
+    private Boolean visitExprList(List<Expression> exprs, ILangExpression parentSelectBlock)
+            throws CompilationException {
         for (Expression item : exprs) {
             if (item.accept(this, parentSelectBlock)) {
                 return true;
@@ -268,12 +270,12 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
     }
 
     @Override
-    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
+    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(CaseExpression caseExpr, ILangExpression arg) throws AsterixException {
+    public Boolean visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
         return caseExpr.getConditionExpr().accept(this, arg) || visitExprList(caseExpr.getWhenExprs(), arg)
                 || visitExprList(caseExpr.getThenExprs(), arg) || caseExpr.getElseExpr().accept(this, arg);
     }

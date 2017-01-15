@@ -19,7 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
@@ -34,7 +34,7 @@ public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
     }
 
     @Override
-    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return ((ISqlppVisitor<R, T>) visitor).visit(this, arg);
     }
 

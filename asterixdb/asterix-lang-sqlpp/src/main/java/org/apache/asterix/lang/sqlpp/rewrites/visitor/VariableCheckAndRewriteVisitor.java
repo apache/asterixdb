@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
@@ -65,7 +65,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     @Override
-    public Expression visit(FieldAccessor fa, ILangExpression parent) throws AsterixException {
+    public Expression visit(FieldAccessor fa, ILangExpression parent) throws CompilationException {
         Expression leadingExpr = fa.getExpr();
         if (leadingExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
             fa.setExpr(leadingExpr.accept(this, fa));
@@ -90,7 +90,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     @Override
-    public Expression visit(VariableExpr varExpr, ILangExpression parent) throws AsterixException {
+    public Expression visit(VariableExpr varExpr, ILangExpression parent) throws CompilationException {
         return resolve(varExpr, null /** Resolves within the default dataverse. */
                 , SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), varExpr, parent);
     }
@@ -98,7 +98,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     // Resolve a variable expression with dataverse name and dataset name.
     private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName,
             Expression originalExprWithUndefinedIdentifier, ILangExpression parent)
-            throws AsterixException {
+            throws CompilationException {
         String varName = varExpr.getVar().getValue();
         checkError(varName);
         if (!rewriteNeeded(varExpr)) {
@@ -123,23 +123,23 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return wrapWithResolveFunction(varExpr, liveVars);
     }
 
-    private void throwUnresolvableError(String dataverseName, String datasetName) throws AsterixException {
+    private void throwUnresolvableError(String dataverseName, String datasetName) throws CompilationException {
         String defaultDataverseName = metadataProvider.getDefaultDataverseName();
         if (dataverseName == null && defaultDataverseName == null) {
-            throw new AsterixException("Cannot find dataset " + datasetName
+            throw new CompilationException("Cannot find dataset " + datasetName
                     + " because there is no dataverse declared, nor an alias with name " + datasetName + "!");
         }
         //If no available dataset nor in-scope variable to resolve to, we throw an error.
-        throw new AsterixException("Cannot find dataset " + datasetName + " in dataverse "
+        throw new CompilationException("Cannot find dataset " + datasetName + " in dataverse "
                 + (dataverseName == null ? defaultDataverseName : dataverseName) + " nor an alias with name "
                 + datasetName + "!");
     }
 
     // Checks whether we need to error the variable reference, e.g., the variable is referred
     // in a LIMIT clause.
-    private void checkError(String varName) throws AsterixException {
+    private void checkError(String varName) throws CompilationException {
         if (scopeChecker.isInForbiddenScopes(varName)) {
-            throw new AsterixException(
+            throw new CompilationException(
                     "Inside limit clauses, it is disallowed to reference a variable having the same name"
                             + " as any variable bound in the same scope as the limit clause.");
         }
@@ -148,13 +148,13 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     // For a From/Join/UNNEST/Quantifiers binding expression, we resolve the undefined identifier reference as
     // a dataset access only.
     private boolean resolveToDatasetOnly(Expression originalExpressionWithUndefinedIdentifier, ILangExpression parent)
-            throws AsterixException {
+            throws CompilationException {
         CheckDatasetOnlyResolutionVisitor visitor = new CheckDatasetOnlyResolutionVisitor();
         return parent.accept(visitor, originalExpressionWithUndefinedIdentifier);
     }
 
     // Whether a rewrite is needed for a variable reference expression.
-    private boolean rewriteNeeded(VariableExpr varExpr) throws AsterixException {
+    private boolean rewriteNeeded(VariableExpr varExpr) throws CompilationException {
         String varName = varExpr.getVar().getValue();
         Identifier ident = scopeChecker.lookupSymbol(varName);
         if (ident != null) {
@@ -168,21 +168,21 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         }
     }
 
-    private Expression wrapWithDatasetFunction(String dataverseName, String datasetName) throws AsterixException {
+    private Expression wrapWithDatasetFunction(String dataverseName, String datasetName) throws CompilationException {
         String fullyQualifiedName = dataverseName == null ? datasetName : dataverseName + "." + datasetName;
         List<Expression> argList = new ArrayList<>();
         argList.add(new LiteralExpr(new StringLiteral(fullyQualifiedName)));
         return new CallExpr(datasetFunction, argList);
     }
 
-    private boolean datasetExists(String dataverseName, String datasetName) throws AsterixException {
+    private boolean datasetExists(String dataverseName, String datasetName) throws CompilationException {
         try {
             if (metadataProvider.findDataset(dataverseName, datasetName) != null) {
                 return true;
             }
             return fullyQualifiedDatasetNameExists(datasetName);
         } catch (AlgebricksException e) {
-            throw new AsterixException(e);
+            throw new CompilationException(e);
         }
     }
 

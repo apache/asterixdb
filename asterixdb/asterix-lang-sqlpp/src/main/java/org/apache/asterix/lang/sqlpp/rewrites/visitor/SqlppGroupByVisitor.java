@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -91,7 +91,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
     }
 
     @Override
-    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         // Traverses the select block in the order of "from", "let"s, "where",
         // "group by", "let"s, "having" and "select".
         FromClause fromClause = selectBlock.getFromClause();
@@ -219,7 +219,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
     }
 
     @Override
-    public Expression visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
+    public Expression visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
         // Puts all FROM binding variables into withVarList.
         FromClause fromClause = (FromClause) arg;
         Collection<VariableExpr> fromBindingVars =

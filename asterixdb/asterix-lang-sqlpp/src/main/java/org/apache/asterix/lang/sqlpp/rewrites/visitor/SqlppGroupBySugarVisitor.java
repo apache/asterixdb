@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -90,7 +90,7 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
     }
 
     @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         List<Expression> newExprList = new ArrayList<>();
         FunctionSignature signature = callExpr.getFunctionSignature();
         boolean aggregate = FunctionMapUtil.isSql92AggregateFunction(signature);
@@ -109,7 +109,7 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
         return callExpr;
     }
 
-    private Expression wrapAggregationArgument(Expression argExpr) throws AsterixException {
+    private Expression wrapAggregationArgument(Expression argExpr) throws CompilationException {
         Expression expr = argExpr;
         Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
 

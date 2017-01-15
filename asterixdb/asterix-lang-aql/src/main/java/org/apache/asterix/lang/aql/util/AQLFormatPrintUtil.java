@@ -23,7 +23,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.AQLFormatPrintVisitor;
 import org.apache.asterix.lang.aql.visitor.AQLToSQLPPPrintVisitor;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -31,12 +31,12 @@ import org.apache.asterix.lang.common.base.Statement;
 
 public class AQLFormatPrintUtil {
 
-    public static void print(ILangExpression expr, PrintWriter output) throws AsterixException {
+    public static void print(ILangExpression expr, PrintWriter output) throws CompilationException {
         AQLFormatPrintVisitor visitor = new AQLFormatPrintVisitor(output);
         expr.accept(visitor, 0);
     }
 
-    public static void print(List<Statement> exprs, PrintWriter output) throws AsterixException {
+    public static void print(List<Statement> exprs, PrintWriter output) throws CompilationException {
         AQLFormatPrintVisitor visitor = new AQLFormatPrintVisitor(output);
         for (Statement expr : exprs) {
             expr.accept(visitor, 0);
@@ -47,15 +47,15 @@ public class AQLFormatPrintUtil {
      * @param expr
      *            a language expression.
      * @return a formatted string of a language expression.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    public static String toString(ILangExpression expr) throws AsterixException {
+    public static String toString(ILangExpression expr) throws CompilationException {
         List<ILangExpression> exprs = new ArrayList<>();
         exprs.add(expr);
         return toString(exprs);
     }
 
-    public static String toString(List<ILangExpression> exprs) throws AsterixException {
+    public static String toString(List<ILangExpression> exprs) throws CompilationException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrintWriter output = new PrintWriter(bos);
         AQLFormatPrintVisitor visitor = new AQLFormatPrintVisitor(output);
@@ -66,7 +66,7 @@ public class AQLFormatPrintUtil {
         return bos.toString();
     }
 
-    public static String toSQLPPString(List<Statement> exprs) throws AsterixException {
+    public static String toSQLPPString(List<Statement> exprs) throws CompilationException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrintWriter output = new PrintWriter(bos);
         AQLToSQLPPPrintVisitor visitor = new AQLToSQLPPPrintVisitor(output);

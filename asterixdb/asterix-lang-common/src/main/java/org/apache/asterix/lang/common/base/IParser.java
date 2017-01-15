@@ -20,10 +20,10 @@ package org.apache.asterix.lang.common.base;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 
 public interface IParser {
 
-    public List<Statement> parse() throws AsterixException;
+    public List<Statement> parse() throws CompilationException;
 
 }

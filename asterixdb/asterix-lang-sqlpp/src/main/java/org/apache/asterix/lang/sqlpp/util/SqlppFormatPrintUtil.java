@@ -23,7 +23,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppFormatPrintVisitor;
@@ -41,9 +41,9 @@ public class SqlppFormatPrintUtil {
      *            the language expression.
      * @param output
      *            a writer for printing strings.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    public static void print(ILangExpression expr, PrintWriter output) throws AsterixException {
+    public static void print(ILangExpression expr, PrintWriter output) throws CompilationException {
         SqlppFormatPrintVisitor visitor = new SqlppFormatPrintVisitor(output);
         expr.accept(visitor, 0);
     }
@@ -55,9 +55,9 @@ public class SqlppFormatPrintUtil {
      *            a list of statements of a query
      * @param output
      *            a writer for printing strings.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    public static void print(List<Statement> statements, PrintWriter output) throws AsterixException {
+    public static void print(List<Statement> statements, PrintWriter output) throws CompilationException {
         SqlppFormatPrintVisitor visitor = new SqlppFormatPrintVisitor(output);
         for (Statement statement : statements) {
             statement.accept(visitor, 0);
@@ -68,9 +68,9 @@ public class SqlppFormatPrintUtil {
      * @param expr
      *            a language expression.
      * @return a formatted string of a language expression.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    public static String toString(ILangExpression expr) throws AsterixException {
+    public static String toString(ILangExpression expr) throws CompilationException {
         List<ILangExpression> exprs = new ArrayList<>();
         exprs.add(expr);
         return toString(exprs);
@@ -80,9 +80,9 @@ public class SqlppFormatPrintUtil {
      * @param exprs
      *            a list of language expression.
      * @return a formatted string of the input language expressions.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    public static String toString(List<ILangExpression> exprs) throws AsterixException {
+    public static String toString(List<ILangExpression> exprs) throws CompilationException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         PrintWriter output = new PrintWriter(bos);
         SqlppFormatPrintVisitor visitor = new SqlppFormatPrintVisitor(output);

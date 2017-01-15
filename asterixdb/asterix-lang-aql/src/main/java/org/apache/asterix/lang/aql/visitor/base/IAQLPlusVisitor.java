@@ -18,16 +18,16 @@
  */
 package org.apache.asterix.lang.aql.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.JoinClause;
 import org.apache.asterix.lang.aql.clause.MetaVariableClause;
 import org.apache.asterix.lang.aql.expression.MetaVariableExpr;
 
 public interface IAQLPlusVisitor<R, T> extends IAQLVisitor<R, T> {
 
-    R visitJoinClause(JoinClause c, T arg) throws AsterixException;
+    R visitJoinClause(JoinClause c, T arg) throws CompilationException;
 
-    R visitMetaVariableClause(MetaVariableClause c, T arg) throws AsterixException;
+    R visitMetaVariableClause(MetaVariableClause c, T arg) throws CompilationException;
 
-    R visitMetaVariableExpr(MetaVariableExpr v, T arg) throws AsterixException;
+    R visitMetaVariableExpr(MetaVariableExpr v, T arg) throws CompilationException;
 }

@@ -21,7 +21,7 @@ package org.apache.asterix.lang.aql.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -49,7 +49,7 @@ public class AQLCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteVar
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(ForClause fc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = fc.getInExpr().accept(this, env);
         VariableExpr varExpr = fc.getVarExpr();
         VariableExpr newVe = generateNewVariable(context, varExpr);
@@ -68,7 +68,7 @@ public class AQLCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteVar
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(FLWOGRExpression flwor,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Clause> newClauses = new ArrayList<Clause>(flwor.getClauseList().size());
         VariableSubstitutionEnvironment currentEnv = env;
         for (Clause c : flwor.getClauseList()) {
@@ -84,7 +84,7 @@ public class AQLCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteVar
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(UnionExpr u,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(u.getExprs(), env, this);
         UnionExpr newU = new UnionExpr(exprList);
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newU, env);
@@ -92,7 +92,7 @@ public class AQLCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteVar
 
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(DistinctClause dc,
-            VariableSubstitutionEnvironment env) throws AsterixException {
+            VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(dc.getDistinctByExpr(), env,
                 this);
         DistinctClause dc2 = new DistinctClause(exprList);

@@ -22,7 +22,7 @@ package org.apache.asterix.lang.common.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
@@ -87,7 +87,8 @@ public class CommonFunctionMapUtil {
      * @return the corresponding system internal function signature if it exists, otherwise
      *         the input function synature.
      */
-    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) throws AsterixException {
+    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs)
+            throws CompilationException {
         String name = fs.getName();
         String lowerCaseName = name.toLowerCase();
         String mappedName = FUNCTION_NAME_MAP.get(lowerCaseName);

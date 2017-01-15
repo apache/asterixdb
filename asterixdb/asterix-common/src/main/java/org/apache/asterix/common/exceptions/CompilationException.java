@@ -24,6 +24,7 @@ import java.io.Serializable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class CompilationException extends AlgebricksException {
+    private static final long serialVersionUID = 1L;
 
     public CompilationException(int errorCode, Serializable... params) {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
@@ -33,4 +34,35 @@ public class CompilationException extends AlgebricksException {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
         addSuppressed(cause);
     }
+
+    /**
+     * @deprecated (Don't use this and provide an error code. This exists for the current exceptions and
+     *             those exceptions need to adopt error code as well.)
+     * @param message
+     */
+    @Deprecated
+    public CompilationException(String message) {
+        super(message);
+    }
+
+    /**
+     * @deprecated (Don't use this and provide an error code. This exists for the current exceptions and
+     *             those exceptions need to adopt error code as well.)
+     * @param message
+     */
+    @Deprecated
+    public CompilationException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * @deprecated (Don't use this and provide an error code. This exists for the current exceptions and
+     *             those exceptions need to adopt error code as well.)
+     * @param message
+     */
+    @Deprecated
+    public CompilationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

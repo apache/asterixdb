@@ -23,11 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
@@ -52,7 +52,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
     }
 
     @Override
-    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         // Gets the map from select clause.
         Map<Expression, Expression> map = getMap(selectBlock.getSelectClause());
 
@@ -93,7 +93,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
         return super.visit(selectBlock, arg);
     }
 
-    private Map<Expression, Expression> getMap(SelectClause selectClause) throws AsterixException {
+    private Map<Expression, Expression> getMap(SelectClause selectClause) throws CompilationException {
         if (selectClause.selectElement()) {
             return getMap(selectClause.getSelectElement());
         }

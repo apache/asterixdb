@@ -22,7 +22,7 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -72,7 +72,7 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
     }
 
     @Override
-    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws CompilationException {
         // Recursively visit nested select expressions.
         SelectSetOperation selectSetOperation = selectExpression.getSelectSetOperation();
         if (!selectSetOperation.hasRightInputs() || !(selectExpression.hasOrderby() || selectExpression.hasLimit())) {

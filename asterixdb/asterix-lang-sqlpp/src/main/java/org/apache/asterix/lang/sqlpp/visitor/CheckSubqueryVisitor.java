@@ -21,7 +21,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -72,7 +72,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Boolean, ILangExpression> {
 
     @Override
-    public Boolean visit(FromClause fromClause, ILangExpression arg) throws AsterixException {
+    public Boolean visit(FromClause fromClause, ILangExpression arg) throws CompilationException {
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             if (fromTerm.accept(this, arg)) {
                 return false;
@@ -82,7 +82,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(FromTerm fromTerm, ILangExpression arg) throws AsterixException {
+    public Boolean visit(FromTerm fromTerm, ILangExpression arg) throws CompilationException {
         if (visit(fromTerm.getLeftExpression(), arg)) {
             return true;
         }
@@ -95,17 +95,17 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(JoinClause joinClause, ILangExpression arg) throws AsterixException {
+    public Boolean visit(JoinClause joinClause, ILangExpression arg) throws CompilationException {
         return visit(joinClause.getRightExpression(), arg) || visit(joinClause.getConditionExpression(), arg);
     }
 
     @Override
-    public Boolean visit(NestClause nestClause, ILangExpression arg) throws AsterixException {
+    public Boolean visit(NestClause nestClause, ILangExpression arg) throws CompilationException {
         return nestClause.accept(this, arg);
     }
 
     @Override
-    public Boolean visit(Projection projection, ILangExpression arg) throws AsterixException {
+    public Boolean visit(Projection projection, ILangExpression arg) throws CompilationException {
         if (projection.star()) {
             return false;
         }
@@ -113,7 +113,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Boolean visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         boolean hasSubquery = visit(selectBlock.getFromClause(), arg) || visit(selectBlock.getGroupbyClause(), arg)
                 || visit(selectBlock.getHavingClause(), arg) || visit(selectBlock.getWhereClause(), arg);
         return hasSubquery || visit(selectBlock.getSelectClause(), arg) || visit(selectBlock.getLetList(), arg)
@@ -121,22 +121,22 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(SelectClause selectClause, ILangExpression arg) throws AsterixException {
+    public Boolean visit(SelectClause selectClause, ILangExpression arg) throws CompilationException {
         return visit(selectClause.getSelectElement(), arg) || visit(selectClause.getSelectRegular(), arg);
     }
 
     @Override
-    public Boolean visit(SelectElement selectElement, ILangExpression arg) throws AsterixException {
+    public Boolean visit(SelectElement selectElement, ILangExpression arg) throws CompilationException {
         return visit(selectElement.getExpression(), arg);
     }
 
     @Override
-    public Boolean visit(SelectRegular selectRegular, ILangExpression arg) throws AsterixException {
+    public Boolean visit(SelectRegular selectRegular, ILangExpression arg) throws CompilationException {
         return visit(selectRegular.getProjections(), arg);
     }
 
     @Override
-    public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws AsterixException {
+    public Boolean visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws CompilationException {
         if (selectSetOperation.getLeftInput().accept(this, arg)) {
             return true;
         }
@@ -149,7 +149,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(SelectExpression selectStatement, ILangExpression arg) throws AsterixException {
+    public Boolean visit(SelectExpression selectStatement, ILangExpression arg) throws CompilationException {
         if (selectStatement.isSubquery()) {
             return true;
         }
@@ -159,53 +159,53 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(UnnestClause unnestClause, ILangExpression arg) throws AsterixException {
+    public Boolean visit(UnnestClause unnestClause, ILangExpression arg) throws CompilationException {
         return visit(unnestClause.getRightExpression(), arg);
     }
 
     @Override
-    public Boolean visit(HavingClause havingClause, ILangExpression arg) throws AsterixException {
+    public Boolean visit(HavingClause havingClause, ILangExpression arg) throws CompilationException {
         return visit(havingClause.getFilterExpression(), arg);
     }
 
     @Override
-    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
+    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
         return visit(independentSubquery.getExpr(), arg);
     }
 
     @Override
-    public Boolean visit(CaseExpression caseExpression, ILangExpression arg) throws AsterixException {
+    public Boolean visit(CaseExpression caseExpression, ILangExpression arg) throws CompilationException {
         return visit(caseExpression.getConditionExpr(), arg) || visit(caseExpression.getWhenExprs(), arg)
                 || visit(caseExpression.getThenExprs(), arg) || visit(caseExpression.getElseExpr(), arg);
     }
 
     @Override
-    public Boolean visit(Query q, ILangExpression arg) throws AsterixException {
+    public Boolean visit(Query q, ILangExpression arg) throws CompilationException {
         return visit(q.getBody(), arg);
     }
 
     @Override
-    public Boolean visit(FunctionDecl fd, ILangExpression arg) throws AsterixException {
+    public Boolean visit(FunctionDecl fd, ILangExpression arg) throws CompilationException {
         return fd.getFuncBody().accept(this, arg);
     }
 
     @Override
-    public Boolean visit(LiteralExpr l, ILangExpression arg) throws AsterixException {
+    public Boolean visit(LiteralExpr l, ILangExpression arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(VariableExpr v, ILangExpression arg) throws AsterixException {
+    public Boolean visit(VariableExpr v, ILangExpression arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(ListConstructor lc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(ListConstructor lc, ILangExpression arg) throws CompilationException {
         return visit(lc.getExprList(), arg);
     }
 
     @Override
-    public Boolean visit(RecordConstructor rc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(RecordConstructor rc, ILangExpression arg) throws CompilationException {
         for (FieldBinding fb : rc.getFbList()) {
             if (visit(fb.getLeftExpr(), arg)) {
                 return true;
@@ -218,27 +218,27 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(OperatorExpr operatorExpr, ILangExpression arg) throws AsterixException {
+    public Boolean visit(OperatorExpr operatorExpr, ILangExpression arg) throws CompilationException {
         return visit(operatorExpr.getExprList(), arg);
     }
 
     @Override
-    public Boolean visit(FieldAccessor fa, ILangExpression arg) throws AsterixException {
+    public Boolean visit(FieldAccessor fa, ILangExpression arg) throws CompilationException {
         return visit(fa.getExpr(), arg);
     }
 
     @Override
-    public Boolean visit(IndexAccessor ia, ILangExpression arg) throws AsterixException {
+    public Boolean visit(IndexAccessor ia, ILangExpression arg) throws CompilationException {
         return visit(ia.getExpr(), arg) || visit(ia.getIndexExpr(), arg);
     }
 
     @Override
-    public Boolean visit(IfExpr ifexpr, ILangExpression arg) throws AsterixException {
+    public Boolean visit(IfExpr ifexpr, ILangExpression arg) throws CompilationException {
         return visit(ifexpr.getCondExpr(), arg) || visit(ifexpr.getThenExpr(), arg) || visit(ifexpr.getElseExpr(), arg);
     }
 
     @Override
-    public Boolean visit(QuantifiedExpression qe, ILangExpression arg) throws AsterixException {
+    public Boolean visit(QuantifiedExpression qe, ILangExpression arg) throws CompilationException {
         for (QuantifiedPair qf : qe.getQuantifiedList()) {
             if (visit(qf.getExpr(), arg)) {
                 return true;
@@ -248,22 +248,22 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(LetClause lc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(LetClause lc, ILangExpression arg) throws CompilationException {
         return visit(lc.getBindingExpr(), arg);
     }
 
     @Override
-    public Boolean visit(WhereClause wc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(WhereClause wc, ILangExpression arg) throws CompilationException {
         return visit(wc.getWhereExpr(), arg);
     }
 
     @Override
-    public Boolean visit(OrderbyClause oc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(OrderbyClause oc, ILangExpression arg) throws CompilationException {
         return visit(oc.getOrderbyList(), arg);
     }
 
     @Override
-    public Boolean visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
         for (GbyVariableExpressionPair key : gc.getGbyPairList()) {
             if (visit(key.getExpr(), arg)) {
                 return true;
@@ -283,21 +283,21 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     }
 
     @Override
-    public Boolean visit(LimitClause lc, ILangExpression arg) throws AsterixException {
+    public Boolean visit(LimitClause lc, ILangExpression arg) throws CompilationException {
         return visit(lc.getLimitExpr(), arg) || visit(lc.getOffset(), arg);
     }
 
     @Override
-    public Boolean visit(UnaryExpr u, ILangExpression arg) throws AsterixException {
+    public Boolean visit(UnaryExpr u, ILangExpression arg) throws CompilationException {
         return visit(u.getExpr(), arg);
     }
 
     @Override
-    public Boolean visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Boolean visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         return visit(callExpr.getExprList(), arg);
     }
 
-    private boolean visit(List<?> langExprs, ILangExpression arg) throws AsterixException {
+    private boolean visit(List<?> langExprs, ILangExpression arg) throws CompilationException {
         for (Object o : langExprs) {
             ILangExpression langExpr = (ILangExpression) o;
             if (langExpr.accept(this, arg)) {
@@ -307,7 +307,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
         return false;
     }
 
-    private boolean visit(ILangExpression langExpr, ILangExpression arg) throws AsterixException {
+    private boolean visit(ILangExpression langExpr, ILangExpression arg) throws CompilationException {
         if (langExpr == null) {
             return false;
         }

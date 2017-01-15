@@ -22,7 +22,7 @@ package org.apache.asterix.lang.common.visitor;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -56,7 +56,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     protected final Set<FunctionSignature> calls = new HashSet<FunctionSignature>();
 
     @Override
-    public Void visit(CallExpr pf, Void arg) throws AsterixException {
+    public Void visit(CallExpr pf, Void arg) throws CompilationException {
         calls.add(pf.getFunctionSignature());
         for (Expression e : pf.getExprList()) {
             e.accept(this, arg);
@@ -65,13 +65,13 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(FieldAccessor fa, Void arg) throws AsterixException {
+    public Void visit(FieldAccessor fa, Void arg) throws CompilationException {
         fa.getExpr().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(GroupbyClause gc, Void arg) throws AsterixException {
+    public Void visit(GroupbyClause gc, Void arg) throws CompilationException {
         for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
             p.getExpr().accept(this, arg);
         }
@@ -82,7 +82,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(IfExpr ifexpr, Void arg) throws AsterixException {
+    public Void visit(IfExpr ifexpr, Void arg) throws CompilationException {
         ifexpr.getCondExpr().accept(this, arg);
         ifexpr.getThenExpr().accept(this, arg);
         ifexpr.getElseExpr().accept(this, arg);
@@ -90,19 +90,19 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(IndexAccessor ia, Void arg) throws AsterixException {
+    public Void visit(IndexAccessor ia, Void arg) throws CompilationException {
         ia.getExpr().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(LetClause lc, Void arg) throws AsterixException {
+    public Void visit(LetClause lc, Void arg) throws CompilationException {
         lc.getBindingExpr().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(LimitClause lc, Void arg) throws AsterixException {
+    public Void visit(LimitClause lc, Void arg) throws CompilationException {
         lc.getLimitExpr().accept(this, arg);
         if (lc.getOffset() != null) {
             lc.getOffset().accept(this, arg);
@@ -111,7 +111,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(ListConstructor lc, Void arg) throws AsterixException {
+    public Void visit(ListConstructor lc, Void arg) throws CompilationException {
         for (Expression e : lc.getExprList()) {
             e.accept(this, arg);
         }
@@ -119,13 +119,13 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(LiteralExpr l, Void arg) throws AsterixException {
+    public Void visit(LiteralExpr l, Void arg) throws CompilationException {
         // do nothing
         return null;
     }
 
     @Override
-    public Void visit(OperatorExpr op, Void arg) throws AsterixException {
+    public Void visit(OperatorExpr op, Void arg) throws CompilationException {
         for (Expression e : op.getExprList()) {
             e.accept(this, arg);
         }
@@ -133,7 +133,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(OrderbyClause oc, Void arg) throws AsterixException {
+    public Void visit(OrderbyClause oc, Void arg) throws CompilationException {
         for (Expression e : oc.getOrderbyList()) {
             e.accept(this, arg);
         }
@@ -141,12 +141,12 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(OrderedListTypeDefinition olte, Void arg) throws AsterixException {
+    public Void visit(OrderedListTypeDefinition olte, Void arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public Void visit(QuantifiedExpression qe, Void arg) throws AsterixException {
+    public Void visit(QuantifiedExpression qe, Void arg) throws CompilationException {
         for (QuantifiedPair qp : qe.getQuantifiedList()) {
             qp.getExpr().accept(this, arg);
         }
@@ -155,13 +155,13 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(Query q, Void arg) throws AsterixException {
+    public Void visit(Query q, Void arg) throws CompilationException {
         q.getBody().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(RecordConstructor rc, Void arg) throws AsterixException {
+    public Void visit(RecordConstructor rc, Void arg) throws CompilationException {
         for (FieldBinding fb : rc.getFbList()) {
             fb.getLeftExpr().accept(this, arg);
             fb.getRightExpr().accept(this, arg);
@@ -170,30 +170,30 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(TypeReferenceExpression tre, Void arg) throws AsterixException {
+    public Void visit(TypeReferenceExpression tre, Void arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public Void visit(UnaryExpr u, Void arg) throws AsterixException {
+    public Void visit(UnaryExpr u, Void arg) throws CompilationException {
         u.getExpr().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(VariableExpr v, Void arg) throws AsterixException {
+    public Void visit(VariableExpr v, Void arg) throws CompilationException {
         // do nothing
         return null;
     }
 
     @Override
-    public Void visit(WhereClause wc, Void arg) throws AsterixException {
+    public Void visit(WhereClause wc, Void arg) throws CompilationException {
         wc.getWhereExpr().accept(this, arg);
         return null;
     }
 
     @Override
-    public Void visit(InsertStatement wc, Void arg) throws AsterixException {
+    public Void visit(InsertStatement wc, Void arg) throws CompilationException {
         wc.getQuery().accept(this, arg);
         Expression returnExpression = wc.getReturnExpression();
         if (returnExpression != null) {
@@ -207,7 +207,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     }
 
     @Override
-    public Void visit(FunctionDecl fd, Void arg) throws AsterixException {
+    public Void visit(FunctionDecl fd, Void arg) throws CompilationException {
         return null;
     }
 

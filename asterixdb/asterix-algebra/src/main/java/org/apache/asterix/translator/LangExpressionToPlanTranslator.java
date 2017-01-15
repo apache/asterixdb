@@ -32,9 +32,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.operators.CommitOperator;
-import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -71,7 +71,6 @@ import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
-import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSource;
@@ -732,7 +731,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(LetClause lc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         LogicalVariable v;
         ILogicalOperator returnedOp;
         if (lc.getBindingExpr().getKind() == Kind.VARIABLE_EXPRESSION) {
@@ -752,7 +751,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(FieldAccessor fa, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(fa.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression fldAccess = new ScalarFunctionCallExpression(
@@ -768,7 +767,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(IndexAccessor ia, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(ia.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression f;
@@ -790,7 +789,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(CallExpr fcall, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         LogicalVariable v = context.newVar();
         FunctionSignature signature = fcall.getFunctionSignature();
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
@@ -824,7 +823,7 @@ class LangExpressionToPlanTranslator
         }
 
         if (f == null) {
-            throw new AsterixException(" Unknown function " + signature.getName() + "@" + signature.getArity());
+            throw new CompilationException(" Unknown function " + signature.getName() + "@" + signature.getArity());
         }
 
         // Put hints into function call expr.
@@ -902,7 +901,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(GroupbyClause gc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Mutable<ILogicalOperator> topOp = tupSource;
         if (gc.hasGroupVar()) {
             List<Pair<Expression, Identifier>> groupFieldList = gc.getGroupFieldList();
@@ -966,7 +965,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(IfExpr ifexpr, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         // In the most general case, IfThenElse is translated in the following
         // way.
         //
@@ -1031,7 +1030,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(OperatorExpr op, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         List<OperatorType> ops = op.getOpList();
         int nOps = ops.size();
 
@@ -1113,7 +1112,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(OrderbyClause oc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         OrderOperator ord = new OrderOperator();
         Iterator<OrderModifier> modifIter = oc.getModifierList().iterator();
         Mutable<ILogicalOperator> topOp = tupSource;
@@ -1142,7 +1141,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(QuantifiedExpression qe, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Mutable<ILogicalOperator> topOp = tupSource;
 
         ILogicalOperator firstOp = null;
@@ -1195,13 +1194,13 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(Query q, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         return q.getBody().accept(this, tupSource);
     }
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(RecordConstructor rc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
         LogicalVariable v1 = context.newVar();
@@ -1221,7 +1220,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(ListConstructor lc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         FunctionIdentifier fid = (lc.getType() == ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR)
                 ? BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR : BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR;
         AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
@@ -1239,7 +1238,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(UnaryExpr u, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Expression expr = u.getExpr();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(expr, tupSource);
         LogicalVariable v1 = context.newVar();
@@ -1261,7 +1260,7 @@ class LangExpressionToPlanTranslator
                 a = processExists(eo.first, v1, true);
                 break;
             default:
-                throw new AsterixException("Unsupported operator: " + u);
+                throw new CompilationException("Unsupported operator: " + u);
         }
         a.getInputs().add(eo.second);
         return new Pair<>(a, v1);
@@ -1279,7 +1278,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(WhereClause w, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(w.getWhereExpr(), tupSource);
         SelectOperator s = new SelectOperator(new MutableObject<>(p.first), false, null);
         s.getInputs().add(p.second);
@@ -1288,7 +1287,7 @@ class LangExpressionToPlanTranslator
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(LimitClause lc, Mutable<ILogicalOperator> tupSource)
-            throws AsterixException {
+            throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), tupSource);
         LimitOperator opLim;
         Expression offset = lc.getOffset();
@@ -1329,7 +1328,7 @@ class LangExpressionToPlanTranslator
     }
 
     protected AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t)
-            throws AsterixException {
+            throws CompilationException {
         FunctionIdentifier fid;
         switch (t) {
             case PLUS:
@@ -1377,7 +1376,7 @@ class LangExpressionToPlanTranslator
     }
 
     protected Pair<ILogicalExpression, Mutable<ILogicalOperator>> langExprToAlgExpression(Expression expr,
-            Mutable<ILogicalOperator> topOpRef) throws AsterixException {
+            Mutable<ILogicalOperator> topOpRef) throws CompilationException {
         switch (expr.getKind()) {
             case VARIABLE_EXPRESSION:
                 VariableReferenceExpression ve = new VariableReferenceExpression(
@@ -1438,7 +1437,7 @@ class LangExpressionToPlanTranslator
     }
 
     protected Pair<ILogicalOperator, LogicalVariable> visitAndOrOperator(OperatorExpr op,
-            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
         List<OperatorType> ops = op.getOpList();
         int nOps = ops.size();
 
@@ -1527,9 +1526,9 @@ class LangExpressionToPlanTranslator
      *
      * @param plan,
      *            the query plan.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    private void eliminateSharedOperatorReferenceForPlan(ILogicalPlan plan) throws AsterixException {
+    private void eliminateSharedOperatorReferenceForPlan(ILogicalPlan plan) throws CompilationException {
         for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
             Set<Mutable<ILogicalOperator>> opRefSet = new HashSet<>();
             eliminateSharedOperatorReference(opRef, opRefSet);
@@ -1546,10 +1545,11 @@ class LangExpressionToPlanTranslator
      *            the set storing seen operator references so far.
      * @return a mapping that maps old variables to new variables, for the ancestors of
      *         <code>currentOpRef</code> to replace variables properly.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     private LinkedHashMap<LogicalVariable, LogicalVariable> eliminateSharedOperatorReference(
-            Mutable<ILogicalOperator> currentOpRef, Set<Mutable<ILogicalOperator>> opRefSet) throws AsterixException {
+            Mutable<ILogicalOperator> currentOpRef, Set<Mutable<ILogicalOperator>> opRefSet)
+            throws CompilationException {
         try {
             opRefSet.add(currentOpRef);
             AbstractLogicalOperator currentOperator = (AbstractLogicalOperator) currentOpRef.getValue();
@@ -1614,7 +1614,7 @@ class LangExpressionToPlanTranslator
             varMap.values().retainAll(liveVars);
             return varMap;
         } catch (AlgebricksException e) {
-            throw new AsterixException(e);
+            throw new CompilationException(e);
         }
     }
 
@@ -1628,10 +1628,10 @@ class LangExpressionToPlanTranslator
      * @param branchExpression,
      *            the expression to be evaluated in this branch.
      * @return a pair of the constructed subplan operator and the output variable for the branch.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     protected Pair<ILogicalOperator, LogicalVariable> constructSubplanOperatorForBranch(ILogicalOperator inputOp,
-            Mutable<ILogicalExpression> selectExpr, Expression branchExpression) throws AsterixException {
+            Mutable<ILogicalExpression> selectExpr, Expression branchExpression) throws CompilationException {
         context.enterSubplan();
         SubplanOperator subplanOp = new SubplanOperator();
         subplanOp.getInputs().add(new MutableObject<>(inputOp));
@@ -1699,7 +1699,7 @@ class LangExpressionToPlanTranslator
 
     // Generates the plan for "UNION ALL" or union expression from its input expressions.
     protected Pair<ILogicalOperator, LogicalVariable> translateUnionAllFromInputExprs(List<ILangExpression> inputExprs,
-            Mutable<ILogicalOperator> tupSource) throws AsterixException {
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
         List<Mutable<ILogicalOperator>> inputOpRefsToUnion = new ArrayList<>();
         List<LogicalVariable> vars = new ArrayList<>();
         for (ILangExpression expr : inputExprs) {

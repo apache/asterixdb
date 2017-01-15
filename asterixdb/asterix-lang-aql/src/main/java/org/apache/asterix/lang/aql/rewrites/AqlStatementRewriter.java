@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.aql.rewrites;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.AqlDeleteRewriteVisitor;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
@@ -26,11 +26,11 @@ import org.apache.asterix.lang.common.base.Statement;
 class AqlStatementRewriter implements IStatementRewriter {
 
     @Override
-    public void rewrite(Statement stmt) throws AsterixException {
+    public void rewrite(Statement stmt) throws CompilationException {
         rewriteDeleteStatement(stmt);
     }
 
-    private void rewriteDeleteStatement(Statement stmt) throws AsterixException {
+    private void rewriteDeleteStatement(Statement stmt) throws CompilationException {
         if (stmt != null) {
             AqlDeleteRewriteVisitor visitor = new AqlDeleteRewriteVisitor();
             stmt.accept(visitor, null);

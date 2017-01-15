@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
@@ -93,36 +94,37 @@ public class FeedMetadataUtil {
     private static final Logger LOGGER = Logger.getLogger(FeedMetadataUtil.class.getName());
 
     public static Dataset validateIfDatasetExists(String dataverse, String datasetName, MetadataTransactionContext ctx)
-            throws AsterixException {
+            throws CompilationException {
         Dataset dataset = MetadataManager.INSTANCE.getDataset(ctx, dataverse, datasetName);
         if (dataset == null) {
-            throw new AsterixException("Unknown target dataset :" + datasetName);
+            throw new CompilationException("Unknown target dataset :" + datasetName);
         }
 
         if (!dataset.getDatasetType().equals(DatasetType.INTERNAL)) {
-            throw new AsterixException("Statement not applicable. Dataset " + datasetName + " is not of required type "
+            throw new CompilationException("Statement not applicable. Dataset " + datasetName
+                    + " is not of required type "
                     + DatasetType.INTERNAL);
         }
         return dataset;
     }
 
     public static Feed validateIfFeedExists(String dataverse, String feedName, MetadataTransactionContext ctx)
-            throws AsterixException {
+            throws CompilationException {
         Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverse, feedName);
         if (feed == null) {
-            throw new AsterixException("Unknown source feed: " + feedName);
+            throw new CompilationException("Unknown source feed: " + feedName);
         }
         return feed;
     }
 
     public static FeedPolicyEntity validateIfPolicyExists(String dataverse, String policyName,
-            MetadataTransactionContext ctx) throws AsterixException {
+            MetadataTransactionContext ctx) throws CompilationException {
         FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, dataverse, policyName);
         if (feedPolicy == null) {
             feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME,
                     policyName);
             if (feedPolicy == null) {
-                throw new AsterixException("Unknown feed policy" + policyName);
+                throw new CompilationException("Unknown feed policy" + policyName);
             }
         }
         return feedPolicy;

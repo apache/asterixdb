@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -85,7 +85,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(Query q, Integer step) throws AsterixException {
+    public Void visit(Query q, Integer step) throws CompilationException {
         if (q.getBody() != null) {
             out.println("Query:");
             q.getBody().accept(this, step);
@@ -115,7 +115,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(ListConstructor lc, Integer step) throws AsterixException {
+    public Void visit(ListConstructor lc, Integer step) throws CompilationException {
         boolean ordered = false;
         if (lc.getType().equals(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR)) {
             ordered = true;
@@ -130,7 +130,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(RecordConstructor rc, Integer step) throws AsterixException {
+    public Void visit(RecordConstructor rc, Integer step) throws CompilationException {
         out.println(skip(step) + "RecordConstructor [");
         // fbList accept visitor
         for (FieldBinding fb : rc.getFbList()) {
@@ -145,7 +145,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(CallExpr pf, Integer step) throws AsterixException {
+    public Void visit(CallExpr pf, Integer step) throws CompilationException {
         out.println(skip(step) + "FunctionCall " + pf.getFunctionSignature().toString() + "[");
         for (Expression expr : pf.getExprList()) {
             expr.accept(this, step + 1);
@@ -155,7 +155,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(OperatorExpr ifbo, Integer step) throws AsterixException {
+    public Void visit(OperatorExpr ifbo, Integer step) throws CompilationException {
         List<Expression> exprList = ifbo.getExprList();
         List<OperatorType> opList = ifbo.getOpList();
         if (ifbo.isCurrentop()) {
@@ -173,7 +173,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(IfExpr ifexpr, Integer step) throws AsterixException {
+    public Void visit(IfExpr ifexpr, Integer step) throws CompilationException {
         out.println(skip(step) + "IfExpr [");
         out.println(skip(step + 1) + "Condition:");
         ifexpr.getCondExpr().accept(this, step + 2);
@@ -186,7 +186,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(QuantifiedExpression qe, Integer step) throws AsterixException {
+    public Void visit(QuantifiedExpression qe, Integer step) throws CompilationException {
         out.println(skip(step) + "QuantifiedExpression " + qe.getQuantifier() + " [");
         // quantifiedList accept visitor
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
@@ -204,7 +204,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(LetClause lc, Integer step) throws AsterixException {
+    public Void visit(LetClause lc, Integer step) throws CompilationException {
         out.print(skip(step) + "Let ");
         lc.getVarExpr().accept(this, 0);
         out.println(skip(step + 1) + ":=");
@@ -213,14 +213,14 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(WhereClause wc, Integer step) throws AsterixException {
+    public Void visit(WhereClause wc, Integer step) throws CompilationException {
         out.println(skip(step) + "Where");
         wc.getWhereExpr().accept(this, step + 1);
         return null;
     }
 
     @Override
-    public Void visit(OrderbyClause oc, Integer step) throws AsterixException {
+    public Void visit(OrderbyClause oc, Integer step) throws CompilationException {
         out.println(skip(step) + "Orderby");
         List<OrderModifier> mlist = oc.getModifierList();
         List<Expression> list = oc.getOrderbyList();
@@ -233,7 +233,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(GroupbyClause gc, Integer step) throws AsterixException {
+    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
         out.println(skip(step) + "Groupby");
         for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
             if (pair.getVar() != null) {
@@ -269,7 +269,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(LimitClause lc, Integer step) throws AsterixException {
+    public Void visit(LimitClause lc, Integer step) throws CompilationException {
         out.println(skip(step) + "Limit");
         lc.getLimitExpr().accept(this, step + 1);
         if (lc.getOffset() != null) {
@@ -280,7 +280,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(FunctionDecl fd, Integer step) throws AsterixException {
+    public Void visit(FunctionDecl fd, Integer step) throws CompilationException {
         out.println(skip(step) + "FunctionDecl " + fd.getSignature().getName() + "(" + fd.getParamList().toString()
                 + ") {");
         fd.getFuncBody().accept(this, step + 1);
@@ -290,7 +290,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(UnaryExpr u, Integer step) throws AsterixException {
+    public Void visit(UnaryExpr u, Integer step) throws CompilationException {
         if (u.getExprType() != null) {
             out.print(skip(step) + u.getExprType() + " ");
             u.getExpr().accept(this, 0);
@@ -301,7 +301,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(FieldAccessor fa, Integer step) throws AsterixException {
+    public Void visit(FieldAccessor fa, Integer step) throws CompilationException {
         out.println(skip(step) + "FieldAccessor [");
         fa.getExpr().accept(this, step + 1);
         out.println(skip(step + 1) + "Field=" + fa.getIdent().getValue());
@@ -310,7 +310,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(IndexAccessor fa, Integer step) throws AsterixException {
+    public Void visit(IndexAccessor fa, Integer step) throws CompilationException {
         out.println(skip(step) + "IndexAccessor [");
         fa.getExpr().accept(this, step + 1);
         out.print(skip(step + 1) + "Index: ");
@@ -324,7 +324,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(TypeDecl t, Integer step) throws AsterixException {
+    public Void visit(TypeDecl t, Integer step) throws CompilationException {
         out.println(skip(step) + "TypeDecl " + t.getIdent() + " [");
         t.getTypeDef().accept(this, step + 1);
         out.println(skip(step) + "]");
@@ -332,7 +332,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(TypeReferenceExpression t, Integer arg) throws AsterixException {
+    public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
         if (t.getIdent().first != null && t.getIdent().first.getValue() != null) {
             out.print(t.getIdent().first.getValue());
             out.print('.');
@@ -342,7 +342,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(RecordTypeDefinition r, Integer step) throws AsterixException {
+    public Void visit(RecordTypeDefinition r, Integer step) throws CompilationException {
         if (r.getRecordKind() == RecordKind.CLOSED) {
             out.print(skip(step) + "closed ");
         } else {
@@ -374,7 +374,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(OrderedListTypeDefinition x, Integer step) throws AsterixException {
+    public Void visit(OrderedListTypeDefinition x, Integer step) throws CompilationException {
         out.print("OrderedList [");
         x.getItemTypeExpression().accept(this, step + 2);
         out.println("]");
@@ -382,7 +382,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(UnorderedListTypeDefinition x, Integer step) throws AsterixException {
+    public Void visit(UnorderedListTypeDefinition x, Integer step) throws CompilationException {
         out.print("UnorderedList <");
         x.getItemTypeExpression().accept(this, step + 2);
         out.println(">");
@@ -390,7 +390,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(DatasetDecl dd, Integer step) throws AsterixException {
+    public Void visit(DatasetDecl dd, Integer step) throws CompilationException {
         if (dd.getDatasetType() == DatasetType.INTERNAL) {
             String line = skip(step) + "DatasetDecl " + dd.getName() + "(" + dd.getItemTypeName() + ")"
                     + " partitioned by " + ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getPartitioningExprs();
@@ -406,13 +406,13 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(DataverseDecl dv, Integer step) throws AsterixException {
+    public Void visit(DataverseDecl dv, Integer step) throws CompilationException {
         out.println(skip(step) + "DataverseUse " + dv.getDataverseName());
         return null;
     }
 
     @Override
-    public Void visit(WriteStatement ws, Integer step) throws AsterixException {
+    public Void visit(WriteStatement ws, Integer step) throws CompilationException {
         out.print(skip(step) + "WriteOutputTo " + ws.getNcName() + ":" + ws.getFileName());
         if (ws.getWriterClassName() != null) {
             out.print(" using " + ws.getWriterClassName());
@@ -422,13 +422,13 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
     }
 
     @Override
-    public Void visit(SetStatement ss, Integer step) throws AsterixException {
+    public Void visit(SetStatement ss, Integer step) throws CompilationException {
         out.println(skip(step) + "Set " + ss.getPropName() + "=" + ss.getPropValue());
         return null;
     }
 
     @Override
-    public Void visit(DisconnectFeedStatement ss, Integer step) throws AsterixException {
+    public Void visit(DisconnectFeedStatement ss, Integer step) throws CompilationException {
         out.println(skip(step) + skip(step) + ss.getFeedName() + skip(step) + ss.getDatasetName());
         return null;
     }

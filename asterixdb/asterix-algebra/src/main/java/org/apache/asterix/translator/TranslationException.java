@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.translator;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 
-public class TranslationException extends AsterixException {
+public class TranslationException extends CompilationException {
     private static final long serialVersionUID = 685960054131778068L;
 
     public TranslationException(String msg) {

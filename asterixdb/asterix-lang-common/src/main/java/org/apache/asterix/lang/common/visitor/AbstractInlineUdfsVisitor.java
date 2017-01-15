@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -84,17 +84,17 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
      * @return a query expression which is upto a specific langauge, e.g., FLWOGR in AQL and expression query in SQL++.
      */
     protected abstract Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
-            throws AsterixException;
+            throws CompilationException;
 
     @Override
-    public Boolean visit(Query q, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(Query q, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(q.getBody(), arg);
         q.setBody(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(FunctionDecl fd, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(FunctionDecl fd, List<FunctionDecl> arg) throws CompilationException {
         // Careful, we should only do this after analyzing the graph of function
         // calls.
         Pair<Boolean, Expression> p = inlineUdfsInExpr(fd.getFuncBody(), arg);
@@ -103,14 +103,14 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(ListConstructor lc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(ListConstructor lc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(lc.getExprList(), arg);
         lc.setExprList(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(RecordConstructor rc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(RecordConstructor rc, List<FunctionDecl> arg) throws CompilationException {
         boolean changed = false;
         for (FieldBinding b : rc.getFbList()) {
             Pair<Boolean, Expression> leftExprInlined = inlineUdfsInExpr(b.getLeftExpr(), arg);
@@ -124,35 +124,35 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(CallExpr pf, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(CallExpr pf, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(pf.getExprList(), arg);
         pf.setExprList(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(OperatorExpr ifbo, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(OperatorExpr ifbo, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(ifbo.getExprList(), arg);
         ifbo.setExprList(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(FieldAccessor fa, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(FieldAccessor fa, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(fa.getExpr(), arg);
         fa.setExpr(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(IndexAccessor fa, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(IndexAccessor fa, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(fa.getExpr(), arg);
         fa.setExpr(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(IfExpr ifexpr, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(IfExpr ifexpr, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p1 = inlineUdfsInExpr(ifexpr.getCondExpr(), arg);
         ifexpr.setCondExpr(p1.second);
         Pair<Boolean, Expression> p2 = inlineUdfsInExpr(ifexpr.getThenExpr(), arg);
@@ -163,7 +163,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(QuantifiedExpression qe, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(QuantifiedExpression qe, List<FunctionDecl> arg) throws CompilationException {
         boolean changed = false;
         for (QuantifiedPair t : qe.getQuantifiedList()) {
             Pair<Boolean, Expression> p = inlineUdfsInExpr(t.getExpr(), arg);
@@ -178,28 +178,28 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(LetClause lc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(LetClause lc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(lc.getBindingExpr(), arg);
         lc.setBindingExpr(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(WhereClause wc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(WhereClause wc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(wc.getWhereExpr(), arg);
         wc.setWhereExpr(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(OrderbyClause oc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(OrderbyClause oc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(oc.getOrderbyList(), arg);
         oc.setOrderbyList(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(GroupbyClause gc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(GroupbyClause gc, List<FunctionDecl> arg) throws CompilationException {
         boolean changed = false;
         for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
             Pair<Boolean, Expression> be = inlineUdfsInExpr(p.getExpr(), arg);
@@ -219,7 +219,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(LimitClause lc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(LimitClause lc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p1 = inlineUdfsInExpr(lc.getLimitExpr(), arg);
         lc.setLimitExpr(p1.second);
         boolean changed = p1.first;
@@ -232,22 +232,22 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     @Override
-    public Boolean visit(UnaryExpr u, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(UnaryExpr u, List<FunctionDecl> arg) throws CompilationException {
         return u.getExpr().accept(this, arg);
     }
 
     @Override
-    public Boolean visit(VariableExpr v, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(VariableExpr v, List<FunctionDecl> arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(LiteralExpr l, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(LiteralExpr l, List<FunctionDecl> arg) throws CompilationException {
         return false;
     }
 
     @Override
-    public Boolean visit(InsertStatement insert, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(InsertStatement insert, List<FunctionDecl> arg) throws CompilationException {
         boolean changed = false;
         Expression returnExpression = insert.getReturnExpression();
         if (returnExpression != null) {
@@ -261,7 +261,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     protected Pair<Boolean, Expression> inlineUdfsInExpr(Expression expr, List<FunctionDecl> arg)
-            throws AsterixException {
+            throws CompilationException {
         if (expr.getKind() != Kind.CALL_EXPRESSION) {
             boolean r = expr.accept(this, arg);
             return new Pair<>(r, expr);
@@ -308,7 +308,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     protected Pair<Boolean, List<Expression>> inlineUdfsInExprList(List<Expression> exprList, List<FunctionDecl> fds)
-            throws AsterixException {
+            throws CompilationException {
         ArrayList<Expression> newList = new ArrayList<>();
         boolean changed = false;
         for (Expression e : exprList) {
@@ -321,7 +321,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         return new Pair<>(changed, newList);
     }
 
-    protected Expression rewriteFunctionBody(Expression expr) throws AsterixException {
+    protected Expression rewriteFunctionBody(Expression expr) throws CompilationException {
         Query wrappedQuery = new Query(false);
         wrappedQuery.setBody(expr);
         wrappedQuery.setTopLevel(false);

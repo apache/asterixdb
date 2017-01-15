@@ -22,18 +22,18 @@ package org.apache.asterix.lang.aql.rewrites.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.aql.visitor.base.AbstractAqlSimpleExpressionVisitor;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 
 public class AqlBuiltinFunctionRewriteVisitor extends AbstractAqlSimpleExpressionVisitor {
 
     @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         FunctionSignature functionSignature = callExpr.getFunctionSignature();
         callExpr.setFunctionSignature(CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature));
         List<Expression> newExprList = new ArrayList<>();

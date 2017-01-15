@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -41,7 +41,7 @@ public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingV
     }
 
     @Override
-    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws CompilationException {
         if (selectExpression.hasLetClauses()) {
             // Inlines the leading WITH list.
             Map<Expression, Expression> varExprMap = new HashMap<>();

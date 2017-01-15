@@ -22,7 +22,7 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -36,7 +36,7 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionV
 public class SqlppListInputFunctionRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         List<Expression> newExprList = new ArrayList<>();
         for (Expression expr : callExpr.getExprList()) {
             newExprList.add(expr.accept(this, arg));

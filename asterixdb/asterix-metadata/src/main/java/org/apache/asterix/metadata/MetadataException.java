@@ -19,9 +19,9 @@
 
 package org.apache.asterix.metadata;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 
-public class MetadataException extends AsterixException {
+public class MetadataException extends CompilationException {
     private static final long serialVersionUID = 1L;
 
     public MetadataException(String message) {

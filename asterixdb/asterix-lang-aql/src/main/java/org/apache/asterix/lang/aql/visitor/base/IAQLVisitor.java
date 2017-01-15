@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.aql.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -27,12 +27,12 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public interface IAQLVisitor<R, T> extends ILangVisitor<R, T> {
 
-    R visit(FLWOGRExpression flwogreExpr, T arg) throws AsterixException;
+    R visit(FLWOGRExpression flwogreExpr, T arg) throws CompilationException;
 
-    R visit(UnionExpr u, T arg) throws AsterixException;
+    R visit(UnionExpr u, T arg) throws CompilationException;
 
-    R visit(ForClause forClause, T arg) throws AsterixException;
+    R visit(ForClause forClause, T arg) throws CompilationException;
 
-    R visit(DistinctClause distinctClause, T arg) throws AsterixException;
+    R visit(DistinctClause distinctClause, T arg) throws CompilationException;
 
 }

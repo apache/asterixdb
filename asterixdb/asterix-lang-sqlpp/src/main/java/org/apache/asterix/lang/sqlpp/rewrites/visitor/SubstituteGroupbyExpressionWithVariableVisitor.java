@@ -22,11 +22,11 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
@@ -46,7 +46,7 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
     }
 
     @Override
-    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         if (selectBlock.hasGroupbyClause()) {
             Map<Expression, Expression> map = new HashMap<>();
             for (GbyVariableExpressionPair gbyKeyPair : selectBlock.getGroupbyClause().getGbyPairList()) {
@@ -93,7 +93,7 @@ class SubstituteGroupbyExpressionVisitor extends SqlppSubstituteExpressionVisito
     }
 
     @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         FunctionSignature signature = callExpr.getFunctionSignature();
         if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
             return callExpr;

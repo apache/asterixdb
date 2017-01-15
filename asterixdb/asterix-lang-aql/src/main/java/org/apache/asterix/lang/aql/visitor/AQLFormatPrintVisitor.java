@@ -20,7 +20,7 @@ package org.apache.asterix.lang.aql.visitor;
 
 import java.io.PrintWriter;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -44,7 +44,7 @@ public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVis
     }
 
     @Override
-    public Void visit(FLWOGRExpression flwor, Integer step) throws AsterixException {
+    public Void visit(FLWOGRExpression flwor, Integer step) throws CompilationException {
         for (Clause cl : flwor.getClauseList()) {
             cl.accept(this, step);
         }
@@ -54,7 +54,7 @@ public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVis
     }
 
     @Override
-    public Void visit(ForClause fc, Integer step) throws AsterixException {
+    public Void visit(ForClause fc, Integer step) throws CompilationException {
         out.print("for ");
         fc.getVarExpr().accept(this, step + 2);
         if (fc.hasPosVar()) {
@@ -68,13 +68,13 @@ public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVis
     }
 
     @Override
-    public Void visit(UnionExpr u, Integer step) throws AsterixException {
+    public Void visit(UnionExpr u, Integer step) throws CompilationException {
         printDelimitedExpressions(u.getExprs(), "\n" + skip(step) + "union\n", step);
         return null;
     }
 
     @Override
-    public Void visit(DistinctClause dc, Integer step) throws AsterixException {
+    public Void visit(DistinctClause dc, Integer step) throws CompilationException {
         out.print(skip(step) + "distinct by ");
         printDelimitedExpressions(dc.getDistinctByExpr(), COMMA, step + 2);
         out.println();

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
@@ -31,14 +31,13 @@ import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.FunctionParser;
 import org.apache.asterix.lang.aql.rewrites.visitor.AqlBuiltinFunctionRewriteVisitor;
-import org.apache.asterix.lang.common.base.IReturningStatement;
-import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.aql.visitor.AQLInlineUdfsVisitor;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.Expression.Kind;
+import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
@@ -46,6 +45,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.CommonFunctionMapUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -68,7 +68,7 @@ class AqlQueryRewriter implements IQueryRewriter {
 
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
+            MetadataProvider metadataProvider, LangRewritingContext context) throws CompilationException {
         setup(declaredFunctions, topStatement, metadataProvider, context);
         if (topStatement.isTopLevel()) {
             wrapInLets();
@@ -96,7 +96,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
     }
 
-    private void rewriteFunctionName() throws AsterixException {
+    private void rewriteFunctionName() throws CompilationException {
         if (topStatement == null) {
             return;
         }
@@ -104,7 +104,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         topStatement.accept(visitor, null);
     }
 
-    private void inlineDeclaredUdfs() throws AsterixException {
+    private void inlineDeclaredUdfs() throws CompilationException {
         if (topStatement == null) {
             return;
         }
@@ -130,7 +130,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         declaredFunctions.removeAll(storedFunctionDecls);
     }
 
-    private Set<FunctionSignature> getFunctionCalls(Expression expression) throws AsterixException {
+    private Set<FunctionSignature> getFunctionCalls(Expression expression) throws CompilationException {
         GatherFunctionCalls gfc = new GatherFunctionCalls();
         expression.accept(gfc, null);
         return gfc.getCalls();
@@ -142,7 +142,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(DistinctClause dc, Void arg) throws AsterixException {
+        public Void visit(DistinctClause dc, Void arg) throws CompilationException {
             for (Expression e : dc.getDistinctByExpr()) {
                 e.accept(this, arg);
             }
@@ -150,7 +150,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(FLWOGRExpression flwor, Void arg) throws AsterixException {
+        public Void visit(FLWOGRExpression flwor, Void arg) throws CompilationException {
             for (Clause c : flwor.getClauseList()) {
                 c.accept(this, arg);
             }
@@ -159,7 +159,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(ForClause fc, Void arg) throws AsterixException {
+        public Void visit(ForClause fc, Void arg) throws CompilationException {
             fc.getInExpr().accept(this, arg);
             if (fc.getPosVarExpr() != null) {
                 fc.getPosVarExpr().accept(this, arg);
@@ -168,7 +168,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(GroupbyClause gc, Void arg) throws AsterixException {
+        public Void visit(GroupbyClause gc, Void arg) throws CompilationException {
             for (GbyVariableExpressionPair p : gc.getGbyPairList()) {
                 p.getExpr().accept(this, arg);
             }
@@ -179,13 +179,13 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(LetClause lc, Void arg) throws AsterixException {
+        public Void visit(LetClause lc, Void arg) throws CompilationException {
             lc.getBindingExpr().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(UnionExpr u, Void arg) throws AsterixException {
+        public Void visit(UnionExpr u, Void arg) throws CompilationException {
             for (Expression e : u.getExprs()) {
                 e.accept(this, arg);
             }

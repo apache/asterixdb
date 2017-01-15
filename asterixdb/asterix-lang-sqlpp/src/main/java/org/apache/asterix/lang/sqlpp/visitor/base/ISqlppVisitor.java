@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -38,33 +38,33 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 
 public interface ISqlppVisitor<R, T> extends ILangVisitor<R, T> {
 
-    R visit(FromClause fromClause, T arg) throws AsterixException;
+    R visit(FromClause fromClause, T arg) throws CompilationException;
 
-    R visit(FromTerm fromTerm, T arg) throws AsterixException;
+    R visit(FromTerm fromTerm, T arg) throws CompilationException;
 
-    R visit(JoinClause joinClause, T arg) throws AsterixException;
+    R visit(JoinClause joinClause, T arg) throws CompilationException;
 
-    R visit(NestClause nestClause, T arg) throws AsterixException;
+    R visit(NestClause nestClause, T arg) throws CompilationException;
 
-    R visit(Projection projection, T arg) throws AsterixException;
+    R visit(Projection projection, T arg) throws CompilationException;
 
-    R visit(SelectBlock selectBlock, T arg) throws AsterixException;
+    R visit(SelectBlock selectBlock, T arg) throws CompilationException;
 
-    R visit(SelectClause selectClause, T arg) throws AsterixException;
+    R visit(SelectClause selectClause, T arg) throws CompilationException;
 
-    R visit(SelectElement selectElement, T arg) throws AsterixException;
+    R visit(SelectElement selectElement, T arg) throws CompilationException;
 
-    R visit(SelectRegular selectRegular, T arg) throws AsterixException;
+    R visit(SelectRegular selectRegular, T arg) throws CompilationException;
 
-    R visit(SelectSetOperation selectSetOperation, T arg) throws AsterixException;
+    R visit(SelectSetOperation selectSetOperation, T arg) throws CompilationException;
 
-    R visit(SelectExpression selectStatement, T arg) throws AsterixException;
+    R visit(SelectExpression selectStatement, T arg) throws CompilationException;
 
-    R visit(UnnestClause unnestClause, T arg) throws AsterixException;
+    R visit(UnnestClause unnestClause, T arg) throws CompilationException;
 
-    R visit(HavingClause havingClause, T arg) throws AsterixException;
+    R visit(HavingClause havingClause, T arg) throws CompilationException;
 
-    R visit(IndependentSubquery independentSubquery, T arg) throws AsterixException;
+    R visit(IndependentSubquery independentSubquery, T arg) throws CompilationException;
 
-    R visit(CaseExpression caseExpression, T arg) throws AsterixException;
+    R visit(CaseExpression caseExpression, T arg) throws CompilationException;
 }

@@ -21,7 +21,7 @@ package org.apache.asterix.lang.sqlpp.visitor.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -68,7 +68,7 @@ public class AbstractSqlppSimpleExpressionVisitor
         extends AbstractSqlppQueryExpressionVisitor<Expression, ILangExpression> {
 
     @Override
-    public Expression visit(FromClause fromClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(FromClause fromClause, ILangExpression arg) throws CompilationException {
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             visit(fromTerm, arg);
         }
@@ -76,7 +76,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(FromTerm fromTerm, ILangExpression arg) throws AsterixException {
+    public Expression visit(FromTerm fromTerm, ILangExpression arg) throws CompilationException {
         // Visit the left expression of a from term.
         fromTerm.setLeftExpression(visit(fromTerm.getLeftExpression(), arg));
 
@@ -88,27 +88,27 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(JoinClause joinClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(JoinClause joinClause, ILangExpression arg) throws CompilationException {
         joinClause.setRightExpression(visit(joinClause.getRightExpression(), arg));
         joinClause.setConditionExpression(visit(joinClause.getConditionExpression(), arg));
         return null;
     }
 
     @Override
-    public Expression visit(NestClause nestClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(NestClause nestClause, ILangExpression arg) throws CompilationException {
         nestClause.setRightExpression(visit(nestClause.getRightExpression(), arg));
         nestClause.setConditionExpression(visit(nestClause.getConditionExpression(), arg));
         return null;
     }
 
     @Override
-    public Expression visit(UnnestClause unnestClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(UnnestClause unnestClause, ILangExpression arg) throws CompilationException {
         unnestClause.setRightExpression(visit(unnestClause.getRightExpression(), arg));
         return null;
     }
 
     @Override
-    public Expression visit(Projection projection, ILangExpression arg) throws AsterixException {
+    public Expression visit(Projection projection, ILangExpression arg) throws CompilationException {
         if (!projection.star()) {
             projection.setExpression(visit(projection.getExpression(), arg));
         }
@@ -116,7 +116,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectBlock selectBlock, ILangExpression arg) throws CompilationException {
         // Traverses the select block in the order of "from", "let"s, "where",
         // "group by", "let"s, "having" and "select".
         if (selectBlock.hasFromClause()) {
@@ -148,7 +148,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(SelectClause selectClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectClause selectClause, ILangExpression arg) throws CompilationException {
         if (selectClause.selectElement()) {
             selectClause.getSelectElement().accept(this, selectClause);
         }
@@ -159,13 +159,13 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(SelectElement selectElement, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectElement selectElement, ILangExpression arg) throws CompilationException {
         selectElement.setExpression(visit(selectElement.getExpression(), selectElement));
         return null;
     }
 
     @Override
-    public Expression visit(SelectRegular selectRegular, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectRegular selectRegular, ILangExpression arg) throws CompilationException {
         for (Projection projection : selectRegular.getProjections()) {
             projection.accept(this, arg);
         }
@@ -173,7 +173,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws CompilationException {
         selectSetOperation.getLeftInput().accept(this, arg);
         for (SetOperationRight right : selectSetOperation.getRightInputs()) {
             right.getSetOperationRightInput().accept(this, arg);
@@ -182,37 +182,37 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(HavingClause havingClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(HavingClause havingClause, ILangExpression arg) throws CompilationException {
         havingClause.setFilterExpression(visit(havingClause.getFilterExpression(), havingClause));
         return null;
     }
 
     @Override
-    public Expression visit(Query q, ILangExpression arg) throws AsterixException {
+    public Expression visit(Query q, ILangExpression arg) throws CompilationException {
         q.setBody(visit(q.getBody(), q));
         return null;
     }
 
     @Override
-    public Expression visit(FunctionDecl fd, ILangExpression arg) throws AsterixException {
+    public Expression visit(FunctionDecl fd, ILangExpression arg) throws CompilationException {
         fd.setFuncBody(visit(fd.getFuncBody(), fd));
         return null;
     }
 
     @Override
-    public Expression visit(WhereClause whereClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(WhereClause whereClause, ILangExpression arg) throws CompilationException {
         whereClause.setWhereExpr(visit(whereClause.getWhereExpr(), whereClause));
         return null;
     }
 
     @Override
-    public Expression visit(OrderbyClause oc, ILangExpression arg) throws AsterixException {
+    public Expression visit(OrderbyClause oc, ILangExpression arg) throws CompilationException {
         oc.setOrderbyList(visit(oc.getOrderbyList(), arg));
         return null;
     }
 
     @Override
-    public Expression visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
+    public Expression visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
             gbyVarExpr.setExpr(visit(gbyVarExpr.getExpr(), gc));
         }
@@ -220,7 +220,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(LimitClause limitClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(LimitClause limitClause, ILangExpression arg) throws CompilationException {
         limitClause.setLimitExpr(visit(limitClause.getLimitExpr(), limitClause));
         if (limitClause.hasOffset()) {
             limitClause.setOffset(visit(limitClause.getOffset(), limitClause));
@@ -229,13 +229,13 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(LetClause letClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(LetClause letClause, ILangExpression arg) throws CompilationException {
         letClause.setBindingExpr(visit(letClause.getBindingExpr(), letClause));
         return null;
     }
 
     @Override
-    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws CompilationException {
         // visit let list
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
@@ -259,18 +259,18 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(LiteralExpr l, ILangExpression arg) throws AsterixException {
+    public Expression visit(LiteralExpr l, ILangExpression arg) throws CompilationException {
         return l;
     }
 
     @Override
-    public Expression visit(ListConstructor lc, ILangExpression arg) throws AsterixException {
+    public Expression visit(ListConstructor lc, ILangExpression arg) throws CompilationException {
         lc.setExprList(visit(lc.getExprList(), arg));
         return lc;
     }
 
     @Override
-    public Expression visit(RecordConstructor rc, ILangExpression arg) throws AsterixException {
+    public Expression visit(RecordConstructor rc, ILangExpression arg) throws CompilationException {
         for (FieldBinding binding : rc.getFbList()) {
             binding.setLeftExpr(visit(binding.getLeftExpr(), rc));
             binding.setRightExpr(visit(binding.getRightExpr(), rc));
@@ -279,13 +279,13 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(OperatorExpr operatorExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(OperatorExpr operatorExpr, ILangExpression arg) throws CompilationException {
         operatorExpr.setExprList(visit(operatorExpr.getExprList(), arg));
         return operatorExpr;
     }
 
     @Override
-    public Expression visit(IfExpr ifExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(IfExpr ifExpr, ILangExpression arg) throws CompilationException {
         ifExpr.setCondExpr(visit(ifExpr.getCondExpr(), ifExpr));
         ifExpr.setThenExpr(visit(ifExpr.getThenExpr(), ifExpr));
         ifExpr.setElseExpr(visit(ifExpr.getElseExpr(), ifExpr));
@@ -293,7 +293,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(QuantifiedExpression qe, ILangExpression arg) throws AsterixException {
+    public Expression visit(QuantifiedExpression qe, ILangExpression arg) throws CompilationException {
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
             pair.setExpr(visit(pair.getExpr(), qe));
         }
@@ -302,30 +302,30 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         callExpr.setExprList(visit(callExpr.getExprList(), arg));
         return callExpr;
     }
 
     @Override
-    public Expression visit(VariableExpr varExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(VariableExpr varExpr, ILangExpression arg) throws CompilationException {
         return varExpr;
     }
 
     @Override
-    public Expression visit(UnaryExpr u, ILangExpression arg) throws AsterixException {
+    public Expression visit(UnaryExpr u, ILangExpression arg) throws CompilationException {
         u.setExpr(visit(u.getExpr(), u));
         return u;
     }
 
     @Override
-    public Expression visit(FieldAccessor fa, ILangExpression arg) throws AsterixException {
+    public Expression visit(FieldAccessor fa, ILangExpression arg) throws CompilationException {
         fa.setExpr(visit(fa.getExpr(), fa));
         return fa;
     }
 
     @Override
-    public Expression visit(IndexAccessor ia, ILangExpression arg) throws AsterixException {
+    public Expression visit(IndexAccessor ia, ILangExpression arg) throws CompilationException {
         ia.setExpr(visit(ia.getExpr(), ia));
         if (ia.getIndexExpr() != null) {
             ia.setIndexExpr(visit(ia.getIndexExpr(), arg));
@@ -334,13 +334,13 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
+    public Expression visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
         independentSubquery.setExpr(visit(independentSubquery.getExpr(), arg));
         return independentSubquery;
     }
 
     @Override
-    public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
         caseExpr.setConditionExpr(visit(caseExpr.getConditionExpr(), arg));
         caseExpr.setWhenExprs(visit(caseExpr.getWhenExprs(), arg));
         caseExpr.setThenExprs(visit(caseExpr.getThenExprs(), arg));
@@ -349,7 +349,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
-    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws AsterixException {
+    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws CompilationException {
         Expression returnExpr = insertStatement.getReturnExpression();
         if (returnExpr != null) {
             insertStatement.setReturnExpression(visit(returnExpr, arg));
@@ -359,19 +359,19 @@ public class AbstractSqlppSimpleExpressionVisitor
         return null;
     }
 
-    protected Expression visit(Expression expr, ILangExpression arg) throws AsterixException{
+    protected Expression visit(Expression expr, ILangExpression arg) throws CompilationException {
         return postVisit(preVisit(expr).accept(this, arg));
     }
 
-    protected Expression preVisit(Expression expr) throws AsterixException{
+    protected Expression preVisit(Expression expr) throws CompilationException {
         return expr;
     }
 
-    protected Expression postVisit(Expression expr) throws AsterixException {
+    protected Expression postVisit(Expression expr) throws CompilationException {
         return expr;
     }
 
-    private List<Expression> visit(List<Expression> exprs, ILangExpression arg) throws AsterixException {
+    private List<Expression> visit(List<Expression> exprs, ILangExpression arg) throws CompilationException {
         List<Expression> newExprList = new ArrayList<>();
         for (Expression expr : exprs) {
             newExprList.add(visit(expr, arg));

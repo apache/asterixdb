@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.common.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
@@ -55,162 +55,162 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisitor<R, T> {
 
     @Override
-    public R visit(CreateIndexStatement cis, T arg) throws AsterixException {
+    public R visit(CreateIndexStatement cis, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DataverseDecl dv, T arg) throws AsterixException {
+    public R visit(DataverseDecl dv, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DeleteStatement del, T arg) throws AsterixException {
+    public R visit(DeleteStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DropDatasetStatement del, T arg) throws AsterixException {
+    public R visit(DropDatasetStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DatasetDecl dd, T arg) throws AsterixException {
+    public R visit(DatasetDecl dd, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(InsertStatement insert, T arg) throws AsterixException {
+    public R visit(InsertStatement insert, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(LoadStatement stmtLoad, T arg) throws AsterixException {
+    public R visit(LoadStatement stmtLoad, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(NodegroupDecl ngd, T arg) throws AsterixException {
+    public R visit(NodegroupDecl ngd, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(OrderedListTypeDefinition olte, T arg) throws AsterixException {
+    public R visit(OrderedListTypeDefinition olte, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(RecordTypeDefinition tre, T arg) throws AsterixException {
+    public R visit(RecordTypeDefinition tre, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(SetStatement ss, T arg) throws AsterixException {
+    public R visit(SetStatement ss, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(TypeDecl td, T arg) throws AsterixException {
+    public R visit(TypeDecl td, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(TypeReferenceExpression tre, T arg) throws AsterixException {
+    public R visit(TypeReferenceExpression tre, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(UnorderedListTypeDefinition ulte, T arg) throws AsterixException {
+    public R visit(UnorderedListTypeDefinition ulte, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(UpdateClause del, T arg) throws AsterixException {
+    public R visit(UpdateClause del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(UpdateStatement update, T arg) throws AsterixException {
+    public R visit(UpdateStatement update, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(WriteStatement ws, T arg) throws AsterixException {
+    public R visit(WriteStatement ws, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CreateDataverseStatement del, T arg) throws AsterixException {
+    public R visit(CreateDataverseStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(IndexDropStatement del, T arg) throws AsterixException {
+    public R visit(IndexDropStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(NodeGroupDropStatement del, T arg) throws AsterixException {
+    public R visit(NodeGroupDropStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DataverseDropStatement del, T arg) throws AsterixException {
+    public R visit(DataverseDropStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(TypeDropStatement del, T arg) throws AsterixException {
+    public R visit(TypeDropStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(DisconnectFeedStatement del, T arg) throws AsterixException {
+    public R visit(DisconnectFeedStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CreateFunctionStatement cfs, T arg) throws AsterixException {
+    public R visit(CreateFunctionStatement cfs, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(FunctionDropStatement del, T arg) throws AsterixException {
+    public R visit(FunctionDropStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CreatePrimaryFeedStatement del, T arg) throws AsterixException {
+    public R visit(CreatePrimaryFeedStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CreateSecondaryFeedStatement del, T arg) throws AsterixException {
+    public R visit(CreateSecondaryFeedStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(ConnectFeedStatement del, T arg) throws AsterixException {
+    public R visit(ConnectFeedStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(FeedDropStatement del, T arg) throws AsterixException {
+    public R visit(FeedDropStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CompactStatement del, T arg) throws AsterixException {
+    public R visit(CompactStatement del, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CreateFeedPolicyStatement cfps, T arg) throws AsterixException {
+    public R visit(CreateFeedPolicyStatement cfps, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(FeedPolicyDropStatement dfs, T arg) throws AsterixException {
+    public R visit(FeedPolicyDropStatement dfs, T arg) throws CompilationException {
         return null;
     }
 }

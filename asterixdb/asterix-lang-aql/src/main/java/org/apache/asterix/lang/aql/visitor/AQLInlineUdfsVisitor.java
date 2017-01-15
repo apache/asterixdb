@@ -21,7 +21,7 @@ package org.apache.asterix.lang.aql.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
@@ -47,7 +47,7 @@ public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(FLWOGRExpression flwor, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(FLWOGRExpression flwor, List<FunctionDecl> arg) throws CompilationException {
         boolean changed = false;
         for (Clause c : flwor.getClauseList()) {
             if (c.accept(this, arg)) {
@@ -60,21 +60,21 @@ public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(ForClause fc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(ForClause fc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(fc.getInExpr(), arg);
         fc.setInExpr(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(UnionExpr u, List<FunctionDecl> fds) throws AsterixException {
+    public Boolean visit(UnionExpr u, List<FunctionDecl> fds) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(u.getExprs(), fds);
         u.setExprs(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(DistinctClause dc, List<FunctionDecl> arg) throws AsterixException {
+    public Boolean visit(DistinctClause dc, List<FunctionDecl> arg) throws CompilationException {
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(dc.getDistinctByExpr(), arg);
         dc.setDistinctByExpr(p.second);
         return p.first;

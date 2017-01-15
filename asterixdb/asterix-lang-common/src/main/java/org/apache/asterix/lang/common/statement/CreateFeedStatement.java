@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -55,7 +55,7 @@ public abstract class CreateFeedStatement implements Statement {
     }
 
     @Override
-    public abstract <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException;
+    public abstract <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException;
 
     @Override
     public byte getCategory() {

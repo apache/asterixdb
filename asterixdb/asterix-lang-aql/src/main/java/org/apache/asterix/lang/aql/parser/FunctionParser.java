@@ -22,7 +22,7 @@ package org.apache.asterix.lang.aql.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
@@ -39,7 +39,7 @@ public class FunctionParser {
         this.parserFactory = parserFactory;
     }
 
-    public FunctionDecl getFunctionDecl(Function function) throws AsterixException {
+    public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
         String functionBody = function.getFunctionBody();
         List<String> params = function.getParams();
         List<VarIdentifier> varIdentifiers = new ArrayList<VarIdentifier>();

@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
@@ -138,7 +138,7 @@ public class AQLPlusParser extends ScopeChecker {
        return s.substring(1).trim();
     }
 
-    public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, AsterixException {
+    public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
             File file = new File(args[0]);
             Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
             AQLPlusParser parser = new AQLPlusParser(fis);
@@ -703,7 +703,7 @@ Expression MultExpr()throws ParseException:
         Token t = getToken(0);
         try{
           op.addOperator(t.toString());
-        } catch (AsterixException e){
+        } catch (CompilationException e){
           throw new ParseException(e.getMessage());
         }
     }
@@ -750,7 +750,7 @@ Expression UnaryExpr() throws ParseException:
           uexpr = new UnaryExpr();
           try{
             uexpr.setExprType(token.image);
-          } catch (AsterixException e){
+          } catch (CompilationException e){
             throw new ParseException(e.getMessage());
           }
     }

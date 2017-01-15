@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -58,8 +58,8 @@ import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -80,7 +80,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(FromClause fromClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(FromClause fromClause, ILangExpression arg) throws CompilationException {
         Scope scopeForFromClause = scopeChecker.extendCurrentScope();
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             fromTerm.accept(this, fromClause);
@@ -93,7 +93,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(FromTerm fromTerm, ILangExpression arg) throws AsterixException {
+    public Expression visit(FromTerm fromTerm, ILangExpression arg) throws CompilationException {
         scopeChecker.createNewScope();
         // Visit the left expression of a from term.
         fromTerm.setLeftExpression(visit(fromTerm.getLeftExpression(), fromTerm));
@@ -115,7 +115,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(JoinClause joinClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(JoinClause joinClause, ILangExpression arg) throws CompilationException {
         Scope leftScope = scopeChecker.removeCurrentScope();
         scopeChecker.createNewScope();
         // NOTE: the two join branches cannot be correlated, instead of checking
@@ -143,7 +143,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(NestClause nestClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(NestClause nestClause, ILangExpression arg) throws CompilationException {
         // NOTE: the two branches of a NEST cannot be correlated, instead of
         // checking the correlation here, we defer the check to the query
         // optimizer.
@@ -166,7 +166,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(UnnestClause unnestClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(UnnestClause unnestClause, ILangExpression arg) throws CompilationException {
         unnestClause.setRightExpression(visit(unnestClause.getRightExpression(), unnestClause));
 
         // register the data item variable
@@ -182,7 +182,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectSetOperation selectSetOperation, ILangExpression arg) throws CompilationException {
         Scope scopeBeforeCurrentBranch = scopeChecker.getCurrentScope();
         scopeChecker.createNewScope();
         selectSetOperation.getLeftInput().accept(this, arg);
@@ -204,7 +204,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(Query q, ILangExpression arg) throws AsterixException {
+    public Expression visit(Query q, ILangExpression arg) throws CompilationException {
         q.setBody(visit(q.getBody(), q));
         q.setVarCounter(scopeChecker.getVarCounter());
         context.setVarCounter(scopeChecker.getVarCounter());
@@ -212,7 +212,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(FunctionDecl fd, ILangExpression arg) throws AsterixException {
+    public Expression visit(FunctionDecl fd, ILangExpression arg) throws CompilationException {
         scopeChecker.createNewScope();
         fd.setFuncBody(visit(fd.getFuncBody(), fd));
         scopeChecker.removeCurrentScope();
@@ -220,7 +220,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(GroupbyClause gc, ILangExpression arg) throws AsterixException {
+    public Expression visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
         // After a GROUP BY, variables defined before the current SELECT BLOCK (e.g., in a WITH clause
         // or an outer scope query) should still be visible.
         Scope newScope = new Scope(scopeChecker, scopeChecker.getCurrentScope().getParentScope());
@@ -266,7 +266,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(LimitClause limitClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(LimitClause limitClause, ILangExpression arg) throws CompilationException {
         scopeChecker.pushForbiddenScope(scopeChecker.getCurrentScope());
         limitClause.setLimitExpr(visit(limitClause.getLimitExpr(), limitClause));
         if(limitClause.hasOffset()) {
@@ -277,7 +277,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(LetClause letClause, ILangExpression arg) throws AsterixException {
+    public Expression visit(LetClause letClause, ILangExpression arg) throws CompilationException {
         scopeChecker.extendCurrentScope();
         letClause.setBindingExpr(visit(letClause.getBindingExpr(), letClause));
         addNewVarSymbolToScope(scopeChecker.getCurrentScope(), letClause.getVarExpr().getVar());
@@ -285,7 +285,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws AsterixException {
+    public Expression visit(SelectExpression selectExpression, ILangExpression arg) throws CompilationException {
         Scope scopeBeforeSelectExpression = scopeChecker.getCurrentScope();
         scopeChecker.createNewScope();
 
@@ -320,7 +320,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(IndependentSubquery independentSubquery, ILangExpression arg) throws AsterixException {
+    public Expression visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
         // Masks parent scopes so as that the subquery is independent of the environment.
         // In this way, free variables defined in the subquery will not be resolved using
         // variables defined in the parent scope.
@@ -332,7 +332,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(QuantifiedExpression qe, ILangExpression arg) throws AsterixException {
+    public Expression visit(QuantifiedExpression qe, ILangExpression arg) throws CompilationException {
         scopeChecker.createNewScope();
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
             pair.setExpr(visit(pair.getExpr(), qe));
@@ -344,10 +344,10 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(VariableExpr varExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(VariableExpr varExpr, ILangExpression arg) throws CompilationException {
         String varName = varExpr.getVar().getValue();
         if (scopeChecker.isInForbiddenScopes(varName)) {
-            throw new AsterixException(
+            throw new CompilationException(
                     "Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
         }
         Identifier ident = scopeChecker.lookupSymbol(varName);
@@ -361,7 +361,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
-    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws AsterixException {
+    public Expression visit(InsertStatement insertStatement, ILangExpression arg) throws CompilationException {
         scopeChecker.createNewScope();
 
         // Visits the body query.
@@ -383,7 +383,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
     // Rewrites for an undefined variable reference, which potentially could be a syntatic sugar.
     protected Expression wrapWithResolveFunction(VariableExpr expr, Set<VariableExpr> liveVars)
-            throws AsterixException {
+            throws CompilationException {
         List<Expression> argList = new ArrayList<>();
         //Ignore the parser-generated prefix "$" for a dataset.
         String varName = SqlppVariableUtil.toUserDefinedVariableName(expr.getVar().getValue()).getValue();
@@ -393,20 +393,21 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     // Adds a new encountered alias identifier into a scope
-    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var) throws AsterixException {
+    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var) throws CompilationException {
         if (scope.findLocalSymbol(var.getValue()) != null) {
-            throw new AsterixException("Duplicate alias definitions: "
+            throw new CompilationException("Duplicate alias definitions: "
                     + SqlppVariableUtil.toUserDefinedName(var.getValue()));
         }
         scope.addNewVarSymbolToScope(var);
     }
 
     // Merges <code>scopeToBeMerged</code> into <code>hostScope</code>.
-    private void mergeScopes(Scope hostScope, Scope scopeToBeMerged) throws AsterixException {
+    private void mergeScopes(Scope hostScope, Scope scopeToBeMerged) throws CompilationException {
         Set<String> symbolsToBeMerged = scopeToBeMerged.getLocalSymbols();
         for (String symbolToBeMerged : symbolsToBeMerged) {
             if (hostScope.findLocalSymbol(symbolToBeMerged) != null) {
-                throw new AsterixException("Duplicate alias definitions: "
+                throw new CompilationException(
+                        "Duplicate alias definitions: "
                         + SqlppVariableUtil.toUserDefinedName(symbolToBeMerged));
             }
         }

@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -58,7 +58,7 @@ public class FunctionMapUtil {
      * @return true if the function signature is a SQL-92 core aggregate,
      *         false otherwise.
      */
-    public static boolean isSql92AggregateFunction(FunctionSignature signature) throws AsterixException {
+    public static boolean isSql92AggregateFunction(FunctionSignature signature) throws CompilationException {
         IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
                 signature.getName().toLowerCase(), signature.getArity()));
         if (finfo == null) {
@@ -98,9 +98,9 @@ public class FunctionMapUtil {
      * @param fs,
      *            the SQL-92 aggregate function signature.
      * @return the SQL++ aggregate function signature.
-     * @throws AsterixException
+     * @throws CompilationException
      */
-    public static FunctionSignature sql92ToCoreAggregateFunction(FunctionSignature fs) throws AsterixException {
+    public static FunctionSignature sql92ToCoreAggregateFunction(FunctionSignature fs) throws CompilationException {
         if (!isSql92AggregateFunction(fs)) {
             return fs;
         }
@@ -116,11 +116,11 @@ public class FunctionMapUtil {
      * @return the system internal function.
      */
     public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, boolean checkSql92Aggregate)
-            throws AsterixException {
+            throws CompilationException {
         if (isCoreAggregateFunction(fs)) {
             return internalizeCoreAggregateFunctionName(fs);
         } else if (checkSql92Aggregate && isSql92AggregateFunction(fs)) {
-            throw new AsterixException(fs.getName()
+            throw new CompilationException(fs.getName()
                     + " is a SQL-92 aggregate function. The SQL++ core aggregate function " + CORE_SQL_AGGREGATE_PREFIX
                     + fs.getName().toLowerCase() + " could potentially express the intent.");
         }
@@ -153,10 +153,10 @@ public class FunctionMapUtil {
      * @param fs,
      *            a user-facing SQL++ core aggregate function signature.
      * @return the AsterixDB internal function signature for the aggregate function.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     private static FunctionSignature internalizeCoreAggregateFunctionName(FunctionSignature fs)
-            throws AsterixException {
+            throws CompilationException {
         String name = fs.getName().toLowerCase();
         boolean coreAgg = name.startsWith(CORE_AGGREGATE_PREFIX);
         String lowerCaseName = coreAgg ? name.substring(CORE_AGGREGATE_PREFIX.length())

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -50,17 +50,17 @@ public class FunctionUtil {
 
     @FunctionalInterface
     public interface IFunctionCollector {
-        Set<FunctionSignature> getFunctionCalls(Expression expression) throws AsterixException;
+        Set<FunctionSignature> getFunctionCalls(Expression expression) throws CompilationException;
     }
 
     @FunctionalInterface
     public interface IFunctionParser {
-        FunctionDecl getFunctionDecl(Function function) throws AsterixException;
+        FunctionDecl getFunctionDecl(Function function) throws CompilationException;
     }
 
     @FunctionalInterface
     public interface IFunctionNormalizer {
-        FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) throws AsterixException;
+        FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) throws CompilationException;
     }
 
     /**
@@ -78,12 +78,12 @@ public class FunctionUtil {
      *            for parsing stored functions in the string represetnation.
      * @param functionNormalizer,
      *            for normalizing function names.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     public static List<FunctionDecl> retrieveUsedStoredFunctions(MetadataProvider metadataProvider,
             Expression expression, List<FunctionSignature> declaredFunctions, List<FunctionDecl> inputFunctionDecls,
             IFunctionCollector functionCollector, IFunctionParser functionParser,
-            IFunctionNormalizer functionNormalizer) throws AsterixException {
+            IFunctionNormalizer functionNormalizer) throws CompilationException {
         List<FunctionDecl> functionDecls = inputFunctionDecls == null ? new ArrayList<>()
                 : new ArrayList<>(inputFunctionDecls);
         if (expression == null) {
@@ -103,7 +103,7 @@ public class FunctionUtil {
             // Checks the existence of the referred dataverse.
             if (metadataProvider.findDataverse(namespace) == null
                     && !namespace.equals(FunctionConstants.ASTERIX_NS)) {
-                throw new AsterixException("In function call \"" + namespace + "." + signature.getName()
+                throw new CompilationException("In function call \"" + namespace + "." + signature.getName()
                         + "(...)\", the dataverse \"" + namespace + "\" cannot be found!");
             }
             Function function = lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
@@ -120,14 +120,14 @@ public class FunctionUtil {
                 } else {
                     messageBuilder.append("function " + signature + " is not defined");
                 }
-                throw new AsterixException(messageBuilder.toString());
+                throw new CompilationException(messageBuilder.toString());
             }
 
             if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
-                        throw new AsterixException(
+                        throw new CompilationException(
                                 "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature()
                                         + " <==> " + functionDecl.getSignature());
                     }
@@ -141,7 +141,7 @@ public class FunctionUtil {
     }
 
     private static Function lookupUserDefinedFunctionDecl(MetadataTransactionContext mdTxnCtx,
-            FunctionSignature signature) throws AsterixException {
+            FunctionSignature signature) throws CompilationException {
         if (signature.getNamespace() == null) {
             return null;
         }

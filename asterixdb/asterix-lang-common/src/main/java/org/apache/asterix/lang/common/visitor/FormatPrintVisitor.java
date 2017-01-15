@@ -30,7 +30,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
@@ -145,7 +145,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(Query q, Integer step) throws AsterixException {
+    public Void visit(Query q, Integer step) throws CompilationException {
         if (q.getBody() != null) {
             q.getBody().accept(this, step);
         }
@@ -185,7 +185,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(ListConstructor lc, Integer step) throws AsterixException {
+    public Void visit(ListConstructor lc, Integer step) throws CompilationException {
         boolean ordered = false;
         if (lc.getType().equals(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR)) {
             ordered = true;
@@ -197,7 +197,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(RecordConstructor rc, Integer step) throws AsterixException {
+    public Void visit(RecordConstructor rc, Integer step) throws CompilationException {
         out.print("{");
         // print all field bindings
         int size = rc.getFbList().size();
@@ -215,7 +215,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CallExpr callExpr, Integer step) throws AsterixException {
+    public Void visit(CallExpr callExpr, Integer step) throws CompilationException {
         printHints(callExpr.getHints(), step);
         out.print(generateFullName(callExpr.getFunctionSignature().getNamespace(),
                 callExpr.getFunctionSignature().getName()) + "(");
@@ -225,7 +225,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(OperatorExpr operatorExpr, Integer step) throws AsterixException {
+    public Void visit(OperatorExpr operatorExpr, Integer step) throws CompilationException {
         List<Expression> exprList = operatorExpr.getExprList();
         List<OperatorType> opList = operatorExpr.getOpList();
         if (operatorExpr.isCurrentop()) {
@@ -247,7 +247,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(IfExpr ifexpr, Integer step) throws AsterixException {
+    public Void visit(IfExpr ifexpr, Integer step) throws CompilationException {
         out.print("if (");
         ifexpr.getCondExpr().accept(this, step + 2);
         out.println(")");
@@ -260,7 +260,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(QuantifiedExpression qe, Integer step) throws AsterixException {
+    public Void visit(QuantifiedExpression qe, Integer step) throws CompilationException {
         out.print(qe.getQuantifier().toString().toLowerCase() + " ");
         // quantifiedList accept visitor
         int index = 0;
@@ -279,7 +279,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(LetClause lc, Integer step) throws AsterixException {
+    public Void visit(LetClause lc, Integer step) throws CompilationException {
         out.print(skip(step) + "let ");
         lc.getVarExpr().accept(this, 0);
         out.print(assignSymbol);
@@ -289,7 +289,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(WhereClause wc, Integer step) throws AsterixException {
+    public Void visit(WhereClause wc, Integer step) throws CompilationException {
         out.print(skip(step) + "where ");
         wc.getWhereExpr().accept(this, step + 1);
         out.println();
@@ -297,7 +297,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(OrderbyClause oc, Integer step) throws AsterixException {
+    public Void visit(OrderbyClause oc, Integer step) throws CompilationException {
         out.print(skip(step) + "order by ");
         List<OrderModifier> mlist = oc.getModifierList();
         List<Expression> list = oc.getOrderbyList();
@@ -318,7 +318,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(GroupbyClause gc, Integer step) throws AsterixException {
+    public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
         if (gc.hasHashGroupByHint()) {
             out.println(skip(step) + "/* +hash */");
         }
@@ -351,7 +351,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(LimitClause lc, Integer step) throws AsterixException {
+    public Void visit(LimitClause lc, Integer step) throws CompilationException {
         out.print(skip(step) + "limit ");
         lc.getLimitExpr().accept(this, step + 1);
         if (lc.getOffset() != null) {
@@ -363,7 +363,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(FunctionDecl fd, Integer step) throws AsterixException {
+    public Void visit(FunctionDecl fd, Integer step) throws CompilationException {
         out.print(skip(step) + "declare function " + generateFullName(null, fd.getSignature().getName()) + "(");
         List<Identifier> parameters = new ArrayList<Identifier>();
         parameters.addAll(fd.getParamList());
@@ -377,21 +377,21 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(UnaryExpr u, Integer step) throws AsterixException {
+    public Void visit(UnaryExpr u, Integer step) throws CompilationException {
         out.print(u.getExprType() == UnaryExprType.NEGATIVE ? "-" : "");
         u.getExpr().accept(this, 0);
         return null;
     }
 
     @Override
-    public Void visit(FieldAccessor fa, Integer step) throws AsterixException {
+    public Void visit(FieldAccessor fa, Integer step) throws CompilationException {
         fa.getExpr().accept(this, step + 1);
         out.print("." + normalize(fa.getIdent().getValue()));
         return null;
     }
 
     @Override
-    public Void visit(IndexAccessor fa, Integer step) throws AsterixException {
+    public Void visit(IndexAccessor fa, Integer step) throws CompilationException {
         fa.getExpr().accept(this, step + 1);
         out.print("[");
         if (fa.isAny()) {
@@ -404,7 +404,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(TypeDecl t, Integer step) throws AsterixException {
+    public Void visit(TypeDecl t, Integer step) throws CompilationException {
         out.println(skip(step) + "create type " + generateFullName(t.getDataverseName(), t.getIdent())
                 + generateIfNotExists(t.getIfNotExists()) + " as");
         t.getTypeDef().accept(this, step + 1);
@@ -413,7 +413,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(TypeReferenceExpression t, Integer arg) throws AsterixException {
+    public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
         if (t.getIdent().first != null && t.getIdent().first.getValue() != null) {
             out.print(normalize(t.getIdent().first.getValue()));
             out.print('.');
@@ -423,7 +423,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(RecordTypeDefinition r, Integer step) throws AsterixException {
+    public Void visit(RecordTypeDefinition r, Integer step) throws CompilationException {
         if (r.getRecordKind() == RecordKind.CLOSED) {
             out.print(" closed ");
         }
@@ -454,7 +454,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(OrderedListTypeDefinition x, Integer step) throws AsterixException {
+    public Void visit(OrderedListTypeDefinition x, Integer step) throws CompilationException {
         out.print("[");
         x.getItemTypeExpression().accept(this, step + 2);
         out.print("]");
@@ -462,7 +462,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(UnorderedListTypeDefinition x, Integer step) throws AsterixException {
+    public Void visit(UnorderedListTypeDefinition x, Integer step) throws CompilationException {
         out.print("{{");
         x.getItemTypeExpression().accept(this, step + 2);
         out.print("}}");
@@ -470,7 +470,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(DatasetDecl dd, Integer step) throws AsterixException {
+    public Void visit(DatasetDecl dd, Integer step) throws CompilationException {
         if (dd.getDatasetType() == DatasetType.INTERNAL) {
             String temp = dd.getDatasetDetailsDecl().isTemp() ? "temporary" : "";
             out.print(skip(step) + "create " + temp + datasetSymbol + generateFullName(dd.getDataverse(), dd.getName())
@@ -518,13 +518,13 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(DataverseDecl dv, Integer step) throws AsterixException {
+    public Void visit(DataverseDecl dv, Integer step) throws CompilationException {
         out.println(skip(step) + "use " + dataverseSymbol + normalize(dv.getDataverseName().getValue()) + ";\n\n");
         return null;
     }
 
     @Override
-    public Void visit(WriteStatement ws, Integer step) throws AsterixException {
+    public Void visit(WriteStatement ws, Integer step) throws CompilationException {
         out.print(skip(step) + "write output to " + ws.getNcName() + ":" + revertStringToQuoted(ws.getFileName()));
         if (ws.getWriterClassName() != null) {
             out.print(" using " + ws.getWriterClassName());
@@ -534,21 +534,21 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(SetStatement ss, Integer step) throws AsterixException {
+    public Void visit(SetStatement ss, Integer step) throws CompilationException {
         out.println(skip(step) + "set " + revertStringToQuoted(ss.getPropName()) + " "
                 + revertStringToQuoted(ss.getPropValue()) + ";\n");
         return null;
     }
 
     @Override
-    public Void visit(DisconnectFeedStatement ss, Integer step) throws AsterixException {
+    public Void visit(DisconnectFeedStatement ss, Integer step) throws CompilationException {
         out.println(skip(step) + "disconnect " + FEED + generateFullName(ss.getDataverseName(), ss.getFeedName())
                 + " from " + datasetSymbol + generateFullName(ss.getDataverseName(), ss.getDatasetName()) + ";");
         return null;
     }
 
     @Override
-    public Void visit(NodegroupDecl ngd, Integer step) throws AsterixException {
+    public Void visit(NodegroupDecl ngd, Integer step) throws CompilationException {
         out.println(
                 CREATE + " nodegroup " + ngd.getNodegroupName() + generateIfNotExists(ngd.getIfNotExists()) + " on ");
         out.print(skip(step + 2));
@@ -559,7 +559,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(LoadStatement stmtLoad, Integer step) throws AsterixException {
+    public Void visit(LoadStatement stmtLoad, Integer step) throws CompilationException {
         out.print(skip(step) + "load " + datasetSymbol
                 + generateFullName(stmtLoad.getDataverseName(), stmtLoad.getDatasetName()) + " using "
                 + revertStringToQuoted(stmtLoad.getAdapter()) + " ");
@@ -570,7 +570,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(DropDatasetStatement del, Integer step) throws AsterixException {
+    public Void visit(DropDatasetStatement del, Integer step) throws CompilationException {
         out.println(
                 skip(step) + "drop " + datasetSymbol + generateFullName(del.getDataverseName(), del.getDatasetName())
                         + generateIfExists(del.getIfExists()) + SEMICOLON);
@@ -578,7 +578,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(InsertStatement insert, Integer step) throws AsterixException {
+    public Void visit(InsertStatement insert, Integer step) throws CompilationException {
         out.print(skip(step) + "insert into " + datasetSymbol
                 + generateFullName(insert.getDataverseName(), insert.getDatasetName()));
         out.print("(");
@@ -589,7 +589,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(DeleteStatement del, Integer step) throws AsterixException {
+    public Void visit(DeleteStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "delete ");
         del.getVariableExpr().accept(this, step + 2);
         out.println(
@@ -603,7 +603,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(UpdateStatement update, Integer step) throws AsterixException {
+    public Void visit(UpdateStatement update, Integer step) throws CompilationException {
         out.println(skip(step) + "update ");
         update.getVariableExpr().accept(this, step + 2);
         out.print(" in ");
@@ -623,7 +623,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(UpdateClause del, Integer step) throws AsterixException {
+    public Void visit(UpdateClause del, Integer step) throws CompilationException {
         if (del.hasSet()) {
             out.println(skip(step) + "set ");
             del.getTarget().accept(this, step + 2);
@@ -654,7 +654,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CreateIndexStatement cis, Integer step) throws AsterixException {
+    public Void visit(CreateIndexStatement cis, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + " index ");
         out.print(normalize(cis.getIndexName().getValue()) + " ");
         out.print(generateIfNotExists(cis.getIfNotExists()));
@@ -691,7 +691,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CreateDataverseStatement del, Integer step) throws AsterixException {
+    public Void visit(CreateDataverseStatement del, Integer step) throws CompilationException {
         out.print(CREATE + dataverseSymbol);
         out.print(normalize(del.getDataverseName().getValue()));
         out.print(generateIfNotExists(del.getIfNotExists()));
@@ -706,7 +706,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(IndexDropStatement del, Integer step) throws AsterixException {
+    public Void visit(IndexDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop index ");
         out.print(generateFullName(del.getDataverseName(), del.getDatasetName()));
         out.print("." + del.getIndexName());
@@ -715,7 +715,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(NodeGroupDropStatement del, Integer step) throws AsterixException {
+    public Void visit(NodeGroupDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop nodegroup ");
         out.print(del.getNodeGroupName());
         out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
@@ -723,7 +723,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(DataverseDropStatement del, Integer step) throws AsterixException {
+    public Void visit(DataverseDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop " + dataverseSymbol);
         out.print(normalize(del.getDataverseName().getValue()));
         out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
@@ -731,7 +731,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(TypeDropStatement del, Integer step) throws AsterixException {
+    public Void visit(TypeDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop type ");
         out.print(generateFullName(del.getDataverseName(), del.getTypeName()));
         out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
@@ -739,7 +739,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(ConnectFeedStatement connectFeedStmt, Integer step) throws AsterixException {
+    public Void visit(ConnectFeedStatement connectFeedStmt, Integer step) throws CompilationException {
         out.print(skip(step) + "connect " + FEED);
         out.print(generateFullName(connectFeedStmt.getDataverseName(), new Identifier(connectFeedStmt.getFeedName())));
         out.print(" to " + datasetSymbol
@@ -752,7 +752,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CreatePrimaryFeedStatement cpfs, Integer step) throws AsterixException {
+    public Void visit(CreatePrimaryFeedStatement cpfs, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + " primary feed ");
         out.print(generateFullName(cpfs.getDataverseName(), cpfs.getFeedName()));
         out.print(generateIfNotExists(cpfs.getIfNotExists()));
@@ -767,7 +767,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CreateSecondaryFeedStatement csfs, Integer step) throws AsterixException {
+    public Void visit(CreateSecondaryFeedStatement csfs, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + " secondary feed ");
         out.print(generateFullName(csfs.getDataverseName(), csfs.getFeedName()));
         out.print(generateIfNotExists(csfs.getIfNotExists()));
@@ -781,7 +781,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(FeedDropStatement del, Integer step) throws AsterixException {
+    public Void visit(FeedDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop " + FEED);
         out.print(generateFullName(del.getDataverseName(), del.getFeedName()));
         out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
@@ -789,12 +789,12 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(FeedPolicyDropStatement dfs, Integer step) throws AsterixException {
+    public Void visit(FeedPolicyDropStatement dfs, Integer step) throws CompilationException {
         return null;
     }
 
     @Override
-    public Void visit(CreateFeedPolicyStatement cfps, Integer step) throws AsterixException {
+    public Void visit(CreateFeedPolicyStatement cfps, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + "ingestion policy ");
         out.print(cfps.getPolicyName());
         out.print(generateIfNotExists(cfps.getIfNotExists()));
@@ -820,7 +820,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CreateFunctionStatement cfs, Integer step) throws AsterixException {
+    public Void visit(CreateFunctionStatement cfs, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + " function ");
         out.print(generateIfNotExists(cfs.getIfNotExists()));
         out.print(this.generateFullName(cfs.getSignature().getNamespace(), cfs.getSignature().getName()));
@@ -834,7 +834,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(FunctionDropStatement del, Integer step) throws AsterixException {
+    public Void visit(FunctionDropStatement del, Integer step) throws CompilationException {
         out.print(skip(step) + "drop function ");
         FunctionSignature funcSignature = del.getFunctionSignature();
         out.print(funcSignature.toString());
@@ -843,7 +843,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     @Override
-    public Void visit(CompactStatement del, Integer step) throws AsterixException {
+    public Void visit(CompactStatement del, Integer step) throws CompilationException {
         return null;
     }
 
@@ -883,7 +883,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     protected void printDelimitedGbyExpressions(List<GbyVariableExpressionPair> gbyList, int step)
-            throws AsterixException {
+            throws CompilationException {
         int gbySize = gbyList.size();
         int gbyIndex = 0;
         for (GbyVariableExpressionPair pair : gbyList) {
@@ -899,7 +899,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     protected void printDelimitedExpressions(List<? extends Expression> exprs, String delimiter, int step)
-            throws AsterixException {
+            throws CompilationException {
         int index = 0;
         int size = exprs.size();
         for (Expression expr : exprs) {

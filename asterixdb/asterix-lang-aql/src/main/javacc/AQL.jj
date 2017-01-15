@@ -43,7 +43,7 @@ import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
@@ -198,7 +198,7 @@ class AQLParser extends ScopeChecker implements IParser {
          try {
            throw new ParseException("Need a binding variable for the enclosed expression: " +
                                        AQLFormatPrintUtil.toString(bodyExpression));
-         } catch (AsterixException e){
+         } catch (CompilationException e){
            throw new ParseException(e.getLocalizedMessage());
          }
        }
@@ -252,7 +252,7 @@ class AQLParser extends ScopeChecker implements IParser {
         super.setInput(s);
     }
 
-    public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, AsterixException {
+    public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
         File file = new File(args[0]);
         Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
         AQLParser parser = new AQLParser(fis);
@@ -260,15 +260,15 @@ class AQLParser extends ScopeChecker implements IParser {
         //st.accept(new AQLPrintVisitor(), 0);
     }
 
-    public List<Statement> parse() throws AsterixException {
+    public List<Statement> parse() throws CompilationException {
         try {
             return Statement();
         } catch (Error e) {
             // this is here as the JavaCharStream that's below the lexer somtimes throws Errors that are not handled
             // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
-            throw new AsterixException(new ParseException(e.getMessage()));
+            throw new CompilationException(new ParseException(e.getMessage()));
         } catch (ParseException e){
-            throw new AsterixException(e.getMessage());
+            throw new CompilationException(e.getMessage());
         }
     }
 }
@@ -1652,7 +1652,7 @@ Expression OperatorExpr()throws ParseException:
         }
         try{
           op.addOperator(token.image);
-        } catch (AsterixException e){
+        } catch (CompilationException e){
           throw new ParseException(e.getMessage());
         }
     }
@@ -1687,7 +1687,7 @@ Expression AndExpr()throws ParseException:
         }
         try{
           op.addOperator(token.image);
-        } catch (AsterixException e){
+        } catch (CompilationException e){
           throw new ParseException(e.getMessage());
         }
     }
@@ -1743,7 +1743,7 @@ Expression RelExpr()throws ParseException:
           }
          try{
            op.addOperator(token.image);
-         } catch (AsterixException e){
+         } catch (CompilationException e){
            throw new ParseException(e.getMessage());
          }
       }
@@ -1786,7 +1786,7 @@ Expression AddExpr()throws ParseException:
         }
         try{
           ((OperatorExpr)op).addOperator(token.image);
-        } catch (AsterixException e){
+        } catch (CompilationException e){
           throw new ParseException(e.getMessage());
         }
     }
@@ -1819,7 +1819,7 @@ Expression MultExpr()throws ParseException:
         }
         try{
           op.addOperator(token.image);
-        } catch (AsterixException e){
+        } catch (CompilationException e){
           throw new ParseException(e.getMessage());
         }
     }
@@ -1851,7 +1851,7 @@ Expression ExponentExpr()throws ParseException:
         }
         try{
           op.addOperator(token.image);
-        } catch (AsterixException e){
+        } catch (CompilationException e){
           throw new ParseException(e.getMessage());
         }
     }
@@ -1898,7 +1898,7 @@ Expression UnaryExpr() throws ParseException:
           uexpr = new UnaryExpr();
           try{
             uexpr.setExprType(token.image);
-          } catch (AsterixException e){
+          } catch (CompilationException e){
             throw new ParseException(e.getMessage());
           }
     }
@@ -2417,7 +2417,7 @@ Clause OrderbyClause()throws ParseException :
           if (hint.startsWith(RANGE_HINT)) {
             try{
               oc.setRangeMap(RangeMapBuilder.parseHint(hint.substring(RANGE_HINT.length())));
-            } catch (AsterixException e) {
+            } catch (CompilationException e) {
               throw new ParseException(e.getMessage());
             }
           }

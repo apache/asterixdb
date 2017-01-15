@@ -20,7 +20,7 @@ package org.apache.asterix.lang.sqlpp.rewrites;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -31,7 +31,7 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
             MetadataProvider metadataProvider,
-            LangRewritingContext context) throws AsterixException {
+            LangRewritingContext context) throws CompilationException {
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context);
 

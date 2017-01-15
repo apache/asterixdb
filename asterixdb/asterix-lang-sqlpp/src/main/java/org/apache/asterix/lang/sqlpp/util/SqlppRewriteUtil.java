@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -43,19 +43,19 @@ public class SqlppRewriteUtil {
     // Applying sugar rewriting for group-by.
     public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
             Collection<VariableExpr> fieldVars, ILangExpression expr,
-            LangRewritingContext context) throws AsterixException {
+            LangRewritingContext context) throws CompilationException {
         SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, fieldVars);
         return expr.accept(visitor, null);
     }
 
-    public static Set<VariableExpr> getFreeVariable(Expression expr) throws AsterixException {
+    public static Set<VariableExpr> getFreeVariable(Expression expr) throws CompilationException {
         Set<VariableExpr> vars = new HashSet<>();
         FreeVariableVisitor visitor = new FreeVariableVisitor();
         expr.accept(visitor, vars);
         return vars;
     }
 
-    public static ILangExpression deepCopy(ILangExpression expr) throws AsterixException {
+    public static ILangExpression deepCopy(ILangExpression expr) throws CompilationException {
         if (expr == null) {
             return expr;
         }
@@ -64,7 +64,7 @@ public class SqlppRewriteUtil {
     }
 
     // Checks if an ILangExpression contains a subquery.
-    public static boolean constainsSubquery(ILangExpression expr) throws AsterixException {
+    public static boolean constainsSubquery(ILangExpression expr) throws CompilationException {
         if (expr == null) {
             return false;
         }
@@ -83,10 +83,10 @@ public class SqlppRewriteUtil {
      * @return an expression, where sub-expressions of the input expression (including the input expression itself)
      *         are replaced with deep copies with their mapped replacements in the exprMap if there exists such a
      *         replacement expression.
-     * @throws AsterixException
+     * @throws CompilationException
      */
     public static Expression substituteExpression(Expression expression, Map<Expression, Expression> exprMap,
-            LangRewritingContext context) throws AsterixException {
+            LangRewritingContext context) throws CompilationException {
         if (exprMap.isEmpty()) {
             return expression;
         }

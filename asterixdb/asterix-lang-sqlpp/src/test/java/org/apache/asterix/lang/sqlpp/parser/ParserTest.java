@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.sqlpp.parser;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class ParserTest {
         IParser parser = factory.createParser(query);
         try {
             parser.parse();
-        } catch (AsterixException e) {
+        } catch (CompilationException e) {
             if (!e.getMessage().contains("Syntax error: In line 3")) {
                 throw new Exception("Unexpected error", e);
             }

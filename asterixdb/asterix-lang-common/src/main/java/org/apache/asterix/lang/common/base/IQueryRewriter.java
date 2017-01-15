@@ -20,7 +20,7 @@ package org.apache.asterix.lang.common.base;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -40,5 +40,5 @@ public interface IQueryRewriter {
      *            manages ids of variables and guarantees uniqueness of variables.
      */
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
-            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException;
+            MetadataProvider metadataProvider, LangRewritingContext context) throws CompilationException;
 }

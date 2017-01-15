@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
@@ -39,7 +39,7 @@ public class VariableCloneAndSubstitutionUtil {
 
     public static List<GbyVariableExpressionPair> substInVarExprPair(LangRewritingContext context,
             List<GbyVariableExpressionPair> gbyVeList, VariableSubstitutionEnvironment newSubs,
-            CloneAndSubstituteVariablesVisitor visitor) throws AsterixException {
+            CloneAndSubstituteVariablesVisitor visitor) throws CompilationException {
         VariableSubstitutionEnvironment subs = newSubs;
         List<GbyVariableExpressionPair> veList = new LinkedList<>();
         for (GbyVariableExpressionPair vep : gbyVeList) {
@@ -64,7 +64,8 @@ public class VariableCloneAndSubstitutionUtil {
     }
 
     public static List<Expression> visitAndCloneExprList(List<Expression> oldExprList,
-            VariableSubstitutionEnvironment arg, CloneAndSubstituteVariablesVisitor visitor) throws AsterixException {
+            VariableSubstitutionEnvironment arg, CloneAndSubstituteVariablesVisitor visitor)
+            throws CompilationException {
         List<Expression> exprs = new ArrayList<>(oldExprList.size());
         for (Expression e : oldExprList) {
             Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = e.accept(visitor, arg);

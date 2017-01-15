@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.sqlpp.struct;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
@@ -51,7 +51,7 @@ public class SetOperationInput {
         return subquery != null;
     }
 
-    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         if (selectBlock != null) {
             return ((ISqlppVisitor<R, T>) visitor).visit(selectBlock, arg);
         } else {

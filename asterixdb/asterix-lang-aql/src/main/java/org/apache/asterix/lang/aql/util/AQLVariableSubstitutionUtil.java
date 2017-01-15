@@ -20,7 +20,7 @@ package org.apache.asterix.lang.aql.util;
 
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.AQLCloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -31,7 +31,7 @@ import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 public class AQLVariableSubstitutionUtil {
 
     public static ILangExpression substituteVariable(ILangExpression expression,
-            Map<VariableExpr, Expression> varExprMap) throws AsterixException {
+            Map<VariableExpr, Expression> varExprMap) throws CompilationException {
         AQLCloneAndSubstituteVariablesVisitor visitor = new AQLCloneAndSubstituteVariablesVisitor(
                 new LangRewritingContext(0));
         VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);

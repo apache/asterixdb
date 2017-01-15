@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -86,7 +86,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
+            MetadataProvider metadataProvider, LangRewritingContext context) throws CompilationException {
         if (topStatement == null) {
             return;
         }
@@ -147,22 +147,22 @@ class SqlppQueryRewriter implements IQueryRewriter {
         topStatement.setVarCounter(context.getVarCounter());
     }
 
-    protected void rewriteGlobalAggregations() throws AsterixException {
+    protected void rewriteGlobalAggregations() throws CompilationException {
         SqlppGlobalAggregationSugarVisitor globalAggregationVisitor = new SqlppGlobalAggregationSugarVisitor();
         topExpr.accept(globalAggregationVisitor, null);
     }
 
-    protected void rewriteListInputFunctions() throws AsterixException {
+    protected void rewriteListInputFunctions() throws CompilationException {
         SqlppListInputFunctionRewriteVisitor listInputFunctionVisitor = new SqlppListInputFunctionRewriteVisitor();
         topExpr.accept(listInputFunctionVisitor, null);
     }
 
-    protected void rewriteFunctionNames() throws AsterixException {
+    protected void rewriteFunctionNames() throws CompilationException {
         SqlppBuiltinFunctionRewriteVisitor functionNameMapVisitor = new SqlppBuiltinFunctionRewriteVisitor();
         topExpr.accept(functionNameMapVisitor, null);
     }
 
-    protected void inlineWithExpressions() throws AsterixException {
+    protected void inlineWithExpressions() throws CompilationException {
         String inlineWith = metadataProvider.getConfig().get(INLINE_WITH);
         if (inlineWith != null && inlineWith.equalsIgnoreCase(NOT_INLINE_WITH)) {
             return;
@@ -172,49 +172,49 @@ class SqlppQueryRewriter implements IQueryRewriter {
         topExpr.accept(inlineWithExpressionVisitor, null);
     }
 
-    protected void generateColumnNames() throws AsterixException {
+    protected void generateColumnNames() throws CompilationException {
         // Generate column names if they are missing in the user query.
         GenerateColumnNameVisitor generateColumnNameVisitor = new GenerateColumnNameVisitor(context);
         topExpr.accept(generateColumnNameVisitor, null);
     }
 
-    protected void substituteGroupbyKeyExpression() throws AsterixException {
+    protected void substituteGroupbyKeyExpression() throws CompilationException {
         // Substitute group-by key expressions that appear in the select clause.
         SubstituteGroupbyExpressionWithVariableVisitor substituteGbyExprVisitor =
                 new SubstituteGroupbyExpressionWithVariableVisitor(context);
         topExpr.accept(substituteGbyExprVisitor, null);
     }
 
-    protected void rewriteSetOperations() throws AsterixException {
+    protected void rewriteSetOperations() throws CompilationException {
         // Rewrites set operation queries that contain order-by and limit clauses.
         SetOperationVisitor setOperationVisitor = new SetOperationVisitor(context);
         topExpr.accept(setOperationVisitor, null);
     }
 
-    protected void rewriteOperatorExpression() throws AsterixException {
+    protected void rewriteOperatorExpression() throws CompilationException {
         // Rewrites like/not-like/in/not-in operators into function call expressions.
         OperatorExpressionVisitor operatorExpressionVisitor = new OperatorExpressionVisitor(context);
         topExpr.accept(operatorExpressionVisitor, null);
     }
 
-    protected void inlineColumnAlias() throws AsterixException {
+    protected void inlineColumnAlias() throws CompilationException {
         // Inline column aliases.
         InlineColumnAliasVisitor inlineColumnAliasVisitor = new InlineColumnAliasVisitor(context);
         topExpr.accept(inlineColumnAliasVisitor, null);
     }
 
-    protected void variableCheckAndRewrite(boolean overwrite) throws AsterixException {
+    protected void variableCheckAndRewrite(boolean overwrite) throws CompilationException {
         VariableCheckAndRewriteVisitor variableCheckAndRewriteVisitor =
                 new VariableCheckAndRewriteVisitor(context, overwrite, metadataProvider);
         topExpr.accept(variableCheckAndRewriteVisitor, null);
     }
 
-    protected void rewriteGroupBys() throws AsterixException {
+    protected void rewriteGroupBys() throws CompilationException {
         SqlppGroupByVisitor groupByVisitor = new SqlppGroupByVisitor(context);
         topExpr.accept(groupByVisitor, null);
     }
 
-    protected void inlineDeclaredUdfs() throws AsterixException {
+    protected void inlineDeclaredUdfs() throws CompilationException {
         List<FunctionSignature> funIds = new ArrayList<FunctionSignature>();
         for (FunctionDecl fdecl : declaredFunctions) {
             funIds.add(fdecl.getSignature());
@@ -238,7 +238,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         declaredFunctions.removeAll(usedStoredFunctionDecls);
     }
 
-    private Set<FunctionSignature> getFunctionCalls(Expression expression) throws AsterixException {
+    private Set<FunctionSignature> getFunctionCalls(Expression expression) throws CompilationException {
         GatherFunctionCalls gfc = new GatherFunctionCalls();
         expression.accept(gfc, null);
         return gfc.getCalls();
@@ -250,7 +250,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(FromClause fromClause, Void arg) throws AsterixException {
+        public Void visit(FromClause fromClause, Void arg) throws CompilationException {
             for (FromTerm fromTerm : fromClause.getFromTerms()) {
                 fromTerm.accept(this, arg);
             }
@@ -258,7 +258,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(FromTerm fromTerm, Void arg) throws AsterixException {
+        public Void visit(FromTerm fromTerm, Void arg) throws CompilationException {
             fromTerm.getLeftExpression().accept(this, arg);
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
                 correlateClause.accept(this, arg);
@@ -267,21 +267,21 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(JoinClause joinClause, Void arg) throws AsterixException {
+        public Void visit(JoinClause joinClause, Void arg) throws CompilationException {
             joinClause.getRightExpression().accept(this, arg);
             joinClause.getConditionExpression().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(NestClause nestClause, Void arg) throws AsterixException {
+        public Void visit(NestClause nestClause, Void arg) throws CompilationException {
             nestClause.getRightExpression().accept(this, arg);
             nestClause.getConditionExpression().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(Projection projection, Void arg) throws AsterixException {
+        public Void visit(Projection projection, Void arg) throws CompilationException {
             if (!projection.star()) {
                 projection.getExpression().accept(this, arg);
             }
@@ -289,7 +289,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(SelectBlock selectBlock, Void arg) throws AsterixException {
+        public Void visit(SelectBlock selectBlock, Void arg) throws CompilationException {
             if (selectBlock.hasFromClause()) {
                 selectBlock.getFromClause().accept(this, arg);
             }
@@ -317,7 +317,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(SelectClause selectClause, Void arg) throws AsterixException {
+        public Void visit(SelectClause selectClause, Void arg) throws CompilationException {
             if (selectClause.selectElement()) {
                 selectClause.getSelectElement().accept(this, arg);
             } else {
@@ -327,13 +327,13 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(SelectElement selectElement, Void arg) throws AsterixException {
+        public Void visit(SelectElement selectElement, Void arg) throws CompilationException {
             selectElement.getExpression().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(SelectRegular selectRegular, Void arg) throws AsterixException {
+        public Void visit(SelectRegular selectRegular, Void arg) throws CompilationException {
             for (Projection projection : selectRegular.getProjections()) {
                 projection.accept(this, arg);
             }
@@ -341,7 +341,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(SelectSetOperation selectSetOperation, Void arg) throws AsterixException {
+        public Void visit(SelectSetOperation selectSetOperation, Void arg) throws CompilationException {
             selectSetOperation.getLeftInput().accept(this, arg);
             for (SetOperationRight setOperationRight : selectSetOperation.getRightInputs()) {
                 setOperationRight.getSetOperationRightInput().accept(this, arg);
@@ -350,7 +350,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(SelectExpression selectStatement, Void arg) throws AsterixException {
+        public Void visit(SelectExpression selectStatement, Void arg) throws CompilationException {
             selectStatement.getSelectSetOperation().accept(this, arg);
             if (selectStatement.hasOrderby()) {
                 selectStatement.getOrderbyClause().accept(this, arg);
@@ -362,25 +362,25 @@ class SqlppQueryRewriter implements IQueryRewriter {
         }
 
         @Override
-        public Void visit(UnnestClause unnestClause, Void arg) throws AsterixException {
+        public Void visit(UnnestClause unnestClause, Void arg) throws CompilationException {
             unnestClause.getRightExpression().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(HavingClause havingClause, Void arg) throws AsterixException {
+        public Void visit(HavingClause havingClause, Void arg) throws CompilationException {
             havingClause.getFilterExpression().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(IndependentSubquery independentSubquery, Void arg) throws AsterixException {
+        public Void visit(IndependentSubquery independentSubquery, Void arg) throws CompilationException {
             independentSubquery.getExpr().accept(this, arg);
             return null;
         }
 
         @Override
-        public Void visit(CaseExpression caseExpression, Void arg) throws AsterixException {
+        public Void visit(CaseExpression caseExpression, Void arg) throws CompilationException {
             caseExpression.getConditionExpr().accept(this, arg);
             for (Expression expr : caseExpression.getWhenExprs()) {
                 expr.accept(this, arg);

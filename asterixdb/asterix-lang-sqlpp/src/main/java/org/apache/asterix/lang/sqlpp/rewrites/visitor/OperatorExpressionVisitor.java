@@ -23,15 +23,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
-import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression.Quantifier;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -47,7 +47,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     @Override
-    public Expression visit(OperatorExpr operatorExpr, ILangExpression arg) throws AsterixException {
+    public Expression visit(OperatorExpr operatorExpr, ILangExpression arg) throws CompilationException {
         List<Expression> newExprList = new ArrayList<>();
         for (Expression expr : operatorExpr.getExprList()) {
             newExprList.add(expr.accept(this, operatorExpr));
@@ -83,7 +83,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
  new ArrayList<>(Collections.singletonList(likeExpr)));
     }
 
-    private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) throws AsterixException {
+    private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) throws CompilationException {
         VariableExpr bindingVar = new VariableExpr(context.newVariable());
         Expression itemExpr = operatorExpr.getExprList().get(0);
         Expression collectionExpr = operatorExpr.getExprList().get(1);
@@ -107,7 +107,8 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         return new CallExpr(new FunctionSignature(null, CONCAT, 1), operatorExpr.getExprList());
     }
 
-    private Expression processBetweenOperator(OperatorExpr operatorExpr, OperatorType opType) throws AsterixException {
+    private Expression processBetweenOperator(OperatorExpr operatorExpr, OperatorType opType)
+            throws CompilationException {
         // The grammar guarantees that the BETWEEN operator gets exactly three expressions.
         Expression target = operatorExpr.getExprList().get(0);
         Expression left = operatorExpr.getExprList().get(1);
@@ -127,7 +128,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     private Expression createLessThanExpression(Expression lhs, Expression rhs, List<IExpressionAnnotation> hints)
-            throws AsterixException {
+            throws CompilationException {
         OperatorExpr comparison = new OperatorExpr();
         comparison.addOperand(lhs);
         comparison.addOperand(rhs);

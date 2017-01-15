@@ -336,7 +336,7 @@
     <test-case FilePath="basic">
       <compilation-unit name="issue_1419_drop_type_with_collection_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Cannot drop type test.subType being used by type test.superType_superlist</expected-error>
+        <expected-error>Cannot drop type test.subType being used by type test.superType_superlist</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

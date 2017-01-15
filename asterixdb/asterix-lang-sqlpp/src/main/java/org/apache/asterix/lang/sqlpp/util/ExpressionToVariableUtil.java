@@ -19,7 +19,7 @@
 
 package org.apache.asterix.lang.sqlpp.util;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
@@ -46,7 +46,7 @@ public class ExpressionToVariableUtil {
             try {
                 throw new ParseException(
                         "Need an alias for the enclosed expression:\n" + SqlppFormatPrintUtil.toString(expr));
-            } catch (AsterixException e) {
+            } catch (CompilationException e) {
                 LOGGER.error(e.getLocalizedMessage(), e);
                 throw new ParseException(e.getLocalizedMessage());
             }

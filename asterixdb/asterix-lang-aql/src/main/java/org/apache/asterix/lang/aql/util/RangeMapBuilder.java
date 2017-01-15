@@ -21,7 +21,7 @@ package org.apache.asterix.lang.aql.util;
 import java.io.DataOutput;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
@@ -58,7 +58,7 @@ import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 public abstract class RangeMapBuilder {
     private static final IParserFactory parserFactory = new AQLParserFactory();
 
-    public static IRangeMap parseHint(Object hint) throws AsterixException {
+    public static IRangeMap parseHint(Object hint) throws CompilationException {
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
         DataOutput out = abvs.getDataOutput();;
         abvs.reset();
@@ -66,17 +66,17 @@ public abstract class RangeMapBuilder {
         IParser parser = parserFactory.createParser((String) hint);
         List<Statement> hintStatements = parser.parse();
         if (hintStatements.size() != 1) {
-            throw new AsterixException("Only one range statement is allowed for the range hint.");
+            throw new CompilationException("Only one range statement is allowed for the range hint.");
         }
 
         // Translate the query into a Range Map
         if (hintStatements.get(0).getKind() != Statement.Kind.QUERY) {
-            throw new AsterixException("Not a proper query for the range hint.");
+            throw new CompilationException("Not a proper query for the range hint.");
         }
         Query q = (Query) hintStatements.get(0);
 
         if (q.getBody().getKind() != Kind.LIST_CONSTRUCTOR_EXPRESSION) {
-            throw new AsterixException("The range hint must be a list.");
+            throw new CompilationException("The range hint must be a list.");
         }
         List<Expression> el = ((ListConstructor) q.getBody()).getExprList();
         int offsets[] = new int[el.size()];
@@ -95,7 +95,7 @@ public abstract class RangeMapBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    private static void parseLiteralToBytes(Expression item, DataOutput out) throws AsterixException {
+    private static void parseLiteralToBytes(Expression item, DataOutput out) throws CompilationException {
         AMutableDouble aDouble = new AMutableDouble(0);
         AMutableFloat aFloat = new AMutableFloat(0);
         AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -142,11 +142,11 @@ public abstract class RangeMapBuilder {
                             + item.getKind() + " type of expressions.");
             }
         } catch (HyracksDataException e) {
-            throw new AsterixException(e.getMessage());
+            throw new CompilationException(e.getMessage());
         }
     }
 
-    public static void verifyRangeOrder(IRangeMap rangeMap, boolean ascending) throws AsterixException {
+    public static void verifyRangeOrder(IRangeMap rangeMap, boolean ascending) throws CompilationException {
         // TODO Add support for composite fields.
         int fieldIndex = 0;
         int fieldType = rangeMap.getTag(0, 0);
@@ -157,7 +157,7 @@ public abstract class RangeMapBuilder {
         int c = 0;
         for (int split = 1; split < rangeMap.getSplitCount(); ++split) {
             if (fieldType != rangeMap.getTag(fieldIndex, split)) {
-                throw new AsterixException("Range field contains more than a single type of items (" + fieldType
+                throw new CompilationException("Range field contains more than a single type of items (" + fieldType
                         + " and " + rangeMap.getTag(fieldIndex, split) + ").");
             }
             int previousSplit = split - 1;
@@ -167,10 +167,10 @@ public abstract class RangeMapBuilder {
                         rangeMap.getLength(fieldIndex, previousSplit), rangeMap.getByteArray(fieldIndex, split),
                         rangeMap.getStartOffset(fieldIndex, split), rangeMap.getLength(fieldIndex, split));
             } catch (HyracksDataException e) {
-                throw new AsterixException(e);
+                throw new CompilationException(e);
             }
             if (c >= 0) {
-                throw new AsterixException("Range fields are not in sorted order.");
+                throw new CompilationException("Range fields are not in sorted order.");
             }
         }
     }

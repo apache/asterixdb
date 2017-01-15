@@ -40,7 +40,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.active.ActiveJobNotificationHandler;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
@@ -55,22 +54,22 @@ import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.ExternalProperties;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber;
 import org.apache.asterix.external.feed.api.IActiveLifecycleEventSubscriber.ActiveLifecycleEvent;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeedJoint;
 import org.apache.asterix.external.feed.api.IFeed.FeedType;
+import org.apache.asterix.external.feed.api.IFeedJoint;
 import org.apache.asterix.external.feed.api.IFeedJoint.FeedJointType;
 import org.apache.asterix.external.feed.management.ActiveLifecycleEventSubscriber;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -88,10 +87,10 @@ import org.apache.asterix.file.DataverseOperations;
 import org.apache.asterix.file.IndexOperations;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
+import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -206,9 +205,6 @@ import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.google.common.collect.Lists;
 
@@ -405,7 +401,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 resultSetIdCounter);
                         break;
                     default:
-                        throw new AsterixException("Unknown function");
+                        throw new CompilationException("Unknown function");
                 }
             }
         } finally {
@@ -485,38 +481,38 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateCompactionPolicy(String compactionPolicy, Map<String, String> compactionPolicyProperties,
-            MetadataTransactionContext mdTxnCtx, boolean isExternalDataset) throws AsterixException, Exception {
+            MetadataTransactionContext mdTxnCtx, boolean isExternalDataset) throws CompilationException, Exception {
         CompactionPolicy compactionPolicyEntity = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
                 MetadataConstants.METADATA_DATAVERSE_NAME, compactionPolicy);
         if (compactionPolicyEntity == null) {
-            throw new AsterixException("Unknown compaction policy: " + compactionPolicy);
+            throw new CompilationException("Unknown compaction policy: " + compactionPolicy);
         }
         String compactionPolicyFactoryClassName = compactionPolicyEntity.getClassName();
         ILSMMergePolicyFactory mergePolicyFactory = (ILSMMergePolicyFactory) Class
                 .forName(compactionPolicyFactoryClassName).newInstance();
         if (isExternalDataset && mergePolicyFactory.getName().compareTo("correlated-prefix") == 0) {
-            throw new AsterixException("The correlated-prefix merge policy cannot be used with external dataset.");
+            throw new CompilationException("The correlated-prefix merge policy cannot be used with external dataset.");
         }
         if (compactionPolicyProperties == null) {
             if (mergePolicyFactory.getName().compareTo("no-merge") != 0) {
-                throw new AsterixException("Compaction policy properties are missing.");
+                throw new CompilationException("Compaction policy properties are missing.");
             }
         } else {
             for (Map.Entry<String, String> entry : compactionPolicyProperties.entrySet()) {
                 if (!mergePolicyFactory.getPropertiesNames().contains(entry.getKey())) {
-                    throw new AsterixException("Invalid compaction policy property: " + entry.getKey());
+                    throw new CompilationException("Invalid compaction policy property: " + entry.getKey());
                 }
             }
             for (String p : mergePolicyFactory.getPropertiesNames()) {
                 if (!compactionPolicyProperties.containsKey(p)) {
-                    throw new AsterixException("Missing compaction policy property: " + p);
+                    throw new CompilationException("Missing compaction policy property: " + p);
                 }
             }
         }
     }
 
     public void handleCreateDatasetStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws AsterixException, Exception {
+            IHyracksClientConnection hcc) throws CompilationException, Exception {
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
         DatasetDecl dd = (DatasetDecl) stmt;
         String dataverseName = getActiveDataverse(dd.getDataverse());
@@ -617,7 +613,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             ExternalDatasetTransactionState.COMMIT);
                     break;
                 default:
-                    throw new AsterixException("Unknown datatype " + dd.getDatasetType());
+                    throw new CompilationException("Unknown datatype " + dd.getDatasetType());
             }
 
             // #. initialize DatasetIdFactory if it is not initialized.
@@ -709,7 +705,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void validateIfResourceIsActiveInFeed(String dataverseName, String datasetName) throws AsterixException {
+    protected void validateIfResourceIsActiveInFeed(String dataverseName, String datasetName)
+            throws CompilationException {
         StringBuilder builder = null;
         IActiveEntityEventsListener[] listeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
         for (IActiveEntityEventsListener listener : listeners) {
@@ -721,7 +718,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
         }
         if (builder != null) {
-            throw new AsterixException("Dataset " + dataverseName + "." + datasetName + " is currently being "
+            throw new CompilationException("Dataset " + dataverseName + "." + datasetName + " is currently being "
                     + "fed into by the following active entities.\n" + builder.toString());
         }
     }
@@ -739,7 +736,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected String configureNodegroupForDataset(DatasetDecl dd, String dataverse, MetadataTransactionContext mdTxnCtx)
-            throws AsterixException {
+            throws CompilationException {
         int nodegroupCardinality;
         String nodegroupName;
         String hintValue = dd.getHints().get(DatasetNodegroupCardinalityHint.NAME);
@@ -751,7 +748,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME,
                     dd.getHints().get(DatasetNodegroupCardinalityHint.NAME)).first;
             if (!valid) {
-                throw new AsterixException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
+                throw new CompilationException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
             } else {
                 nodegroupCardinality = Integer.parseInt(dd.getHints().get(DatasetNodegroupCardinalityHint.NAME));
             }
@@ -961,7 +958,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     spec = ExternalIndexingOperations.buildFilesIndexReplicationJobSpec(ds, externalFilesSnapshot,
                             metadataProvider, true);
                     if (spec == null) {
-                        throw new AsterixException(
+                        throw new CompilationException(
                                 "Failed to create job spec for replicating Files Index For external dataset");
                     }
                     filesIndexReplicated = true;
@@ -976,7 +973,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 for (Index index : indexes) {
                     if (index.getKeyFieldNames().equals(indexFields)
                             && !index.getKeyFieldTypes().equals(indexFieldTypes) && index.isEnforcingKeyFileds()) {
-                        throw new AsterixException("Cannot create index " + indexName + " , enforced index "
+                        throw new CompilationException("Cannot create index " + indexName + " , enforced index "
                                 + index.getIndexName() + " on field \"" + StringUtils.join(indexFields, ',')
                                 + "\" is already defined with type \"" + index.getKeyFieldTypes() + "\"");
                     }
@@ -1001,7 +998,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             spec = IndexOperations.buildSecondaryIndexCreationJobSpec(cis, aRecordType, metaRecordType,
                     keySourceIndicators, enforcedType, metadataProvider);
             if (spec == null) {
-                throw new AsterixException("Failed to create job spec for creating index '"
+                throw new CompilationException("Failed to create job spec for creating index '"
                         + stmtCreateIndex.getDatasetName() + "." + stmtCreateIndex.getIndexName() + "'");
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1431,7 +1428,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IActiveEntityEventsListener[] activeListeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
             for (IActiveEntityEventsListener listener : activeListeners) {
                 if (listener.isEntityUsingDataset(dataverseName, datasetName)) {
-                    throw new AsterixException(
+                    throw new CompilationException(
                             "Can't drop dataset since it is connected to active entity: " + listener.getEntityId());
                 }
             }
@@ -1560,7 +1557,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             if (builder != null) {
-                throw new AsterixException("Dataset" + datasetName
+                throw new CompilationException("Dataset" + datasetName
                         + " is currently being fed into by the following active entities: " + builder.toString());
             }
 
@@ -2195,7 +2192,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 subscriberRegistered = listener.isFeedConnectionActive(feedConnId, eventSubscriber);
             }
             if (subscriberRegistered) {
-                throw new AsterixException("Feed " + cfs.getFeedName() + " is already connected to dataset "
+                throw new CompilationException("Feed " + cfs.getFeedName() + " is already connected to dataset "
                         + cfs.getDatasetName().getValue());
             }
             FeedPolicyEntity feedPolicy = FeedMetadataUtil.validateIfPolicyExists(dataverseName, cbfs.getPolicyName(),
@@ -2264,11 +2261,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      * @param feedPolicy
      * @param mdTxnCtx
      * @return
-     * @throws AsterixException
+     * @throws CompilationException
      */
     protected Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse,
             Feed feed, String dataset, FeedPolicyEntity feedPolicy, MetadataTransactionContext mdTxnCtx)
-            throws AsterixException {
+            throws CompilationException {
         IFeedJoint sourceFeedJoint;
         FeedConnectionRequest request;
         List<String> functionsToApply = new ArrayList<>();
@@ -2281,7 +2278,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FeedEventsListener listener = (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE
                 .getActiveEntityListener(entityId);
         if (listener == null) {
-            throw new AsterixException("Feed Listener is not registered");
+            throw new CompilationException("Feed Listener is not registered");
         }
 
         boolean isFeedJointAvailable = listener.isFeedJointAvailable(feedJointKey);
@@ -2370,7 +2367,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FeedEventsListener listener = (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE
                 .getActiveEntityListener(entityId);
         if (listener == null || !listener.isEntityUsingDataset(dataverseName, datasetName)) {
-            throw new AsterixException("Feed " + feed.getFeedId().getEntityName() + " is currently not connected to "
+            throw new CompilationException(
+                    "Feed " + feed.getFeedId().getEntityName() + " is currently not connected to "
                     + cfs.getDatasetName().getValue() + ". Invalid operation!");
         }
         listener.registerFeedEventSubscriber(eventSubscriber);
@@ -2380,7 +2378,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataset dataset = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(),
                     dataverseName, cfs.getDatasetName().getValue());
             if (dataset == null) {
-                throw new AsterixException(
+                throw new CompilationException(
                         "Unknown dataset :" + cfs.getDatasetName().getValue() + " in dataverse " + dataverseName);
             }
             Pair<JobSpecification, Boolean> specDisconnectType = FeedOperations
@@ -2879,7 +2877,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleRunStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws AsterixException, Exception {
+            IHyracksClientConnection hcc) throws CompilationException, Exception {
         RunStatement runStmt = (RunStatement) stmt;
         switch (runStmt.getSystem()) {
             case "pregel":
@@ -2966,12 +2964,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // Validates the source/sink dataverses and datasets.
         Dataset fromDataset = metadataProvider.findDataset(dataverseNameFrom, datasetNameFrom);
         if (fromDataset == null) {
-            throw new AsterixException("The source dataset " + datasetNameFrom + " in dataverse " + dataverseNameFrom
+            throw new CompilationException(
+                    "The source dataset " + datasetNameFrom + " in dataverse " + dataverseNameFrom
                     + " could not be found for the Run command");
         }
         Dataset toDataset = metadataProvider.findDataset(dataverseNameTo, datasetNameTo);
         if (toDataset == null) {
-            throw new AsterixException("The sink dataset " + datasetNameTo + " in dataverse " + dataverseNameTo
+            throw new CompilationException("The sink dataset " + datasetNameTo + " in dataverse " + dataverseNameTo
                     + " could not be found for the Run command");
         }
 
@@ -3137,7 +3136,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void rewriteStatement(Statement stmt) throws AsterixException {
+    protected void rewriteStatement(Statement stmt) throws CompilationException {
         IStatementRewriter rewriter = rewriterFactory.createStatementRewriter();
         rewriter.rewrite(stmt);
     }

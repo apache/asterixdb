@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.common.visitor.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -41,92 +41,92 @@ import org.apache.asterix.lang.common.statement.Query;
 public abstract class AbstractAstVisitor<R, T> extends AbstractQueryExpressionVisitor<R, T> {
 
     @Override
-    public R visit(Query q, T arg) throws AsterixException {
+    public R visit(Query q, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(FunctionDecl fd, T arg) throws AsterixException {
+    public R visit(FunctionDecl fd, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(LiteralExpr l, T arg) throws AsterixException {
+    public R visit(LiteralExpr l, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(VariableExpr v, T arg) throws AsterixException {
+    public R visit(VariableExpr v, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(ListConstructor lc, T arg) throws AsterixException {
+    public R visit(ListConstructor lc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(RecordConstructor rc, T arg) throws AsterixException {
+    public R visit(RecordConstructor rc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(OperatorExpr ifbo, T arg) throws AsterixException {
+    public R visit(OperatorExpr ifbo, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(FieldAccessor fa, T arg) throws AsterixException {
+    public R visit(FieldAccessor fa, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(IndexAccessor ia, T arg) throws AsterixException {
+    public R visit(IndexAccessor ia, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(IfExpr ifexpr, T arg) throws AsterixException {
+    public R visit(IfExpr ifexpr, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(QuantifiedExpression qe, T arg) throws AsterixException {
+    public R visit(QuantifiedExpression qe, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(LetClause lc, T arg) throws AsterixException {
+    public R visit(LetClause lc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(WhereClause wc, T arg) throws AsterixException {
+    public R visit(WhereClause wc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(OrderbyClause oc, T arg) throws AsterixException {
+    public R visit(OrderbyClause oc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(GroupbyClause gc, T arg) throws AsterixException {
+    public R visit(GroupbyClause gc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(LimitClause lc, T arg) throws AsterixException {
+    public R visit(LimitClause lc, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(UnaryExpr u, T arg) throws AsterixException {
+    public R visit(UnaryExpr u, T arg) throws CompilationException {
         return null;
     }
 
     @Override
-    public R visit(CallExpr pf, T arg) throws AsterixException {
+    public R visit(CallExpr pf, T arg) throws CompilationException {
         return null;
     }
 

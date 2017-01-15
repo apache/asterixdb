@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.OperatorType;
@@ -91,12 +91,12 @@ public class OperatorExpr extends AbstractExpression {
         return cmp;
     }
 
-    public void addOperator(String strOp) throws AsterixException {
+    public void addOperator(String strOp) throws CompilationException {
         Optional<OperatorType> op = OperatorType.fromSymbol(strOp);
         if (op.isPresent()) {
             opList.add(op.get());
         } else {
-            throw new AsterixException("Unsupported operator: " + strOp);
+            throw new CompilationException("Unsupported operator: " + strOp);
         }
     }
 
@@ -106,7 +106,7 @@ public class OperatorExpr extends AbstractExpression {
     }
 
     @Override
-    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return visitor.visit(this, arg);
     }
 
