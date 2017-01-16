@@ -42,6 +42,13 @@
     </license>
   </licenses>
 
+  <scm>
+    <connection>scm:git:https://github.com/apache/asterixdb</connection>
+    <developerConnection>scm:git:ssh://asterix-gerrit.ics.uci.edu:29418/asterixdb</developerConnection>
+    <url>https://github.com/apache/asterixdb</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jdk.version>1.8</jdk.version>
