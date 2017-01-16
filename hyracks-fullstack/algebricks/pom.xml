@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>apache-asterixdb-hyracks</artifactId>
-    <version>0.2.18-SNAPSHOT</version>
+    <version>0.2.18</version>
   </parent>
 
   <licenses>
