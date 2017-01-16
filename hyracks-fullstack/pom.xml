@@ -24,6 +24,7 @@
   <version>0.2.18-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
+  <url>https://asterixdb.apache.org/</url>
 
   <parent>
     <groupId>org.apache</groupId>
@@ -147,6 +148,16 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <excludes>
+            <exclude>**/DEPENDENCIES</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -331,9 +342,12 @@
               <goal>process</goal>
             </goals>
             <configuration>
-              <resourceBundles combine.children="append">
+              <resourceBundles>
                 <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
               </resourceBundles>
+              <properties>
+                <projectName>Apache Hyracks - ${project.name}</projectName>
+              </properties>
             </configuration>
           </execution>
         </executions>

@@ -23,6 +23,7 @@
   <artifactId>apache-asterixdb</artifactId>
   <version>0.8.9-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <url>https://asterixdb.apache.org/</url>
 
   <parent>
     <groupId>org.apache</groupId>
@@ -72,6 +73,16 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <excludes>
+            <exclude>**/DEPENDENCIES</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -199,10 +210,12 @@
               <goal>process</goal>
             </goals>
             <configuration>
-              <appendedResourcesDirectory>${appendedResourcesDirectory}</appendedResourcesDirectory>
               <resourceBundles>
                 <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
               </resourceBundles>
+              <properties>
+                <projectName>Apache AsterixDB - ${project.name}</projectName>
+              </properties>
             </configuration>
           </execution>
         </executions>
