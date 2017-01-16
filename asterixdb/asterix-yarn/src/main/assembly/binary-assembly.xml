@@ -76,6 +76,7 @@
   <dependencySets>
     <dependencySet>
       <includes>
+        <!-- NOTE! Any changes here must be mirrored in src/main/assembly/binary-assembly.xml -->
         <include>org.apache.asterix:asterix-yarn</include>
         <include>org.apache.asterix:asterix-common</include>
         <include>log4j:log4j</include>

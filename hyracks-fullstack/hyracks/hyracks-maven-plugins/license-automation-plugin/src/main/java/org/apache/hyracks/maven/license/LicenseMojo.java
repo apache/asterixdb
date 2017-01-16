@@ -19,7 +19,6 @@
 package org.apache.hyracks.maven.license;
 
 import java.io.File;
-import java.lang.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,13 +29,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.hyracks.maven.license.project.LicensedProjects;
-import org.apache.hyracks.maven.license.project.Project;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hyracks.maven.license.project.LicensedProjects;
+import org.apache.hyracks.maven.license.project.Project;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.model.License;
@@ -116,33 +117,49 @@ public abstract class LicenseMojo extends AbstractMojo {
         Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap = gatherDependencies();
         for (Map.Entry<MavenProject, List<Pair<String, String>>> dep : dependencyLicenseMap.entrySet()) {
             final MavenProject depProject = dep.getKey();
-            String depLocation = dependencySets.isEmpty() ? location : getIncludedLocation(depProject.getArtifact());
+            Set<String> locations = dependencySets.isEmpty() ? Collections.singleton(location)
+                    : getIncludedLocation(depProject.getArtifact());
             if (isExcluded(depProject.getArtifact())) {
                 getLog().debug("skipping " + depProject + " [excluded]");
-            } else if (depLocation == null) {
+            } else if (locations.isEmpty()) {
                 getLog().debug("skipping " + depProject + " [not included in dependency sets]");
             } else {
-                addDependencyToLicenseMap(depProject, dep.getValue(), depLocation);
+                for (String depLocation : locations) {
+                    addDependencyToLicenseMap(depProject, dep.getValue(), depLocation);
+                }
             }
         }
+    }
+
+    private int getLicenseMetric(String url) {
+        LicenseSpec licenseSpec = urlToLicenseMap.get(url);
+        return licenseSpec != null ? licenseSpec.getMetric() : LicenseSpec.UNDEFINED_LICENSE_METRIC;
     }
 
     private void addDependencyToLicenseMap(MavenProject depProject, List<Pair<String, String>> depLicenses,
                                            String depLocation) {
         final String depGav = toGav(depProject);
         getLog().debug("adding " + depGav + ", location: " + depLocation);
+        final MutableBoolean usedMetric = new MutableBoolean(false);
         if (depLicenses.size() > 1) {
             Collections.sort(depLicenses, (o1, o2) -> {
-                final LicenseSpec l1 = urlToLicenseMap.get(o1.getLeft());
-                final LicenseSpec l2 = urlToLicenseMap.get(o2.getLeft());
-                return Integer.compare(l1 != null ? l1.getMetric() : LicenseSpec.UNDEFINED_LICENSE_METRIC,
-                        l2 != null ? l2.getMetric() : LicenseSpec.UNDEFINED_LICENSE_METRIC);
+                final int metric1 = getLicenseMetric(o1.getLeft());
+                final int metric2 = getLicenseMetric(o2.getLeft());
+                usedMetric.setValue(usedMetric.booleanValue()
+                        || metric1 != LicenseSpec.UNDEFINED_LICENSE_METRIC
+                        || metric2 != LicenseSpec.UNDEFINED_LICENSE_METRIC);
+                return Integer.compare(metric1, metric2);
             });
-            getLog().warn("Multiple licenses for " + depGav + ": " + depLicenses
-                    + "; taking first or lowest metric.");
+            if (usedMetric.booleanValue()) {
+                getLog().info("Multiple licenses for " + depGav + ": " + depLicenses
+                        + "; taking lowest metric: " + depLicenses.get(0));
+            } else {
+                getLog().warn("Multiple licenses for " + depGav + ": " + depLicenses
+                        + "; taking first listed: " + depLicenses.get(0));
+            }
         } else if (depLicenses.isEmpty()) {
-            getLog().error("No license defined for " + depGav);
-            depLicenses.add(new ImmutablePair<>("MISSING_LICENSE", "MISSING LICENSE"));
+            getLog().info("no license defined in model for " + depGav);
+            depLicenses.add(new ImmutablePair<>("MISSING_LICENSE", null));
         }
         Pair<String, String> key = depLicenses.get(0);
         String licenseUrl = key.getLeft();
@@ -155,7 +172,7 @@ public abstract class LicenseMojo extends AbstractMojo {
             } catch (MalformedURLException e) {
                 // we encounter this a lot.  Log a warning, and use an annotated key
                 final String fakeLicenseUrl = depGav.replaceAll(":", "--") + "_" + licenseUrl;
-                getLog().warn("- URL for " + depGav + " is malformed: " + licenseUrl + "; using: "
+                getLog().info("- URL for " + depGav + " is malformed: " + licenseUrl + "; using: "
                         + fakeLicenseUrl);
                 licenseUrl = fakeLicenseUrl;
             }
@@ -211,13 +228,12 @@ public abstract class LicenseMojo extends AbstractMojo {
             if (dep == null) {
                 getLog().warn("Unused override dependency " + gav + "; ignoring...");
             } else {
-                final List<Pair<String, String>> newUrl = Collections.singletonList(
+                final List<Pair<String, String>> newLicense = Collections.singletonList(
                         new ImmutablePair<>(override.getUrl(), override.getName()));
-                List<Pair<String, String>> prev = dependencyLicenseMap.put(dep, newUrl);
-                if (!prev.isEmpty()) {
-                    getLog().warn("NOTICE: replacing license(s) " + prev + " for dependency " + gav + " with "
-                            + newUrl);
-                }
+                List<Pair<String, String>> prevLicense = dependencyLicenseMap.put(dep, newLicense);
+                getLog().warn("license list for " + toGav(dep)
+                        + " changed with <override>; was: " + prevLicense
+                        + ", now: " + newLicense);
             }
         }
         return dependencyLicenseMap;
@@ -308,15 +324,16 @@ public abstract class LicenseMojo extends AbstractMojo {
         return false;
     }
 
-    protected String getIncludedLocation(Artifact artifact) {
+    protected Set<String> getIncludedLocation(Artifact artifact) {
+        Set<String> locations = new TreeSet<>();
         for (DependencySet set : dependencySets) {
             for (Pattern include : set.getPatterns()) {
                 if (include.matcher(artifact.getGroupId() + ":" + artifact.getArtifactId()).matches()) {
-                    return set.getLocation();
+                    locations.add(set.getLocation());
                 }
             }
         }
-        return null;
+        return locations;
     }
 }
 

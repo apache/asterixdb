@@ -254,6 +254,10 @@
           <artifactId>rome</artifactId>
           <groupId>net.java.dev.rome</groupId>
         </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

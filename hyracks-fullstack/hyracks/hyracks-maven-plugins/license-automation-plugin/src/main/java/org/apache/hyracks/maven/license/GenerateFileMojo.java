@@ -118,6 +118,7 @@ public class GenerateFileMojo extends LicenseMojo {
         }
     }
 
+
     private void resolveLicenseContent() throws IOException {
         Set<LicenseSpec> licenseSpecs = new HashSet<>();
         for (LicensedProjects licensedProjects : licenseMap.values()) {
@@ -125,22 +126,30 @@ public class GenerateFileMojo extends LicenseMojo {
         }
         licenseSpecs.addAll(urlToLicenseMap.values());
         for (LicenseSpec license : licenseSpecs) {
-            if (license.getContent() == null) {
-                getLog().debug("Resolving content for " + license.getUrl() + " (" + license.getContentFile() + ")");
-                File cFile = new File(license.getContentFile());
-                if (!cFile.isAbsolute()) {
-                    cFile = new File(licenseDirectory, license.getContentFile());
-                }
-                if (!cFile.exists()) {
+            resolveLicenseContent(license, true);
+        }
+    }
+
+    private String resolveLicenseContent(LicenseSpec license, boolean bestEffort) throws IOException {
+        if (license.getContent() == null) {
+            getLog().debug("Resolving content for " + license.getUrl() + " (" + license.getContentFile() + ")");
+            File cFile = new File(license.getContentFile());
+            if (!cFile.isAbsolute()) {
+                cFile = new File(licenseDirectory, license.getContentFile());
+            }
+            if (!cFile.exists()) {
+                if (!bestEffort) {
                     getLog().warn("MISSING: license content file (" + cFile + ") for url: " + license.getUrl());
                     license.setContent("MISSING: " + license.getContentFile() + " (" + license.getUrl() + ")");
-                } else {
-                    StringWriter sw = new StringWriter();
-                    LicenseUtil.readAndTrim(sw, cFile);
-                    license.setContent(sw.toString());
                 }
+            } else {
+                getLog().info("Reading license content from file: " + cFile);
+                StringWriter sw = new StringWriter();
+                LicenseUtil.readAndTrim(sw, cFile);
+                license.setContent(sw.toString());
             }
         }
+        return license.getContent();
     }
 
     private void combineCommonGavs() {
@@ -231,7 +240,7 @@ public class GenerateFileMojo extends LicenseMojo {
         }
     }
 
-    private void rebuildLicenseContentProjectMap() {
+    private void rebuildLicenseContentProjectMap() throws IOException {
         int counter = 0;
         Map<String, LicensedProjects> licenseMap2 = new TreeMap<>(WHITESPACE_NORMALIZED_COMPARATOR);
         for (LicensedProjects lps : licenseMap.values()) {
@@ -239,17 +248,27 @@ public class GenerateFileMojo extends LicenseMojo {
                 String licenseText = project.getLicenseText();
                 if (licenseText == null) {
                     getLog().warn("Using license other than from within artifact: " + project.gav());
-                    licenseText = lps.getLicense().getContent();
+                    licenseText = resolveLicenseContent(lps.getLicense(), false);
+                }
+                LicenseSpec spec = lps.getLicense();
+                if (spec.getDisplayName() == null) {
+                    LicenseSpec canonicalLicense = urlToLicenseMap.get(spec.getUrl());
+                    if (canonicalLicense != null) {
+                        spec.setDisplayName(canonicalLicense.getDisplayName());
+                    }
                 }
                 if (!licenseMap2.containsKey(licenseText)) {
-                    LicenseSpec spec = lps.getLicense();
                     if (!licenseText.equals(lps.getLicense().getContent())) {
                         spec = new LicenseSpec(new ArrayList<>(), licenseText, null, spec.getDisplayName(),
                                 spec.getMetric(), spec.getUrl() + (counter++));
                     }
                     licenseMap2.put(licenseText, new LicensedProjects(spec));
                 }
-                licenseMap2.get(licenseText).addProject(project);
+                final LicensedProjects lp2 = licenseMap2.get(licenseText);
+                if (lp2.getLicense().getDisplayName() == null) {
+                    lp2.getLicense().setDisplayName(lps.getLicense().getDisplayName());
+                }
+                lp2.addProject(project);
             }
         }
         licenseMap = licenseMap2;

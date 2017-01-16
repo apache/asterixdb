@@ -47,6 +47,12 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
       <version>1.5.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

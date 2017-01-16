@@ -171,10 +171,6 @@
               <gav>com.google.protobuf:protobuf-java:2.5.0</gav>
               <url>https://raw.githubusercontent.com/google/protobuf/master/LICENSE</url>
             </override>
-            <override>
-              <gav>org.slf4j:slf4j-simple:1.6.1</gav>
-              <url>http://www.slf4j.org/license.html</url>
-            </override>
           </overrides>
           <licenses>
             <license>
@@ -383,7 +379,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>1.6.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -419,7 +414,6 @@
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
-      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>

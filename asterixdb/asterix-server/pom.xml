@@ -81,22 +81,16 @@
           <models>
              <model>${basedir}/../src/main/appended-resources/supplemental-models.xml</model>
           </models>
+          <extraLicenseMaps>
+            <extraLicenseMap>
+              <file>${basedir}/../asterix-client-helper/target/generated-resources/license_map.json</file>
+              <location>lib/</location>
+            </extraLicenseMap>
+          </extraLicenseMaps>
           <overrides>
-            <override>
-              <gav>org.tukaani:xz:1.0</gav>
-              <url>PUBLIC_DOMAIN</url>
-            </override>
-            <override>
-              <gav>aopalliance:aopalliance:1.0</gav>
-              <url>PUBLIC_DOMAIN</url>
-            </override>
             <override>
               <gav>asm:asm:3.1</gav>
               <url>http://asm.objectweb.org/license.html</url>
-            </override>
-            <override>
-              <gav>commons-el:commons-el:1.0</gav>
-              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             </override>
             <override>
               <gav>com.thoughtworks.paranamer:paranamer:2.3</gav>
@@ -127,16 +121,8 @@
               <url>https://raw.githubusercontent.com/google/protobuf/master/LICENSE</url>
             </override>
             <override>
-              <gav>org.hamcrest:hamcrest-core:1.3</gav>
-              <url>https://raw.githubusercontent.com/hamcrest/JavaHamcrest/1260407ae3d2786cb54b8be52ebe041e54ccd6ac/LICENSE.txt</url>
-            </override>
-            <override>
               <gav>xmlenc:xmlenc:0.52</gav>
               <url>xmlenc_0.52_LICENSE</url>
-            </override>
-            <override>
-              <gav>org.slf4j:slf4j-log4j12:1.7.5</gav>
-              <url>http://www.slf4j.org/license.html</url>
             </override>
           </overrides>
           <licenses>
@@ -199,6 +185,7 @@
                 <aliasUrl>https://glassfish.java.net/public/CDDL+GPL.html</aliasUrl>
                 <aliasUrl>http://glassfish.dev.java.net/public/CDDL+GPL.html</aliasUrl>
                 <aliasUrl>https://glassfish.dev.java.net/public/CDDLv1.0.html</aliasUrl>
+                <aliasUrl>https://glassfish.java.net/public/CDDLv1.0.html</aliasUrl>
               </aliasUrls>
             </license>
             <license>
@@ -216,6 +203,7 @@
             <license>
               <!-- this is special case- handled in ftl template -->
               <url>PUBLIC_DOMAIN</url>
+              <aliasUrls>Public Domain</aliasUrls>
             </license>
           </licenses>
           <templateProperties>
