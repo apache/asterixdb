@@ -27,13 +27,13 @@ import org.apache.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFac
 import org.apache.hyracks.storage.am.rtree.impls.FloatPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.rtree.impls.IntegerPrimitiveValueProviderFactory;
 
-public class AqlPrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
+public class PrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public static final AqlPrimitiveValueProviderFactory INSTANCE = new AqlPrimitiveValueProviderFactory();
+    public static final PrimitiveValueProviderFactory INSTANCE = new PrimitiveValueProviderFactory();
 
-    private AqlPrimitiveValueProviderFactory() {
+    private PrimitiveValueProviderFactory() {
     }
 
     @Override
@@ -48,21 +48,16 @@ public class AqlPrimitiveValueProviderFactory implements IPrimitiveValueProvider
 
             @Override
             public double getValue(byte[] bytes, int offset) {
-
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
                 switch (tag) {
-                    case INT32: {
+                    case INT32:
                         return intProvider.getValue(bytes, offset + 1);
-                    }
-                    case FLOAT: {
+                    case FLOAT:
                         return floatProvider.getValue(bytes, offset + 1);
-                    }
-                    case DOUBLE: {
+                    case DOUBLE:
                         return doubleProvider.getValue(bytes, offset + 1);
-                    }
-                    default: {
+                    default:
                         throw new NotImplementedException("Value provider for type " + tag + " is not implemented");
-                    }
                 }
             }
         };

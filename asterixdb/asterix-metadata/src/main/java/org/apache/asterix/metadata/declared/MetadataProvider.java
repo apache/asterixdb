@@ -47,7 +47,7 @@ import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.StoragePathUtil;
-import org.apache.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
+import org.apache.asterix.dataflow.data.nontagged.valueproviders.PrimitiveValueProviderFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
@@ -632,7 +632,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IPrimitiveValueProviderFactory[] valueProviderFactories =
                     new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
             for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
-                valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
+                valueProviderFactories[i] = PrimitiveValueProviderFactory.INSTANCE;
             }
 
             RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
@@ -1729,7 +1729,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE
                         .getBinaryComparatorFactory(nestedKeyType, true);
                 typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(nestedKeyType);
-                valueProviderFactories[i] = AqlPrimitiveValueProviderFactory.INSTANCE;
+                valueProviderFactories[i] = PrimitiveValueProviderFactory.INSTANCE;
             }
             List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             for (List<String> partitioningKey : partitioningKeys) {

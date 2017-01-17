@@ -24,14 +24,14 @@ import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 
-public class AQLAPIServlet extends RESTAPIServlet {
+public class FullAPIServlet extends RESTAPIServlet {
 
     private static final long serialVersionUID = 1L;
     private static final String AQL_STMT_PARAM_NAME = "aql";
     private static final byte ALLOWED_CATEGORIES = Statement.Category.QUERY | Statement.Category.UPDATE
             | Statement.Category.DDL | Statement.Category.PROCEDURE;
 
-    public AQLAPIServlet(ILangCompilationProvider compilationProvider,
+    public FullAPIServlet(ILangCompilationProvider compilationProvider,
             IStatementExecutorFactory statementExecutorFactory) {
         super(compilationProvider, statementExecutorFactory);
     }

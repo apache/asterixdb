@@ -30,7 +30,7 @@ import javax.servlet.Servlet;
 
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.api.http.servlet.AQLAPIServlet;
+import org.apache.asterix.api.http.servlet.FullAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterCCDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
@@ -261,7 +261,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     protected Servlet createServlet(Servlets key) {
         switch (key) {
             case AQL:
-                return new AQLAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
+                return new FullAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case AQL_QUERY:
                 return new QueryAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
@@ -273,7 +273,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 return new DDLAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case SQLPP:
-                return new AQLAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
+                return new FullAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case SQLPP_QUERY:
                 return new QueryAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
