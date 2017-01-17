@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.asterix</groupId>
     <artifactId>apache-asterixdb</artifactId>
-    <version>0.8.9</version>
+    <version>0.8.9-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -83,9 +83,9 @@
             </license>
           </licenses>
           <templateProperties>
-            <asterixAppLocation />
+            <asterixAppLocation/>
             <asterixAppResourcesPrefix>asterix-app/src/main/resources/</asterixAppResourcesPrefix>
-            <packageName />
+            <packageName/>
           </templateProperties>
         </configuration>
       </plugin>
