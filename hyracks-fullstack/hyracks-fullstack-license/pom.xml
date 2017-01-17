@@ -22,7 +22,7 @@
   <name>hyracks-fullstack-license</name>
   <parent>
     <groupId>org.apache.hyracks</groupId>
-    <artifactId>apache-asterixdb-hyracks</artifactId>
+    <artifactId>apache-hyracks</artifactId>
     <version>0.2.18-SNAPSHOT</version>
   </parent>
 
