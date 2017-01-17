@@ -110,7 +110,11 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
         if (usePrePost) {
             totalGrams = numChars + gramLength - 1;
         } else {
-            totalGrams = numChars - gramLength + 1;
+            if (numChars >= gramLength) {
+                totalGrams = numChars - gramLength + 1;
+            } else {
+                totalGrams = 0;
+            }
         }
     }
 
