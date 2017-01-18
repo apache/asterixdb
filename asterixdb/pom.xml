@@ -64,8 +64,8 @@
     <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <algebricks.version>0.3.0</algebricks.version>
-    <hyracks.version>0.3.0</hyracks.version>
+    <algebricks.version>0.2.18-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.2.18-SNAPSHOT</hyracks.version>
     <hadoop.version>2.2.0</hadoop.version>
     <jetty.version>9.3.11.v20160721</jetty.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
