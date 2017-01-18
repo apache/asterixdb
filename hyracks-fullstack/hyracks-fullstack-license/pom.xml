@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>apache-hyracks</artifactId>
-    <version>0.2.18-SNAPSHOT</version>
+    <version>0.3.0</version>
   </parent>
 
   <licenses>
@@ -80,7 +80,7 @@
             </license>
           </licenses>
           <templateProperties>
-            <hyracksControlCcLocation/>
+            <hyracksControlCcLocation />
             <hyracksControlCcResourcesPrefix>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/</hyracksControlCcResourcesPrefix>
             <packageName>Hyracks and Algebricks</packageName>
           </templateProperties>
