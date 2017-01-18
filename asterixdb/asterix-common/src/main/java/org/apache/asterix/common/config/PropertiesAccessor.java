@@ -234,9 +234,14 @@ public class PropertiesAccessor {
     private void loadAsterixBuildProperties() throws AsterixException {
         Properties gitProperties = new Properties();
         try {
-            gitProperties.load(getClass().getClassLoader().getResourceAsStream("git.properties"));
-            for (final String name : gitProperties.stringPropertyNames()) {
-                asterixBuildProperties.put(name, gitProperties.getProperty(name));
+            InputStream propertyStream = getClass().getClassLoader().getResourceAsStream("git.properties");
+            if (propertyStream != null) {
+                gitProperties.load(propertyStream);
+                for (final String name : gitProperties.stringPropertyNames()) {
+                    asterixBuildProperties.put(name, gitProperties.getProperty(name));
+                }
+            } else {
+                LOGGER.info("Build properties not found on classpath. Version API will return empty object");
             }
         } catch (IOException e) {
             throw new AsterixException(e);
