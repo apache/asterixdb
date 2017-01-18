@@ -50,16 +50,17 @@
           </execution>
         </executions>
         <configuration>
-          <templateRootDir>${basedir}</templateRootDir>
+          <templateRootDir>${basedir}/src/main/licenses/templates</templateRootDir>
           <outputDir>${basedir}/..</outputDir>
           <location>ignored</location>
           <generatedFiles>
             <generatedFile>
-              <template>src/main/licenses/templates/hyracks-source-license.ftl</template>
+              <template>hyracks-source-license.ftl</template>
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <template>src/main/licenses/templates/asterix-notice.ftl</template>
+              <!-- TODO(mblow): share the template with asterixdb as a maven artifact -->
+              <template>asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>

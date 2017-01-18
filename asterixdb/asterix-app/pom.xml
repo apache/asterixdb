@@ -75,6 +75,10 @@
 
           <!-- The path for the to be generated properties file, it's relative to ${project.basedir} -->
           <generateGitPropertiesFilename>./target/classes/git.properties</generateGitPropertiesFilename>
+
+          <!-- there is no .git directory when building from a source assembly- a static git.properties file (generated
+               at source assembly time) is used in this case -->
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
         </configuration>
 
       </plugin>

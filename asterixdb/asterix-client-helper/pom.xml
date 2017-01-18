@@ -79,12 +79,6 @@
         </executions>
         <configuration>
           <templateRootDir>${basedir}/../../</templateRootDir>
-          <generatedFiles>
-            <generatedFile>
-              <template>asterixdb/src/main/licenses/templates/asterix-license.ftl</template>
-              <outputFile>LICENSE</outputFile>
-            </generatedFile>
-          </generatedFiles>
           <location>repo/</location>
           <licenseMapOutputFile>${project.build.directory}/generated-resources/license_map.json</licenseMapOutputFile>
           <excludes>

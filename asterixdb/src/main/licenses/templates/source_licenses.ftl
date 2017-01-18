@@ -222,3 +222,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 </@license>
+<@license component="AsterixDB runtime" files="org/apache/asterix/hivecompat/io/*"
+          licenseName="The Apache License, Version 2.0"
+          location="${hivecompatLocation!}" filePrefix="${hivecompatPrefix!}">
+Source files in asterix-hivecompat are derived from portions of Apache Hive Query Language v0.13.0 (org.apache.hive:hive-exec).
+</@license>
