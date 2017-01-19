@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.common.exceptions;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 public class AlgebricksException extends Exception {
@@ -39,6 +40,10 @@ public class AlgebricksException extends Exception {
         this.errorCode = errorCode;
         this.nodeId = nodeId;
         this.params = params;
+    }
+
+    public static AlgebricksException create(int errorCode, Serializable... params) {
+        return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), params);
     }
 
     public AlgebricksException(String message) {

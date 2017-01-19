@@ -25,7 +25,10 @@ import java.util.Map;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 /**
- * A registry of runtime error codes
+ * A registry of runtime/compile error codes
+ * Error code:
+ * 0 --- 999: runtime errors
+ * 1000 ---- 1999: compilation errors
  */
 public class ErrorCode {
     private static final String RESOURCE_PATH = "errormsg" + File.separator + "en.properties";
@@ -36,6 +39,7 @@ public class ErrorCode {
     public static final int FAILURE_ON_NODE = 3;
     public static final int RUNTIME_FILE_WITH_ABSOULTE_PATH_NOT_WITHIN_ANY_IO_DEVICE = 4;
     public static final int RUNTIME_FULLTEXT_PHRASE_FOUND = 5;
+    public static final int COMPILATION_RULECOLLECTION_NOT_INSTANCE_OF_LIST = 1001;
 
     // Loads the map that maps error codes to error message templates.
     private static Map<Integer, String> errorMessageMap = null;
