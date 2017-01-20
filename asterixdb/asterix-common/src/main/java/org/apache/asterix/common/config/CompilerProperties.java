@@ -25,19 +25,19 @@ import org.apache.hyracks.util.StorageUtil;
 
 public class CompilerProperties extends AbstractProperties {
 
-    private static final String COMPILER_SORTMEMORY_KEY = "compiler.sortmemory";
+    public static final String COMPILER_SORTMEMORY_KEY = "compiler.sortmemory";
     private static final long COMPILER_SORTMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
 
-    private static final String COMPILER_GROUPMEMORY_KEY = "compiler.groupmemory";
+    public static final String COMPILER_GROUPMEMORY_KEY = "compiler.groupmemory";
     private static final long COMPILER_GROUPMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
 
-    private static final String COMPILER_JOINMEMORY_KEY = "compiler.joinmemory";
+    public static final String COMPILER_JOINMEMORY_KEY = "compiler.joinmemory";
     private static final long COMPILER_JOINMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
 
     private static final String COMPILER_FRAMESIZE_KEY = "compiler.framesize";
     private static final int COMPILER_FRAMESIZE_DEFAULT = StorageUtil.getSizeInBytes(32, KILOBYTE);
 
-    private static final String COMPILER_PARALLELISM_KEY = "compiler.parallelism";
+    public static final String COMPILER_PARALLELISM_KEY = "compiler.parallelism";
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
     private static final String COMPILER_PREGELIX_HOME = "compiler.pregelix.home";

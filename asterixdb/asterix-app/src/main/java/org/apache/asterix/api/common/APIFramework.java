@@ -35,7 +35,9 @@ import org.apache.asterix.api.common.Job.SubmissionMode;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.IPropertyInterpreter;
 import org.apache.asterix.common.config.OptimizationConfUtil;
+import org.apache.asterix.common.config.PropertyInterpreters;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -59,9 +61,9 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
-import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -208,9 +210,13 @@ public class APIFramework {
 
         CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
-        int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
-        int groupFrameLimit = (int) (compilerProperties.getGroupMemorySize() / frameSize);
-        int joinFrameLimit = (int) (compilerProperties.getJoinMemorySize() / frameSize);
+        Map<String, String> querySpecificConfig = metadataProvider.getConfig();
+        int sortFrameLimit = getFrameLimit(querySpecificConfig.get(CompilerProperties.COMPILER_SORTMEMORY_KEY),
+                compilerProperties.getSortMemorySize(), frameSize);
+        int groupFrameLimit = getFrameLimit(querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
+                compilerProperties.getGroupMemorySize(), frameSize);
+        int joinFrameLimit = getFrameLimit(querySpecificConfig.get(CompilerProperties.COMPILER_JOINMEMORY_KEY),
+                compilerProperties.getJoinMemorySize(), frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalSort(sortFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalGroupBy(groupFrameLimit);
@@ -230,7 +236,8 @@ public class APIFramework {
         builder.setMissableTypeComputer(MissableTypeComputer.INSTANCE);
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
 
-        int parallelism = compilerProperties.getParallelism();
+        int parallelism = getParallelism(querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
+                compilerProperties.getParallelism());
         builder.setClusterLocations(parallelism == CompilerProperties.COMPILER_PARALLELISM_AS_STORAGE
                 ? metadataProvider.getClusterLocations() : getComputationLocations(clusterInfoCollector, parallelism));
 
@@ -403,5 +410,20 @@ public class APIFramework {
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
+    }
+
+    // Gets the frame limit.
+    private int getFrameLimit(String parameter, long memBudgetInConfiguration, int frameSize) {
+        IPropertyInterpreter<Long> longBytePropertyInterpreter = PropertyInterpreters.getLongBytePropertyInterpreter();
+        long memBudget = parameter == null ? memBudgetInConfiguration
+                : longBytePropertyInterpreter.interpret(parameter);
+        return (int) (memBudget / frameSize);
+    }
+
+    // Gets the parallelism parameter.
+    private int getParallelism(String parameter, int parallelismInConfiguration) {
+        IPropertyInterpreter<Integer> integerIPropertyInterpreter = PropertyInterpreters
+                .getIntegerPropertyInterpreter();
+        return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.interpret(parameter);
     }
 }

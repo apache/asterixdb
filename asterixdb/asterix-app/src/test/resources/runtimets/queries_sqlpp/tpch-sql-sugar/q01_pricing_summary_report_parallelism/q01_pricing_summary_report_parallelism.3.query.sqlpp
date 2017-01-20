@@ -16,18 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- *
- * Big object (20 MB) loading test
- * Expected result: success
- *
- */
 
-use dataverse testdv2;
+USE tpch;
 
+SET `compiler.parallelism` "5"
 
-set "compiler.sortmemory" "64MB"
-
-load dataset testds
-using localfs
-(("path"="asterix_nc1://target/data/big-object/big_object_20M.adm"),("format"="adm"));
+SELECT  l_returnflag,
+        l_linestatus,
+        sum(l_quantity) AS sum_qty,
+        sum(l_extendedprice) AS sum_base_price,
+        sum(l_extendedprice * (1 - l_discount)) AS sum_disc_price,
+        sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS sum_charge,
+        avg(l_quantity) AS ave_qty,
+        avg(l_extendedprice) AS ave_price,
+        avg(l_discount) AS ave_disc,
+        count(1) AS count_order
+FROM  LineItem
+WHERE l_shipdate <= '1998-09-02'
+/* +hash */
+GROUP BY l_returnflag, l_linestatus
+ORDER BY l_returnflag, l_linestatus
+;

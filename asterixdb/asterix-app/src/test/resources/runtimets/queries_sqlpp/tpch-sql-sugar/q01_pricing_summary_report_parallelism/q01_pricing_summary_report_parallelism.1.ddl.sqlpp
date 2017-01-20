@@ -16,18 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- *
- * Big object (20 MB) loading test
- * Expected result: success
- *
- */
 
-use dataverse testdv2;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
+
+use tpch;
 
 
-set "compiler.sortmemory" "64MB"
+create type tpch.LineItemType as
+ closed {
+  l_orderkey : bigint,
+  l_partkey : bigint,
+  l_suppkey : bigint,
+  l_linenumber : bigint,
+  l_quantity : double,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+}
 
-load dataset testds
-using localfs
-(("path"="asterix_nc1://target/data/big-object/big_object_20M.adm"),("format"="adm"));
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+

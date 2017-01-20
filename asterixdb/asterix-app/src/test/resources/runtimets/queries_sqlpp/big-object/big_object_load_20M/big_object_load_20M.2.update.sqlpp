@@ -23,10 +23,9 @@
  *
  */
 
-use dataverse testdv2;
+use testdv2;
 
-
-set "compiler.sortmemory" "64MB"
+set `compiler.sortmemory` "64MB"
 
 load dataset testds
 using localfs
