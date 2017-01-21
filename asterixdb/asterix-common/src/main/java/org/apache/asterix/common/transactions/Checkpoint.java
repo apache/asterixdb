@@ -18,11 +18,16 @@
  */
 package org.apache.asterix.common.transactions;
 
-import java.io.Serializable;
+import java.io.IOException;
 
-public class Checkpoint implements Serializable, Comparable<Checkpoint> {
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    private static final long serialVersionUID = 1L;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class Checkpoint implements Comparable<Checkpoint> {
 
     private final long checkpointLsn;
     private final long minMCTFirstLsn;
@@ -31,8 +36,11 @@ public class Checkpoint implements Serializable, Comparable<Checkpoint> {
     private final boolean sharp;
     private final int storageVersion;
 
-    public Checkpoint(long checkpointLsn, long minMCTFirstLsn, int maxJobId, long timeStamp, boolean sharp,
-            int storageVersion) {
+    @JsonCreator
+    public Checkpoint(@JsonProperty("checkpointLsn") long checkpointLsn,
+            @JsonProperty("minMCTFirstLsn") long minMCTFirstLsn, @JsonProperty("maxJobId") int maxJobId,
+            @JsonProperty("timeStamp") long timeStamp, @JsonProperty("sharp") boolean sharp,
+            @JsonProperty("storageVersion") int storageVersion) {
         this.checkpointLsn = checkpointLsn;
         this.minMCTFirstLsn = minMCTFirstLsn;
         this.maxJobId = maxJobId;
@@ -106,5 +114,21 @@ public class Checkpoint implements Serializable, Comparable<Checkpoint> {
         result = prime * result + storageVersion;
         result = prime * result + (int) (timeStamp ^ (timeStamp >>> 32));
         return result;
+    }
+
+    public String asJson() throws HyracksDataException {
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public static Checkpoint fromJson(String json) throws HyracksDataException {
+        try {
+            return new ObjectMapper().readValue(json, Checkpoint.class);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

@@ -18,14 +18,14 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,15 +84,12 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         if (checkpoints == null || checkpoints.length == 0) {
             return null;
         }
-
-        Checkpoint checkpointObject;
         List<Checkpoint> checkpointObjectList = new ArrayList<>();
         for (File file : checkpoints) {
-            try (FileInputStream fis = new FileInputStream(file);
-                    ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
-                checkpointObject = (Checkpoint) oisFromFis.readObject();
-                checkpointObjectList.add(checkpointObject);
-            } catch (IOException | ClassNotFoundException e) {
+            try {
+                String jsonString = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+                checkpointObjectList.add(Checkpoint.fromJson(jsonString));
+            } catch (IOException e) {
                 throw new ACIDException("Failed to read a checkpoint file", e);
             }
         }
@@ -139,12 +136,10 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         // Construct checkpoint file name
         String fileName = checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX
                 + Long.toString(checkpoint.getTimeStamp());
-        //TODO: replace java serialization
         // Write checkpoint file to disk
-        try (FileOutputStream fos = new FileOutputStream(fileName);
-                ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
-            oosToFos.writeObject(checkpoint);
-            oosToFos.flush();
+        Path path = Paths.get(fileName);
+        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            writer.write(checkpoint.asJson());
         } catch (IOException e) {
             throw new HyracksDataException("Failed to write checkpoint to disk", e);
         }
