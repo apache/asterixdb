@@ -303,6 +303,7 @@
       <groupId>com.e-movimento.tinytools</groupId>
       <artifactId>privilegedaccessor</artifactId>
       <version>1.2.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

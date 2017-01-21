@@ -39,8 +39,9 @@ public class ListifyAggregateDescriptor extends AbstractAggregateFunctionDynamic
 
     private AOrderedListType oltype;
 
-    public void reset(AOrderedListType orderedListType) {
-        this.oltype = orderedListType;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.oltype = (AOrderedListType) states[0];
     }
 
     @Override

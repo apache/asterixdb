@@ -62,7 +62,10 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
     private CastTypeDescriptor() {
     }
 
-    public void reset(IAType reqType, IAType inputType) {
+    @Override
+    public void setImmutableStates(Object... states) {
+        reqType = (IAType) states[0];
+        inputType = (IAType) states[1];
         // If reqType or inputType is null, or they are the same, it indicates there is a bug in the compiler.
         if (reqType == null || inputType == null || reqType.equals(inputType)) {
             throw new IllegalStateException(

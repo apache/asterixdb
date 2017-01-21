@@ -55,20 +55,13 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
-import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.ConstantExpressionUtil;
-import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.asterix.runtime.evaluators.common.FunctionManagerImpl;
-import org.apache.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.OpenRecordConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.OrderedListConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByIndexEvalFactory;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNestedEvalFactory;
@@ -111,8 +104,6 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
-
-import junit.extensions.PA;
 
 public class NonTaggedDataFormat implements IDataFormat {
 
@@ -372,7 +363,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
-                ((ListifyAggregateDescriptor) fd).reset((AOrderedListType) context.getType(expr));
+                fd.setImmutableStates(context.getType(expr));
             }
         });
         functionTypeInferers.put(BuiltinFunctions.RECORD_MERGE, new FunctionTypeInferer() {
@@ -383,8 +374,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 IAType outType = (IAType) context.getType(expr);
                 IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
                 IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
-                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.IAType, org.apache.asterix.om.types.IAType, "
-                        + " org.apache.asterix.om.types.IAType)", outType, type0, type1);
+                fd.setImmutableStates(outType, type0, type1);
             }
         });
 
@@ -396,8 +386,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
                 IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
                 IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
-                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.IAType, org.apache.asterix.om.types.IAType)",
-                        type0, type1);
+                fd.setImmutableStates(type0, type1);
             }
         });
 
@@ -417,8 +406,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 if (type1.getTypeTag().equals(ATypeTag.ANY)) {
                     type1 = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
                 }
-                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.IAType, org.apache.asterix.om.types.IAType,"
-                        + " org.apache.asterix.om.types.IAType)", outType, type0, type1);
+                fd.setImmutableStates(outType, type0, type1);
             }
         });
 
@@ -438,8 +426,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 if (type1.getTypeTag().equals(ATypeTag.ANY)) {
                     type1 = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
                 }
-                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.IAType, org.apache.asterix.om.types.IAType,"
-                        + " org.apache.asterix.om.types.IAType)", outType, type0, type1);
+                fd.setImmutableStates(outType, type0, type1);
             }
         });
         functionTypeInferers.put(BuiltinFunctions.CAST_TYPE, new FunctionTypeInferer() {
@@ -449,8 +436,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
                 IAType rt = TypeCastUtils.getRequiredType(funcExpr);
                 IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
-                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.IAType, org.apache.asterix.om.types.IAType)", rt,
-                        it);
+                fd.setImmutableStates(rt, it);
             }
         });
         functionTypeInferers.put(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
@@ -458,8 +444,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
                 ARecordType rt = (ARecordType) context.getType(expr);
-                ((OpenRecordConstructorDescriptor) fd).reset(rt,
-                        computeOpenFields((AbstractFunctionCallExpression) expr, rt));
+                fd.setImmutableStates(rt, computeOpenFields((AbstractFunctionCallExpression) expr, rt));
             }
 
             private boolean[] computeOpenFields(AbstractFunctionCallExpression expr, ARecordType recType) {
@@ -486,21 +471,21 @@ public class NonTaggedDataFormat implements IDataFormat {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
-                ((ClosedRecordConstructorDescriptor) fd).reset((ARecordType) context.getType(expr));
+                fd.setImmutableStates(context.getType(expr));
             }
         });
         functionTypeInferers.put(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
-                ((OrderedListConstructorDescriptor) fd).reset((AOrderedListType) context.getType(expr));
+                fd.setImmutableStates(context.getType(expr));
             }
         });
         functionTypeInferers.put(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
                     throws AlgebricksException {
-                ((UnorderedListConstructorDescriptor) fd).reset((AUnorderedListType) context.getType(expr));
+                fd.setImmutableStates(context.getType(expr));
             }
         });
         functionTypeInferers.put(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, new FunctionTypeInferer() {
@@ -511,8 +496,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 switch (t.getTypeTag()) {
                     case RECORD: {
-                        ARecordType recType = (ARecordType) t;
-                        PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                        fd.setImmutableStates(t);
                         break;
                     }
                     case UNION: {
@@ -520,8 +504,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                         if (unionT.isUnknownableType()) {
                             IAType t2 = unionT.getActualType();
                             if (t2.getTypeTag() == ATypeTag.RECORD) {
-                                ARecordType recType = (ARecordType) t2;
-                                PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                                fd.setImmutableStates(t2);
                                 break;
                             }
                         }
@@ -548,14 +531,11 @@ public class NonTaggedDataFormat implements IDataFormat {
 
                 switch (t.getTypeTag()) {
                     case RECORD: {
-                        ARecordType recType = (ARecordType) t;
-                        PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType, java.util.List)", recType,
-                                listFieldPath);
+                        fd.setImmutableStates(t, listFieldPath);
                         break;
                     }
                     case ANY:
-                        PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType, java.util.List)",
-                                ARecordType.FULLY_OPEN_RECORD_TYPE, listFieldPath);
+                        fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE, listFieldPath);
                         break;
                     default: {
                         throw new NotImplementedException("field-access-nested for data of type " + t);
@@ -571,11 +551,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 ATypeTag typeTag = t.getTypeTag();
                 if (typeTag.equals(ATypeTag.RECORD)) {
-                    ARecordType recType = (ARecordType) t;
-                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                    fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
-                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)",
-                            ARecordType.FULLY_OPEN_RECORD_TYPE);
+                    fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("get-record-fields for data of type " + t);
                 }
@@ -589,11 +567,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 ATypeTag typeTag = t.getTypeTag();
                 if (typeTag.equals(ATypeTag.RECORD)) {
-                    ARecordType recType = (ARecordType) t;
-                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                    fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
-                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)",
-                            ARecordType.FULLY_OPEN_RECORD_TYPE);
+                    fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("get-record-field-value for data of type " + t);
                 }
@@ -607,11 +583,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 ATypeTag typeTag = t.getTypeTag();
                 if (typeTag.equals(ATypeTag.RECORD)) {
-                    ARecordType recType = (ARecordType) t;
-                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)", recType);
+                    fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
-                    PA.invokeMethod(fd, "reset(org.apache.asterix.om.types.ARecordType)",
-                            ARecordType.FULLY_OPEN_RECORD_TYPE);
+                    fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("record-fields with data of type " + t);
                 }

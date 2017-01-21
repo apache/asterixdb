@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.evaluators.functions;
+package org.apache.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -25,6 +25,7 @@ import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -50,8 +51,9 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
     private AUnorderedListType ultype;
 
-    public void reset(AUnorderedListType unorderedListType) {
-        this.ultype = unorderedListType;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.ultype = (AUnorderedListType) states[0];
     }
 
     @Override

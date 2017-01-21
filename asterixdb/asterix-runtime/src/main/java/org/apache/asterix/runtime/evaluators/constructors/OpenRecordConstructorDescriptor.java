@@ -50,9 +50,10 @@ public class OpenRecordConstructorDescriptor extends AbstractScalarFunctionDynam
     private ARecordType recType;
     private boolean[] openFields;
 
-    public void reset(ARecordType recType, boolean[] openFields) {
-        this.recType = recType;
-        this.openFields = openFields;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.recType = (ARecordType) states[0];
+        this.openFields = (boolean[]) states[1];
     }
 
     @Override

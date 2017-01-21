@@ -197,7 +197,7 @@ import org.apache.asterix.runtime.evaluators.functions.NumericTanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericTruncDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.OrderedListConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.OrderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.PrefixLenJaccardDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
@@ -244,7 +244,7 @@ import org.apache.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor
 import org.apache.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.UnorderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryLengthDescriptor;

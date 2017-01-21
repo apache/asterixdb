@@ -37,8 +37,9 @@ public class GetRecordFieldValueDescriptor extends AbstractScalarFunctionDynamic
 
     private ARecordType recType;
 
-    public void reset(ARecordType recType) {
-        this.recType = recType;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.recType = (ARecordType) states[0];
     }
 
     @Override

@@ -74,10 +74,11 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
     private ARecordType inRecType0;
     private ARecordType inRecType1;
 
-    public void reset(IAType outType, IAType inType0, IAType inType1) {
-        outRecType = TypeComputeUtils.extractRecordType(outType);
-        inRecType0 = TypeComputeUtils.extractRecordType(inType0);
-        inRecType1 = TypeComputeUtils.extractRecordType(inType1);
+    @Override
+    public void setImmutableStates(Object... states) {
+        outRecType = TypeComputeUtils.extractRecordType((IAType) states[0]);
+        inRecType0 = TypeComputeUtils.extractRecordType((IAType) states[1]);
+        inRecType1 = TypeComputeUtils.extractRecordType((IAType) states[2]);
     }
 
     @Override

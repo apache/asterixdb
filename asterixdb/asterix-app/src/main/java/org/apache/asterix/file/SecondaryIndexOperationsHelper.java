@@ -402,7 +402,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType) {
         CastTypeDescriptor castFuncDesc = (CastTypeDescriptor) CastTypeDescriptor.FACTORY.createFunctionDescriptor();
-        castFuncDesc.reset(enforcedItemType, itemType);
+        castFuncDesc.setImmutableStates(enforcedItemType, itemType);
 
         int[] outColumns = new int[1];
         int[] projectionList = new int[(dataset.hasMetaPart() ? 2 : 1) + numPrimaryKeys];

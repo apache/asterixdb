@@ -30,22 +30,26 @@ import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorF
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 
 public interface IFunctionDescriptor extends Serializable {
-    public FunctionIdentifier getIdentifier();
 
-    public FunctionDescriptorTag getFunctionDescriptorTag();
+    default void setImmutableStates(Object... states) {
+    }
 
-    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException;
+    FunctionIdentifier getIdentifier();
 
-    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+    FunctionDescriptorTag getFunctionDescriptorTag();
+
+    IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException;
+
+    IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException;
 
-    public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
+    ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
             final IScalarEvaluatorFactory[] args) throws AlgebricksException;
 
-    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+    IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException;
 
-    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+    IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException;
 
 }

@@ -74,10 +74,11 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
     private AOrderedListType inListType;
     private IAType inputFieldListItemType;
 
-    public void reset(IAType outType, IAType inType0, IAType inType1) {
-        outRecType = TypeComputeUtils.extractRecordType(outType);
-        inRecType = TypeComputeUtils.extractRecordType(inType0);
-        inListType = TypeComputeUtils.extractOrderedListType(inType1);
+    @Override
+    public void setImmutableStates(Object... states) {
+        outRecType = TypeComputeUtils.extractRecordType((IAType) states[0]);
+        inRecType = TypeComputeUtils.extractRecordType((IAType) states[1]);
+        inListType = TypeComputeUtils.extractOrderedListType((IAType) states[2]);
         inputFieldListItemType = inListType.getItemType();
         if (inputFieldListItemType == null || inputFieldListItemType.getTypeTag() == ATypeTag.ANY) {
             inputFieldListItemType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;

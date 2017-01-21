@@ -54,10 +54,12 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
     private IAType inputTypeLeft;
     private IAType inputTypeRight;
 
-    public void reset(IAType inTypeLeft, IAType inTypeRight) {
-        this.inputTypeLeft = inTypeLeft;
-        this.inputTypeRight = inTypeRight;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.inputTypeLeft = (IAType) states[0];
+        this.inputTypeRight = (IAType) states[1];
     }
+
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

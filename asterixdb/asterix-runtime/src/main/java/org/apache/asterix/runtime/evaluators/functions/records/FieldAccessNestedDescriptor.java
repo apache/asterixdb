@@ -40,9 +40,10 @@ public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDe
     private ARecordType recType;
     private List<String> fldName;
 
-    public void reset(ARecordType recType, List<String> fldName) {
-        this.recType = recType;
-        this.fldName = fldName;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.recType = (ARecordType) states[0];
+        this.fldName = (List<String>) states[1];
     }
 
     @Override

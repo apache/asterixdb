@@ -44,10 +44,11 @@ public class RecordRemoveFieldsDescriptor extends AbstractScalarFunctionDynamicD
     private ARecordType inputRecType;
     private AOrderedListType inputListType;
 
-    public void reset(IAType outType, IAType inType, IAType inListType) {
-        outputRecordType = (ARecordType) outType;
-        inputRecType = (ARecordType) inType;
-        inputListType = (AOrderedListType) inListType;
+    @Override
+    public void setImmutableStates(Object... states) {
+        outputRecordType = (ARecordType) states[0];
+        inputRecType = (ARecordType) states[1];
+        inputListType = (AOrderedListType) states[2];
     }
 
     @Override

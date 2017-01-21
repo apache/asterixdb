@@ -58,8 +58,9 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
     private static final long serialVersionUID = 1L;
     private ARecordType recType;
 
-    public void reset(ARecordType recType) {
-        this.recType = recType;
+    @Override
+    public void setImmutableStates(Object... states) {
+        this.recType = (ARecordType) states[0];
     }
 
     @Override
