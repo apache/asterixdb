@@ -1828,7 +1828,7 @@ Expression RelExpr()throws ParseException:
     operand = BetweenExpr()
 
     (
-      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? (<LIKE>|<IN>))
+      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN>)
         {
           String mhint = getHint(token);
           if (mhint != null) {
@@ -1873,6 +1873,7 @@ Expression RelExpr()throws ParseException:
        return op==null? operand: op;
      }
 }
+
 
 Expression BetweenExpr()throws ParseException:
 {
@@ -1938,7 +1939,7 @@ Expression IsExpr() throws ParseException:
     boolean not = false;
 }
 {
-    operand = ConcatExpr()
+    operand = LikeExpr()
     ( <IS> (<NOT> { not = true; })? (<NULL> | <MISSING> | <UNKOWN>)
       {
         String functionName = "is-" + token.image.toLowerCase();
@@ -1953,6 +1954,45 @@ Expression IsExpr() throws ParseException:
     {
         return expr = expr==null? operand : expr;
     }
+}
+
+
+Expression LikeExpr()throws ParseException:
+{
+  boolean not = false;
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = ConcatExpr()
+    (
+        LOOKAHEAD(2)
+        (<NOT> { not = true; })? <LIKE>
+        {
+          op = new OperatorExpr();
+          op.addOperand(operand);
+          op.setCurrentop(true);
+
+          String operator = token.image.toLowerCase();
+          if (not) {
+            operator = "not_" + operator;
+          }
+          try{
+            op.addOperator(operator);
+          } catch (CompilationException e){
+            throw new ParseException(e.getMessage());
+          }
+        }
+
+        operand = ConcatExpr()
+        {
+          op.addOperand(operand);
+        }
+     )?
+
+     {
+       return op == null ? operand : op;
+     }
 }
 
 Expression ConcatExpr()throws ParseException:

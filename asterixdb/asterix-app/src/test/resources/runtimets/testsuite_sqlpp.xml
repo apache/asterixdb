@@ -1063,6 +1063,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="like">
+        <output-dir compare="Text">like</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="lt_01">
         <output-dir compare="Text">lt_01</output-dir>
       </compilation-unit>
