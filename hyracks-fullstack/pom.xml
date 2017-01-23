@@ -20,8 +20,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
-  <artifactId>apache-asterixdb-hyracks</artifactId>
-  <version>0.2.18-SNAPSHOT</version>
+  <artifactId>apache-hyracks</artifactId>
+  <version>0.3.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
   <url>https://asterixdb.apache.org/</url>
@@ -453,7 +453,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>

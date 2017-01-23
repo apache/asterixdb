@@ -21,7 +21,7 @@
   <parent>
     <artifactId>apache-asterixdb</artifactId>
     <groupId>org.apache.asterix</groupId>
-    <version>0.8.9-SNAPSHOT</version>
+    <version>0.9.1-SNAPSHOT</version>
   </parent>
   <artifactId>asterix-installer</artifactId>
   <properties>
@@ -54,13 +54,14 @@
           </execution>
         </executions>
         <configuration>
+          <templateRootDir>${basedir}/../src/main/licenses/templates</templateRootDir>
           <generatedFiles>
             <generatedFile>
-              <template>asterixdb/src/main/licenses/templates/asterix-license.ftl</template>
+              <template>asterix-license.ftl</template>
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <template>hyracks-fullstack/hyracks-fullstack-license/src/main/licenses/templates/asterix-notice.ftl</template>
+              <template>asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>
@@ -85,7 +86,6 @@
             <exclude>org.apache.hyracks:*</exclude>
           </excludes>
           <licenseDirectory>${basedir}/../src/main/licenses/content</licenseDirectory>
-          <templateRootDir>${basedir}/../../</templateRootDir>
           <dependencySets>
             <dependencySet>
               <includes>
@@ -132,6 +132,7 @@
             <packageName>Managix Install</packageName>
             <asterixAppLocation>repo/asterix-app-${project.version}.jar, within asterix/asterix-server-${project.version}-binary-assembly.zip</asterixAppLocation>
             <hyracksControlCcLocation>repo/hyracks-control-cc-${project.version}.jar, within asterix/asterix-server-${project.version}-binary-assembly.zip</hyracksControlCcLocation>
+            <hivecompatLocation>repo/asterix-hivecompat-${project.version}.jar, within asterix/asterix-server-${project.version}-binary-assembly.zip</hivecompatLocation>
           </templateProperties>
         </configuration>
       </plugin>

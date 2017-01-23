@@ -1,4 +1,4 @@
-<!--
+<#--
  ! Licensed to the Apache Software Foundation (ASF) under one
  ! or more contributor license agreements.  See the NOTICE file
  ! distributed with this work for additional information
@@ -15,28 +15,33 @@
  ! KIND, either express or implied.  See the License for the
  ! specific language governing permissions and limitations
  ! under the License.
- !-->
+-->
+<#-- TODO(mblow): share notice file template with hyracks via maven artifact -->
+<#if packageName?has_content>
+Apache AsterixDB ${packageName!}
+<#else>
+Apache AsterixDB
+</#if>
+Copyright 2015-2017 The Apache Software Foundation
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.hyracks.examples</groupId>
-  <artifactId>btree-example</artifactId>
-  <packaging>pom</packaging>
-  <name>btree-example</name>
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+<#list noticeMap>
 
-  <parent>
-    <groupId>org.apache.hyracks</groupId>
-    <artifactId>hyracks-examples</artifactId>
-    <version>0.3.1-SNAPSHOT</version>
-  </parent>
+AsterixDB utilizes many libraries, which come with the following applicable NOTICE(s):
 
-  <properties>
-    <root.dir>${basedir}/../../..</root.dir>
-  </properties>
+<#items as e>
+   <#assign noticeText = e.getKey()/>
+   <#assign projects = e.getValue()/>
+   <#list projects as p>
+       <#list p.locations as loc>
+- ${loc}${p.artifactId}-${p.version}.jar
+       </#list>
+   </#list>
 
-  <modules>
-    <module>btreehelper</module>
-    <module>btreeclient</module>
-    <module>btreeserver</module>
-  </modules>
-</project>
+<@indent spaces=6>
+${noticeText}
+</@indent>
+
+</#items>
+</#list>

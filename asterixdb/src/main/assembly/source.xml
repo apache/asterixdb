@@ -26,47 +26,21 @@
   <fileSets>
     <fileSet>
       <directory>${project.basedir}</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
-      <includes>
-        <include>**/LICENSE</include>
-        <include>**/NOTICE</include>
-        <include>**/README</include>
-        <include>**/src/**</include>
-        <include>**/results/**</include>
-        <include>**/pom.xml</include>
-        <include>**/build*.xml</include>
-        <include>**/findbugs*.xml</include>
-        <include>**/*site.xml</include>
-        <include>**/*.adm</include>
-        <include>**/*.json</include>
-        <include>**/*.aql</include>
-        <include>**/*.ddl</include>
-        <include>**/*.seq</include>
-        <include>**/*.rc</include>
-        <include>**/*.big</include>
-        <include>**/*textFileS</include>
-        <include>**/*large_text</include>
-        <include>**/*.csv*</include>
-        <include>**/*.tbl</include>
-        <include>**/*.txt</include>
-        <include>**/part-*</include>
-        <include>**/*.cleaned</include>
-        <include>**/*.md</include>
-        <include>**/*.hcli</include>
-        <include>**/*.properties</include>
-        <include>**/*.scm</include>
-        <include>**/*.sh</include>
-      </includes>
       <excludes>
         <exclude>**/${project.build.directory}/**</exclude>
+        <exclude>**/git.properties</exclude>
+        <exclude>release.properties</exclude>
+        <exclude>asterix-app/src/test/resources/externallib/**</exclude>
+        <exclude>asterix-installer/src/test/resources/clusterts/asterix-installer-*-binary-assembly/**</exclude>
       </excludes>
     </fileSet>
     <fileSet>
-      <directory>target/maven-shared-archive-resources/META-INF</directory>
-      <outputDirectory>/</outputDirectory>
+      <directory>asterix-app/target/classes</directory>
+      <outputDirectory>./asterix-app/src/main/resources/</outputDirectory>
       <includes>
-        <include>DEPENDENCIES*</include>
+        <include>git.properties</include>
       </includes>
     </fileSet>
   </fileSets>

@@ -1,0 +1,9 @@
+===
+   AsterixDB includes source code with separate copyright notices and
+   license terms. Your use of this source code is subject to the terms
+   and condition of the following licenses.
+===
+   Source files org/apache/asterix/hivecompat/io/* are derived from portions
+   of Apache Hive Query Language v0.13.0 (org.apache.hive:hive-exec),
+   made available under The Apache License, Version 2.0:
+---

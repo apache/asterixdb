@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.asterix</groupId>
     <artifactId>apache-asterixdb</artifactId>
-    <version>0.8.9-SNAPSHOT</version>
+    <version>0.9.1-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -50,16 +50,17 @@
           </execution>
         </executions>
         <configuration>
-          <templateRootDir>${basedir}/../../</templateRootDir>
+          <templateRootDir>${basedir}/../src/main/licenses/templates</templateRootDir>
           <outputDir>${basedir}/..</outputDir>
           <location>ignored</location>
           <generatedFiles>
             <generatedFile>
-              <template>asterixdb/src/main/licenses/templates/asterix-source-license.ftl</template>
+              <template>asterix-source-license.ftl</template>
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <template>hyracks-fullstack/hyracks-fullstack-license/src/main/licenses/templates/asterix-notice.ftl</template>
+              <!-- TODO(mblow): share the template with hyracks as a maven artifact -->
+              <template>asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>
@@ -83,9 +84,9 @@
             </license>
           </licenses>
           <templateProperties>
-            <asterixAppLocation/>
             <asterixAppResourcesPrefix>asterix-app/src/main/resources/</asterixAppResourcesPrefix>
-            <packageName/>
+            <hivecompatPrefix>asterix-hivecompat/src/main/java/</hivecompatPrefix>
+            <packageName />
           </templateProperties>
         </configuration>
       </plugin>

@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.asterix</groupId>
     <artifactId>apache-asterixdb</artifactId>
-    <version>0.8.9-SNAPSHOT</version>
+    <version>0.9.1-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -54,14 +54,14 @@
           </execution>
         </executions>
         <configuration>
-          <templateRootDir>${basedir}/../../</templateRootDir>
+          <templateRootDir>${basedir}/../src/main/licenses/templates</templateRootDir>
           <generatedFiles>
             <generatedFile>
-              <template>asterixdb/src/main/licenses/templates/asterix-license.ftl</template>
+              <template>asterix-license.ftl</template>
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <template>hyracks-fullstack/hyracks-fullstack-license/src/main/licenses/templates/asterix-notice.ftl</template>
+              <template>asterix-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>
@@ -210,6 +210,7 @@
             <packageName>Server Install</packageName>
             <asterixAppLocation>repo/asterix-app-${project.version}.jar, within this assembly</asterixAppLocation>
             <hyracksControlCcLocation>repo/hyracks-control-cc-${project.version}.jar, within this assembly</hyracksControlCcLocation>
+            <hivecompatLocation>repo/asterix-hivecompat-${project.version}.jar, within this assembly</hivecompatLocation>
           </templateProperties>
         </configuration>
       </plugin>

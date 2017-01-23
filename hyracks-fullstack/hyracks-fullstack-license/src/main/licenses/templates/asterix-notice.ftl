@@ -16,6 +16,7 @@
  ! specific language governing permissions and limitations
  ! under the License.
 -->
+<#-- TODO(mblow): share notice file template with asterixdb via maven artifact -->
 <#if packageName?has_content>
 Apache AsterixDB ${packageName!}
 <#else>

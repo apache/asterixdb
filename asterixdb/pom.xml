@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>apache-asterixdb</artifactId>
-  <version>0.8.9-SNAPSHOT</version>
+  <version>0.9.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>https://asterixdb.apache.org/</url>
 
@@ -64,8 +64,8 @@
     <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <algebricks.version>0.2.18-SNAPSHOT</algebricks.version>
-    <hyracks.version>0.2.18-SNAPSHOT</hyracks.version>
+    <algebricks.version>0.3.1-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.3.1-SNAPSHOT</hyracks.version>
     <hadoop.version>2.2.0</hadoop.version>
     <jetty.version>9.3.11.v20160721</jetty.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
@@ -387,7 +387,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -400,7 +400,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>

@@ -21,7 +21,7 @@
   <parent>
     <artifactId>apache-asterixdb</artifactId>
     <groupId>org.apache.asterix</groupId>
-    <version>0.8.9-SNAPSHOT</version>
+    <version>0.9.1-SNAPSHOT</version>
   </parent>
   <artifactId>asterix-app</artifactId>
   <licenses>
@@ -75,6 +75,10 @@
 
           <!-- The path for the to be generated properties file, it's relative to ${project.basedir} -->
           <generateGitPropertiesFilename>./target/classes/git.properties</generateGitPropertiesFilename>
+
+          <!-- there is no .git directory when building from a source assembly- a static git.properties file (generated
+               at source assembly time) is used in this case -->
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
         </configuration>
 
       </plugin>
