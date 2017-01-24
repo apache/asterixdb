@@ -18,7 +18,7 @@
 -->
 <#-- TODO(mblow): share notice file template with hyracks via maven artifact -->
 <#if packageName?has_content>
-Apache AsterixDB ${packageName!}
+${packageName!}
 <#else>
 Apache AsterixDB
 </#if>
@@ -29,11 +29,12 @@ The Apache Software Foundation (http://www.apache.org/).
 <#list noticeMap>
 
 AsterixDB utilizes many libraries, which come with the following applicable NOTICE(s):
-
 <#items as e>
    <#assign noticeText = e.getKey()/>
    <#assign projects = e.getValue()/>
+
    <#list projects as p>
+${p.name} (${p.groupId}:${p.artifactId}:${p.version})
        <#list p.locations as loc>
 - ${loc}${p.artifactId}-${p.version}.jar
        </#list>
@@ -42,6 +43,5 @@ AsterixDB utilizes many libraries, which come with the following applicable NOTI
 <@indent spaces=6>
 ${noticeText}
 </@indent>
-
 </#items>
 </#list>

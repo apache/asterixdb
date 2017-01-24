@@ -94,7 +94,7 @@
             </override>
             <override>
               <gav>com.thoughtworks.paranamer:paranamer:2.3</gav>
-              <url>https://raw.githubusercontent.com/codehaus/paranamer-git/master/LICENSE.txt</url>
+              <url>https://github.com/codehaus/paranamer-git/blob/paranamer-2.3/LICENSE.txt</url>
             </override>
             <override>
               <gav>org.codehaus.jettison:jettison:1.1</gav>
@@ -118,25 +118,32 @@
             </override>
             <override>
               <gav>com.google.protobuf:protobuf-java:2.5.0</gav>
-              <url>https://raw.githubusercontent.com/google/protobuf/master/LICENSE</url>
+              <url>https://github.com/google/protobuf/blob/v2.5.0/COPYING.txt</url>
             </override>
             <override>
               <gav>xmlenc:xmlenc:0.52</gav>
-              <url>xmlenc_0.52_LICENSE</url>
+              <url>https://cytranet.dl.sourceforge.net/project/xmlenc/xmlenc/0.52/xmlenc-0.52.tgz?xmlenc-0.52/COPYRIGHT</url>
             </override>
           </overrides>
           <licenses>
             <license>
-              <url>https://raw.githubusercontent.com/google/protobuf/master/LICENSE</url>
+              <displayName>a BSD 3-clause license</displayName>
+              <url>http://asm.objectweb.org/license.html</url>
+            </license>
+            <license>
+              <displayName>a BSD 3-clause license</displayName>
+              <url>https://github.com/google/protobuf/blob/v2.5.0/COPYING.txt</url>
               <contentFile>protobuf_2.5.0_LICENSE.txt</contentFile>
             </license>
             <license>
-              <url>xmlenc_0.52_LICENSE</url>
-              <contentFile>xmlenc_0.52_LICENSE.txt</contentFile>
+              <displayName>a BSD 3-clause license</displayName>
+              <url>https://github.com/codehaus/paranamer-git/blob/paranamer-2.3/LICENSE.txt</url>
+              <contentFile>paranamer-2.3_LICENSE.txt</contentFile>
             </license>
             <license>
-              <url>https://raw.githubusercontent.com/hamcrest/JavaHamcrest/1260407ae3d2786cb54b8be52ebe041e54ccd6ac/LICENSE.txt</url>
-              <contentFile>hamcrest_1.3_LICENSE.txt</contentFile>
+              <displayName>a BSD 3-clause license</displayName>
+              <url>https://cytranet.dl.sourceforge.net/project/xmlenc/xmlenc/0.52/xmlenc-0.52.tgz?xmlenc-0.52/COPYRIGHT</url>
+              <contentFile>xmlenc_0.52_LICENSE.txt</contentFile>
             </license>
             <license>
               <displayName>The Apache Software License, Version 2.0</displayName>
@@ -151,7 +158,7 @@
             <license>
               <url>https://java.net/projects/stax-utils/sources/svn/content/trunk/LICENSE</url>
               <contentFile>stax-utils_LICENSE.txt</contentFile>
-              <displayName>a BSD-style License</displayName>
+              <displayName>a BSD 3-clause license</displayName>
               <aliasUrls>
                 <aliasUrl>https://stax-utils.dev.java.net/source/browse/*checkout*/stax-utils/LICENSE</aliasUrl>
               </aliasUrls>
@@ -207,7 +214,7 @@
             </license>
           </licenses>
           <templateProperties>
-            <packageName>Server Install</packageName>
+            <packageName>Apache AsterixDB Server Install</packageName>
             <asterixAppLocation>repo/asterix-app-${project.version}.jar, within this assembly</asterixAppLocation>
             <hyracksControlCcLocation>repo/hyracks-control-cc-${project.version}.jar, within this assembly</hyracksControlCcLocation>
             <hivecompatLocation>repo/asterix-hivecompat-${project.version}.jar, within this assembly</hivecompatLocation>

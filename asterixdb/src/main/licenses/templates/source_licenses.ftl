@@ -87,7 +87,7 @@
    Copyright 2012 Twitter, Inc.
    http://www.apache.org/licenses/LICENSE-2.0.txt
 </@license>
-<@license files=["webui/static/js/smoothie.js", "feed/smoothie.js"]>
+<@license files=["webui/static/js/smoothie.js", "feed/smoothie.js"] licenseName="The MIT License">
 Copyright (c) 2010-2013, Joe Walnes
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

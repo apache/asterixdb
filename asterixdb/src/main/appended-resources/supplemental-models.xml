@@ -73,8 +73,20 @@
       </organization>
       <licenses>
         <license>
-          <name>The BSD License</name>
+          <name>a BSD 3-clause license</name>
           <url>http://jline.sourceforge.net/license.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>com.jcraft</groupId>
+      <artifactId>jsch</artifactId>
+      <licenses>
+        <license>
+          <name>a BSD 3-clause license</name>
+          <url>http://www.jcraft.com/jsch/LICENSE.txt</url>
         </license>
       </licenses>
     </project>
@@ -100,6 +112,7 @@
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <name>Java Servlet API</name>
+      <url>https://jcp.org/aboutJava/communityprocess/mrel/jsr154/index.html</url>
       <organization>
         <name>Oracle Corporation</name>
         <url>http://www.oracle.com/</url>
@@ -108,6 +121,18 @@
         <license>
           <name>COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0</name>
           <url>http://www.sun.com/cddl/cddl.html</url>
+        </license>
+      </licenses>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>jdom</groupId>
+      <artifactId>jdom</artifactId>
+      <licenses>
+        <license>
+          <name>an ASL v1.1-style license</name>
+          <url>licenses/jdom.txt</url>
         </license>
       </licenses>
     </project>

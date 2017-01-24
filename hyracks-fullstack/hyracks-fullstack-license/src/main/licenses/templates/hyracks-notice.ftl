@@ -17,23 +17,20 @@
  ! under the License.
 -->
 <#-- TODO(mblow): share notice file template with asterixdb via maven artifact -->
-<#if packageName?has_content>
-Apache AsterixDB ${packageName!}
-<#else>
-Apache AsterixDB
-</#if>
+Apache Hyracks and Algebricks
 Copyright 2015-2017 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 <#list noticeMap>
 
-AsterixDB utilizes many libraries, which come with the following applicable NOTICE(s):
+Hyracks and Algebricks utilize many libraries, which come with the following applicable NOTICE(s):
 
 <#items as e>
    <#assign noticeText = e.getKey()/>
    <#assign projects = e.getValue()/>
    <#list projects as p>
+${p.name} (${p.groupId}:${p.artifactId}:${p.version})
        <#list p.locations as loc>
 - ${loc}${p.artifactId}-${p.version}.jar
        </#list>

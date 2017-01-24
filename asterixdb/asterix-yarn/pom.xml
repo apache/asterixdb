@@ -169,7 +169,7 @@
             </override>
             <override>
               <gav>com.google.protobuf:protobuf-java:2.5.0</gav>
-              <url>https://raw.githubusercontent.com/google/protobuf/master/LICENSE</url>
+              <url>https://github.com/google/protobuf/blob/v2.5.0/COPYING.txt</url>
             </override>
           </overrides>
           <licenses>
@@ -177,13 +177,9 @@
               <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
               <aliasUrls>http://www.apache.org/licenses/LICENSE-2.0</aliasUrls>
             </license>
-            <license>
-              <url>https://opensource.org/licenses/mit-license.php</url>
-              <aliasUrls>http://www.opensource.org/li]censes/mit-license.php</aliasUrls>
-            </license>
           </licenses>
           <templateProperties>
-            <packageName>YARN Install</packageName>
+            <packageName>Apache AsterixDB YARN Install</packageName>
             <asterixAppLocation>repo/asterix-app-${project.version}.jar, within asterix/asterix-server-${project.version}-binary-assembly.zip</asterixAppLocation>
             <hyracksControlCcLocation>repo/hyracks-control-cc-${project.version}.jar, within asterix/asterix-server-${project.version}-binary-assembly.zip</hyracksControlCcLocation>
             <hivecompatLocation>repo/asterix-hivecompat-${project.version}.jar, within asterix/asterix-server-${project.version}-binary-assembly.zip</hivecompatLocation>
@@ -431,7 +427,6 @@
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-      <version>2.2.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>

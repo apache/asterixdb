@@ -19,7 +19,9 @@
 package org.apache.hyracks.maven.license.project;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.maven.project.MavenProject;
 
@@ -37,6 +39,7 @@ public class Project {
     private String artifactPath;
     private String noticeText;
     private String licenseText;
+    private String sourcePointer;
 
     @JsonIgnore
     private MavenProject mavenProject;
@@ -105,8 +108,9 @@ public class Project {
     }
 
     @JsonIgnore
-    public String [] getLocations() {
-        return getLocation().split(",");
+    public List<String> getLocations() {
+        // TODO(mblow): store locations as an set instead of string
+        return Arrays.asList(getLocation().split(","));
     }
 
     public void setArtifactId(String artifactId) {
@@ -155,5 +159,18 @@ public class Project {
 
     public void setLicenseText(String licenseText) {
         this.licenseText = licenseText;
+    }
+
+    public String getSourcePointer() {
+        return sourcePointer;
+    }
+
+    public void setSourcePointer(String sourcePointer) {
+        this.sourcePointer = sourcePointer;
+    }
+
+    @Override
+    public String toString() {
+        return "Project [" + gav() + "]";
     }
 }

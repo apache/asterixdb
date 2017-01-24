@@ -40,6 +40,7 @@ import org.apache.hyracks.maven.license.project.LicensedProjects;
 import org.apache.hyracks.maven.license.project.Project;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
@@ -85,6 +86,12 @@ public abstract class LicenseMojo extends AbstractMojo {
 
     @Component
     private ModelInheritanceAssembler assembler;
+
+    @Parameter( defaultValue = "${session}", required = true, readonly = true )
+    protected MavenSession session;
+
+    @Component
+    protected org.apache.maven.artifact.resolver.ArtifactResolver artifactResolver;
 
     @Parameter ( required = true )
     private String location;
@@ -192,6 +199,9 @@ public abstract class LicenseMojo extends AbstractMojo {
                     urlToLicenseMap.put(alias ,license);
                 }
             }
+        } else if (license.getDisplayName() == null && spec.getDisplayName() != null) {
+            getLog().info("Propagating license name from " + project.gav() + ": " + spec.getDisplayName());
+            license.setDisplayName(spec.getDisplayName());
         }
         licenseUrl = license.getUrl();
         LicensedProjects entry = licenseMap.get(licenseUrl);

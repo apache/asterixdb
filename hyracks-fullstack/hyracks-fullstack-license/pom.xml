@@ -59,8 +59,7 @@
               <outputFile>LICENSE</outputFile>
             </generatedFile>
             <generatedFile>
-              <!-- TODO(mblow): share the template with asterixdb as a maven artifact -->
-              <template>asterix-notice.ftl</template>
+              <template>hyracks-notice.ftl</template>
               <outputFile>NOTICE</outputFile>
             </generatedFile>
           </generatedFiles>
@@ -83,7 +82,7 @@
           <templateProperties>
             <hyracksControlCcLocation />
             <hyracksControlCcResourcesPrefix>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/</hyracksControlCcResourcesPrefix>
-            <packageName>Hyracks and Algebricks</packageName>
+            <packageName>Apache Hyracks and Algebricks</packageName>
           </templateProperties>
         </configuration>
       </plugin>
