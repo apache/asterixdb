@@ -2171,6 +2171,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        metadataProvider.disableBlockingOperator();
         boolean subscriberRegistered = false;
         IActiveLifecycleEventSubscriber eventSubscriber = new ActiveLifecycleEventSubscriber();
         FeedConnectionId feedConnId = null;
@@ -2410,6 +2411,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         metadataProvider.setWriteTransaction(true);
+        metadataProvider.disableBlockingOperator();
         SubscribeFeedStatement bfs = (SubscribeFeedStatement) stmt;
         bfs.initialize(metadataProvider.getMetadataTxnContext());
 

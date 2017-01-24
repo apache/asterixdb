@@ -18,14 +18,13 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.metadata.declared.DataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class RemoveSortInFeedIngestionRule implements IAlgebraicRewriteRule {
@@ -44,31 +43,16 @@ public class RemoveSortInFeedIngestionRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
+        if (!metadataProvider.isBlockingOperatorDisabled()) {
+            return false;
+        }
         AbstractLogicalOperator insertOp = op;
-        AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        boolean isSourceAFeed = false;
-        while (descendantOp != null) {
-            if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                DataSource dataSource = (DataSource) ((DataSourceScanOperator) descendantOp).getDataSource();
-                if (dataSource.getDatasourceType() == DataSource.Type.FEED) {
-                    isSourceAFeed = true;
-                }
-                break;
-            }
-            if (descendantOp.getInputs().isEmpty()) {
-                break;
-            }
-            descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
+        AbstractLogicalOperator prevOp = (AbstractLogicalOperator) insertOp.getInputs().get(0).getValue();
+        if (prevOp.getOperatorTag() == LogicalOperatorTag.ORDER) {
+            insertOp.getInputs().set(0, prevOp.getInputs().get(0));
+            return true;
         }
-
-        if (isSourceAFeed) {
-            AbstractLogicalOperator prevOp = (AbstractLogicalOperator) insertOp.getInputs().get(0).getValue();
-            if (prevOp.getOperatorTag() == LogicalOperatorTag.ORDER) {
-                insertOp.getInputs().set(0, prevOp.getInputs().get(0));
-                return true;
-            }
-        }
-
         return false;
     }
 

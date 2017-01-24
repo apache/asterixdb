@@ -21,14 +21,14 @@ package org.apache.asterix.optimizer.rules;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -56,7 +57,10 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
+        if (metadataProvider.isBlockingOperatorDisabled()) {
+            return false;
+        }
         SelectOperator select;
         if ((select = asSelectOperator(opRef)) == null) {
             return false;
@@ -122,24 +126,27 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         context.computeAndSetTypeEnvironmentForOperator(ets);
 
         ILogicalExpression cExp = new ConstantExpression(new AsterixConstantValue(list));
-        Mutable<ILogicalExpression> mutCExp = new MutableObject<ILogicalExpression>(cExp);
+        Mutable<ILogicalExpression> mutCExp = new MutableObject<>(cExp);
         IFunctionInfo scanFctInfo = BuiltinFunctions
                 .getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
         UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(scanFctInfo, mutCExp);
         LogicalVariable scanVar = context.newVar();
-        UnnestOperator unn = new UnnestOperator(scanVar, new MutableObject<ILogicalExpression>(scanExp));
-        unn.getInputs().add(new MutableObject<ILogicalOperator>(ets));
+        UnnestOperator unn = new UnnestOperator(scanVar, new MutableObject<>(scanExp));
+        unn.getInputs().add(new MutableObject<>(ets));
         context.computeAndSetTypeEnvironmentForOperator(unn);
 
         IFunctionInfo eqFctInfo = BuiltinFunctions.getAsterixFunctionInfo(AlgebricksBuiltinFunctions.EQ);
         AbstractFunctionCallExpression eqExp = new ScalarFunctionCallExpression(eqFctInfo);
-        eqExp.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(scanVar)));
-        eqExp.getArguments().add(new MutableObject<ILogicalExpression>(varEx.cloneExpression()));
+        eqExp.getArguments().add(new MutableObject<>(new VariableReferenceExpression(scanVar)));
+        eqExp.getArguments().add(new MutableObject<>(varEx.cloneExpression()));
         eqExp.getAnnotations().put(IndexedNLJoinExpressionAnnotation.INSTANCE,
                 IndexedNLJoinExpressionAnnotation.INSTANCE);
+        BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
+        bcast.setObject(BroadcastExpressionAnnotation.BroadcastSide.LEFT); // Broadcast the OR predicates branch.
+        eqExp.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
 
-        InnerJoinOperator jOp = new InnerJoinOperator(new MutableObject<ILogicalExpression>(eqExp));
-        jOp.getInputs().add(new MutableObject<ILogicalOperator>(unn));
+        InnerJoinOperator jOp = new InnerJoinOperator(new MutableObject<>(eqExp));
+        jOp.getInputs().add(new MutableObject<>(unn));
         jOp.getInputs().add(select.getInputs().get(0));
 
         opRef.setValue(jOp);

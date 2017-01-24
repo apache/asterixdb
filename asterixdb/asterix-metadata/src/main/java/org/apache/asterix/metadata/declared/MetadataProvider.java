@@ -186,6 +186,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private JobId jobId;
     private Map<String, Integer> locks;
     private boolean isTemporaryDatasetWriteJob = true;
+    private boolean blockingOperatorDisabled = false;
 
     public MetadataProvider(Dataverse defaultDataverse) {
         this.defaultDataverse = defaultDataverse;
@@ -199,6 +200,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void setConfig(Map<String, String> config) {
         this.config = config;
+    }
+
+    public void disableBlockingOperator() {
+        blockingOperatorDisabled = true;
+    }
+
+    public boolean isBlockingOperatorDisabled() {
+        return blockingOperatorDisabled;
     }
 
     @Override
