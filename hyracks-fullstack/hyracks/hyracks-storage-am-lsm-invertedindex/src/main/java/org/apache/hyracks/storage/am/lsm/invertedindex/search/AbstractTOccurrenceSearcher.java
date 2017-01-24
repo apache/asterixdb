@@ -122,12 +122,12 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
                 // If it's a list, it can have multiple keywords in it. But, each keyword should not be a phrase.
                 if (isFullTextSearchQuery) {
                     if (queryTokenizerType == TokenizerType.STRING && tokenCountInOneField > 1) {
-                        throw HyracksDataException.create(ErrorCode.RUNTIME_FULLTEXT_PHRASE_FOUND);
+                        throw HyracksDataException.create(ErrorCode.FULLTEXT_PHRASE_FOUND);
                     } else if (queryTokenizerType == TokenizerType.LIST) {
                         for (int j = 1; j < token.getTokenLength(); j++) {
                             if (DelimitedUTF8StringBinaryTokenizer
                                     .isSeparator((char) token.getData()[token.getStartOffset() + j])) {
-                                throw HyracksDataException.create(ErrorCode.RUNTIME_FULLTEXT_PHRASE_FOUND);
+                                throw HyracksDataException.create(ErrorCode.FULLTEXT_PHRASE_FOUND);
                             }
                         }
                     }

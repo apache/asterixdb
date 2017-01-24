@@ -18,13 +18,13 @@
  */
 package org.apache.hyracks.control.cc.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
 import org.apache.hyracks.control.cc.work.GetNodeDetailsJSONWork;
 import org.apache.hyracks.control.cc.work.GetNodeSummariesJSONWork;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NodesRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;
@@ -40,12 +40,13 @@ public class NodesRESTAPIFunction implements IJSONOutputFunction {
         switch (arguments.length) {
             case 1: {
                 if ("".equals(arguments[0])) {
-                    GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs);
+                    GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs.getNodeManager());
                     ccs.getWorkQueue().scheduleAndSync(gnse);
                     result.set("result", gnse.getSummaries());
                 } else {
                     String nodeId = arguments[0];
-                    GetNodeDetailsJSONWork gnde = new GetNodeDetailsJSONWork(ccs, nodeId, true, true);
+                    GetNodeDetailsJSONWork gnde = new GetNodeDetailsJSONWork(ccs.getNodeManager(), ccs.getCCConfig(),
+                            nodeId, true, true);
                     ccs.getWorkQueue().scheduleAndSync(gnde);
                     result.set("result", gnde.getDetail());
                 }

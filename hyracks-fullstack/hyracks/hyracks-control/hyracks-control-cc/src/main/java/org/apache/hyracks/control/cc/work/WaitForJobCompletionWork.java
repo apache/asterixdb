@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.IJobStatusConditionVariable;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
@@ -39,7 +40,8 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
-        final IJobStatusConditionVariable cRunningVar = ccs.getActiveRunMap().get(jobId);
+        IJobManager jobManager = ccs.getJobManager();
+        final IJobStatusConditionVariable cRunningVar = jobManager.get(jobId);
         if (cRunningVar != null) {
             ccs.getExecutor().execute(new Runnable() {
                 @Override
@@ -53,32 +55,20 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
                 }
             });
         } else {
-            final IJobStatusConditionVariable cArchivedVar = ccs.getRunMapArchive().get(jobId);
-            if (cArchivedVar != null) {
-                ccs.getExecutor().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            cArchivedVar.waitForCompletion();
-                            callback.setValue(null);
-                        } catch (Exception e) {
-                            callback.setException(e);
-                        }
+            final List<Exception> exceptions = jobManager.getRunHistory(jobId);
+            ccs.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    callback.setValue(null);
+                    if (exceptions != null && !exceptions.isEmpty()) {
+                        /**
+                         * only report the first exception because IResultCallback will only throw one exception
+                         * anyway
+                         */
+                        callback.setException(exceptions.get(0));
                     }
-                });
-            } else {
-                final List<Exception> exceptions = ccs.getRunHistory().get(jobId);
-                ccs.getExecutor().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.setValue(null);
-                        if (exceptions != null && exceptions.size() > 0) {
-                            /** only report the first exception because IResultCallback will only throw one exception anyway */
-                            callback.setException(exceptions.get(0));
-                        }
-                    }
-                });
-            }
+                }
+            });
         }
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.control.common.deployment;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -33,7 +34,7 @@ public class DeploymentRun implements IDeploymentStatusConditionVariable {
     private DeploymentStatus deploymentStatus = DeploymentStatus.FAIL;
     private final Set<String> deploymentNodeIds = new TreeSet<String>();
 
-    public DeploymentRun(Set<String> nodeIds) {
+    public DeploymentRun(Collection<String> nodeIds) {
         deploymentNodeIds.addAll(nodeIds);
     }
 

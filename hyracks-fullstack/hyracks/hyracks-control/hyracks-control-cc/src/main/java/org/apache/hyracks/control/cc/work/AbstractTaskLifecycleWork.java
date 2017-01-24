@@ -28,6 +28,7 @@ import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.ActivityPlan;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.job.Task;
 import org.apache.hyracks.control.cc.job.TaskAttempt;
@@ -50,7 +51,8 @@ public abstract class AbstractTaskLifecycleWork extends AbstractHeartbeatWork {
 
     @Override
     public final void runWork() {
-        JobRun run = ccs.getActiveRunMap().get(jobId);
+        IJobManager jobManager = ccs.getJobManager();
+        JobRun run = jobManager.get(jobId);
         if (run != null) {
             TaskId tid = taId.getTaskId();
             Map<ActivityId, ActivityCluster> activityClusterMap = run.getActivityClusterGraph().getActivityMap();

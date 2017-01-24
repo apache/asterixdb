@@ -24,9 +24,11 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 
 public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
@@ -45,33 +47,29 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
 
     @Override
     public void runWork() {
-        final JobRun run = ccs.getActiveRunMap().get(jobId);
+        IJobManager jobManager = ccs.getJobManager();
+        final JobRun run = jobManager.get(jobId);
         Set<String> cleanupPendingNodes = run.getCleanupPendingNodeIds();
         if (!cleanupPendingNodes.remove(nodeId)) {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning(nodeId + " not in pending cleanup nodes set: " + cleanupPendingNodes + " for Job: "
-                        + jobId);
+                LOGGER.warning(
+                        nodeId + " not in pending cleanup nodes set: " + cleanupPendingNodes + " for Job: " + jobId);
             }
             return;
         }
-        NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
+        INodeManager nodeManager = ccs.getNodeManager();
+        NodeControllerState ncs = nodeManager.getNodeControllerState(nodeId);
         if (ncs != null) {
             ncs.getActiveJobIds().remove(jobId);
         }
         if (cleanupPendingNodes.isEmpty()) {
-            CCApplicationContext appCtx = ccs.getApplicationContext();
-            if (appCtx != null) {
-                try {
-                    appCtx.notifyJobFinish(jobId);
-                } catch (HyracksException e) {
-                    e.printStackTrace();
-                }
+            try {
+                jobManager.finalComplete(run);
+            } catch (HyracksException e) {
+                // Fail the job with the caught exception during final completion.
+                run.getExceptions().add(e);
+                run.setStatus(JobStatus.FAILURE, run.getExceptions());
             }
-            run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
-            run.setEndTime(System.currentTimeMillis());
-            ccs.getActiveRunMap().remove(jobId);
-            ccs.getRunMapArchive().put(jobId, run);
-            ccs.getRunHistory().put(jobId, run.getExceptions());
         }
     }
 }

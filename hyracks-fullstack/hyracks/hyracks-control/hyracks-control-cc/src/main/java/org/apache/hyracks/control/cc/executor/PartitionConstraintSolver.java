@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.cc.scheduler;
+package org.apache.hyracks.control.cc.executor;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,14 +45,14 @@ public class PartitionConstraintSolver {
     public void addConstraint(Constraint c) {
         Set<ConstraintExpression> rValues = constraints.get(c.getLValue());
         if (rValues == null) {
-            rValues = new HashSet<ConstraintExpression>();
+            rValues = new HashSet<>();
             constraints.put(c.getLValue(), rValues);
         }
         rValues.add(c.getRValue());
     }
 
     public void solve(Collection<LValueConstraintExpression> targetSet) {
-        Set<LValueConstraintExpression> inProcess = new HashSet<LValueConstraintExpression>();
+        Set<LValueConstraintExpression> inProcess = new HashSet<>();
         for (LValueConstraintExpression lv : targetSet) {
             solveLValue(lv, inProcess);
         }
@@ -62,12 +62,12 @@ public class PartitionConstraintSolver {
         switch (ce.getTag()) {
             case CONSTANT:
                 return new Solution(((ConstantExpression) ce).getValue(), Solution.Status.FOUND);
-
             case PARTITION_COUNT:
             case PARTITION_LOCATION:
                 return solveLValue((LValueConstraintExpression) ce, inProcess);
+            default:
+                return null;
         }
-        return null;
     }
 
     private Solution solveLValue(LValueConstraintExpression lv, Set<LValueConstraintExpression> inProcess) {

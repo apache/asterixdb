@@ -16,16 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.work;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GatherStateDumpsWork extends SynchronizableWork {
@@ -41,8 +42,9 @@ public class GatherStateDumpsWork extends SynchronizableWork {
     @Override
     public void doRun() throws Exception {
         ccs.addStateDumpRun(sdr.stateDumpId, sdr);
-        sdr.setNCs(new HashSet<>(ccs.getNodeMap().keySet()));
-        for (NodeControllerState ncs : ccs.getNodeMap().values()) {
+        INodeManager nodeManager = ccs.getNodeManager();
+        sdr.setNCs(nodeManager.getAllNodeIds());
+        for (NodeControllerState ncs : nodeManager.getAllNodeControllerStates()) {
             ncs.getNodeController().dumpState(sdr.stateDumpId);
         }
     }
@@ -59,7 +61,7 @@ public class GatherStateDumpsWork extends SynchronizableWork {
 
         private final Map<String, String> ncStates;
 
-        private Set<String> ncIds;
+        private Collection<String> ncIds;
 
         private boolean complete;
 
@@ -70,7 +72,7 @@ public class GatherStateDumpsWork extends SynchronizableWork {
             complete = false;
         }
 
-        public void setNCs(Set<String> ncIds) {
+        public void setNCs(Collection<String> ncIds) {
             this.ncIds = ncIds;
         }
 

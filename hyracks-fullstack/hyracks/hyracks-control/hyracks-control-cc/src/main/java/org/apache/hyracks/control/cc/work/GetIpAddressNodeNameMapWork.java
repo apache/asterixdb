@@ -23,19 +23,20 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetIpAddressNodeNameMapWork extends SynchronizableWork {
-    private final ClusterControllerService ccs;
+    private final INodeManager nodeManager;
     private Map<InetAddress, Set<String>> map;
 
-    public GetIpAddressNodeNameMapWork(ClusterControllerService ccs, Map<InetAddress, Set<String>> map) {
-        this.ccs = ccs;
+    public GetIpAddressNodeNameMapWork(INodeManager nodeManager, Map<InetAddress, Set<String>> map) {
+        this.nodeManager = nodeManager;
         this.map = map;
     }
 
     @Override
     protected void doRun() throws Exception {
-        map.putAll(ccs.getIpAddressNodeNameMap());
+        map.putAll(nodeManager.getIpAddressNodeNameMap());
     }
 }

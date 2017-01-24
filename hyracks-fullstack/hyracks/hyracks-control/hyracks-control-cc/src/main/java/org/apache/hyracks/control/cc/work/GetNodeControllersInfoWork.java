@@ -18,35 +18,25 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
-import org.apache.hyracks.api.client.NodeStatus;
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
 public class GetNodeControllersInfoWork extends AbstractWork {
-    private final ClusterControllerService ccs;
+    private final INodeManager nodeManager;
     private IResultCallback<Map<String, NodeControllerInfo>> callback;
 
-    public GetNodeControllersInfoWork(ClusterControllerService ccs,
+    public GetNodeControllersInfoWork(INodeManager nodeManager,
             IResultCallback<Map<String, NodeControllerInfo>> callback) {
-        this.ccs = ccs;
+        this.nodeManager = nodeManager;
         this.callback = callback;
     }
 
     @Override
     public void run() {
-        Map<String, NodeControllerInfo> result = new LinkedHashMap<>();
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        for (Map.Entry<String, NodeControllerState> e : nodeMap.entrySet()) {
-            NodeControllerState ncState = e.getValue();
-            result.put(e.getKey(), new NodeControllerInfo(e.getKey(), NodeStatus.ALIVE, ncState.getDataPort(),
-                    ncState.getDatasetPort(), ncState.getMessagingPort(), ncState.getNumCores()));
-        }
-        callback.setValue(result);
+        callback.setValue(nodeManager.getNodeControllerInfoMap());
     }
 }

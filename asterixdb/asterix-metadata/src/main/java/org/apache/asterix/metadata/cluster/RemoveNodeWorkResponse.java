@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.cluster;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ public class RemoveNodeWorkResponse extends ClusterManagementWorkResponse {
         nodesToBeRemoved.addAll(w.getNodesToBeRemoved());
     }
 
-    public boolean updateProgress(Set<String> failedNodeIds) {
+    public boolean updateProgress(Collection<String> failedNodeIds) {
         nodesToBeRemoved.removeAll(failedNodeIds);
         return nodesToBeRemoved.isEmpty();
 

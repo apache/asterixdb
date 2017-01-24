@@ -18,6 +18,7 @@ package org.apache.asterix.common.api;
  * specific language governing permissions and limitations
  * under the License.
  */
+import java.util.Collection;
 import java.util.Set;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -28,7 +29,7 @@ public interface IClusterEventsSubscriber {
      * @param deadNodeIds
      * @return
      */
-    public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds);
+    public Set<IClusterManagementWork> notifyNodeFailure(Collection<String> deadNodeIds);
 
     /**
      * @param joinedNodeId

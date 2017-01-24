@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.control.cc.job;
 
-import org.apache.hyracks.control.cc.scheduler.ActivityPartitionDetails;
+import org.apache.hyracks.control.cc.executor.ActivityPartitionDetails;
 
 public class ActivityPlan {
     private final ActivityPartitionDetails apd;

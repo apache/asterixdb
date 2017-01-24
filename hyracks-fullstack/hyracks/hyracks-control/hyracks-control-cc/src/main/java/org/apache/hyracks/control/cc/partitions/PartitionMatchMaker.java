@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.cc.partitions;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
@@ -156,7 +156,7 @@ public class PartitionMatchMaker {
         }
     }
 
-    public void notifyNodeFailures(final Set<String> deadNodes) {
+    public void notifyNodeFailures(final Collection<String> deadNodes) {
         removeEntries(partitionDescriptors, new IEntryFilter<PartitionDescriptor>() {
             @Override
             public boolean matches(PartitionDescriptor o) {

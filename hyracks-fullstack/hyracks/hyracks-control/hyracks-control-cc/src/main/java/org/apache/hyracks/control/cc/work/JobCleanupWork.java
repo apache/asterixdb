@@ -18,33 +18,27 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
 
 public class JobCleanupWork extends AbstractWork {
     private static final Logger LOGGER = Logger.getLogger(JobCleanupWork.class.getName());
 
-    private ClusterControllerService ccs;
+    private IJobManager jobManager;
     private JobId jobId;
     private JobStatus status;
     private List<Exception> exceptions;
 
-    public JobCleanupWork(ClusterControllerService ccs, JobId jobId, JobStatus status, List<Exception> exceptions) {
-        this.ccs = ccs;
+    public JobCleanupWork(IJobManager jobManager, JobId jobId, JobStatus status, List<Exception> exceptions) {
+        this.jobManager = jobManager;
         this.jobId = jobId;
         this.status = status;
         this.exceptions = exceptions;
@@ -52,83 +46,18 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        LOGGER.info("Cleanup for JobRun with id: " + jobId);
-        final JobRun run = ccs.getActiveRunMap().get(jobId);
-        if (run == null) {
-            LOGGER.warning("Unable to find JobRun with id: " + jobId);
-            return;
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Cleanup for JobRun with id: " + jobId);
         }
-        if (run.getPendingStatus() != null && run.getCleanupPendingNodeIds().isEmpty()) {
-            finishJob(run);
-            return;
+        try {
+            JobRun jobRun = jobManager.get(jobId);
+            jobManager.prepareComplete(jobRun, status, exceptions);
+        } catch (HyracksException e) {
+            // Fail the job with the caught exception during final completion.
+            JobRun run = jobManager.get(jobId);
+            run.getExceptions().add(e);
+            run.setStatus(JobStatus.FAILURE, run.getExceptions());
         }
-        if (run.getPendingStatus() != null) {
-            LOGGER.warning("Ignoring duplicate cleanup for JobRun with id: " + jobId);
-            return;
-        }
-        Set<String> targetNodes = run.getParticipatingNodeIds();
-        run.getCleanupPendingNodeIds().addAll(targetNodes);
-        if (run.getPendingStatus() != JobStatus.FAILURE && run.getPendingStatus() != JobStatus.TERMINATED) {
-            run.setPendingStatus(status, exceptions);
-        }
-        if (targetNodes != null && !targetNodes.isEmpty()) {
-            Set<String> toDelete = new HashSet<String>();
-            for (String n : targetNodes) {
-                NodeControllerState ncs = ccs.getNodeMap().get(n);
-                try {
-                    if (ncs == null) {
-                        toDelete.add(n);
-                    } else {
-                        ncs.getNodeController().cleanUpJoblet(jobId, status);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            targetNodes.removeAll(toDelete);
-            run.getCleanupPendingNodeIds().removeAll(toDelete);
-            if (run.getCleanupPendingNodeIds().isEmpty()) {
-                finishJob(run);
-            }
-        } else {
-            finishJob(run);
-        }
-    }
-
-    private void finishJob(final JobRun run) {
-        CCApplicationContext appCtx = ccs.getApplicationContext();
-        if (appCtx != null) {
-            try {
-                appCtx.notifyJobFinish(jobId);
-            } catch (HyracksException e) {
-                e.printStackTrace();
-            }
-        }
-        run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
-        run.setEndTime(System.currentTimeMillis());
-        ccs.getActiveRunMap().remove(jobId);
-        ccs.getRunMapArchive().put(jobId, run);
-        ccs.getRunHistory().put(jobId, run.getExceptions());
-
-        if (run.getActivityClusterGraph().isReportTaskDetails()) {
-            /**
-             * log job details when profiling is enabled
-             */
-            try {
-                ccs.getJobLogFile().log(createJobLogObject(run));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    private ObjectNode createJobLogObject(final JobRun run) {
-        ObjectMapper om = new ObjectMapper();
-        ObjectNode jobLogObject = om.createObjectNode();
-        ActivityClusterGraph acg = run.getActivityClusterGraph();
-        jobLogObject.set("activity-cluster-graph", acg.toJSON());
-        jobLogObject.set("job-run", run.toJSON());
-        return jobLogObject;
     }
 
     @Override

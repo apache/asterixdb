@@ -20,7 +20,7 @@
 
   <property>
     <name>nc.java.opts</name>
-    <value>-Xmx3096m -Dnode.Resolver="org.apache.asterix.external.util.IdentitiyResolverFactory"</value>
+    <value>-Xmx4096m -Dnode.Resolver="org.apache.asterix.external.util.IdentitiyResolverFactory"</value>
     <description>JVM parameters for each Node Contoller (NC)</description>
   </property>
 

@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.job.resource.NodeCapacity;
+
 public interface INCApplicationEntryPoint {
-    public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception;
+    void start(INCApplicationContext ncAppCtx, String[] args) throws Exception;
 
-    public void notifyStartupComplete() throws Exception;
+    void notifyStartupComplete() throws Exception;
 
-    public void stop() throws Exception;
+    void stop() throws Exception;
+
+    NodeCapacity getCapacity();
 }

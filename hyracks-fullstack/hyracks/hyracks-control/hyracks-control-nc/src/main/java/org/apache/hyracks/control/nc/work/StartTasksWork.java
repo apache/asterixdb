@@ -22,9 +22,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,11 +83,11 @@ public class StartTasksWork extends AbstractWork {
 
     private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap;
 
-    private final EnumSet<JobFlag> flags;
+    private final Set<JobFlag> flags;
 
     public StartTasksWork(NodeControllerService ncs, DeploymentId deploymentId, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, EnumSet<JobFlag> flags) {
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, Set<JobFlag> flags) {
         this.ncs = ncs;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
@@ -219,7 +219,7 @@ public class StartTasksWork extends AbstractWork {
 
     private IPartitionWriterFactory createPartitionWriterFactory(final IHyracksTaskContext ctx,
             IConnectorPolicy cPolicy, final JobId jobId, final IConnectorDescriptor conn, final int senderIndex,
-            final TaskAttemptId taId, EnumSet<JobFlag> flags) {
+            final TaskAttemptId taId, Set<JobFlag> flags) {
         IPartitionWriterFactory factory;
         if (cPolicy.materializeOnSendSide()) {
             if (cPolicy.consumerWaitsForProducerToFinish()) {

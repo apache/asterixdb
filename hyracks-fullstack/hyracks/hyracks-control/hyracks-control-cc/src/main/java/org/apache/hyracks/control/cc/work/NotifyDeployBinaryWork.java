@@ -48,7 +48,7 @@ public class NotifyDeployBinaryWork extends AbstractHeartbeatWork {
 
     @Override
     public void runWork() {
-        /** triggered remotely by a NC to notify that the NC is deployed */
+        // Triggered remotely by a NC to notify that the NC is deployed.
         DeploymentRun dRun = ccs.getDeploymentRun(deploymentId);
         dRun.notifyDeploymentStatus(nodeId, deploymentStatus);
     }

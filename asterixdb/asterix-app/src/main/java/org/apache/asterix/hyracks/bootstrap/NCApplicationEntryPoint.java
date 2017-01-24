@@ -32,6 +32,7 @@ import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
@@ -51,6 +52,7 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
@@ -259,6 +261,19 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         //Clean any temporary files
         performLocalCleanUp();
+    }
+
+    @Override
+    public NodeCapacity getCapacity() {
+        IPropertiesProvider propertiesProvider = (IPropertiesProvider) runtimeContext;
+        StorageProperties storageProperties = propertiesProvider.getStorageProperties();
+        // Deducts the reserved buffer cache size and memory component size from the maxium heap size,
+        // and deducts one core for processing heartbeats.
+        long memorySize = Runtime.getRuntime().maxMemory() - storageProperties.getBufferCacheSize()
+                - storageProperties.getMemoryComponentGlobalBudget();
+        int allCores = Runtime.getRuntime().availableProcessors();
+        int maximumCoresForComputation = allCores > 1 ? allCores - 1 : allCores;
+        return new NodeCapacity(memorySize, maximumCoresForComputation);
     }
 
     private void performLocalCleanUp() {

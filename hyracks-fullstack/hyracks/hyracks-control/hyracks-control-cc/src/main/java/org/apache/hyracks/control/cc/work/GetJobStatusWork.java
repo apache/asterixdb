@@ -16,22 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.work;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
-import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetJobStatusWork extends SynchronizableWork {
-    private final ClusterControllerService ccs;
+    private final IJobManager jobManager;
     private final JobId jobId;
     private final IResultCallback<JobStatus> callback;
 
-    public GetJobStatusWork(ClusterControllerService ccs, JobId jobId, IResultCallback<JobStatus> callback) {
-        this.ccs = ccs;
+    public GetJobStatusWork(IJobManager jobManager, JobId jobId, IResultCallback<JobStatus> callback) {
+        this.jobManager = jobManager;
         this.jobId = jobId;
         this.callback = callback;
     }
@@ -39,10 +40,7 @@ public class GetJobStatusWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         try {
-            JobRun run = ccs.getActiveRunMap().get(jobId);
-            if (run == null) {
-                run = ccs.getRunMapArchive().get(jobId);
-            }
+            JobRun run = jobManager.get(jobId);
             JobStatus status = run == null ? null : run.getStatus();
             callback.setValue(status);
         } catch (Exception e) {

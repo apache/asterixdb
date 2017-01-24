@@ -102,6 +102,15 @@ public class CCConfig {
             usage = "Specify path to master configuration file (default: none)", required = false)
     public String configFile = null;
 
+    @Option(name = "-job-queue-class-name", usage = "Specify the implementation class name for the job queue. (default:"
+            + " org.apache.hyracks.control.cc.scheduler.FIFOJobQueue)",
+            required = false)
+    public String jobQueueClassName = "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue";
+
+    @Option(name = "-job-manager-class-name", usage = "Specify the implementation class name for the job manager. "
+            + "(default: org.apache.hyracks.control.cc.job.JobManager)", required = false)
+    public String jobManagerClassName = "org.apache.hyracks.control.cc.job.JobManager";
+
     @Argument
     @Option(name = "--", handler = StopOptionHandler.class)
     public List<String> appArgs;

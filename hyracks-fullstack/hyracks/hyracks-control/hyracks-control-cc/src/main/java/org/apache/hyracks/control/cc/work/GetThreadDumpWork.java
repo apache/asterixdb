@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.work;
 
 import java.lang.management.ManagementFactory;
@@ -27,6 +28,7 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -59,7 +61,8 @@ public class GetThreadDumpWork extends AbstractWork {
                 callback.setException(e);
             }
         } else {
-            final NodeControllerState ncState = ccs.getNodeMap().get(nodeId);
+            INodeManager nodeManager = ccs.getNodeManager();
+            final NodeControllerState ncState = nodeManager.getNodeControllerState(nodeId);
             if (ncState == null) {
                 // bad node id, reply with null immediately
                 callback.setValue(null);

@@ -49,6 +49,7 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.service.IControllerService;
@@ -266,11 +267,15 @@ public class NodeControllerService implements IControllerService {
         NetworkAddress netAddress = netManager.getPublicNetworkAddress();
         NetworkAddress meesagingPort = messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress()
                 : null;
+        int allCores = osMXBean.getAvailableProcessors();
         ccs.registerNode(new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netAddress, datasetAddress,
-                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), osMXBean.getAvailableProcessors(),
+                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), allCores,
                 runtimeMXBean.getVmName(), runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(),
                 runtimeMXBean.getClassPath(), runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(),
                 runtimeMXBean.getInputArguments(), runtimeMXBean.getSystemProperties(), hbSchema, meesagingPort,
+                ncAppEntryPoint == null
+                        ? new NodeCapacity(Runtime.getRuntime().maxMemory(), allCores > 1 ? allCores - 1 : allCores)
+                        : ncAppEntryPoint.getCapacity(),
                 PidHelper.getPid()));
 
         synchronized (this) {
@@ -455,7 +460,7 @@ public class NodeControllerService implements IControllerService {
 
             hbData.diskReads = ioCounter.getReads();
             hbData.diskWrites = ioCounter.getWrites();
-            hbData.numCores = Runtime.getRuntime().availableProcessors();
+            hbData.numCores = Runtime.getRuntime().availableProcessors() - 1; // Reserves one core for heartbeats.
 
             try {
                 cc.nodeHeartbeat(id, hbData);

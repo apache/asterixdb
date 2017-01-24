@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -59,7 +60,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
     }
 
     @Override
-    public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds) {
+    public Set<IClusterManagementWork> notifyNodeFailure(Collection<String> deadNodeIds) {
         setState(ClusterStateManager.INSTANCE.getState());
         ClusterStateManager.INSTANCE.setGlobalRecoveryCompleted(false);
         return Collections.emptySet();

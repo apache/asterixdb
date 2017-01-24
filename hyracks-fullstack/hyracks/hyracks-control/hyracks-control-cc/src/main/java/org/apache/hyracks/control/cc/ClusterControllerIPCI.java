@@ -68,7 +68,7 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case UNREGISTER_NODE:
                 CCNCFunctions.UnregisterNodeFunction unf = (CCNCFunctions.UnregisterNodeFunction) fn;
-                ccs.getWorkQueue().schedule(new UnregisterNodeWork(ccs, unf.getNodeId()));
+                ccs.getWorkQueue().schedule(new UnregisterNodeWork(ccs.getNodeManager(), unf.getNodeId()));
                 break;
             case NODE_HEARTBEAT:
                 CCNCFunctions.NodeHeartbeatFunction nhf = (CCNCFunctions.NodeHeartbeatFunction) fn;
@@ -87,7 +87,7 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case REPORT_PROFILE:
                 CCNCFunctions.ReportProfileFunction rpf = (CCNCFunctions.ReportProfileFunction) fn;
-                ccs.getWorkQueue().schedule(new ReportProfilesWork(ccs, rpf.getProfiles()));
+                ccs.getWorkQueue().schedule(new ReportProfilesWork(ccs.getJobManager(), rpf.getProfiles()));
                 break;
             case NOTIFY_TASK_COMPLETE:
                 CCNCFunctions.NotifyTaskCompleteFunction ntcf = (CCNCFunctions.NotifyTaskCompleteFunction) fn;
@@ -137,7 +137,7 @@ class ClusterControllerIPCI implements IIPCI {
                         rsf.getDeploymentId(), rsf.getNodeId()));
                 break;
             case GET_NODE_CONTROLLERS_INFO:
-                ccs.getWorkQueue().schedule(new GetNodeControllersInfoWork(ccs,
+                ccs.getWorkQueue().schedule(new GetNodeControllersInfoWork(ccs.getNodeManager(),
                         new IResultCallback<Map<String, NodeControllerInfo>>() {
                             @Override
                             public void setValue(Map<String, NodeControllerInfo> result) {

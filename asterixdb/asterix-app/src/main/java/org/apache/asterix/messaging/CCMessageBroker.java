@@ -28,6 +28,7 @@ import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 
 public class CCMessageBroker implements ICCMessageBroker {
 
@@ -49,8 +50,8 @@ public class CCMessageBroker implements ICCMessageBroker {
 
     @Override
     public void sendApplicationMessageToNC(IApplicationMessage msg, String nodeId) throws Exception {
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        NodeControllerState state = nodeMap.get(nodeId);
+        INodeManager nodeManager = ccs.getNodeManager();
+        NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
         state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
     }
 }

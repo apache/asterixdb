@@ -18,26 +18,26 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.common.work.SynchronizableWork;
-
 public class GetNodeSummariesJSONWork extends SynchronizableWork {
-    private final ClusterControllerService ccs;
+    private final INodeManager nodeManager;
     private ArrayNode summaries;
 
-    public GetNodeSummariesJSONWork(ClusterControllerService ccs) {
-        this.ccs = ccs;
+    public GetNodeSummariesJSONWork(INodeManager nodeManager) {
+        this.nodeManager = nodeManager;
     }
 
     @Override
     protected void doRun() throws Exception {
         ObjectMapper om = new ObjectMapper();
         summaries = om.createArrayNode();
-        for (NodeControllerState ncs : ccs.getNodeMap().values()) {
+        for (NodeControllerState ncs : nodeManager.getAllNodeControllerStates()) {
             summaries.add(ncs.toSummaryJSON());
         }
     }

@@ -28,10 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.expressions.ConstantExpression;
@@ -44,6 +40,12 @@ import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.job.resource.ClusterCapacity;
+import org.apache.hyracks.api.job.resource.IClusterCapacity;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
@@ -76,11 +78,9 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
 
-    private IGlobalJobDataFactory globalJobDataFactory;
-
     private boolean useConnectorPolicyForScheduling;
 
-    private boolean reportTaskDetails;
+    private IClusterCapacity requiredClusterCapacity;
 
     private transient int operatorIdCounter;
 
@@ -106,7 +106,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         connectorIdCounter = 0;
         maxReattempts = 2;
         useConnectorPolicyForScheduling = false;
-        reportTaskDetails = true;
+        requiredClusterCapacity = new ClusterCapacity();
         setFrameSize(frameSize);
     }
 
@@ -281,14 +281,6 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         this.jobletEventListenerFactory = jobletEventListenerFactory;
     }
 
-    public IGlobalJobDataFactory getGlobalJobDataFactory() {
-        return globalJobDataFactory;
-    }
-
-    public void setGlobalJobDataFactory(IGlobalJobDataFactory globalJobDataFactory) {
-        this.globalJobDataFactory = globalJobDataFactory;
-    }
-
     public boolean isUseConnectorPolicyForScheduling() {
         return useConnectorPolicyForScheduling;
     }
@@ -297,12 +289,12 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         this.useConnectorPolicyForScheduling = useConnectorPolicyForScheduling;
     }
 
-    public boolean isReportTaskDetails() {
-        return reportTaskDetails;
+    public void setRequiredClusterCapacity(IClusterCapacity capacity) {
+        this.requiredClusterCapacity = capacity;
     }
 
-    public void setReportTaskDetails(boolean reportTaskDetails) {
-        this.reportTaskDetails = reportTaskDetails;
+    public IClusterCapacity getRequiredClusterCapacity() {
+        return requiredClusterCapacity;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

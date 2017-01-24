@@ -16,14 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.partitions;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.base.INodeController;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionRequest;
@@ -34,8 +35,9 @@ public class PartitionUtils {
         PartitionDescriptor desc = match.getLeft();
         PartitionRequest req = match.getRight();
 
-        NodeControllerState producerNCS = ccs.getNodeMap().get(desc.getNodeId());
-        NodeControllerState requestorNCS = ccs.getNodeMap().get(req.getNodeId());
+        INodeManager nodeManager = ccs.getNodeManager();
+        NodeControllerState producerNCS = nodeManager.getNodeControllerState(desc.getNodeId());
+        NodeControllerState requestorNCS = nodeManager.getNodeControllerState(req.getNodeId());
         final NetworkAddress dataport = producerNCS.getDataPort();
         final INodeController requestorNC = requestorNCS.getNodeController();
         requestorNC.reportPartitionAvailability(pid, dataport);

@@ -16,32 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.work;
 
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.work.AbstractWork;
 
 public class ReportProfilesWork extends AbstractWork {
-    private final ClusterControllerService ccs;
+    private final IJobManager jobManager;
     private final List<JobProfile> profiles;
 
-    public ReportProfilesWork(ClusterControllerService ccs, List<JobProfile> profiles) {
-        this.ccs = ccs;
+    public ReportProfilesWork(IJobManager jobManager, List<JobProfile> profiles) {
+        this.jobManager = jobManager;
         this.profiles = profiles;
     }
 
     @Override
     public void run() {
-        Map<JobId, JobRun> runMap = ccs.getActiveRunMap();
         for (JobProfile profile : profiles) {
-            JobRun run = runMap.get(profile.getJobId());
+            JobRun run = jobManager.get(profile.getJobId());
             if (run != null) {
                 JobProfile jp = run.getJobProfile();
                 jp.merge(profile);

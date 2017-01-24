@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 
 public final class NodeRegistration implements Serializable {
@@ -69,11 +70,13 @@ public final class NodeRegistration implements Serializable {
 
     private final int pid;
 
+    private final NodeCapacity capacity;
+
     public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
                             NetworkAddress datasetPort, String osName, String arch, String osVersion, int nProcessors,
                             String vmName, String vmVersion, String vmVendor, String classpath, String libraryPath,
                             String bootClasspath, List<String> inputArguments, Map<String, String> systemProperties,
-                            HeartbeatSchema hbSchema, NetworkAddress messagingPort, int pid) {
+            HeartbeatSchema hbSchema, NetworkAddress messagingPort, NodeCapacity capacity, int pid) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
@@ -93,6 +96,7 @@ public final class NodeRegistration implements Serializable {
         this.systemProperties = systemProperties;
         this.hbSchema = hbSchema;
         this.messagingPort = messagingPort;
+        this.capacity = capacity;
         this.pid = pid;
     }
 
@@ -102,6 +106,10 @@ public final class NodeRegistration implements Serializable {
 
     public String getNodeId() {
         return nodeId;
+    }
+
+    public NodeCapacity getCapacity() {
+        return capacity;
     }
 
     public NCConfig getNCConfig() {

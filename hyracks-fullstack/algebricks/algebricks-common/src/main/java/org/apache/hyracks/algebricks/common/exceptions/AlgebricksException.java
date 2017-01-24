@@ -46,22 +46,42 @@ public class AlgebricksException extends Exception {
         return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), params);
     }
 
+    /**
+     * @deprecated Error code is needed.
+     */
+    @Deprecated
     public AlgebricksException(String message) {
         this(ErrorMessageUtil.NONE, UNKNOWN, message, null, null);
     }
 
+    /**
+     * @deprecated Error code is needed.
+     */
+    @Deprecated
     public AlgebricksException(Throwable cause) {
         this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, null);
     }
 
+    /**
+     * @deprecated Error code is needed.
+     */
+    @Deprecated
     public AlgebricksException(Throwable cause, String nodeId) {
         this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, nodeId);
     }
 
+    /**
+     * @deprecated Error code is needed.
+     */
+    @Deprecated
     public AlgebricksException(String message, Throwable cause, String nodeId) {
         this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, nodeId);
     }
 
+    /**
+     * @deprecated Error code is needed.
+     */
+    @Deprecated
     public AlgebricksException(String message, Throwable cause) {
         this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, (String) null);
     }

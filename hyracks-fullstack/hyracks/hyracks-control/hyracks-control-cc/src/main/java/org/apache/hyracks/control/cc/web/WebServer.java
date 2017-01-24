@@ -19,7 +19,6 @@
 package org.apache.hyracks.control.cc.web;
 
 import java.util.EnumSet;
-import java.util.logging.Logger;
 
 import javax.servlet.DispatcherType;
 
@@ -43,8 +42,6 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class WebServer {
-    private final static Logger LOGGER = Logger.getLogger(WebServer.class.getName());
-
     private final ClusterControllerService ccs;
     private final Server server;
     private final ServerConnector connector;

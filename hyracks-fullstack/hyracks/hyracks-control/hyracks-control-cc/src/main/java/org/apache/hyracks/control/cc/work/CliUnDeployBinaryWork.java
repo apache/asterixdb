@@ -19,14 +19,14 @@
 
 package org.apache.hyracks.control.cc.work;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.deployment.DeploymentRun;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.IPCResponder;
@@ -68,12 +68,8 @@ public class CliUnDeployBinaryWork extends SynchronizableWork {
             /**
              * Deploy for the node controllers
              */
-            Map<String, NodeControllerState> nodeControllerStateMap = ccs.getNodeMap();
-
-            Set<String> nodeIds = new TreeSet<String>();
-            for (String nc : nodeControllerStateMap.keySet()) {
-                nodeIds.add(nc);
-            }
+            INodeManager nodeManager = ccs.getNodeManager();
+            Collection<String> nodeIds = nodeManager.getAllNodeIds();
             final DeploymentRun dRun = new DeploymentRun(nodeIds);
 
             /** The following call prevents a user to undeploy with the same deployment id simultaneously. */
@@ -82,7 +78,7 @@ public class CliUnDeployBinaryWork extends SynchronizableWork {
             /***
              * deploy binaries to each node controller
              */
-            for (NodeControllerState ncs : nodeControllerStateMap.values()) {
+            for (NodeControllerState ncs : nodeManager.getAllNodeControllerStates()) {
                 ncs.getNodeController().undeployBinary(deploymentId);
             }
 

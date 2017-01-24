@@ -25,16 +25,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.control.common.base.INodeController;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NodeControllerState {
     private static final int RRD_SIZE = 720;
@@ -141,7 +143,7 @@ public class NodeControllerState {
 
     private int lastHeartbeatDuration;
 
-    private int numCores;
+    private NodeCapacity capacity;
 
     public NodeControllerState(INodeController nodeController, NodeRegistration reg) {
         this.nodeController = nodeController;
@@ -204,7 +206,7 @@ public class NodeControllerState {
         diskWrites = new long[RRD_SIZE];
 
         rrdPtr = 0;
-        numCores = 0;
+        capacity = reg.getCapacity();
     }
 
     public synchronized void notifyHeartbeat(HeartbeatData hbData) {
@@ -242,16 +244,11 @@ public class NodeControllerState {
             diskReads[rrdPtr] = hbData.diskReads;
             diskWrites[rrdPtr] = hbData.diskWrites;
             rrdPtr = (rrdPtr + 1) % RRD_SIZE;
-            numCores = hbData.numCores;
         }
     }
 
     public int incrementLastHeartbeatDuration() {
         return lastHeartbeatDuration++;
-    }
-
-    public int getLastHeartbeatDuration() {
-        return lastHeartbeatDuration;
     }
 
     public INodeController getNodeController() {
@@ -277,8 +274,9 @@ public class NodeControllerState {
     public NetworkAddress getMessagingPort() {
         return messagingPort;
     }
-    public int getNumCores() {
-        return numCores;
+
+    public NodeCapacity getCapacity() {
+        return capacity;
     }
 
     public synchronized ObjectNode toSummaryJSON()  {
@@ -324,6 +322,8 @@ public class NodeControllerState {
             o.putPOJO("nonheap-used-sizes", nonheapUsedSize);
             o.putPOJO("nonheap-committed-sizes", nonheapCommittedSize);
             o.putPOJO("nonheap-max-sizes", nonheapMaxSize);
+            o.putPOJO("application-memory-budget", capacity.getMemoryByteSize());
+            o.putPOJO("application-cpu-core-budget", capacity.getCores());
             o.putPOJO("thread-counts", threadCount);
             o.putPOJO("peak-thread-counts", peakThreadCount);
             o.putPOJO("system-load-averages", systemLoadAverage);

@@ -19,10 +19,9 @@
 
 package org.apache.hyracks.control.cc.work;
 
-import java.util.Map;
-
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
@@ -40,8 +39,8 @@ public abstract class AbstractHeartbeatWork extends SynchronizableWork {
 
     @Override
     public void doRun() {
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        NodeControllerState state = nodeMap.get(nodeId);
+        INodeManager nodeManager = ccs.getNodeManager();
+        NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
         if (state != null) {
             state.notifyHeartbeat(hbData);
         }

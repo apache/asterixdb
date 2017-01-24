@@ -19,14 +19,13 @@
 
 package org.apache.hyracks.control.cc.work;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.shutdown.ShutdownRun;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
@@ -52,9 +51,8 @@ public class ClusterShutdownWork extends SynchronizableWork {
             if (ccs.getShutdownRun() != null) {
                 throw new IPCException("Shutdown already in progress");
             }
-            Map<String, NodeControllerState> nodeControllerStateMap = ccs.getNodeMap();
-            Set<String> nodeIds = new TreeSet<>();
-            nodeIds.addAll(nodeControllerStateMap.keySet());
+            INodeManager nodeManager = ccs.getNodeManager();
+            Collection<String> nodeIds = nodeManager.getAllNodeIds();
             /**
              * set up our listener for the node ACKs
              */
@@ -64,7 +62,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
             /**
              * Shutdown all the nodes...
              */
-            nodeControllerStateMap.forEach(this::shutdownNode);
+            nodeManager.apply(this::shutdownNode);
 
             ccs.getExecutor().execute(new Runnable() {
                 @Override

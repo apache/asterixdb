@@ -78,8 +78,10 @@ public class SampleLocalClusterIT {
 
     @Test
     public void test0_startCluster() throws Exception {
-        Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh"))
+        Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"), "-f")
                 .inheritIO().start();
+        Assert.assertEquals(0, process.waitFor());
+        process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
     }
 

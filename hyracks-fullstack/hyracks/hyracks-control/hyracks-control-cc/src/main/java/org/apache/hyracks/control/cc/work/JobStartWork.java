@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.Collections;
 import java.util.EnumSet;
 
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -26,9 +25,9 @@ import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -54,24 +53,14 @@ public class JobStartWork extends SynchronizableWork {
 
     @Override
     protected void doRun() throws Exception {
+        IJobManager jobManager = ccs.getJobManager();
         try {
             final CCApplicationContext appCtx = ccs.getApplicationContext();
             IActivityClusterGraphGeneratorFactory acggf = (IActivityClusterGraphGeneratorFactory) DeploymentUtils
                     .deserialize(acggfBytes, deploymentId, appCtx);
             IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(jobId, appCtx, jobFlags);
-            JobRun run = new JobRun(ccs, deploymentId, jobId, acgg, jobFlags);
-            run.setStatus(JobStatus.INITIALIZED, null);
-            run.setStartTime(System.currentTimeMillis());
-            ccs.getActiveRunMap().put(jobId, run);
-            appCtx.notifyJobCreation(jobId, acggf);
-            run.setStatus(JobStatus.RUNNING, null);
-            try {
-                run.getScheduler().startJob();
-            } catch (Exception e) {
-                ccs.getWorkQueue().schedule(
-                        new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, Collections.singletonList(e)));
-            }
-            callback.setValue(jobId);
+            JobRun run = new JobRun(ccs, deploymentId, jobId, acggf, acgg, jobFlags, callback);
+            jobManager.add(run);
         } catch (Exception e) {
             callback.setException(e);
         }

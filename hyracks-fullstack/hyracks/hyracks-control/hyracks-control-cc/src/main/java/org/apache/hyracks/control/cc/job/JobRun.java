@@ -20,17 +20,12 @@ package org.apache.hyracks.control.cc.job;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
@@ -42,29 +37,37 @@ import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.ActivityClusterId;
 import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
+import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.executor.ActivityPartitionDetails;
+import org.apache.hyracks.control.cc.executor.JobExecutor;
 import org.apache.hyracks.control.cc.partitions.PartitionMatchMaker;
-import org.apache.hyracks.control.cc.scheduler.ActivityPartitionDetails;
-import org.apache.hyracks.control.cc.scheduler.JobScheduler;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.utils.ExceptionUtils;
+import org.apache.hyracks.control.common.work.IResultCallback;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobRun implements IJobStatusConditionVariable {
     private final DeploymentId deploymentId;
 
     private final JobId jobId;
 
+    private final IActivityClusterGraphGeneratorFactory acggf;
+
     private final IActivityClusterGraphGenerator acgg;
 
     private final ActivityClusterGraph acg;
 
-    private final JobScheduler scheduler;
+    private final JobExecutor scheduler;
 
-    private final EnumSet<JobFlag> jobFlags;
+    private final Set<JobFlag> jobFlags;
 
     private final Map<ActivityClusterId, ActivityClusterPlan> activityClusterPlanMap;
 
@@ -94,21 +97,26 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
+    private final IResultCallback<JobId> callback;
+
     public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
-            IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
+            IActivityClusterGraphGeneratorFactory acggf, IActivityClusterGraphGenerator acgg, Set<JobFlag> jobFlags,
+            IResultCallback<JobId> callback) {
         this.deploymentId = deploymentId;
         this.jobId = jobId;
+        this.acggf = acggf;
         this.acgg = acgg;
         this.acg = acgg.initialize();
-        this.scheduler = new JobScheduler(ccs, this, acgg.getConstraints());
+        this.scheduler = new JobExecutor(ccs, this, acgg.getConstraints());
         this.jobFlags = jobFlags;
-        activityClusterPlanMap = new HashMap<ActivityClusterId, ActivityClusterPlan>();
+        this.callback = callback;
+        activityClusterPlanMap = new HashMap<>();
         pmm = new PartitionMatchMaker();
-        participatingNodeIds = new HashSet<String>();
-        cleanupPendingNodeIds = new HashSet<String>();
+        participatingNodeIds = new HashSet<>();
+        cleanupPendingNodeIds = new HashSet<>();
         profile = new JobProfile(jobId);
-        connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
-        operatorLocations = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
+        connectorPolicyMap = new HashMap<>();
+        operatorLocations = new HashMap<>();
         createTime = System.currentTimeMillis();
     }
 
@@ -120,11 +128,15 @@ public class JobRun implements IJobStatusConditionVariable {
         return jobId;
     }
 
+    public IActivityClusterGraphGeneratorFactory getActivityClusterGraphFactory() {
+        return acggf;
+    }
+
     public ActivityClusterGraph getActivityClusterGraph() {
         return acg;
     }
 
-    public EnumSet<JobFlag> getFlags() {
+    public Set<JobFlag> getFlags() {
         return jobFlags;
     }
 
@@ -167,8 +179,8 @@ public class JobRun implements IJobStatusConditionVariable {
         return createTime;
     }
 
-    public void setCreateTime(long createTime) {
-        this.createTime = createTime;
+    public IResultCallback<JobId> getCallback() {
+        return callback;
     }
 
     public long getStartTime() {
@@ -228,7 +240,7 @@ public class JobRun implements IJobStatusConditionVariable {
         return profile;
     }
 
-    public JobScheduler getScheduler() {
+    public JobExecutor getExecutor() {
         return scheduler;
     }
 

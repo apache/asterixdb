@@ -39,7 +39,7 @@ public class NotifyShutdownWork extends SynchronizableWork {
 
     @Override
     public void doRun() {
-        /** triggered remotely by a NC to notify that the NC is shutting down */
+        // Triggered remotely by a NC to notify that the NC is shutting down.
         ShutdownRun sRun = ccs.getShutdownRun();
         LOGGER.info("Received shutdown acknowledgement from NC ID:" + nodeId);
         sRun.notifyShutdown(nodeId);

@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.application;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,6 +48,6 @@ public interface IClusterLifecycleListener {
      * @param deadNodeIds
      *            A set of Node Controller Ids that have left the cluster. The set is not cumulative.
      */
-    public void notifyNodeFailure(Set<String> deadNodeIds) throws HyracksException;
+    public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException;
 
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.cc.scheduler;
+package org.apache.hyracks.control.cc.executor;
 
 public final class Runnability {
     private final Tag tag;

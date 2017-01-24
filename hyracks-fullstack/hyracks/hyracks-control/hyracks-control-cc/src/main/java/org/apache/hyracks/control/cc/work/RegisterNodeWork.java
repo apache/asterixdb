@@ -18,16 +18,14 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.net.InetAddress;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.base.INodeController;
 import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
@@ -50,34 +48,15 @@ public class RegisterNodeWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         String id = reg.getNodeId();
-
         IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(reg.getNodeControllerAddress());
-        CCNCFunctions.NodeRegistrationResult result = null;
-        Map<String, String> ncConfiguration = null;
+        CCNCFunctions.NodeRegistrationResult result;
+        Map<String, String> ncConfiguration = new HashMap<>();
         try {
             INodeController nodeController = new NodeControllerRemoteProxy(ncIPCHandle);
-
             NodeControllerState state = new NodeControllerState(nodeController, reg);
-            Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-            if (nodeMap.containsKey(id)) {
-                throw new Exception("Node with this name already registered.");
-            }
-            nodeMap.put(id, state);
-            Map<InetAddress, Set<String>> ipAddressNodeNameMap = ccs.getIpAddressNodeNameMap();
-            // QQQ Breach of encapsulation here - way too much duplicated data
-            // in NodeRegistration
-            String ipAddress = state.getNCConfig().dataIPAddress;
-            if (state.getNCConfig().dataPublicIPAddress != null) {
-                ipAddress = state.getNCConfig().dataPublicIPAddress;
-            }
-            ncConfiguration = new HashMap<String, String>();
+            INodeManager nodeManager = ccs.getNodeManager();
+            nodeManager.addNode(id, state);
             state.getNCConfig().toMap(ncConfiguration);
-            Set<String> nodes = ipAddressNodeNameMap.get(InetAddress.getByName(ipAddress));
-            if (nodes == null) {
-                nodes = new HashSet<String>();
-                ipAddressNodeNameMap.put(InetAddress.getByName(ipAddress), nodes);
-            }
-            nodes.add(id);
             LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
             NodeParameters params = new NodeParameters();
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());

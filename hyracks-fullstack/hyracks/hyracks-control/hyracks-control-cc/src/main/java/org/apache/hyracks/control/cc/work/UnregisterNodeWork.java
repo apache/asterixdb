@@ -18,24 +18,20 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.Map;
-
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class UnregisterNodeWork extends SynchronizableWork {
-    private final ClusterControllerService ccs;
+    private final INodeManager nodeManager;
     private final String nodeId;
 
-    public UnregisterNodeWork(ClusterControllerService ccs, String nodeId) {
-        this.ccs = ccs;
+    public UnregisterNodeWork(INodeManager nodeManager, String nodeId) {
+        this.nodeManager = nodeManager;
         this.nodeId = nodeId;
     }
 
     @Override
     protected void doRun() throws Exception {
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        nodeMap.remove(nodeId);
+        nodeManager.removeNode(nodeId);
     }
 }

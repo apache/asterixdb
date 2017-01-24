@@ -16,11 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.api.job;
 
 public enum JobStatus {
-    INITIALIZED,
+    PENDING,
     RUNNING,
     TERMINATED,
     FAILURE,
+    FAILURE_BEFORE_EXECUTION
 }

@@ -20,8 +20,10 @@ package org.apache.hyracks.examples.btree.helper;
 
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.job.resource.NodeCapacity;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
+
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
         RuntimeContext rCtx = new RuntimeContext(ncAppCtx);
@@ -36,5 +38,10 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void stop() throws Exception {
 
+    }
+
+    @Override
+    public NodeCapacity getCapacity() {
+        return new NodeCapacity(Runtime.getRuntime().maxMemory(), Runtime.getRuntime().availableProcessors() - 1);
     }
 }

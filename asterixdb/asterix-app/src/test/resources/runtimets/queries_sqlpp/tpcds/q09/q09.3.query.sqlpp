@@ -20,6 +20,9 @@
 
 use tpcds;
 
+set `compiler.joinmemory` "4MB"
+set `compiler.groupmemory` "4MB"
+
 select case when (select value count(ss)
                   from store_sales ss
                   where ss_quantity >= 1 and ss_quantity <= 20) > 25437

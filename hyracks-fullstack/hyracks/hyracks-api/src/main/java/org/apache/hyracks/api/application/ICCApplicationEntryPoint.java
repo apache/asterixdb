@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.api.application;
 
-public interface ICCApplicationEntryPoint {
-    public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
-    public void stop() throws Exception;
+public interface ICCApplicationEntryPoint {
+    void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception;
+
+    void stop() throws Exception;
 
     void startupCompleted() throws Exception;
+
+    IJobCapacityController getJobCapacityController();
 }

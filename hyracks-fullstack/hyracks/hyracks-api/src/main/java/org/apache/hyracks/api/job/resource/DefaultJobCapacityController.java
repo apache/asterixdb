@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,36 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.cc.scheduler;
 
-import org.apache.hyracks.control.cc.job.TaskCluster;
+package org.apache.hyracks.api.job.resource;
 
-public class RankedRunnableTaskCluster implements Comparable<RankedRunnableTaskCluster> {
-    private final int rank;
+import org.apache.hyracks.api.job.JobSpecification;
 
-    private final TaskCluster taskCluster;
+public class DefaultJobCapacityController implements IJobCapacityController {
 
-    public RankedRunnableTaskCluster(int rank, TaskCluster taskCluster) {
-        this.rank = rank;
-        this.taskCluster = taskCluster;
-    }
+    public static final DefaultJobCapacityController INSTANCE = new DefaultJobCapacityController();
 
-    public int getRank() {
-        return rank;
-    }
-
-    public TaskCluster getTaskCluster() {
-        return taskCluster;
+    private DefaultJobCapacityController() {
     }
 
     @Override
-    public String toString() {
-        return "[" + rank + ":" + taskCluster + "]";
+    public JobSubmissionStatus allocate(JobSpecification job) {
+        return JobSubmissionStatus.EXECUTE;
     }
 
     @Override
-    public int compareTo(RankedRunnableTaskCluster o) {
-        int cmp = rank - o.rank;
-        return cmp < 0 ? -1 : (cmp > 0 ? 1 : 0);
+    public void release(JobSpecification job) {
+        // No operation here.
     }
 }

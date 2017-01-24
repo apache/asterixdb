@@ -72,13 +72,13 @@ class ClientInterfaceIPCI implements IIPCI {
             case GET_JOB_STATUS:
                 HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf =
                         (HyracksClientInterfaceFunctions.GetJobStatusFunction) fn;
-                ccs.getWorkQueue().schedule(new GetJobStatusWork(ccs, gjsf.getJobId(),
-                        new IPCResponder<JobStatus>(handle, mid)));
+                ccs.getWorkQueue().schedule(
+                        new GetJobStatusWork(ccs.getJobManager(), gjsf.getJobId(), new IPCResponder<>(handle, mid)));
                 break;
             case GET_JOB_INFO:
                 HyracksClientInterfaceFunctions.GetJobInfoFunction gjif =
                         (HyracksClientInterfaceFunctions.GetJobInfoFunction) fn;
-                ccs.getWorkQueue().schedule(new GetJobInfoWork(ccs, gjif.getJobId(),
+                ccs.getWorkQueue().schedule(new GetJobInfoWork(ccs.getJobManager(), gjif.getJobId(),
                         new IPCResponder<JobInfo>(handle, mid)));
                 break;
             case START_JOB:
@@ -118,8 +118,8 @@ class ClientInterfaceIPCI implements IIPCI {
                         new IPCResponder<>(handle, mid)));
                 break;
             case GET_NODE_CONTROLLERS_INFO:
-                ccs.getWorkQueue().schedule(new GetNodeControllersInfoWork(ccs,
-                        new IPCResponder<>(handle, mid)));
+                ccs.getWorkQueue().schedule(
+                        new GetNodeControllersInfoWork(ccs.getNodeManager(), new IPCResponder<>(handle, mid)));
                 break;
             case GET_CLUSTER_TOPOLOGY:
                 try {
@@ -149,7 +149,8 @@ class ClientInterfaceIPCI implements IIPCI {
             case GET_NODE_DETAILS_JSON:
                 HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction gndjf =
                         (HyracksClientInterfaceFunctions.GetNodeDetailsJSONFunction) fn;
-                ccs.getWorkQueue().schedule(new GetNodeDetailsJSONWork(ccs, gndjf.getNodeId(),
+                ccs.getWorkQueue()
+                        .schedule(new GetNodeDetailsJSONWork(ccs.getNodeManager(), ccs.getCCConfig(), gndjf.getNodeId(),
                         gndjf.isIncludeStats(), gndjf.isIncludeConfig(), new IPCResponder<>(handle, mid)));
                 break;
             case THREAD_DUMP:

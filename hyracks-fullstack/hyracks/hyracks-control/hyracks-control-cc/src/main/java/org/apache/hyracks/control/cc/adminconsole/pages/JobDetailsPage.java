@@ -79,7 +79,7 @@ public class JobDetailsPage extends AbstractPage {
             }
         }
 
-        GetJobRunJSONWork gjrw = new GetJobRunJSONWork(ccs, jobId);
+        GetJobRunJSONWork gjrw = new GetJobRunJSONWork(ccs.getJobManager(), jobId);
         ccs.getWorkQueue().scheduleAndSync(gjrw);
         Label jobrun = new Label("job-run", gjrw.getJSON().toString());
         jobrun.setEscapeModelStrings(false);

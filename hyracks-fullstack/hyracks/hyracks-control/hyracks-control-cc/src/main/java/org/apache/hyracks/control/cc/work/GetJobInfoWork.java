@@ -20,18 +20,18 @@ package org.apache.hyracks.control.cc.work;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
-import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetJobInfoWork extends SynchronizableWork {
-    private final ClusterControllerService ccs;
+    private final IJobManager jobManager;
     private final JobId jobId;
     private final IResultCallback<JobInfo> callback;
 
-    public GetJobInfoWork(ClusterControllerService ccs, JobId jobId, IResultCallback<JobInfo> callback) {
-        this.ccs = ccs;
+    public GetJobInfoWork(IJobManager jobManager, JobId jobId, IResultCallback<JobInfo> callback) {
+        this.jobManager = jobManager;
         this.jobId = jobId;
         this.callback = callback;
     }
@@ -39,10 +39,7 @@ public class GetJobInfoWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         try {
-            JobRun run = ccs.getActiveRunMap().get(jobId);
-            if (run == null) {
-                run = ccs.getRunMapArchive().get(jobId);
-            }
+            JobRun run = jobManager.get(jobId);
             JobInfo info = (run != null) ? new JobInfo(run.getJobId(), run.getStatus(), run.getOperatorLocations())
                     : null;
             callback.setValue(info);

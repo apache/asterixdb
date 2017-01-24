@@ -16,31 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.work;
 
 import java.util.Collection;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class GetJobSummariesJSONWork extends SynchronizableWork {
-    private final ClusterControllerService ccs;
+    private final IJobManager jobManager;
     private ArrayNode summaries;
 
-    public GetJobSummariesJSONWork(ClusterControllerService ccs) {
-        this.ccs = ccs;
+    public GetJobSummariesJSONWork(IJobManager jobManager) {
+        this.jobManager = jobManager;
     }
 
     @Override
     protected void doRun() throws Exception {
         ObjectMapper om = new ObjectMapper();
         summaries = om.createArrayNode();
-        populateJSON(ccs.getActiveRunMap().values());
-        populateJSON(ccs.getRunMapArchive().values());
+        populateJSON(jobManager.getRunningJobs());
+        populateJSON(jobManager.getPendingJobs());
+        populateJSON(jobManager.getArchivedJobs());
     }
 
     private void populateJSON(Collection<JobRun> jobRuns)  {

@@ -343,7 +343,7 @@ public class IOManager implements IIOManager {
     public FileReference resolveAbsolutePath(String path) throws HyracksDataException {
         IODeviceHandle devHandle = getDevice(path);
         if (devHandle == null) {
-            throw HyracksDataException.create(ErrorCode.RUNTIME_FILE_WITH_ABSOULTE_PATH_NOT_WITHIN_ANY_IO_DEVICE, path);
+            throw HyracksDataException.create(ErrorCode.FILE_WITH_ABSOULTE_PATH_NOT_WITHIN_ANY_IO_DEVICE, path);
         }
         String relativePath = devHandle.getRelativePath(path);
         return new FileReference(devHandle, relativePath);

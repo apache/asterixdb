@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 
 /**
  * Utility class for obtaining information on the set of Hyracks NodeController
@@ -61,6 +62,7 @@ public class RuntimeUtils {
     public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) {
         ClusterControllerService ccs = (ClusterControllerService) AppContextInfo.INSTANCE
                 .getCCApplicationContext().getControllerService();
-        map.putAll(ccs.getIpAddressNodeNameMap());
+        INodeManager nodeManager = ccs.getNodeManager();
+        map.putAll(nodeManager.getIpAddressNodeNameMap());
     }
 }

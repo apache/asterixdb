@@ -18,16 +18,16 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
 
@@ -42,40 +42,29 @@ public class RemoveDeadNodesWork extends AbstractWork {
 
     @Override
     public void run() {
-        final Set<String> deadNodes = new HashSet<String>();
-        Map<String, NodeControllerState> nodeMap = ccs.getNodeMap();
-        for (Map.Entry<String, NodeControllerState> e : nodeMap.entrySet()) {
-            NodeControllerState state = e.getValue();
-            if (state.incrementLastHeartbeatDuration() >= ccs.getCCConfig().maxHeartbeatLapsePeriods) {
-                deadNodes.add(e.getKey());
-                LOGGER.info(e.getKey() + " considered dead");
-            }
-        }
-        Set<JobId> affectedJobIds = new HashSet<JobId>();
-        for (String deadNode : deadNodes) {
-            NodeControllerState state = nodeMap.remove(deadNode);
-
-            // Deal with dead tasks.
-            affectedJobIds.addAll(state.getActiveJobIds());
-        }
-        int size = affectedJobIds.size();
-        if (size > 0) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Number of affected jobs: " + size);
-            }
-            for (JobId jobId : affectedJobIds) {
-                JobRun run = ccs.getActiveRunMap().get(jobId);
-                if (run != null) {
-                    run.getScheduler().notifyNodeFailures(deadNodes);
+        try {
+            INodeManager nodeManager = ccs.getNodeManager();
+            Pair<Collection<String>, Collection<JobId>> result = nodeManager.removeDeadNodes();
+            Collection<String> deadNodes = result.getLeft();
+            Collection<JobId> affectedJobIds = result.getRight();
+            int size = affectedJobIds.size();
+            if (size > 0) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Number of affected jobs: " + size);
+                }
+                IJobManager jobManager = ccs.getJobManager();
+                for (JobId jobId : affectedJobIds) {
+                    JobRun run = jobManager.get(jobId);
+                    if (run != null) {
+                        run.getExecutor().notifyNodeFailures(deadNodes);
+                    }
                 }
             }
-        }
-        if (!deadNodes.isEmpty()) {
-            try {
+            if (!deadNodes.isEmpty()) {
                 ccs.getApplicationContext().notifyNodeFailure(deadNodes);
-            } catch (HyracksException e) {
-                LOGGER.log(Level.WARNING, "Uncaught exception on notifyNodeFailure", e);
             }
+        } catch (HyracksException e) {
+            LOGGER.log(Level.WARNING, "Uncaught exception on notifyNodeFailure", e);
         }
     }
 

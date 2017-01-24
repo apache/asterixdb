@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.control.cc.work;
 
 import java.io.File;
@@ -35,18 +36,21 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.utils.PidHelper;
 import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.kohsuke.args4j.Option;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class GetNodeDetailsJSONWork extends SynchronizableWork {
     private static final Logger LOGGER = Logger.getLogger(GetNodeDetailsJSONWork.class.getName());
-    private final ClusterControllerService ccs;
+    private final INodeManager nodeManager;
+    private final CCConfig ccConfig;
     private final String nodeId;
     private final boolean includeStats;
     private final boolean includeConfig;
@@ -54,18 +58,19 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
     private ObjectNode detail;
     private ObjectMapper om = new ObjectMapper();
 
-    public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId, boolean includeStats,
+    public GetNodeDetailsJSONWork(INodeManager nodeManager, CCConfig ccConfig, String nodeId, boolean includeStats,
                                   boolean includeConfig, IPCResponder<String> callback) {
-        this.ccs = ccs;
+        this.nodeManager = nodeManager;
+        this.ccConfig = ccConfig;
         this.nodeId = nodeId;
         this.includeStats = includeStats;
         this.includeConfig = includeConfig;
         this.callback = callback;
     }
 
-    public GetNodeDetailsJSONWork(ClusterControllerService ccs, String nodeId, boolean includeStats,
+    public GetNodeDetailsJSONWork(INodeManager nodeManager, CCConfig ccConfig, String nodeId, boolean includeStats,
                                   boolean includeConfig) {
-        this(ccs, nodeId, includeStats, includeConfig, null);
+        this(nodeManager, ccConfig, nodeId, includeStats, includeConfig, null);
     }
 
     @Override
@@ -74,10 +79,10 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
             // null nodeId is a request for CC
             detail = getCCDetails();
             if (includeConfig) {
-                addIni(detail, ccs.getCCConfig());
+                addIni(detail, ccConfig);
             }
         } else {
-            NodeControllerState ncs = ccs.getNodeMap().get(nodeId);
+            NodeControllerState ncs = nodeManager.getNodeControllerState(nodeId);
             if (ncs != null) {
                 detail = ncs.toDetailedJSON(includeStats, includeConfig);
                 if (includeConfig) {

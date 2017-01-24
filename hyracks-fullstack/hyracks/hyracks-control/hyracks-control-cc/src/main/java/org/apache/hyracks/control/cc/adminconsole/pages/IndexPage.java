@@ -42,7 +42,7 @@ public class IndexPage extends AbstractPage {
     public IndexPage() throws Exception {
         ClusterControllerService ccs = getAdminConsoleApplication().getClusterControllerService();
 
-        GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs);
+        GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs.getNodeManager());
         ccs.getWorkQueue().scheduleAndSync(gnse);
         ArrayNode nodeSummaries = gnse.getSummaries();
         add(new Label("node-count", String.valueOf(nodeSummaries.size())));
@@ -63,7 +63,7 @@ public class IndexPage extends AbstractPage {
         };
         add(nodeList);
 
-        GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs);
+        GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs.getJobManager());
         ccs.getWorkQueue().scheduleAndSync(gjse);
         ArrayNode jobSummaries = gjse.getSummaries();
         ListView<JsonNode> jobList = new ListView<JsonNode>("jobs-list", Lists.newArrayList(jobSummaries.iterator())) {

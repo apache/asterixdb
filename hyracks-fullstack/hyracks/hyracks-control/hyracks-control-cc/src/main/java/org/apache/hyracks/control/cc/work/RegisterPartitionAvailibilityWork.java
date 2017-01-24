@@ -21,9 +21,9 @@ package org.apache.hyracks.control.cc.work;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.partitions.PartitionMatchMaker;
 import org.apache.hyracks.control.cc.partitions.PartitionUtils;
@@ -43,7 +43,8 @@ public class RegisterPartitionAvailibilityWork extends AbstractWork {
     @Override
     public void run() {
         final PartitionId pid = partitionDescriptor.getPartitionId();
-        JobRun run = ccs.getActiveRunMap().get(pid.getJobId());
+        IJobManager jobManager = ccs.getJobManager();
+        JobRun run = jobManager.get(pid.getJobId());
         if (run == null) {
             return;
         }

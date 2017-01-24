@@ -21,6 +21,7 @@ package org.apache.hyracks.control.cc.application;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         }
     }
 
-    public void notifyNodeFailure(Set<String> deadNodeIds) throws HyracksException {
+    public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
         for (IClusterLifecycleListener l : clusterLifecycleListeners) {
             l.notifyNodeFailure(deadNodeIds);
         }

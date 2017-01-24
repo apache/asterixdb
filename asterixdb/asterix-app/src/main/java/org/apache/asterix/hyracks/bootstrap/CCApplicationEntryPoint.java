@@ -30,7 +30,6 @@ import javax.servlet.Servlet;
 
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.api.http.servlet.FullAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterCCDetailsAPIServlet;
 import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
@@ -38,6 +37,7 @@ import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
 import org.apache.asterix.api.http.servlet.DDLAPIServlet;
 import org.apache.asterix.api.http.servlet.DiagnosticsAPIServlet;
 import org.apache.asterix.api.http.servlet.FeedServlet;
+import org.apache.asterix.api.http.servlet.FullAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryServiceServlet;
@@ -47,8 +47,8 @@ import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
-import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.cc.CompilerExtensionManager;
+import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExtension;
@@ -62,11 +62,13 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
+import org.apache.asterix.runtime.job.resource.JobCapacityController;
 import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -85,6 +87,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static IAsterixStateProxy proxy;
     protected ICCApplicationContext appCtx;
     protected CompilerExtensionManager ccExtensionManager;
+    private IJobCapacityController jobCapacityController;
 
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
@@ -131,6 +134,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
         ccAppCtx.setMessageBroker(messageBroker);
+
+        jobCapacityController = new JobCapacityController(controllerService.getResourceManager());
     }
 
     protected List<AsterixExtension> getExtensions() {
@@ -328,6 +333,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     @Override
     public void startupCompleted() throws Exception {
         ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
+    }
+
+    @Override
+    public IJobCapacityController getJobCapacityController() {
+        return jobCapacityController;
     }
 
     public static synchronized void setAsterixStateProxy(IAsterixStateProxy proxy) {

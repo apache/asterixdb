@@ -45,7 +45,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
                     break;
                 }
             case 0: {
-                GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs);
+                GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs.getJobManager());
                 ccs.getWorkQueue().scheduleAndSync(gjse);
                 result.set("result", gjse.getSummaries());
                 break;
@@ -59,7 +59,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
                     ccs.getWorkQueue().scheduleAndSync(gjage);
                     result.set("result", gjage.getJSON());
                 } else if ("job-run".equalsIgnoreCase(arguments[1])) {
-                    GetJobRunJSONWork gjre = new GetJobRunJSONWork(ccs, jobId);
+                    GetJobRunJSONWork gjre = new GetJobRunJSONWork(ccs.getJobManager(), jobId);
                     ccs.getWorkQueue().scheduleAndSync(gjre);
                     result.set("result", gjre.getJSON());
                 }

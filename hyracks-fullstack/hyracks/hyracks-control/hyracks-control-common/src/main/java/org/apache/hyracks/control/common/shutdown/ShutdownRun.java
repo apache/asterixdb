@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.control.common.shutdown;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +30,7 @@ public class ShutdownRun implements IShutdownStatusConditionVariable{
     private boolean shutdownSuccess = false;
     private static final long SHUTDOWN_TIMER_MS = TimeUnit.SECONDS.toMillis(30);
 
-    public ShutdownRun(Set<String> nodeIds) {
+    public ShutdownRun(Collection<String> nodeIds) {
         shutdownNodeIds.addAll(nodeIds);
     }
 
