@@ -55,7 +55,7 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
                 }
             });
         } else {
-            final List<Exception> exceptions = jobManager.getRunHistory(jobId);
+            final List<Exception> exceptions = jobManager.getExceptionHistory(jobId);
             ccs.getExecutor().execute(new Runnable() {
                 @Override
                 public void run() {

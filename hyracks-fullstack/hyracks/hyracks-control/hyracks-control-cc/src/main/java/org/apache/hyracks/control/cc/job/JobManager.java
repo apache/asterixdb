@@ -44,6 +44,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.application.CCApplicationContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.cc.scheduler.FIFOJobQueue;
 import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.cc.work.JobCleanupWork;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -58,11 +59,11 @@ public class JobManager implements IJobManager {
     private static final Logger LOGGER = Logger.getLogger(JobManager.class.getName());
 
     private final ClusterControllerService ccs;
-    private final IJobQueue jobQueue;
     private final Map<JobId, JobRun> activeRunMap;
     private final Map<JobId, JobRun> runMapArchive;
     private final Map<JobId, List<Exception>> runMapHistory;
     private final IJobCapacityController jobCapacityController;
+    private IJobQueue jobQueue;
 
     public JobManager(CCConfig ccConfig, ClusterControllerService ccs, IJobCapacityController jobCapacityController)
             throws HyracksException {
@@ -74,7 +75,11 @@ public class JobManager implements IJobManager {
             jobQueue = (IJobQueue) jobQueueConstructor.newInstance(this, this.jobCapacityController);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e) {
-            throw HyracksException.create(ErrorCode.CLASS_LOADING_ISSUE, e, e.getMessage());
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.log(Level.WARNING, "class " + ccConfig.jobQueueClassName + " could not be used: ", e);
+            }
+            // Falls back to the default implementation if the user-provided class name is not valid.
+            jobQueue = new FIFOJobQueue(this, jobCapacityController);
         }
         activeRunMap = new HashMap<>();
         runMapArchive = new LinkedHashMap<JobId, JobRun>() {
@@ -248,7 +253,7 @@ public class JobManager implements IJobManager {
     }
 
     @Override
-    public List<Exception> getRunHistory(JobId jobId) {
+    public List<Exception> getExceptionHistory(JobId jobId) {
         return runMapHistory.get(jobId);
     }
 

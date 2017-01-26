@@ -86,13 +86,14 @@ public interface IJobManager {
     JobRun get(JobId jobId);
 
     /**
-     * Retrieves a historical job from a given job id.
+     * Retrieves the exception records for a historical job.
      *
      * @param jobId,
      *            the job id.
-     * @return the matched historical jobs that have been run but not yet discarded.
+     * @return the exception records of a job that has been removed from the archive but still stays in the stored
+     *         history, where each historical job is paired with exceptions during its execution.
      */
-    List<Exception> getRunHistory(JobId jobId);
+    List<Exception> getExceptionHistory(JobId jobId);
 
     /**
      * @return all jobs that are currently running.
