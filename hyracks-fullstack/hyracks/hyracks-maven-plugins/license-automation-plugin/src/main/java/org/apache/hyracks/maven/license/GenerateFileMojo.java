@@ -22,11 +22,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.Override;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -34,7 +31,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -53,31 +49,17 @@ import freemarker.cache.FileTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.maven.license.freemarker.IndentDirective;
 import org.apache.hyracks.maven.license.freemarker.LoadFileDirective;
 import org.apache.hyracks.maven.license.project.LicensedProjects;
 import org.apache.hyracks.maven.license.project.Project;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.metadata.ArtifactMetadata;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.repository.ArtifactRepositoryPolicy;
-import org.apache.maven.artifact.repository.Authentication;
-import org.apache.maven.artifact.repository.DefaultRepositoryRequest;
-import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout;
-import org.apache.maven.artifact.repository.layout.DefaultRepositoryLayout;
-import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
-import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
-import org.apache.maven.repository.Proxy;
 
 @Mojo(name = "generate",
         requiresProject = true,
@@ -128,7 +110,7 @@ public class GenerateFileMojo extends LicenseMojo {
             resolveLicenseFiles();
             rebuildLicenseContentProjectMap();
             combineCommonGavs();
-            collectSourceAssemblies();
+            SourcePointerResolver.execute(this);
             persistLicenseMap();
             buildNoticeProjectMap();
             generateFiles();
@@ -137,58 +119,6 @@ public class GenerateFileMojo extends LicenseMojo {
         }
     }
 
-    private void collectSourceAssemblies() throws ProjectBuildingException, IOException {
-        try (StubArtifactRepository stubRepo = new StubArtifactRepository()) {
-            DefaultRepositoryRequest rr = new DefaultRepositoryRequest();
-            rr.setLocalRepository(stubRepo);
-            ArtifactRepository central = getCentralRepository();
-            rr.setRemoteRepositories(Collections.singletonList(central));
-            ArtifactResolutionRequest request = new ArtifactResolutionRequest(rr);
-            for (LicensedProjects lp : licenseMap.values()) {
-                if (lp.getLicense().getDisplayName() != null
-                        && lp.getLicense().getDisplayName().toLowerCase().contains("cddl")) {
-                    ensureCDDLSourcesPointer(lp.getProjects(), central, request);
-                }
-            }
-        }
-    }
-
-    private void ensureCDDLSourcesPointer(Collection<Project> projects, ArtifactRepository central,
-                                          ArtifactResolutionRequest request) throws ProjectBuildingException {
-        for (Project p : projects) {
-            if (p.getSourcePointer() != null) {
-                continue;
-            }
-            getLog().debug("finding sources for artifact: " + p);
-            Artifact sourcesArtifact = new DefaultArtifact(p.getGroupId(), p.getArtifactId(),
-                    p.getVersion(), Artifact.SCOPE_COMPILE, "jar", "sources", null);
-            MavenProject mavenProject = resolveDependency(sourcesArtifact);
-            sourcesArtifact.setArtifactHandler(mavenProject.getArtifact().getArtifactHandler());
-
-            request.setArtifact(sourcesArtifact);
-            ArtifactResolutionResult result = artifactResolver.resolve(request);
-            getLog().debug("result: " + result);
-            StringBuilder noticeBuilder = new StringBuilder("You may obtain ");
-            noticeBuilder.append(p.getName()).append(" in Source Code form code here:\n");
-            if (result.isSuccess()) {
-                noticeBuilder.append(central.getUrl()).append("/").append(central.pathOf(sourcesArtifact));
-            } else {
-                getLog().warn("Unable to find sources in 'central' for " + p + ", falling back to project url: "
-                        + p.getUrl());
-                noticeBuilder.append(p.getUrl() != null ? p.getUrl() : "MISSING SOURCE POINTER");
-            }
-            p.setSourcePointer(noticeBuilder.toString());
-        }
-    }
-
-    private ArtifactRepository getCentralRepository() {
-        for (ArtifactRepository repo : session.getRequest().getRemoteRepositories()) {
-            if ("central".equals(repo.getId())) {
-                return repo;
-            }
-        }
-        throw new IllegalStateException("Unable to find 'central' remote repository!");
-    }
 
     private void resolveLicenseContent() throws IOException {
         Set<LicenseSpec> licenseSpecs = new HashSet<>();
@@ -440,155 +370,6 @@ public class GenerateFileMojo extends LicenseMojo {
             }
         }
         return matches;
-    }
-
-    private static class StubArtifactRepository implements ArtifactRepository, AutoCloseable {
-        private static final Random random = new Random();
-        private final File tempDir;
-        private final ArtifactRepositoryLayout layout;
-
-        public StubArtifactRepository() {
-            String tmpDir = System.getProperty("java.io.tmpdir", "/tmp");
-            this.tempDir = new File(tmpDir, "repo" + random.nextInt());
-            this.layout = new DefaultRepositoryLayout();
-        }
-
-        @Override
-        public ArtifactRepositoryLayout getLayout() {
-            return layout;
-        }
-
-        @Override
-        public String pathOf(Artifact artifact) {
-            return this.layout.pathOf(artifact);
-        }
-
-        @Override
-        public String getBasedir() {
-            return tempDir.toString();
-        }
-
-        @Override
-        public void close() throws IOException {
-            FileUtils.deleteDirectory(tempDir);
-
-        }
-
-        @Override
-        public String pathOfRemoteRepositoryMetadata(ArtifactMetadata artifactMetadata) {
-            return null;
-        }
-
-        @Override
-        public String pathOfLocalRepositoryMetadata(ArtifactMetadata artifactMetadata,
-                                                    ArtifactRepository artifactRepository) {
-            return null;
-        }
-
-        @Override
-        public String getUrl() {
-            return null;
-        }
-
-        @Override
-        public void setUrl(String s) {
-            // unused
-        }
-
-        @Override
-        public String getProtocol() {
-            return null;
-        }
-
-        @Override
-        public String getId() {
-            return "stub";
-        }
-
-        @Override
-        public void setId(String s) {
-            // unused
-        }
-
-        @Override
-        public ArtifactRepositoryPolicy getSnapshots() {
-            return null;
-        }
-
-        @Override
-        public void setSnapshotUpdatePolicy(ArtifactRepositoryPolicy artifactRepositoryPolicy) {
-            // unused
-        }
-
-        @Override
-        public ArtifactRepositoryPolicy getReleases() {
-            return null;
-        }
-
-        @Override
-        public void setReleaseUpdatePolicy(ArtifactRepositoryPolicy artifactRepositoryPolicy) {
-            // unused
-        }
-
-        @Override
-        public void setLayout(ArtifactRepositoryLayout artifactRepositoryLayout) {
-            // unused
-        }
-
-        @Override
-        public String getKey() {
-            return null;
-        }
-
-        @Override
-        public boolean isUniqueVersion() {
-            return false;
-        }
-
-        @Override
-        public boolean isBlacklisted() {
-            return false;
-        }
-
-        @Override
-        public void setBlacklisted(boolean b) {
-            // unused
-        }
-
-        @Override
-        public Artifact find(Artifact artifact) {
-            return null;
-        }
-
-        @Override
-        public List<String> findVersions(Artifact artifact) {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public boolean isProjectAware() {
-            return false;
-        }
-
-        @Override
-        public void setAuthentication(Authentication authentication) {
-            // unused
-        }
-
-        @Override
-        public Authentication getAuthentication() {
-            return null;
-        }
-
-        @Override
-        public void setProxy(Proxy proxy) {
-            // unused
-        }
-
-        @Override
-        public Proxy getProxy() {
-            return null;
-        }
     }
 }
 
